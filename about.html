@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>学校 · 海南中学 HAINAN MIDDLE SCHOOL</title>
+<meta name="description" content="海南中学府城校区：创于 1923 年的百年文脉，凤栖堂、衍林堂、百年榄仁树与当代校园。">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="theme-color" content="#0c2233">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/sections.css">
+<style>
+  .tl{position:relative;padding-left:clamp(24px,4vw,52px)}
+  .tl::before{content:"";position:absolute;left:clamp(6px,1.2vw,14px);top:6px;bottom:6px;width:1px;background:var(--line-light)}
+  .tl-item{position:relative;padding-bottom:clamp(34px,5vh,58px)}
+  .tl-item::before{
+    content:"";position:absolute;left:calc(clamp(24px,4vw,52px) * -1 + clamp(6px,1.2vw,14px) - 4px);
+    top:9px;width:9px;height:9px;border-radius:50%;background:var(--coral);
+    box-shadow:0 0 0 4px rgba(232,106,58,.14);
+  }
+  .tl-year{font-family:var(--f-en);font-size:clamp(1.5rem,3vw,2.4rem);font-weight:300;letter-spacing:-.02em;line-height:1}
+  .tl-title{font-size:clamp(1.05rem,1.6vw,1.3rem);font-weight:600;margin-top:8px}
+  .tl-desc{color:var(--on-light-70);line-height:1.9;margin-top:8px;max-width:62ch}
+  .place-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,26px)}
+  @media(max-width:900px){.place-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.place-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="海南中学 首页">
+      <span class="brand-name">海南中学</span>
+      <span class="brand-sub">Hainan Middle School</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="about.html" aria-current="page">学校</a>
+      <a class="nav-link" href="news.html">新闻</a>
+      <a class="nav-link" href="index.html#academic">学术</a>
+      <a class="nav-link" href="index.html#life">校园生活</a>
+      <a class="nav-link" href="admissions.html">招生</a>
+      <a class="nav-link" href="alumni.html">校友</a>
+      <a class="nav-link" href="contact.html">联系我们</a>
+    </nav>
+    <a class="btn btn-solid" href="campus-3d.html">探索 <span class="btn-arrow" aria-hidden="true">↗</span></a>
+    <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <div class="menu-bg" style="background-image:url('assets/images/web/lanshu-1600.jpg')"></div>
+  <div class="wrap menu-inner">
+    <ul class="menu-list">
+      <li class="menu-item" style="transition-delay:.05s"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
+      <li class="menu-item" style="transition-delay:.10s"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
+      <li class="menu-item" style="transition-delay:.15s"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
+      <li class="menu-item" style="transition-delay:.20s"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
+      <li class="menu-item" style="transition-delay:.25s"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
+      <li class="menu-item" style="transition-delay:.30s"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
+      <li class="menu-item" style="transition-delay:.35s"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
+    </ul>
+    <div class="menu-foot">
+      <span class="t-mono">Fucheng Campus · Haikou · Hainan</span>
+      <span class="t-mono">20°02′N 110°20′E</span>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+<section class="page-head noise">
+  <div class="page-head-glow"></div>
+  <div class="wrap z1">
+    <nav class="crumb" aria-label="面包屑"><a href="index.html">首页</a><span aria-hidden="true">/</span><span>学校</span></nav>
+    <span class="eyebrow eyebrow-dark">About · 关于海南中学</span>
+    <h1 class="t-display" style="font-size:clamp(2.4rem,6vw,5.4rem)">百年文脉</h1>
+    <p class="t-lead mt-m" style="max-width:52ch;color:var(--on-dark-70)">
+      一所学校与一座岛的共同记忆。以下是依据公开报道整理的历史节点与校园空间。
+    </p>
+  </div>
+</section>
+
+<!-- 历史时间轴 -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="n">History — 历史节点</span>
+        <h2 class="t-h1">一个世纪</h2>
+      </div>
+      <div class="sec-head-r">
+        <p class="t-lead">以下节点依据海南中学官网《学校简介》、海南日报《一所中学的一个世纪》、海南省人民政府网校庆文章等公开资料整理。</p>
+      </div>
+    </div>
+
+    <div class="tl">
+      <div class="tl-item reveal">
+        <p class="tl-year">1923</p>
+        <h3 class="tl-title">创校 · 私立琼海中学</h3>
+        <p class="tl-desc">1923 年 8 月，冯官尧、王国宪、韩卓秦、钟衍林等 13 名教育界知名人士决定在海府地区筹备创校，并组成校董会。他们给新学校定名为「私立琼海中学」，以府城镇苏泉书院为临时校址，推举钟衍林为第一任校长。同年 9 月，学校正式开学。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1924</p>
+        <h3 class="tl-title">迁至今址</h3>
+        <p class="tl-desc">1924 年，学校呈准广东省教育厅备案；12 月又呈准琼山县政府和琼崖善后处，拨定府城西门外大路街的五贤祠为该校新校址，即海南中学今址。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1938 — 1946</p>
+        <h3 class="tl-title">战火中的停办与复校</h3>
+        <p class="tl-desc">1938 年广州沦陷后，校方将贵重图书、仪器运至香港，设立「琼海中学香港分校」。1939 年 2 月琼崖沦陷，学校停办。1942 年至抗战胜利前，钟衍林等人努力筹谋复校，直到 1946 年，学校才得以复校。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1951</p>
+        <h3 class="tl-title">匹瑾女子中学并入</h3>
+        <p class="tl-desc">1951 年，匹瑾女子中学并入该校。此后学校历经多次更名与体制调整，逐步发展为一所完全中学。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1959</p>
+        <h3 class="tl-title">成为广东省重点中学</h3>
+        <p class="tl-desc">新中国成立后，学校由私立改为公办，数易其名，于 1959 年成为广东省重点中学。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1988</p>
+        <h3 class="tl-title">定名「海南中学」</h3>
+        <p class="tl-desc">1988 年海南建省后，学校改为现名。此后被誉为「海南基础教育的一面旗帜」，科技创新教育、艺术体育教育、校本课程建设、校园文化建设特色鲜明。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">1999</p>
+        <h3 class="tl-title">综合实践活动课程</h3>
+        <p class="tl-desc">自 1999 年起，学校开展「在行走中真看、真听、真做」的学生综合实践活动，并将其纳入综合实践活动课程体系，引导学生求真学问、长真本领。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">2013</p>
+        <h3 class="tl-title">「春风化雨」铜像落成</h3>
+        <p class="tl-desc">海南中学 90 周年校庆时，衍林堂前新增一处景观——「春风化雨——钟衍林和学生们」铜像，表现首任校长与学生们在一起的瞬间。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">2017</p>
+        <h3 class="tl-title">托管三亚学校</h3>
+        <p class="tl-desc">2017 年学校接管三亚实验中学，并将其更名为海南中学三亚学校，开启集团化办学。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">2022</p>
+        <h3 class="tl-title">一校两区两翼</h3>
+        <p class="tl-desc">2022 年接管白沙中学并更名为海南中学白沙学校，逐步形成「一校两区两翼」的一体化集团办学模式。</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-year">2023</p>
+        <h3 class="tl-title">百年华诞</h3>
+        <p class="tl-desc">2023 年 11 月 1 日，海南中学迎来百年华诞。许多在世界各地工作生活的校友回到他们梦想出发的地方。</p>
+      </div>
+    </div>
+
+    <p class="t-small mt-l">
+      ※ 历史节点整理自公开报道，用于呈现学校沿革概览。如需引用，请以海南中学官方校史资料为准。
+      个别年份的更名沿革因资料来源有限，此处未作展开。
+    </p>
+  </div>
+</section>
+
+<!-- 校园空间 -->
+<section class="sec bg-sky noise">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="n">Places — 校园空间</span>
+        <h2 class="t-h1">建筑与景观</h2>
+      </div>
+      <div class="sec-head-r">
+        <p class="t-lead">凤栖堂、衍林堂、榄仁树、陶然亭与思园——历史不是被封存的陈列，而是每天都要经过的日常。</p>
+      </div>
+    </div>
+
+    <div class="place-grid">
+      <article class="card reveal">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/fengqitang-1600.jpg" alt="凤栖堂建筑外观，绿瓦与朱柱" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">历史建筑</span>
+          <h3 class="t-h3 mt-s">凤栖堂 · FENGQI HALL</h3>
+          <p class="t-small mt-s">府城校区最具历史感的建筑之一：绿瓦、朱柱与完整院落，是校园的视觉中心。</p>
+        </div>
+      </article>
+      <article class="card reveal reveal-d1">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/xxgk-yanlintang-800.jpg" alt="衍林堂建筑外观" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">历史建筑</span>
+          <h3 class="t-h3 mt-s">衍林堂 · YANLIN HALL</h3>
+          <p class="t-small mt-s">堂前立有「春风化雨——钟衍林和学生们」铜像，纪念首任校长钟衍林。</p>
+        </div>
+      </article>
+      <article class="card reveal reveal-d2">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/lanshu-1600.jpg" alt="校园里的百年榄仁树" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">自然 · 历史</span>
+          <h3 class="t-h3 mt-s">百年榄仁树</h3>
+          <p class="t-small mt-s">「树木是有记忆的，它的故事记录在年轮里。」它的年轮，就是这所学校历史的注脚。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/taoranting-800.jpg" alt="校内陶然亭" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">园林</span>
+          <h3 class="t-h3 mt-s">陶然亭 · TAORAN PAVILION</h3>
+          <p class="t-small mt-s">绿瓦凉亭与草坪灌木，构成校园里尺度最小、也最安静的空间节点。</p>
+        </div>
+      </article>
+      <article class="card reveal reveal-d1">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/wenhua_siyuan-800.jpg" alt="思园林荫道" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">园林</span>
+          <h3 class="t-h3 mt-s">思园 · 砚池</h3>
+          <p class="t-small mt-s">林荫道与水面构成校园的热带园林景观，是课间最自然的去处。</p>
+        </div>
+      </article>
+      <article class="card reveal reveal-d2">
+        <div class="card-media" style="aspect-ratio:4/3"><img src="assets/images/web/yihao-800.jpg" alt="府城校区一号教学楼" loading="lazy"></div>
+        <div class="card-body">
+          <span class="tag">教学</span>
+          <h3 class="t-h3 mt-s">一号教学楼</h3>
+          <p class="t-small mt-s">现代简洁的体量与外廊，适应海南的日照与雨季。校园里最日常的建筑。</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- 数据说明 -->
+<section class="sec on-dark noise">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="n">Data — 数据说明</span>
+        <h2 class="t-h1">我们不会编造数字</h2>
+      </div>
+      <div class="sec-head-r">
+        <p class="t-lead">本站只展示可核实的公开信息。以下数据摘自<a href="https://www.haizhong.edu.cn/haizhong/xxgk/xxjj/index.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">海南中学官网《学校简介》</a>；无法确认的数据，一律标注为「待接入官方数据」。</p>
+      </div>
+    </div>
+    <div class="grid g-3">
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">1923</p>
+        <p class="stat-label mt-s">创校年份</p>
+        <p class="stat-cn mt-s">可核实 · 校徽记载 1923.9.21，与公开报道一致</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">100+</p>
+        <p class="stat-label mt-s">办学年限</p>
+        <p class="stat-cn mt-s">可核实 · 2023 年迎来百年华诞</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">5834</p>
+        <p class="stat-label mt-s">在读学生</p>
+        <p class="stat-cn mt-s">可核实 · 官网《学校简介》</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">125</p>
+        <p class="stat-label mt-s">教学班</p>
+        <p class="stat-cn mt-s">可核实 · 初、高中两学部合计</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">447</p>
+        <p class="stat-label mt-s">专任教师</p>
+        <p class="stat-cn mt-s">可核实 · 含特级教师 19 名、正高级教师 16 名</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-num" style="font-size:clamp(2.4rem,5vw,3.6rem)">2</p>
+        <p class="stat-label mt-s">校区</p>
+        <p class="stat-cn mt-s">可核实 · 府城校区、美伦校区</p>
+      </div>
+    </div>
+    <div class="grid g-3 mt-m">
+      <div class="card-glass">
+        <p class="stat-label">校训</p>
+        <p class="stat-cn mt-s" style="font-size:1.05rem;line-height:1.85">尚德 · 睿智 · 唯实 · 创新</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-label">教育价值追求</p>
+        <p class="stat-cn mt-s" style="font-size:1.05rem;line-height:1.85">心灵自由 · 学习自主 · 行为自觉</p>
+      </div>
+      <div class="card-glass">
+        <p class="stat-label">办学格局</p>
+        <p class="stat-cn mt-s">一校两区两翼：府城、美伦两校区，并托管海南中学三亚学校（2017）、白沙学校（2022）</p>
+      </div>
+    </div>
+    <div class="row gap-m mt-l" style="flex-wrap:wrap">
+      <a class="btn btn-ghost" href="campus-3d.html">进入 3D 数字校园 <span class="btn-arrow" aria-hidden="true">↗</span></a>
+      <a class="btn btn-ghost" href="index.html#campus">查看校园概念地图</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer-glow"></div>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h2 class="t-display" style="font-size:clamp(2rem,4.4vw,3.6rem)">海南中学</h2>
+        <p class="hero-en" style="font-size:.8rem;color:var(--on-dark-45)">HAINAN MIDDLE SCHOOL</p>
+        <p class="t-body mt-m" style="color:var(--on-dark-70);max-width:34ch">在岛屿与世界之间。</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col"><h4>Explore</h4><ul>
+          <li><a href="about.html">学校</a></li><li><a href="news.html">新闻</a></li>
+          <li><a href="index.html#academic">学术</a></li><li><a href="index.html#life">校园生活</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Campus</h4><ul>
+          <li><a href="admissions.html">招生</a></li><li><a href="alumni.html">校友</a></li>
+          <li><a href="clubs.html">社团</a></li><li><a href="campus-3d.html">3D 校园</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Connect</h4><ul>
+          <li><a href="contact.html">联系我们</a></li><li><a href="contact.html#creator">关于创作者</a></li>
+          <li><a href="contact.html#sitemap">网站地图</a></li>
+          <li><a href="contact.html#privacy">隐私政策</a></li><li><a href="contact.html#disclaimer">免责声明</a></li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Hainan Middle School · 海南中学数字校园概念站</span>
+      <span class="footer-credit">Designed &amp; built by <a href="contact.html#creator">manyIwant</a> · Still learning. Still making.</span>
+      <div class="footer-links">
+        <a href="contact.html#sitemap">网站地图</a><a href="contact.html#privacy">隐私政策</a><a href="contact.html#disclaimer">免责声明</a>
+      </div>
+    </div>
+    <div class="footer-disclaimer">
+      本站为非官方数字校园概念展示项目。校园图片来源于海南中学官网、海南日报、人民网海南频道、海南省人民政府网、海口市人民政府网等公开报道，
+      版权归原作者与发布机构所有，仅作展示与参考用途，不代表已获商业授权。历史节点整理自公开报道，以官方校史资料为准。
+    </div>
+  </div>
+</footer>
+<button class="to-top" id="toTop" aria-label="返回顶部">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>

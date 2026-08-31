@@ -1,0 +1,19 @@
+# 开发过程备份与临时文件（不进仓库）
+data/backup/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node（如果有）
+node_modules/
+
+# 构建产物
+dist/
+build/
+*.log

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>校友 · 海南中学 HAINAN MIDDLE SCHOOL</title>
+<meta name="description" content="FROM HERE TO THE WORLD —— 海南中学校友名录（姓名与身份摘自海南中学官网《学校简介》）。">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="theme-color" content="#0c2233">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/sections.css">
+<style>
+  .world{position:relative;border-radius:var(--r-xl);overflow:hidden;background:var(--deep);
+    border:1px solid var(--line-dark);aspect-ratio:2/1;min-height:280px}
+  .world svg{width:100%;height:100%;display:block}
+  .node{cursor:pointer}
+  .node circle.dot{fill:var(--coral);transition:r .4s var(--e-out),fill .4s}
+  .node circle.halo{fill:none;stroke:var(--coral);stroke-width:1;opacity:0;transition:opacity .4s,r .8s var(--e-out)}
+  .node:hover circle.dot,.node.is-on circle.dot{fill:var(--coral-bright);r:6}
+  .node:hover circle.halo,.node.is-on circle.halo{opacity:.55;r:16}
+  .node text{font-family:var(--f-en);font-size:11px;fill:rgba(255,255,255,.72);pointer-events:none}
+  .node.is-on text{fill:#fff}
+  .acard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:clamp(14px,2vw,24px)}
+  .acard{padding:clamp(20px,2.4vw,30px);border-radius:var(--r-md);background:#fff;border:1px solid var(--line-light);
+    transition:transform .5s var(--e-out),box-shadow .5s}
+  .acard:hover{transform:translateY(-5px);box-shadow:var(--sh-md)}
+  .acard .quote{font-size:1.02rem;line-height:1.8;color:var(--on-light)}
+  .acard.is-on{border-color:var(--coral);box-shadow:0 0 0 2px rgba(232,106,58,.25)}
+  .demo-banner{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:18px 22px;border-radius:var(--r-md);
+    background:#fdf1de;border:1px solid #f0dcbd;color:#7a4f22;font-size:.9rem;line-height:1.7}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="nav is-scrolled" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="海南中学 首页">
+      <span class="brand-name">海南中学</span>
+      <span class="brand-sub">Hainan Middle School</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="about.html">学校</a>
+      <a class="nav-link" href="news.html">新闻</a>
+      <a class="nav-link" href="index.html#academic">学术</a>
+      <a class="nav-link" href="index.html#life">校园生活</a>
+      <a class="nav-link" href="admissions.html">招生</a>
+      <a class="nav-link" href="alumni.html" aria-current="page">校友</a>
+      <a class="nav-link" href="contact.html">联系我们</a>
+    </nav>
+    <a class="btn btn-solid" href="campus-3d.html">探索 <span class="btn-arrow" aria-hidden="true">↗</span></a>
+    <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <div class="menu-bg" style="background-image:url('assets/images/web/lanshu-1600.jpg')"></div>
+  <div class="wrap menu-inner">
+    <ul class="menu-list">
+      <li class="menu-item" style="transition-delay:.05s"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
+      <li class="menu-item" style="transition-delay:.10s"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
+      <li class="menu-item" style="transition-delay:.15s"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
+      <li class="menu-item" style="transition-delay:.20s"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
+      <li class="menu-item" style="transition-delay:.25s"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
+      <li class="menu-item" style="transition-delay:.30s"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
+      <li class="menu-item" style="transition-delay:.35s"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
+    </ul>
+    <div class="menu-foot">
+      <span class="t-mono">Fucheng Campus · Haikou · Hainan</span>
+      <span class="t-mono">20°02′N 110°20′E</span>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+<section class="page-head noise">
+  <div class="page-head-glow"></div>
+  <div class="wrap z1">
+    <nav class="crumb" aria-label="面包屑"><a href="index.html">首页</a><span aria-hidden="true">/</span><span>校友</span></nav>
+    <span class="eyebrow eyebrow-dark">Alumni · FROM HERE TO THE WORLD</span>
+    <h1 class="t-display" style="font-size:clamp(2.2rem,5.6vw,5rem)">从这里，到世界</h1>
+    <p class="t-lead mt-m" style="max-width:52ch;color:var(--on-dark-70)">
+      一座岛上的校园，与散落在世界各地的人。
+    </p>
+    <p class="t-small mt-s" id="alumniQuote" style="max-width:56ch;color:var(--on-dark-45)"></p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="demo-banner mb-l">
+      <span class="tag">官方资料</span>
+      <span>本页校友姓名与身份描述摘自<a href="https://www.haizhong.edu.cn/haizhong/xxgk/xxjj/index.html" target="_blank" rel="noopener">海南中学官网《学校简介》</a>原文，未作演绎。官网未提供校友所在城市，地图节点按「领域」聚合示意，<strong>不代表校友实际所在地</strong>。</span>
+    </div>
+
+    <div class="world reveal" id="world">
+      <svg viewBox="0 0 1000 500" role="img" aria-label="世界地图抽象示意图，按领域聚合的校友分布节点（示意，非实际位置）">
+        <!-- 经纬网格 -->
+        <g stroke="rgba(255,255,255,.07)" stroke-width="1">
+          <line x1="0" y1="125" x2="1000" y2="125"/><line x1="0" y1="250" x2="1000" y2="250"/><line x1="0" y1="375" x2="1000" y2="375"/>
+          <line x1="250" y1="0" x2="250" y2="500"/><line x1="500" y1="0" x2="500" y2="500"/><line x1="750" y1="0" x2="750" y2="500"/>
+        </g>
+        <!-- 抽象大陆块（示意，非精确地理边界） -->
+        <g fill="rgba(111,176,207,.10)" stroke="rgba(111,176,207,.28)" stroke-width="1">
+          <path d="M120 110 L300 100 L320 200 L250 250 L180 230 L150 170 Z"/>
+          <path d="M255 265 L305 260 L290 360 L265 420 L245 380 L240 300 Z"/>
+          <path d="M450 100 L520 90 L560 130 L540 175 L470 180 L440 140 Z"/>
+          <path d="M470 195 L560 190 L575 300 L520 350 L480 300 L465 240 Z"/>
+          <path d="M560 90 L780 70 L900 110 L880 200 L760 230 L620 200 L570 150 Z"/>
+          <path d="M760 330 L870 320 L900 380 L820 420 L750 390 Z"/>
+          <!-- 海南（起点）附近标记区域放大提示 -->
+          <circle cx="750" cy="232" r="4" fill="none" stroke="rgba(232,106,58,.5)" stroke-width="1"/>
+        </g>
+        <!-- 起点：海口 -->
+        <g>
+          <circle cx="806" cy="222" r="4" fill="#e86a3a"/>
+          <circle cx="806" cy="222" r="11" fill="none" stroke="#e86a3a" stroke-width="1" opacity=".4"/>
+          <text x="806" y="248" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.85)" font-family="Sora,sans-serif">HAIKOU</text>
+        </g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+    <p class="t-small mt-s">※ 地图为抽象示意图（等距圆柱投影），大陆轮廓经过简化，不作为地理参考。节点按校友<b>领域</b>聚合，位置仅用于区分领域、<b>不代表任何校友的实际所在地</b>。</p>
+
+    <div class="sec-head mt-xl">
+      <div>
+        <span class="n">Notable Alumni — 校友名录</span>
+        <h2 class="t-h1">他们是海中人</h2>
+      </div>
+      <div class="sec-head-r">
+        <p class="t-lead">点击地图上的领域节点，可高亮该领域的校友。</p>
+      </div>
+    </div>
+    <div class="acard-grid" id="acards"></div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer-glow"></div>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h2 class="t-display" style="font-size:clamp(2rem,4.4vw,3.6rem)">海南中学</h2>
+        <p class="hero-en" style="font-size:.8rem;color:var(--on-dark-45)">HAINAN MIDDLE SCHOOL</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col"><h4>Explore</h4><ul>
+          <li><a href="about.html">学校</a></li><li><a href="news.html">新闻</a></li>
+          <li><a href="index.html#academic">学术</a></li><li><a href="index.html#life">校园生活</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Campus</h4><ul>
+          <li><a href="admissions.html">招生</a></li><li><a href="alumni.html">校友</a></li>
+          <li><a href="clubs.html">社团</a></li><li><a href="campus-3d.html">3D 校园</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Connect</h4><ul>
+          <li><a href="contact.html">联系我们</a></li><li><a href="contact.html#creator">关于创作者</a></li>
+          <li><a href="contact.html#sitemap">网站地图</a></li>
+          <li><a href="contact.html#privacy">隐私政策</a></li><li><a href="contact.html#disclaimer">免责声明</a></li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Hainan Middle School · 海南中学数字校园概念站</span>
+      <span class="footer-credit">Designed &amp; built by <a href="contact.html#creator">manyIwant</a> · Still learning. Still making.</span>
+      <div class="footer-links">
+        <a href="contact.html#sitemap">网站地图</a><a href="contact.html#privacy">隐私政策</a><a href="contact.html#disclaimer">免责声明</a>
+      </div>
+    </div>
+    <div class="footer-disclaimer">
+      本站为非官方数字校园概念展示项目。本页校友姓名与身份描述摘自海南中学官网《学校简介》原文；地图节点按领域聚合示意，不代表实际所在地。
+    </div>
+  </div>
+</footer>
+<button class="to-top" id="toTop" aria-label="返回顶部">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="assets/js/main.js" defer></script>
+<script>
+(function(){
+  var nodesG = document.getElementById('nodes');
+  var cardsG = document.getElementById('acards');
+  if(!nodesG || !cardsG) return;
+
+  function project(lat, lng){
+    return { x: (lng + 180) / 360 * 1000, y: (90 - lat) / 180 * 500 };
+  }
+
+  fetch('data/alumni.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(d){
+    var fields = d.fields || [];
+    var people = d.notables || [];
+    var q = document.getElementById('alumniQuote');
+    if(q && d.quote) q.textContent = '「' + d.quote + '」—— 海南中学官网《学校简介》';
+
+    // 领域节点（示意位置）
+    nodesG.innerHTML = fields.map(function(f){
+      var n = people.filter(function(p){ return p.field === f.name; }).length;
+      var pt = project(f.lat, f.lng);
+      return '<g class="node" data-field="'+f.name+'" tabindex="0" role="button" aria-label="'+f.name+'领域，'+n+'人">'+
+        '<circle class="halo" cx="'+pt.x.toFixed(1)+'" cy="'+pt.y.toFixed(1)+'" r="6"/>'+
+        '<circle class="dot" cx="'+pt.x.toFixed(1)+'" cy="'+pt.y.toFixed(1)+'" r="4"/>'+
+        '<text x="'+(pt.x+10).toFixed(1)+'" y="'+(pt.y+4).toFixed(1)+'">'+f.name+' '+n+'</text></g>';
+    }).join('');
+
+    // 真实校友卡片（仅官网原文身份，不代拟引语）
+    cardsG.innerHTML = people.map(function(p){
+      return '<article class="acard" data-field="'+p.field+'">'+
+        '<div class="row gap-s" style="flex-wrap:wrap;margin-bottom:12px">'+
+        '<span class="tag">'+p.field+'</span></div>'+
+        '<strong style="font-size:1.05rem">'+p.name+'</strong>'+
+        '<p class="t-small mt-s" style="line-height:1.7">'+p.identity+'</p>'+
+        '</article>';
+    }).join('');
+
+    function select(field){
+      Array.prototype.forEach.call(nodesG.querySelectorAll('.node'), function(n){
+        n.classList.toggle('is-on', n.getAttribute('data-field') === field);
+      });
+      Array.prototype.forEach.call(cardsG.querySelectorAll('.acard'), function(c){
+        c.classList.toggle('is-on', c.getAttribute('data-field') === field);
+      });
+    }
+    nodesG.addEventListener('click', function(e){
+      var n = e.target.closest('.node');
+      if(n) select(n.getAttribute('data-field'));
+    });
+    nodesG.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      var n = e.target.closest('.node');
+      if(n){ e.preventDefault(); select(n.getAttribute('data-field')); }
+    });
+  }).catch(function(){
+    cardsG.innerHTML = '<p class="t-body">校友数据加载失败。</p>';
+  });
+})();
+</script>
+</body>
+</html>

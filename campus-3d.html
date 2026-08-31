@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>3D 数字校园 · 海南中学 HAINAN MIDDLE SCHOOL</title>
+<meta name="description" content="海南中学 3D 数字校园概念展示：可旋转、缩放、探索的校园空间（CONCEPTUAL 3D CAMPUS）。">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="theme-color" content="#08161f">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/campus3d.css">
+</head>
+<body class="c3d">
+<a class="skip-link" href="#hudMain">跳到界面控制</a>
+
+<!-- ===== 加载屏 ===== -->
+<div class="loader" id="loader">
+  <div class="loader-mark">海南中学</div>
+  <div class="loader-sub">Hainan Middle School</div>
+  <div class="loader-bar"><span id="loaderBar"></span></div>
+  <div class="loader-pct" id="loaderPct">0%</div>
+  <div class="loader-status" id="loaderStatus">Initializing digital campus…</div>
+  <button class="loader-enter" id="loaderEnter">ENTER CAMPUS →</button>
+  <p class="loader-status" style="max-width:44ch;letter-spacing:.1em;text-align:center;line-height:1.9;text-transform:none">
+    依据府城校区真实平面图与历史资料还原<br>建筑体量与景观形态为写实概念模型 · 非测绘成果
+  </p>
+</div>
+
+<!-- ===== HUD ===== -->
+<div class="hud hud-tl" id="hudMain">
+  <div class="hud-box">
+    <p class="hud-title">3D CAMPUS</p>
+    <p class="hud-sub">Hainan Middle School</p>
+    <a class="hud-back" href="index.html">← 返回网站</a>
+  </div>
+</div>
+
+<div class="hud hud-tr">
+  <button class="env-btn" id="envBtn" aria-expanded="false" aria-controls="envPanel">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.2M12 19.4v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 7.7 7.7M16.3 16.3l1.6 1.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6"/>
+    </svg>
+    <span>环境</span>
+  </button>
+
+  <div class="env-panel" id="envPanel" role="dialog" aria-label="环境设置" aria-modal="false">
+    <div class="env-head">
+      <span class="env-head-t">环境 ENVIRONMENT</span>
+      <button class="env-close" id="envClose" aria-label="关闭环境面板">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="env-body" id="envBody"></div>
+    <div class="env-tips">
+      <span><b>左键拖动</b> 旋转</span>
+      <span><b>滚轮</b> 缩放</span>
+      <span><b>右键拖动</b> 平移</span>
+      <span><b>点击建筑</b> 查看详情</span>
+    </div>
+  </div>
+</div>
+
+<div class="hud hud-bl">
+  <div class="minimap" id="minimap" aria-hidden="true"></div>
+</div>
+
+<!-- 创作者署名（右下） -->
+<div class="hud hud-br">
+  <div class="hud-credit">
+    <p class="hud-credit-n">manyIwant</p>
+    <p class="hud-credit-s">Still learning. Still making. · <a href="contact.html#creator">关于创作者</a></p>
+  </div>
+</div>
+
+<!-- ===== POI 层 ===== -->
+<div class="poi-layer" id="poiLayer"></div>
+
+<!-- ===== 信息面板 ===== -->
+<aside class="info" id="info" role="dialog" aria-labelledby="infoTitle" aria-live="polite">
+  <button class="info-close" id="infoClose" aria-label="关闭信息面板">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <span class="info-tag">CONCEPT</span>
+  <h3 id="infoTitle">建筑名称</h3>
+  <p class="en" id="infoEn">Building</p>
+  <div class="info-img"><img id="infoImg" alt=""></div>
+  <p class="txt" id="infoDesc"></p>
+  <div class="meta">
+    <span id="infoCat"></span>
+    <span id="infoPos"></span>
+  </div>
+  <p class="info-note" id="infoNote"></p>
+  <div class="info-acts" id="infoActs"></div>
+</aside>
+
+<!-- ===== 漫游 ===== -->
+<div class="tour-cap" id="tourCap">
+  <p class="n" id="tourN">STOP 01 / 07</p>
+  <p class="t" id="tourT">校园入口</p>
+  <p class="d" id="tourD"></p>
+</div>
+<div class="tour-ctl" id="tourCtl">
+  <button class="hud-btn" id="tourPrev">←</button>
+  <button class="hud-btn" id="tourToggle">暂停</button>
+  <button class="hud-btn" id="tourNext">→</button>
+  <div class="tour-prog"><span id="tourProg"></span></div>
+  <button class="hud-btn" id="tourExit">EXIT</button>
+</div>
+
+<!-- ===== 彩蛋 ===== -->
+<div class="star-toast" id="starToast" role="dialog" aria-labelledby="starText">
+  <p id="starText">每一个真正重要的地方，都曾经有人抬头看过星空。</p>
+  <span class="en">Someone once looked up, here.</span>
+  <button id="starClose">RETURN TO CAMPUS</button>
+</div>
+
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/OrbitControls.js"></script>
+<script src="assets/js/three-campus.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>新闻 · 海南中学 HAINAN MIDDLE SCHOOL</title>
+<meta name="description" content="海南中学校园新闻：百年校庆、招生开放日、教研活动、校园体育与校园建设动态。">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="theme-color" content="#0c2233">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/sections.css">
+<style>
+  .news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.2vw,30px)}
+  .news-grid .card{cursor:pointer}
+  .news-grid .card-media{aspect-ratio:16/10}
+  .news-grid .card:first-child{grid-column:span 2}
+  .news-grid .card:first-child .card-media{aspect-ratio:16/9}
+  @media(max-width:1000px){.news-grid{grid-template-columns:repeat(2,1fr)}.news-grid .card:first-child{grid-column:span 2}}
+  @media(max-width:640px){.news-grid{grid-template-columns:1fr}.news-grid .card:first-child{grid-column:span 1}}
+  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:clamp(24px,4vh,40px)}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="nav is-scrolled" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="海南中学 首页">
+      <span class="brand-name">海南中学</span>
+      <span class="brand-sub">Hainan Middle School</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="about.html">学校</a>
+      <a class="nav-link" href="news.html" aria-current="page">新闻</a>
+      <a class="nav-link" href="index.html#academic">学术</a>
+      <a class="nav-link" href="index.html#life">校园生活</a>
+      <a class="nav-link" href="admissions.html">招生</a>
+      <a class="nav-link" href="alumni.html">校友</a>
+      <a class="nav-link" href="contact.html">联系我们</a>
+    </nav>
+    <a class="btn btn-solid" href="campus-3d.html">探索 <span class="btn-arrow" aria-hidden="true">↗</span></a>
+    <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <div class="menu-bg" style="background-image:url('assets/images/web/lanshu-1600.jpg')"></div>
+  <div class="wrap menu-inner">
+    <ul class="menu-list">
+      <li class="menu-item" style="transition-delay:.05s"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
+      <li class="menu-item" style="transition-delay:.10s"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
+      <li class="menu-item" style="transition-delay:.15s"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
+      <li class="menu-item" style="transition-delay:.20s"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
+      <li class="menu-item" style="transition-delay:.25s"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
+      <li class="menu-item" style="transition-delay:.30s"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
+      <li class="menu-item" style="transition-delay:.35s"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
+    </ul>
+    <div class="menu-foot">
+      <span class="t-mono">Fucheng Campus · Haikou · Hainan</span>
+      <span class="t-mono">20°02′N 110°20′E</span>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+<section class="page-head noise">
+  <div class="page-head-glow"></div>
+  <div class="wrap z1">
+    <nav class="crumb" aria-label="面包屑"><a href="index.html">首页</a><span aria-hidden="true">/</span><span>新闻</span></nav>
+    <span class="eyebrow eyebrow-dark">Newsroom · 新闻中心</span>
+    <h1 class="t-display" style="font-size:clamp(2.4rem,6vw,5.4rem)">校园正在发生</h1>
+    <p class="t-lead mt-m" style="max-width:56ch;color:var(--on-dark-70)">
+      记录这所学校的当下。所有条目标注来源与发布时间，点击可查看详情与原文链接。
+    </p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="filter-bar" id="newsFilters" role="group" aria-label="新闻分类筛选">
+      <button class="filter is-on" data-cat="all">全部</button>
+      <button class="filter" data-cat="百年校庆">百年校庆</button>
+      <button class="filter" data-cat="招生">招生</button>
+      <button class="filter" data-cat="教学教研">教学教研</button>
+      <button class="filter" data-cat="体育">体育</button>
+      <button class="filter" data-cat="校园生活">校园生活</button>
+      <button class="filter" data-cat="校园建设">校园建设</button>
+      <button class="filter" data-cat="喜报">喜报</button>
+    </div>
+
+    <div class="news-grid" id="newsGrid"></div>
+
+    <p class="t-small mt-l">
+      ※ 新闻标题、日期与来源为可核查的公开报道信息；摘要为便于阅读的简要概述，完整内容请以来源原文为准。
+      本站不发布未经官方确认的校园消息。
+    </p>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer-glow"></div>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h2 class="t-display" style="font-size:clamp(2rem,4.4vw,3.6rem)">海南中学</h2>
+        <p class="hero-en" style="font-size:.8rem;color:var(--on-dark-45)">HAINAN MIDDLE SCHOOL</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col"><h4>Explore</h4><ul>
+          <li><a href="about.html">学校</a></li><li><a href="news.html">新闻</a></li>
+          <li><a href="index.html#academic">学术</a></li><li><a href="index.html#life">校园生活</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Campus</h4><ul>
+          <li><a href="admissions.html">招生</a></li><li><a href="alumni.html">校友</a></li>
+          <li><a href="clubs.html">社团</a></li><li><a href="campus-3d.html">3D 校园</a></li>
+        </ul></div>
+        <div class="footer-col"><h4>Connect</h4><ul>
+          <li><a href="contact.html">联系我们</a></li><li><a href="contact.html#creator">关于创作者</a></li>
+          <li><a href="contact.html#sitemap">网站地图</a></li>
+          <li><a href="contact.html#privacy">隐私政策</a></li><li><a href="contact.html#disclaimer">免责声明</a></li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Hainan Middle School · 海南中学数字校园概念站</span>
+      <span class="footer-credit">Designed &amp; built by <a href="contact.html#creator">manyIwant</a> · Still learning. Still making.</span>
+      <div class="footer-links">
+        <a href="contact.html#sitemap">网站地图</a><a href="contact.html#privacy">隐私政策</a><a href="contact.html#disclaimer">免责声明</a>
+      </div>
+    </div>
+    <div class="footer-disclaimer">
+      本站为非官方数字校园概念展示项目。新闻图片与内容来源于公开报道，版权归原作者与发布机构所有，仅作展示参考，不代表已获商业授权。
+    </div>
+  </div>
+</footer>
+<button class="to-top" id="toTop" aria-label="返回顶部">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<div class="modal" id="newsModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="modal-hero"><img id="modalImg" alt=""></div>
+    <div class="modal-body">
+      <div class="row gap-s" style="flex-wrap:wrap;margin-bottom:14px">
+        <span class="tag" id="modalCat">分类</span>
+        <span class="news-date" id="modalDate"></span>
+        <span class="tag" id="modalSource">来源</span>
+      </div>
+      <h2 class="t-h2" id="modalTitle" style="font-size:clamp(1.35rem,2.4vw,2rem)"></h2>
+      <div class="t-body mt-m" id="modalBody" style="white-space:pre-line"></div>
+      <div class="mt-l" style="padding-top:18px;border-top:1px solid var(--line-light)">
+        <p class="t-small" id="modalNote"></p>
+        <a class="btn btn-dark mt-s" id="modalSourceLink" href="#" target="_blank" rel="noopener">查看原文 <span class="btn-arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/news-page.js" defer></script>
+</body>
+</html>
