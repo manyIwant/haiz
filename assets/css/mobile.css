@@ -51,10 +51,24 @@ a,button,input,select,textarea,label,[role="button"]{touch-action:manipulation}
    ============================================================ */
 @media (max-width:900px){
 
-  /* ---------- 可读性：抬高一批过小的字号 ---------- */
+  /* ---------- 首屏：修掉 hero-foot 与按钮的重叠 ----------
+     .hero-foot 是绝对定位贴底的，而 .hero-inner 的底部内边距在矮屏上不足以
+     让出空间，导致「府城校区 · 中国海南海口」压在按钮上。
+     这里把底部预留量抬到能容纳 meta 的高度，并按需缩小 meta 的字距与行高。 */
+  .hero-inner{padding-bottom:calc(clamp(96px,16vh,150px) + var(--sab))}
+  .hero-foot{
+    padding-bottom:calc(clamp(18px,3vh,30px) + var(--sab));
+    gap:12px;
+  }
+  .hero-meta{
+    font-size:.68rem;letter-spacing:.12em;line-height:1.75;
+    max-width:100%;
+  }
+  .scroll-cue .bar{height:34px}
+
   .brand-sub{font-size:.68rem;letter-spacing:.18em}      /* 8.96px → 10.88px */
   .sec-head .n,.eyebrow{font-size:.74rem}                /* 11.2px → 11.84px */
-  .hero-meta,.scroll-cue{font-size:.72rem}               /* 10.56px → 11.52px */
+  .scroll-cue{font-size:.72rem}                          /* 10.56px → 11.52px */
   .t-mono{font-size:.78rem}                              /* 11.52px → 12.48px */
   .tag{font-size:.72rem}
   .crumb{font-size:.86rem}
@@ -71,8 +85,23 @@ a,button,input,select,textarea,label,[role="button"]{touch-action:manipulation}
   .footer-links a,.footer-col li a,.footer-bottom a{
     display:inline-flex;align-items:center;min-height:40px;
   }
-  .note-box a,.t-body a,.t-small a{display:inline-flex;align-items:center;min-height:32px}
   .brand{min-height:44px;justify-content:center}
+
+  /* ---------- 正文内联链接的命中区 ----------
+     正文里的 <a> 若改成 inline-flex 会打断行内排版（遇到长链接换行时尤其明显），
+     这里改用「垂直 padding + 等量负 margin」扩大命中区，行高与换行完全不受影响。 */
+  .note-box a,.t-body a,.t-small a,.t-lead a,.stat-cn a,
+  .t-h1 a,.t-h2 a,.t-h3 a,.hero-meta a,.footer-bottom a{
+    display:inline-block;
+    padding-block:12px;
+    margin-block:-12px;
+  }
+  /* 3D 页彩蛋星星：视觉仍是小星点，仅把可点区域扩到 44px */
+  .egg-star{position:relative}
+  .egg-star::after{
+    content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%);
+  }
 
   /* ---------- 可读性：剩余一批 11.2px 以下的标签 ---------- */
   .stat-label{font-size:.76rem}
@@ -135,6 +164,20 @@ a,button,input,select,textarea,label,[role="button"]{touch-action:manipulation}
   .hud-credit-s a{display:inline-flex;align-items:center;min-height:32px}
   .hud-credit-n{font-size:.82rem}
   .hud-credit-s{font-size:.64rem}
+}
+
+/* ============================================================
+   矮屏首屏（横屏手机 / 小屏笔电）
+   竖屏手机高度通常 >700px，但横屏只有 375~430px，
+   首屏的上下留白会挤掉内容并让贴底的 meta 压到按钮上。
+   ============================================================ */
+@media (max-width:900px) and (max-height:700px){
+  .hero-inner{padding-top:clamp(76px,13vh,120px);padding-bottom:calc(clamp(76px,13vh,112px) + var(--sab))}
+  .hero-title{font-size:clamp(2.3rem,8.6vw,3.3rem)}
+  .hero-lede{font-size:clamp(.98rem,2.4vw,1.15rem);margin-top:clamp(12px,2vh,20px)}
+  .hero-actions{margin-top:clamp(16px,2.6vh,26px)}
+  .hero-eyebrow{margin-bottom:clamp(10px,1.8vh,18px)}
+  .scroll-cue{display:none}
 }
 
 /* ---------- 尊重系统减弱动效 ---------- */

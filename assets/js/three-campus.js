@@ -37,11 +37,64 @@
     balanced: { alias: true,  shadow: 1024, treeK: 0.72, dpr: 1.5, rain: 700,  lamps: true,  aniso: 4 },
     low:      { alias: false, shadow: 0,    treeK: 0.42, dpr: 1.0, rain: 0,    lamps: false, aniso: 1 }
   };
+
+  /* 自适应像素比下限：即便掉帧也不低于此值，避免画面糊到不可用 */
+  var DPR_FLOOR = { high: 1.0, balanced: 0.9, low: 0.75 };
+
+  /* ===== 帧率监控：连续掉帧时自动降像素比（最省算力的一档降级） ===== */
+  var adapt = {
+    samples: 0, acc: 0, ratio: 1, baseDpr: 1, floor: 1,
+    cool: 0,               // 冷却帧数，避免抖动式反复降级
+    fps: 0, downgrades: 0
+  };
+  var FPS_FLOOR = 46;      // 低于此帧率视为掉帧
+  var SAMPLE_WIN = 45;     // 采样窗口（帧）
+
+  function adaptReset(cfg) {
+    adapt.samples = 0; adapt.acc = 0; adapt.cool = 90;
+    adapt.baseDpr = Math.min(window.devicePixelRatio || 1, cfg.dpr);
+    adapt.floor = Math.max(DPR_FLOOR[state.quality] || 0.75, 0.6);
+    adapt.ratio = adapt.baseDpr;
+  }
+
+  function adaptStep(dt) {
+    // 冷却期内不采样，让上一档降级的效果先稳定下来
+    if (adapt.cool > 0) { adapt.cool--; return; }
+    if (dt <= 0) return;
+    adapt.acc += dt; adapt.samples++;
+    if (adapt.samples < SAMPLE_WIN) return;
+    var fps = adapt.samples / adapt.acc;
+    adapt.samples = 0; adapt.acc = 0;
+    adapt.fps = Math.round(fps);
+
+    if (fps < FPS_FLOOR && adapt.ratio > adapt.floor + 0.02) {
+      // 按比例下调，单次最多降 15%，防止画面分辨率突变
+      adapt.ratio = Math.max(adapt.floor, adapt.ratio * 0.85);
+      renderer.setPixelRatio(adapt.ratio);
+      adapt.cool = 120;
+      adapt.downgrades++;
+      window.dispatchEvent(new CustomEvent('hms3d:perf', {
+        detail: { fps: adapt.fps, ratio: adapt.ratio, downgrades: adapt.downgrades }
+      }));
+    } else if (fps > FPS_FLOOR + 22 && adapt.ratio < adapt.baseDpr - 0.02) {
+      // 余量充足时缓慢回升，上限为档位对应的 baseDpr
+      adapt.ratio = Math.min(adapt.baseDpr, adapt.ratio * 1.06);
+      renderer.setPixelRatio(adapt.ratio);
+      adapt.cool = 150;
+    }
+  }
   function detectQuality() {
     var cores = navigator.hardwareConcurrency || 4;
+    var mem = navigator.deviceMemory || 4;
     var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    if (cores <= 4 || (mobile && cores <= 6)) return 'low';
-    if (cores <= 8 || mobile) return 'balanced';
+    // 触屏/移动设备默认不进 high：高分阴影 + 2x 像素比在手机上几乎必然掉帧
+    if (mobile) {
+      if (cores <= 4 || mem <= 4) return 'low';
+      if (cores <= 6 || mem <= 6) return 'low';
+      return 'balanced';
+    }
+    if (cores <= 4 || mem <= 4) return 'low';
+    if (cores <= 8) return 'balanced';
     return 'high';
   }
 
@@ -50,6 +103,11 @@
   var groundMat, roadMats = [], waterMat, fieldMat;
   var buildingMeshes = [], hitMeshes = [], poiEls = [], lampLamps = [], treeMeshes = [];
   var data = null, loaded = false, flying = false, frameId = 0;
+  var lastCamPos = new THREE.Vector3(1e9, 1e9, 1e9);
+  var lastCamTarget = new THREE.Vector3();
+  var interacting = false, interactFrames = 0, idleFrames = 0;
+  var starActive = false;   // 星体动画仅在需要时开启
+  var poiSig = '';
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var TF = { ox: 900, oy: 784, s: 0.167 };
 
@@ -1759,6 +1817,7 @@
     if (!layer) return;
     layer.innerHTML = '';
     poiEls = [];
+    poiSig = '';
     (data.buildings || []).forEach(function (b) {
       if (!b.poi) return;
       var o = rectWorld(b.rect);
@@ -1768,30 +1827,48 @@
       e.addEventListener('click', function () { selectBuilding(b.id, true); });
       layer.appendChild(e);
       var top = b.form === 'oldtree' ? (b.size[1] || 18) : (b.size[1] || 3);
-      poiEls.push({ el: e, id: b.id, pos: new THREE.Vector3(o.x, top + 5.5, o.z) });
+      poiEls.push({ el: e, id: b.id, pos: new THREE.Vector3(o.x, top + 5.5, o.z),
+                    x: null, y: null, s: -1, hidden: null, on: null });
     });
   }
   function updatePOIs() {
     if (!poiEls.length) return;
     var w = window.innerWidth, h = window.innerHeight, v = new THREE.Vector3();
-    poiEls.forEach(function (p) {
+    // 相机/视口没变时直接跳过，避免逐帧写 DOM 样式触发布局
+    var sig = camera.position.x.toFixed(2) + ',' + camera.position.y.toFixed(2) + ',' + camera.position.z.toFixed(2) +
+              ',' + camera.quaternion.x.toFixed(4) + ',' + camera.quaternion.y.toFixed(4) + ',' +
+              camera.quaternion.z.toFixed(4) + ',' + camera.quaternion.w.toFixed(4) + ',' + w + 'x' + h;
+    if (sig === poiSig) return;
+    poiSig = sig;
+
+    for (var i = 0; i < poiEls.length; i++) {
+      var p = poiEls[i];
       v.copy(p.pos);
       var dist = v.distanceTo(camera.position);
       v.project(camera);
       var behind = v.z > 1;
       var x = (v.x * 0.5 + 0.5) * w, y = (-v.y * 0.5 + 0.5) * h;
       var off = x < -60 || x > w + 60 || y < -40 || y > h + 40;
-      p.el.classList.toggle('hidden', behind || off || dist > 300);
-      p.el.style.left = x + 'px';
-      p.el.style.top = y + 'px';
+      var hide = behind || off || dist > 300;
+      if (hide !== p.hidden) { p.el.classList.toggle('hidden', hide); p.hidden = hide; }
+      if (hide) continue;
+      if (x !== p.x || y !== p.y) {
+        // 写入相对视口中心的偏移量；自身居中由 CSS 的 translate(-50%,-50%) 负责
+        p.el.style.setProperty('--poi-x', (x - w / 2).toFixed(1) + 'px');
+        p.el.style.setProperty('--poi-y', (y - h / 2).toFixed(1) + 'px');
+        p.x = x; p.y = y;
+      }
       var s = Math.max(0.72, Math.min(1, 190 / Math.max(55, dist)));
-      p.el.style.transform = 'translate(-50%,-50%) scale(' + s.toFixed(2) + ')';
-      p.el.classList.toggle('is-on', state.selected === p.id);
-    });
+      if (Math.abs(s - p.s) > 0.01) { p.el.style.setProperty('--poi-s', s.toFixed(2)); p.s = s; }
+      var on = state.selected === p.id;
+      if (on !== p.on) { p.el.classList.toggle('is-on', on); p.on = on; }
+    }
   }
 
   /* ================= 小地图 ================= */
   var mmSvg = null, mmCam = null, mmShapes = [];
+  var mmLast = 0, mmPx = 1e9, mmPz = 1e9, mmPr = 1e9, mmSel = null;
+
   function buildMinimap() {
     var mm = $('#minimap');
     if (!mm) return;
@@ -1844,11 +1921,23 @@
   }
   function updateMinimap() {
     if (!mmCam) return;
-    mmCam.setAttribute('transform', 'translate(' + camera.position.x.toFixed(1) + ',' + camera.position.z.toFixed(1) + ') rotate(' +
-      (Math.atan2(controls.target.x - camera.position.x, controls.target.z - camera.position.z) * 180 / Math.PI).toFixed(1) + ')');
-    mmShapes.forEach(function (s) {
-      s.setAttribute('fill', s.getAttribute('data-id') === state.selected ? '#e0913f' : 'rgba(210,200,180,.55)');
-    });
+    // 小地图每帧重写 SVG 属性代价高；按 ~15fps 节流，且相机无位移时直接跳过
+    var now = performance.now();
+    if (now - mmLast < 66) return;
+    var cx = camera.position.x, cz = camera.position.z;
+    var rot = Math.atan2(controls.target.x - cx, controls.target.z - cz) * 180 / Math.PI;
+    if (Math.abs(cx - mmPx) < 0.4 && Math.abs(cz - mmPz) < 0.4 && Math.abs(rot - mmPr) < 0.6) return;
+    mmLast = now; mmPx = cx; mmPz = cz; mmPr = rot;
+
+    mmCam.setAttribute('transform', 'translate(' + cx.toFixed(1) + ',' + cz.toFixed(1) + ') rotate(' + rot.toFixed(1) + ')');
+    var sel = state.selected;
+    if (sel !== mmSel) {
+      mmSel = sel;
+      for (var i = 0; i < mmShapes.length; i++) {
+        var s = mmShapes[i];
+        s.setAttribute('fill', s.getAttribute('data-id') === sel ? '#e0913f' : 'rgba(210,200,180,.55)');
+      }
+    }
   }
 
   /* ================= 相机 ================= */
@@ -1962,6 +2051,7 @@
   function showStar() {
     var t = $('#starToast');
     if (!t) return;
+    starActive = true;                 // 点亮时才启用星体动画与持续重绘
     $('#starText').textContent = '每一个真正重要的地方，都曾经有人抬头看过星空。';
     t.classList.add('is-on');
     $('#starClose').focus();
@@ -2035,9 +2125,14 @@
       if (e.pointerType === 'touch' || flying) return;
       canvas.style.cursor = pick(e) ? 'pointer' : 'grab';
     });
+    // 交互期间与交互后一段时间保持全速渲染，手感不打折
+    function markInteract() { interacting = true; interactFrames = 36; }
     var dp = null, dt = 0;
-    canvas.addEventListener('pointerdown', function (e) { dp = { x: e.clientX, y: e.clientY }; dt = Date.now(); });
+    canvas.addEventListener('pointerdown', function (e) { markInteract(); dp = { x: e.clientX, y: e.clientY }; dt = Date.now(); });
+    canvas.addEventListener('pointermove', function (e) { if (e.buttons) markInteract(); });
+    canvas.addEventListener('wheel', markInteract, { passive: true });
     canvas.addEventListener('pointerup', function (e) {
+      markInteract();
       if (!dp) return;
       var dx = e.clientX - dp.x, dy = e.clientY - dp.y;
       var moved = Math.sqrt(dx * dx + dy * dy), el2 = Date.now() - dt;
@@ -2145,16 +2240,25 @@
     if (q === state.quality) return;
     state.quality = q;
     var cfg = QCFG[q];
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cfg.dpr));
     renderer.shadowMap.enabled = cfg.shadow > 0;
     if (sunLight) {
       sunLight.castShadow = cfg.shadow > 0;
-      if (cfg.shadow > 0) { sunLight.shadow.mapSize.width = cfg.shadow; sunLight.shadow.mapSize.height = cfg.shadow; }
+      if (cfg.shadow > 0) {
+        sunLight.shadow.mapSize.width = cfg.shadow;
+        sunLight.shadow.mapSize.height = cfg.shadow;
+        // 尺寸变更必须释放旧的 shadow map，否则显存里会留一份旧分辨率贴图
+        if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
+      }
     }
     treeMeshes.forEach(function (im) { im.count = Math.max(1, Math.round(im.userData.full * cfg.treeK)); });
-    if (rainSys) { scene.remove(rainSys); rainSys = null; }
+    // 重新按新档位初始化像素比与自适应下限
+    adaptReset(cfg);
+    renderer.setPixelRatio(adapt.ratio);
+    if (rainSys) { scene.remove(rainSys); rainSys.geometry.dispose(); rainSys.material.dispose(); rainSys = null; }
     createRain();
     applyLighting();
+    var r = $('#resetBtn');
+    if (r) r.blur();
   }
 
   function bindUI() {
@@ -2180,7 +2284,8 @@
     var te = $('#tourExit'); if (te) te.addEventListener('click', stopTour);
 
     $('#infoClose').addEventListener('click', clearSelection);
-    $('#starClose').addEventListener('click', function () { $('#starToast').classList.remove('is-on'); });
+    function closeStar() { $('#starToast').classList.remove('is-on'); starActive = false; }
+    $('#starClose').addEventListener('click', closeStar);
     var rb = $('#resetBtn');
     if (rb) rb.addEventListener('click', function () {
       clearSelection(); stopTour();
@@ -2189,7 +2294,7 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      if ($('#starToast').classList.contains('is-on')) { $('#starToast').classList.remove('is-on'); return; }
+      if ($('#starToast').classList.contains('is-on')) { closeStar(); return; }
       if ($('#info').classList.contains('is-on')) { clearSelection(); return; }
       if (envPanel.classList.contains('is-on')) { setEnv(false); return; }
       if (state.touring) stopTour();
@@ -2199,13 +2304,39 @@
   /* ================= 渲染循环 ================= */
   function animate() {
     frameId = requestAnimationFrame(animate);
+
+    // 后台标签页：完全停止渲染与逻辑，避免白烧 GPU/电池
+    if (document.hidden) { clock.getDelta(); return; }
+
     var dt = clock.getDelta(), t = clock.elapsedTime;
+
+    // 帧率自适应：掉帧时降像素比，这是性价比最高的一档降级
+    adaptStep(dt);
+
+    if (interacting) { interactFrames--; if (interactFrames <= 0) interacting = false; }
+
+    // 相机静止时跳过不必要的重绘（OrbitControls 阻尼需要收敛时间）
     controls.update();
-    if (!reduced && !flying && state.quality !== 'low') {
+    var camMoved = camera.position.distanceToSquared(lastCamPos) > 1e-6 ||
+                   controls.target.distanceToSquared(lastCamTarget) > 1e-6;
+    if (camMoved) {
+      lastCamPos.copy(camera.position);
+      lastCamTarget.copy(controls.target);
+    }
+
+    // 空闲且无可动画元素时按 30fps 节流；交互期间始终全速，手感不受影响
+    var mustRender = camMoved || interacting || (rainSys && rainSys.visible) || flying || state.touring || starActive;
+    idleFrames++;
+    if (!mustRender && (idleFrames & 1)) return;
+
+    // 轻微呼吸感：仅在「低档位之外 + 用户未交互」时叠加，且不再反向触发重绘判定
+    if (!reduced && !flying && !interacting && state.quality === 'high' && !state.touring) {
       camera.position.x += Math.sin(t * 0.16) * 0.010;
       camera.position.y += Math.sin(t * 0.12 + 1) * 0.007;
+      lastCamPos.copy(camera.position);
     }
-    if (starMesh) {
+    // 星体只在被点亮（彩蛋/夜晚）时旋转，平时不做无谓动画
+    if (starMesh && starActive) {
       starMesh.rotation.y += dt * 0.5;
       starMesh.position.y = 2.2 + Math.sin(t * 1.2) * 0.3;
     }
@@ -2266,7 +2397,8 @@
 
     var cfg = QCFG[state.quality];
     renderer = new THREE.WebGLRenderer({ antialias: cfg.alias, powerPreference: 'high-performance', alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cfg.dpr));
+    adaptReset(cfg);
+    renderer.setPixelRatio(adapt.ratio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.LinearToneMapping;
@@ -2380,6 +2512,8 @@
     get data() { return data; },
     get count() { return buildingMeshes.length; },
     get quality() { return state.quality; },
+    /* 性能面板数据：可在控制台查看实时帧率与当前像素比 */
+    get perf() { return { fps: adapt.fps, pixelRatio: +adapt.ratio.toFixed(2), cap: adapt.baseDpr, downgrades: adapt.downgrades }; },
     get camera() { return camera; },
     get scene() { return scene; },
     get loadingDone() { return loaded; },

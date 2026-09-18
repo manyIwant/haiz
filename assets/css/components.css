@@ -109,6 +109,14 @@
   transition:opacity .7s var(--e-out),transform .7s var(--e-out),border-color .35s,padding-left .45s var(--e-out);
 }
 .menu.is-open .menu-item{opacity:1;transform:none}
+/* 菜单错位入场：由结构决定，不再在每个 <li> 上手写 transition-delay */
+.menu.is-open .menu-item:nth-child(1){transition-delay:.05s}
+.menu.is-open .menu-item:nth-child(2){transition-delay:.10s}
+.menu.is-open .menu-item:nth-child(3){transition-delay:.15s}
+.menu.is-open .menu-item:nth-child(4){transition-delay:.20s}
+.menu.is-open .menu-item:nth-child(5){transition-delay:.25s}
+.menu.is-open .menu-item:nth-child(6){transition-delay:.30s}
+.menu.is-open .menu-item:nth-child(7){transition-delay:.35s}
 .menu-item:hover{border-bottom-color:var(--coral);padding-left:14px}
 .menu-item .idx{
   font-family:var(--f-en);font-size:.72rem;letter-spacing:.1em;color:var(--coral);
@@ -376,16 +384,30 @@
 
 /* ---------- 饼屑 / 页面头 ---------- */
 .page-head{
-  position:relative;padding-top:clamp(110px,16vh,180px);padding-bottom:clamp(40px,6vh,72px);
+  position:relative;padding-top:clamp(112px,15vh,172px);padding-bottom:clamp(44px,6.4vh,76px);
   background:var(--deep);color:var(--on-dark);overflow:hidden;
 }
 .page-head-glow{
   position:absolute;inset:auto -10% -60% 40%;aspect-ratio:1.4;pointer-events:none;
-  background:radial-gradient(circle,rgba(47,110,142,.4) 0%,transparent 65%);
+  background:radial-gradient(circle,rgba(47,110,142,.34) 0%,transparent 65%);
 }
 .crumb{display:flex;gap:10px;align-items:center;font-size:.8rem;color:var(--on-dark-45);margin-bottom:18px}
+.crumb a{transition:color .25s var(--e-out)}
 .crumb a:hover{color:#fff}
 .crumb span[aria-hidden]{opacity:.5}
+
+/* 内页主标题：统一刻度，替代各页写死的 clamp(2.4rem,6vw,5.4rem) */
+.page-head .t-display{
+  font-size:clamp(2.15rem,5.2vw,4.6rem);
+  line-height:1.06;
+  letter-spacing:-.015em;
+  text-wrap:balance;
+}
+.page-head .t-lead{max-width:52ch;color:var(--on-dark-70);text-wrap:pretty}
+
+/* 段落/区块主标题（原为写死的 clamp(2rem,4.4vw,3.6rem)） */
+.block-title{font-size:clamp(1.85rem,4vw,3.2rem);line-height:1.1;letter-spacing:-.015em;text-wrap:balance}
+.block-title-sm{font-size:clamp(1.5rem,3vw,2.3rem);line-height:1.16;letter-spacing:-.01em}
 
 /* ---------- 响应式 ---------- */
 @media (max-width:1024px){

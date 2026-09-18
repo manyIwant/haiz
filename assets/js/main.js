@@ -68,21 +68,52 @@
     $$('.reveal, .reveal-scale').forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* ---------- 视差（轻度） ---------- */
+  /* 显现节奏：只对「同一父级下的兄弟组」自动错位，
+     不再由作者在各段落手写 reveal-d1/d2/d3（那会让不同段落的节奏互相干扰）。 */
+  $$('.reveal-seq').forEach(function (box) {
+    var kids = Array.prototype.filter.call(box.children, function (c) {
+      return c.classList.contains('reveal') || c.classList.contains('reveal-scale');
+    });
+    kids.forEach(function (k, i) {
+      if (i === 0) return;                       // 第一个不加延迟
+      if (/\breveal-d[1-4]\b/.test(k.className)) return;  // 作者显式指定则不覆盖
+      k.style.transitionDelay = (i * 0.06).toFixed(2) + 's';
+    });
+  });
+
+  /* ---------- 视差（轻度） ----------
+     使用缓存 offsetTop 替代每次读取 getBoundingClientRect，避免 layout thrash；
+     并用 transform 进度而非绝对偏移，滚动时不再抖动。 */
   var parallaxEls = $$('[data-parallax]');
-  if (parallaxEls.length && !reduced) {
+  if (parallaxEls.length && !reduced && perf === 'full') {
     var ticking = false;
+    var metrics = [];
+    function measureParallax() {
+      metrics = parallaxEls.map(function (el) {
+        var r = el.getBoundingClientRect();
+        return {
+          el: el,
+          top: r.top + window.pageYOffset,
+          h: r.height,
+          rate: (parseFloat(el.getAttribute('data-parallax')) || 0.2) * 0.3
+        };
+      });
+    }
+    measureParallax();
+    window.addEventListener('resize', measureParallax, { passive: true });
+
     window.addEventListener('scroll', function () {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(function () {
-        var y = window.pageYOffset;
-        parallaxEls.forEach(function (el) {
-          var r = el.getBoundingClientRect();
-          if (r.bottom < -200 || r.top > window.innerHeight + 200) return;
-          var rate = parseFloat(el.getAttribute('data-parallax')) || 0.2;
-          el.style.transform = 'translate3d(0,' + (y - (el.offsetTop || 0)) * rate * 0.35 + 'px,0)';
-        });
+        var y = window.pageYOffset, vh = window.innerHeight;
+        for (var i = 0; i < metrics.length; i++) {
+          var m = metrics[i];
+          // 视口外直接跳过，不做任何样式写入
+          if (m.top + m.h < y - 200 || m.top > y + vh + 200) continue;
+          var progress = (y + vh - m.top) * m.rate;
+          m.el.style.transform = 'translate3d(0,' + progress.toFixed(2) + 'px,0)';
+        }
         ticking = false;
       });
     }, { passive: true });
@@ -405,6 +436,11 @@
       });
     }, { passive: true });
   }
+
+  /* ---------- 页面可见性：后台标签页暂停装饰性动画 ---------- */
+  document.addEventListener('visibilitychange', function () {
+    document.documentElement.classList.toggle('is-hidden', document.hidden);
+  });
 
   /* ---------- 返回顶部 ---------- */
   var toTop = $('#toTop');

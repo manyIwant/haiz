@@ -27,15 +27,17 @@
   padding-bottom:clamp(64px,10vh,120px);padding-top:clamp(120px,20vh,220px);
 }
 .hero-eyebrow{
-  display:inline-flex;align-items:center;gap:12px;margin-bottom:clamp(18px,3vh,32px);
-  font-family:var(--f-en);font-size:.7rem;letter-spacing:.26em;text-transform:uppercase;
-  color:rgba(255,255,255,.72);
+  display:inline-flex;align-items:center;gap:12px;margin-bottom:clamp(16px,2.6vh,28px);
+  font-family:var(--f-en);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;
+  font-variant-numeric:tabular-nums;
+  color:rgba(255,255,255,.68);
 }
 .hero-eyebrow::before{content:"";width:clamp(24px,4vw,56px);height:1px;background:rgba(255,255,255,.42)}
 .hero-title{
-  font-weight:700;letter-spacing:.04em;line-height:1.06;
-  font-size:clamp(3rem,11vw,9.5rem);
-  text-shadow:0 4px 40px rgba(6,16,26,.4);
+  font-weight:700;letter-spacing:.02em;line-height:1.04;
+  font-size:clamp(3rem,10vw,8.4rem);
+  text-wrap:balance;
+  text-shadow:0 2px 24px rgba(6,16,26,.32);
 }
 .hero-title .ch{
   display:inline-block;opacity:0;transform:translateY(46px);
@@ -49,10 +51,13 @@
   margin-top:clamp(10px,1.6vh,18px);
 }
 .hero-lede{
-  max-width:34ch;margin-top:clamp(18px,3vh,34px);
-  font-size:clamp(1.02rem,1.9vw,1.5rem);line-height:1.72;
-  color:rgba(255,255,255,.9);font-weight:300;
-  text-shadow:0 2px 20px rgba(6,16,26,.4);
+  max-width:30ch;margin-top:clamp(20px,3.2vh,36px);
+  font-family:var(--f-cn);font-weight:300;
+  font-size:clamp(1.05rem,1.7vw,1.42rem);line-height:1.76;
+  letter-spacing:.01em;
+  color:rgba(255,255,255,.88);
+  text-shadow:0 1px 18px rgba(6,16,26,.42);
+  text-wrap:pretty;
 }
 .hero-actions{
   display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(26px,4.4vh,46px);

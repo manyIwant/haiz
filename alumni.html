@@ -62,13 +62,13 @@
   <div class="menu-bg" style="background-image:url('assets/images/web/lanshu-1600.jpg')"></div>
   <div class="wrap menu-inner">
     <ul class="menu-list">
-      <li class="menu-item" style="transition-delay:.05s"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
-      <li class="menu-item" style="transition-delay:.10s"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
-      <li class="menu-item" style="transition-delay:.15s"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
-      <li class="menu-item" style="transition-delay:.20s"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
-      <li class="menu-item" style="transition-delay:.25s"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
-      <li class="menu-item" style="transition-delay:.30s"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
-      <li class="menu-item" style="transition-delay:.35s"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
+      <li class="menu-item"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
+      <li class="menu-item"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
+      <li class="menu-item"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
+      <li class="menu-item"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
+      <li class="menu-item"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
+      <li class="menu-item"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
+      <li class="menu-item"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
     </ul>
     <div class="menu-foot">
       <span class="t-mono">Fucheng Campus · Haikou · Hainan</span>
@@ -83,8 +83,8 @@
   <div class="wrap z1">
     <nav class="crumb" aria-label="面包屑"><a href="index.html">首页</a><span aria-hidden="true">/</span><span>校友</span></nav>
     <span class="eyebrow eyebrow-dark">Alumni · FROM HERE TO THE WORLD</span>
-    <h1 class="t-display" style="font-size:clamp(2.2rem,5.6vw,5rem)">从这里，到世界</h1>
-    <p class="t-lead mt-m" style="max-width:52ch;color:var(--on-dark-70)">
+    <h1 class="t-display">从这里，到世界</h1>
+    <p class="t-lead mt-m">
       一座岛上的校园，与散落在世界各地的人。
     </p>
     <p class="t-small mt-s" id="alumniQuote" style="max-width:56ch;color:var(--on-dark-45)"></p>
@@ -146,8 +146,8 @@
   <div class="wrap">
     <div class="footer-top">
       <div class="footer-brand">
-        <h2 class="t-display" style="font-size:clamp(2rem,4.4vw,3.6rem)">海南中学</h2>
-        <p class="hero-en" style="font-size:.8rem;color:var(--on-dark-45)">HAINAN MIDDLE SCHOOL</p>
+        <h2 class="t-display block-title">海南中学</h2>
+        <p class="hero-en hero-en-sm">HAINAN MIDDLE SCHOOL</p>
       </div>
       <div class="footer-cols">
         <div class="footer-col"><h4>Explore</h4><ul>
@@ -211,7 +211,7 @@
     // 真实校友卡片（仅官网原文身份，不代拟引语）
     cardsG.innerHTML = people.map(function(p){
       return '<article class="acard" data-field="'+p.field+'">'+
-        '<div class="row gap-s" style="flex-wrap:wrap;margin-bottom:12px">'+
+        '<div class="row gap-s row-wrap mb-s">'+
         '<span class="tag">'+p.field+'</span></div>'+
         '<strong style="font-size:1.05rem">'+p.name+'</strong>'+
         '<p class="t-small mt-s" style="line-height:1.7">'+p.identity+'</p>'+

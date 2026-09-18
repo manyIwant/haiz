@@ -194,16 +194,21 @@ body.c3d{margin:0;overflow:hidden;background:#08161f;color:#f4f8fa}
 .minimap svg{width:100%;height:100%;display:block}
 .mm-cam{transition:transform .12s linear}
 
-/* ---------- POI 标签 ---------- */
+/* ---------- POI 标签 ----------
+   定位策略：left/top 固定在中点，位置由 transform:translate3d 驱动（合成层，
+   不触发重排）。注意 JS 端写入的位移已是「相对视口中心的偏移」，
+   因此这里用 translate(-50%,-50%) 做自身居中、再叠 --poi-s 缩放。 */
 .poi-layer{position:fixed;inset:0;z-index:110;pointer-events:none;overflow:hidden}
 .poi{
-  position:absolute;transform:translate(-50%,-50%);
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%) translate3d(var(--poi-x,0),var(--poi-y,0),0) scale(var(--poi-s,1));
   display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:100px;
   background:rgba(8,22,34,.6);border:1px solid rgba(255,255,255,.18);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   font-family:var(--f-en);font-size:.58rem;letter-spacing:.14em;color:#fff;
   white-space:nowrap;pointer-events:auto;cursor:pointer;
-  transition:background .3s,border-color .3s,opacity .3s,transform .3s var(--e-out);
+  will-change:transform;
+  transition:background .3s,border-color .3s,opacity .3s;
 }
 .poi:hover,.poi.is-on{background:rgba(232,106,58,.85);border-color:rgba(255,255,255,.5)}
 .poi .dot{width:5px;height:5px;border-radius:50%;background:var(--coral);flex-shrink:0}
