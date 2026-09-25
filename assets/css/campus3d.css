@@ -39,6 +39,12 @@ body.c3d{margin:0;overflow:hidden;background:#08161f;color:#f4f8fa}
   font-family:var(--f-en);font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
   color:rgba(255,255,255,.32);
 }
+/* 免责说明：中文长句，需覆盖上面的 0.6rem / 大写字距设定，保证可读性 */
+.loader-note{
+  font-family:var(--f-cn);font-size:.68rem;letter-spacing:.1em;text-transform:none;
+  max-width:44ch;text-align:center;line-height:1.9;
+  color:rgba(255,255,255,.4);
+}
 .loader-enter{
   margin-top:6px;padding:15px 34px;border-radius:100px;
   border:1px solid rgba(255,255,255,.34);color:#fff;

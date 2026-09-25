@@ -33,9 +33,9 @@
 
   var state = { time: 3, night: false, weather: 'clear', quality: 'high', selected: null, touring: false, tourPaused: false, tourIdx: 0 };
   var QCFG = {
-    high:     { alias: true,  shadow: 2048, treeK: 1.00, dpr: 2.0, rain: 1400, lamps: true,  aniso: 8 },
-    balanced: { alias: true,  shadow: 1024, treeK: 0.72, dpr: 1.5, rain: 700,  lamps: true,  aniso: 4 },
-    low:      { alias: false, shadow: 0,    treeK: 0.42, dpr: 1.0, rain: 0,    lamps: false, aniso: 1 }
+    high:     { alias: true,  shadow: 2048, treeK: 1.00, dpr: 2.0, rain: 1400, lamps: true,  aniso: 8, winK: 1.00 },
+    balanced: { alias: true,  shadow: 1024, treeK: 0.72, dpr: 1.5, rain: 700,  lamps: true,  aniso: 4, winK: 0.85 },
+    low:      { alias: false, shadow: 0,    treeK: 0.42, dpr: 1.0, rain: 0,    lamps: false, aniso: 1, winK: 0.65 }
   };
 
   /* 自适应像素比下限：即便掉帧也不低于此值，避免画面糊到不可用 */
@@ -102,6 +102,8 @@
   var sunLight, hemiLight, ambLight, skyMesh, rainSys, starMesh;
   var groundMat, roadMats = [], waterMat, fieldMat;
   var buildingMeshes = [], hitMeshes = [], poiEls = [], lampLamps = [], treeMeshes = [];
+  // 【v13 新增】占地表：建筑/水体的世界坐标包围盒，供路灯等小品避让使用
+  var OCCUPIED = [];
   var data = null, loaded = false, flying = false, frameId = 0;
   var lastCamPos = new THREE.Vector3(1e9, 1e9, 1e9);
   var lastCamTarget = new THREE.Vector3();
@@ -118,6 +120,25 @@
     var x0 = wx(Math.min(r[0], r[2])), x1 = wx(Math.max(r[0], r[2]));
     var z0 = wz(Math.max(r[1], r[3])), z1 = wz(Math.min(r[1], r[3]));
     return { x: (x0 + x1) / 2, z: (z0 + z1) / 2, w: x1 - x0, d: z1 - z0 };
+  }
+
+  /* 【v13 新增】占地登记与避让查询
+     ------------------------------------------------------------------
+     背景：校道数据里的 rect 是「大块铺装区域」而非细长车道，
+     按道路中线成列布灯时，灯杆会成排穿过教学楼、宿舍与水面
+     （实测 99 个灯位中有 350 处落在建筑包围盒内、4 处落在水里）。
+     为此建立一张占地表，任何贴地小品布点前先做一次包含判定。 */
+  function markOccupied(x, z, w, d, tag) {
+    OCCUPIED.push({ x: x, z: z, hw: w / 2, hd: d / 2, tag: tag || '' });
+  }
+  // 矩形占地：外扩 m 米后，点是否落入
+  function isOccupied(x, z, m) {
+    var mm = m || 0;
+    for (var i = 0; i < OCCUPIED.length; i++) {
+      var o = OCCUPIED[i];
+      if (Math.abs(x - o.x) <= o.hw + mm && Math.abs(z - o.z) <= o.hd + mm) return true;
+    }
+    return false;
   }
 
   /* ================= 材质库（低饱和 · 真实建筑） ================= */
@@ -225,6 +246,9 @@
   // 四坡屋顶（庑殿/歇山）：前后两片梯形坡面 + 左右两片三角形戗脊坡面 + 正脊
   // 【v10 关键修复】屋檐/戗脊尺寸只由「进深 d + 挑檐 overhang」决定，与楼宽 w 无关。
   //   修复前左右端片以 ow/2 作坡长，楼越长外伸越夸张（一号 116m 竟外伸 58m，三号 36m 仅 18m）。
+  // 【v13 关键修复】坡面绕 X 轴旋转方向反了：屋脊端落在 y=0、檐口端落在 y=h，
+  //   整个屋顶「倒扣」且与外墙穿插。修正为 rotation.x = +s * pitch，
+  //   使屋脊端(y=h, z=0) 与檐口端(y=0, z=s*run) 各自归位。
   function hipRoof(w, d, h, overhang, mat, ridgeMat) {
     var g = new THREE.Group();
     var o = overhang;
@@ -233,10 +257,12 @@
     var run = (ow - ridgeLen) / 2;           // 坡面水平投影，恒满足 ridgeLen + 2*run = ow
     var slopeLen = Math.sqrt(run * run + h * h);
     var pitch = Math.atan2(h, run);
-    // 前后两片梯形坡面（box 近似，旋转）
+    // 前后两片梯形坡面（box 近似，旋转）：中心置于坡面中点 (0, h/2, s*run/2)
+    // 旋转符号必须为 +s：使 z=-slopeLen/2 端落在屋脊 (y=h, z=0)、
+    // z=+slopeLen/2 端落在檐口 (y=0, z=s*run)。
     [-1, 1].forEach(function (s) {
       var p = box(ridgeLen, 0.34, slopeLen, mat, 0, h / 2, s * run / 2, g);
-      p.rotation.x = -s * pitch;
+      p.rotation.x = s * pitch;
     });
     // 左右两片三角形戗脊坡面（真三角形，尺寸与楼宽无关）
     [-1, 1].forEach(function (s) {
@@ -248,13 +274,16 @@
     return g;
   }
   // 简单双坡屋顶
+  // 【v13 同源修复】与 hipRoof 相同的旋转符号错误：屋脊/檐口高度颠倒。
+  //   坡面中心 (0, h/2, s*od/4)，旋转 +s*pitch 后
+  //   z=-sl/2 端归到屋脊 (y=h,z=0)，z=+sl/2 端归到檐口 (y=0,z=s*od/2)。
   function gableRoof(w, d, h, overhang, mat, ridgeMat) {
     var g = new THREE.Group();
     var ow = w + overhang * 2, od = d + overhang * 2;
     var sl = Math.sqrt(Math.pow(od / 2, 2) + h * h);
     [-1, 1].forEach(function (s) {
       var p = box(ow, 0.3, sl, mat, 0, h / 2, s * od / 4, g);
-      p.rotation.x = -s * Math.atan2(h, od / 2);
+      p.rotation.x = s * Math.atan2(h, od / 2);
     });
     if (ridgeMat) box(ow + 0.5, 0.4, 0.6, ridgeMat, 0, h + 0.05, 0, g);
     return g;
@@ -283,13 +312,28 @@
     winQueue.hole.push({ x: x, y: y, z: z, w: w, h: h, a: axis, d: depth || 0.18 });
     winQueue.glass.push({ x: x, y: y, z: z, w: w, h: h, a: axis, d: (depth || 0.18) * 0.55, mat: glassMat || null });
   }
-  function flushWindows(root, cap) {
+  function flushWindows(root, cfg) {
     if (!winQueue.hole.length) return;
-    var n = Math.min(winQueue.hole.length, cap || 4000);
+    // 【v13 修复】此前以 cap 直接截断队列前缀（high=4000 / 其余=2600），
+    //   而 queue 是按建筑顺序写入的 —— 一旦超出上限，被砍掉的是「排在后面的整栋楼」，
+    //   表现为部分建筑完全没有窗户，比均匀降密难看得多。
+    //   改为按 winK 做等距抽样：数量降下来，但全校每栋楼都保留窗户。
+    var all = winQueue.hole.length;
+    var winK = (cfg && cfg.winK != null) ? cfg.winK : 1;
+    var step = winK >= 1 ? 1 : 1 / Math.max(winK, 0.05);
+    var idx = [];
+    if (step <= 1) {
+      for (var q = 0; q < all; q++) idx.push(q);
+    } else {
+      // step 为浮点时 q2 也是浮点，必须取整后再作数组下标，
+      // 否则 winQueue.hole[1.18] 取到 undefined 直接崩溃。
+      for (var q2 = 0; q2 < all; q2 += step) idx.push(Math.floor(q2));
+    }
+    var n = idx.length;
     var gHole = new THREE.BoxGeometry(1, 1, 1);
     var imHole = new THREE.InstancedMesh(gHole, MAT.glassDark, n);
     for (var i = 0; i < n; i++) {
-      var a = winQueue.hole[i];
+      var a = winQueue.hole[idx[i]];
       _dummy.position.set(a.x, a.y, a.z);
       _dummy.rotation.set(0, a.a === 'z' ? 0 : Math.PI / 2, 0);
       _dummy.scale.set(a.a === 'z' ? a.w : a.d, a.h, a.a === 'z' ? a.d : a.w);
@@ -299,7 +343,8 @@
     /* 【实拍纠正】玻璃按材质分组：教学楼使用蓝绿玻璃，其余建筑沿用默认玻璃 */
     var grpList = [], grpIdx = {};
     for (var j = 0; j < n; j++) {
-      var b = winQueue.glass[j];
+      var b = winQueue.glass[idx[j]];
+      if (!b) continue;
       var mkey = b.mat ? b.mat.uuid : '_def';
       if (grpIdx[mkey] === undefined) {
         grpIdx[mkey] = grpList.length;
@@ -759,12 +804,12 @@
     plane(w, d, MAT.grass, 0, 0.06, 0, g);
     // 十字/环形铺装小径
     var pw = Math.min(w, d) * 0.16;
-    plane(w * 0.86, pw, MAT.paving, 0, 0.10, 0, g);
-    plane(pw, d * 0.86, MAT.paving, 0, 0.10, 0, g);
-    // 中央小广场
+    plane(w * 0.86, pw, MAT.paving, 0, LAY.deck, 0, g);
+    plane(pw, d * 0.86, MAT.paving, 0, LAY.deck, 0, g);
+    // 中央小广场（比园路再抬一档，避免与交叉铺装共面闪烁）
     var cr = Math.min(w, d) * 0.2;
     var circle = new THREE.Mesh(new THREE.CircleGeometry(cr, 32), MAT.paving);
-    circle.rotation.x = -Math.PI / 2; circle.position.y = 0.12; circle.receiveShadow = true; g.add(circle);
+    circle.rotation.x = -Math.PI / 2; circle.position.y = LAY.deck + 0.012; circle.receiveShadow = true; g.add(circle);
     // 景石
     var rnd = mulberry(b.id);
     for (var i = 0; i < 5; i++) {
@@ -800,29 +845,30 @@
   /* --- 砚池：水面 + 石砌池岸 + 睡莲 --- */
   FORMS.pond = function (g, b) {
     var w = b.size[0], d = b.size[2];
-    // 池底
-    plane(w, d, MAT.earth, 0, -0.45, 0, g);
-    // 池岸（石砌框）
-    var t = 0.9;
-    box(w + t * 2, 0.42, t, MAT.poolEdge, 0, 0.21, d / 2 + t / 2, g);
-    box(w + t * 2, 0.42, t, MAT.poolEdge, 0, 0.21, -d / 2 - t / 2, g);
-    box(t, 0.42, d, MAT.poolEdge, w / 2 + t / 2, 0.21, 0, g);
-    box(t, 0.42, d, MAT.poolEdge, -w / 2 - t / 2, 0.21, 0, g);
-    // 水面
-    var water = plane(w, d, waterMat, 0, 0.05, 0, g);
+    // 池底（沉到草坪层之下）
+    plane(w, d, MAT.earth, 0, LAY.lawn - 0.03, 0, g);
+    // 池岸（石砌框）：上沿略高于水面，形成真实的高差
+    var t = 0.9, edgeH = 0.5;
+    box(w + t * 2, edgeH, t, MAT.poolEdge, 0, LAY.water - edgeH / 2 + 0.10, d / 2 + t / 2, g);
+    box(w + t * 2, edgeH, t, MAT.poolEdge, 0, LAY.water - edgeH / 2 + 0.10, -d / 2 - t / 2, g);
+    box(t, edgeH, d, MAT.poolEdge, w / 2 + t / 2, LAY.water - edgeH / 2 + 0.10, 0, g);
+    box(t, edgeH, d, MAT.poolEdge, -w / 2 - t / 2, LAY.water - edgeH / 2 + 0.10, 0, g);
+    // 水面（惰性取得材质，避免依赖 buildGround 的执行顺序）
+    var water = plane(w, d, ensureWaterMat(), 0, LAY.water, 0, g);
     water.castShadow = false;
+    water.receiveShadow = false;
     // 睡莲
     var rnd = mulberry(b.id);
     for (var i = 0; i < 9; i++) {
       var px = (rnd() - 0.5) * w * 0.7, pz = (rnd() - 0.5) * d * 0.7;
       var pad = new THREE.Mesh(new THREE.CircleGeometry(0.55 + rnd() * 0.5, 10), MAT.leafB);
-      pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.08, pz); g.add(pad);
+      pad.rotation.x = -Math.PI / 2; pad.position.set(px, LAY.water + 0.012, pz); g.add(pad);
     }
-    // 岸边石
+    // 岸边石（放在池岸顶面，不再悬空）
     for (var j = 0; j < 6; j++) {
       var a = rnd() * Math.PI * 2;
       var rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.5, 0), MAT.stone);
-      rock.position.set(Math.cos(a) * w * 0.5, 0.4, Math.sin(a) * d * 0.6);
+      rock.position.set(Math.cos(a) * w * 0.5, LAY.deck + 0.35, Math.sin(a) * d * 0.6);
       rock.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
       rock.castShadow = true; g.add(rock);
     }
@@ -831,13 +877,12 @@
   /* --- 植物园：草地 + 密集热带植被（由全局植被系统叠加，此处只做地坪） --- */
   FORMS.botanic = function (g, b) {
     var w = b.size[0], d = b.size[2];
-    plane(w, d, MAT.grassDark, 0, 0.06, 0, g);
+    plane(w, d, MAT.grassDark, 0, LAY.lawnPatch, 0, g);
     // 园路环
     var ring = new THREE.Mesh(new THREE.RingGeometry(Math.min(w, d) * 0.22, Math.min(w, d) * 0.34, 40), MAT.earth);
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.1; g.add(ring);
-    plane(pw2(w), 1.6, MAT.earth, 0, 0.1, 0, g);
-    plane(1.6, d, MAT.earth, 0, 0.1, 0, g);
-    function pw2(v) { return v * 0.95; }
+    ring.rotation.x = -Math.PI / 2; ring.position.y = LAY.deck; g.add(ring);
+    plane(w * 0.95, 1.6, MAT.earth, 0, LAY.deck, 0, g);
+    plane(1.6, d, MAT.earth, 0, LAY.deck, 0, g);
   };
 
   /* --- 田径场轮廓工具：两条直道 + 两个半圆（标准 stadium / capsule 形） --- */
@@ -921,7 +966,7 @@
     // ① 阶梯座面：第 t 排 = 立体环带 [R+t·stepD, R+(t+1)·stepD]，从地面升到 (t+1)·tierH
     for (var t = 0; t < tiers; t++) {
       var r0 = R_out + t * stepD, r1 = r0 + stepD;
-      var blk = stadiumRingSolid(halfLen, r1, r0, (t % 2 ? riserMat : seatMat), 0, (t + 1) * tierH);
+      var blk = stadiumRingSolid(halfLen, r1, r0, (t % 2 ? riserMat : seatMat), LAY.field, (t + 1) * tierH);
       g.add(blk);
       // 每排前沿的白色防滑条（踏步前缘）
       var nose = stadiumMesh(halfLen, r0 + 0.28, tileMat, (t + 1) * tierH + 0.02, r0);
@@ -929,7 +974,7 @@
     }
 
     // ② 跑道侧白铁栏杆：0.40m 矮踢脚 + 上下两道横杆 + 立杆（不遮挡第一排座面）
-    var fWall = stadiumRingSolid(halfLen, R_out + 0.22, R_out, tileMat, 0, 0.40);
+    var fWall = stadiumRingSolid(halfLen, R_out + 0.22, R_out, tileMat, LAY.field, 0.40);
     fWall.castShadow = false; g.add(fWall);
     var fr = stadiumSamples(halfLen, R_out + 0.11, 5.0);
     for (var i = 0; i < fr.length; i++) {
@@ -943,7 +988,7 @@
     fR2.castShadow = false; g.add(fR2);
 
     // ③ 外侧白色瓷砖挡墙 + 顶部压顶
-    var bWall = stadiumRingSolid(halfLen, R_out + standW + 0.30, R_out + standW, tileMat, 0, standH + 1.10);
+    var bWall = stadiumRingSolid(halfLen, R_out + standW + 0.30, R_out + standW, tileMat, LAY.field, standH + 1.10);
     g.add(bWall);
     var cap = stadiumMesh(halfLen, R_out + standW + 0.42, tileMat, standH + 1.14, R_out + standW + 0.22);
     g.add(cap);
@@ -985,29 +1030,32 @@
     var st = buildStadiumStands(halfLen, R_out, g);
 
     // 红色塑胶跑道环（stadium 形，非椭圆）
-    var track = stadiumMesh(halfLen, R_out, MAT.trackRed, 0.06, R_in);
+    var track = stadiumMesh(halfLen, R_out, MAT.trackRed, LAY.field, R_in);
     track.receiveShadow = true; g.add(track);
 
     // 内场草坪（台湾草）
-    var inner = stadiumMesh(halfLen, R_in, MAT.trackGreen, 0.07);
+    var inner = stadiumMesh(halfLen, R_in, MAT.trackGreen, LAY.field + 0.01);
     inner.receiveShadow = true; g.add(inner);
 
     // 白线材质
     var lineMat = new THREE.MeshBasicMaterial({ color: 0xe6e2d4, transparent: true, opacity: 0.62 });
     function line(x, z, lw, ld) {
       var m = new THREE.Mesh(new THREE.PlaneGeometry(lw, ld), lineMat);
-      m.rotation.x = -Math.PI / 2; m.position.set(x, 0.1, z); g.add(m);
+      m.rotation.x = -Math.PI / 2; m.position.set(x, LAY.mark, z); g.add(m);
     }
 
     // ① 分道线：内圈线 + 7 条分隔线（第 1~8 道）
     for (var i = 0; i <= lanes; i++) {
       var rr = R_in + i * laneW;
       if (rr > R_out - 0.06) rr = R_out - 0.06;
-      var lm = stadiumMesh(halfLen, rr, lineMat, 0.1, rr - 0.11);
+      var lm = stadiumMesh(halfLen, rr, lineMat, LAY.mark, rr - 0.11);
       g.add(lm);
     }
 
-    // ② 中央足球场（100m × 64m，标准 400m 场内可容纳）
+    // ② 中央足球场（标准 400m 场内可容纳）
+    // 【v13 修复】此前禁区/球门区的线宽与半宽为写死常数（40.3 / 18.3 / 20.15 / 9.15），
+    //   与上面按 halfLen/R_in 计算出的实际场地尺寸脱钩：一旦场地被压缩，
+    //   这些线会戳出边线之外。现在全部由 fw/fh 推导，并按比例夹取。
     var fw = Math.min(100, 2 * halfLen + 2 * R_in - 12), fh = Math.min(64, 2 * R_in - 8);
     var hw = fw / 2, hh = fh / 2;
     line(0, -hh, fw, 0.18); line(0, hh, fw, 0.18);              // 边线
@@ -1015,22 +1063,47 @@
     line(0, 0, fw, 0.18);                                        // 中线
     // 中圈
     var cc = new THREE.Mesh(new THREE.RingGeometry(9.0, 9.18, 40), lineMat);
-    cc.rotation.x = -Math.PI / 2; cc.position.y = 0.1; g.add(cc);
+    cc.rotation.x = -Math.PI / 2; cc.position.y = LAY.mark; g.add(cc);
     // 中点
     var cd = new THREE.Mesh(new THREE.CircleGeometry(0.28, 16), lineMat);
-    cd.rotation.x = -Math.PI / 2; cd.position.y = 0.1; g.add(cd);
-    // 两侧禁区（16.5m）与球门区（5.5m）
+    cd.rotation.x = -Math.PI / 2; cd.position.y = LAY.mark; g.add(cd);
+    // 两侧禁区（16.5m）、球门区（5.5m）与点球点，均按场地实际尺寸推导
+    var penaltyD = Math.min(16.5, fw * 0.28);        // 禁区深度，场地过短时按比例收缩
+    var penaltyW = Math.min(40.3, fh * 0.92);        // 禁区宽度
+    var goalD = Math.min(5.5, penaltyD * 0.4);       // 球门区深度
+    var goalW = Math.min(18.3, penaltyW * 0.5);      // 球门区宽度
+    var spotD = Math.min(11, penaltyD * 0.66);       // 点球点距端线
+    var arcR = 9.15;                                  // 罚球弧半径（标准值）
     [-1, 1].forEach(function (s) {
       var px = s * hw, pn = -s;
-      line(px - pn * 16.5, 0, 0.16, 40.3);
-      line(px - pn * 16.5 * 0.5, -20.15, 16.5, 0.16);
-      line(px - pn * 16.5 * 0.5, 20.15, 16.5, 0.16);
-      line(px - pn * 5.5, 0, 0.16, 18.3);
-      line(px - pn * 5.5 * 0.5, -9.15, 5.5, 0.16);
-      line(px - pn * 5.5 * 0.5, 9.15, 5.5, 0.16);
+      // 禁区
+      line(px - pn * penaltyD, 0, 0.16, penaltyW);
+      line(px - pn * penaltyD * 0.5, -penaltyW / 2, penaltyD, 0.16);
+      line(px - pn * penaltyD * 0.5, penaltyW / 2, penaltyD, 0.16);
+      // 球门区
+      line(px - pn * goalD, 0, 0.16, goalW);
+      line(px - pn * goalD * 0.5, -goalW / 2, goalD, 0.16);
+      line(px - pn * goalD * 0.5, goalW / 2, goalD, 0.16);
       // 点球点
       var sp = new THREE.Mesh(new THREE.CircleGeometry(0.26, 12), lineMat);
-      sp.rotation.x = -Math.PI / 2; sp.position.set(px - pn * 11, 0.1, 0); g.add(sp);
+      sp.rotation.x = -Math.PI / 2; sp.position.set(px - pn * spotD, LAY.mark, 0); g.add(sp);
+      // 罚球弧（只保留禁区外那段圆弧）
+      // 角度约定：RingGeometry 经 rotation.x = -PI/2 后，θ 映射到世界方向 (cosθ, -sinθ)。
+      // 弧需朝场地中央凸出（即朝 -pn 方向），故右侧取 π 附近、左侧取 0 附近。
+      var arcHalf = Math.acos(Math.min(1, (penaltyD - spotD) / arcR));
+      var arc = new THREE.Mesh(
+        new THREE.RingGeometry(arcR - 0.09, arcR, 28, 1,
+          pn > 0 ? Math.PI - arcHalf : -arcHalf, arcHalf * 2), lineMat);
+      arc.rotation.x = -Math.PI / 2;
+      arc.position.set(px - pn * spotD, LAY.mark, 0);
+      g.add(arc);
+      // 球门（简化门框：两柱一横梁）
+      var goalW2 = Math.min(7.32, goalW * 0.5), goalH = 2.44, goalD2 = 0.22;
+      var postMat = MAT.columnGrey;
+      [-1, 1].forEach(function (gs) {
+        box(0.16, goalH, 0.16, postMat, px - pn * goalD2, goalH / 2, gs * goalW2 / 2, g);
+      });
+      box(0.16, 0.16, goalW2 + 0.16, postMat, px - pn * goalD2, goalH, 0, g);
     });
 
     // ③ 起跑区（西侧直道端，错开的前伸线）
@@ -1081,29 +1154,29 @@
         court.receiveShadow = true;
         // —— 以下为 15×28 标准划线区，南北两端各留 2.5m 缓冲 ——
         var hw = courtW / 2, hl = playD / 2;
-        plane(0.14, playD, courtLine, cx - hw + 0.07, 0.08, cz, g);   // 左边线（南北）
-        plane(0.14, playD, courtLine, cx + hw - 0.07, 0.08, cz, g);   // 右边线（南北）
-        plane(courtW, 0.14, courtLine, cx, 0.08, cz - hl + 0.07, g);  // 北端线
-        plane(courtW, 0.14, courtLine, cx, 0.08, cz + hl - 0.07, g);  // 南端线
-        plane(courtW, 0.12, courtLine, cx, 0.08, cz, g);              // 中线（东西向）
+        plane(0.14, playD, courtLine, cx - hw + 0.07, LAY.mark, cz, g);   // 左边线（南北）
+        plane(0.14, playD, courtLine, cx + hw - 0.07, LAY.mark, cz, g);   // 右边线（南北）
+        plane(courtW, 0.14, courtLine, cx, LAY.mark, cz - hl + 0.07, g);  // 北端线
+        plane(courtW, 0.14, courtLine, cx, LAY.mark, cz + hl - 0.07, g);  // 南端线
+        plane(courtW, 0.12, courtLine, cx, LAY.mark, cz, g);              // 中线（东西向）
         var ccl = new THREE.Mesh(new THREE.RingGeometry(1.72, 1.86, 28), courtLine);
-        ccl.rotation.x = -Math.PI / 2; ccl.position.set(cx, 0.08, cz); g.add(ccl);
+        ccl.rotation.x = -Math.PI / 2; ccl.position.set(cx, LAY.mark, cz); g.add(ccl);
         [-1, 1].forEach(function (s) {                                 // s=-1 北筐, +1 南筐
           var baseZ = cz + s * hl;                                     // 该端端线
           var keyW = 4.9, keyD = 5.8;
-          plane(keyW, keyD, keyMat, cx, 0.07, baseZ - s * keyD / 2, g);          // 三秒区
-          plane(keyW, 0.12, courtLine, cx, 0.085, baseZ - s * keyD, g);          // 罚球线
+          plane(keyW, keyD, keyMat, cx, LAY.field, baseZ - s * keyD / 2, g);          // 三秒区
+          plane(keyW, 0.12, courtLine, cx, LAY.mark, baseZ - s * keyD, g);          // 罚球线
           var fc = new THREE.Mesh(new THREE.RingGeometry(1.72, 1.86, 24), courtLine);
-          fc.rotation.x = -Math.PI / 2; fc.position.set(cx, 0.085, baseZ - s * keyD); g.add(fc);
+          fc.rotation.x = -Math.PI / 2; fc.position.set(cx, LAY.mark, baseZ - s * keyD); g.add(fc);
           // 三分线：以篮筐为圆心的半圆，开口朝场地中央
           var hoopZ = baseZ - s * 1.575;
           var arc = new THREE.Mesh(new THREE.RingGeometry(6.70, 6.84, 40, 1,
                               (s > 0 ? 0 : Math.PI), Math.PI), courtLine);
-          arc.rotation.x = -Math.PI / 2; arc.position.set(cx, 0.085, hoopZ); g.add(arc);
+          arc.rotation.x = -Math.PI / 2; arc.position.set(cx, LAY.mark, hoopZ); g.add(arc);
           // 篮筐（红点，南北两端 → 两筐连线为南北向）
           var hoop = new THREE.Mesh(new THREE.CircleGeometry(0.24, 14),
                                     new THREE.MeshBasicMaterial({ color: 0xdd4b39 }));
-          hoop.rotation.x = -Math.PI / 2; hoop.position.set(cx, 0.09, hoopZ); g.add(hoop);
+          hoop.rotation.x = -Math.PI / 2; hoop.position.set(cx, LAY.mark + 0.005, hoopZ); g.add(hoop);
         });
       }
     }
@@ -1157,8 +1230,8 @@
     top3.position.set(0.5, H * 1.01, 0.25); top3.castShadow = true; g.add(top3);
     // 树池（加大以匹配大冠幅）
     var ring = new THREE.Mesh(new THREE.RingGeometry(4.0, 5.0, 28), MAT.stone);
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; g.add(ring);
-    plane(5.0 * 2, 5.0 * 2, MAT.earth, 0, 0.04, 0, g);
+    ring.rotation.x = -Math.PI / 2; ring.position.y = LAY.deck + 0.006; g.add(ring);
+    plane(5.0 * 2, 5.0 * 2, MAT.earth, 0, LAY.deck, 0, g);
     // 说明牌
     box(1.5, 1.0, 0.12, MAT.stone, 5.5, 0.9, 0, g);
     box(0.12, 0.7, 0.12, MAT.metalDark, 5.5, 0.35, 0, g);
@@ -1341,13 +1414,26 @@
     }
     g.position.set(o.x, 0, o.z);
     if (b.rot) g.rotation.y = b.rot;
+    // 【v13】登记占地：水体按实际轮廓，其余按建筑外沿；供路灯/小品避让
+    if (b.form === 'pond') markOccupied(o.x, o.z, o.w, o.d, 'water');
+    else markOccupied(o.x, o.z, b.size[0], b.size[2], 'bldg');
     // 接触阴影（AO 近似：底部一圈暗面）
-    if (cfg.shadow > 0 && b.size[1] > 1) {
+    // 【v13 修复】此前 y=0.14 高于路面(0.045)/广场(0.055)，AO 会盖在道路和相邻铺装上，
+    //   且缺少 polygonOffset 会与地面共面闪烁（z-fighting）。
+    //   水景不落 AO（水面本就有自身阴影关系）。
+    if (cfg.shadow > 0 && b.size[1] > 1 && b.form !== 'pond') {
       var ao = new THREE.Mesh(
-        new THREE.PlaneGeometry(b.size[0] * 1.14, b.size[2] * 1.14),
-        new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16, depthWrite: false })
+        new THREE.PlaneGeometry(b.size[0] * 1.10, b.size[2] * 1.10),
+        new THREE.MeshBasicMaterial({
+          color: 0x000000, transparent: true, opacity: 0.15,
+          depthWrite: false,
+          polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+        })
       );
-      ao.rotation.x = -Math.PI / 2; ao.position.y = 0.14; g.add(ao);
+      ao.rotation.x = -Math.PI / 2;
+      ao.position.y = LAY.field + 0.01;   // 草坪之上、路面之下（不污染铺装与道路）
+      ao.renderOrder = 1;
+      g.add(ao);
     }
     return g;
   }
@@ -1372,22 +1458,50 @@
     var g = x.createLinearGradient(0, 0, 0, 512);
     g.addColorStop(0, top); g.addColorStop(0.42, mid); g.addColorStop(0.74, horizon); g.addColorStop(1, bot);
     x.fillStyle = g; x.fillRect(0, 0, 8, 512);
-    return new THREE.CanvasTexture(c);
+    var t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace !== undefined ? THREE.SRGBColorSpace : undefined;
+    return t;
   }
+
+  /* 天空贴图缓存：调色板是有限的（时段 × 天气 × 昼夜），
+     此前每次 applyLighting 都新建 canvas 贴图并 dispose 旧的，
+     切时段时会频繁分配/释放 GPU 纹理。这里按色值缓存复用。 */
+  var skyCache = {};
+  function getSkyTex(top, mid, bot, horizon) {
+    var k = top + '|' + mid + '|' + bot + '|' + horizon;
+    if (!skyCache[k]) skyCache[k] = skyTex(top, mid, bot, horizon);
+    return skyCache[k];
+  }
+
+  /* ================= 地表高度分层（v13） =================
+     此前各层地表 Y 值散乱（0.015/0.03/0.045/0.055/0.06/0.07/0.08/0.10/0.12），
+     层间仅差 0.01~0.02，在远景相机下会互相穿插闪烁（z-fighting）。
+     这里统一为常量分层，层间距 ≥0.03，并按「从下到上」的语义命名。 */
+  var LAY = {
+    base:     -0.02,   // 校园外大地
+    lawn:      0.015,  // 校园草坪底
+    lawnPatch: 0.045,  // 绿地组团
+    field:     0.075,  // 运动场内场 / 球场
+    deck:      0.105,  // 铺装、广场、园路
+    mark:      0.135,  // 场地白线
+    water:     0.165,  // 水面
+    prop:      0.195   // 贴地小品（睡莲、景石座等）
+  };
 
   /* ================= 地面 / 道路 / 绿地 / 水景 ================= */
   function buildGround(cfg) {
     var G = data.meta.ground, W = G.width, D = G.depth;
     // 大地（校园外也铺一层，避免看到虚空）
-    var base = plane(W * 2.6, D * 2.6, M('#54654f', 0.98), 0, -0.02, 0, scene);
+    var base = plane(W * 2.6, D * 2.6, M('#54654f', 0.98), 0, LAY.base, 0, scene);
     base.receiveShadow = false;
-    // 校园草坪底
-    groundMat = M('#5b7a4c', 0.97);
-    var grassTex = noiseTex('#5b7a4c', 2600, 512, 0.13);
-    grassTex.repeat.set(26, 22);
+    // 校园草坪底：底色压亮、靠贴图提供细节，避免大面积纯色的「塑料感」
+    groundMat = M('#ffffff', 0.97);
+    var grassTex = noiseTex('#638052', 3000, 512, 0.14);
+    grassTex.repeat.set(30, 26);
+    grassTex.anisotropy = cfg.aniso || 1;
     groundMat.map = grassTex;
-    groundMat.color.set('#8fae7e');
-    var lawn = plane(W, D, groundMat, 0, 0.015, 0, scene);
+    groundMat.color.set('#9cb98a');
+    var lawn = plane(W, D, groundMat, 0, LAY.lawn, 0, scene);
     lawn.receiveShadow = cfg.shadow > 0;
 
     // 绿地组团
@@ -1395,16 +1509,40 @@
       var o = rectWorld(L.rect);
       // 【官网实证】校园草坪为台湾草（细叶结缕草，色偏黄绿）
       var mat = L.kind === 'lawn' ? MAT.grassTaiwan : (L.kind === 'botanic' ? MAT.grassDark : M('#54744a', 0.97));
-      var m = plane(o.w, o.d, mat, o.x, 0.03, o.z, scene);
+      var m = plane(o.w, o.d, mat, o.x, LAY.lawnPatch, o.z, scene);
       m.receiveShadow = cfg.shadow > 0;
     });
 
     // 道路
     var roadTex = noiseTex('#a5a29a', 3200, 256, 0.2);
+    roadTex.anisotropy = cfg.aniso || 1;
+    // 【v13】路缘石材质提到循环外：此前每遍历一条道路都 new 一个材质，
+    //   11 条路 = 11 份完全相同的实例，既浪费显存也让路缘石无法被合批。
+    var kerbMat = M('#c8c3b8', 0.93);
+    // 路面材质不能简单共用：下面会为每条路按自身尺寸 clone 贴图并写入 mat.map，
+    // 若共用材质，所有路都会用最后一条路的 UV 重复率（大路纹理被拉花）。
+    // 故按 kind 缓存基础参数，仅当需要贴图时为该路单独建一份材质。
+    var roadMatBase = {
+      plaza: ['#c2bcb0', 0.93],
+      path: ['#b6b1a7', 0.94],
+      road: ['#9c9991', 0.95]
+    };
+    var plazaMat = M(roadMatBase.plaza[0], roadMatBase.plaza[1]);
     (data.roads || []).forEach(function (R) {
-      var mat = R.kind === 'plaza' ? M('#c2bcb0', 0.93)
-        : (R.kind === 'path' ? M('#b6b1a7', 0.94) : M('#9c9991', 0.95));
-      var yRoad = R.kind === 'plaza' ? 0.055 : 0.045;
+      var bp = roadMatBase[R.kind] || roadMatBase.road;
+      var yRoad = LAY.deck;
+      var o = rectWorld(R.rect);
+      // 先解析材质：需贴图的道路各自持有一份（避免共享 UV 导致纹理拉伸），
+      // 广场类无贴图则复用同一实例。必须在 poly / rect 两个分支之前完成，
+      // 否则 poly 分支会读到未初始化的 mat。
+      var mat;
+      if (R.kind !== 'plaza') {
+        var t = roadTex.clone(); t.needsUpdate = true;
+        t.repeat.set(Math.max(2, o.w / 12), Math.max(2, o.d / 12));
+        mat = M(bp[0], bp[1]); mat.map = t;
+      } else {
+        mat = plazaMat;
+      }
       // 多边形校道（来自 KML 实测形状）：铺设真实道路面，保留路网走向
       if (R.poly && R.poly.length >= 3) {
         var shape = new THREE.Shape();
@@ -1422,36 +1560,51 @@
         roadMats.push(mat);
         return;
       }
-      var o = rectWorld(R.rect);
-      var t = roadTex.clone(); t.needsUpdate = true;
-      t.repeat.set(Math.max(2, o.w / 12), Math.max(2, o.d / 12));
-      if (R.kind !== 'plaza') mat.map = t;
       var m = plane(o.w, o.d, mat, o.x, yRoad, o.z, scene);
       m.receiveShadow = cfg.shadow > 0;
       roadMats.push(mat);
       // 路缘石（细边，提升真实感）
       if (R.kind !== 'plaza') {
-        var kerb = M('#c8c3b8', 0.93);
-        var t2 = 0.34;
+        var t2 = 0.34, kh = 0.18;
         [[0, o.d / 2, o.w, t2], [0, -o.d / 2, o.w, t2], [o.w / 2, 0, t2, o.d], [-o.w / 2, 0, t2, o.d]].forEach(function (s) {
-          var k = box(s[2], 0.16, s[3], kerb, o.x + s[0], 0.075, o.z + s[1], scene);
+          // 路缘石下沿贴到草坪层，避免悬空
+          var k = box(s[2], kh, s[3], kerbMat, o.x + s[0], LAY.deck - kh / 2 + 0.02, o.z + s[1], scene);
           k.castShadow = false;
         });
       }
     });
 
     // 水景（砚池）
-    waterMat = M('#5c7f86', 0.06, 0.22, { transparent: true, opacity: 0.90 });
+    // 【v13 加固】此前 waterMat 在函数末尾才赋值，若 buildGround 中途出错，
+    //   FORMS.pond 会拿到 undefined 并静默丢失水面。改为惰性工厂 + 兜底默认值。
+    ensureWaterMat();
+  }
+
+  /* 水面材质：惰性创建，任何调用方都能安全取得实例 */
+  function ensureWaterMat() {
+    if (!waterMat) {
+      waterMat = M('#4e6f7a', 0.05, 0.30, {
+        transparent: true,
+        opacity: 0.92,
+        envMapIntensity: 1.2
+      });
+    }
+    return waterMat;
   }
 
   /* ================= 植被（多种形态 · 每棵各不相同） ================= */
   function mergeGeos(items) {
     var P = [], N = [], C = [];
     var m3 = new THREE.Matrix3(), v = new THREE.Vector3(), nv = new THREE.Vector3();
+    // 【v13 修复】此前每个 item 的源几何体（TREE_MAKERS 每株树会现场 new 出几十个
+    //   CylinderGeometry/BoxGeometry/IcosahedronGeometry）在合并后既不 dispose 也不回收：
+    //   JS 对象虽可被 GC，但对应的 WebGLBuffer 必须显式 dispose 才会从显存释放。
+    //   300 棵树 × 每株数十个部件 = 上千个孤儿缓冲常驻。现在合并完成后立即释放。
     items.forEach(function (it) {
-      var g = it.geo.index ? it.geo.toNonIndexed() : it.geo;
+      var src = it.geo;
+      var g = src.index ? src.toNonIndexed() : src;
       var pos = g.attributes.position, nor = g.attributes.normal;
-      if (!pos) return;
+      if (!pos) { src.dispose(); return; }
       m3.getNormalMatrix(it.matrix);
       for (var i = 0; i < pos.count; i++) {
         v.fromBufferAttribute(pos, i).applyMatrix4(it.matrix);
@@ -1460,6 +1613,9 @@
         else N.push(0, 1, 0);
         C.push(it.color.r, it.color.g, it.color.b);
       }
+      // toNonIndexed() 产生的是中间副本，一并释放；源几何体随后也释放
+      if (g !== src) g.dispose();
+      src.dispose();
     });
     var geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
@@ -1689,6 +1845,13 @@
   function buildVegetation(cfg) {
     var list = data.trees || [];
     if (!list.length) return;
+    // 【v13 修复】原始树点数据里有约 20% 落在建筑轮廓内或水面上（实测 300 棵中 61 棵，
+    //   其中 53 棵穿楼、26 棵泡在水里，含部分重叠）。此前直接按点建树，
+    //   于是树干从屋顶穿出、树冠悬在砚池当中。这里先做一次占地过滤再分组。
+    list = list.filter(function (t) {
+      return !isOccupied(wx(t.p[0]), wz(t.p[1]), 0.8);
+    });
+    if (!list.length) return 0;
     // 按 类型×变体 分组
     var groups = {};
     list.forEach(function (t) {
@@ -1727,25 +1890,54 @@
     var g = new THREE.Group();
     if (!cfg.lamps) { scene.add(g); return g; }
     var poleMat = M('#4a5257', 0.72, 0.2);
-    var headMat = M('#e8d9b8', 0.5, 0.0, { emissive: new THREE.Color('#ffc06a'), emissiveIntensity: 0 });
+    var headMat = M('#e8d9b8', 0.5, 0.0, { emissive: new THREE.Color('#ffc06a'), emissiveIntensity: 0, side: THREE.DoubleSide });
+    // 【v13 修复】此前把所有 road 都当成「细长车道」处理，灯杆一律偏出 0.72×半宽：
+    //   对 9m 宽的园路（偏移 3.26m）尚可，但对 200m+ 宽的铺装广场就会把灯杆
+    //   丢到广场正中央，既不合理也不好看。现在按路宽分档：
+    //     · 真正的道路（短轴 ≤ 26m）：沿路缘内侧成列布置，左右交替；
+    //     · 大面积铺装（短轴 > 26m）：只沿长边两侧各布一排，中间不落灯。
+    //   同时改为共享 geometry/material —— 原先每根灯杆都现场 new 3 份几何体 +
+    //   clone 材质，共 ~100 根，等于 300 个一次性几何体常驻显存。
+    var poleGeo = new THREE.CylinderGeometry(0.13, 0.18, 7.5, 6);
+    var armGeo = new THREE.BoxGeometry(1.3, 0.12, 0.12);
+    var headGeo = new THREE.BoxGeometry(0.9, 0.26, 0.5);
     var spots = [];
-    // 沿主要校道布灯
     (data.roads || []).forEach(function (R) {
       var o = rectWorld(R.rect);
-      var n = Math.max(2, Math.round(Math.max(o.w, o.d) / 26));
+      var horiz = o.w > o.d;                          // 走向沿 X 轴
+      var L = horiz ? o.w : o.d;                      // 沿走向的长度
+      var roadW = horiz ? o.d : o.w;                  // 垂直于走向的宽度
+      var n = Math.max(2, Math.round(L / 26));
+      // 灯位距路中线的横向偏移：贴在路缘内侧约 0.55m 处
+      var off = Math.max(0.6, roadW / 2 - 0.55);
       for (var i = 0; i < n; i++) {
         var t = (i + 0.5) / n;
-        if (o.w > o.d) spots.push([o.x - o.w / 2 + t * o.w, o.z + o.d / 2 * 0.72]);
-        else spots.push([o.x + o.w / 2 * 0.72, o.z - o.d / 2 + t * o.d]);
+        var side = (i % 2 === 0) ? 1 : -1;            // 左右交替，接近真实路灯排布
+        var px, pz;
+        if (horiz) { px = o.x - o.w / 2 + t * o.w; pz = o.z + side * off; }
+        else { px = o.x + side * off; pz = o.z - o.d / 2 + t * o.d; }
+        // 【v13】避让建筑与水面：校道是大块铺装区，成列布灯会穿楼。留 1.2m 净距。
+        if (isOccupied(px, pz, 1.2)) continue;
+        if (horiz) spots.push([px, pz, side]);
+        else spots.push([px, pz, 0, side]);
       }
     });
     spots.forEach(function (p) {
-      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 7.5, 6), poleMat);
-      pole.position.set(p[0], 3.75, p[1]); pole.castShadow = false; g.add(pole);
-      var arm = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.12, 0.12), poleMat);
-      arm.position.set(p[0] + 0.5, 7.4, p[1]); g.add(arm);
-      var head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.26, 0.5), headMat.clone());
-      head.position.set(p[0] + 1.0, 7.28, p[1]); g.add(head);
+      var horiz = p[2] !== 0;
+      var side = horiz ? p[2] : p[3];
+      var pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(p[0], LAY.deck + 3.75, p[1]); pole.castShadow = false; g.add(pole);
+      // 灯臂朝路面中心伸出
+      var dirX = horiz ? 0 : -side;
+      var dirZ = horiz ? -side : 0;
+      var arm = new THREE.Mesh(armGeo, poleMat);
+      arm.position.set(p[0] + dirX * 0.5, LAY.deck + 7.4, p[1] + dirZ * 0.5);
+      arm.rotation.y = horiz ? Math.PI / 2 : 0;
+      g.add(arm);
+      var head = new THREE.Mesh(headGeo, headMat);
+      head.position.set(p[0] + dirX * 1.0, LAY.deck + 7.28, p[1] + dirZ * 1.0);
+      head.rotation.y = horiz ? Math.PI / 2 : 0;
+      g.add(head);
       lampLamps.push(head);
     });
     scene.add(g);
@@ -1781,9 +1973,12 @@
         else if (state.weather === 'cloudy') { top = '#6d8598'; mid = '#8ba3b2'; hor = '#a8b8c0'; bot = '#b4bfc4'; }
         else { top = t.top; mid = t.top; hor = t.bot; bot = t.bot; }
       }
-      if (skyMesh.material.map) skyMesh.material.map.dispose();
-      skyMesh.material.map = skyTex(top, mid, bot, hor);
-      skyMesh.material.needsUpdate = true;
+      // 走缓存：不再每次 dispose + 新建贴图（避免切换时段时的 GPU 纹理抖动）
+      var tex = getSkyTex(top, mid, bot, hor);
+      if (skyMesh.material.map !== tex) {
+        skyMesh.material.map = tex;
+        skyMesh.material.needsUpdate = true;
+      }
     }
     if (groundMat) groundMat.roughness = wx2.groundRough;
     roadMats.forEach(function (m) { m.roughness = wx2.groundRough; });
@@ -2236,20 +2431,36 @@
     sr.appendChild(rr);
   }
 
+  /* 【v13】阴影相机与偏置：随档位统一配置，避免初始化与运行时切换两处写不一致。
+     阴影视野固定 ±SHADOW_SPAN，法线偏置取约 1 个纹素尺寸。 */
+  var SHADOW_SPAN = 210;
+  function applyShadowConfig(cfg) {
+    if (!sunLight) return;
+    var on = cfg.shadow > 0;
+    renderer.shadowMap.enabled = on;
+    sunLight.castShadow = on;
+    if (!on) return;
+    sunLight.shadow.mapSize.width = cfg.shadow;
+    sunLight.shadow.mapSize.height = cfg.shadow;
+    // 尺寸变更必须释放旧的 shadow map，否则显存里会留一份旧分辨率贴图
+    if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
+    var cam = sunLight.shadow.camera;
+    cam.near = 20; cam.far = 1100;
+    cam.left = -SHADOW_SPAN; cam.right = SHADOW_SPAN;
+    cam.top = SHADOW_SPAN; cam.bottom = -SHADOW_SPAN;
+    cam.updateProjectionMatrix();
+    sunLight.shadow.bias = -0.0006;
+    // 法线偏置 ≈ 1 个纹素(2*SPAN/mapSize)，随分辨率缩放；
+    // 原先写死 0.02 远小于纹素，是阴影痤疮与漏光的直接成因。
+    sunLight.shadow.normalBias = (2 * SHADOW_SPAN) / cfg.shadow;
+    sunLight.shadow.needsUpdate = true;
+  }
+
   function setQuality(q) {
     if (q === state.quality) return;
     state.quality = q;
     var cfg = QCFG[q];
-    renderer.shadowMap.enabled = cfg.shadow > 0;
-    if (sunLight) {
-      sunLight.castShadow = cfg.shadow > 0;
-      if (cfg.shadow > 0) {
-        sunLight.shadow.mapSize.width = cfg.shadow;
-        sunLight.shadow.mapSize.height = cfg.shadow;
-        // 尺寸变更必须释放旧的 shadow map，否则显存里会留一份旧分辨率贴图
-        if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
-      }
-    }
+    applyShadowConfig(cfg);
     treeMeshes.forEach(function (im) { im.count = Math.max(1, Math.round(im.userData.full * cfg.treeK)); });
     // 重新按新档位初始化像素比与自适应下限
     adaptReset(cfg);
@@ -2365,7 +2576,7 @@
       buildingMeshes.push(g);
       hitMeshes.push(g);
     });
-    flushWindows(scene, cfg.shadow > 0 ? 4000 : 2600);
+    flushWindows(scene, cfg);
 
     var treeCount = buildVegetation(cfg);
     treeMeshes.forEach(function (im) { im.userData.full = im.instanceMatrix.count; });
@@ -2421,19 +2632,9 @@
     ambLight = new THREE.AmbientLight(0xffffff, 0.4); scene.add(ambLight);
     sunLight = new THREE.DirectionalLight(0xfff4e2, 1.2);
     sunLight.position.set(-220, 300, 200);
-    if (cfg.shadow > 0) {
-      sunLight.castShadow = true;
-      sunLight.shadow.mapSize.width = cfg.shadow;
-      sunLight.shadow.mapSize.height = cfg.shadow;
-      sunLight.shadow.camera.near = 20;
-      sunLight.shadow.camera.far = 1100;
-      var s = 210;
-      sunLight.shadow.camera.left = -s; sunLight.shadow.camera.right = s;
-      sunLight.shadow.camera.top = s; sunLight.shadow.camera.bottom = -s;
-      sunLight.shadow.bias = -0.0006;
-      sunLight.shadow.normalBias = 0.02;
-    }
     scene.add(sunLight);
+    // 阴影相机与偏置统一由 applyShadowConfig 配置（与 setQuality 共用，避免两处写不一致）
+    applyShadowConfig(cfg);
 
     clock = new THREE.Clock();
     buildMaterials();
