@@ -2168,6 +2168,113 @@
     requestAnimationFrame(step);
   }
 
+  /* ================= 电影级下降的镜头交接 =================
+     设计约束（来自需求）：
+       · 不允许「影片结束 → 黑屏 → 3D 加载」
+       · 首帧 3D 画面必须与上一页末帧在 位置/朝向/高度/视场/运动方向 上连续
+       · 不允许瞬移、跳切、闪烁
+     做法：
+       1) 从 sessionStorage 读取 descent.html 写入的意图标记
+       2) 相机初始位姿 = 校门内侧近地视点，朝向门内（与末帧一致）
+       3) 解算 3D 世界中的"北门内侧"坐标，把相机放到那里
+       4) 首帧只渲染不移动，随后用 easeInOut 平滑抬升到全景
+     光照方向沿用 descent 的左上主光，保证明暗关系不突变。 */
+  function readHandoff() {
+    try {
+      var raw = sessionStorage.getItem('hmz:handoff');
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      // 5 分钟内有效，避免过期标记影响正常进入
+      if (!o || o.from !== 'cinematic' || (Date.now() - (o.at || 0)) > 300000) return null;
+      return o;
+    } catch (e) { return null; }
+  }
+
+  /* 找到北门建筑，返回其世界坐标与朝向
+     （beimen: size [13.0, 10.5, 8.2]，rot 0 -> 长边沿 X，进深沿 Z） */
+  function gateAnchor() {
+    var list = data.buildings || [];
+    var b = null;
+    for (var i = 0; i < list.length && !b; i++) {
+      if (list[i].form === 'gate' && /北|main|正/i.test((list[i].id || '') + (list[i].name || ''))) b = list[i];
+    }
+    if (!b) {
+      for (var k = 0; k < list.length && !b; k++) {
+        if (list[k].form === 'gate') b = list[k];
+      }
+    }
+    if (!b) return null;
+    var o = rectWorld(b.rect);
+    var sz = b.size || [12, 10, 8];
+    /* 朝向判定：这份数据里「北门」落在 z 负端（-158.6），「南门」落在 z 正端（+203.4），
+       即 plan 图的 py 轴与世界 z 轴符号相反。因此从北门进校的方向是 +Z。
+       这里用两座门的 z 值反推，避免把方向写死写反。 */
+    var gates = (data.buildings || []).filter(function (x) { return x.form === 'gate'; });
+    var inward = 1;
+    if (gates.length >= 2) {
+      var zs = gates.map(function (x) { return rectWorld(x.rect).z; });
+      var zMin = Math.min.apply(null, zs), zMax = Math.max.apply(null, zs);
+      /* 若本门更靠 z 正端，则进校方向为 -Z */
+      inward = (o.z > (zMin + zMax) / 2) ? -1 : 1;
+    }
+    return { x: o.x, z: o.z, w: sz[0], h: sz[1], d: sz[2], inward: inward };
+  }
+
+  function applyHandoff() {
+    var h = readHandoff();
+    if (!h) return false;
+    var g = gateAnchor();
+    if (!g) return false;
+
+    /* 相机站位：门洞内侧、人眼高度，朝校园内看。
+       inward 由两座门的位置反推，不写死方向。 */
+    var eyeX = g.x;
+    var eyeZ = g.z + g.inward * (g.d / 2 + 7);
+    var eyeY = 1.66;                                   // 与末帧同高
+    var lookX = g.x;
+    var lookZ = g.z + g.inward * 26;
+
+    camera.position.set(eyeX, eyeY, eyeZ);
+    controls.target.set(lookX, 3.0, lookZ);
+    controls.update();
+
+    /* 首帧立即渲染 —— 保证与上一页末帧视觉衔接，不出现空帧 */
+    renderer.render(scene, camera);
+
+    /* 短暂停留，让观众认出"就是刚才那道门"，再平滑抬升到全景 */
+    var riseDelay = reduced ? 80 : 520;
+    setTimeout(function () {
+      var vAll = viewOf(data.entryView || 'center');
+      var endLook = new THREE.Vector3(vAll ? vAll.look[0] : 0, 6, vAll ? vAll.look[1] : 0);
+      var endEye = vAll
+        ? new THREE.Vector3(vAll.eye[0], vAll.e, vAll.eye[1])
+        : new THREE.Vector3(0, 200, 30);
+      flyFrom(new THREE.Vector3(eyeX, eyeY, eyeZ),
+              new THREE.Vector3(lookX, 3.0, lookZ),
+              endEye, endLook, reduced ? 200 : 4600);
+    }, riseDelay);
+
+    try { sessionStorage.removeItem('hmz:handoff'); } catch (e) {}
+    return true;
+  }
+
+  /* 与 flyTo 同类，但显式给定起终点，用于交接后的连续抬升 */
+  function flyFrom(sp, st, ep, et, dur) {
+    if (flying) return;
+    flying = true;
+    var t0 = performance.now();
+    dur = Math.max(1, dur || 3000);
+    function step(now) {
+      var p = Math.min(1, (now - t0) / dur), e = ease(p);
+      camera.position.set(lerp(sp.x, ep.x, e), lerp(sp.y, ep.y, e), lerp(sp.z, ep.z, e));
+      controls.target.set(lerp(st.x, et.x, e), lerp(st.y, et.y, e), lerp(st.z, et.z, e));
+      controls.update();
+      if (p < 1) requestAnimationFrame(step);
+      else { flying = false; }
+    }
+    requestAnimationFrame(step);
+  }
+
   /* ================= 选中 / 信息卡 ================= */
   function findB(id) { return (data.buildings || []).filter(function (x) { return x.id === id; })[0]; }
   function selectBuilding(id, fly) {
@@ -2607,7 +2714,17 @@
     camera.position.set(0, 180, 260);
 
     var cfg = QCFG[state.quality];
-    renderer = new THREE.WebGLRenderer({ antialias: cfg.alias, powerPreference: 'high-performance', alpha: false });
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: cfg.alias, powerPreference: 'high-performance', alpha: false });
+    } catch (err) {
+      renderer = null;
+    }
+    if (!renderer) {
+      /* 无 WebGL（旧设备 / 软件渲染被禁 / 隐私模式）：
+         给出明确说明并保留静态封面，不留白屏。 */
+      showNoWebGL();
+      return;
+    }
     adaptReset(cfg);
     renderer.setPixelRatio(adapt.ratio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -2648,16 +2765,39 @@
     bindUI();
     animate();
 
-    // 入场：从高空缓降，最能表达校园空间感
-    var v = viewOf(data.entryView || 'center');
-    camera.position.set(v.look[0], 300, v.look[1] + 260);
-    controls.target.set(v.look[0], 6, v.look[1]);
-    setTimeout(function () { applyView(data.entryView || 'center', 3000, true); }, 260);
+    // 入场：
+    //  a) 由 descent.html 电影级下降交接而来 -> 相机从校门内侧续接，再抬升到全景
+    //     （要求：首帧与上一页末帧视觉连续，不允许黑屏 / 跳切 / 闪现）
+    //  b) 直接进入本页 -> 从高空缓降
+    if (!applyHandoff()) {
+      var v = viewOf(data.entryView || 'center');
+      camera.position.set(v.look[0], 300, v.look[1] + 260);
+      controls.target.set(v.look[0], 6, v.look[1]);
+      setTimeout(function () { applyView(data.entryView || 'center', 3000, true); }, 260);
+    }
 
     var m = /[?&]focus=([^&]+)/.exec(location.search);
     if (m) setTimeout(function () { selectBuilding(decodeURIComponent(m[1]), true); }, 3400);
 
     window.addEventListener('resize', onResize);
+  }
+
+  /* 无 WebGL 时的降级：说明原因，并提供一个可点的入口回到校园影像页，
+     绝不允许留白屏或黑屏。 */
+  function showNoWebGL() {
+    var boot = $('#loader');
+    if (boot) boot.style.display = 'none';
+    var wrap = document.createElement('div');
+    wrap.className = 'nowebgl';
+    wrap.innerHTML =
+      '<div class="nowebgl-inner">' +
+        '<h2>此设备暂不支持 3D 显示</h2>' +
+        '<p>浏览器未能创建 WebGL 上下文。数字校园需要 WebGL；' +
+        '你可以改用较新的浏览器，或在设置中开启硬件加速后重试。</p>' +
+        '<p class="nowebgl-alt">作为替代，这里仍保留完整的校园影像与建筑资料。</p>' +
+        '<a class="nowebgl-btn" href="index.html">返回校园首页</a>' +
+      '</div>';
+    document.body.appendChild(wrap);
   }
 
   function onResize() {

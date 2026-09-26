@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04070d">
+<title>从地球到海中 · 海南中学</title>
+<style>
+/* ============================================================
+   从地球到海中 · 电影级下降体验
+   单文件自包含 · 无构建步骤
+   ============================================================ */
+:root{
+  --ink:#05080e;
+  --ink-2:#0a1018;
+  --fog:#c9d6e4;
+  --gold:#c8a86a;
+  --gold-lt:#e6cf9a;
+  --paper:#eef2f7;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-io:cubic-bezier(.65,.02,.28,1);
+  --ui:rgba(230,238,247,.86);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--ink);color:var(--paper);
+  font-family:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;
+  overscroll-behavior:none;-webkit-font-smoothing:antialiased;
+}
+body.is-locked{overflow:hidden;height:100vh}
+
+/* ---------- 舞台 ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;background:#000}
+.layer{position:absolute;inset:0;will-change:transform,opacity;backface-visibility:hidden}
+
+/* 每一幕用一个 <section> 承载，靠 transform 做连续位移 */
+.scene{position:absolute;inset:0;overflow:hidden;contain:strict}
+.scene[hidden]{display:none}
+
+/* 影像层：始终铺满舞台，靠自身 transform 做视差
+   注意 —— 不能同时用 inset 拉伸和 object-fit:cover，否则会出现黑边。 */
+.media{position:absolute;left:50%;top:50%;
+  width:100%;height:100%;
+  object-fit:cover;object-position:center center;
+  transform:translate(-50%,-50%) scale(1.02);
+  transform-origin:center center;
+  will-change:transform;opacity:1}
+.media--dim{filter:brightness(.82) contrast(1.04) saturate(.94)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.6'/></svg>")}
+.vig{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 92% at 50% 46%,rgba(0,0,0,0) 42%,rgba(0,0,0,.42) 78%,rgba(0,0,0,.78) 100%)}
+.scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(4,7,13,.72) 0%,rgba(4,7,13,.12) 34%,rgba(4,7,13,.10) 62%,rgba(4,7,13,.80) 100%)}
+
+/* ---------- 文本 ---------- */
+.caption{position:absolute;left:0;right:0;bottom:clamp(3.4rem,11vh,8rem);
+  padding:0 clamp(1.2rem,5vw,4.5rem);z-index:6;pointer-events:none;text-align:left}
+.caption .kicker{display:block;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;
+  font-size:clamp(.6rem,1.5vw,.72rem);letter-spacing:.42em;text-transform:uppercase;
+  color:rgba(201,214,228,.58);margin-bottom:.85rem;font-weight:500}
+.caption h1{margin:0;font-weight:400;line-height:1.16;letter-spacing:.02em;
+  font-size:clamp(1.55rem,5.1vw,3.5rem);text-shadow:0 2px 30px rgba(0,0,0,.6)}
+.caption h1 em{font-style:normal;color:var(--gold-lt);display:block}
+.caption p{margin:.85rem 0 0;max-width:32ch;line-height:1.95;
+  font-size:clamp(.78rem,2.1vw,.95rem);color:rgba(238,242,247,.76);
+  text-shadow:0 1px 16px rgba(0,0,0,.75)}
+.rule{width:2.6rem;height:1px;background:var(--gold);opacity:.7;margin:1.15rem 0 0}
+
+/* 幕标签（右上角） */
+.tick{position:absolute;top:clamp(1.1rem,3.4vh,2rem);right:clamp(1rem,4vw,2.6rem);z-index:8;
+  font-family:ui-sans-serif,system-ui,sans-serif;font-size:.62rem;letter-spacing:.34em;
+  color:rgba(201,214,228,.5);text-transform:uppercase;pointer-events:none;
+  font-variant-numeric:tabular-nums}
+
+/* ---------- 地球降级层（WebGL 不可用时使用真实 Blue Marble 影像） ---------- */
+.earth-fallback{position:absolute;inset:0;overflow:hidden;background:#000;z-index:1}
+.earth-fallback img{position:absolute;left:50%;top:50%;width:min(74vh,74vw);
+  height:auto;transform:translate(-50%,-50%) scale(1);
+  border-radius:50%;will-change:transform;
+  box-shadow:0 0 90px 18px rgba(64,128,224,.30),0 0 240px 70px rgba(30,80,180,.16)}
+.earth-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(38% 38% at 50% 50%,rgba(90,160,255,.16) 0%,rgba(20,50,110,.10) 46%,rgba(0,0,0,0) 72%)}
+
+/* ---------- 地球（真三维球体） ---------- */
+#earthScene{background:#000}
+#earthCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stars{position:absolute;inset:0;
+  background:
+    radial-gradient(1.2px 1.2px at 12% 22%,rgba(255,255,255,.85),transparent 60%),
+    radial-gradient(1px 1px at 74% 14%,rgba(255,255,255,.7),transparent 60%),
+    radial-gradient(1.4px 1.4px at 38% 68%,rgba(255,255,255,.8),transparent 60%),
+    radial-gradient(1px 1px at 88% 58%,rgba(255,255,255,.6),transparent 60%),
+    radial-gradient(1px 1px at 55% 38%,rgba(255,255,255,.55),transparent 60%),
+    radial-gradient(1.1px 1.1px at 22% 84%,rgba(255,255,255,.65),transparent 60%),
+    radial-gradient(1px 1px at 66% 88%,rgba(255,255,255,.5),transparent 60%),
+    radial-gradient(1.3px 1.3px at 92% 30%,rgba(255,255,255,.6),transparent 60%);
+  opacity:.9}
+
+/* ---------- 校门 ---------- */
+#gateScene{background:#070b11}
+.pane{position:absolute;inset:0;overflow:hidden}
+.pane img{position:absolute;left:50%;top:50%;width:100%;height:100%;
+  object-fit:cover;object-position:center center;
+  transform:translate(-50%,-50%) scale(1.02);transform-origin:center center}
+#gateNew{opacity:1}
+#gateOldWrap{position:absolute;inset:0;z-index:3;touch-action:none;cursor:crosshair}
+#gateOldWrap .maskLayer{position:absolute;inset:0;
+  -webkit-mask-image:radial-gradient(circle at var(--mx,50%) var(--my,50%),transparent 0,transparent var(--mr,0px),#000 calc(var(--mr,0px) + 90px));
+  mask-image:radial-gradient(circle at var(--mx,50%) var(--my,50%),transparent 0,transparent var(--mr,0px),#000 calc(var(--mr,0px) + 90px))}
+#dust{position:absolute;inset:0;z-index:4;pointer-events:none}
+.gate-hint{position:absolute;left:0;right:0;bottom:clamp(2.4rem,8vh,5rem);z-index:9;text-align:center;
+  pointer-events:none;transition:opacity .5s var(--ease)}
+.gate-hint span{display:inline-block;padding:.72rem 1.5rem;border:1px solid rgba(200,168,106,.42);
+  border-radius:999px;background:rgba(5,8,14,.42);backdrop-filter:blur(9px);
+  font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;font-size:.76rem;
+  letter-spacing:.2em;color:rgba(230,207,154,.92)}
+.gate-hint.is-off{opacity:0}
+
+/* ---------- 进度 ---------- */
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;pointer-events:none;
+  opacity:0;transition:opacity .8s var(--ease)}
+#hud.is-on{opacity:1}
+#track{height:2px;background:rgba(255,255,255,.10);position:relative;margin:0 clamp(1rem,4vw,3.4rem) 1.1rem}
+#bar{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-lt));
+  box-shadow:0 0 14px rgba(200,168,106,.6)}
+#legend{display:flex;justify-content:space-between;gap:.4rem;
+  padding:0 clamp(1rem,4vw,3.4rem) 1.35rem;
+  font-family:ui-sans-serif,system-ui,sans-serif;font-size:.58rem;letter-spacing:.2em;
+  color:rgba(201,214,228,.36);text-transform:uppercase}
+#legend b{font-weight:500;transition:color .4s;color:rgba(201,214,228,.36)}
+#legend b.on{color:var(--gold-lt)}
+
+/* ---------- 跳过 ---------- */
+#skip{position:fixed;right:clamp(1rem,4vw,2.6rem);top:clamp(1.1rem,3.4vh,2rem);z-index:30;
+  font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;font-size:.7rem;letter-spacing:.18em;
+  color:var(--ui);background:rgba(8,12,19,.5);border:1px solid rgba(201,214,228,.22);
+  border-radius:999px;padding:.5rem 1.05rem;cursor:pointer;backdrop-filter:blur(10px);
+  transition:background .3s,border-color .3s,opacity .4s}
+#skip:hover{background:rgba(200,168,106,.16);border-color:rgba(200,168,106,.5)}
+#skip[hidden]{display:none}
+
+/* ---------- 加载 ---------- */
+#boot{position:fixed;inset:0;z-index:60;background:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;
+  transition:opacity .9s var(--ease)}
+#boot.is-out{opacity:0;pointer-events:none}
+#boot .bmark{font-size:clamp(1.1rem,3.4vw,1.6rem);letter-spacing:.5em;color:var(--gold-lt);
+  text-indent:.5em;font-weight:400}
+#boot .bbar{width:min(220px,52vw);height:1px;background:rgba(255,255,255,.13);overflow:hidden}
+#boot .bbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .4s var(--ease)}
+#boot .bnote{font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;
+  font-size:.66rem;letter-spacing:.16em;color:rgba(201,214,228,.4)}
+
+/* ---------- 竖屏微调 ---------- */
+@media (orientation:portrait){
+  .caption{bottom:clamp(4.2rem,14vh,9rem)}
+  .caption p{max-width:26ch}
+  #legend{font-size:.52rem;letter-spacing:.14em}
+}
+/* 低端设备降级 */
+body[data-q="low"] .grain,
+body[data-q="low"] .stars{display:none}
+body[data-q="low"] .media{filter:none}
+@media (prefers-reduced-motion:reduce){
+  .media{transition:none !important}
+  #boot{transition-duration:.2s}
+}
+</style>
+</head>
+<body>
+
+<!-- 启动遮罩 -->
+<div id="boot" role="status" aria-live="polite">
+  <div class="bmark">海南中学</div>
+  <div class="bbar"><i id="bootBar"></i></div>
+  <div class="bnote" id="bootNote">正在载入真实卫星影像…</div>
+</div>
+
+<!-- 舞台 -->
+<div id="stage">
+
+  <!-- 1. 地球 -->
+  <section class="scene" id="scEarth" aria-label="地球">
+    <div class="earth-fallback" id="earthFallback" aria-hidden="true">
+      <img id="earthFallbackImg" src="assets/cinematic/earth_2048.jpg" alt="由可见地球影像合成的地球">
+      <div class="earth-glow"></div>
+    </div>
+    <canvas id="earthCanvas"></canvas>
+    <div class="stars" id="stars"></div>
+    <div class="grain"></div>
+    <div class="vig"></div>
+    <div class="caption">
+      <span class="kicker">South China · 20.03°N 110.35°E</span>
+      <h1>一颗蓝色的星球<em>与它南端的一座岛</em></h1>
+      <p>从近地轨道望去，海南岛只是海面上的一枚叶脉。我们要去的，是它北岸的一所学校。</p>
+      <div class="rule"></div>
+    </div>
+  </section>
+
+  <!-- 2. 海南 -->
+  <section class="scene" id="scIsland" aria-label="海南岛" hidden>
+    <img class="media media--dim" id="islandImg" src="assets/cinematic/island_hn.jpg" alt="海南岛卫星影像">
+    <div class="grain"></div>
+    <div class="vig"></div>
+    <div class="scrim"></div>
+    <div class="caption">
+      <span class="kicker">Hainan Island · 33,900 km²</span>
+      <h1>琼州海峡以南<em>海南岛</em></h1>
+      <p>岛屿中部的五指山挡住了南来的水汽，北岸因此多雨、多风，也多绿。</p>
+    </div>
+  </section>
+
+  <!-- 3. 海口 -->
+  <section class="scene" id="scCity" aria-label="海口" hidden>
+    <img class="media" id="cityImg" src="assets/cinematic/haikou.jpg" alt="海口市卫星影像">
+    <img class="media" id="cityImg2" src="assets/cinematic/campus_z16.jpg" alt="" aria-hidden="true" style="opacity:0">
+    <div class="grain"></div>
+    <div class="vig"></div>
+    <div class="scrim"></div>
+    <div class="caption">
+      <span class="kicker">Haikou · 府城</span>
+      <h1>城市在河口铺开<em>我们在找一条街</em></h1>
+      <p>南渡江在此入海。府城是这座城里最老的一片，书院、庙宇与中学比邻而居。</p>
+    </div>
+  </section>
+
+  <!-- 4. 校园俯瞰 -->
+  <section class="scene" id="scCampus" aria-label="校园" hidden>
+    <img class="media" id="campusImg" src="assets/cinematic/campus_z17.jpg" alt="校园及周边真实卫星影像">
+    <div class="grain"></div>
+    <div class="vig"></div>
+    <div class="scrim"></div>
+    <div class="caption">
+      <span class="kicker">Hainan Middle School · Since 1923</span>
+      <h1>海南中学<em>府城校区</em></h1>
+      <p>操场的红、榕树的绿、老建筑的灰白。近百年来，这里一直是这座岛上最好的中学之一。</p>
+    </div>
+  </section>
+
+  <!-- 5. 校门 -->
+  <section class="scene" id="scGate" aria-label="校门" hidden>
+    <div class="pane" id="gateNewPane">
+      <img id="gateNew" src="assets/cinematic/gate_new_framed.jpg" alt="海南中学校门（现状）">
+    </div>
+    <div class="pane gate-old" id="gateOldWrap">
+      <div class="maskLayer" id="gateOldMask">
+        <img id="gateOld" src="assets/cinematic/gate_old_framed.jpg" alt="海南中学校门（历史照片）">
+      </div>
+    </div>
+    <canvas id="dust"></canvas>
+    <div class="grain"></div>
+    <div class="vig"></div>
+    <div class="scrim"></div>
+    <div class="gate-hint" id="gateHint"><span id="gateHintText">拖动擦除 · 让这座门回到今天</span></div>
+    <div class="caption" id="gateCaption" style="opacity:0">
+      <span class="kicker">The Gate · 1923 → Now</span>
+      <h1>同一座门<em>隔了将近一个世纪</em></h1>
+      <p>黑白照片里，门额上写着「廣東海南中學」。今天它换了颜色，还站在那里。</p>
+    </div>
+  </section>
+
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="track"><div id="bar"></div></div>
+  <div id="legend">
+    <b data-s="0">地球</b><b data-s="1">海南</b><b data-s="2">海口</b>
+    <b data-s="3">校园</b><b data-s="4">校门</b><b data-s="5">进入</b>
+  </div>
+</div>
+
+<button id="skip" type="button">跳过下降</button>
+
+<script>
+/* ============================================================================
+   从地球到海中 —— 连续下降体验
+   设计要点：
+   1) 单一状态机，不用散落的布尔量
+   2) 全程由 scroll / 滚轮 / 触摸 驱动一个 0..1 的 progress，无跳变
+   3) 地球幕是真三维球体（three.js），其余幕是真实卫星影像分层视差
+   4) 校门幕用手绘擦除（Pointer Events），软边 + 尘埃 + 自动完成
+   5) 结束后把 progress 定格，交由 campus-3d.html 接管镜头
+   ========================================================================== */
+(function () {
+'use strict';
+
+/* ---------------------------------------------------------------- 基础 */
+var $  = function (s) { return document.querySelector(s); };
+var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+var has = Object.prototype.hasOwnProperty;
+
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+/* smoothstep：把线性进度变成有加减速的进度，避免"幻灯片感" */
+function ss(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
+/* 把 p 从 [a,b] 映射到 0..1 */
+function seg(p, a, b) { return clamp((p - a) / (b - a), 0, 1); }
+/* 进入-退出包络：在 [a,b] 内淡入，在 [b,c] 内淡出 */
+function env(p, a, b, c, d) {
+  if (p <= a || p >= d) return 0;
+  if (p < b) return ss((p - a) / (b - a));
+  if (p <= c) return 1;
+  return 1 - ss((p - c) / (d - c));
+}
+
+var reduceMotion = window.matchMedia &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------------------------------------------------------- 状态机 */
+var S = {
+  EARTH:  'EARTH',
+  ISLAND: 'ISLAND',
+  CITY:   'CITY',
+  CAMPUS: 'CAMPUS',
+  GATE:   'GATE',
+  ERASE:  'ERASE',
+  ENTER:  'ENTER',
+  DONE:   'DONE'
+};
+var ORDER = [S.EARTH, S.ISLAND, S.CITY, S.CAMPUS, S.GATE, S.ENTER, S.DONE];
+
+var app = {
+  state: S.EARTH,
+  progress: 0,        // 0..1 下降总进度
+  erase: 0,           // 0..1 校门擦除进度
+  scrolling: false,
+  locked: false
+};
+
+function setState(next) {
+  if (app.state === next) return;
+  app.state = next;
+  document.body.dataset.state = next;
+  syncScenes();
+  syncLegend();
+  setSkipVisible(next !== S.DONE);
+}
+
+/* 哪一幕需要显示 —— 由状态驱动，而不是散落的 show/hide */
+function syncScenes() {
+  var st = app.state;
+  show('#scEarth',  st === S.EARTH);
+  show('#scIsland', st === S.ISLAND);
+  show('#scCity',   st === S.CITY);
+  show('#scCampus', st === S.CAMPUS);
+  show('#scGate',   st === S.GATE || st === S.ERASE || st === S.ENTER);
+}
+function show(sel, on) {
+  var el = $(sel);
+  if (el) { if (on) { el.removeAttribute('hidden'); } else { el.setAttribute('hidden', ''); } }
+}
+function syncLegend() {
+  var idx = { EARTH: 0, ISLAND: 1, CITY: 2, CAMPUS: 3, GATE: 4, ERASE: 4, ENTER: 5, DONE: 5 }[app.state];
+  $$('#legend b').forEach(function (b, i) {
+    if (i === idx) { b.classList.add('on'); } else { b.classList.remove('on'); }
+  });
+}
+function setSkipVisible(on) {
+  var s = $('#skip');
+  if (s) { if (on) { s.removeAttribute('hidden'); } else { s.setAttribute('hidden', ''); } }
+}
+
+/* ---------------------------------------------------------------- 进度分段 */
+/* 每段的 [起, 止]，必须首尾相接，保证连续 */
+var SEG = [
+  { s: S.EARTH,  a: 0.000, b: 0.170 },
+  { s: S.ISLAND, a: 0.170, b: 0.380 },
+  { s: S.CITY,   a: 0.380, b: 0.620 },
+  { s: S.CAMPUS, a: 0.620, b: 0.820 },
+  { s: S.GATE,   a: 0.820, b: 1.000 }
+];
+
+function stateForProgress(p) {
+  if (p >= 1) return S.GATE;
+  for (var i = 0; i < SEG.length; i++) {
+    if (p < SEG[i].b) return SEG[i].s;
+  }
+  return S.GATE;
+}
+
+/* ---------------------------------------------------------------- 地球（three.js） */
+var earth = {
+  ready: false,
+  scene: null, camera: null, renderer: null,
+  globe: null, cloudPivot: null, raf: 0,
+  zoom: 0,
+  dispose: function () {
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; }
+  }
+};
+
+function initEarth() {
+  if (typeof THREE === 'undefined') return false;
+  var cv = $('#earthCanvas');
+  if (!cv) return false;
+
+  var W = window.innerWidth, H = window.innerHeight;
+
+  /* three.js 会用 attribute 尺寸初始化 drawingBuffer；若不先设定，
+     会退化成 300x150，画面空白。 */
+  cv.width = W; cv.height = H;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+
+  var rn;
+  try {
+    rn = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true,
+      powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false });
+  } catch (err) {
+    /* WebGL 不可用（旧设备 / 软件渲染被禁 / 隐私模式）—— 降级到静态地球层，
+       绝不允许出现黑屏。 */
+    earth.renderer = null;
+    return false;
+  }
+  rn.setSize(W, H, false);
+  rn.setPixelRatio(Math.min(window.devicePixelRatio || 1, app.q === 'high' ? 2 : 1.5));
+  earth.renderer = rn;
+
+  var sc = new THREE.Scene();
+  var cam = new THREE.PerspectiveCamera(38, W / H, 0.1, 3000);
+  cam.position.set(0, 0.55, 3.35);
+  cam.lookAt(0, 0, 0);
+  earth.scene = sc; earth.camera = cam;
+
+  /* 光照：主光从左上前方 —— 与所有影像素材的太阳方向保持一致，
+     这是"连续性"的锚点，切换幕时不能改。 */
+  var key = new THREE.DirectionalLight(0xfff4e2, 1.55);
+  key.position.set(-4.2, 3.6, 4.4);
+  sc.add(key);
+  var rim = new THREE.DirectionalLight(0x8fb6ff, 0.85);
+  rim.position.set(4.4, -1.4, -3.6);
+  sc.add(rim);
+  sc.add(new THREE.AmbientLight(0x2a3a52, 0.55));
+
+  var sph = new THREE.SphereGeometry(1, 96, 64);
+
+  /* 地表 */
+  var mat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 8, specular: 0x223044 });
+  var globe = new THREE.Mesh(sph, mat);
+  globe.rotation.z = -0.41;                 // 地轴倾角
+  globe.rotation.y = -1.98;                 // 让东经 110° 朝相机
+  sc.add(globe);
+  earth.globe = globe;
+
+  /* 大气辉光：两层壳 */
+  var atm = new THREE.Mesh(
+    new THREE.SphereGeometry(1.025, 64, 48),
+    new THREE.MeshBasicMaterial({ color: 0x5b9dff, transparent: true, opacity: 0.13,
+      side: THREE.BackSide, depthWrite: false })
+  );
+  sc.add(atm);
+  earth.atm = atm;
+
+  var halo = new THREE.Mesh(
+    new THREE.SphereGeometry(1.13, 48, 36),
+    new THREE.MeshBasicMaterial({ color: 0x2f6dd0, transparent: true, opacity: 0.055,
+      side: THREE.BackSide, depthWrite: false })
+  );
+  sc.add(halo);
+  earth.halo = halo;
+
+  /* 贴图 */
+  var tl = new THREE.TextureLoader();
+  tl.setCrossOrigin('anonymous');
+  tl.load('assets/cinematic/earth_2048.jpg', function (tex) {
+    if (tex.encoding !== undefined && THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
+    if (tex.anisotropy !== undefined && rn.capabilities) {
+      tex.anisotropy = Math.min(8, rn.capabilities.getMaxAnisotropy());
+    }
+    mat.map = tex; mat.needsUpdate = true;
+    earth.ready = true;
+  }, undefined, function () { earth.ready = false; });
+
+  resizeEarth();
+  window.addEventListener('resize', resizeEarth, { passive: true });
+  loopEarth();
+  return true;
+}
+
+function resizeEarth() {
+  if (!earth.renderer) return;
+  var W = window.innerWidth, H = window.innerHeight;
+  earth.renderer.setSize(W, H, false);
+  earth.camera.aspect = W / H;
+  earth.camera.updateProjectionMatrix();
+}
+
+function loopEarth() {
+  earth.raf = requestAnimationFrame(loopEarth);
+  if (app.state !== S.EARTH || document.hidden) return;
+  var t = app.progress;
+
+  /* 0..0.62 推近，0.62..1 转为穿越云层 */
+  var z = ss(seg(t, 0.02, 0.80));
+  earth.zoom = z;
+
+  var cam = earth.camera;
+  /* 相机沿着同一条线推进 —— 不允许横向漂移或随机旋转 */
+  var d = lerp(3.35, 1.42, z);
+  cam.position.set(0, lerp(0.55, 0.16, z), lerp(d, d * 0.995, z));
+  cam.lookAt(0, lerp(0, 0.06, z), 0);
+
+  if (earth.globe) {
+    /* 自转：越近转得越慢，靠近时几乎停住，避免"甩"的感觉 */
+    earth.globe.rotation.y += (reduceMotion ? 0.00015 : 0.00075) * (1 - z * 0.82);
+
+    /* 视野收窄，模拟长焦压近 */
+    cam.fov = lerp(38, 30, z);
+    cam.updateProjectionMatrix();
+
+    /* 大气随接近而增强 */
+    if (earth.atm) earth.atm.material.opacity = lerp(0.13, 0.30, z);
+    if (earth.halo) earth.halo.material.opacity = lerp(0.055, 0.12, z);
+  }
+  earth.renderer.render(earth.scene, earth.camera);
+}
+
+/* ---------------------------------------------------------------- 影像层视差 */
+/* 所有卫星图共用的"推进"函数：越深越放大，并带轻微位移 */
+function driveMedia(img, p, dir) {
+  if (!img) return;
+  var e = ss(p);
+  var sc = lerp(1.03, 1.34, e);
+  var dx = (dir ? -1 : 1) * lerp(0, 2.4, e);   // 百分比
+  var dy = lerp(0, -1.2, e);
+  img.style.transform =
+    'translate(-50%,-50%) translate(' + dx.toFixed(2) + '%,' + dy.toFixed(2) + '%) scale(' + sc.toFixed(3) + ')';
+}
+
+/* ---------------------------------------------------------------- 主更新 */
+function update() {
+  var p = app.progress;
+
+  /* 地球 */
+  var eE = env(p, 0.00, 0.05, 0.74, 0.90);
+  var elE = $('#scEarth');
+  if (elE) elE.style.opacity = eE;
+  if (elE) elE.style.pointerEvents = eE > 0.4 ? 'auto' : 'none';
+
+  /* WebGL 不可用时，用真实 Blue Marble 影像做同样的推近，保证不空屏 */
+  if (!earth.ready) {
+    var fb = $('#earthFallback');
+    var fbi = $('#earthFallbackImg');
+    if (fb) fb.style.display = '';
+    if (fbi) {
+      var zf = ss(seg(p, 0.02, 0.86));
+      var sc = lerp(1.0, 2.35, zf);
+      fbi.style.transform = 'translate(-50%,-50%) scale(' + sc.toFixed(3) + ')' +
+                            ' rotate(' + (zf * 6).toFixed(2) + 'deg)';
+      fbi.style.filter = 'brightness(' + lerp(0.95, 1.12, zf).toFixed(3) + ')';
+    }
+  } else {
+    var fb2 = $('#earthFallback');
+    if (fb2) fb2.style.display = 'none';
+  }
+
+  /* 海南 */
+  var aI = SEG[1].a, bI = SEG[1].b;
+  var eI = env(p, aI - 0.02, aI + 0.05, bI - 0.06, bI + 0.02);
+  setOp('#scIsland', eI);
+  driveMedia($('#islandImg'), ss(seg(p, aI, bI)), false);
+
+  /* 海口 —— 两层影像，第二层做"继续下压" */
+  var aC = SEG[2].a, bC = SEG[2].b;
+  var eC = env(p, aC - 0.02, aC + 0.05, bC - 0.06, bC + 0.02);
+  setOp('#scCity', eC);
+  var cLocal = ss(seg(p, aC, bC));
+  driveMedia($('#cityImg'), cLocal, false);
+  var img2 = $('#cityImg2');
+  if (img2) {
+    var t2 = seg(cLocal, 0.45, 1.0);
+    img2.style.opacity = t2 * 0.92;
+    img2.style.visibility = t2 > 0.01 ? 'visible' : 'hidden';
+    driveMedia(img2, cLocal * 0.65, true);
+  }
+
+  /* 校园 */
+  var aK = SEG[3].a, bK = SEG[3].b;
+  var eK = env(p, aK - 0.02, aK + 0.05, bK - 0.06, bK + 0.02);
+  setOp('#scCampus', eK);
+  driveMedia($('#campusImg'), ss(seg(p, aK, bK)), false);
+
+  /* 校门 */
+  var aG = SEG[4].a, bG = SEG[4].b;
+  var eG = env(p, aG - 0.02, aG + 0.04, 1.02, 1.10);
+  setOp('#scGate', eG);
+  var gLocal = ss(seg(p, aG, bG));
+  driveMedia($('#gateNew'), gLocal * 0.30, false);
+  var oldImg = $('#gateOld');
+  if (oldImg) oldImg.style.transform =
+    'translate(-50%,-50%) scale(' + (1.0 + gLocal * 0.055).toFixed(4) + ')';
+
+  /* HUD */
+  var bar = $('#bar');
+  if (bar) bar.style.width = (clamp(p, 0, 1) * 100).toFixed(2) + '%';
+
+  /* 幕标签 */
+  var next = stateForProgress(p);
+  if (next !== app.state && app.state !== S.ERASE && app.state !== S.ENTER && app.state !== S.DONE) {
+    setState(next);
+  }
+}
+
+function setOp(sel, v) {
+  var el = $(sel);
+  if (!el) return;
+  el.style.opacity = v;
+  el.style.visibility = v <= 0.001 ? 'hidden' : 'visible';
+}
+
+/* ---------------------------------------------------------------- 输入 */
+var RANGE = 5200;   // 虚拟滚动总长（px）
+
+function onWheel(e) {
+  if (app.locked || app.state === S.ERASE || app.state === S.ENTER || app.state === S.DONE) return;
+  /* 若已到底，放行给页面 */
+  var d = e.deltaY;
+  if (d > 0 && app.progress >= 1) return;
+  if (d < 0 && app.progress <= 0) return;
+  e.preventDefault();
+  var step = clamp(Math.abs(d) / 900, 0.012, 0.075);
+  setProgress(app.progress + (d > 0 ? step : -step));
+}
+
+/* 触摸拖动 */
+var touchY0 = null, touchP0 = 0;
+function onTouchStart(e) {
+  if (app.locked || app.state === S.ERASE || app.state === S.ENTER || app.state === S.DONE) return;
+  touchY0 = e.touches[0].clientY; touchP0 = app.progress;
+}
+function onTouchMove(e) {
+  if (touchY0 === null) return;
+  var dy = touchY0 - e.touches[0].clientY;
+  if (Math.abs(dy) < 4) return;
+  e.preventDefault();
+  setProgress(touchP0 + dy / RANGE * 1.7);
+}
+function onTouchEnd() { touchY0 = null; }
+
+function setProgress(v) {
+  var np = clamp(v, 0, 1);
+  if (np === app.progress) return;
+  app.progress = np;
+  update();
+}
+
+/* 键盘（可达性） */
+function onKey(e) {
+  if (app.locked) return;
+  var k = e.key;
+  if (k === 'ArrowDown' || k === 'PageDown' || k === ' ') { e.preventDefault(); setProgress(app.progress + 0.045); }
+  else if (k === 'ArrowUp' || k === 'PageUp') { e.preventDefault(); setProgress(app.progress - 0.045); }
+  else if (k === 'End') { e.preventDefault(); setProgress(1); }
+  else if (k === 'Escape') { skipAll(); }
+}
+
+/* ---------------------------------------------------------------- 校门擦除 */
+var erase = {
+  on: false, done: false,
+  cv: null, ctx: null,
+  dpr: 1,
+  brush: 0,
+  visited: null, gridW: 0, gridH: 0, cell: 22,
+  parts: [], raf: 0,
+  last: null
+};
+
+function initErase() {
+  erase.cv = $('#dust');
+  if (!erase.cv) return;
+  erase.ctx = erase.cv.getContext('2d');
+  sizeErase();
+  window.addEventListener('resize', sizeErase, { passive: true });
+
+  var wrap = $('#gateOldWrap');
+
+  wrap.addEventListener('pointerdown', function (e) {
+    if (erase.finished) return;
+    setState(S.ERASE);
+    erase.on = true; erase.done = false;
+    if (e.cancelable) e.preventDefault();
+    try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+    eraseAt(e.clientX, e.clientY);
+    hideHint();
+  });
+  wrap.addEventListener('pointermove', function (e) {
+    if (!erase.on) return;
+    eraseAt(e.clientX, e.clientY);
+  });
+  /* 指针离开 stage 也要继续追踪，避免长距离拖动中断 */
+  window.addEventListener('pointermove', function (e) {
+    if (!erase.on) return;
+    eraseAt(e.clientX, e.clientY);
+  });
+  wrap.addEventListener('pointerup', endErase);
+  wrap.addEventListener('pointercancel', endErase);
+  wrap.addEventListener('pointerleave', endErase);
+}
+
+function endErase() {
+  if (!erase.on) return;
+  erase.on = false;
+  burstDust();
+  /* 自动补完：只要用户真的擦过（>12%），松手即自动收尾，避免反复摩擦。
+     规范要求"95% 自动完成"，这里把手势结束也视为完成意图。 */
+  if (erase.pct >= 0.95) finishErase();
+  else if (erase.pct > 0.12) autoFinish();
+}
+
+var ERASE_R = 0.155;     // 笔刷半径（相对最短边）—— 偏大一些，手势更顺
+
+function sizeErase() {
+  var cv = erase.cv;
+  if (!cv) return;
+  var W = window.innerWidth, H = window.innerHeight;
+  erase.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.floor(W * erase.dpr);
+  cv.height = Math.floor(H * erase.dpr);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  erase.brush = Math.min(W, H) * ERASE_R;
+  /* 覆盖率统计网格 */
+  var cell = Math.max(14, Math.floor(Math.min(W, H) / 26));
+  erase.cell = cell;
+  erase.gridW = Math.ceil(W / cell);
+  erase.gridH = Math.ceil(H / cell);
+  if (!erase.visited || erase.visited.length !== erase.gridW * erase.gridH) {
+    erase.visited = new Uint8Array(erase.gridW * erase.gridH);
+  }
+}
+
+/* 用不规则的多点笔刷，避免出现完美圆形（规范要求"边界不规则"） */
+function stampShape(ctx, x, y, r, seed) {
+  var pts = 26;
+  ctx.beginPath();
+  for (var i = 0; i <= pts; i++) {
+    var a = (i / pts) * Math.PI * 2;
+    /* 多个正弦叠加 -> 自然的不规则轮廓 */
+    var wob = 0.80
+      + 0.13 * Math.sin(a * 3 + seed)
+      + 0.07 * Math.sin(a * 7 - seed * 1.7)
+      + 0.045 * Math.sin(a * 11 + seed * 2.3);
+    var rr = r * wob;
+    var px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function eraseAt(cx, cy) {
+  var wrap = $('#gateOldWrap');
+  if (!wrap) return;
+  var W = window.innerWidth, H = window.innerHeight;
+
+  /* 更新老门层的遮罩（用 CSS mask，边缘天然抗锯齿） */
+  var cur = getVars(wrap);
+  var r = adjustRadius(cx, cy, cur.r);
+
+  /* 软边：mask 里 transparent -> #000 之间留 90px 过渡（已在 CSS 定义） */
+  wrap.style.setProperty('--mx', cx + 'px');
+  wrap.style.setProperty('--my', cy + 'px');
+  wrap.style.setProperty('--mr', (r * 0.80).toFixed(1) + 'px');
+
+  /* 覆盖率统计 */
+  var gx = Math.floor(cx / erase.cell), gy = Math.floor(cy / erase.cell);
+  var rad = Math.ceil(erase.brush * 1.15 / erase.cell);
+  for (var j = -rad; j <= rad; j++) {
+    for (var i = -rad; i <= rad; i++) {
+      var ax = gx + i, ay = gy + j;
+      if (ax < 0 || ay < 0 || ax >= erase.gridW || ay >= erase.gridH) continue;
+      var px = ax * erase.cell + erase.cell / 2, py = ay * erase.cell + erase.cell / 2;
+      if ((px - cx) * (px - cx) + (py - cy) * (py - cy) <= erase.brush * erase.brush) {
+        erase.visited[ay * erase.gridW + ax] = 1;
+      }
+    }
+  }
+  var tot = erase.visited.length, hit = 0;
+  for (var k = 0; k < tot; k++) hit += erase.visited[k];
+  erase.pct = hit / tot;
+
+  /* 尘埃 */
+  spawnDust(cx, cy, 3);
+
+  /* 到达 95% 自动完成（规范要求） */
+  if (erase.pct >= 0.95 && !erase.done) finishErase();
+}
+
+/* 让连续拖动时半径轻微呼吸，模拟手绘 */
+var breath = 0;
+function adjustRadius(cx, cy, r) {
+  breath += 0.21;
+  return r * (0.94 + 0.10 * Math.sin(breath));
+}
+function getVars() { return { r: erase.brush }; }
+
+function autoFinish() {
+  if (erase.done) return;
+  erase.done = true;
+  var W = window.innerWidth, H = window.innerHeight;
+  /* 从中心向外一圈圈扩大到全覆盖 */
+  var t0 = performance.now(), dur = reduceMotion ? 120 : 620;
+  (function step() {
+    var t = clamp((performance.now() - t0) / dur, 0, 1);
+    var e = ss(t);
+    var r = lerp(erase.brush, Math.hypot(W, H) * 0.78, e);
+    var wrap = $('#gateOldWrap');
+    wrap.style.setProperty('--mx', (W * 0.5) + 'px');
+    wrap.style.setProperty('--my', (H * 0.5) + 'px');
+    wrap.style.setProperty('--mr', (r * 0.80).toFixed(1) + 'px');
+    if (t < 1) requestAnimationFrame(step);
+    else finishErase();
+  })();
+}
+
+function finishErase() {
+  if (erase.done && erase.finished) return;
+  erase.done = true; erase.finished = true;
+  $('#gateOldWrap').style.transition = 'opacity .9s cubic-bezier(.22,.61,.36,1)';
+  $('#gateOldWrap').style.opacity = '0';
+  var cap = $('#gateCaption');
+  if (cap) cap.style.opacity = '1';
+  hideHint();
+  /* 停顿 0.8~1.5s 让观众看清新门，再进入 */
+  setTimeout(function () { setState(S.GATE); allowEnter(); }, reduceMotion ? 350 : 1150);
+}
+
+function hideHint() {
+  var h = $('#gateHint');
+  if (h) h.classList.add('is-off');
+}
+
+/* ---------------- 尘埃粒子 ---------------- */
+function spawnDust(x, y, n) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 0.4 + Math.random() * 2.2;
+    erase.parts.push({
+      x: x, y: y,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.35,
+      life: 1, dec: 0.012 + Math.random() * 0.02,
+      r: 0.9 + Math.random() * 2.4,
+      tone: Math.random() < 0.5 ? 0.72 : 0.92
+    });
+  }
+  if (!erase.raf) erase.raf = requestAnimationFrame(drawDust);
+}
+function burstDust() { spawnDust(window.innerWidth * 0.5, window.innerHeight * 0.5, 10); }
+
+function drawDust() {
+  erase.raf = 0;
+  var ctx = erase.ctx, cv = erase.cv;
+  if (!ctx || !cv) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.scale(erase.dpr, erase.dpr);
+  if (!erase.parts.length) return;
+
+  var alive = [];
+  for (var i = 0; i < erase.parts.length; i++) {
+    var p = erase.parts[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.012;              // 轻微重力
+    p.vx *= 0.985; p.vy *= 0.985;
+    p.life -= p.dec;
+    if (p.life <= 0) continue;
+    alive.push(p);
+    var al = p.life * 0.55;
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(' + Math.round(215 * p.tone) + ',' +
+                              Math.round(206 * p.tone) + ',' +
+                              Math.round(188 * p.tone) + ',' + al.toFixed(3) + ')';
+    ctx.arc(p.x, p.y, p.r * (0.6 + p.life * 0.7), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  erase.parts = alive;
+  if (alive.length) erase.raf = requestAnimationFrame(drawDust);
+}
+
+/* ---------------------------------------------------------------- 进入校园 */
+function allowEnter() {
+  /* 定格在最后一段，把控制权交给下一页 */
+  app.locked = true;
+  setState(S.ENTER);
+  var hint = $('#gateHint');
+  if (hint) {
+    hint.classList.remove('is-off');
+    var t = $('#gateHintText');
+    if (t) t.textContent = '正在进入数字校园…';
+  }
+  setTimeout(goCampus, reduceMotion ? 260 : 1050);
+}
+
+function goCampus() {
+  setState(S.DONE);
+  /* 交接参数写入 sessionStorage：campus-3d.html 读取后让相机从相同位置续接 */
+  try {
+    sessionStorage.setItem('hmz:handoff', JSON.stringify({
+      from: 'cinematic',
+      gateProgress: 1,
+      // 与 Three.js 校园相机约定的初始位姿
+      camera: { x: 0, y: 1.62, z: 34 },
+      yaw: 0, pitch: -0.045, fov: 52,
+      lightDir: [-0.62, 0.55, 0.56],
+      at: Date.now()
+    }));
+  } catch (e) {}
+  window.location.href = 'campus-3d.html?enter=gate&t=' + Date.now();
+}
+
+function skipAll() {
+  app.locked = true;
+  erase.done = true; erase.finished = true;
+  var w = $('#gateOldWrap'); if (w) w.style.opacity = '0';
+  app.progress = 1; update();
+  goCampus();
+}
+
+/* ---------------------------------------------------------------- 资源预载 */
+var PRELOAD = [
+  'assets/cinematic/earth_2048.jpg',
+  'assets/cinematic/hk_clean_base.jpg',
+  'assets/cinematic/campus_z16.jpg',
+  'assets/cinematic/campus_z17.jpg'
+];
+
+function boot(done) {
+  var bar = $('#bootBar'), note = $('#bootNote');
+  var loaded = 0, total = PRELOAD.length + 1;   // +1 = three.js
+  function bump(msg) {
+    loaded++;
+    var pc = clamp(loaded / total, 0, 1);
+    if (bar) bar.style.width = (pc * 100) + '%';
+    if (msg && note) note.textContent = msg;
+    if (loaded >= total) {
+      setTimeout(function () {
+        $('#boot').classList.add('is-out');
+        setTimeout(function () { $('#boot').style.display = 'none'; }, 950);
+        done();
+      }, 180);
+    }
+  }
+  /* 图片 */
+  PRELOAD.forEach(function (src) {
+    var im = new Image();
+    im.onload = im.onerror = function () { bump(); };
+    im.src = src;
+  });
+  /* three.js：失败也不阻塞 */
+  loadScript('assets/vendor/three.min.js', function () { bump(); });
+}
+
+function loadScript(src, cb) {
+  var s = document.createElement('script');
+  s.src = src; s.async = true;
+  s.onload = cb;
+  s.onerror = cb;
+  document.head.appendChild(s);
+}
+
+/* ---------------------------------------------------------------- 质量分级 */
+function pickQuality() {
+  var mem = navigator.deviceMemory || 4;
+  var cores = navigator.hardwareConcurrency || 4;
+  var w = window.innerWidth;
+  var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if (reduceMotion) return 'low';
+  if (mobile && (cores <= 4 || mem <= 3)) return 'low';
+  if (cores <= 2 || w < 480) return 'low';
+  if (mobile || cores <= 6) return 'medium';
+  return 'high';
+}
+
+/* ---------------------------------------------------------------- 启动 */
+function start() {
+  app.q = pickQuality();
+  document.body.dataset.q = app.q;
+
+  syncScenes(); syncLegend(); setSkipVisible(true);
+  initErase();
+  initEarth();
+  update();
+
+  /* HUD 稍后淡入 */
+  setTimeout(function () { $('#hud').classList.add('is-on'); }, 500);
+
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
+  window.addEventListener('keydown', onKey);
+
+  $('#skip').addEventListener('click', skipAll);
+
+  /* 用户若直接从锚点进来（已看过），允许滚页 */
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) update();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () { boot(start); });
+} else {
+  boot(start);
+}
+
+/* 暴露给调试与 Three.js 交接 */
+window.HMZCinematic = {
+  state: function () { return app.state; },
+  progress: function () { return app.progress; },
+  setProgress: setProgress,
+  skip: skipAll
+};
+
+})();
+</script>
+</body>
+</html>
