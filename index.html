@@ -14,8 +14,91 @@
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/sections.css">
 <link rel="stylesheet" href="assets/css/mobile.css">
+<style>
+/* ============================================================
+   首页入场层：从地球到海南中学·电影级下降体验
+   用户一进站先看到下降动画，走完后平滑交还首页内容。
+   仅首次会话播放；已看过或用户跳过时直接进入首页。
+   ============================================================ */
+#cineGate{
+  position:fixed; inset:0; z-index:9000;
+  background:#05080e;
+  opacity:1;
+  transition:opacity .75s cubic-bezier(.4,0,.2,1),
+             visibility 0s linear .75s;
+  will-change:opacity;
+}
+#cineGate iframe{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; display:block;
+}
+#cineGate.is-out{
+  opacity:0; visibility:hidden; pointer-events:none;
+}
+/* 入场层存在时锁住首页滚动，避免用户滚动穿透 */
+html.cine-lock, html.cine-lock body{ overflow:hidden !important; }
+/* 无 iframe 支持 / 脚本关闭时的兜底：不遮挡内容 */
+@media (prefers-reduced-motion: reduce){
+  #cineGate{transition-duration:.2s}
+}
+</style>
 </head>
-<body>
+<body class="cine-lock">
+<!-- ============ 电影级下降入场层 ============ -->
+<div id="cineGate" role="presentation" aria-hidden="true">
+  <iframe id="cineFrame" title="从地球到海南中学" allow="autoplay"
+          src="descent.html?embed=1" tabindex="-1"></iframe>
+</div>
+<script>
+/* 入场层控制：必须在 body 解析早期执行，避免闪一下首页内容 */
+(function () {
+  var SEEN_KEY = 'hmz:cinematicSeen';
+  var gate  = document.getElementById('cineGate');
+  var frame = document.getElementById('cineFrame');
+
+  function unlock() {
+    document.documentElement.classList.remove('cine-lock');
+    document.body.classList.remove('cine-lock');
+    document.body.style.overflow = '';
+    if (gate) gate.classList.add('is-out');
+    /* 动画结束后彻底移除，释放内存与 GPU 上下文 */
+    setTimeout(function () {
+      if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
+      frame = null; gate = null;
+    }, 1000);
+  }
+
+  var seen = false;
+  try { seen = sessionStorage.getItem(SEEN_KEY) === '1'; } catch (e) {}
+
+  /* reduced-motion 或已看过：不播放，直接进入首页 */
+  var reduce = window.matchMedia &&
+               window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (seen || reduce) {
+    if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
+    document.documentElement.classList.remove('cine-lock');
+    document.body.classList.remove('cine-lock');
+    return;
+  }
+
+  /* 兜底：若 12 秒内没收到完成信号（例如 iframe 出错），自动放行 */
+  var guard = setTimeout(unlock, 12000);
+  window.__hmzCineGuard = guard;
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || d.type !== 'hmz:cinematic:done') return;
+    clearTimeout(guard);
+    unlock();
+  });
+
+  /* 首帧内容就绪前不显示首页内容，避免下方文字透出 */
+  document.documentElement.classList.add('cine-lock');
+})();
+</script>
+
 <a class="skip-link" href="#main">跳到主要内容</a>
 
 <!-- ============ 导航 ============ -->

@@ -167,6 +167,17 @@ body[data-q="low"] .media{filter:none}
   .media{transition:none !important}
   #boot{transition-duration:.2s}
 }
+
+/* ---------- 内嵌模式：收尾交还首页 ---------- */
+html.is-handoff,html.is-handoff body{
+  transition:opacity .75s cubic-bezier(.4,0,.2,1) !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+html.is-handoff #boot{display:none !important}
+@media (prefers-reduced-motion:reduce){
+  html.is-handoff,html.is-handoff body{transition-duration:.2s !important}
+}
 </style>
 </head>
 <body>
@@ -328,7 +339,17 @@ var app = {
   progress: 0,        // 0..1 下降总进度
   erase: 0,           // 0..1 校门擦除进度
   scrolling: false,
-  locked: false
+  locked: false,
+  /* 被 index.html 以 iframe 方式内嵌时置 true：
+     收尾不再跳转，改为淡出并把控制权交还首页 */
+  embed: (function () {
+    try {
+      if (window.self !== window.top) return true;            // 被内嵌
+      if (/[?&]embed=1\b/.test(location.search)) return true;  // 显式指定
+      if (window.HMZ_CINEMATIC_EMBED) return true;             // 宿主提前声明
+    } catch (e) { return true; }   // 跨域访问 self/top 受限 => 内嵌
+    return false;
+  })()
 };
 
 function setState(next) {
@@ -894,19 +915,45 @@ function allowEnter() {
 
 function goCampus() {
   setState(S.DONE);
-  /* 交接参数写入 sessionStorage：campus-3d.html 读取后让相机从相同位置续接 */
+
+  /* 交接参数写入 sessionStorage：campus-3d.html 读取后让相机从相同位置续接。
+     首页内嵌模式下不跳转，仅保留参数供后续「进入数字校园」按钮复用。 */
   try {
     sessionStorage.setItem('hmz:handoff', JSON.stringify({
       from: 'cinematic',
       gateProgress: 1,
-      // 与 Three.js 校园相机约定的初始位姿
       camera: { x: 0, y: 1.62, z: 34 },
       yaw: 0, pitch: -0.045, fov: 52,
       lightDir: [-0.62, 0.55, 0.56],
       at: Date.now()
     }));
   } catch (e) {}
+
+  /* 内嵌模式：通知宿主页（index.html），由宿主决定如何接管 */
+  if (app.embed) {
+    finishEmbed();
+    return;
+  }
+
+  /* 独立模式：保持原行为，跳到数字校园 */
   window.location.href = 'campus-3d.html?enter=gate&t=' + Date.now();
+}
+
+/* 内嵌在首页时：幕布淡出，把滚动权交还给首页内容 */
+function finishEmbed() {
+  try { sessionStorage.setItem('hmz:cinematicSeen', '1'); } catch (e) {}
+  app.locked = true;
+  var host = window.parent !== window ? window.parent : window;
+  try {
+    host.postMessage({ type: 'hmz:cinematic:done' }, '*');
+  } catch (e) {
+    try { host.postMessage({ type: 'hmz:cinematic:done' }, '*'); } catch (e2) {}
+  }
+  /* 自身淡出，避免与首页首屏叠影 */
+  document.documentElement.classList.add('is-handoff');
+  setTimeout(function () {
+    if (document.body) document.body.style.display = 'none';
+  }, reduceMotion ? 260 : 900);
 }
 
 function skipAll() {
