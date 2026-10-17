@@ -1,0 +1,44 @@
+[
+  {
+    "mode": "desktop 1440×900",
+    "loaded": true,
+    "checks": [
+      "startup",
+      "enter",
+      "movement",
+      "view control",
+      "map",
+      "safe teleport",
+      "POI dialog",
+      "classroom entry and exit",
+      "indoor HUD",
+      "pause/reset",
+      "quality fallback",
+      "resize",
+      "visibility input reset"
+    ],
+    "gpu": false,
+    "elapsedMs": 1433
+  },
+  {
+    "mode": "mobile 390×844",
+    "loaded": true,
+    "checks": [
+      "startup",
+      "enter",
+      "movement",
+      "view control",
+      "map",
+      "safe teleport",
+      "POI dialog",
+      "classroom entry and exit",
+      "indoor HUD",
+      "pause/reset",
+      "quality fallback",
+      "resize",
+      "visibility input reset"
+    ],
+    "gpu": false,
+    "elapsedMs": 1353
+  }
+]

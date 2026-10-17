@@ -1,0 +1,15 @@
+{
+  "passed": 9,
+  "checks": [
+    "News category/search model, pending-source separation and article dialog",
+    "Search empty state",
+    "Club filtering, proposal detail and browser-local saving",
+    "Local poll, memo storage, safe text rendering and memo removal",
+    "KML-based atlas hotspots and connected first-person links",
+    "Menu open/close state",
+    "Alumni field filter",
+    "Photo viewer",
+    "Scoped local-data clearing"
+  ],
+  "verification": "Node DOM/event simulation; visual browser rendering not tested."
+}

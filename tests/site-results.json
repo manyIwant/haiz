@@ -1,0 +1,15 @@
+{
+  "pages": 10,
+  "localLinks": 319,
+  "images": 59,
+  "checks": [
+    "All original page routes preserved plus life.html",
+    "No broken local links or anchor references",
+    "Unique IDs, page metadata and image descriptions",
+    "Shared navigation on all editorial pages",
+    "Sample clubs and fictional micro-stories explicitly labelled",
+    "CNAME retained",
+    "No access credentials in source"
+  ],
+  "browserQA": "Not run: no supported managed browser-control capability."
+}

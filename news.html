@@ -1,172 +1,307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>新闻 · 海南中学 HAINAN MIDDLE SCHOOL</title>
-<meta name="description" content="海南中学校园新闻：百年校庆、招生开放日、教研活动、校园体育与校园建设动态。">
-<link rel="icon" href="favicon.ico" type="image/x-icon">
-<meta name="theme-color" content="#0c2233">
-<link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/components.css">
-<link rel="stylesheet" href="assets/css/sections.css">
-<link rel="stylesheet" href="assets/css/mobile.css">
-<style>
-  .news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.2vw,30px)}
-  .news-grid .card{cursor:pointer}
-  .news-grid .card-media{aspect-ratio:16/10}
-  .news-grid .card:first-child{grid-column:span 2}
-  .news-grid .card:first-child .card-media{aspect-ratio:16/9}
-  @media(max-width:1000px){.news-grid{grid-template-columns:repeat(2,1fr)}.news-grid .card:first-child{grid-column:span 2}}
-  @media(max-width:640px){.news-grid{grid-template-columns:1fr}.news-grid .card:first-child{grid-column:span 1}}
-  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:clamp(24px,4vh,40px)}
-</style>
+<meta name="theme-color" content="#eae7dc">
+<meta name="description" content="有来源、有日期的校园报道档案，创作与待核资料清晰标记。">
+<meta property="og:title" content="新闻档案 · haiz.space">
+<meta property="og:description" content="有来源、有日期的校园报道档案，创作与待核资料清晰标记。">
+<meta property="og:type" content="website">
+<title>新闻档案 · haiz.space</title>
+<link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/journal.css?v=3">
+<script defer src="assets/js/journal.js?v=3">
+</script>
 </head>
-<body>
-<a class="skip-link" href="#main">跳到主要内容</a>
-
-<header class="nav is-scrolled" id="nav">
-  <div class="wrap nav-inner">
-    <a class="brand" href="index.html" aria-label="海南中学 首页">
-      <span class="brand-name">海南中学</span>
-      <span class="brand-sub">Hainan Middle School</span>
-    </a>
-    <nav class="nav-links" aria-label="主导航">
-      <a class="nav-link" href="index.html">首页</a>
-      <a class="nav-link" href="about.html">学校</a>
-      <a class="nav-link" href="news.html" aria-current="page">新闻</a>
-      <a class="nav-link" href="index.html#academic">学术</a>
-      <a class="nav-link" href="index.html#life">校园生活</a>
-      <a class="nav-link" href="admissions.html">招生</a>
-      <a class="nav-link" href="alumni.html">校友</a>
-      <a class="nav-link" href="contact.html">联系我们</a>
-    </nav>
-    <a class="btn btn-solid" href="campus-3d.html">探索 <span class="btn-arrow" aria-hidden="true">↗</span></a>
-    <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="menu">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</header>
-
-<div class="menu" id="menu" hidden>
-  <div class="menu-bg" style="background-image:url('assets/images/web/lanshu-1600.jpg')"></div>
-  <div class="wrap menu-inner">
-    <ul class="menu-list">
-      <li class="menu-item"><span class="idx">01</span><a class="cn" href="about.html">学校</a><span class="en">About</span></li>
-      <li class="menu-item"><span class="idx">02</span><a class="cn" href="news.html">新闻</a><span class="en">News</span></li>
-      <li class="menu-item"><span class="idx">03</span><a class="cn" href="index.html#academic">学术</a><span class="en">Academic</span></li>
-      <li class="menu-item"><span class="idx">04</span><a class="cn" href="index.html#life">校园生活</a><span class="en">Campus Life</span></li>
-      <li class="menu-item"><span class="idx">05</span><a class="cn" href="admissions.html">招生</a><span class="en">Admissions</span></li>
-      <li class="menu-item"><span class="idx">06</span><a class="cn" href="alumni.html">校友</a><span class="en">Alumni</span></li>
-      <li class="menu-item"><span class="idx">07</span><a class="cn" href="campus-3d.html">3D 校园</a><span class="en">3D Campus</span></li>
-    </ul>
-    <div class="menu-foot">
-      <span class="t-mono">Fucheng Campus · Haikou · Hainan</span>
-      <span class="t-mono">20°02′N 110°20′E</span>
-    </div>
-  </div>
+<body data-page="news">
+<a class="skip-link" href="#main">跳至正文</a>
+<header class="site-nav" id="siteNav">
+<a href="index.html" class="brand" aria-label="haiz.space 首页">
+<span class="brand-mark">h<span>z</span>
+</span>
+<span>haiz.space<small>海南中学 · 府城校区</small>
+</span>
+</a>
+<nav class="desktop-nav" aria-label="主导航">
+<a href="index.html" >校园手记</a>
+<a href="about.html" >学校</a>
+<a href="news.html" aria-current="page">新闻档案</a>
+<a href="clubs.html" >社团提案</a>
+<a href="life.html" >课间电台</a>
+</nav>
+<div class="nav-actions">
+<a href="campus-3d.html" class="nav-walk">走进校园 <span aria-hidden="true">↗</span>
+</a>
+<button class="menu-toggle" id="menuToggle" aria-controls="siteMenu" aria-expanded="false" aria-label="打开菜单">
+<span>
+</span>
+<span>
+</span>
+</button>
 </div>
-
+</header>
+<nav class="site-menu" id="siteMenu" aria-label="展开导航" hidden>
+<p class="eyebrow">A SCHOOL. MANY WORLDS.</p>
+<a href="index.html">
+<small>01</small>校园手记<span aria-hidden="true">↗</span>
+</a>
+<a href="about.html">
+<small>02</small>学校<span aria-hidden="true">↗</span>
+</a>
+<a href="news.html">
+<small>03</small>新闻档案<span aria-hidden="true">↗</span>
+</a>
+<a href="clubs.html">
+<small>04</small>社团提案<span aria-hidden="true">↗</span>
+</a>
+<a href="life.html">
+<small>05</small>课间电台<span aria-hidden="true">↗</span>
+</a>
+<div class="menu-bottom">
+<a href="alumni.html">校友</a>
+<a href="admissions.html">来访与招生</a>
+<a href="contact.html">关于本站</a>
+</div>
+</nav>
 <main id="main">
-<section class="page-head noise">
-  <div class="page-head-glow"></div>
-  <div class="wrap z1">
-    <nav class="crumb" aria-label="面包屑"><a href="index.html">首页</a><span aria-hidden="true">/</span><span>新闻</span></nav>
-    <span class="eyebrow eyebrow-dark">Newsroom · 新闻中心</span>
-    <h1 class="t-display">校园正在发生</h1>
-    <p class="t-lead mt-m">
-      记录这所学校的当下。所有条目标注来源与发布时间，点击可查看详情与原文链接。
-    </p>
-  </div>
+<section class="page-hero wrap">
+<div class="page-hero-copy reveal">
+<p class="section-kicker">
+<span>02</span>THE CAMPUS ARCHIVE</p>
+<h1>把发生过的，<br>认真留下。</h1>
+<p>旧闻有日期，报道有出处。创作摘要和待核资料单独标记。按原记录日期，翻阅校园资料。</p>
+</div>
 </section>
-
-<section class="sec">
-  <div class="wrap">
-    <div class="filter-bar" id="newsFilters" role="group" aria-label="新闻分类筛选">
-      <button class="filter is-on" data-cat="all">全部</button>
-      <button class="filter" data-cat="百年校庆">百年校庆</button>
-      <button class="filter" data-cat="招生">招生</button>
-      <button class="filter" data-cat="教学教研">教学教研</button>
-      <button class="filter" data-cat="体育">体育</button>
-      <button class="filter" data-cat="校园生活">校园生活</button>
-      <button class="filter" data-cat="校园建设">校园建设</button>
-      <button class="filter" data-cat="喜报">喜报</button>
-    </div>
-
-    <div class="news-grid" id="newsGrid"></div>
-
-    <p class="t-small mt-l">
-      ※ 新闻标题、日期与来源为可核查的公开报道信息；摘要为便于阅读的简要概述，完整内容请以来源原文为准。
-      本站不发布未经官方确认的校园消息。
-    </p>
-  </div>
+<section class="section wrap section-tight">
+<div class="filter-toolbar">
+<div class="filter-tabs" id="newsFilters" role="group" aria-label="新闻类别">
+<button class="active" data-news-filter="all" aria-pressed="true">全部档案</button>
+<button data-news-filter="百年校庆" aria-pressed="false">百年校庆</button>
+<button data-news-filter="校园生活" aria-pressed="false">校园生活</button>
+<button data-news-filter="教学教研" aria-pressed="false">教学教研</button>
+<button data-news-filter="pending" aria-pressed="false">来源待核</button>
+</div>
+<label class="search-field">
+<span>搜索档案</span>
+<input id="newsSearch" type="search" placeholder="标题 / 来源 / 关键词" aria-label="搜索新闻档案">
+<b>⌕</b>
+</label>
+</div>
+<p id="newsCount" class="results-count" role="status">
+</p>
+<div id="newsGrid" class="news-grid">
+<article class="news-card  reveal">
+<button class="image-button" data-news="n1" data-cursor="阅读">
+<img src="assets/images/web/news-football1.jpg" alt="“菜地”里长出热爱" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>校园生活</span>
+<time>2025-12-08</time>
+<span class="sample-badge">摘要示例</span>
+</div>
+<h3>
+<button data-news="n1">“菜地”里长出热爱</button>
+</h3>
+<p>报道聚焦海南中学府城校区足球场的日常训练，记录学生们在球场上坚持与成长的故事。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n8" data-cursor="阅读">
+<img src="assets/images/web/jiaoxuelou-1600.jpg" alt="海南中学江东校区显露真容" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>校园建设</span>
+<time>2025-07-14</time>
+<span class="sample-badge">摘要示例</span>
+</div>
+<h3>
+<button data-news="n8">海南中学江东校区显露真容</button>
+</h3>
+<p>海南中学江东校区建设进展对外披露，新校园的建筑形态与空间布局逐步呈现。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n2" data-cursor="阅读">
+<img src="assets/images/web/xiaoqing-1600.jpg" alt="赓续百年荣光 顺潮奋楫远航——写在海南中学建校100周年之际" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>百年校庆</span>
+<time>2023-11-01</time>
+<span class="sample-badge">资料报道</span>
+</div>
+<h3>
+<button data-news="n2">赓续百年荣光 顺潮奋楫远航——写在海南中学建校100周年之际</button>
+</h3>
+<p>在建校 100 周年节点上回望学校与海南共同走过的世纪，并展望其在自由贸易港背景下的新使命。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n3" data-cursor="阅读">
+<img src="assets/images/web/lanshu-1600.jpg" alt="一所中学的一个世纪 百年海中恰芳华" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>百年校庆</span>
+<time>2023-10-30</time>
+<span class="sample-badge">资料报道</span>
+</div>
+<h3>
+<button data-news="n3">一所中学的一个世纪 百年海中恰芳华</button>
+</h3>
+<p>以校园里的一棵百年榄仁树为切口，讲述学校诞生于民族危难、成长于国家奋进的百年故事。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n4" data-cursor="阅读">
+<img src="assets/images/web/academic-kfr23_yingbin-800.jpg" alt="选择海中，成就梦想——海南中学举办 2023 年中考招生开放日活动" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>招生</span>
+<time>2023-07-04</time>
+<span class="sample-badge">资料报道</span>
+</div>
+<h3>
+<button data-news="n4">选择海中，成就梦想——海南中学举办 2023 年中考招生开放日活动</button>
+</h3>
+<p>校园开放日面向初三学生与家长开放，校方就招生政策、国际班就读情况等进行现场宣讲与答疑。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n5" data-cursor="阅读">
+<img src="assets/images/web/news-yundonghui.jpg" alt="海南中学 2022 年校运会" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>体育</span>
+<time>2022-11-18</time>
+<span class="sample-badge">摘要示例</span>
+</div>
+<h3>
+<button data-news="n5">海南中学 2022 年校运会</button>
+</h3>
+<p>学生以集体方阵形式参加校运会，展现校园体育活动的组织与参与规模。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n6" data-cursor="阅读">
+<img src="assets/images/web/news-yishujie.jpg" alt="青春年少与老牌名校的相遇——海南中学（府城校区）举行 2022 年中招开放日活动" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>招生</span>
+<time>2022-09-17</time>
+<span class="sample-badge">资料报道</span>
+</div>
+<h3>
+<button data-news="n6">青春年少与老牌名校的相遇——海南中学（府城校区）举行 2022 年中招开放日活动</button>
+</h3>
+<p>府城校区面向初中毕业生及家长开展中招咨询，并针对美伦校区、国际班等就读情况开设专场宣讲。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n7" data-cursor="阅读">
+<img src="assets/images/web/academic-jy_ketang2-800.jpg" alt="“双减”背景下同课异构教研活动：让课堂更高效" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>教学教研</span>
+<time>2022-03-08</time>
+<span class="sample-badge">资料报道</span>
+</div>
+<h3>
+<button data-news="n7">“双减”背景下同课异构教研活动：让课堂更高效</button>
+</h3>
+<p>府城校区与美伦校区教师围绕同一课题开展同课异构，并在课后进行评课、议课。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n11" data-cursor="阅读">
+<img src="assets/images/news/news-gaokao-700-2026.jpg" alt="2026年海南高考700分以上考生分布一览（含800以上）" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>喜报</span>
+<time>2026-07-01</time>
+<span class="sample-badge">来源待核</span>
+</div>
+<h3>
+<button data-news="n11">2026年海南高考700分以上考生分布一览（含800以上）</button>
+</h3>
+<p>2026年海南高考700分以上（含800以上）考生分布：海南中学（府城）388人居全省第一，海南侨中285人，海口一中109人，海口中学84人，北师大海附80人，海师附中42人。</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n10" data-cursor="阅读">
+<img src="assets/images/news/news-zuoxi-summer.jpg" alt="海南中学夏季作息时间表（2025-2026学年第二学期）" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>校园生活</span>
+<time>2026-04-07</time>
+<span class="sample-badge">来源待核</span>
+</div>
+<h3>
+<button data-news="n10">海南中学夏季作息时间表（2025-2026学年第二学期）</button>
+</h3>
+<p>2025-2026 学年第二学期夏季作息时间表，适用于高一、高二。起床 6:20-6:40，早操 6:40-7:00，早餐 7:00-7:25，早读 7:25-7:55；上午 5 节课（8:00-12…</p>
+</article>
+<article class="news-card  reveal">
+<button class="image-button" data-news="n9" data-cursor="阅读">
+<img src="assets/images/news/news-jiebao-2025.jpg" alt="虎踞龙盘 捷报频传——2025年高考再创佳绩" class="" loading="lazy" decoding="async">
+<span class="image-arrow">↗</span>
+</button>
+<div class="news-meta">
+<span>喜报</span>
+<time>2025-06-26</time>
+<span class="sample-badge">来源待核</span>
+</div>
+<h3>
+<button data-news="n9">虎踞龙盘 捷报频传——2025年高考再创佳绩</button>
+</h3>
+<p>府城校区高三年级共19个班，其中1-18班为普通高考教学班、19班为国际课程教学班。2025年高考全省前10名中我校有7人，其中3人并列第1名；单科270分以上299人；800分以上62人（占全省59…</p>
+</article>
+</div>
+<p id="newsEmpty" class="empty-state" hidden>暂时没有找到这条线索。试试另一个关键词。</p>
 </section>
 </main>
-
-<footer class="footer">
-  <div class="footer-glow"></div>
-  <div class="wrap">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <h2 class="t-display block-title">海南中学</h2>
-        <p class="hero-en hero-en-sm">HAINAN MIDDLE SCHOOL</p>
-      </div>
-      <div class="footer-cols">
-        <div class="footer-col"><h4>Explore</h4><ul>
-          <li><a href="about.html">学校</a></li><li><a href="news.html">新闻</a></li>
-          <li><a href="index.html#academic">学术</a></li><li><a href="index.html#life">校园生活</a></li>
-        </ul></div>
-        <div class="footer-col"><h4>Campus</h4><ul>
-          <li><a href="admissions.html">招生</a></li><li><a href="alumni.html">校友</a></li>
-          <li><a href="clubs.html">社团</a></li><li><a href="campus-3d.html">3D 校园</a></li>
-        </ul></div>
-        <div class="footer-col"><h4>Connect</h4><ul>
-          <li><a href="contact.html">联系我们</a></li><li><a href="contact.html#creator">关于创作者</a></li>
-          <li><a href="contact.html#sitemap">网站地图</a></li>
-          <li><a href="contact.html#privacy">隐私政策</a></li><li><a href="contact.html#disclaimer">免责声明</a></li>
-        </ul></div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2026 Hainan Middle School · 海南中学数字校园概念站</span>
-      <span class="footer-credit">Designed &amp; built by <a href="contact.html#creator">manyIwant</a> · Still learning. Still making.</span>
-      <div class="footer-links">
-        <a href="contact.html#sitemap">网站地图</a><a href="contact.html#privacy">隐私政策</a><a href="contact.html#disclaimer">免责声明</a>
-      </div>
-    </div>
-    <div class="footer-disclaimer">
-      本站为非官方数字校园概念展示项目。新闻图片与内容来源于公开报道，版权归原作者与发布机构所有，仅作展示参考，不代表已获商业授权。
-    </div>
-  </div>
-</footer>
-<button class="to-top" id="toTop" aria-label="返回顶部">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-</button>
-
-<div class="modal" id="newsModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
-  <div class="modal-scrim" data-close></div>
-  <div class="modal-panel">
-    <button class="modal-close" data-close aria-label="关闭">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-    <div class="modal-hero"><img id="modalImg" alt=""></div>
-    <div class="modal-body">
-      <div class="row gap-s row-wrap mb-s">
-        <span class="tag" id="modalCat">分类</span>
-        <span class="news-date" id="modalDate"></span>
-        <span class="tag" id="modalSource">来源</span>
-      </div>
-      <h2 class="t-h2" id="modalTitle" style="font-size:clamp(1.35rem,2.4vw,2rem)"></h2>
-      <div class="t-body mt-m" id="modalBody" style="white-space:pre-line"></div>
-      <div class="mt-l" style="padding-top:18px;border-top:1px solid var(--line-light)">
-        <p class="t-small" id="modalNote"></p>
-        <a class="btn btn-dark mt-s" id="modalSourceLink" href="#" target="_blank" rel="noopener">查看原文 <span class="btn-arrow" aria-hidden="true">↗</span></a>
-      </div>
-    </div>
-  </div>
+<footer class="site-footer">
+<div class="footer-top">
+<span class="eyebrow">THE STORY IS STILL BEING WRITTEN.</span>
+<a href="campus-3d.html" class="text-link">再走一段校园 <span aria-hidden="true">↗</span>
+</a>
 </div>
-
-<script src="assets/js/main.js" defer></script>
-<script src="assets/js/news-page.js" defer></script>
+<div class="footer-phrase">Still learning.<br>
+<em>Still making.</em>
+<span class="footer-flower" aria-hidden="true">✳</span>
+</div>
+<div class="footer-links">
+<a href="about.html">学校与空间</a>
+<a href="clubs.html">社团提案</a>
+<a href="news.html">新闻档案</a>
+<a href="life.html">课间电台</a>
+<a href="alumni.html">校友</a>
+<a href="admissions.html">来访与招生</a>
+<a href="contact.html#creator">manyIwant</a>
+</div>
+<div class="footer-bottom">
+<span>© 2026 haiz.space · 非官方校园创作项目</span>
+<span>海南 / 海口 / 府城</span>
+<a href="contact.html#disclaimer">内容来源与创作说明</a>
+<button class="to-top" data-top>回到页首 ↑</button>
+</div>
+</footer>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true">
+</div>
+<div class="cursor-label" id="cursorLabel" aria-hidden="true">探索</div>
+<dialog class="story-dialog" id="storyDialog" aria-labelledby="storyTitle">
+<button class="dialog-close" data-close-dialog aria-label="关闭详情">×</button>
+<div id="storyContent">
+</div>
+</dialog>
+<dialog class="photo-dialog" id="photoDialog" aria-label="校园照片">
+<button class="dialog-close" data-close-dialog aria-label="关闭照片">×</button>
+<img id="photoFull" alt="">
+<p id="photoCaption">
+</p>
+</dialog>
+<div id="siteToast" class="site-toast" role="status" hidden>
+</div>
 </body>
 </html>

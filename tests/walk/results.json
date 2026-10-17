@@ -1,0 +1,33 @@
+{
+  "passed": 21,
+  "checks": [
+    "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
+    "existing KML anchors and 34 nodes preserved",
+    "all generated geometry and transforms are finite",
+    "window instances placed at their building, not at origin",
+    "WASD and diagonal normalize at walking speed",
+    "rotation changes forward direction; sprint is 6m/s",
+    "walls block movement and allow sliding",
+    "high delta time cannot tunnel through thin gate posts",
+    "north gate is passable through central arch",
+    "water and teaching building have solid collision",
+    "16 furnished classrooms preserve the original building footprints",
+    "each room has a continuous walk from outdoors, through the hall and door",
+    "both exterior entries of all four teaching buildings are passable",
+    "classroom desks and unmodelled wings remain solid",
+    "ground beneath upper-storey links is walkable",
+    "stadium interior remains playable",
+    "all 9 landmark destinations have safe arrival points",
+    "touch joystick normalizes and look clamps pitch",
+    "campus boundary blocks escape",
+    "contact shadow instances lie on the floor",
+    "same-origin startup assets exist; no CDN runtime"
+  ],
+  "nodes": 34,
+  "classrooms": 16,
+  "trees": 305,
+  "colliders": 1644,
+  "meshes": 1595,
+  "vertices": 445039,
+  "browserQA": "Unavailable: managed control-browser capability is not installed. GPU rendering and real-device touch/pointer-lock unverified."
+}

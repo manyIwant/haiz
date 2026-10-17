@@ -1,0 +1,135 @@
+{
+  "materials": [
+    {
+      "name": "terrazzo",
+      "source": "https://polyhaven.com/a/terrazzo_tiles",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "adaptation": "Resized to 512×512 JPEG for browser performance; map types: albedo, OpenGL normal, roughness.",
+      "files": [
+        {
+          "path": "assets/walk/textures/terrazzo-color.jpg",
+          "sha256": "e0cd7385b44f70602b5ee302e89508894527a45de3285c247078d84885e7278c"
+        },
+        {
+          "path": "assets/walk/textures/terrazzo-normal.jpg",
+          "sha256": "e9e07307eef68707ff71a38fab1e6b9ef1c2c1ce535f76a9413fc512a6a39af5"
+        },
+        {
+          "path": "assets/walk/textures/terrazzo-rough.jpg",
+          "sha256": "86a057176ce3a25f76d5d008890fbe1280dbc44eafbc967add8fbcd1e465a04f"
+        }
+      ]
+    },
+    {
+      "name": "plaster",
+      "source": "https://polyhaven.com/a/plastered_wall_04",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "adaptation": "Resized to 512×512 JPEG for browser performance; map types: albedo, OpenGL normal, roughness.",
+      "files": [
+        {
+          "path": "assets/walk/textures/plaster-color.jpg",
+          "sha256": "9a41cd3e0b0e4e6e016c0c87a62c2fe3148d37e08f1b5090bfae1545acbd5095"
+        },
+        {
+          "path": "assets/walk/textures/plaster-normal.jpg",
+          "sha256": "ae88ec32f1b66f800b970b2aeb540d5703287f71d6cd65286271fb8cbd79f5e3"
+        },
+        {
+          "path": "assets/walk/textures/plaster-rough.jpg",
+          "sha256": "621ce63d30de62a9ca6bbd8030ce2859e034523f91b633e716f1aeddd328f70f"
+        }
+      ]
+    },
+    {
+      "name": "wood",
+      "source": "https://polyhaven.com/a/wood_table_001",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "adaptation": "Resized to 512×512 JPEG for browser performance; map types: albedo, OpenGL normal, roughness.",
+      "files": [
+        {
+          "path": "assets/walk/textures/wood-color.jpg",
+          "sha256": "1f13990413869858b9c0262c52a715a48f22c1b42b9fd60cba3aabe91b952db7"
+        },
+        {
+          "path": "assets/walk/textures/wood-normal.jpg",
+          "sha256": "67552b67d5d9a2e2c92b2c6c1b40f6e13a4eb2ac0f3f2f454c087dcefc5505b3"
+        },
+        {
+          "path": "assets/walk/textures/wood-rough.jpg",
+          "sha256": "31849a3bfd16fe09395fe63df7d829767153b7fc59df0d9b128b86a117e91fe4"
+        }
+      ]
+    },
+    {
+      "name": "grass",
+      "source": "https://polyhaven.com/a/aerial_grass_rock",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "files": [
+        {
+          "path": "assets/walk/textures/grass-color.jpg",
+          "sha256": "9be256a54c0326b7d7e6a3d87f7c90a44d820b7ba6e513af963c7f1330ed5c66"
+        },
+        {
+          "path": "assets/walk/textures/grass-normal.jpg",
+          "sha256": "2ec71203ca28c0ed65b39e743c10016b2aae9ca536dc5a6491da991f595e9370"
+        },
+        {
+          "path": "assets/walk/textures/grass-rough.jpg",
+          "sha256": "6a7617e9e3456083c07c12df7bee6a20f1334f2a0c0dc2c8e6760227f606caca"
+        }
+      ]
+    },
+    {
+      "name": "paving",
+      "source": "https://polyhaven.com/a/concrete_floor_02",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "files": [
+        {
+          "path": "assets/walk/textures/paving-color.jpg",
+          "sha256": "11e851ad5b10bddeef59243775c973c1526c22e83d6e9cbc671a536fdac8e925"
+        },
+        {
+          "path": "assets/walk/textures/paving-normal.jpg",
+          "sha256": "98f6463d2a1d465ae261149b4c535aa1ebc18128d089d3728bc048cf973e9e60"
+        },
+        {
+          "path": "assets/walk/textures/paving-rough.jpg",
+          "sha256": "f01708482a7ed4d4c0edb747c5f94217d3f5c245efb60ba4e69b13da6930edc5"
+        }
+      ]
+    }
+  ],
+  "implementation_references": [
+    {
+      "url": "https://github.com/mrdoob/three.js/blob/dev/examples/games_fps.html",
+      "usage": "Controller and collision design reference; no source copied."
+    },
+    {
+      "url": "https://github.com/Abdulrezak-halid/3d-classroom",
+      "usage": "Classroom furnishings and procedural surface reference; no source or model copied."
+    },
+    {
+      "url": "https://github.com/dhruvm-04/VirtualTour",
+      "usage": "Campus/interior navigation reference; no source or model copied."
+    }
+  ],
+  "interiors": "Original imagined ground-floor classrooms, not surveyed replicas.",
+  "environment": {
+    "path": "assets/walk/textures/campus-light.hdr",
+    "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy",
+    "license": "CC0-1.0",
+    "usage": "Lighting/reflection only; not used as Hainan landscape background."
+  },
+  "foliage": {
+    "path": "assets/walk/textures/terminalia-leaves.webp",
+    "source": "Original AI-generated texture for this project",
+    "tool": "built-in image generation",
+    "alpha": true,
+    "prompt_record": "docs/design-notes.md"
+  }
+}
