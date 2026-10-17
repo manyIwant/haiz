@@ -6,6 +6,10 @@
 
 ## 本轮升级
 
+- 新增 `architecture.html` 建筑观察手册：四处既有实拍、照片热点、现代/传统建筑筛选、与 3D 共用的程序材质预览，以及仅保存在本机的观察册。
+- 新增墙砖、瓦面、石材与木构四类程序材质，绑定颜色、凹凸与粗糙度贴图，使用按模型单位投影的 UV。晨光、雨后、薄暮入口可直接传递地点与观察镜头设置。
+- 本轮外网资料请求被网络代理拒绝；外观依据为上传版本已有照片，研究记录与边界见 `docs/material-field-guide-20261017.md`。
+
 - 统一升级首页、学校、新闻、社团、校友、来访招生与关于本站，并新增“课间电台”。暖纸色、深绿、砖红与校园影像构成杂志视觉。
 - 首页包含滚动视差、渐入排版、横向影像画廊、磁吸入口、社团悬停影像、照片灯箱与详情弹窗；支持减少动态效果偏好。
 - 新闻档案支持分类与关键词搜索，保留原仓库日期及来源；没有原文链接的条目单独标为“来源待核”。
@@ -66,11 +70,12 @@ node scripts/build-pages.mjs
 ```bash
 npm install
 npm test
+npm run test:browser
 ```
 
 检查包括10个页面的本地链接、锚点、图片说明与导航；新闻/社团筛选、照片与详情弹窗、本地保存、安全便笺渲染；原校园坐标、几何、材质解码、门洞、碰撞、16间教室往返路线；桌面与手机输入事件模拟。
 
-`tests/*-results.json` 和 `tests/walk/*-results.json` 记录验证范围。当前验证环境缺少受支持的浏览器控制能力，因此**未做真实浏览器CSS布局、GPU渲染、真机帧率与多点触控实测**。DOM和输入模拟不等于真机验证。
+`tests/*-results.json` 和 `tests/walk/*-results.json` 记录验证范围。`npm run test:browser` 使用 Playwright 与 Chromium 验证真实页面布局、交互和 WebGL 着色器，生成 `tests/browser-results.json` 和本地截图。本轮云端使用 SwiftShader 软件渲染，手机仅做视口模拟；未做硬件帧率与真实手机多点触控实测。浏览器可用 `CHROMIUM_PATH` 指定，缺少时需先安装 Chromium 或执行 `npx playwright install chromium`。
 
 ## 来源与边界
 

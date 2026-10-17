@@ -1,8 +1,16 @@
 [
   {
     "mode": "desktop 1440×900",
+    "startup": "network",
     "loaded": true,
     "checks": [
+      "startup JSON fallback",
+      "pond reflection quality switch",
+      "architectural observation control",
+      "all three climate presets",
+      "continuous three-stop route without collision",
+      "route pause and manual takeover",
+      "memory archive at each stop",
       "startup",
       "enter",
       "movement",
@@ -18,12 +26,20 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 1433
+    "elapsedMs": 2620
   },
   {
     "mode": "mobile 390×844",
+    "startup": "network",
     "loaded": true,
     "checks": [
+      "startup JSON fallback",
+      "pond reflection quality switch",
+      "architectural observation control",
+      "all three climate presets",
+      "continuous three-stop route without collision",
+      "route pause and manual takeover",
+      "memory archive at each stop",
       "startup",
       "enter",
       "movement",
@@ -39,6 +55,76 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 1353
+    "elapsedMs": 2486
+  },
+  {
+    "mode": "desktop 1440×900",
+    "startup": "file",
+    "loaded": true,
+    "checks": [
+      "startup JSON fallback",
+      "pond reflection quality switch",
+      "architectural observation control",
+      "all three climate presets",
+      "continuous three-stop route without collision",
+      "route pause and manual takeover",
+      "memory archive at each stop",
+      "startup",
+      "enter",
+      "movement",
+      "view control",
+      "map",
+      "safe teleport",
+      "POI dialog",
+      "classroom entry and exit",
+      "indoor HUD",
+      "pause/reset",
+      "quality fallback",
+      "resize",
+      "visibility input reset"
+    ],
+    "gpu": false,
+    "elapsedMs": 2482
+  },
+  {
+    "mode": "mobile 390×844",
+    "startup": "failed",
+    "loaded": true,
+    "checks": [
+      "startup JSON fallback",
+      "pond reflection quality switch",
+      "architectural observation control",
+      "all three climate presets",
+      "continuous three-stop route without collision",
+      "route pause and manual takeover",
+      "memory archive at each stop",
+      "startup",
+      "enter",
+      "movement",
+      "view control",
+      "map",
+      "safe teleport",
+      "POI dialog",
+      "classroom entry and exit",
+      "indoor HUD",
+      "pause/reset",
+      "quality fallback",
+      "resize",
+      "visibility input reset"
+    ],
+    "gpu": false,
+    "elapsedMs": 2574
+  },
+  {
+    "mode": "descent handoff",
+    "startup": "arrival",
+    "loaded": true,
+    "checks": [
+      "aerial camera descends continuously",
+      "ground eye height",
+      "safe arrival collision",
+      "manual control takeover"
+    ],
+    "gpu": false
   }
 ]

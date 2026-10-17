@@ -1,10 +1,13 @@
 {
-  "passed": 21,
+  "passed": 24,
   "checks": [
+    "photo-informed facade materials have bump and roughness maps with metric UVs",
     "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
     "existing KML anchors and 34 nodes preserved",
     "all generated geometry and transforms are finite",
+    "ground texture density is consistent across roads and lawns",
     "window instances placed at their building, not at origin",
+    "upper-floor glass is visible before the solid teaching wall",
     "WASD and diagonal normalize at walking speed",
     "rotation changes forward direction; sprint is 6m/s",
     "walls block movement and allow sliding",
@@ -26,8 +29,8 @@
   "nodes": 34,
   "classrooms": 16,
   "trees": 305,
-  "colliders": 1644,
-  "meshes": 1595,
-  "vertices": 445039,
+  "colliders": 1729,
+  "meshes": 1691,
+  "vertices": 502961,
   "browserQA": "Unavailable: managed control-browser capability is not installed. GPU rendering and real-device touch/pointer-lock unverified."
 }

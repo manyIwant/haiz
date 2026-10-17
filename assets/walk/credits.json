@@ -106,6 +106,20 @@
   ],
   "implementation_references": [
     {
+      "url": "https://github.com/mrdoob/three.js/blob/r128/examples/js/objects/Sky.js",
+      "path": "assets/vendor/Sky.js",
+      "license": "MIT",
+      "license_file": "assets/vendor/THREE-LICENSE.txt",
+      "usage": "Official r128 atmospheric scattering sky, coupled to the same simulated sunlight as the campus and pond."
+    },
+    {
+      "url": "https://github.com/mrdoob/three.js/blob/r128/examples/js/objects/Water.js",
+      "path": "assets/vendor/Water.js",
+      "license": "MIT",
+      "license_file": "assets/vendor/THREE-LICENSE.txt",
+      "usage": "Official Three.js r128 Water source reused unchanged for the main pond. One 256x256 reflection target, enabled only nearby on non-low quality. Adapter: assets/walk/reflections.js."
+    },
+    {
       "url": "https://github.com/mrdoob/three.js/blob/dev/examples/games_fps.html",
       "usage": "Controller and collision design reference; no source copied."
     },
@@ -118,6 +132,13 @@
       "usage": "Campus/interior navigation reference; no source or model copied."
     }
   ],
+  "procedural_facades": {
+    "path": "assets/walk/surfaces.js",
+    "source": "Original deterministic procedural textures made for this project; no new third-party images or scans.",
+    "families": ["ceramic joints", "roof tile channels and overlaps", "stone grain and joints", "timber grain"],
+    "maps": ["sRGB color", "linear bump height", "linear roughness"],
+    "reference": "Existing school photographs listed in data/architecture.json; dimensions are interpreted, not surveyed."
+  },
   "interiors": "Original imagined ground-floor classrooms, not surveyed replicas.",
   "environment": {
     "path": "assets/walk/textures/campus-light.hdr",

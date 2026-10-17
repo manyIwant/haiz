@@ -50,7 +50,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       plinth:     M('#948f84', 0.96),       // 勒脚
       baseStone:  M('#3a3a3a', 0.90),       // 【实拍纠正】教学楼深灰色石材基座（整层）
       wallLight:  M('#e8e4dc', 0.93),       // 【实拍纠正】浅灰白主墙面（替代 wallCream）
-      glassTeal:  M('#4A90A2', 0.12, 0.10, { transparent: true, opacity: 0.88 }), // 【实拍纠正】蓝绿色玻璃
+      glassTeal:  M('#647f85', 0.24, 0.16), // Muted glazing; opaque upper rooms avoid transparency sorting.
       roofPorch:  M('#B22222', 0.88),       // 【实拍纠正】门廊中式红色坡屋顶
       // 屋顶
       roofFlat:   M('#918d84', 0.95),
@@ -69,7 +69,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       beam:       M('#8a5a45', 0.88),
       frame:      M('#54685a', 0.62, 0.15), // 【航拍实证】窗框（绿色）
       glass:      M('#6f8798', 0.14, 0.10, { transparent: true, opacity: 0.86 }),
-      glassDark:  M('#4d5f51', 0.12, 0.12, { transparent: true, opacity: 0.92 }), // 【航拍实证】窗框呈绿色（窗洞走 InstancedMesh 批量渲染）
+      glassDark:  M('#34443f', 0.75), // Recess behind the outer glazing, not a transparent box.
       door:       M('#6b5541', 0.84),
       step:       M('#b6b0a5', 0.95),
       // 地面
@@ -117,6 +117,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
     m.rotation.x = rotX == null ? -Math.PI / 2 : rotX;
     m.position.set(x || 0, y || 0, z || 0);
+    if(mat.userData.groundTile)groundUV(m.geometry,mat.userData.groundTile,x||0,z||0);
     m.receiveShadow = true;
     if (parent) parent.add(m);
     return m;
@@ -202,7 +203,10 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
   var _dummy = new THREE.Object3D();
   function queueWindow(x, y, z, w, h, axis, depth, glassMat) {
     winQueue.hole.push({ x: x, y: y, z: z, w: w, h: h, a: axis, d: depth || 0.18 });
-    winQueue.glass.push({ x: x, y: y, z: z, w: w, h: h, a: axis, d: (depth || 0.18) * 0.55, mat: glassMat || null });
+    // The previous thinner glazing sat wholly behind the wall surface.
+    // Move it outward in local face space before the building rotation.
+    var nx=axis==='x'?(x<0?-1:1):0,nz=axis==='z'?(z<0?-1:1):0;
+    winQueue.glass.push({ x:x+nx*.13, y:y, z:z+nz*.13, nx:nx,nz:nz,w:w,h:h,a:axis,d:.035,mat:glassMat||null });
   }
   function flushWindows(root, cfg) {
     if (!winQueue.hole.length) return;
@@ -255,9 +259,19 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
         imGlass.setMatrixAt(k, _dummy.matrix);
       }
       imGlass.instanceMatrix.needsUpdate = true;
+      imGlass.userData.windowGlazing=true;
       imGlass.castShadow = false; imGlass.receiveShadow = false;
       root.add(imGlass);
     });
+    // Slim sills, jambs and centre mullions: one shared draw call for the campus.
+    var frames=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),MAT.frame,n*5),fi=0;
+    for(var f=0;f<n;f++){
+      var win=winQueue.glass[idx[f]],ang=win.ry||0,ca=Math.cos(ang),sa=Math.sin(ang);
+      [[-win.w/2,0,.055,win.h+.12],[win.w/2,0,.055,win.h+.12],[0,-win.h/2,win.w+.1,.07],[0,win.h/2,win.w+.1,.055],[0,0,.045,win.h]].forEach(function(v){
+        _dummy.position.set(win.x+v[0]*ca,win.y+v[1],win.z-v[0]*sa);_dummy.rotation.set(0,ang,0);_dummy.scale.set(v[2],v[3],.08);_dummy.updateMatrix();frames.setMatrixAt(fi++,_dummy.matrix);
+      });
+    }
+    frames.receiveShadow=true;frames.userData.windowFrames=true;root.add(frames);
     imHole.instanceMatrix.needsUpdate = true;
     imHole.castShadow = false; imHole.receiveShadow = false;
     root.add(imHole);
@@ -324,8 +338,8 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       col.castShadow = true; g.add(col);
     }
     // 【v10】屋檐长度沿用三/四号教学楼的 0.3m（现由修复后的 hipRoof 保证四面等宽外伸）
-    var rh2 = 2.4;
-    var roof2 = hipRoof(w, d, rh2, 0.3, MAT.roofRed, MAT.ridgeRed);
+    var rh2 = b.id==='yihao'?.85:b.id==='erhao'?.25:2.4;
+    var roof2 = b.id==='erhao'?parapet(w,d,.65,.22,MAT.wallLight,MAT.wallPutty):hipRoof(w,d,rh2,.3,MAT.roofRed,MAT.ridgeRed);
     roof2.position.y = H + 0.05;
     g.add(roof2);
     // 【v10】楼梯间改为绝对尺寸（取三/四号的 5.8 × 12.4），不再随楼宽放大
@@ -385,6 +399,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     });
     ['hole','glass'].forEach(function(key){winQueue[key]=winQueue[key].filter(function(a,i){return i<start||a.y>b.floorH;});});
     g.userData.classrooms=window.CampusInteriors.build(g,b,o);
+    if(window.CampusArchitecture)window.CampusArchitecture.facade(g,b,MAT);
   };
 
   /* --- 历史建筑（凤栖堂 / 衍林堂 / 校史馆）：台基 + 柱廊 + 歇山顶 --- */
@@ -584,7 +599,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
   FORMS.gate = function (g, b) {
     var w = b.size[0], H = b.size[1], d = b.size[2];
     // 实拍校门为四柱三间三楼牌楼：中门高、边门低，绿色琉璃瓦，白色门柱，金色回纹
-    var W = 18, D = Math.max(d, 6), HT = Math.max(H, 10.5);
+    var W = 18, D = b.id==='beimen'?1.65:Math.max(d,6), HT = b.id==='beimen'?8.4:Math.max(H,10.5); // Photo-based proportions, not measured dimensions.
     var P = 1.35;                      // 方形门柱边长
     var midW = 6.6, sideW = 3.8;       // 中门/边门净宽
     var colX = [-W / 2 + P / 2, -midW / 2 - P / 2, midW / 2 + P / 2, W / 2 - P / 2];
@@ -630,12 +645,12 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     g.add(plate);
     var backPlate=plate.clone();backPlate.position.z=-D*.42;backPlate.rotation.y=Math.PI;g.add(backPlate);
     // 绿色琉璃瓦屋顶：主檐高 + 两侧低檐
-    var mainRW = midW + P * 3.2, mainRD = D * 1.65, mainRH = 2.7;
+    var mainRW = midW + P * 3.2, mainRD = D * 1.65, mainRH = b.id==='beimen'?1.65:2.7;
     var mainRoof = hipRoof(mainRW, mainRD, mainRH, 0.95, MAT.roofHerit, MAT.ridge);
     mainRoof.position.y = HT + 0.55;
     g.add(mainRoof);
 
-    var sideRW = (W - mainRW) / 2 + 0.6, sideRD = D * 1.55, sideRH = 1.6;
+    var sideRW = (W - mainRW) / 2 + 0.6, sideRD = D * 1.55, sideRH = b.id==='beimen'?1.05:1.6;
     [-1, 1].forEach(function (s) {
       var sideRoof = hipRoof(sideRW, sideRD, sideRH, 0.8, MAT.roofHerit, MAT.ridge);
       sideRoof.position.set(s * (mainRW / 2 + sideRW / 2 - 0.3), colH[0] + 0.55, 0);
@@ -746,6 +761,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     box(t, edgeH, d, MAT.poolEdge, -w / 2 - t / 2, LAY.water - edgeH / 2 + 0.10, 0, g);
     // 水面（惰性取得材质，避免依赖 buildGround 的执行顺序）
     var water = plane(w, d, ensureWaterMat(), 0, LAY.water, 0, g);
+    if(b.id==='yanchi')water.userData.reflectivePond=true;
     water.castShadow = false;
     water.receiveShadow = false;
     // 睡莲
@@ -755,14 +771,19 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       var pad = new THREE.Mesh(new THREE.CircleGeometry(0.55 + rnd() * 0.5, 10), MAT.leafB);
       pad.rotation.x = -Math.PI / 2; pad.position.set(px, LAY.water + 0.012, pz); g.add(pad);
     }
-    // 岸边石（放在池岸顶面，不再悬空）
-    for (var j = 0; j < 6; j++) {
-      var a = rnd() * Math.PI * 2;
-      var rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.5, 0), MAT.stone);
-      rock.position.set(Math.cos(a) * w * 0.5, LAY.deck + 0.35, Math.sin(a) * d * 0.6);
-      rock.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
-      rock.castShadow = true; g.add(rock);
+    // Layered shore stone masses observed in campus_yanchi.jpg. Footprint unchanged.
+    for(var j=0;j<26;j++){
+      var px=-w*.45+rnd()*w*.28,pz=-d*.42+rnd()*d*.8;
+      var rock=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),MAT.stone);
+      rock.scale.set(1.5+rnd()*2.5,.35+rnd()*.7,1+rnd()*1.7);
+      rock.position.set(px,LAY.water+.25+rnd()*.5,pz);rock.rotation.y=rnd()*6.28;
+      rock.castShadow=true;rock.receiveShadow=true;g.add(rock);
     }
+    for(var n=0;n<9;n++){
+      var leaf=new THREE.Mesh(new THREE.SphereGeometry(1,8,5),MAT.leafB);
+      leaf.scale.set(.7,.45,1.1);leaf.position.set(-w*.43,LAY.water+.7,-d*.4+n*d*.1);g.add(leaf);
+    }
+
   };
 
   /* --- 植物园：草地 + 密集热带植被（由全局植被系统叠加，此处只做地坪） --- */
@@ -1309,10 +1330,29 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     return skyCache[k];
   }
 
-  function scannedSurface(mat,name,u,v){
-    var bank=pbrBank[name];if(!bank)return mat;
-    [['color','map'],['normal','normalMap'],['rough','roughnessMap']].forEach(function(pair){if(bank[pair[0]]){var tex=bank[pair[0]].clone();tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(u,v);tex.anisotropy=4;tex.needsUpdate=true;mat[pair[1]]=tex;}});
-    mat.normalScale.set(name==='grass'?.55:.28,name==='grass'?.55:.28);return mat;
+  var groundFallbacks={},scannedTextures={};
+  function groundFallback(name){
+    if(groundFallbacks[name])return groundFallbacks[name];
+    var c=document.createElement('canvas');c.width=c.height=1024;var ctx=c.getContext('2d'),im=ctx.createImageData(1024,1024),rnd=mulberry('surface-'+name),grass=name==='grass';
+    for(var i=0;i<im.data.length;i+=4){var n=(rnd()-.5)*(grass?17:9);im.data[i]=(grass?105:174)+n;im.data[i+1]=(grass?123:170)+n;im.data[i+2]=(grass?80:159)+n;im.data[i+3]=255;}
+    ctx.putImageData(im,0,0);
+    if(grass)for(var j=0;j<16000;j++){var x=rnd()*1024,y=rnd()*1024;ctx.strokeStyle=j%2?'#66784b55':'#a4ad7040';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rnd()-.5)*3,y-2-rnd()*4);ctx.stroke();}
+    var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.anisotropy=8;groundFallbacks[name]=t;return t;
+  }
+  function groundUV(geometry,tile,x,z){
+    var p=geometry.attributes.position,uv=geometry.attributes.uv;
+    for(var i=0;i<p.count;i++)uv.setXY(i,(p.getX(i)+x)/tile,(p.getY(i)-z)/tile);
+    uv.needsUpdate=true;
+  }
+  function scannedSurface(mat,name){
+    var bank=pbrBank[name]||{};mat.userData.groundTile=name==='grass'?1.8:2.0;
+    mat.map=groundFallback(name);
+    if(!scannedTextures[name]){
+      scannedTextures[name]={};
+      [['color','map'],['normal','normalMap'],['rough','roughnessMap']].forEach(function(pair){if(bank[pair[0]]){var tex=bank[pair[0]].clone();tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(1,1);tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;tex.anisotropy=8;tex.needsUpdate=true;scannedTextures[name][pair[1]]=tex;}});
+    }
+    Object.assign(mat,scannedTextures[name]);
+    mat.normalScale.set(name==='grass'?.16:.12,name==='grass'?.16:.12);return mat;
   }
 
   /* ================= 地表高度分层（v13） =================
@@ -1338,11 +1378,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     base.receiveShadow = false;
     // 校园草坪底：底色压亮、靠贴图提供细节，避免大面积纯色的「塑料感」
     groundMat = M('#ffffff', 0.97);
-    var grassTex = noiseTex('#638052', 3000, 512, 0.14);
-    grassTex.repeat.set(30, 26);
-    grassTex.anisotropy = cfg.aniso || 1;
-    groundMat.map = grassTex;
-    groundMat.color.set(pbrBank.grass?'#d0d2b6':'#9cb98a');scannedSurface(groundMat,'grass',W/6,D/6);
+    groundMat.color.set(pbrBank.grass?'#d0d2b6':'#9cb98a');scannedSurface(groundMat,'grass');
     var lawn = plane(W, D, groundMat, 0, LAY.lawn, 0, scene);
     lawn.receiveShadow = cfg.shadow > 0;
 
@@ -1351,20 +1387,16 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       var o = rectWorld(L.rect);
       // 【官网实证】校园草坪为台湾草（细叶结缕草，色偏黄绿）
       var mat = L.kind === 'lawn' ? MAT.grassTaiwan : (L.kind === 'botanic' ? MAT.grassDark : M('#54744a', 0.97));
-      mat=mat.clone();scannedSurface(mat,'grass',o.w/6,o.d/6);mat.color.set('#c4c9a7');
+      mat=mat.clone();scannedSurface(mat,'grass');mat.color.set('#c4c9a7');
       var m = plane(o.w, o.d, mat, o.x, LAY.lawnPatch, o.z, scene);
       m.receiveShadow = cfg.shadow > 0;
     });
 
     // 道路
-    var roadTex = noiseTex('#a5a29a', 3200, 256, 0.2);
-    roadTex.anisotropy = cfg.aniso || 1;
     // 【v13】路缘石材质提到循环外：此前每遍历一条道路都 new 一个材质，
     //   11 条路 = 11 份完全相同的实例，既浪费显存也让路缘石无法被合批。
     var kerbMat = M('#c8c3b8', 0.93);
-    // 路面材质不能简单共用：下面会为每条路按自身尺寸 clone 贴图并写入 mat.map，
-    // 若共用材质，所有路都会用最后一条路的 UV 重复率（大路纹理被拉花）。
-    // 故按 kind 缓存基础参数，仅当需要贴图时为该路单独建一份材质。
+    // 铺装按米制 UV 采样，矩形与 KML 多边形保持相同纹理尺度。
     var roadMatBase = {
       plaza: ['#c2bcb0', 0.93],
       path: ['#b6b1a7', 0.94],
@@ -1375,18 +1407,8 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       var bp = roadMatBase[R.kind] || roadMatBase.road;
       var yRoad = LAY.deck;
       var o = rectWorld(R.rect);
-      // 先解析材质：需贴图的道路各自持有一份（避免共享 UV 导致纹理拉伸），
-      // 广场类无贴图则复用同一实例。必须在 poly / rect 两个分支之前完成，
-      // 否则 poly 分支会读到未初始化的 mat。
-      var mat;
-      if (R.kind !== 'plaza') {
-        var t = roadTex.clone(); t.needsUpdate = true;
-        t.repeat.set(Math.max(2, o.w / 12), Math.max(2, o.d / 12));
-        mat = M(bp[0], bp[1]); mat.map = t;
-      } else {
-        mat = plazaMat;
-      }
-      mat=mat.clone();scannedSurface(mat,'paving',R.poly?.42:o.w/2.4,R.poly?.42:o.d/2.4);mat.color.set('#d4cdbc');
+      var mat=R.kind==='plaza'?plazaMat.clone():M(bp[0],bp[1]);
+      scannedSurface(mat,'paving');mat.color.set('#d4cdbc');
       // 多边形校道（来自 KML 实测形状）：铺设真实道路面，保留路网走向
       if (R.poly && R.poly.length >= 3) {
         var shape = new THREE.Shape();
@@ -1396,6 +1418,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
         });
         shape.closePath();
         var gP = new THREE.ShapeGeometry(shape);
+        groundUV(gP,mat.userData.groundTile,0,0);
         var mP = new THREE.Mesh(gP, mat);
         mP.rotation.x = -Math.PI / 2;
         mP.position.y = yRoad;
@@ -1521,6 +1544,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     oldGarden(g,b,o);
     var hall=new THREE.Group(),w=b.size[0]*.64,d=b.size[2]*.27;
     var qs=winQueue.hole.length;FORMS.hall(hall,{size:[w,5.8,d]});hall.position.z=b.size[2]*.31;
+    if(b.id==='fengqitang'&&window.CampusArchitecture)window.CampusArchitecture.heritage(hall,w,d,MAT);
     [winQueue.hole,winQueue.glass].forEach(function(q){for(var k=qs;k<q.length;k++)q[k].z+=hall.position.z;});
     // Hall windows are queued separately in parent coordinates.
     g.add(hall);
@@ -1529,10 +1553,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     sign.position.set(0,4.5,hall.position.z+d/2+.2);g.add(sign);
   };
   FORMS.oldtree=function(g,b){
-    var t=leafyTree(g,0,0,b.size[1]||16,9,b.id,'terminalia','high');
-    t.userData.foliageTree=true;
-    var ring=new THREE.Mesh(new THREE.RingGeometry(2.2,2.6,64),MAT.stone);ring.rotation.x=-Math.PI/2;ring.position.y=.12;g.add(ring);
-    box(1.2,.8,.16,MAT.stone,4,.5,0,g);
+    window.MemoryArt.decorate(g,b,Object.assign({},pbrBank,{foliage:pbrBank.foliage||foliageMat.map}),'balanced');
   };
   function makeVegetation(quality){
     var tiles={},count=0;
@@ -1604,7 +1625,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false});
   }
   async function build(target,input,quality,onProgress,pbr){
-    scene=target;data=input;pbrBank=pbr||{};OCCUPIED=[];vegetationTiles=[];waterMat=null;roadMats=[];
+    scene=target;data=input;pbrBank=pbr||{};scannedTextures={};OCCUPIED=[];vegetationTiles=[];waterMat=null;roadMats=[];
     TF.ox=data.meta.transform.originPx[0];TF.oy=data.meta.transform.originPx[1];TF.s=data.meta.transform.scale;
     var cfg={shadow:quality==='low'?0:1024,aniso:4,winK:1,lamps:true};
     buildMaterials();var indoorMaterials=window.CampusInteriors.init(pbr||{});initFoliage();MAT.leafA.flatShading=MAT.leafB.flatShading=MAT.leafDry.flatShading=false;
@@ -1614,9 +1635,12 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var tileCanvas=document.createElement('canvas');tileCanvas.width=tileCanvas.height=128;var tx=tileCanvas.getContext('2d');tx.fillStyle='#b6b4a4';tx.fillRect(0,0,128,128);for(var xx=0;xx<128;xx+=16){var gr=tx.createLinearGradient(xx,0,xx+16,0);gr.addColorStop(0,'#7f8674');gr.addColorStop(.4,'#d4d0bd');gr.addColorStop(1,'#8b9280');tx.fillStyle=gr;tx.fillRect(xx,0,16,128);}for(var yy=0;yy<128;yy+=24){tx.fillStyle='#727f6855';tx.fillRect(0,yy,128,2);}var tileTex=new THREE.CanvasTexture(tileCanvas);tileTex.encoding=THREE.sRGBEncoding;tileTex.wrapS=tileTex.wrapT=THREE.RepeatWrapping;tileTex.repeat.set(10,3);tileTex.anisotropy=4;
     [MAT.roofHerit,MAT.roofRed,MAT.roofPorch,MAT.roofTile].forEach(function(m){m.map=tileTex;});
     MAT.roofHerit.color.set('#3f6650');MAT.roofRed.color.set('#985a45');MAT.glassTeal.color.set('#527c7f');
+    if(window.CampusSurfaces)window.CampusSurfaces.init(MAT);
     buildGround(cfg);var buildings=[],colliders=[];
     for(var i=0;i<data.buildings.length;i++){
-      var b=data.buildings[i],g=createBuilding(b,cfg);scene.add(g);collectColliders(g,colliders,b.id);
+      var b=data.buildings[i],g=createBuilding(b,cfg);
+      if(window.CampusSurfaces)window.CampusSurfaces.project(g);
+      scene.add(g);collectColliders(g,colliders,b.id);
       if(g.userData.classrooms)g.userData.classrooms.forEach(function(r){r.obstacles.forEach(function(c){colliders.push(c);});});
       if(b.form==='pond'){var o=rectWorld(b.rect);colliders.push({minX:o.x-o.w/2-.9,maxX:o.x+o.w/2+.9,minZ:o.z-o.d/2-.9,maxZ:o.z+o.d/2+.9,id:b.id});}
       buildings.push({group:g,data:b,center:rectWorld(b.rect)});
@@ -1629,7 +1653,8 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint;colliders.push({minX:p.x-p.r,maxX:p.x+p.r,minZ:p.z-p.r,maxZ:p.z+p.r,id:'trunk'});}});
     // Low contrast contact shade anchors tree trunks even on low graphics settings.
     var ao=softGroundShadow();scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint,m=new THREE.Mesh(new THREE.PlaneGeometry(5,5),ao);m.rotation.x=-Math.PI/2;m.position.set(p.x,.14,p.z);scene.add(m);}});
-    return {rooms:window.CampusInteriors.rooms,buildings:buildings,colliders:colliders,treeCount:trees,vegetationTiles:vegetationTiles,rectWorld:rectWorld,water:waterMat,bounds:{minX:-data.meta.ground.width/2+3,maxX:data.meta.ground.width/2-3,minZ:-data.meta.ground.depth/2+3,maxZ:data.meta.ground.depth/2-3}};
+    var waterSurface=null;scene.traverse(function(m){if(m.userData.reflectivePond)waterSurface=m;});
+    return {rooms:window.CampusInteriors.rooms,buildings:buildings,colliders:colliders,treeCount:trees,vegetationTiles:vegetationTiles,rectWorld:rectWorld,water:waterMat,waterSurface:waterSurface,roadMaterials:roadMats,bounds:{minX:-data.meta.ground.width/2+3,maxX:data.meta.ground.width/2-3,minZ:-data.meta.ground.depth/2+3,maxZ:data.meta.ground.depth/2-3}};
   }
   global.CampusWorld={build:build};
 })(window);

@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-17T15:12:41.164Z",
+  "browser": "154.0.8037.57",
+  "results": [
+    {
+      "target": "1440×960 desktop",
+      "checks": [
+        "category filter",
+        "photo hotspots",
+        "persistent local collection",
+        "material and relief maps",
+        "clear collection",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "390×844 mobile emulation",
+      "checks": [
+        "category filter",
+        "photo hotspots",
+        "persistent local collection",
+        "material and relief maps",
+        "clear collection",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "Chromium WebGL / software renderer",
+      "checks": [
+        "real WebGL shader compilation",
+        "34 nodes and 16 classrooms",
+        "four facade material families",
+        "deep-linked climate and observation settings",
+        "three rendered architectural viewpoints",
+        "no browser errors or missing assets"
+      ],
+      "passed": true,
+      "evidence": {
+        "diagnostics": {
+          "nodes": 34,
+          "classrooms": 16,
+          "environment": "HDR",
+          "trees": 305,
+          "colliders": 1729,
+          "quality": "high",
+          "climate": "afterrain",
+          "reflection": false,
+          "tour": null,
+          "drawCalls": 606,
+          "triangles": 230154,
+          "fps": 60,
+          "loaded": true,
+          "position": {
+            "x": 14.194999999999997,
+            "z": -31.098649999999992
+          }
+        },
+        "observation": true,
+        "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+        "surfaces": [
+          "roof",
+          "stone",
+          "timber",
+          "ceramic"
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "failedRequests": [],
+  "limitations": "SwiftShader software WebGL and mobile viewport emulation; no hardware FPS, physical touch or on-site measurements."
+}

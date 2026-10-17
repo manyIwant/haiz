@@ -39,7 +39,7 @@
       wall:surface(bank,'plaster','#f5eedb',.95,[2,1]),
       plasterOutside:surface(bank,'plaster','#e8e3d1',.94,[8,2]),
       desk:surface(bank,'wood','#d3b181',.62,[.7,.7]),
-      chair:surface(bank,'wood','#b4956d',.7,[.55,.55]),
+      chair:new T.MeshStandardMaterial({color:'#537dab',roughness:.58}),
       dado:new T.MeshStandardMaterial({color:'#a3b7a3',roughness:.87}),
       ceiling:new T.MeshStandardMaterial({color:'#eee9dc',roughness:1}),
       frame:new T.MeshStandardMaterial({color:'#7c8d83',roughness:.45,metalness:.35}),
@@ -52,6 +52,8 @@
       door:new T.MeshStandardMaterial({color:'#667d6f',roughness:.62}),
       emissive:new T.MeshStandardMaterial({color:'#fff6df',emissive:'#fff0c5',emissiveIntensity:.5,roughness:.7})
     };
+    materials.curtain=new T.MeshStandardMaterial({color:'#a7bbb5',roughness:1,side:T.DoubleSide});
+    materials.screen=new T.MeshStandardMaterial({color:'#d9e0d7',roughness:.55,emissive:'#bac9c2',emissiveIntensity:.07});
     const shade=textureCanvas(64,64,ctx=>{const gr=ctx.createRadialGradient(32,32,4,32,32,32);gr.addColorStop(0,'rgba(29,38,29,.28)');gr.addColorStop(1,'rgba(29,38,29,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,64,64);});
     materials.contact=new T.MeshBasicMaterial({map:shade,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
     return materials;
@@ -89,7 +91,7 @@
       ctx.strokeStyle='#c4cfb155';ctx.lineWidth=1;ctx.strokeRect(25,25,w-50,h-50);ctx.fillStyle='#e6e2c9';ctx.font='36px serif';ctx.fillText(info.title,65,102);ctx.strokeStyle='#c4cfb188';ctx.beginPath();ctx.moveTo(65,131);ctx.lineTo(950,131);ctx.stroke();ctx.font='27px serif';info.lines.forEach((line,i)=>ctx.fillText(line,65,205+i*76));
     });
     const x=sx*(core-.24),ry=sx===1?-Math.PI/2:Math.PI/2;
-    const frame=meshBox(parent,materials.chair,.1,1.62,4.9,x,2.0,zmid);
+    const frame=meshBox(parent,materials.frame,.1,1.62,4.9,x,2.0,zmid);
     const panel=new T.Mesh(new T.PlaneGeometry(4.65,1.43),new T.MeshStandardMaterial({map:board,roughness:.94}));panel.rotation.y=ry;panel.position.set(x-sx*.06,2.0,zmid);parent.add(panel);
     meshBox(parent,materials.frame,.18,.055,4.9,x-sx*.11,1.18,zmid);
     label(parent,'尚德 · 睿智 · 唯实 · 创新','HAINAN MIDDLE SCHOOL',4.65,.32,x-sx*.07,3.17,zmid,ry);
@@ -113,6 +115,19 @@
     chalkboard(detail,roomIndex,sx,zmid,core);
     const batches=batcher(detail),obstacles=[];
     function put(key,mat,geo,x,y,z,scale,ry=0,rx=0){batches.put(key,mat,geo,x,y,z,scale[0],scale[1],scale[2],ry,rx);}
+    // Pale green curtains and a mobile display are visible in the archived
+    // classroom photos. Placement and room dimensions remain an interpretation.
+    const outsideZ=sz*(1.5+roomD)-sz*.22;
+    for(const x of [xmin+.65,xmax-.65])for(let pleat=0;pleat<7;pleat++){
+      put('curtains',materials.curtain,unitBox,x+(pleat-3)*.065,2.0,outsideZ+Math.sin(pleat*1.7)*.045,[.075,2.25,.045]);
+    }
+    const shelfX=sx*2.2,shelfZ=zmid+sz*(roomD/2-1.1);
+    put('bookcase',materials.desk,unitBox,shelfX,.8,shelfZ,[.35,1.35,1.3]);
+    for(let level=0;level<3;level++)for(let book=0;book<9;book++)put('librarybooks',book%2?materials.book:materials.paper,unitBox,shelfX-sx*.2,.32+level*.42,shelfZ-.53+book*.12,[.13,.27+(book%3)*.025,.075]);
+    // The lectern remains on the existing teacher footprint; no aisle is blocked.
+    put('lectern',materials.desk,unitBox,sx*(core-1.2),1.0,zmid,[.58,.36,1.2]);
+    put('displayframe',materials.dark,unitBox,sx*(core-.24),2.35,zmid+sz*2,[.075,.95,1.65]);
+    put('display',materials.screen,unitBox,sx*(core-.29),2.35,zmid+sz*2,[.025,.85,1.5]);
     const columns=[-3.8,-2.65,-1.5,1.5,2.65,3.8],rows=6,ry=sx>0?-Math.PI/2:Math.PI/2;
     function local(x,z,dx,dz){return {x:x+Math.cos(ry)*dx+Math.sin(ry)*dz,z:z-Math.sin(ry)*dx+Math.cos(ry)*dz};}
     for(let row=0;row<rows;row++)for(let col=0;col<columns.length;col++){
@@ -133,6 +148,7 @@
     put('teacher',materials.desk,unitBox,tx,.81,zmid,[.62,.08,1.65]);
     put('teacherbody',materials.door,unitBox,tx,.44,zmid,[.55,.7,1.48]);
     obstacles.push({minX:tx-.34,maxX:tx+.34,minZ:zmid-.85,maxZ:zmid+.85,id:name+':teacher'});
+    obstacles.push({minX:shelfX-.23,maxX:shelfX+.23,minZ:shelfZ-.68,maxZ:shelfZ+.68,id:name+':bookcase'});
     for(const zoff of [-2.5,2.5]){
       // Long fluorescent fixture and a three-blade ceiling fan.
       put('light',materials.emissive,unitBox,sx*(core-6.1),fh-.34,zmid+zoff,[1.18,.055,.16]);

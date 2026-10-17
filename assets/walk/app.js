@@ -2,11 +2,14 @@
   const $=id=>document.getElementById(id),M=window.CampusMotion;
   const touch=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>1;
   const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const arrivalMode=new URLSearchParams(location.search).get('arrival')==='descent';
+  let arrivalProgress=0,arrivalTaken=false,arrivalPoint=null;
   const state={started:false,paused:true,yaw:Math.PI,pitch:.04,walked:0,input:{x:0,y:0,run:false},pos:{x:13,z:-172},quality:'auto',sensitivity:1,bob:false,frames:0,fps:60};
   const keys=new Set(),dialogs=['pauseDialog','mapDialog','poiDialog','aboutDialog'];
+  let sky,climate,reflections,planner,tour=null,tourIndex=-1,observation=false;
   let renderer,scene,camera,sun,hemiLight,ambientLight,world,data,nearest=null,last=0,frame=0,toastTimer,drag=null,lookTouch=null,joyPointer=null;
   let active=true,contextLost=false,shadowCenter={x:Infinity,z:Infinity},adaptTime=0,adaptFrames=0,pixelRatio=1,shadowEnabled=true;
-  const destinations=[{id:'beimen',label:'北门',tag:'01'},{id:'fengqitang',label:'凤栖堂',tag:'02'},{id:'yanlintang',label:'衍林堂',tag:'03'},{id:'lanshu',label:'百年榄仁树',tag:'04'},{id:'yihao',label:'一号教学楼',tag:'05'},{id:'library',label:'图书馆',tag:'06'},{id:'yanchi',label:'砚池',tag:'07'},{id:'yundong',label:'操场',tag:'08'},{id:'nanmen',label:'南门',tag:'09'}];
+  const destinations=[{id:'beimen',label:'北门',tag:'01'},{id:'fengqitang',label:'凤栖堂',tag:'02'},{id:'yanlintang',label:'衍林堂',tag:'03'},{id:'lanshu',label:'百年榄仁树',tag:'04'},{id:'yihao',label:'一号教学楼',tag:'05'},{id:'library',label:'图书馆',tag:'06'},{id:'yanchi',label:'砚池',tag:'07'},{id:'yundong',label:'操场',tag:'08'},{id:'nanmen',label:'南门',tag:'09'},{id:'kexue',label:'科学馆',tag:'10'},{id:'erhao',label:'二号教学楼',tag:'11'}];
   function status(p,msg){$('loadBar').style.width=Math.round(p*100)+'%';$('loadStatus').textContent=msg;}
   function toast(msg){$('toast').textContent=msg;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3600);}
   function error(title,msg){$('errorTitle').textContent=title;$('errorText').textContent=msg;$('errorPanel').hidden=false;$('enterButton').disabled=true;}
@@ -26,7 +29,7 @@
       catch(e){toast('按住场景拖动环顾。');}
     }
   }
-  function applyLook(dx,dy,isTouch=false){const v=M.look(state.yaw,state.pitch,dx,dy,state.sensitivity,isTouch);state.yaw=v.yaw;state.pitch=v.pitch;}
+  function applyLook(dx,dy,isTouch=false){if(dx||dy)stopTour();const v=M.look(state.yaw,state.pitch,dx,dy,state.sensitivity,isTouch);state.yaw=v.yaw;state.pitch=v.pitch;}
   function canvasEvents(canvas){
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
     canvas.addEventListener('pointerdown',e=>{
@@ -76,7 +79,7 @@
     window.addEventListener('keydown',e=>{
       if(!state.started)return;
       const k=e.key.toLowerCase();
-      if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright',' ','shift'].includes(k)&&!state.paused){e.preventDefault();keys.add(k);}
+      if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright',' ','shift'].includes(k)&&!state.paused){e.preventDefault();stopTour();keys.add(k);}
       if(e.repeat)return;
       if(k==='m'){e.preventDefault();if($('mapDialog').open)resume();else{pause('mapDialog');drawMaps();}}
       if(k==='e'&&!state.paused){e.preventDefault();inspect();}
@@ -86,7 +89,7 @@
     window.addEventListener('blur',()=>{clearInput();if(state.started&&!state.paused)pause();});
     document.addEventListener('visibilitychange',()=>{active=!document.hidden;if(!active){clearInput();if(state.started)pause();}else last=performance.now();});
     const joy=$('joystick');
-    function moveJoy(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,v=M.joystick(dx,dy,40);state.input.x=v.x;state.input.y=v.y;$('stick').style.transform=`translate(${v.x*36}px,${-v.y*36}px)`;}
+    function moveJoy(e){stopTour();const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,v=M.joystick(dx,dy,40);state.input.x=v.x;state.input.y=v.y;$('stick').style.transform=`translate(${v.x*36}px,${-v.y*36}px)`;}
     joy.addEventListener('pointerdown',e=>{if(state.paused||joyPointer!==null)return;e.preventDefault();joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);moveJoy(e);});
     joy.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer){e.preventDefault();moveJoy(e);}});
     function endJoy(e){if(e.pointerId!==joyPointer)return;joyPointer=null;state.input.x=state.input.y=0;$('stick').style.transform='';}
@@ -94,24 +97,56 @@
     $('runButton').onclick=()=>{state.input.run=!state.input.run;$('runButton').setAttribute('aria-pressed',String(state.input.run));};
     $('sensitivity').oninput=e=>state.sensitivity=Number(e.target.value);
     $('bobToggle').onchange=e=>state.bob=e.target.checked;
+    $('observationToggle').onchange=e=>{observation=e.target.checked;document.body.classList.toggle('observation',observation);};
+    observation=new URLSearchParams(location.search).get('observe')==='1';
+    $('observationToggle').checked=observation;document.body.classList.toggle('observation',observation);
+    $('climate').onchange=e=>{if(climate.select(e.target.value))$('climateLabel').textContent=climate.presets[e.target.value].name+' · 模拟环境';};
+    $('tourButton').onclick=()=>startTour(0);$('tourStop').onclick=()=>stopTour();$('tourNext').onclick=()=>startTour(tourIndex+1);
     $('quality').onchange=e=>{state.quality=e.target.value;setQuality();toast('画面精度已调整。');};
     window.addEventListener('resize',resize);
+    window.addEventListener('message',e=>{if(!arrivalMode||e.source!==window.parent||e.origin!==location.origin)return;if(e.data?.type==='haiz:arrival:progress')setArrivalProgress(e.data.progress);if(e.data?.type==='haiz:arrival:takeover')takeArrivalControl();});
+  }
+  function setArrivalProgress(value){
+    if(!arrivalMode||arrivalTaken||!world||!Number.isFinite(value))return;
+    arrivalProgress=Math.max(0,Math.min(1,value));state.paused=true;
+    const c=world.buildings.find(b=>b.data.id==='beimen').center,t=arrivalProgress;
+    arrivalPoint=arrivalPoint||M.safePoint(c.x,c.z-13,world.colliders,world.bounds);
+    if(!arrivalPoint)return;
+    camera.position.set(arrivalPoint.x,1.85+(1-t)*300,arrivalPoint.z-(1-t)*65);
+    camera.fov=48;camera.lookAt(c.x,1.85+t*3.65,c.z);camera.updateProjectionMatrix();
+    shadowCenter={x:arrivalPoint.x,z:arrivalPoint.z};sun.target.position.set(shadowCenter.x,0,shadowCenter.z);sun.target.updateMatrixWorld();
+  }
+  function takeArrivalControl(){
+    if(!arrivalMode||arrivalTaken||!world)return;
+    setArrivalProgress(1);if(!arrivalPoint)return;arrivalTaken=true;
+    const c=world.buildings.find(b=>b.data.id==='beimen').center;
+    state.pos={...arrivalPoint};state.yaw=Math.atan2(-(c.x-state.pos.x),-(c.z-state.pos.z));state.pitch=Math.atan2(3.65,Math.hypot(c.x-state.pos.x,c.z-state.pos.z));
+    observation=true;$('observationToggle').checked=true;document.body.classList.add('observation');
+    $('hud').hidden=false;$('touchControls').hidden=!touch;updateCamera(0);resume(false);
   }
   function goTo(id,notify=true){
+    stopTour();
     const b=world.buildings.find(b=>b.data.id===id);if(!b)return;
     const c=b.center,form=b.data.form;
-    let x=c.x,z=c.z+b.data.size[2]/2+9;
+    let x=c.x,z=c.z+b.data.size[2]/2+9,lookX=c.x,lookZ=c.z;
     if(form==='gate'){z=c.z+(id==='beimen'?-13:13);}
     if(form==='garden'){x=c.x-b.data.size[0]*.38;z=c.z-b.data.size[2]*.35;}
+    if(id==='fengqitang'){
+      // Observe the hall's photographed front, rather than looking at the
+      // garden centre with the generic pavilion hiding the main facade.
+      lookZ=c.z+b.data.size[2]*.31;x=c.x-b.data.size[0]*.1;
+      z=lookZ+b.data.size[2]*.27/2+18;
+    }
     if(form==='oldtree'){x=c.x-10;z=c.z-8;}
     if(form==='field'){x=c.x;z=c.z;}
     const p=M.safePoint(x,z,world.colliders,world.bounds);
     if(!p){toast('附近暂时没有安全落点。');return false;}
-    state.pos=p;state.yaw=Math.atan2(-(c.x-p.x),-(c.z-p.z));state.pitch=.045;clearInput();
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='fengqitang'?.1:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
   }
   function goToClassroom(buildingId='yihao'){
+    stopTour();
     const room=world.rooms.find(r=>r.buildingId===buildingId);if(!room)return;
     const p=M.safePoint(room.arrival.x,room.arrival.z,world.colliders,world.bounds);
     if(!p){toast('教室入口暂时不可达。');return false;}
@@ -119,8 +154,51 @@
     updateCamera(0);updateHud();drawMaps();toast('已到'+room.name.replace(/ · .*/,'')+'首层，向前走进教室。');return true;
   }
   function inspect(){
+    $('tourNext').hidden=true;
+    if(tour)stopTour();
     if(!nearest)return;const b=nearest.data,idx=destinations.findIndex(d=>d.id===b.id);
-    $('poiName').textContent=b.name;$('poiEnglish').textContent=b.en||'Fucheng Campus';$('poiDescription').textContent=b.desc||'府城校区日常校园空间。';$('poiIndex').textContent=String(idx+1).padStart(2,'0');$('poiCategory').textContent=b.category+' / CAMPUS NOTES';$('poiEnterClassroom').hidden=b.form!=='academic';$('poiEnterClassroom').onclick=()=>{goToClassroom(b.id);resume();};pause('poiDialog');
+    $('poiName').textContent=b.name;$('poiEnglish').textContent=b.en||'Fucheng Campus';$('poiDescription').textContent=b.desc||'府城校区日常校园空间。';$('poiIndex').textContent=String(idx+1).padStart(2,'0');$('poiCategory').textContent=b.category+' / CAMPUS NOTES';$('poiEnterClassroom').hidden=b.form!=='academic';$('poiEnterClassroom').onclick=()=>{goToClassroom(b.id);resume();};showMemory(b.id);pause('poiDialog');
+  }
+  function stopTour(){tour=null;$('tourStop').hidden=true;$('tourNext').hidden=true;tourIndex=-1;}
+  function showMemory(id){
+    const archive=window.CampusMemory.places.find(p=>p.id===id),record=window.CampusArchitecture?.records[id];
+    const p=archive||(record&&{...record,name:world.buildings.find(b=>b.data.id===id)?.data.name||id,memory:'对照照片观察轮廓与材料；房间布局仍为近似表达。',confidence:'照片观察 / 未测绘'});$('memoryLayer').hidden=!p;
+    if(!p)return;
+    $('memoryPhoto').hidden=!p.image;if(p.image)$('memoryPhoto').src=p.image;$('memoryPhoto').alt=p.name+' · 项目已有实拍';
+    $('memoryObservation').textContent=p.observation;$('memoryText').textContent=p.memory;
+    $('memoryEvidence').textContent=p.confidence;$('memoryLimit').textContent=p.limit;
+    $('memorySource').href=p.source;$('memorySource').textContent=p.sourceName+' ↗';
+    $('memoryRead').href='memory-walk.html#'+p.id;
+    $('memoryRead').hidden=!archive;
+    if(!archive&&['yihao','erhao','fengqitang','library'].includes(id)){
+      $('memoryRead').href='architecture.html?place='+id;$('memoryRead').textContent='建筑观察手册 · 实拍与材料 ↗';$('memoryRead').hidden=false;
+    }else $('memoryRead').textContent='完整地点档案 ↗';
+  }
+  function startTour(index){
+    if(index>=window.CampusMemory.places.length){stopTour();resume();toast('三次停留结束。接下来，自由行走。');return;}
+    const place=window.CampusMemory.places[index],b=world.buildings.find(b=>b.data.id===place.id),c=b.center;
+    const desired=place.id==='beimen'?{x:c.x,z:c.z-13}:place.id==='lanshu'?{x:c.x-10,z:c.z-8}:{x:c.x+b.data.size[0]/2+4,z:c.z};
+    const destination=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);
+    const path=destination&&planner.find(state.pos,destination);
+    if(!path){stopTour();toast('当前地点无法规划安全步行线。请走到开阔校道再试。');return;}
+    tourIndex=index;tour={path,point:1,place,b};$('tourStop').hidden=false;$('tourNext').hidden=true;
+    $('tourCaption').textContent=String(index+1).padStart(2,'0')+' / '+place.name;
+    resume();toast(reduced?'缓慢步行至'+place.name+'；随时操作即可接管。':'沿模型内可通行路径前往'+place.name+'；WASD 或环顾可接管。');
+  }
+  function advanceTour(dt){
+    if(!tour)return;
+    const target=tour.path[tour.point],dx=target.x-state.pos.x,dz=target.z-state.pos.z,distance=Math.hypot(dx,dz);
+    if(distance<.00001){tour.point++;if(tour.point>=tour.path.length){
+      const reached=tour,index=tourIndex;tour=null;nearest=reached.b;
+      state.yaw=Math.atan2(-(reached.b.center.x-state.pos.x),-(reached.b.center.z-state.pos.z));state.pitch=.04;
+      inspect();tourIndex=index;$('tourNext').hidden=false;$('tourNext').textContent=index===2?'结束路线，自由探索':'继续走向'+window.CampusMemory.places[index+1].name;$('tourStop').hidden=true;updateCamera(0);
+    }return;}
+    const angle=Math.atan2(-dx,-dz),delta=Math.atan2(Math.sin(angle-state.yaw),Math.cos(angle-state.yaw));
+    state.yaw+=delta*Math.min(1,dt*2.2);state.pitch+=(.025-state.pitch)*Math.min(1,dt*2);
+    const speed=2.2,s=Math.min(distance,speed*dt);
+    const next={x:state.pos.x+dx/distance*s,z:state.pos.z+dz/distance*s};
+    if(!planner.clear(state.pos,next)){stopTour();toast('路线遇到障碍，已交还自由控制。');return;}
+    state.pos=next;state.walked+=s;
   }
   function updateHud(){
     let best=Infinity,close=null;
@@ -129,7 +207,7 @@
     const room=window.CampusInteriors.currentRoom(state.pos.x,state.pos.z);
     $('locationName').textContent=room?room.name:best<75?close.data.name+'附近':'校园校道';
     $('indoorStatus').hidden=!room;if(room)$('indoorName').textContent=room.name;
-    $('distanceWalked').textContent=Math.floor(state.walked);$('motionState').textContent=(state.input.run||keys.has('shift'))?'快步行走':'自由漫游';
+    $('distanceWalked').textContent=Math.floor(state.walked);$('motionState').textContent=tour?'沿路行走':(state.input.run||keys.has('shift'))?'快步行走':'自由漫游';
     $('inspectButton').hidden=best>65||!!room;$('inspectName').textContent=close.data.name;$('inspectDistance').textContent=Math.round(best)+' m';
   }
   function mapPoint(x,z,size,pad){const w=620,d=580,scale=(size-2*pad)/Math.max(w,d);return {x:size/2+x*scale,y:size/2-z*scale,s:scale};}
@@ -158,7 +236,7 @@
   function drawMaps(){drawMap($('miniMap'),false);if($('mapDialog').open)drawMap($('largeMap'),true);}
   function buildDestinations(){
     const list=$('destinationList');for(const d of destinations){const button=document.createElement('button');button.innerHTML='<span><b>'+d.tag+'</b>'+d.label+'</span><small>移步 ↗</small>';button.onclick=()=>{goTo(d.id);resume();};list.appendChild(button);}
-    const roomButton=document.createElement('button');roomButton.innerHTML='<span><b>10</b>开放教室 · 一号楼</span><small>进入 ↗</small>';roomButton.onclick=()=>{goToClassroom();resume();};list.appendChild(roomButton);
+    const roomButton=document.createElement('button');roomButton.innerHTML='<span><b>12</b>开放教室 · 一号楼</span><small>进入 ↗</small>';roomButton.onclick=()=>{goToClassroom();resume();};list.appendChild(roomButton);
   }
   function setQuality(){
     const q=state.quality==='auto'?(touch?'balanced':navigator.hardwareConcurrency<=4?'balanced':'high'):state.quality;
@@ -184,30 +262,33 @@
   }
   function animate(now){
     frame=requestAnimationFrame(animate);if(!active||contextLost)return;
-    const dt=Math.min((now-last)/1000||0,.1);last=now;
+    const dt=Math.max(0,Math.min((now-last)/1000||0,.1));last=now;
+    const targetFov=observation?48:(touch?73:68);
+    if((!arrivalMode||arrivalTaken)&&Math.abs(camera.fov-targetFov)>.01){camera.fov+=(targetFov-camera.fov)*(reduced?1:Math.min(1,dt*4));camera.updateProjectionMatrix();}
     if(!state.paused){
       const keyboardX=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
       const keyboardY=(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0);
       const input={x:state.input.x+keyboardX,y:state.input.y+keyboardY,run:state.input.run||keys.has('shift'),speedScale:window.CampusInteriors.currentRoom(state.pos.x,state.pos.z) ? .72 : 1};
-      state.walked+=M.step(state.pos,input,state.yaw,dt,world.colliders,world.bounds);updateCamera(now/1000);
+      if(tour)advanceTour(dt);else state.walked+=M.step(state.pos,input,state.yaw,dt,world.colliders,world.bounds);updateCamera(now/1000);
       if(state.frames%10===0){updateHud();drawMaps();}
     }
     window.CampusInteriors.tick(state.pos.x,state.pos.z,state.paused?0:dt,reduced);
-    const indoors=!!window.CampusInteriors.currentRoom(state.pos.x,state.pos.z);renderer.toneMappingExposure+=((indoors?1.28:1.08)-renderer.toneMappingExposure)*Math.min(1,dt*2);
+    const indoors=!!window.CampusInteriors.currentRoom(state.pos.x,state.pos.z);renderer.toneMappingExposure=climate.tick(dt,indoors,state.paused);
+    reflections.tick(dt,state.effectiveQuality,indoors,state.paused);
     if(state.frames%24===0){
       // Tile visibility is distance based, mirroring open-world chunk culling.
       for(const tile of world.vegetationTiles)tile.group.visible=Math.hypot(tile.x-state.pos.x,tile.z-state.pos.z)<260;
     }
-    if(state.frames%3===0||!state.paused)renderer.render(scene,camera);
+    if((!arrivalMode||arrivalTaken||arrivalProgress>0)&&(state.frames%3===0||!state.paused||arrivalMode&&!arrivalTaken))renderer.render(scene,camera);
     state.frames++;adaptTime+=dt;adaptFrames++;
     if(adaptTime>4){
       state.fps=adaptFrames/adaptTime;
-      if(state.quality==='auto'&&state.fps<28&&state.started&&!state.paused&&pixelRatio>.85){pixelRatio=Math.max(.85,pixelRatio-.2);renderer.setPixelRatio(pixelRatio);renderer.setSize(innerWidth,innerHeight);}
+      if(state.quality==='auto'&&state.fps<28&&state.started&&!state.paused&&pixelRatio>1){pixelRatio=Math.max(1,pixelRatio-.2);renderer.setPixelRatio(pixelRatio);renderer.setSize(innerWidth,innerHeight);}
       adaptFrames=0;adaptTime=0;
     }
   }
   async function loadEnvironment(){
-    if(!THREE.RGBELoader||!renderer.capabilities)return;
+    if(location.protocol==='file:'||!THREE.RGBELoader||!renderer.capabilities)return;
     await new Promise(resolve=>{
       let settled=false;const timer=setTimeout(()=>done(),10000);
       function done(){if(settled)return;settled=true;clearTimeout(timer);resolve();}
@@ -224,12 +305,33 @@
     bindControls();
     if(!window.THREE||!M||!window.CampusWorld||!window.CampusInteriors)throw new Error('校园程序加载不完整，请刷新页面重试。');
     status(.08,'读取已有校园空间…');
-    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),15000);
-    let response;try{response=await fetch('assets/walk/campus.json',{signal:abort.signal});}finally{clearTimeout(timer);}
-    if(!response.ok)throw new Error('校园空间数据暂时不可用（'+response.status+'）。');
-    data=await response.json();if(!data.buildings?.length)throw new Error('校园数据缺少建筑。');
+    // `fetch()` is intentionally avoided for file:// pages. Browsers block
+    // local JSON requests from a file origin, which used to surface as the
+    // unhelpful “NetworkError when attempting to fetch resource” panel when
+    // somebody opened the downloaded site directly. The generated snapshot is
+    // also a safe fallback for a temporarily unavailable Pages asset.
+    if(location.protocol==='file:'&&window.CAMPUS_DATA){
+      data=window.CAMPUS_DATA;
+      status(.1,'读取内置校园空间…');
+    }else{
+      const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),15000);
+      try{
+        const response=await fetch('assets/walk/campus.json',{signal:abort.signal});
+        if(!response.ok)throw new Error('校园空间数据暂时不可用（'+response.status+'）。');
+        data=await response.json();
+      }catch(fetchError){
+        if(window.CAMPUS_DATA){
+          data=window.CAMPUS_DATA;
+          status(.1,'网络空间数据不可用 · 使用内置校园空间…');
+        }else if(location.protocol==='file:'){
+          throw new Error('直接打开文件时无法读取校园数据。请使用 START-HERE.md 中的本地服务器，或重新下载完整版本。');
+        }else throw fetchError;
+      }finally{clearTimeout(timer);}
+    }
+    if(!data?.buildings?.length)throw new Error('校园数据缺少建筑。');
     scene=new THREE.Scene();scene.background=new THREE.Color('#c5d8d5');scene.fog=new THREE.Fog('#d0d8c7',160,520);
-    const sky=new THREE.Mesh(new THREE.SphereGeometry(600,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{top:{value:new THREE.Color('#8bb9c5')},bottom:{value:new THREE.Color('#e3dfcc')}},vertexShader:'varying vec3 vPosition;void main(){vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform vec3 top;uniform vec3 bottom;varying vec3 vPosition;void main(){float h=clamp(normalize(vPosition).y,0.0,1.0);gl_FragColor=vec4(mix(bottom,top,pow(h,0.55)),1.0);}'}));sky.renderOrder=-10;scene.add(sky);
+    sky=new THREE.Mesh(new THREE.SphereGeometry(600,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{top:{value:new THREE.Color('#8bb9c5')},bottom:{value:new THREE.Color('#e3dfcc')}},vertexShader:'varying vec3 vPosition;void main(){vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform vec3 top;uniform vec3 bottom;varying vec3 vPosition;void main(){float h=clamp(normalize(vPosition).y,0.0,1.0);gl_FragColor=vec4(mix(bottom,top,pow(h,0.55)),1.0);}'}));sky.renderOrder=-10;scene.add(sky);
+    if(THREE.Sky){scene.remove(sky);sky.geometry.dispose();sky.material.dispose();sky=new THREE.Sky();sky.scale.setScalar(10000);sky.frustumCulled=false;scene.add(sky);}
     camera=new THREE.PerspectiveCamera(touch?73:68,innerWidth/innerHeight,.08,850);
     try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch(e){error('此设备暂未开启 3D 显示','校园漫游需要 WebGL。请开启浏览器硬件加速，或换用支持 WebGL 的浏览器。');return;}
     renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -240,19 +342,37 @@
     setQuality();canvasEvents(renderer.domElement);
     status(.12,'加载扫描材质…');
     const environmentReady=loadEnvironment();
-    const pbr=await window.CampusInteriors.loadMaterials(p=>status(.12+p*.09,'加载草地、铺装、树叶与室内材质…'));
+    const pbr=location.protocol==='file:'?{}:await window.CampusInteriors.loadMaterials(p=>status(.12+p*.09,'加载草地、铺装、树叶与室内材质…'));
     await environmentReady;
     status(.22,'重建校道与开放教室…');
     world=await window.CampusWorld.build(scene,data,state.effectiveQuality,status,pbr);
-    scene.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)&&'envMapIntensity'in o.material)o.material.envMapIntensity=.65;});
+    // r128 expects linear material colors. Palette hex values are sRGB;
+    // convert each shared material once, after all photo-informed overrides.
+    const managedMaterials=new Set();
+    scene.traverse(o=>{
+      if(!o.isMesh)return;
+      for(const m of Array.isArray(o.material)?o.material:[o.material]){
+        if(!m?.isMeshStandardMaterial||managedMaterials.has(m))continue;
+        managedMaterials.add(m);m.color.convertSRGBToLinear();m.envMapIntensity=.22;
+      }
+    });
+    const aniso=Math.min(16,renderer.capabilities?.getMaxAnisotropy?.()||8);
+    scene.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material])for(const key of ['map','normalMap','roughnessMap'])if(m?.[key]){m[key].anisotropy=aniso;m[key].magFilter=THREE.LinearFilter;m[key].minFilter=THREE.LinearMipmapLinearFilter;m[key].needsUpdate=true;}});
+    climate=window.CampusClimate.create(scene,sky,sun,hemiLight,ambientLight,world,reduced);climate.tick(1,false);planner=window.CampusRoute.planner(world,M);
+    const requestedClimate=new URLSearchParams(location.search).get('climate');
+    if(requestedClimate&&climate.select(requestedClimate)){
+      $('climate').value=requestedClimate;$('climateLabel').textContent=climate.presets[requestedClimate].name+' · 模拟环境';climate.tick(5,false);
+    }
+    reflections=window.CampusReflections.create(scene,camera,sun,world,reduced);
     status(.94,'校准视角与安全落点…');
     buildDestinations();goTo('beimen',false);updateCamera(0);drawMaps();renderer.render(scene,camera);
     status(1,touch?'校园已就绪 · 左摇杆行走，右半屏环顾':'校园已就绪 · WASD 行走，鼠标环顾');$('enterText').textContent='开始漫游';$('enterButton').disabled=false;
     last=performance.now();frame=requestAnimationFrame(animate);
-    window.haizWalk={state,world,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};
+    window.haizWalk={state,world,climate,reflections,planner,startTour,stopTour,setArrivalProgress,takeArrivalControl,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,climate:climate.current,reflection:reflections.active,tour:tour?.place.id||null,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};
+    if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
     if(new URLSearchParams(location.search).get('enter')==='gate'){
       state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;goTo('beimen',false);resume(false);toast(touch?'抵达北门。左摇杆行走，右侧滑动环顾。':'抵达北门。WASD 行走，按住场景拖动环顾。');
     }
   }
-  boot().catch(err=>{console.error('Campus initialization failed',err);error('校园加载遇到了问题',err.message||'请重新加载再试。');status(0,'加载未完成');});
+  boot().catch(err=>{console.error('Campus initialization failed',err);error('校园加载遇到了问题',err.message||'请重新加载再试。');status(0,'加载未完成');if(arrivalMode)window.parent?.postMessage({type:'haiz:arrival:error'},location.origin);});
 })();

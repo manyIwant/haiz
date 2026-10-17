@@ -4,7 +4,7 @@ const {createCanvas,loadImage}=require(require.resolve('@napi-rs/canvas',{paths:
 const M=require('../../assets/walk/movement.js');
 const data=JSON.parse(fs.readFileSync('assets/walk/campus.json'));
 const context={THREE,console,setTimeout,window:{},document:{createElement(tag){assert.equal(tag,'canvas');return createCanvas(1,1);}}};
-vm.createContext(context);for(const file of ['interiors.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
+vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
 const results=[];
 function test(name,fn){fn();results.push(name);console.log('PASS',name);}
 (async()=>{
@@ -13,11 +13,38 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   vm.runInContext(fs.readFileSync('assets/vendor/RGBELoader.js','utf8'),context);
   const hdr=fs.readFileSync('assets/walk/textures/campus-light.hdr');const environment=new THREE.RGBELoader().parse(hdr.buffer.slice(hdr.byteOffset,hdr.byteOffset+hdr.byteLength));assert.equal(environment.width,1024);assert.equal(environment.height,512);
   const scene=new THREE.Scene(),world=await context.window.CampusWorld.build(scene,data,'balanced',undefined,bank);
+  test('photo-informed facade materials have bump and roughness maps with metric UVs',()=>{
+    const kinds=new Set();let projected=0;
+    scene.traverse(m=>{if(!m.isMesh||!m.material?.userData.surfaceStudy)return;
+      const mat=m.material;kinds.add(mat.userData.surfaceStudy);assert(mat.bumpMap&&mat.roughnessMap);assert.equal(mat.map.encoding,THREE.sRGBEncoding);assert.notEqual(mat.bumpMap.encoding,THREE.sRGBEncoding);
+      const uv=m.geometry.attributes.uv;assert(uv&&Array.from(uv.array).every(Number.isFinite));
+      if(m.geometry.userData.metricUV)projected++;
+    });assert.equal(kinds.size,4);assert(projected>0);
+    const mat=new THREE.MeshStandardMaterial();mat.userData.metricTile=2;
+    const group=new THREE.Group(),mesh=new THREE.Mesh(new THREE.BoxGeometry(12,4,2),mat);group.add(mesh);context.window.CampusSurfaces.project(group);
+    const uv=mesh.geometry.attributes.uv;assert(Math.max(...Array.from(uv.array))>=3,'12-unit wall must not stretch one tile');
+  });
   test('fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces',()=>{const mats=context.window.CampusInteriors.materials;for(const m of [mats.floor,mats.desk,mats.wall]){assert(m.map&&m.normalMap&&m.roughnessMap);assert.equal(m.map.encoding,THREE.sRGBEncoding);assert.equal(m.normalMap.image.width,512);}});
   test('existing KML anchors and 34 nodes preserved',()=>{assert.equal(world.buildings.length,34);assert.deepEqual(data.anchors.center,[19.996067,110.347227]);assert.deepEqual(data.anchors.southGate,[19.994326,110.348012]);});
   let vertices=0,meshes=0;scene.updateMatrixWorld(true);
   test('all generated geometry and transforms are finite',()=>{scene.traverse(m=>{if(m.isMesh){meshes++;const p=m.geometry.attributes.position;vertices+=p.count;for(const n of p.array)assert(Number.isFinite(n));for(const n of m.matrixWorld.elements)assert(Number.isFinite(n));if(m.isInstancedMesh)for(const n of m.instanceMatrix.array)assert(Number.isFinite(n));}});assert(vertices>50000);assert(world.colliders.length>100);});
+  test('ground texture density is consistent across roads and lawns',()=>{
+    let surfaces=0,polygons=0;scene.traverse(m=>{if(!m.isMesh)return;const mat=m.material;if(!mat?.userData.groundTile)return;const tile=mat.userData.groundTile,p=m.geometry.attributes.position,uv=m.geometry.attributes.uv;
+      for(let i=1;i<p.count;i++){const dx=p.getX(i)-p.getX(0),dy=p.getY(i)-p.getY(0),du=uv.getX(i)-uv.getX(0),dv=uv.getY(i)-uv.getY(0);assert(Math.abs(dx/tile-du)<.0001);assert(Math.abs(dy/tile-dv)<.0001);}
+      assert.equal(mat.map.minFilter,THREE.LinearMipmapLinearFilter);assert.equal(mat.map.magFilter,THREE.LinearFilter);surfaces++;if(m.geometry.type==='ShapeGeometry')polygons++;
+    });assert(surfaces>5);assert.equal(polygons,data.roads.filter(r=>r.poly?.length>=3).length);
+  });
   test('window instances placed at their building, not at origin',()=>{const windows=[];scene.traverse(m=>{if(m.isInstancedMesh&&m.parent===scene&&m.geometry.type==='BoxGeometry')windows.push(m);});assert(windows.length>=3);const mat=new THREE.Matrix4(),pos=new THREE.Vector3();let near=0,far=0;for(const m of windows)for(let i=0;i<m.count;i++){m.getMatrixAt(i,mat);pos.setFromMatrixPosition(mat);if(Math.hypot(pos.x,pos.z)<20)near++;if(Math.hypot(pos.x,pos.z)>80)far++;}assert(far>100);assert(far>near);});
+  test('upper-floor glass is visible before the solid teaching wall',()=>{
+    const b=world.buildings.find(b=>b.data.id==='yihao'),matrix=new THREE.Matrix4(),p=new THREE.Vector3();let verified=false;
+    scene.traverse(m=>{if(!m.userData.windowGlazing||verified)return;
+      for(let i=0;i<m.count;i++){m.getMatrixAt(i,matrix);p.setFromMatrixPosition(matrix);
+        if(Math.abs(p.z-(b.center.z+b.data.size[2]/2))>.2||Math.abs(p.x-b.center.x)>b.data.size[0]/2||p.y<6)continue;
+        const ray=new THREE.Raycaster(new THREE.Vector3(p.x+.3,p.y,p.z+1),new THREE.Vector3(0,0,-1),0,2),hits=ray.intersectObjects([b.group,m],true);
+        assert(hits.length&&hits[0].object===m,'glass must not be buried inside plaster');verified=true;break;
+      }
+    });assert(verified,'a front window must be tested');
+  });
   const bounds={minX:-1000,maxX:1000,minZ:-1000,maxZ:1000};
   function walk(p,input,yaw,steps,colliders=[]){for(let i=0;i<steps;i++)M.step(p,input,yaw,1/60,colliders,bounds);return p;}
   test('WASD and diagonal normalize at walking speed',()=>{let p=walk({x:0,z:0},{x:0,y:1},0,60),d=walk({x:0,z:0},{x:1,y:1},0,60);assert(Math.abs(p.z+3.1)<.001);assert(Math.abs(Math.hypot(d.x,d.z)-3.1)<.001);assert(Math.abs(d.x+d.z)<.001);});
@@ -26,7 +53,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('high delta time cannot tunnel through thin gate posts',()=>{const post=[{minX:-.05,maxX:.05,minZ:-2,maxZ:2}];let p={x:-1,z:0};for(let i=0;i<20;i++)M.step(p,{x:1,y:0,run:true},0,3,post,bounds);assert(p.x<-.36);});
   test('north gate is passable through central arch',()=>{const g=world.buildings.find(b=>b.data.id==='beimen'),p={x:g.center.x,z:g.center.z-12};assert(!M.blocked(p.x,p.z,world.colliders,world.bounds));for(let i=0;i<480;i++)M.step(p,{x:0,y:1},Math.PI,1/60,world.colliders,world.bounds);assert(p.z>g.center.z+9,'blocked at '+p.z);});
   test('water and teaching building have solid collision',()=>{for(const id of ['yanchi','library']){const b=world.buildings.find(b=>b.data.id===id);assert(M.blocked(b.center.x,b.center.z,world.colliders,world.bounds),id);}});
-  test('16 furnished classrooms preserve the original building footprints',()=>{assert.equal(world.rooms.length,16);assert(world.rooms.every(r=>r.deskCount===36));for(const r of world.rooms){assert(r.obstacles.length===37);assert(!M.blocked(r.arrival.x,r.arrival.z,world.colliders,world.bounds),r.id+' arrival');}});
+  test('16 furnished classrooms preserve the original building footprints',()=>{assert.equal(world.rooms.length,16);assert(world.rooms.every(r=>r.deskCount===36));for(const r of world.rooms){assert(r.obstacles.length===38);assert(!M.blocked(r.arrival.x,r.arrival.z,world.colliders,world.bounds),r.id+' arrival');}});
   test('each room has a continuous walk from outdoors, through the hall and door',()=>{
     function reach(p,t,label){for(let k=0;k<3000;k++){let dx=t.x-p.x,dz=t.z-p.z;if(Math.hypot(dx,dz)<.09)return;M.step(p,{x:0,y:1},Math.atan2(-dx,-dz),1/60,world.colliders,world.bounds);}throw Error(label+' unreachable from '+JSON.stringify(p)+' to '+JSON.stringify(t)+'; obstacles='+JSON.stringify(world.colliders.filter(c=>M.intersects(p.x,p.z,c,.5))));}
     for(const room of world.rooms){const b=world.buildings.find(b=>b.data.id===room.buildingId),p={x:b.center.x,z:b.center.z-b.data.size[2]/2-1};

@@ -1,0 +1,56 @@
+{
+  "edition": "2026-10-17",
+  "researchNote": "本轮尝试访问学校官网、360Cities、海南日报、搜狐转载和 Poly Haven，均被运行环境的网络代理以 CONNECT 403 拒绝。下列外观观察来自本版本已有实拍；外部链接为待在线复核的资料入口，不表示本轮已读取。照片拍摄日期和转载授权待确认。",
+  "places": [
+    {
+      "id": "yihao", "name": "一号教学楼", "en": "THE TEACHING BLOCK", "category": "modern", "number": "01",
+      "image": "assets/images/campus/campus_yihao.jpg", "alt": "一号教学楼正面，浅色墙面与深灰中央立面，入口有红色瓦檐",
+      "intro": "先看一面墙，再看一整栋楼。",
+      "observation": "浅灰白墙面衬着蓝灰窗玻璃，深色中央构件将入口框出来。红色门廊瓦檐很浅，和上方的浅色挑檐形成两层节奏。",
+      "model": "细分浅色墙砖的勾缝、深灰基座的石材颗粒，以及红瓦的弧面与搭接；纹理按模型单位铺设，不随楼体宽度被拉长。",
+      "limit": "保留原模型体量。照片不能证明准确层高、墙砖尺寸或内部平面。",
+      "materials": ["ceramic", "stone", "roof"],
+      "hotspots": [{"x": 43, "y": 38, "title": "浅墙与窗框", "text": "浅色竖向构件和横向窗台组织出立面的节奏。"}, {"x": 51, "y": 57, "title": "红瓦入口", "text": "门廊檐口的红色是照片中的局部点缀。"}, {"x": 32, "y": 68, "title": "深色基座", "text": "灰色石材与浅色上部形成清晰的材料分界。"}],
+      "source": "https://www.360cities.net/zh/image/hkaxiong-hnzx-jxl1", "sourceName": "一号教学楼公开全景资料入口（待在线复核）"
+    },
+    {
+      "id": "erhao", "name": "二号教学楼", "en": "THE OPEN GALLERY", "category": "modern", "number": "02",
+      "image": "assets/images/campus/campus_erhao.jpg", "alt": "二号教学楼庭院活动照片，可见浅色外廊、连续楼板和细柱",
+      "intro": "长廊让热带的风穿过去。",
+      "observation": "庭院视角里，白色楼板、细柱与深色廊内阴影交替出现。背阴一侧能看见细密墙砖和金属窗栏。",
+      "model": "加强小尺度墙砖和金属框的反光差异，保留浅屋面、外廊细柱与栏杆；不复制照片中的活动横幅。",
+      "limit": "照片记录的是某次活动，不能代表当前布置；廊道与尺寸仍为近似。",
+      "materials": ["ceramic", "stone"],
+      "hotspots": [{"x": 77, "y": 47, "title": "外廊的节奏", "text": "楼板和细柱共同形成连续的明暗框格。"}, {"x": 30, "y": 37, "title": "背阴的墙砖", "text": "墙砖可用细勾缝表达，避免巨大的砖块感。"}],
+      "source": "https://hi.people.com.cn/n2/2019/1211/c231190-33622877.html", "sourceName": "人民网校园报道资料入口（待在线复核）"
+    },
+    {
+      "id": "fengqitang", "name": "凤栖堂", "en": "UNDER GREEN EAVES", "category": "heritage", "number": "03",
+      "image": "assets/images/web/fengqitang-1600.jpg", "alt": "凤栖堂实拍，绿瓦叠檐、红金色柱子、白墙与木格窗",
+      "intro": "把目光停在一片绿瓦上。",
+      "observation": "绿瓦并非一块纯绿色平面：瓦沟、搭接和檐口会接住不同的光。暖红立柱上的金色细线，与木格窗、浅墙、暗色台阶并置。",
+      "model": "为瓦面增加重复弧纹的凹凸与粗糙度变化，木构增加顺纹细节，台阶加入石材颗粒。红金柱饰沿用实拍可见的配色。",
+      "limit": "未校准机位、柱距和拍摄年代；瓦面为原创程序材质，不是实景扫描。",
+      "materials": ["roof", "timber", "stone"],
+      "hotspots": [{"x": 63, "y": 30, "title": "叠起的瓦面", "text": "瓦筒的弧面与横向搭接，让高光断续而不是整片发亮。"}, {"x": 72, "y": 50, "title": "红与金", "text": "金色细线围绕暖红柱体，避免把整根柱子做成金属。"}, {"x": 62, "y": 54, "title": "木格窗", "text": "木色窗框的细节可以在近距离观察时读出来。"}],
+      "source": "https://www.hainan.gov.cn/hainan/5309/202311/506488b9d6b84f5a8e1b965f26dcfeb2.shtml", "sourceName": "海南省政府网百年校庆资料入口（待在线复核）"
+    },
+    {
+      "id": "library", "name": "图书馆", "en": "LIGHT BETWEEN BOOKS", "category": "modern", "number": "04",
+      "image": "assets/images/campus/campus_library.jpg", "alt": "图书馆实拍，白色水平外廊、蓝色弧形窗面、外部台阶与顶部圆顶",
+      "intro": "书页之外，也有光的层次。",
+      "observation": "照片可见浅色水平带、蓝色弧形玻璃构件、外部台阶和顶部圆形体量。前景树木遮挡了部分建筑。",
+      "model": "本轮补充材料观察档案与漫游入口。现有图书馆仍为近似体量，照片中的圆顶、入口与台阶尚未完整复原。",
+      "limit": "明确保留待建模部分，避免将近似模型称为已完成的实景复刻。",
+      "materials": ["ceramic", "stone"],
+      "hotspots": [{"x": 77, "y": 17, "title": "圆顶轮廓", "text": "可作为下一轮建模标识，当前数字模型尚未复原。"}, {"x": 57, "y": 38, "title": "弧形玻璃", "text": "蓝灰玻璃与浅色墙面形成材质对比。"}],
+      "source": "https://www.haizhong.edu.cn/", "sourceName": "学校官网资料入口（待在线复核）"
+    }
+  ],
+  "materials": {
+    "ceramic": {"name": "浅色墙砖", "en": "CERAMIC", "color": "#dcded4", "note": "细勾缝、微弱釉光；避免整面墙像塑料。"},
+    "roof": {"name": "瓦面", "en": "GLAZED TILE", "color": "#446b53", "note": "纵向瓦沟、横向搭接，让反光随着弧面变化。"},
+    "stone": {"name": "深灰石材", "en": "STONE", "color": "#59605a", "note": "颗粒、拼缝和较粗糙的台阶表面。"},
+    "timber": {"name": "木构", "en": "TIMBER", "color": "#8a5a45", "note": "顺纹与轻微色差，保留木材的温度。"}
+  }
+}

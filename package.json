@@ -1,11 +1,16 @@
 {
-  "name":"haiz-campus-journal",
-  "version":"0.3.0",
-  "private":true,
-  "description":"Buildless Hainan Middle School campus journal and first-person exploration prototype",
-  "scripts":{
-    "build":"node scripts/build-pages.mjs",
-    "test":"node tests/site.cjs && node tests/journal.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs"
+  "name": "haiz-campus-journal",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Buildless Hainan Middle School campus journal and first-person exploration prototype",
+  "scripts": {
+    "build": "node scripts/build-pages.mjs && node scripts/build-memory.cjs && node scripts/build-campus-data.cjs",
+    "test": "node tests/site.cjs && node tests/journal.cjs && node tests/descent.cjs && node tests/cinematic-runtime.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs",
+    "test:browser": "node tests/browser.cjs"
   },
-  "devDependencies":{"@napi-rs/canvas":"0.1.100","linkedom":"0.18.12"}
+  "devDependencies": {
+    "@napi-rs/canvas": "0.1.100",
+    "linkedom": "0.18.12",
+    "playwright": "1.62.1"
+  }
 }
