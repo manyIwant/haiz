@@ -1,7 +1,7 @@
 {
-  "pages": 12,
-  "localLinks": 405,
-  "images": 59,
+  "pages": 13,
+  "localLinks": 449,
+  "images": 60,
   "checks": [
     "All original page routes preserved plus life.html",
     "No broken local links or anchor references",
@@ -11,5 +11,5 @@
     "CNAME retained",
     "No access credentials in source"
   ],
-  "browserQA": "Not run: no supported managed browser-control capability."
+  "browserQA": "Static and DOM checks only; see tests/browser-results.json for real Chromium validation."
 }

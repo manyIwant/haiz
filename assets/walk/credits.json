@@ -136,7 +136,7 @@
     "path": "assets/walk/surfaces.js",
     "source": "Original deterministic procedural textures made for this project; no new third-party images or scans.",
     "families": ["ceramic joints", "roof tile channels and overlaps", "stone grain and joints", "timber grain"],
-    "maps": ["sRGB color", "linear bump height", "linear roughness"],
+    "maps": ["512x512 sRGB color", "512x512 linear bump height", "512x512 OpenGL tangent normal", "512x512 linear roughness"],
     "reference": "Existing school photographs listed in data/architecture.json; dimensions are interpreted, not surveyed."
   },
   "interiors": "Original imagined ground-floor classrooms, not surveyed replicas.",

@@ -1,7 +1,29 @@
 {
-  "date": "2026-10-17T15:12:41.164Z",
+  "date": "2026-10-17T15:50:54.010Z",
   "browser": "154.0.8037.57",
   "results": [
+    {
+      "target": "cinematic root / desktop",
+      "checks": [
+        "root is the cinematic entry",
+        "editorial home remains accessible",
+        "3D iframe is user-initiated",
+        "chapter seek and speed controls",
+        "sound off by default"
+      ],
+      "passed": true
+    },
+    {
+      "target": "cinematic root / mobile",
+      "checks": [
+        "root is the cinematic entry",
+        "editorial home remains accessible",
+        "3D iframe is user-initiated",
+        "chapter seek and speed controls",
+        "sound off by default"
+      ],
+      "passed": true
+    },
     {
       "target": "1440×960 desktop",
       "checks": [
@@ -9,6 +31,10 @@
         "photo hotspots",
         "persistent local collection",
         "material and relief maps",
+        "real 3D material lab",
+        "wetness, tiling, shape, and lighting controls",
+        "search and empty state",
+        "opt-in audio toggle",
         "clear collection",
         "no horizontal overflow"
       ],
@@ -21,19 +47,36 @@
         "photo hotspots",
         "persistent local collection",
         "material and relief maps",
+        "real 3D material lab",
+        "wetness, tiling, shape, and lighting controls",
+        "search and empty state",
+        "opt-in audio toggle",
         "clear collection",
         "no horizontal overflow"
       ],
       "passed": true
     },
     {
+      "target": "cinematic → real campus iframe",
+      "checks": [
+        "lazy world startup",
+        "same-origin ready handshake",
+        "arrival control takeover",
+        "keyboard-focusable live campus"
+      ],
+      "passed": true
+    },
+    {
       "target": "Chromium WebGL / software renderer",
       "checks": [
-        "real WebGL shader compilation",
+        "real WebGL and leaf/depth shader compilation",
         "34 nodes and 16 classrooms",
-        "four facade material families",
+        "four PBR facade material families",
+        "normal maps and wetness response",
         "deep-linked climate and observation settings",
         "three rendered architectural viewpoints",
+        "camera lens and downloaded postcard",
+        "digital passport after campus travel",
         "no browser errors or missing assets"
       ],
       "passed": true,
@@ -48,8 +91,8 @@
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 606,
-          "triangles": 230154,
+          "drawCalls": 474,
+          "triangles": 435719,
           "fps": 60,
           "loaded": true,
           "position": {
@@ -65,6 +108,12 @@
           "timber",
           "ceramic"
         ]
+      },
+      "wetness": {
+        "dry": 0.62,
+        "wet": 0.3,
+        "normal": true,
+        "physical": true
       }
     }
   ],

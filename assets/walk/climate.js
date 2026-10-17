@@ -7,6 +7,11 @@ const presets={
 };
 function create(scene,sky,sun,hemi,ambient,world,reduced){
  const roads=[...new Set(world.roadMaterials||[])].map(m=>({m,color:m.color.clone(),rough:m.roughness}));
+ const surfaces=[],seen=new Set();
+ scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material]){
+   if(!m?.userData.surfaceStudy||seen.has(m))continue;seen.add(m);
+   surfaces.push({m,color:m.color.clone(),rough:m.roughness,coat:m.clearcoat||0,coatRough:m.clearcoatRoughness??.3,kind:m.userData.surfaceStudy});
+ }});
  let current='morning',time=0,target=presets[current],wet=0,exposure=target.exposure,offset=target.offset.slice();
  // A small repeating normal map: surface ripples, not floating particles.
  const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d'),img=c.createImageData(128,128);
@@ -25,6 +30,12 @@ function create(scene,sky,sun,hemi,ambient,world,reduced){
   sun.position.set(sun.target.position.x+offset[0],offset[1],sun.target.position.z+offset[2]);
   if(su.sunPosition){su.sunPosition.value.set(offset[0],offset[1],offset[2]);su.turbidity.value=3+wet*5;su.rayleigh.value=1.8;su.mieCoefficient.value=.005+wet*.01;su.mieDirectionalG.value=.8;}
   roads.forEach(({m,color,rough})=>{m.color.copy(color).multiplyScalar(1-wet*.22);m.roughness=rough*(1-wet)+.28*wet;});
+  surfaces.forEach(({m,color,rough,coat,coatRough,kind})=>{
+    const amount=wet*(kind==='timber'?.35:1);
+    m.color.copy(color).multiplyScalar(1-amount*(kind==='stone'?.24:.1));
+    m.roughness=rough*(1-amount)+.3*amount;
+    if(m.isMeshPhysicalMaterial){m.clearcoat=coat+(1-coat)*amount*.35;m.clearcoatRoughness=coatRough*(1-amount)+.18*amount;}
+  });
   if(world.water){world.water.color.lerp(col.water,t);if(!reduced){normal.offset.set(time*.007,time*.003);}world.water.normalScale.set(.15+wet*.07,.15+wet*.07);}
   return exposure;
  }

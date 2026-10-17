@@ -2299,7 +2299,7 @@
     acts.appendChild(a2);
     if (b.id === 'shitang' || b.id === 'shitang2' || b.id === 'shisheng') {
       var a3 = el('a', 'hud-btn', '校园生活 ↗');
-      a3.href = 'index.html#life'; acts.appendChild(a3);
+      a3.href = 'journal.html#life'; acts.appendChild(a3);
     }
     if (b.id === 'kexue' || b.id === 'yishu') {
       var a4 = el('a', 'hud-btn', '学术课程 ↗');

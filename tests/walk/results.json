@@ -32,5 +32,5 @@
   "colliders": 1729,
   "meshes": 1691,
   "vertices": 502961,
-  "browserQA": "Unavailable: managed control-browser capability is not installed. GPU rendering and real-device touch/pointer-lock unverified."
+  "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }

@@ -15,6 +15,7 @@
     ctx.fillStyle=ctx.createPattern(map.image,'repeat');ctx.fillRect(0,0,512,512);
     if(!$('reliefToggle').checked){ctx.globalCompositeOperation='multiply';ctx.fillStyle=m.color;ctx.fillRect(0,0,512,512);ctx.globalCompositeOperation='source-over';}
     $('materialName').textContent=m.en+' / '+m.name;$('materialNote').textContent=m.note;
+    window.CampusMaterialLab?.set(key,m.color);
     $('materialChoices').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.material===key)));
   }
   function tabs(){

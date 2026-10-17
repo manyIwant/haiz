@@ -16,7 +16,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('photo-informed facade materials have bump and roughness maps with metric UVs',()=>{
     const kinds=new Set();let projected=0;
     scene.traverse(m=>{if(!m.isMesh||!m.material?.userData.surfaceStudy)return;
-      const mat=m.material;kinds.add(mat.userData.surfaceStudy);assert(mat.bumpMap&&mat.roughnessMap);assert.equal(mat.map.encoding,THREE.sRGBEncoding);assert.notEqual(mat.bumpMap.encoding,THREE.sRGBEncoding);
+      const mat=m.material;kinds.add(mat.userData.surfaceStudy);assert(mat.bumpMap&&mat.roughnessMap&&mat.normalMap);assert.equal(mat.map.encoding,THREE.sRGBEncoding);assert.notEqual(mat.bumpMap.encoding,THREE.sRGBEncoding);assert.notEqual(mat.normalMap.encoding,THREE.sRGBEncoding);assert.equal(mat.normalMap.image.width,512);
       const uv=m.geometry.attributes.uv;assert(uv&&Array.from(uv.array).every(Number.isFinite));
       if(m.geometry.userData.metricUV)projected++;
     });assert.equal(kinds.size,4);assert(projected>0);
@@ -76,7 +76,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('campus boundary blocks escape',()=>{assert(M.blocked(world.bounds.maxX,0,world.colliders,world.bounds));});
   test('contact shadow instances lie on the floor',()=>{scene.traverse(m=>{if(m.userData.interiorBatch==='contact'){const mat=new THREE.Matrix4(),normal=new THREE.Vector3(0,0,1);m.getMatrixAt(0,mat);normal.transformDirection(mat);assert(Math.abs(normal.y)>.99);}});});
   test('same-origin startup assets exist; no CDN runtime',()=>{const html=fs.readFileSync('campus-3d.html','utf8');for(const m of html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g))assert(fs.existsSync(m[1].split('?')[0]),m[1]);assert(!/src="https?:/.test(html));});
-  const summary={passed:results.length,checks:results,nodes:world.buildings.length,classrooms:world.rooms.length,trees:world.treeCount,colliders:world.colliders.length,meshes,vertices,browserQA:'Unavailable: managed control-browser capability is not installed. GPU rendering and real-device touch/pointer-lock unverified.'};
+  const summary={passed:results.length,checks:results,nodes:world.buildings.length,classrooms:world.rooms.length,trees:world.treeCount,colliders:world.colliders.length,meshes,vertices,browserQA:'Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified.'};
   fs.writeFileSync('tests/walk/results.json',JSON.stringify(summary,null,2));
   fs.writeFileSync('tests/walk/scene-summary.json',JSON.stringify(world.buildings.map(b=>({id:b.data.id,center:b.center})),null,2));
   console.log(JSON.stringify(summary,null,2));

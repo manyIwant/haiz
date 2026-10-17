@@ -43,7 +43,7 @@ document.addEventListener('click',async e=>{
  if(el.matches('[data-delete-memo]')){memos=memos.filter(m=>m.id!==el.dataset.deleteMemo);storage.write('memos',memos);renderMemos();return;}
  if(el.matches('[data-top]')){window.scrollTo({top:0,behavior:reduced?'instant':'smooth'});return;}
  if(el.matches('[data-copy]')){try{await navigator.clipboard.writeText(el.dataset.copy);toast('已复制。');}catch{toast('请手动复制：'+el.dataset.copy);}return;}
- if(el.id==='clearLocalData'){for(const k of ['saved','poll','memos'])try{localStorage.removeItem(NS+k);}catch{}saved=[];memos=[];poll=null;updateSaves();updatePoll();renderMemos();toast('已清除本机收藏、课间选择与便笺。');}
+ if(el.id==='clearLocalData'){for(const k of ['saved','poll','memos'])try{localStorage.removeItem(NS+k);}catch{}try{localStorage.removeItem('haiz.architecture.notebook.v1');}catch{}window.HaizExperience?.clearPassport();saved=[];memos=[];poll=null;updateSaves();updatePoll();renderMemos();toast('已清除本机收藏、探索足迹、课间选择与便笺。');}
  if(el.matches('[data-atlas]'))selectAtlas(el.dataset.atlas);
 });
 $$('dialog').forEach(dialog=>dialog.addEventListener('click',e=>{if(e.target!==dialog)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}));
