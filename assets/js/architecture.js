@@ -11,9 +11,9 @@
     const collected=saved.includes(current.id);$('collectButton').setAttribute('aria-pressed',String(collected));$('collectButton').textContent=collected?'已收进观察册 ✓':'收进观察册 ＋';$('clearCollection').hidden=!saved.length;
   }
   function preview(key){
-    material=key;const m=data.materials[key],canvas=$('materialCanvas'),ctx=canvas.getContext('2d'),map=window.CampusSurfaces.maps(key)[$('reliefToggle').checked?'height':'color'];
+    material=key;const m=data.materials[key],canvas=$('materialCanvas'),ctx=canvas.getContext('2d'),map=$('reliefToggle').checked?window.CampusSurfaces.maps(key).height:window.CampusSurfaces.albedo(key);
     ctx.fillStyle=ctx.createPattern(map.image,'repeat');ctx.fillRect(0,0,512,512);
-    if(!$('reliefToggle').checked){ctx.globalCompositeOperation='multiply';ctx.fillStyle=m.color;ctx.fillRect(0,0,512,512);ctx.globalCompositeOperation='source-over';}
+    if(!$('reliefToggle').checked){ctx.globalCompositeOperation='multiply';ctx.fillStyle=map.userData?.generatedGlaze?'#e4e4d6':m.color;ctx.fillRect(0,0,512,512);ctx.globalCompositeOperation='source-over';}
     $('materialName').textContent=m.en+' / '+m.name;$('materialNote').textContent=m.note;
     window.CampusMaterialLab?.set(key,m.color);
     $('materialChoices').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.material===key)));

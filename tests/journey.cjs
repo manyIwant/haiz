@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),C=require('../assets/walk/journey-core.js');
+const ids=['beimen','yihao','yanchi','fengqitang','library','erhao','lanshu'];let checks=0;
+function check(fn){fn();checks++;}
+check(()=>assert.deepEqual(C.stops(['beimen','<script>','beimen','yihao'],ids),['beimen','yihao']));
+check(()=>assert.equal(C.stops(ids,ids).length,6));check(()=>assert.deepEqual(C.stops(null,ids),[]));
+for(let from=0;from<6;from++)for(let to=0;to<6;to++)check(()=>{const a=ids.slice(0,6),b=C.move(a,from,to);assert.equal(b[to],a[from]);assert.equal(new Set(b).size,6);assert.deepEqual(a,ids.slice(0,6));});
+check(()=>assert.equal(C.distance([{x:0,z:0},{x:3,z:4},{x:6,z:8}]),10));
+check(()=>assert.equal(C.distance([{x:NaN,z:0},{x:1,z:0}]),null));
+check(()=>assert.match(C.query(['yihao'],'liveweather'),/climate=morning$/));
+const bounds={minX:-100,maxX:100,minZ:-100,maxZ:100},view={position:{x:5,z:2},yaw:.5,pitch:-.2,lens:48,climate:'dusk',name:'我的机位'};
+check(()=>{const c=C.camera({...view,yaw:99,pitch:4,lens:150,climate:'rain'});assert.equal(c.lens,80);assert.equal(c.pitch,1.2);assert.equal(c.climate,'morning');assert(Math.abs(c.yaw)<=Math.PI);});
+check(()=>assert.equal(C.camera({...view,position:{x:101,z:0}},bounds),null));
+check(()=>{assert.equal(C.parseView('1,,0,0,48',bounds),null);assert.equal(C.parseView('1,2,Infinity,0,48',bounds),null);});
+check(()=>assert.equal(C.parseView(C.viewQuery(view).split('&')[0].slice(5),bounds).position.x,5));
+const records=new Map(),context={window:{CampusJourneyCore:C},localStorage:{getItem:k=>records.get(k)||null,setItem:(k,v)=>records.set(k,v),removeItem:k=>records.delete(k)},Date,Math};vm.createContext(context);vm.runInContext(fs.readFileSync('assets/walk/view-store.js','utf8'),context);const S=context.window.CampusViews;
+check(()=>{for(let i=0;i<12;i++)S.add({...view,name:'机位'+i});assert.equal(S.read().length,8);assert.equal(S.read()[0].name,'机位11');});
+check(()=>{const id=S.read()[0].id;S.remove(id);assert(!S.read().some(v=>v.id===id));});
+check(()=>{records.set('haiz.camera.views.v1','[{"id":"bad","position":{"x":null,"z":2},"yaw":0,"pitch":0,"lens":48}]');assert.equal(S.read().length,0);});
+check(()=>{records.set('haiz.camera.views.v1','not-json');assert.equal(S.read().length,0);S.clear();assert.equal(records.size,0);});
+console.log('PASS',checks,'route ordering, model positions, camera URL validation and bounded local camera records');

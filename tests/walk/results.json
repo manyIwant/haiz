@@ -1,8 +1,9 @@
 {
-  "passed": 24,
+  "passed": 25,
   "checks": [
     "photo-informed facade materials have bump and roughness maps with metric UVs",
     "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
+    "original generated glaze is decoded on green roofs without replacing red roof albedo",
     "existing KML anchors and 34 nodes preserved",
     "all generated geometry and transforms are finite",
     "ground texture density is consistent across roads and lawns",

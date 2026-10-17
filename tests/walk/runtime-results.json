@@ -9,6 +9,8 @@
       "architectural observation control",
       "all three climate presets",
       "continuous three-stop route without collision",
+      "custom four-stop architecture route without collision",
+      "validated camera restoration and invalid-position rejection",
       "route pause and manual takeover",
       "memory archive at each stop",
       "startup",
@@ -26,7 +28,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 4143
+    "elapsedMs": 5257
   },
   {
     "mode": "mobile 390×844",
@@ -55,7 +57,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 3971
+    "elapsedMs": 4249
   },
   {
     "mode": "desktop 1440×900",
@@ -84,7 +86,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 4020
+    "elapsedMs": 4001
   },
   {
     "mode": "mobile 390×844",
@@ -113,7 +115,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 4007
+    "elapsedMs": 4140
   },
   {
     "mode": "descent handoff",
@@ -124,6 +126,18 @@
       "ground eye height",
       "safe arrival collision",
       "manual control takeover"
+    ],
+    "gpu": false
+  },
+  {
+    "mode": "custom route URL entry",
+    "startup": "journey",
+    "loaded": true,
+    "checks": [
+      "whitelisted route starts from its first landmark",
+      "requested climate retained",
+      "collision-safe first stop",
+      "single pointer-lock request"
     ],
     "gpu": false
   }

@@ -9,7 +9,7 @@
     "Menu open/close state",
     "Alumni field filter",
     "Photo viewer",
-    "Scoped local-data clearing"
+    "Scoped local-data clearing including route and camera records, preserving unrelated keys"
   ],
   "verification": "Node DOM/event simulation; visual browser rendering not tested."
 }

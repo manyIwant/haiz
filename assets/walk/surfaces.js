@@ -1,7 +1,8 @@
 /* Original procedural material studies. Photo-informed, not scans of the school.
    Metric UV projection keeps joints the same size on different buildings. */
 (function(root){'use strict';
-  const cache={};
+  const cache={};let glaze=null;
+  function setGlaze(texture){glaze=texture;texture.wrapS=texture.wrapT=THREE.MirroredRepeatWrapping;texture.encoding=THREE.sRGBEncoding;texture.userData={...texture.userData,generatedGlaze:true};texture.needsUpdate=true;}
   function maps(kind){
     if(cache[kind])return cache[kind];
     const size=512,canvases={};
@@ -56,7 +57,7 @@
     material.userData.surfaceStudy=kind;material.userData.metricTile=tile;
     material.needsUpdate=true;
   }
-  function init(m){
+  function init(m,bank={}){
     function coat(key,amount,rough){
       const old=m[key],physical=new THREE.MeshPhysicalMaterial();
       THREE.MeshStandardMaterial.prototype.copy.call(physical,old);
@@ -71,11 +72,13 @@
     for(const k of ['beam','door'])bind(m[k],'timber',1.4,.012);
     m.roofHerit.roughness=.62;m.roofRed.roughness=.85;m.roofPorch.roughness=.82;
     m.wallLight.color.set('#e8e6de');m.baseStone.color.set('#525953');
+    if(bank.glaze){setGlaze(bank.glaze);m.roofHerit.map=glaze;m.roofHerit.color.set('#e4e4d6');m.roofHerit.userData.generatedGlaze=true;}
     m.glassTeal.roughness=.22;m.glassTeal.envMapIntensity=.8;
   }
   function sample(kind,color,wet=0){
     const result=new THREE.MeshPhysicalMaterial({color:new THREE.Color(color).convertSRGBToLinear(),roughness:.8});
     bind(result,kind,1.6,.02);result.clearcoat=kind==='roof'?.3:.08;result.clearcoatRoughness=.3;
+    if(kind==='roof'&&glaze){result.map=glaze;result.color.set('#e4e4d6').convertSRGBToLinear();result.userData.generatedGlaze=true;}
     result.color.multiplyScalar(1-wet*.22);result.roughness=.8*(1-wet)+.24*wet;result.clearcoat+=wet*.3;
     return result;
   }
@@ -97,5 +100,5 @@
       uv.needsUpdate=true;geo.userData.metricUV=true;
     });
   }
-  root.CampusSurfaces={init,project,maps,sample};
+  root.CampusSurfaces={init,project,maps,sample,setGlaze,albedo:kind=>kind==='roof'&&glaze?glaze:maps(kind).color};
 })(window);

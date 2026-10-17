@@ -17,12 +17,12 @@
         function finish(tex){
           if(settled){if(tex)tex.dispose();return;}settled=true;clearTimeout(timer);
           if(tex){tex.wrapS=tex.wrapT=T.RepeatWrapping;tex.anisotropy=4;if(type==='color')tex.encoding=T.sRGBEncoding;bank[name][type]=tex;}
-          done++;if(progress)progress(done/16);resolve();
+          done++;if(progress)progress(done/17);resolve();
         }
         loader.load('assets/walk/textures/'+name+'-'+type+'.jpg',finish,undefined,()=>finish(null));
       }));
     }
-    jobs.push(new Promise(resolve=>{let settled=false;const timer=setTimeout(()=>finish(null),12000);function finish(tex){if(settled){tex?.dispose();return;}settled=true;clearTimeout(timer);if(tex){tex.encoding=T.sRGBEncoding;tex.anisotropy=4;bank.foliage=tex;}done++;if(progress)progress(done/16);resolve();}loader.load('assets/walk/textures/terminalia-leaves.webp',finish,undefined,()=>finish(null));}));
+    for(const [name,path]of [['foliage','terminalia-leaves.webp'],['glaze','jade-glaze-generated.webp']])jobs.push(new Promise(resolve=>{let settled=false;const timer=setTimeout(()=>finish(null),12000);function finish(tex){if(settled){tex?.dispose();return;}settled=true;clearTimeout(timer);if(tex){tex.encoding=T.sRGBEncoding;tex.anisotropy=4;bank[name]=tex;}done++;if(progress)progress(done/17);resolve();}loader.load('assets/walk/textures/'+path,finish,undefined,()=>finish(null));}));
     await Promise.all(jobs);return bank;
   }
   function surface(bank,key,color,roughness,repeat){

@@ -6,7 +6,7 @@
   let arrivalProgress=0,arrivalTaken=false,arrivalPoint=null;
   const state={started:false,paused:true,yaw:Math.PI,pitch:.04,walked:0,input:{x:0,y:0,run:false},pos:{x:13,z:-172},quality:'auto',sensitivity:1,bob:false,frames:0,fps:60};
   const keys=new Set(),dialogs=['pauseDialog','mapDialog','poiDialog','aboutDialog'];
-  let sky,climate,reflections,breeze,planner,tour=null,tourIndex=-1,observation=false;
+  let sky,climate,reflections,breeze,planner,tour=null,tourIndex=-1,tourSequence=null,observation=false;
   let renderer,scene,camera,sun,hemiLight,ambientLight,world,data,nearest=null,last=0,frame=0,toastTimer,drag=null,lookTouch=null,joyPointer=null;
   let active=true,contextLost=false,shadowCenter={x:Infinity,z:Infinity},adaptTime=0,adaptFrames=0,pixelRatio=1,shadowEnabled=true;
   const destinations=[{id:'beimen',label:'北门',tag:'01'},{id:'fengqitang',label:'凤栖堂',tag:'02'},{id:'yanlintang',label:'衍林堂',tag:'03'},{id:'lanshu',label:'百年榄仁树',tag:'04'},{id:'yihao',label:'一号教学楼',tag:'05'},{id:'library',label:'图书馆',tag:'06'},{id:'yanchi',label:'砚池',tag:'07'},{id:'yundong',label:'操场',tag:'08'},{id:'nanmen',label:'南门',tag:'09'},{id:'kexue',label:'科学馆',tag:'10'},{id:'erhao',label:'二号教学楼',tag:'11'}];
@@ -52,7 +52,7 @@
     canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
     document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas&&!state.paused)applyLook(e.movementX,e.movementY);});
     document.addEventListener('pointerlockchange',()=>{
-      if(!document.pointerLockElement&&state.started&&!state.paused&&!touch)pause();
+      if(!document.pointerLockElement&&state.started&&!state.paused&&!touch&&!window.CampusWorkshop?.active)pause();
     });
     document.addEventListener('pointerlockerror',()=>{if(state.started&&!state.paused)toast('按住场景拖动即可控制视角。');});
     canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;pause(null);error('画面暂时中断','浏览器回收了图形资源。请重新加载，选择轻量画面后继续探索。');});
@@ -61,7 +61,13 @@
   function bindControls(){
     $('enterButton').addEventListener('click',()=>{
       if(!world||state.started)return;state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;
-      const focus=new URLSearchParams(location.search).get('focus');if(focus==='classroom')goToClassroom();else goTo(focus||'beimen',false);resume();
+      const params=new URLSearchParams(location.search),focus=params.get('focus');
+      const journey=window.CampusJourneyCore?.stops(params.get('journey'),destinations)||[];
+      if(focus==='classroom')goToClassroom();else goTo(journey[0]||focus||'beimen',false);
+      const view=window.CampusJourneyCore?.parseView(params.get('view'),world.bounds);
+      if(view){view.climate=climate.current;restoreView(view);}
+      // A journey resumes internally. Request pointer lock only once per gesture.
+      if(!journey.length||!startJourney(journey))resume();
       if(touch)toast('左摇杆行走，右半屏滑动环顾。');
     });
     $('classroomButton').onclick=()=>{goToClassroom();resume();};
@@ -161,7 +167,19 @@
     if(!nearest)return;const b=nearest.data,idx=destinations.findIndex(d=>d.id===b.id);
     $('poiName').textContent=b.name;$('poiEnglish').textContent=b.en||'Fucheng Campus';$('poiDescription').textContent=b.desc||'府城校区日常校园空间。';$('poiIndex').textContent=String(idx+1).padStart(2,'0');$('poiCategory').textContent=b.category+' / CAMPUS NOTES';$('poiEnterClassroom').hidden=b.form!=='academic';$('poiEnterClassroom').onclick=()=>{goToClassroom(b.id);resume();};showMemory(b.id);pause('poiDialog');
   }
-  function stopTour(){tour=null;$('tourStop').hidden=true;$('tourNext').hidden=true;tourIndex=-1;}
+  function stopTour(){tour=null;tourSequence=null;$('tourStop').hidden=true;$('tourNext').hidden=true;tourIndex=-1;}
+  function restoreView(value){
+    const view=window.CampusJourneyCore?.camera(value,world.bounds);if(!view)return false;
+    const point=M.safePoint(view.position.x,view.position.z,world.colliders,world.bounds);if(!point)return false;
+    stopTour();state.pos=point;state.yaw=view.yaw;state.pitch=view.pitch;state.photoFov=view.lens;
+    climate.select(view.climate);$('climate').value=view.climate;$('climateLabel').textContent=climate.presets[view.climate].name+' · 模拟环境';
+    clearInput();camera.fov=view.lens;camera.updateProjectionMatrix();shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();window.CampusWorkshop?.syncView({...view,placeId:nearest?.data.id});return true;
+  }
+  function startJourney(ids){
+    const selected=window.CampusJourneyCore?.stops(ids,destinations)||[];if(!selected.length)return false;
+    const places=selected.map(id=>{const b=world.buildings.find(b=>b.data.id===id);return {id,name:b.data.name};});
+    startTour(0,places);return !!tour;
+  }
   function showMemory(id){
     window.CampusWorkshop?.visit(id);
     const archive=window.CampusMemory.places.find(p=>p.id===id),record=window.CampusArchitecture?.records[id];
@@ -177,15 +195,19 @@
       $('memoryRead').href='architecture.html?place='+id;$('memoryRead').textContent='建筑观察手册 · 实拍与材料 ↗';$('memoryRead').hidden=false;
     }else $('memoryRead').textContent='完整地点档案 ↗';
   }
-  function startTour(index){
-    if(index>=window.CampusMemory.places.length){stopTour();resume();toast('三次停留结束。接下来，自由行走。');return;}
-    const place=window.CampusMemory.places[index],b=world.buildings.find(b=>b.data.id===place.id),c=b.center;
-    const desired=place.id==='beimen'?{x:c.x,z:c.z-13}:place.id==='lanshu'?{x:c.x-10,z:c.z-8}:{x:c.x+b.data.size[0]/2+4,z:c.z};
+  function startTour(index,sequence){
+    if(index===0)tourSequence=sequence||null;
+    const places=tourSequence||window.CampusMemory.places;
+    if(index>=places.length){stopTour();resume();toast('这段路线结束。接下来，自由行走。');return;}
+    const place=places[index],b=world.buildings.find(b=>b.data.id===place.id),c=b.center;
+    let desired=place.id==='beimen'?{x:c.x,z:c.z-13}:place.id==='lanshu'?{x:c.x-10,z:c.z-8}:{x:c.x,z:c.z+b.data.size[2]/2+9};
+    if(place.id==='yanchi')desired={x:c.x+b.data.size[0]/2+4,z:c.z};
+    if(place.id==='fengqitang')desired={x:c.x-b.data.size[0]*.1,z:c.z+b.data.size[2]*(.31+.27/2)+18};
     const destination=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);
     const path=destination&&planner.find(state.pos,destination);
     if(!path){stopTour();toast('当前地点无法规划安全步行线。请走到开阔校道再试。');return;}
     tourIndex=index;tour={path,point:1,place,b};$('tourStop').hidden=false;$('tourNext').hidden=true;
-    $('tourCaption').textContent=String(index+1).padStart(2,'0')+' / '+place.name;
+    $('tourCaption').textContent=String(index+1).padStart(2,'0')+' / '+places.length+' · '+place.name;
     resume();toast(reduced?'缓慢步行至'+place.name+'；随时操作即可接管。':'沿模型内可通行路径前往'+place.name+'；WASD 或环顾可接管。');
   }
   function advanceTour(dt){
@@ -194,7 +216,8 @@
     if(distance<.00001){tour.point++;if(tour.point>=tour.path.length){
       const reached=tour,index=tourIndex;tour=null;nearest=reached.b;
       state.yaw=Math.atan2(-(reached.b.center.x-state.pos.x),-(reached.b.center.z-state.pos.z));state.pitch=.04;
-      inspect();tourIndex=index;$('tourNext').hidden=false;$('tourNext').textContent=index===2?'结束路线，自由探索':'继续走向'+window.CampusMemory.places[index+1].name;$('tourStop').hidden=true;updateCamera(0);
+      const places=tourSequence||window.CampusMemory.places;
+      inspect();tourIndex=index;$('tourNext').hidden=false;$('tourNext').textContent=index===places.length-1?'结束路线，自由探索':'继续走向'+places[index+1].name;$('tourStop').hidden=true;updateCamera(0);
     }return;}
     const angle=Math.atan2(-dx,-dz),delta=Math.atan2(Math.sin(angle-state.yaw),Math.cos(angle-state.yaw));
     state.yaw+=delta*Math.min(1,dt*2.2);state.pitch+=(.025-state.pitch)*Math.min(1,dt*2);
@@ -375,6 +398,7 @@
     last=performance.now();frame=requestAnimationFrame(animate);
     window.haizWalk={state,world,climate,reflections,planner,startTour,stopTour,setArrivalProgress,takeArrivalControl,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,climate:climate.current,reflection:reflections.active,tour:tour?.place.id||null,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};
     window.CampusWorkshop?.attach(window.haizWalk);
+    Object.assign(window.haizWalk,{startJourney,restoreView});
     if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
     if(new URLSearchParams(location.search).get('enter')==='gate'){
       state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;goTo('beimen',false);resume(false);toast(touch?'抵达北门。左摇杆行走，右侧滑动环顾。':'抵达北门。WASD 行走，按住场景拖动环顾。');

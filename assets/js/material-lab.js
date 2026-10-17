@@ -48,6 +48,9 @@ function boot(){
     const contact=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shade),transparent:true,depthWrite:false}));contact.rotation.x=-Math.PI/2;contact.position.y=-.893;scene.add(contact);
     host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','拖动旋转材质，使用下方控件调整湿度、密度、形状与光照');
     ready=true;canvas.hidden=true;update();resize();
+    new THREE.TextureLoader().load('assets/walk/textures/jade-glaze-generated.webp',texture=>{
+      if(!ready){texture.dispose();return;}window.CampusSurfaces.setGlaze(texture);update();if(current.kind==='roof')window.HaizArchitecture?.preview('roof');
+    },undefined,()=>{});
     renderer.domElement.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
     renderer.domElement.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId){angle+=(e.clientX-drag.x)*.01;drag.x=e.clientX;render();}else{const r=host.getBoundingClientRect();keyLight.position.x=((e.clientX-r.left)/r.width-.5)*7;render();}});
     for(const type of ['pointerup','pointercancel'])renderer.domElement.addEventListener(type,()=>{drag=null;animate();});

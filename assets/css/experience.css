@@ -5,3 +5,4 @@
 /* Leave the climate note unobscured while walking. */
 body:has(#viewport).started .experience-dock{top:170px;bottom:auto}
 @media(max-width:650px){body:has(#viewport).started .experience-dock{top:154px;bottom:auto}}
+.explore-extra>a{font-size:10px;color:#8c4c36;border-bottom:1px solid #8c4c3655;white-space:nowrap}

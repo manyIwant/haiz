@@ -1,12 +1,12 @@
 {
-  "date": "2026-10-17T15:50:54.010Z",
+  "date": "2026-10-17T23:38:37.058Z",
   "browser": "154.0.8037.57",
   "results": [
     {
       "target": "cinematic root / desktop",
       "checks": [
         "root is the cinematic entry",
-        "editorial home remains accessible",
+        "editorial home and director studio remain accessible",
         "3D iframe is user-initiated",
         "chapter seek and speed controls",
         "sound off by default"
@@ -17,7 +17,7 @@
       "target": "cinematic root / mobile",
       "checks": [
         "root is the cinematic entry",
-        "editorial home remains accessible",
+        "editorial home and director studio remain accessible",
         "3D iframe is user-initiated",
         "chapter seek and speed controls",
         "sound off by default"
@@ -57,6 +57,36 @@
       "passed": true
     },
     {
+      "target": "route studio / desktop",
+      "checks": [
+        "real model footprints",
+        "preset and custom sequence",
+        "accessible reordering controls and retained focus",
+        "six-stop limit and empty state",
+        "persistent route and climate",
+        "map paper toggle",
+        "safe text rendering in camera archive",
+        "camera removal",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "route studio / mobile",
+      "checks": [
+        "real model footprints",
+        "preset and custom sequence",
+        "accessible reordering controls and retained focus",
+        "six-stop limit and empty state",
+        "persistent route and climate",
+        "map paper toggle",
+        "safe text rendering in camera archive",
+        "camera removal",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
       "target": "cinematic → real campus iframe",
       "checks": [
         "lazy world startup",
@@ -72,10 +102,14 @@
         "real WebGL and leaf/depth shader compilation",
         "34 nodes and 16 classrooms",
         "four PBR facade material families",
+        "1024px generated glaze with procedural normal and physical clearcoat",
         "normal maps and wetness response",
         "deep-linked climate and observation settings",
         "three rendered architectural viewpoints",
+        "P releases pointer lock for camera controls",
         "camera lens and downloaded postcard",
+        "saved camera archive and accurate URL restoration",
+        "custom journey launch from director studio",
         "digital passport after campus travel",
         "no browser errors or missing assets"
       ],
@@ -114,6 +148,72 @@
         "wet": 0.3,
         "normal": true,
         "physical": true
+      },
+      "glaze": [
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        }
+      ],
+      "restored": {
+        "position": {
+          "x": 13.4,
+          "z": 12.8
+        },
+        "yaw": 0,
+        "pitch": 0.045,
+        "lens": 32,
+        "climate": "afterrain"
       }
     }
   ],

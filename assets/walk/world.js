@@ -1635,7 +1635,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var tileCanvas=document.createElement('canvas');tileCanvas.width=tileCanvas.height=128;var tx=tileCanvas.getContext('2d');tx.fillStyle='#b6b4a4';tx.fillRect(0,0,128,128);for(var xx=0;xx<128;xx+=16){var gr=tx.createLinearGradient(xx,0,xx+16,0);gr.addColorStop(0,'#7f8674');gr.addColorStop(.4,'#d4d0bd');gr.addColorStop(1,'#8b9280');tx.fillStyle=gr;tx.fillRect(xx,0,16,128);}for(var yy=0;yy<128;yy+=24){tx.fillStyle='#727f6855';tx.fillRect(0,yy,128,2);}var tileTex=new THREE.CanvasTexture(tileCanvas);tileTex.encoding=THREE.sRGBEncoding;tileTex.wrapS=tileTex.wrapT=THREE.RepeatWrapping;tileTex.repeat.set(10,3);tileTex.anisotropy=4;
     [MAT.roofHerit,MAT.roofRed,MAT.roofPorch,MAT.roofTile].forEach(function(m){m.map=tileTex;});
     MAT.roofHerit.color.set('#3f6650');MAT.roofRed.color.set('#985a45');MAT.glassTeal.color.set('#527c7f');
-    if(window.CampusSurfaces)window.CampusSurfaces.init(MAT);
+    if(window.CampusSurfaces)window.CampusSurfaces.init(MAT,pbrBank);
     buildGround(cfg);var buildings=[],colliders=[];
     for(var i=0;i<data.buildings.length;i++){
       var b=data.buildings[i],g=createBuilding(b,cfg);

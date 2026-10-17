@@ -8,26 +8,28 @@
   <title>haiz.space — 从校门，走进海中</title>
   <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/walk/style.css?v=6">
-  <link rel="stylesheet" href="assets/walk/workshop.css?v=8">
+  <link rel="stylesheet" href="assets/walk/workshop.css?v=9">
   <script defer src="assets/vendor/three.min.js"></script>
   <script defer src="assets/vendor/RGBELoader.js"></script>
   <script defer src="assets/vendor/Water.js"></script>
   <script defer src="assets/vendor/Sky.js"></script>
   <script defer src="assets/walk/movement.js?v=6"></script>
-  <script defer src="assets/walk/interiors.js?v=6"></script>
+  <script defer src="assets/walk/journey-core.js?v=9"></script>
+  <script defer src="assets/walk/view-store.js?v=9"></script>
+  <script defer src="assets/walk/interiors.js?v=9"></script>
   <script defer src="assets/walk/memory-art.js?v=6"></script>
   <script defer src="assets/walk/campus-data.js?v=6"></script>
-  <script defer src="assets/walk/surfaces.js?v=8"></script>
-  <script defer src="assets/walk/world.js?v=6"></script>
+  <script defer src="assets/walk/surfaces.js?v=9"></script>
+  <script defer src="assets/walk/world.js?v=9"></script>
   <script defer src="assets/walk/architecture.js?v=6"></script>
   <script defer src="assets/walk/memory.js?v=6"></script>
   <script defer src="assets/walk/climate.js?v=8"></script>
   <script defer src="assets/walk/route.js?v=6"></script>
   <script defer src="assets/walk/reflections.js?v=6"></script>
   <script defer src="assets/walk/breeze.js?v=8"></script>
-  <script defer src="assets/walk/app.js?v=8"></script>
-  <script defer src="assets/walk/workshop.js?v=8"></script>
-<link rel="stylesheet" href="assets/css/experience.css?v=8"><script defer src="assets/js/experience.js?v=8"></script></head>
+  <script defer src="assets/walk/app.js?v=9"></script>
+  <script defer src="assets/walk/workshop.js?v=9"></script>
+<link rel="stylesheet" href="assets/css/experience.css?v=9"><script defer src="assets/js/experience.js?v=9"></script></head>
 <body>
   <div id="viewport" aria-label="第一人称校园场景"></div>
   <header class="masthead">
@@ -71,7 +73,7 @@
     <button id="resumeButton" class="solid-button">继续行走 <span>↗</span></button>
     <button id="tourButton" class="solid-button">树荫下的三次停留 · 开始路线 ↗</button><p class="muted">北门 → 一号楼前榄仁树 → 砚池。模型内路线，可随时接管。</p><div class="settings"><label>校园气候 · 艺术模拟<select id="climate"><option value="morning">晨光 / 暖色树影</option><option value="afterrain">雨后 / 潮湿铺装</option><option value="dusk">薄暮 / 低角度日光</option></select></label><label>画面精度<select id="quality"><option value="auto">自动适配</option><option value="high">精细</option><option value="balanced">均衡</option><option value="low">轻量</option></select></label><label>视角灵敏度<input id="sensitivity" type="range" min="0.4" max="2" step="0.1" value="1"></label><label>行走轻微起伏<input id="bobToggle" type="checkbox"></label></div>
     <div class="settings"><label>建筑观察镜头<input id="observationToggle" type="checkbox"></label></div><p class="muted">收窄视角，隐藏准星与小地图，慢慢看窗、檐口与树影。</p>
-    <div class="pause-actions"><button id="resetButton">回到北门 ↗</button><button id="aboutButton">关于此原型 ↗</button></div><p><a href="architecture.html">打开建筑观察手册 ↗</a></p>
+    <div class="pause-actions"><button id="resetButton">回到北门 ↗</button><button id="aboutButton">关于此原型 ↗</button></div><p><a href="architecture.html">打开建筑观察手册 ↗</a> · <a href="director.html">编排自己的路线 ↗</a></p>
     <p class="control-note">WASD / 方向键 行走　Shift 快走<br>鼠标环顾（或按住场景拖动）　M 地图　E 地点<br>手机：左摇杆行走，右半屏滑动环顾</p>
   </dialog>
 

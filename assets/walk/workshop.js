@@ -6,11 +6,18 @@ const studio=document.createElement('section');studio.id='photoStudio';studio.cl
 studio.innerHTML='<div><span class="studio-kicker">A POSTCARD FROM CAMPUS</span><h2>把此刻，寄给自己。</h2></div><div class="studio-controls"><label>镜头 <input id="photoLens" type="range" min="32" max="80" step="1" value="48"><span id="photoLensValue">48°</span></label><label>光照<select id="photoClimate"><option value="morning">晨光</option><option value="afterrain">雨后</option><option value="dusk">薄暮</option></select></label><button id="photoCapture">冲印明信片 ↓</button><button id="photoShare">复制此处入口 ↗</button><button id="photoExit">继续行走 ×</button></div><p id="photoStatus" role="status">拖动场景环顾，WASD 走动；照片不包含界面。</p>';
 document.body.append(trigger,studio);
 const $=id=>document.getElementById(id);
+const savePanel=document.createElement('div');savePanel.className='photo-save';
+savePanel.innerHTML='<label for="photoViewName">为这个机位取个名字<input id="photoViewName" type="text" maxlength="32" placeholder="比如：凤栖堂的晨光"></label><button id="saveCameraView">保存这个机位 ＋</button><a href="director.html#viewsTitle">我的取景集 ↗</a>';
+studio.insertBefore(savePanel,$('photoStatus'));
+function snapshot(){return {position:{...api.state.pos},yaw:api.state.yaw,pitch:api.state.pitch,lens:Number($('photoLens').value),climate:api.climate.current,name:$('photoViewName').value};}
+function syncView(value){$('photoLens').value=String(value.lens);$('photoLensValue').textContent=Math.round(value.lens)+'°';if(value.placeId)lastPlace=value.placeId;}
 function visit(id){if(!api?.state.started)return;lastPlace=id;window.HaizExperience?.visit(id);}
 function toggle(value=!photo){
   if(!api?.state.started)return;
   photo=value;document.body.classList.toggle('photo-mode',photo);studio.hidden=!photo;
+  if(photo){api.stopTour();if(document.pointerLockElement)document.exitPointerLock();}
   api.state.photoFov=photo?Number($('photoLens').value):null;$('photoClimate').value=api.climate.current;
+  if(photo)$('photoViewName').value=(api.world.buildings.find(b=>b.data.id===lastPlace)?.data.name||'校园')+' · '+api.climate.presets[api.climate.current].name;
   api.resume(false);$('photoStatus').textContent=photo?'拖动场景环顾，WASD 走动；照片不包含界面。':'';
 }
 function setClimate(){const value=$('photoClimate').value;const input=$('climate');input.value=value;input.dispatchEvent(new Event('change'));}
@@ -39,14 +46,18 @@ trigger.onclick=()=>toggle();$('photoExit').onclick=()=>toggle(false);$('photoCa
 $('photoLens').oninput=e=>{const value=Number(e.target.value);api.state.photoFov=value;$('photoLensValue').textContent=value+'°';};
 $('photoClimate').onchange=setClimate;
 $('photoShare').onclick=async()=>{
-  const url=new URL('campus-3d.html',location.href);url.searchParams.set('focus',lastPlace);url.searchParams.set('climate',api.climate.current);url.searchParams.set('observe','1');
+  const url=new URL('campus-3d.html',location.href);url.search=window.CampusJourneyCore.viewQuery(snapshot());url.searchParams.set('focus',lastPlace);url.searchParams.set('observe','1');
   try{await navigator.clipboard.writeText(url.href);$('photoStatus').textContent='已复制此处入口，可以分享给朋友。';}catch{$('photoStatus').textContent='此处入口：'+url.href;}
+};
+$('saveCameraView').onclick=()=>{
+  try{const record=window.CampusViews.add(snapshot());$('photoStatus').textContent='已保存“'+record.name+'”，可在探索导演台恢复这个视角。';}
+  catch{$('photoStatus').textContent='本机暂未能保存机位；仍可下载明信片或复制机位入口。';}
 };
 document.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='p'&&!e.ctrlKey&&!e.metaKey&&!e.target.closest('input,textarea,select')&&api?.state.started&&!api.state.paused){e.preventDefault();toggle();}});
 function attach(value){
   if(api)return;api=value;
   const button=document.createElement('button');button.className='solid-button';button.id='studioFromPause';button.textContent='校园摄影 · 冲印一张明信片 ↗';button.onclick=()=>toggle(true);$('pauseDialog').append(button);
 }
-window.CampusWorkshop={attach,visit,toggle,capture,get active(){return photo;}};
+window.CampusWorkshop={attach,visit,toggle,capture,syncView,get active(){return photo;}};
 if(window.haizWalk)attach(window.haizWalk);
 })();

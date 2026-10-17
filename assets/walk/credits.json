@@ -139,6 +139,14 @@
     "maps": ["512x512 sRGB color", "512x512 linear bump height", "512x512 OpenGL tangent normal", "512x512 linear roughness"],
     "reference": "Existing school photographs listed in data/architecture.json; dimensions are interpreted, not surveyed."
   },
+  "generated_glaze": {
+    "path": "assets/walk/textures/jade-glaze-generated.webp",
+    "sha256": "f8058026a58525612d2aa3f3e9c3d22bc6ba96e59493a908cae8f6920e7136cc",
+    "source": "Original AI-generated green ceramic glaze color study for this project; not a school photograph or scan.",
+    "tool": "built-in image generation",
+    "adaptation": "1024x1024 WebP albedo only. Mirrored repeat, sRGB; paired with original procedural roof normal, height and roughness maps. Red roofs retain their original procedural color maps.",
+    "prompt_record": "docs/exploration-studio-20261018.md"
+  },
   "interiors": "Original imagined ground-floor classrooms, not surveyed replicas.",
   "environment": {
     "path": "assets/walk/textures/campus-light.hdr",

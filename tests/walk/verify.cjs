@@ -10,6 +10,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
 (async()=>{
   const bank={};for(const name of ['terrazzo','plaster','wood','grass','paving']){bank[name]={};for(const type of ['color','normal','rough']){const img=await loadImage(fs.readFileSync('assets/walk/textures/'+name+'-'+type+'.jpg'));const expected=(['grass','paving'].includes(name)&&type==='color')?1024:512;assert.equal(img.width,expected);assert.equal(img.height,expected);const t=new THREE.Texture(img);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(type==='color')t.encoding=THREE.sRGBEncoding;bank[name][type]=t;}}
   const leaf=await loadImage(fs.readFileSync('assets/walk/textures/terminalia-leaves.webp'));bank.foliage=new THREE.Texture(leaf);bank.foliage.encoding=THREE.sRGBEncoding;
+  const glaze=await loadImage(fs.readFileSync('assets/walk/textures/jade-glaze-generated.webp'));assert.equal(glaze.width,1024);assert.equal(glaze.height,1024);bank.glaze=new THREE.Texture(glaze);
   vm.runInContext(fs.readFileSync('assets/vendor/RGBELoader.js','utf8'),context);
   const hdr=fs.readFileSync('assets/walk/textures/campus-light.hdr');const environment=new THREE.RGBELoader().parse(hdr.buffer.slice(hdr.byteOffset,hdr.byteOffset+hdr.byteLength));assert.equal(environment.width,1024);assert.equal(environment.height,512);
   const scene=new THREE.Scene(),world=await context.window.CampusWorld.build(scene,data,'balanced',undefined,bank);
@@ -25,6 +26,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
     const uv=mesh.geometry.attributes.uv;assert(Math.max(...Array.from(uv.array))>=3,'12-unit wall must not stretch one tile');
   });
   test('fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces',()=>{const mats=context.window.CampusInteriors.materials;for(const m of [mats.floor,mats.desk,mats.wall]){assert(m.map&&m.normalMap&&m.roughnessMap);assert.equal(m.map.encoding,THREE.sRGBEncoding);assert.equal(m.normalMap.image.width,512);}});
+  test('original generated glaze is decoded on green roofs without replacing red roof albedo',()=>{let green=0,red=0;scene.traverse(o=>{const m=o.material;if(m?.userData.surfaceStudy!=='roof')return;if(m.userData.generatedGlaze){green++;assert.equal(m.map.image.width,1024);assert.equal(m.map.wrapS,THREE.MirroredRepeatWrapping);assert.equal(m.map.encoding,THREE.sRGBEncoding);}else{red++;assert.equal(m.map.image.width,512);}});assert(green&&red);});
   test('existing KML anchors and 34 nodes preserved',()=>{assert.equal(world.buildings.length,34);assert.deepEqual(data.anchors.center,[19.996067,110.347227]);assert.deepEqual(data.anchors.southGate,[19.994326,110.348012]);});
   let vertices=0,meshes=0;scene.updateMatrixWorld(true);
   test('all generated geometry and transforms are finite',()=>{scene.traverse(m=>{if(m.isMesh){meshes++;const p=m.geometry.attributes.position;vertices+=p.count;for(const n of p.array)assert(Number.isFinite(n));for(const n of m.matrixWorld.elements)assert(Number.isFinite(n));if(m.isInstancedMesh)for(const n of m.instanceMatrix.array)assert(Number.isFinite(n));}});assert(vertices>50000);assert(world.colliders.length>100);});
