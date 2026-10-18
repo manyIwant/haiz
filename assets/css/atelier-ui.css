@@ -1,0 +1,52 @@
+/* haiz's own palette and typography. Pattern references: Oura / Linear analyses
+   in VoltAgent/awesome-design-md (MIT), not their logos or proprietary fonts. */
+:root{--atelier-paper:#f7f3eb;--atelier-ink:#292e2a;--atelier-muted:#626e62;--atelier-line:#2a37281c;--atelier-ease:cubic-bezier(.22,1,.36,1)}
+body:not(:has(#viewport)):not(:has(#stage)){background:var(--atelier-paper);color:var(--atelier-ink)}
+body[data-page]{--paper:#f7f3eb;--paper-dark:#eeeee4;--muted:#616c60;--ink:#293f36;--rule:#293f3624}
+body[data-page] .site-nav.scrolled{background:#f7f3ebf2}
+.site-nav a,.field-nav a,.director-nav a{transition:color .22s ease,opacity .22s ease}
+.site-nav a:hover,.field-nav nav a:hover,.director-nav>div a:hover{color:#966548}
+.image-button,.gallery-frame,.atlas-detail figure{border-radius:14px;isolation:isolate}
+.experience-tilt{transform:none!important}
+.image-button img,.gallery-frame img{transition:transform .9s var(--atelier-ease),filter .6s ease}
+.news-card h3,.club-row h3{letter-spacing:-.025em}
+.news-card .image-arrow{border-radius:50%;background:#f8f4e9ec;color:#293f36;display:grid;place-items:center}
+.site-menu>a{transition:color .25s ease,translate .35s var(--atelier-ease)}
+.site-menu>a:hover{translate:8px 0;padding-left:0}
+.field-nav,.director-nav{border-color:var(--atelier-line);padding-block:25px}
+.field-nav nav,.director-nav>div{gap:26px}
+.field-hero{padding-top:65px;padding-bottom:95px;gap:5vw}
+.field-hero h1{font-size:clamp(58px,6.3vw,96px);letter-spacing:-.045em;line-height:1.14}
+.field-hero figure{position:relative;border-radius:18px;overflow:hidden;box-shadow:0 18px 55px #26362512}
+.field-hero figure>img{filter:saturate(.88);transition:transform 1.2s var(--atelier-ease);aspect-ratio:1.22;object-fit:cover}
+.field-hero figure:hover>img{transform:scale(1.025)}
+.field-hero figcaption{background:#142a22dc;color:#f8f4e8;backdrop-filter:blur(12px);padding:16px 20px;font-size:11px}
+.photo-seal{display:none}
+.observe-grid{gap:5vw}.photo-board{border-radius:14px;overflow:hidden;background:#ebe9df}
+.field-note{background:#fffdf6;border:1px solid var(--atelier-line);padding:30px!important;border-radius:14px}
+.field-index{font-variant-numeric:tabular-nums;opacity:.6}
+.filter-buttons,.place-tabs{gap:8px}
+.filter-buttons button,.place-tabs button,.collect-button{border-radius:999px;padding:10px 17px;min-height:42px;transition:background .25s ease,color .25s ease,border-color .25s ease}
+.place-tabs button[aria-pressed=true]{background:#293e34;color:#f7f3eb;border-color:#293e34}
+.solid-link,.director-launch{border-radius:8px;transition:background .2s ease,box-shadow .2s ease}
+.solid-link:hover,.director-launch:hover{background:#405843;box-shadow:0 8px 24px #293f3619}
+.hotspot-note,.limit-note,.hero-intro,.lab-intro,.source-link{line-height:1.9}
+.material-lab{background:#202924!important;color:#f1eee5;border-radius:0;padding-top:85px;padding-bottom:85px}
+.material-lab .section-line{border-color:#f1eee52b}.material-lab .section-line p,.material-lab .lab-intro,.material-lab #materialNote,.material-lab .relief-label{color:#c1c9bc}
+.material-lab .material-choices button{color:#e2e6dc;border-color:#c6d0bd44;border-radius:8px;min-height:43px}
+.material-lab .material-choices button[aria-pressed=true]{background:#e4e8d8;color:#293f36}
+.material-preview{border-radius:16px;overflow:hidden;border:1px solid #e0e6cf24;background:#17251e}
+.sample-caption{color:#bfc9b4;background:#17251e;padding:16px 18px}
+.light-cards{gap:15px}.light-card{position:relative;isolation:isolate;min-height:290px;border-radius:14px;overflow:hidden;background-size:cover!important;background-position:center!important;transition:background-position .8s var(--atelier-ease),translate .5s var(--atelier-ease)}
+.light-card:before{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#091e17e6,#0c231638 65%);z-index:-1}
+.light-card.morning{background-image:url('../images/campus/campus_fengqitang.jpg')!important}.light-card.rain{background-image:url('../images/campus/campus_yihao.jpg')!important}.light-card.dusk{background-image:url('../images/campus/campus_erhao.jpg')!important}
+.light-card,.light-card>*{color:#f4f0e4!important}.light-card:hover{translate:0 -5px;background-position:52% 50%!important}
+.director-hero{padding-top:90px}.director-presets button{border-radius:12px;background:#e9eddf}.director-presets button:hover{background:#e0e7d3}
+.director-map-wrap,.director-sequence{border-radius:14px}.director-sequence{background:#fffdf6}.director-map-wrap{background:#e7ecdd}
+.saved-views article{border-radius:14px;background:#e9edde}.empty-views{border-radius:14px}
+.atelier-chapters{position:fixed;z-index:70;bottom:28px;left:50%;translate:-50% 0;display:flex;gap:4px;padding:6px;border:1px solid #d7d9cc;background:#f7f4ebeF;backdrop-filter:blur(14px);border-radius:999px;box-shadow:0 8px 24px #26362514}
+.atelier-chapters a{font:11px system-ui;color:#596753;text-decoration:none;border-radius:999px;padding:11px 17px;transition:background .22s ease,color .22s ease}.atelier-chapters a[aria-current]{background:#2d4436;color:#f7f4eb}
+.atelier-reveal{animation:atelier-reveal .7s var(--atelier-ease) both}@keyframes atelier-reveal{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:800px){.field-hero h1{font-size:62px}.field-nav nav,.director-nav>div{gap:15px}.field-note{padding:24px!important}.field-hero{padding-top:42px;padding-bottom:55px}.field-hero figure>img{aspect-ratio:1.2}.light-card{min-height:240px}}
+@media(max-width:650px){.field-nav,.director-nav{padding-block:20px}.field-hero h1{font-size:57px}.field-hero figure{border-radius:12px}.field-hero figcaption{font-size:9px;padding:12px}.field-note{padding:22px!important}.place-tabs button{padding:9px 13px;font-size:11px}.material-lab{padding-top:50px;padding-bottom:50px}.light-card{min-height:230px}.atelier-chapters{left:15px;translate:none;bottom:18px;padding:4px}.atelier-chapters a{font-size:10px;padding:10px 12px}.director-hero{padding-top:55px}.director-hero h1{font-size:clamp(38px,12vw,50px)}}
+@media(prefers-reduced-motion:reduce){.atelier-reveal{animation:none}.light-card:hover{translate:none}*,*:before,*:after{scroll-behavior:auto!important}.image-button img,.gallery-frame img,.field-hero figure>img{transition:none}}

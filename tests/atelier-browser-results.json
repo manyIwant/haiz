@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-18T00:02:32.774Z",
+  "passed": true,
+  "checks": [
+    "licensed GLB decode, PBR texture binding and three distance-cullable instances",
+    "three architectural views",
+    "reference dialog, photo selection and safe view control",
+    "low-quality model fallback",
+    "redesigned desktop/mobile guide, chapter navigation and no overflow",
+    "zero page errors or missing assets"
+  ],
+  "evidence": [
+    {
+      "id": "fengqitang",
+      "tags": [
+        "double-eave-hall",
+        "curved-hip-roof",
+        "curved-hip-roof"
+      ],
+      "indoors": false
+    },
+    {
+      "id": "yihao",
+      "tags": [
+        "recessed-facade",
+        "curved-hip-roof",
+        "curved-hip-roof"
+      ],
+      "indoors": false
+    },
+    {
+      "id": "library",
+      "tags": [
+        "library-dome-arcade"
+      ],
+      "indoors": false
+    }
+  ],
+  "errors": [],
+  "limitations": "Software WebGL; visual quality is reviewed from screenshots, not established by geometry tests or claimed as photogrammetric accuracy."
+}

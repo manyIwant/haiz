@@ -1,9 +1,9 @@
 /* Deterministic climate studies, not a live weather service. No external requests. */
 (function(root){'use strict';
 const presets={
- morning:{name:'晨光',top:'#83b6c4',bottom:'#eee3c8',fog:'#d6ddd0',near:170,far:520,sun:'#ffe3ad',power:1.7,hemi:.82,ambient:.24,exposure:1.08,offset:[-100,65,-55],wet:0,water:'#537d75'},
- afterrain:{name:'雨后',top:'#839da8',bottom:'#ccd7d2',fog:'#b6c9c5',near:105,far:400,sun:'#e6f2ed',power:.85,hemi:.92,ambient:.30,exposure:1.03,offset:[-85,100,-65],wet:1,water:'#456d70'},
- dusk:{name:'薄暮',top:'#7c8fa9',bottom:'#e4bca1',fog:'#aeb3bc',near:170,far:490,sun:'#ffc894',power:.95,hemi:.58,ambient:.24,exposure:1.12,offset:[105,28,25],wet:0,water:'#667786'}
+ morning:{name:'晨光',top:'#83b6c4',bottom:'#eee3c8',fog:'#d6ddd0',near:210,far:620,sun:'#fff0d8',power:2.2,hemi:.50,ambient:.085,exposure:.98,offset:[-65,80,100],wet:0,water:'#537d75'},
+ afterrain:{name:'雨后',top:'#839da8',bottom:'#ccd7d2',fog:'#b6c9c5',near:150,far:480,sun:'#e6f2ed',power:.95,hemi:.68,ambient:.12,exposure:1.03,offset:[-55,100,80],wet:1,water:'#456d70'},
+ dusk:{name:'薄暮',top:'#7c8fa9',bottom:'#e4bca1',fog:'#aeb3bc',near:190,far:550,sun:'#ffc894',power:1.35,hemi:.42,ambient:.08,exposure:1.08,offset:[105,28,45],wet:0,water:'#667786'}
 };
 function create(scene,sky,sun,hemi,ambient,world,reduced){
  const roads=[...new Set(world.roadMaterials||[])].map(m=>({m,color:m.color.clone(),rough:m.roughness}));

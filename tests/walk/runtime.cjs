@@ -29,7 +29,7 @@ async function run(touch,startup='network'){
   window.THREE=ctx.THREE;vm.createContext(ctx);
   vm.runInContext(fs.readFileSync('assets/vendor/Water.js','utf8'),ctx);
   vm.runInContext(fs.readFileSync('assets/vendor/Sky.js','utf8'),ctx);
-  for(const file of ['campus-data.js','movement.js','journey-core.js','interiors.js','memory-art.js','surfaces.js','architecture.js','world.js','memory.js','climate.js','route.js','reflections.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),ctx);
+  for(const file of ['campus-data.js','movement.js','journey-core.js','interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','world.js','memory.js','climate.js','route.js','reflections.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),ctx);
   vm.runInContext(source,ctx);
   const start=performance.now();while(!window.haizWalk&&!ids.errorPanel.hidden){if(ids.errorText.textContent)throw new Error(ids.errorText.textContent);if(performance.now()-start>20000)throw Error('startup timeout');await new Promise(r=>setTimeout(r,10));}
   if(!window.haizWalk){while(!window.haizWalk&&performance.now()-start<20000){if(ids.errorText.textContent)throw Error(ids.errorText.textContent);await new Promise(r=>setTimeout(r,10));}}
@@ -53,6 +53,7 @@ async function run(touch,startup='network'){
   assert(api.world.roadMaterials.every(m=>Number.isFinite(m.roughness)));
 assert.equal(api.diagnostics().nodes,34);
   ids.enterButton.dispatch('click');assert(api.state.started&&!api.state.paused);assert.equal(ids.touchControls.hidden,!touch);
+  window.dispatch('keydown',{key:'Escape',target:{closest(selector){return selector==='dialog'?{id:'referenceDialog'}:null;}}});assert(!api.state.paused,'foreign modal Escape must not open the walk pause dialog');
   let now=performance.now();function tick(n){for(let i=0;i<n;i++){now+=1000/60;const fn=RAF.shift();assert(fn);fn(now);}}
   // Exercise the complete route at simulation speed; each position must remain collision-free.
   api.startTour(0);let routeNow=performance.now();

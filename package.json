@@ -5,8 +5,9 @@
   "description": "Buildless Hainan Middle School campus journal and first-person exploration prototype",
   "scripts": {
     "build": "node scripts/build-pages.mjs && node scripts/build-memory.cjs && node scripts/build-campus-data.cjs && node scripts/build-experience.cjs",
-    "test": "node tests/journey.cjs && node tests/site.cjs && node tests/journal.cjs && node tests/descent.cjs && node tests/cinematic-runtime.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs",
-    "test:browser": "node tests/browser.cjs"
+    "test": "node tests/open-assets.cjs && node tests/journey.cjs && node tests/site.cjs && node tests/journal.cjs && node tests/descent.cjs && node tests/cinematic-runtime.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "test:atelier": "node tests/atelier-browser.cjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

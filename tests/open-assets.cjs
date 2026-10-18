@@ -1,0 +1,11 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const credits=JSON.parse(fs.readFileSync('assets/walk/credits.json'));
+for(const asset of [credits.open_plant,credits.gltf_loader,credits.generated_glaze])assert.equal(crypto.createHash('sha256').update(fs.readFileSync(asset.path)).digest('hex'),asset.sha256,'asset provenance hash');
+const data=fs.readFileSync(credits.open_plant.path);assert.equal(data.readUInt32LE(0),0x46546c67);assert.equal(data.readUInt32LE(4),2);assert.equal(data.readUInt32LE(8),data.length);
+const jsonLength=data.readUInt32LE(12),model=JSON.parse(data.subarray(20,20+jsonLength)),binLength=data.readUInt32LE(20+jsonLength);assert.equal(data.readUInt32LE(24+jsonLength),0x004e4942);
+assert.equal(model.meshes.length,2);assert.equal(model.nodes.length,2);assert.equal(model.images.length,5);assert(!model.animations&&!model.extensionsUsed&&!model.extensionsRequired);assert(model.materials.some(m=>m.alphaMode==='MASK'));assert(model.materials.every(m=>!m.emissiveTexture&&!m.extensions));
+for(const view of model.bufferViews)assert((view.byteOffset||0)+view.byteLength<=binLength&&view.byteOffset%4===0);
+for(const a of model.accessors)assert(a.bufferView<model.bufferViews.length&&a.count>0);
+for(const image of model.images)assert(model.bufferViews[image.bufferView].byteLength>0);
+assert.match(fs.readFileSync(credits.open_plant.notice,'utf8'),/Rico Cilliers/);assert.match(fs.readFileSync(credits.open_plant.notice,'utf8'),/Eric Chadwick/);assert(fs.existsSync(credits.design_references.license_file));
+console.log('PASS open asset hashes, GLB bounds, PBR/alpha fallback, removed animations/lights, and attribution');

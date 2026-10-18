@@ -85,6 +85,7 @@
     window.addEventListener('keydown',e=>{
       if(!state.started)return;
       if(e.target?.closest?.('input,textarea,select,[contenteditable="true"]'))return;
+      const activeDialog=e.target?.closest?.('dialog')||document.querySelector?.('dialog[open]');if(activeDialog&&!dialogs.includes(activeDialog.id))return;
       const k=e.key.toLowerCase();
       if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright',' ','shift'].includes(k)&&!state.paused){e.preventDefault();stopTour();keys.add(k);}
       if(e.repeat)return;
@@ -142,13 +143,21 @@
       // Observe the hall's photographed front, rather than looking at the
       // garden centre with the generic pavilion hiding the main facade.
       lookZ=c.z+b.data.size[2]*.31;x=c.x-b.data.size[0]*.1;
-      z=lookZ+b.data.size[2]*.27/2+18;
+      z=lookZ+b.data.size[2]*.27/2+27;
     }
     if(form==='oldtree'){x=c.x-10;z=c.z-8;}
     if(form==='field'){x=c.x;z=c.z;}
+    if(id==='library'){x=c.x-b.data.size[0]*.10;z=c.z+b.data.size[2]/2+30;}
+    if(observation&&['yihao','erhao'].includes(id)){
+      // A long front setback can land inside the next teaching block. Prefer
+      // an oblique exterior view, never an apparently safe classroom interior.
+      const candidates=[{x:c.x+b.data.size[0]/2+15,z:c.z+b.data.size[2]/2+20},{x:c.x-b.data.size[0]/2-15,z:c.z+b.data.size[2]/2+20},{x:c.x,z:c.z+b.data.size[2]/2+15}];
+      const exterior=p=>!world.buildings.some(other=>other!==b&&other.data.size[1]>3&&!['gate','oldtree'].includes(other.data.form)&&Math.abs(p.x-other.center.x)<other.data.size[0]/2+1&&Math.abs(p.z-other.center.z)<other.data.size[2]/2+1);
+      for(const desired of candidates){const candidate=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);if(candidate&&exterior(candidate)&&!window.CampusInteriors.currentRoom(candidate.x,candidate.z)){x=candidate.x;z=candidate.z;break;}}
+    }
     const p=M.safePoint(x,z,world.colliders,world.bounds);
     if(!p){toast('附近暂时没有安全落点。');return false;}
-    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='fengqitang'?.1:.045;clearInput();
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='library'?.22:id==='fengqitang'?.15:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     window.CampusWorkshop?.visit(id);
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
@@ -202,7 +211,8 @@
     const place=places[index],b=world.buildings.find(b=>b.data.id===place.id),c=b.center;
     let desired=place.id==='beimen'?{x:c.x,z:c.z-13}:place.id==='lanshu'?{x:c.x-10,z:c.z-8}:{x:c.x,z:c.z+b.data.size[2]/2+9};
     if(place.id==='yanchi')desired={x:c.x+b.data.size[0]/2+4,z:c.z};
-    if(place.id==='fengqitang')desired={x:c.x-b.data.size[0]*.1,z:c.z+b.data.size[2]*(.31+.27/2)+18};
+    if(place.id==='fengqitang')desired={x:c.x-b.data.size[0]*.1,z:c.z+b.data.size[2]*(.31+.27/2)+27};
+    if(place.id==='library')desired={x:c.x-b.data.size[0]*.1,z:c.z+b.data.size[2]/2+30};
     const destination=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);
     const path=destination&&planner.find(state.pos,destination);
     if(!path){stopTour();toast('当前地点无法规划安全步行线。请走到开阔校道再试。');return;}
@@ -303,6 +313,7 @@
     reflections.tick(dt,state.effectiveQuality,indoors,state.paused);
     breeze?.tick(dt,state.effectiveQuality,state.paused);
     if(state.frames%24===0){
+      window.CampusDecor?.tick();
       // Tile visibility is distance based, mirroring open-world chunk culling.
       for(const tile of world.vegetationTiles)tile.group.visible=Math.hypot(tile.x-state.pos.x,tile.z-state.pos.z)<260;
     }
@@ -380,7 +391,7 @@
       if(!o.isMesh)return;
       for(const m of Array.isArray(o.material)?o.material:[o.material]){
         if(!m?.isMeshStandardMaterial||managedMaterials.has(m))continue;
-        managedMaterials.add(m);m.color.convertSRGBToLinear();m.envMapIntensity=.22;
+        managedMaterials.add(m);m.color.convertSRGBToLinear();m.envMapIntensity=m.metalness>.15?.48:.24;
       }
     });
     const aniso=Math.min(16,renderer.capabilities?.getMaxAnisotropy?.()||8);
@@ -399,6 +410,7 @@
     window.haizWalk={state,world,climate,reflections,planner,startTour,stopTour,setArrivalProgress,takeArrivalControl,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,climate:climate.current,reflection:reflections.active,tour:tour?.place.id||null,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};
     window.CampusWorkshop?.attach(window.haizWalk);
     Object.assign(window.haizWalk,{startJourney,restoreView});
+    window.CampusDecor?.attach(window.haizWalk);window.CampusReview?.attach(window.haizWalk);
     if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
     if(new URLSearchParams(location.search).get('enter')==='gate'){
       state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;goTo('beimen',false);resume(false);toast(touch?'抵达北门。左摇杆行走，右侧滑动环顾。':'抵达北门。WASD 行走，按住场景拖动环顾。');

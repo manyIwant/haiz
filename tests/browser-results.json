@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-17T23:38:37.058Z",
+  "date": "2026-10-18T00:06:54.421Z",
   "browser": "154.0.8037.57",
   "results": [
     {
@@ -120,18 +120,18 @@
           "classrooms": 16,
           "environment": "HDR",
           "trees": 305,
-          "colliders": 1729,
+          "colliders": 1801,
           "quality": "high",
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 474,
-          "triangles": 435719,
+          "drawCalls": 755,
+          "triangles": 549113,
           "fps": 60,
           "loaded": true,
           "position": {
-            "x": 14.194999999999997,
-            "z": -31.098649999999992
+            "x": 87.195,
+            "z": -20.098649999999992
           }
         },
         "observation": true,
@@ -203,15 +203,27 @@
           "normal": 512,
           "mirrored": true,
           "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
         }
       ],
       "restored": {
         "position": {
-          "x": 13.4,
-          "z": 12.8
+          "x": 74.4,
+          "z": 23.8
         },
-        "yaw": 0,
-        "pitch": 0.045,
+        "yaw": 1.101,
+        "pitch": 0.16,
         "lens": 32,
         "climate": "afterrain"
       }

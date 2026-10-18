@@ -143,6 +143,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
   //   整个屋顶「倒扣」且与外墙穿插。修正为 rotation.x = +s * pitch，
   //   使屋脊端(y=h, z=0) 与檐口端(y=0, z=s*run) 各自归位。
   function hipRoof(w, d, h, overhang, mat, ridgeMat) {
+    if(window.CampusAtelier)return window.CampusAtelier.roof(w,d,h,overhang,mat,ridgeMat);
     var g = new THREE.Group();
     var o = overhang;
     var ow = w + o * 2, od = d + o * 2;
@@ -348,7 +349,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
 
     // ===== 【实拍纠正】升级入口门廊：中式双柱 + 红色坡屋顶 + 起翘 =====
     var ez = d / 2 + 3.0;                          // 门廊进深加大
-    var pw = 10.0;                                 // 门廊宽度
+    var pw = b.id==='yihao'?14:10;
     var pd = 6.5;                                  // 门廊深度
 
     // 门廊基座台阶
@@ -359,7 +360,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     box(pw + 1.2, 0.35, pd * 0.6, MAT.concrete, 0, 0.175, ez - pd * 0.15, g);
 
     // 【新增】门廊两侧中式立柱（方形截面，仿石材质）
-    var porchColX = [-3.8, 3.8];
+    var porchColX = b.id==='yihao'?[-5.8,5.8]:[-3.8,3.8];
     porchColX.forEach(function (cx) {
       // 柱础
       box(0.9, 0.5, 0.9, MAT.baseStone, cx, 0.25, ez, g);
@@ -373,7 +374,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     box(pw + 1.5, 0.35, pd * 0.5, MAT.beam, 0, 6.25, ez - pd * 0.15, g);
 
     // 【新增】门廊红色坡屋顶（四坡带起翘）
-    var porchRoofH = 2.2;
+    var porchRoofH = b.id==='yihao'?.85:1.2;
     var porchRoof = hipRoof(pw + 2.0, pd + 1.0, porchRoofH, 0.8, MAT.roofPorch, MAT.ridgeRed);
     porchRoof.position.set(0, 6.6, ez);
     g.add(porchRoof);
@@ -400,6 +401,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     ['hole','glass'].forEach(function(key){winQueue[key]=winQueue[key].filter(function(a,i){return i<start||a.y>b.floorH;});});
     g.userData.classrooms=window.CampusInteriors.build(g,b,o);
     if(window.CampusArchitecture)window.CampusArchitecture.facade(g,b,MAT);
+    window.CampusAtelier?.recessedFacade(g,b,MAT);
   };
 
   /* --- 历史建筑（凤栖堂 / 衍林堂 / 校史馆）：台基 + 柱廊 + 歇山顶 --- */
@@ -455,6 +457,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
 
   /* --- 图书馆：基座 + 竖向遮阳 + 大窗 --- */
   FORMS.library = function (g, b) {
+    if(window.CampusAtelier)return window.CampusAtelier.library(g,b,MAT);
     var w = b.size[0], d = b.size[2], H = b.size[1], f = b.floors, fh = b.floorH;
     box(w + 0.6, 1.2, d + 0.6, MAT.plinth, 0, 0.6, 0, g);
     box(w, H - 1.2, d, MAT.wallPutty, 0, 1.2 + (H - 1.2) / 2, 0, g);
@@ -1250,6 +1253,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     g.userData.data = b;
     var windowStart = winQueue.hole.length;
     var o = rectWorld(b.rect);
+    o.detail=cfg.shadow>0;
     if (!b.size[2]) b.size[2] = o.d;          // 园林/水景/运动场：深度取自平面轮廓
     var fn = FORMS[b.form];
     if (!fn) {                       // 兜底：素块
@@ -1378,7 +1382,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     base.receiveShadow = false;
     // 校园草坪底：底色压亮、靠贴图提供细节，避免大面积纯色的「塑料感」
     groundMat = M('#ffffff', 0.97);
-    groundMat.color.set(pbrBank.grass?'#d0d2b6':'#9cb98a');scannedSurface(groundMat,'grass');
+    groundMat.color.set(pbrBank.grass?'#a9bd96':'#9cb98a');scannedSurface(groundMat,'grass');
     var lawn = plane(W, D, groundMat, 0, LAY.lawn, 0, scene);
     lawn.receiveShadow = cfg.shadow > 0;
 
@@ -1543,14 +1547,19 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
   FORMS.garden=function(g,b,o){
     oldGarden(g,b,o);
     var hall=new THREE.Group(),w=b.size[0]*.64,d=b.size[2]*.27;
-    var qs=winQueue.hole.length;FORMS.hall(hall,{size:[w,5.8,d]});hall.position.z=b.size[2]*.31;
-    if(b.id==='fengqitang'&&window.CampusArchitecture)window.CampusArchitecture.heritage(hall,w,d,MAT);
+    var qs=winQueue.hole.length;
+    if(b.id==='fengqitang'&&window.CampusAtelier)window.CampusAtelier.hall(hall,w,d,MAT,o.detail);
+    else FORMS.hall(hall,{size:[w,5.8,d]});
+    hall.position.z=b.size[2]*.31;
+    if(b.id==='fengqitang'&&!window.CampusAtelier&&window.CampusArchitecture)window.CampusArchitecture.heritage(hall,w,d,MAT);
     [winQueue.hole,winQueue.glass].forEach(function(q){for(var k=qs;k<q.length;k++)q[k].z+=hall.position.z;});
     // Hall windows are queued separately in parent coordinates.
     g.add(hall);
     var cv=document.createElement('canvas');cv.width=512;cv.height=96;var ctx=cv.getContext('2d');ctx.fillStyle='#173e35';ctx.fillRect(0,0,512,96);ctx.fillStyle='#e8d9af';ctx.font='44px serif';ctx.textAlign='center';ctx.fillText(b.name,256,65);
-    var sign=new THREE.Mesh(new THREE.PlaneGeometry(w*.28,1.2),new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(cv),roughness:.9}));
-    sign.position.set(0,4.5,hall.position.z+d/2+.2);g.add(sign);
+    if(b.id!=='fengqitang'||!window.CampusAtelier){
+      var sign=new THREE.Mesh(new THREE.PlaneGeometry(w*.28,1.2),new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(cv),roughness:.9}));
+      sign.position.set(0,4.5,hall.position.z+d/2+.2);g.add(sign);
+    }
   };
   FORMS.oldtree=function(g,b){
     window.MemoryArt.decorate(g,b,Object.assign({},pbrBank,{foliage:pbrBank.foliage||foliageMat.map}),'balanced');

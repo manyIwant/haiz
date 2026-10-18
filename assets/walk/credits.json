@@ -147,6 +147,30 @@
     "adaptation": "1024x1024 WebP albedo only. Mirrored repeat, sRGB; paired with original procedural roof normal, height and roughness maps. Red roofs retain their original procedural color maps.",
     "prompt_record": "docs/exploration-studio-20261018.md"
   },
+  "open_plant": {
+    "path": "assets/walk/models/potted-plant.glb",
+    "sha256": "22785b665f14189e4da5586828291cea9fadf3ffa1ff94336cd2bec291a64903",
+    "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/DiffuseTransmissionPlant",
+    "source_sha256": "1748be8847e24bdd5cb6c5ac2bfd0afe8f11efc4f85091148550555e47c7ee83",
+    "authors": "Rico Cilliers / Poly Haven, 2021 (CC0-1.0); Eric Chadwick / Darmstadt Graphics Group GmbH, 2024 (CC-BY-4.0).",
+    "notice": "assets/walk/models/NOTICE.md",
+    "adaptation": "Original pot and foliage geometry and selected textures extracted losslessly. Dense gravel, animation, fireflies, cameras, emission and unsupported diffuse transmission removed. Three distance-cullable creative set-dressing instances; not surveyed campus vegetation.",
+    "pipeline": "scripts/prepare-plant.cjs"
+  },
+  "gltf_loader": {
+    "path": "assets/vendor/GLTFLoader.js",
+    "source": "https://github.com/mrdoob/three.js/blob/d4aa9e00ea29808534a3e082f602c544e5f2419c/examples/js/loaders/GLTFLoader.js",
+    "license": "MIT",
+    "license_file": "assets/vendor/THREE-LICENSE.txt",
+    "sha256": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6"
+  },
+  "design_references": {
+    "source": "https://github.com/VoltAgent/awesome-design-md/tree/3b605329240ce735b510037cca322f1831fdd7f8",
+    "selected": ["design-md/oura/DESIGN.md", "design-md/linear.app/DESIGN.md"],
+    "license": "MIT",
+    "license_file": "assets/vendor/AWESOME-DESIGN-MD-LICENSE.txt",
+    "adaptation": "Independent haiz palette, original Chinese/system typography, photo-led editorial surfaces, quiet tool chrome and reduced-motion-safe finite transitions. No brand assets or proprietary fonts copied."
+  },
   "interiors": "Original imagined ground-floor classrooms, not surveyed replicas.",
   "environment": {
     "path": "assets/walk/textures/campus-light.hdr",

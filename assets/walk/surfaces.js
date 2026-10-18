@@ -64,10 +64,11 @@
       physical.defines={STANDARD:'',PHYSICAL:''};
       physical.clearcoat=amount;physical.clearcoatRoughness=rough;m[key]=physical;
     }
-    coat('wallLight',.1,.45);coat('roofHerit',.3,.3);
+    coat('wallLight',.1,.45);coat('roofHerit',.16,.48);
     coat('roofRed',.06,.6);coat('roofPorch',.06,.6);coat('roofTile',.08,.5);
     bind(m.wallLight,'ceramic',1.6,.018);
     for(const k of ['roofHerit','roofRed','roofPorch','roofTile'])bind(m[k],'roof',1.6,.035);
+    m.roofHerit.normalScale.set(.18,.18);m.roofHerit.bumpScale=.004;
     for(const k of ['baseStone','plinth','step','poolEdge'])bind(m[k],'stone',2.4,.024);
     for(const k of ['beam','door'])bind(m[k],'timber',1.4,.012);
     m.roofHerit.roughness=.62;m.roofRed.roughness=.85;m.roofPorch.roughness=.82;

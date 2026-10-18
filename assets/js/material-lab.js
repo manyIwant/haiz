@@ -2,8 +2,9 @@
 (()=>{'use strict';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer,scene,camera,mesh,slab,keyLight,rim,hemi,ready=false,failed=false,visible=false,frame=0,material=null,environment;
-let current={kind:'roof',color:'#446b53'},wet=0,repeat=1,drag=null,rotate=!reduced,shape='sphere',angle=.25;
+let current={kind:'roof',color:'#446b53'},wet=0,repeat=1,drag=null,rotate=!reduced,shape='sphere',angle=.25,wants3d=true;
 const host=document.createElement('div');host.id='material3d';host.className='material-3d';host.setAttribute('aria-label','可拖动旋转的三维材质样本');
+host.hidden=true;
 const preview=document.querySelector('.material-preview'),canvas=document.getElementById('materialCanvas');
 canvas.before(host);
 const controls=document.createElement('div');controls.className='material-lab-controls';
@@ -12,6 +13,7 @@ preview.append(controls);
 const $=id=>document.getElementById(id);
 function mode(three){
   if(three&&failed)return;
+  wants3d=three;
   if(three){$('reliefToggle').checked=false;boot();}
   host.hidden=!three;canvas.hidden=three&&ready;
   $('lab3d').setAttribute('aria-pressed',String(three));$('lab2d').setAttribute('aria-pressed',String(!three));render();
@@ -47,7 +49,7 @@ function boot(){
     const shade=document.createElement('canvas');shade.width=shade.height=128;const c=shade.getContext('2d'),g=c.createRadialGradient(64,64,6,64,64,64);g.addColorStop(0,'rgba(0,0,0,.5)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,128,128);
     const contact=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shade),transparent:true,depthWrite:false}));contact.rotation.x=-Math.PI/2;contact.position.y=-.893;scene.add(contact);
     host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','拖动旋转材质，使用下方控件调整湿度、密度、形状与光照');
-    ready=true;canvas.hidden=true;update();resize();
+    ready=true;host.hidden=!wants3d;canvas.hidden=wants3d;update();resize();
     new THREE.TextureLoader().load('assets/walk/textures/jade-glaze-generated.webp',texture=>{
       if(!ready){texture.dispose();return;}window.CampusSurfaces.setGlaze(texture);update();if(current.kind==='roof')window.HaizArchitecture?.preview('roof');
     },undefined,()=>{});
@@ -68,6 +70,6 @@ $('labRotate').onclick=()=>{rotate=!rotate;$('labRotate').setAttribute('aria-pre
 $('labLight').onchange=e=>{boot();if(!ready)return;const warm=e.target.value==='warm',cloud=e.target.value==='cloud';keyLight.color.set(warm?'#ffd1a0':'#fff1d5');keyLight.intensity=cloud?.7:2.1;hemi.intensity=cloud?1.15:.85;keyLight.position.set(-2.8,3.2,2.5);render();};
 $('reliefToggle').addEventListener('change',()=>{if($('reliefToggle').checked)mode(false);});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',animate);
-if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){boot();animate();}else cancelAnimationFrame(frame);},{rootMargin:'150px'});observer.observe(host);}else{visible=true;boot();}
+if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){if(wants3d)boot();animate();}else cancelAnimationFrame(frame);},{rootMargin:'150px'});observer.observe(preview);}else{visible=true;boot();}
 window.CampusMaterialLab={set(kind,color){current={kind,color};update();},get ready(){return ready;},get state(){return {kind:current.kind,wet,repeat,shape};}};
 })();
