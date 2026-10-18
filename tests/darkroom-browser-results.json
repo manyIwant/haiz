@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-18T00:34:29.574Z",
+  "passed": true,
+  "checks": [
+    "desktop layout, local images and no autoplay AudioContext",
+    "real pointer scratch mask, gesture-to-score translation without autoplay, complete reveal and reset",
+    "place changes, literal untrusted note, palette, pointer and keyboard score edits",
+    "gesture-unlocked Web Audio, no competing ambient sound, scheduled loop, stop and source cleanup",
+    "share to independent mobile context preserves exact score without autoplay or backend",
+    "actual touch events scratch photo and edit horizontally scrollable score",
+    "a received remix survives chapter navigation and refresh without reverting or autoplay",
+    "real 1080×1440 PNG export with uncropped local photo and credits",
+    "offline WAV render has valid headers, bounded duration, nonzero unclipped samples",
+    "hidden page immediately stops audio and pending sources",
+    "scoped erase preserves unrelated data, clears URL and does not re-save on reload",
+    "reduced motion, malformed hash, blocked storage and unavailable AudioContext degrade safely",
+    "site-wide privacy clearing includes darkroom without clearing other applications"
+  ],
+  "errors": [],
+  "limitations": "Chromium desktop and emulated mobile touch, not physical iOS/Android hardware. WAV samples verified, subjective sound quality not measured. Link handoff is asynchronous, not live multiuser."
+}

@@ -66,7 +66,8 @@
     }
     coat('wallLight',.1,.45);coat('roofHerit',.16,.48);
     coat('roofRed',.06,.6);coat('roofPorch',.06,.6);coat('roofTile',.08,.5);
-    bind(m.wallLight,'ceramic',1.6,.018);
+    // Smaller tile joints read at facade scale instead of looking like masonry blocks.
+    bind(m.wallLight,'ceramic',.8,.009);
     for(const k of ['roofHerit','roofRed','roofPorch','roofTile'])bind(m[k],'roof',1.6,.035);
     m.roofHerit.normalScale.set(.18,.18);m.roofHerit.bumpScale=.004;
     for(const k of ['baseStone','plinth','step','poolEdge'])bind(m[k],'stone',2.4,.024);
@@ -75,6 +76,16 @@
     m.wallLight.color.set('#e8e6de');m.baseStone.color.set('#525953');
     if(bank.glaze){setGlaze(bank.glaze);m.roofHerit.map=glaze;m.roofHerit.color.set('#e4e4d6');m.roofHerit.userData.generatedGlaze=true;}
     m.glassTeal.roughness=.22;m.glassTeal.envMapIntensity=.8;
+  }
+  let metalMaps;
+  function brushedMetal(){
+    if(metalMaps)return metalMaps;
+    const rough=document.createElement('canvas'),normal=document.createElement('canvas');rough.width=normal.width=256;rough.height=normal.height=256;
+    const r=rough.getContext('2d'),n=normal.getContext('2d'),ri=r.createImageData(256,256),ni=n.createImageData(256,256);
+    for(let y=0;y<256;y++)for(let x=0;x<256;x++){const i=(y*256+x)*4,line=Math.sin(x*Math.PI*2/256*47)*.6+Math.cos(x*Math.PI*2/256*83)*.4,age=Math.sin(y*Math.PI*2/256*3+x*Math.PI*2/256)*.5;ri.data[i]=ri.data[i+1]=ri.data[i+2]=170+line*13+age*17;ri.data[i+3]=255;ni.data[i]=128+line*3;ni.data[i+1]=128;ni.data[i+2]=255;ni.data[i+3]=255;}
+    r.putImageData(ri,0,0);n.putImageData(ni,0,0);metalMaps={rough:new THREE.CanvasTexture(rough),normal:new THREE.CanvasTexture(normal)};
+    for(const t of Object.values(metalMaps)){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,1);t.anisotropy=4;}
+    return metalMaps;
   }
   function sample(kind,color,wet=0){
     const result=new THREE.MeshPhysicalMaterial({color:new THREE.Color(color).convertSRGBToLinear(),roughness:.8});
@@ -101,5 +112,5 @@
       uv.needsUpdate=true;geo.userData.metricUV=true;
     });
   }
-  root.CampusSurfaces={init,project,maps,sample,setGlaze,albedo:kind=>kind==='roof'&&glaze?glaze:maps(kind).color};
+  root.CampusSurfaces={init,project,maps,sample,setGlaze,brushedMetal,albedo:kind=>kind==='roof'&&glaze?glaze:maps(kind).color};
 })(window);

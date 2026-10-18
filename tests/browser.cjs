@@ -22,14 +22,16 @@ let browser;
     assert.equal(await page.locator('#campusFrame').getAttribute('src'),null,'3D campus must wait for an explicit start');
     assert.equal(await page.locator('a[href="journal.html"]').count(),1);
     assert.equal(await page.locator('#opening a[href="director.html"]').count(),1);
+    assert.equal(await page.locator('#opening a[href="darkroom.html"]').count(),1);
     assert.equal(await page.evaluate(()=>HaizExperience.sound),false);
+    if(mobile){for(const viewport of [{width:320,height:568},{width:375,height:667},{width:390,height:844}]){await page.setViewportSize(viewport);for(const link of await page.locator('#opening .opening-portals a').all()){await link.scrollIntoViewIfNeeded();assert(await link.evaluate(a=>{const r=a.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return hit===a||a.contains(hit);}),viewport.width+' entry portal must not be covered');}}await page.locator('#play').scrollIntoViewIfNeeded();}
     await page.screenshot({path:path.join(artifacts,mobile?'entry-mobile.png':'entry-desktop.png')});
     await page.click('#play');assert.equal(await page.locator('#campusFrame').getAttribute('src'),'campus-3d.html?arrival=descent');
     await page.waitForFunction(()=>getComputedStyle(document.getElementById('opening')).opacity==='0');
     await page.evaluate(()=>HMZCinematic.setProgress(.68));await page.waitForFunction(()=>Math.abs(HMZCinematic.progress()-.68)<.0001&&document.getElementById('chapterTitle').textContent==='把远方，变成日常。');
     assert.equal(await page.locator('#chapterTitle').textContent(),'把远方，变成日常。');
     await page.selectOption('#journeySpeed','2');
-    results.push({target:mobile?'cinematic root / mobile':'cinematic root / desktop',checks:['root is the cinematic entry','editorial home and director studio remain accessible','3D iframe is user-initiated','chapter seek and speed controls','sound off by default'],passed:true});console.log('PASS cinematic root',mobile?'mobile':'desktop');await context.close();
+    results.push({target:mobile?'cinematic root / mobile':'cinematic root / desktop',checks:['root is the cinematic entry','editorial home, darkroom and director studio remain accessible','320/375/390 px mobile portals remain reachable without overlay interference','3D iframe is user-initiated','chapter seek and speed controls','sound off by default'],passed:true});console.log('PASS cinematic root',mobile?'mobile':'desktop');await context.close();
   }
   for(const mobile of [false,true]){
     const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:960},hasTouch:mobile,isMobile:mobile,reducedMotion:'reduce'}),page=await context.newPage();observe(page);

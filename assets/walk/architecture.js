@@ -11,10 +11,37 @@ function box(g,m,w,h,d,x,y,z){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d
 function facade(g,b,m){
  const w=b.size[0],h=b.size[1],d=b.size[2],fh=b.floorH;
  if(b.id==='yihao'){
-  for(const x of [-w*.16,-w*.085,w*.085,w*.16])box(g,m.wallGrey,.34,h-1.2,.42,x,(h+1.2)/2,d/2+.14);
-  for(const x of [-w*.105,w*.105])box(g,m.baseStone,2.1,h*.43,.28,x,h*.43/2,d/2+.2);
-  box(g,m.wallLight,w*.34,.28,1.4,0,h+.65,0);
-  for(const x of [-w*.17,w*.17])box(g,m.wallLight,.8,1.3,1.4,x,h+.18,0);
+  const face=d/2;
+  // Photograph's entrance composition: narrow full-height piers, two stone towers,
+  // deep window reveals and a stepped, projecting central white cornice.
+  for(const x of [-w*.16,-w*.085,w*.085,w*.16]){
+    box(g,m.wallGrey,.34,h-1.2,.42,x,(h+1.2)/2,face+.14);
+    box(g,m.wallPutty,.56,.18,.62,x,h-.3,face+.22);
+  }
+  for(const x of [-w*.105,w*.105]){
+    const height=h*.56;
+    box(g,m.baseStone,2.8,height,.18,x,height/2,face+.23);
+    for(const sign of [-1,1])box(g,m.baseStone,.42,height,.34,x+sign*1.19,height/2,face+.42);
+    for(let floor=0;floor<3;floor++){
+      const cy=1.9+floor*3.15,wh=1.3;
+      box(g,m.glassTeal,1.4,wh,.045,x,cy,face+.35);
+      for(const side of [-1,1]){box(g,m.frame,.065,wh,.10,x+side*.7,cy,face+.43);box(g,m.baseStone,1.9,.16,.35,x,cy+side*(wh/2+.10),face+.45);}
+      box(g,m.frame,.045,wh,.09,x,cy,face+.43);
+    }
+    box(g,m.baseStone,3.6,.25,1.35,x,height+.1,face+.25);
+    box(g,m.wallPutty,3.8,.13,1.5,x,height+.29,face+.24);
+    box(g,m.wallLight,.28,h-height-1.0,.48,x,height+(h-height-1.0)/2+.5,face+.25);
+  }
+  const crown=w*.27;
+  for(let level=0;level<3;level++)box(g,m.wallLight,crown+level*.8,.18,1.65+level*.28,0,h+.2+level*.23,face+.22);
+  for(const sign of [-1,1]){
+    box(g,m.wallLight,.65,1.1,1.9,sign*(crown/2-.4),h+.62,face+.18);
+    for(let i=0;i<3;i++)box(g,m.wallLight,2.1-i*.35,.20,1.5,sign*(crown/2+1.0),h-.3+i*.24,face+.1);
+  }
+  for(let i=-5;i<=5;i++)box(g,m.wallPutty,.25,.36,.70,i*crown/12,h-.12,face+.53);
+  // Thin outer roof edge and recessed shadow slot, not a blank white slab.
+  box(g,m.wallGrey,crown,.09,.35,0,h+.05,face+.82);
+  g.userData.photographicEntrance='stepped-cornice-stone-piers';
  }
  if(['yihao','erhao'].includes(b.id)){
   // Slender shade rails along the existing external gallery. No new floorplan.

@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#193b35" />
+    <meta
+      name="description"
+      content="用指尖显影真实校园影像，把四处校园意象编成声景，再寄出一张可被改编的明信片。手机、电脑与键盘都能参与的非官方创作实验。"
+    />
+    <title>共感暗房 · haiz.space</title>
+    <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/fonts/sora-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="assets/css/darkroom.css?v=11" />
+    <script defer src="assets/js/darkroom-core.js?v=11"></script>
+    <script defer src="assets/js/darkroom.js?v=11"></script>
+    <link rel="stylesheet" href="assets/css/experience.css?v=11" />
+    <script defer src="assets/js/experience.js?v=11"></script>
+    <link rel="stylesheet" href="assets/css/atelier-ui.css?v=11" />
+    <script defer src="assets/js/atelier-ui.js?v=11"></script>
+  </head>
+  <body>
+    <a class="room-skip" href="#develop">跳至照片显影台</a>
+    <header class="room-nav">
+      <a class="room-brand" href="index.html">haiz<span>.space</span></a
+      ><span>AN EXPERIMENT IN FEELING A PLACE</span>
+      <nav aria-label="页内导航">
+        <a href="#develop">显影</a><a href="#compose">编曲</a
+        ><a href="#postcard">寄出 ↗</a>
+      </nav>
+    </header>
+    <main>
+      <section class="room-hero">
+        <p class="room-kicker">THE CAMPUS DARKROOM / 共感暗房 · 03</p>
+        <div class="room-headline">
+          <h1>课间不长。<br />足够<span>创作一次。</span></h1>
+          <div>
+            <p>把目光变成笔触，<br />把一座校园变成一小段音乐。</p>
+            <p class="room-small">
+              不是一场观看。<br />这一次，你是作品的一部分。
+            </p>
+            <a href="#develop" class="room-round" aria-label="开始显影">↓</a>
+          </div>
+        </div>
+        <div class="room-hero-bottom">
+          <span>01 照片是实拍 / 02 声音是想象 / 03 作品属于你的这一刻</span
+          ><a href="journal.html">回到校园杂志 ↗</a>
+        </div>
+      </section>
+      <section id="develop" class="room-develop" aria-labelledby="developTitle">
+        <div class="room-section-head">
+          <div>
+            <p class="room-kicker">01 / REVEAL WHAT YOU FEEL</p>
+            <h2 id="developTitle">光从指尖，<em>慢慢出来。</em></h2>
+          </div>
+          <p>
+            在相纸上拖动鼠标或指尖。<br />不用手势？也能用滑杆，或一键看全图。
+          </p>
+        </div>
+        <div class="room-photo-desk">
+          <div class="room-photo-main">
+            <div
+              id="revealStage"
+              class="room-photo"
+              aria-label="校园照片显影画面"
+            >
+              <img
+                id="roomPhoto"
+                src="assets/images/web/fengqitang-1600.jpg"
+                alt="凤栖堂既有实拍，绿瓦叠檐与红金色立柱"
+              /><canvas id="revealCanvas" aria-hidden="true"></canvas>
+              <div class="room-photo-corner" aria-hidden="true">
+                TOUCH TO DEVELOP <span>＋</span>
+              </div>
+              <div id="revealHint" class="room-reveal-hint" aria-hidden="true">
+                用一笔光，唤醒一张照片。<small
+                  >画面内滑动显影 · 画面外滚动页面</small
+                >
+              </div>
+            </div>
+            <div class="room-photo-caption">
+              <span id="photoCaption">凤栖堂 / UNDER GREEN EAVES</span
+              ><span>既有实拍 · 保留完整画幅</span>
+            </div>
+          </div>
+          <aside class="room-photo-aside">
+            <div class="room-place-top">
+              <span id="placeNumber">01 / 04</span
+              ><span class="room-live-dot">YOUR CONTACT SHEET</span>
+            </div>
+            <h3 id="placeName">凤栖堂</h3>
+            <p id="placeObservation">
+              绿瓦的亮处不是同一片绿。停下来，看看瓦沟怎样接住一束光。
+            </p>
+            <p id="placePoem" class="room-poem">
+              把铃声留在檐下，<br />把下一句交给风。
+            </p>
+            <div
+              id="roomPlaces"
+              class="room-places"
+              role="group"
+              aria-label="选择显影地点"
+            ></div>
+            <label class="room-exposure" for="exposure"
+              >相纸透光 <output id="exposureValue">28%</output
+              ><input
+                id="exposure"
+                type="range"
+                min="0"
+                max="100"
+                value="28"
+                step="1"
+            /></label>
+            <div class="room-reveal-actions">
+              <button id="revealAll">看完整照片 ↗</button
+              ><button id="resetReveal">重新显影 ↻</button>
+            </div>
+            <a
+              id="placeWalk"
+              href="campus-3d.html?focus=fengqitang&amp;observe=1"
+              >去模型里，找同一处地方 ↗</a
+            >
+          </aside>
+        </div>
+        <div class="room-trace">
+          <button id="traceScore" disabled>把这道光，译成音乐 ↓</button>
+          <p>
+            显影后，把你的笔触变成独一份节拍。左右位置对应八拍，上下位置对应四个声部；原始笔触只留在这一页，不写入链接。
+          </p>
+        </div>
+        <p class="room-provenance">
+          照片沿用项目已有校园影像，版权归原作者与发布机构；年代及转载授权尚未独立核验。显影只是交互蒙版，不是修复史料，也不改变原图。<a
+            href="contact.html#disclaimer"
+            >来源说明 ↗</a
+          >
+        </p>
+      </section>
+      <div class="room-transition" aria-hidden="true">
+        <svg viewBox="0 0 1200 160" preserveAspectRatio="none">
+          <path
+            id="roomThread"
+            d="M-10 80 C180 180 240 -50 420 80 S680 210 790 75 S1040 0 1210 80"
+          /></svg
+        ><span>LET THE IMAGE BECOME A SCORE.</span>
+      </div>
+      <section id="compose" class="room-compose" aria-labelledby="composeTitle">
+        <div class="room-section-head">
+          <div>
+            <p class="room-kicker">02 / A SMALL SCORE FOR A LARGE PLACE</p>
+            <h2 id="composeTitle">如果校园，<br /><em>有你的节拍。</em></h2>
+          </div>
+          <p>
+            四个地点，四种声音想象，八拍循环。<br />点亮格子，用耳朵重走一次课间。
+          </p>
+        </div>
+        <div class="room-score-top">
+          <div
+            id="scorePresets"
+            class="room-presets"
+            role="group"
+            aria-label="声景灵感"
+          >
+            <button data-score="shade">树荫慢板</button
+            ><button data-score="rain">雨后回声</button
+            ><button data-score="blank">从一段安静开始</button>
+          </div>
+          <span class="room-sound-label">SYNTHESIZED, NOT RECORDED.</span>
+        </div>
+        <div class="room-score-shell">
+          <div
+            class="room-score-scroll"
+            tabindex="0"
+            aria-label="八拍声景编排，窄屏可横向滚动"
+          >
+            <div
+              id="scoreGrid"
+              class="room-score"
+              role="group"
+              aria-label="声景节拍编辑器"
+            ></div>
+          </div>
+          <div class="room-transport">
+            <button id="scorePlay" class="room-play" aria-pressed="false">
+              <span>▶</span> 听见这段课间</button
+            ><label for="scoreTempo"
+              >速度 <output id="tempoValue">84</output> BPM<input
+                id="scoreTempo"
+                type="range"
+                min="60"
+                max="132"
+                value="84"
+                step="1" /></label
+            ><label for="scoreVolume"
+              >音量 <output id="volumeValue">35%</output
+              ><input
+                id="scoreVolume"
+                type="range"
+                min="0"
+                max="70"
+                value="35"
+                step="1"
+            /></label>
+          </div>
+        </div>
+        <div class="room-score-foot">
+          <p>
+            点击格子开关音符，电脑可按住拖过多个格子。键盘 Tab
+            选格子，空格切换。手机可横向浏览全部八拍。声音由浏览器合成，首次播放才申请音频；离开页面自动停止。
+          </p>
+          <span id="scoreReadout" aria-live="off">00 / 08</span>
+        </div>
+        <p id="audioStatus" class="room-status" role="status">
+          还没有声音。由你按下播放，再让它开始。
+        </p>
+      </section>
+      <section
+        id="postcard"
+        class="room-postcard"
+        aria-labelledby="postcardTitle"
+      >
+        <div class="room-section-head">
+          <div>
+            <p class="room-kicker">03 / PASS THE FEELING ON</p>
+            <h2 id="postcardTitle">
+              寄出一个课间。<br /><em>等另一个人续写。</em>
+            </h2>
+          </div>
+          <p>
+            照片、文字和节拍装进一个链接。<br />另一台手机或电脑打开，就能继续改编。
+          </p>
+        </div>
+        <div class="room-mail-desk">
+          <article class="room-card" id="postcardPreview">
+            <div class="room-card-top">
+              <span>HAIZ / A POSTCARD THAT CAN BE HEARD</span
+              ><b aria-hidden="true">海<br />中</b>
+            </div>
+            <img
+              id="postcardPhoto"
+              src="assets/images/web/fengqitang-1600.jpg"
+              alt="作品选用的凤栖堂完整照片"
+              loading="lazy"
+            />
+            <p id="postcardNote">愿你经过这里的时候，刚好有风。</p>
+            <div
+              id="postcardScore"
+              class="room-card-score"
+              aria-label="作品的节拍缩略图"
+            ></div>
+            <div class="room-card-bottom">
+              <span id="postcardPlace">凤栖堂 · 84 BPM</span
+              ><span id="scoreCode">NO. —</span>
+            </div>
+          </article>
+          <div class="room-mail-tools">
+            <p id="remixState" class="room-remix-state">
+              这是一份只在你浏览器里保存的创作。
+            </p>
+            <label for="roomNote"
+              >给这段课间，留一句话。<textarea
+                id="roomNote"
+                rows="3"
+                maxlength="160"
+                placeholder="愿你经过这里的时候，刚好有风。"
+              ></textarea
+              ><small
+                ><span id="noteCount">0</span> / 80
+                字；不需要写真实姓名或联系方式。</small
+              ></label
+            >
+            <div class="room-palette" role="group" aria-label="明信片纸色">
+              <button data-paper="jade" aria-pressed="true">榄仁绿</button
+              ><button data-paper="clay" aria-pressed="false">陶土红</button>
+            </div>
+            <button id="shareScore" class="room-primary">
+              复制接力链接 <span>↗</span></button
+            ><button id="exportPostcard" class="room-secondary">
+              保存明信片 PNG <span>↓</span></button
+            ><button id="exportScore" class="room-secondary">
+              导出这一轮声景 WAV <span>♫</span></button
+            ><label class="room-share-field" for="scoreLink"
+              >作品链接（也可手动复制）<input
+                id="scoreLink"
+                type="text"
+                readonly
+                spellcheck="false"
+            /></label>
+            <p id="mailStatus" class="room-status" role="status">
+              链接包含作品内容，不包含你的浏览记录。分享后，拿到链接的人可以读到留言。
+            </p>
+            <button id="forgetScore" class="room-forget">
+              清除本机这份创作
+            </button>
+          </div>
+        </div>
+        <aside class="room-honesty">
+          <span>NO LIVE ROOM. NO FAKE AUDIENCE.</span>
+          <p>
+            这是异步作品接力，不是实时联机。链接本身携带创作，不会上传服务器，也没有虚构点赞或在线人数。导出的是你的编排与原照片来源说明；本地清除不会撤回已分享的链接。
+          </p>
+        </aside>
+      </section>
+      <section class="room-colophon">
+        <p class="room-kicker">A PLACE IS MORE THAN ITS GEOMETRY.</p>
+        <p>有的地方，<br />是在参与之后才被记住的。</p>
+        <div>
+          <a href="director.html">继续编排一条校园路线 ↗</a
+          ><a href="architecture.html">回到实拍与建筑细节 ↗</a>
+        </div>
+        <small
+          >交互研究：<a
+            href="https://github.com/codrops/ImageTrailEffects"
+            target="_blank"
+            rel="noopener"
+            >Codrops / Image Trail</a
+          >、<a
+            href="https://github.com/codrops/OnScrollPathAnimations"
+            target="_blank"
+            rel="noopener"
+            >On-Scroll SVG Paths</a
+          >、<a
+            href="https://github.com/brunosimon/folio-2019"
+            target="_blank"
+            rel="noopener"
+            >Bruno Simon / Folio 2019</a
+          >。本站为适配触摸与键盘的独立实现，未复制示例照片、模型、第三方动画库；不声称本站获奖。</small
+        >
+      </section>
+    </main>
+    <footer class="room-footer">
+      <a href="index.html">haiz.space</a
+      ><span>非官方校园创作实验 / STILL LEARNING. STILL MAKING.</span
+      ><a href="contact.html#privacy">隐私与来源 ↗</a>
+    </footer>
+    <noscript
+      ><p class="room-noscript">
+        显影、编曲与导出需要 JavaScript。仍可阅读本页说明和照片，或打开
+        <a href="memory-walk.html">轻量校园档案</a>。
+      </p></noscript
+    >
+  </body>
+</html>

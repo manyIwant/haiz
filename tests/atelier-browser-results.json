@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18T00:02:32.774Z",
+  "date": "2026-10-18T00:28:48.187Z",
   "passed": true,
   "checks": [
     "licensed GLB decode, PBR texture binding and three distance-cullable instances",

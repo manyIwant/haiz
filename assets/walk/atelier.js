@@ -3,9 +3,15 @@
 (function(root){'use strict';
 const T=THREE;
 const recessGlass=new T.MeshStandardMaterial({color:'#244650',roughness:.18,metalness:.35});
+const roofLining=new T.MeshStandardMaterial({color:'#675441',roughness:.9});
 function mesh(g,geo,mat,x=0,y=0,z=0){const o=new T.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o;}
 function box(g,m,w,h,d,x,y,z){return mesh(g,new T.BoxGeometry(w,h,d),m,x,y,z);}
 function tube(g,m,points,r=.035){const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));return mesh(g,new T.TubeGeometry(curve,Math.max(12,points.length*3),r,6,false),m);}
+let contactMaterial;
+function contact(g,x,y,z,r){
+  if(!contactMaterial){const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d'),fade=c.createRadialGradient(64,64,12,64,64,64);fade.addColorStop(0,'rgba(16,23,15,.45)');fade.addColorStop(.45,'rgba(16,23,15,.23)');fade.addColorStop(1,'rgba(16,23,15,0)');c.fillStyle=fade;c.fillRect(0,0,128,128);contactMaterial=new T.MeshBasicMaterial({map:new T.CanvasTexture(canvas),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,opacity:.65});}
+  const o=mesh(g,new T.PlaneGeometry(r*2,r*2),contactMaterial,x,y+.008,z);o.rotation.x=-Math.PI/2;o.castShadow=o.receiveShadow=false;o.userData.approximateContact=true;o.userData.noMerge=true;return o;
+}
 function planter(g,m,x,z){const slot=new T.Group();slot.position.set(x,.12,z);slot.userData.openPlantSlot=true;slot.userData.noMerge=true;mesh(slot,new T.CylinderGeometry(.41,.34,.72,24),m,0,.36,0);g.add(slot);return slot;}
 function roof(w,d,rise,overhang,mat,ridgeMat,detail=false){
   const g=new T.Group(),ow=w+overhang*2,od=d+overhang*2,ridge=Math.max(.6,ow-od),segments=detail?Math.ceil(ow/.24)*3:24,rows=detail?12:10;
@@ -20,6 +26,9 @@ function roof(w,d,rise,overhang,mat,ridgeMat,detail=false){
     for(let j=0;j<=rows;j++)for(let i=0;i<=cols;i++){const v=point(face,i/cols*2-1,j/rows);p.push(...v);uv.push(v[0]/1.6,v[2]/1.6);}
     for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=j*(cols+1)+i,b=a+1,c=a+cols+1,e=c+1;const reverse=face===-1||face===2;indices.push(...(reverse?[a,b,c,b,e,c]:[a,c,b,b,c,e]));}
     const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(p,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();geo.userData.metricUV=true;mesh(g,geo,mat);
+    // A roof needs an intrados as well as its upward tile skin. Otherwise an
+    // eye-level visitor sees through the slopes and only the ridge tubes remain.
+    const lining=geo.clone(),back=indices.slice();for(let i=0;i<back.length;i+=3){const v=back[i+1];back[i+1]=back[i+2];back[i+2]=v;}lining.translate(0,-.12,0);lining.setIndex(back);lining.computeVertexNormals();lining.userData={architecturalIntrados:true};mesh(g,lining,roofLining);
   }
   // The eave has a real thickness, rather than the old exposed vertical green box.
   for(const s of [-1,1]){
@@ -59,9 +68,13 @@ function hall(g,w,d,m,detail=true){
     const col=mesh(g,new T.CylinderGeometry(.19,.23,4.75,24),red,x,base+2.375,cz);
     col.userData.hallColumn=true;
     mesh(g,new T.CylinderGeometry(.30,.34,.18,24),stone,x,base+.09,cz);
+    contact(g,x,base,cz,.54);
     for(const yy of [base+.25,5.05])mesh(g,new T.CylinderGeometry(.235,.235,.08,24),gold,x,yy,cz);
     for(const dx of [-.11,.11])box(g,gold,.022,4.12,.025,x+dx,2.82,cz+.20);
     box(g,red,.7,.16,.55,x,5.24,cz);box(g,gold,.9,.07,.40,x,5.36,cz);box(g,red,1.15,.13,.35,x,5.46,cz);
+    // Small curved bracket profiles and capital medallions read in silhouette.
+    for(const side of [-1,1])tube(g,gold,[[x+side*.08,5.08,cz+.28],[x+side*.31,5.25,cz+.28],[x+side*.46,5.42,cz+.28],[x+side*.51,5.55,cz+.28]],.027);
+    const disc=mesh(g,new T.CylinderGeometry(.11,.11,.025,20),gold,x,5.27,cz+.30);disc.rotation.x=Math.PI/2;
   }
   box(g,wood,w+1.1,.24,.35,0,5.58,cz);box(g,gold,w+1.2,.045,.4,0,5.71,cz);
   for(let i=0;i<Math.ceil(w/.45);i++)box(g,wood,.08,.12,2.8,-w/2+i*.45,5.64,d/2+.6);
@@ -91,7 +104,8 @@ function library(g,b,m){
   const [w,H,d]=b.size,fh=b.floorH,face=d/2;
   g.userData.atelier='library-dome-arcade';
   const white=m.wallLight.clone();white.color.set('#ecece6');white.roughness=.83;
-  const zinc=new T.MeshStandardMaterial({color:'#8c9496',roughness:.36,metalness:.75});
+  const metal=root.CampusSurfaces?.brushedMetal();
+  const zinc=new T.MeshStandardMaterial({color:'#8c9496',roughness:.57,metalness:.75,roughnessMap:metal?.rough||null,normalMap:metal?.normal||null,normalScale:new T.Vector2(.12,.12)});
   const rib=new T.MeshStandardMaterial({color:'#4e5b5e',roughness:.48,metalness:.6});
   box(g,white,w,H,d-.65,0,H/2,-.325);
   for(let floor=0;floor<4;floor++){
@@ -108,6 +122,7 @@ function library(g,b,m){
   const dx=w*.34,dz=d*.42,base=H+.9,profile=[[0,3.6],[.28,3.35],[1.15,2.8],[2.15,1.9],[2.45,1.0],[2.3,.3],[2.2,0]];
   mesh(g,new T.CylinderGeometry(2.25,2.25,1.6,48),white,dx,H+.4,dz);
   const dome=mesh(g,new T.LatheGeometry(profile.slice().reverse().map(p=>new T.Vector2(...p)),64),zinc,dx,base,dz);dome.userData.libraryDome=true;
+  dome.userData.brushedMetal=true;
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2;tube(g,rib,profile.map(([r,y])=>[dx+Math.cos(a)*r,base+y,dz+Math.sin(a)*r]),.027);}
   mesh(g,new T.SphereGeometry(.12,12,8),rib,dx,base+3.65,dz);
   const sx=-w*.20,stairN=22,tread=.46;

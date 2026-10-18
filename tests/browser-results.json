@@ -1,12 +1,13 @@
 {
-  "date": "2026-10-18T00:06:54.421Z",
+  "date": "2026-10-18T00:34:29.800Z",
   "browser": "154.0.8037.57",
   "results": [
     {
       "target": "cinematic root / desktop",
       "checks": [
         "root is the cinematic entry",
-        "editorial home and director studio remain accessible",
+        "editorial home, darkroom and director studio remain accessible",
+        "320/375/390 px mobile portals remain reachable without overlay interference",
         "3D iframe is user-initiated",
         "chapter seek and speed controls",
         "sound off by default"
@@ -17,7 +18,8 @@
       "target": "cinematic root / mobile",
       "checks": [
         "root is the cinematic entry",
-        "editorial home and director studio remain accessible",
+        "editorial home, darkroom and director studio remain accessible",
+        "320/375/390 px mobile portals remain reachable without overlay interference",
         "3D iframe is user-initiated",
         "chapter seek and speed controls",
         "sound off by default"
@@ -120,18 +122,18 @@
           "classrooms": 16,
           "environment": "HDR",
           "trees": 305,
-          "colliders": 1801,
+          "colliders": 1811,
           "quality": "high",
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 755,
-          "triangles": 549113,
+          "drawCalls": 548,
+          "triangles": 663019,
           "fps": 60,
           "loaded": true,
           "position": {
-            "x": 87.195,
-            "z": -20.098649999999992
+            "x": 14.194999999999997,
+            "z": -22.098649999999992
           }
         },
         "observation": true,

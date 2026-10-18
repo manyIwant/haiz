@@ -6,3 +6,6 @@
 body:has(#viewport).started .experience-dock{top:170px;bottom:auto}
 @media(max-width:650px){body:has(#viewport).started .experience-dock{top:154px;bottom:auto}}
 .explore-extra>a{font-size:10px;color:#8c4c36;border-bottom:1px solid #8c4c3655;white-space:nowrap}
+/* Three entry portals need their own space on small screens, not a floating dock over them. */
+@media(max-width:650px){body:has(#stage):not(.is-playing):not(.entered) .experience-dock{display:none}body:not(.is-playing) #stage{touch-action:pan-y}body:has(#stage) .opening{max-height:calc(71dvh - 65px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-bottom:10px}.opening .opening-portals{flex-direction:column;align-items:flex-start;gap:0}.opening .opening-portals .quiet-link{margin-top:5px;padding:8px 0;min-height:32px}}
+@media(max-width:650px) and (max-height:650px){body:not(.is-playing) .coordinates{display:none}body:has(#stage) .opening{top:24vh;max-height:calc(76dvh - 65px)}}

@@ -1,13 +1,15 @@
 /* haiz's own palette and typography. Pattern references: Oura / Linear analyses
    in VoltAgent/awesome-design-md (MIT), not their logos or proprietary fonts. */
 :root{--atelier-paper:#f7f3eb;--atelier-ink:#292e2a;--atelier-muted:#626e62;--atelier-line:#2a37281c;--atelier-ease:cubic-bezier(.22,1,.36,1)}
-body:not(:has(#viewport)):not(:has(#stage)){background:var(--atelier-paper);color:var(--atelier-ink)}
+body:not(:has(#viewport)):not(:has(#stage)):not(:has(.room-hero)){background:var(--atelier-paper);color:var(--atelier-ink)}
 body[data-page]{--paper:#f7f3eb;--paper-dark:#eeeee4;--muted:#616c60;--ink:#293f36;--rule:#293f3624}
 body[data-page] .site-nav.scrolled{background:#f7f3ebf2}
 .site-nav a,.field-nav a,.director-nav a{transition:color .22s ease,opacity .22s ease}
 .site-nav a:hover,.field-nav nav a:hover,.director-nav>div a:hover{color:#966548}
 .image-button,.gallery-frame,.atlas-detail figure{border-radius:14px;isolation:isolate}
 .experience-tilt{transform:none!important}
+.darkroom-invite{display:grid;grid-template-columns:1fr 1fr;gap:7vw;align-items:center;padding-block:95px}.darkroom-invite h2{font:400 clamp(36px,4.2vw,64px)/1.2 "Songti SC",serif;letter-spacing:-.03em;margin:20px 0}.darkroom-invite h2 em{color:#a45738;font-style:normal}.darkroom-invite p:not(.eyebrow){font-size:13px;line-height:1.9;color:#667260;max-width:31em}.darkroom-invite small{display:block;font-size:9px;color:#667260;margin-top:25px}.darkroom-invite-photo{position:relative;display:block;background:#1e3e31;border-radius:6px;overflow:hidden;box-shadow:0 16px 40px #26362518}.darkroom-invite-photo img{width:100%;height:400px;object-fit:cover;transition:transform .8s var(--atelier-ease)}.darkroom-invite-photo:hover img{transform:scale(1.025)}.darkroom-invite-photo>span{display:flex;justify-content:space-between;padding:18px 20px;font:8px system-ui;letter-spacing:.12em;color:#eceedd}.darkroom-invite-photo b{font-size:16px}
+@media(max-width:700px){.darkroom-invite{grid-template-columns:1fr;gap:30px;padding-block:55px}.darkroom-invite-photo img{height:300px}}
 .image-button img,.gallery-frame img{transition:transform .9s var(--atelier-ease),filter .6s ease}
 .news-card h3,.club-row h3{letter-spacing:-.025em}
 .news-card .image-arrow{border-radius:50%;background:#f8f4e9ec;color:#293f36;display:grid;place-items:center}

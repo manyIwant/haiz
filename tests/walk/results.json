@@ -1,12 +1,14 @@
 {
-  "passed": 28,
+  "passed": 30,
   "checks": [
     "photo-informed facade materials have bump and roughness maps with metric UVs",
     "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
     "original generated glaze is decoded on green roofs without replacing red roof albedo",
     "existing KML anchors and 34 nodes preserved",
     "curved hip surfaces face upward and double-eave tile geometry is quality-scalable",
+    "roof intrados face downward so slopes are not transparent from an eye-level porch view",
     "photograph-informed hall, library silhouette and recessed academic facade replace generic forms",
+    "photo-informed teaching entrance, brushed cupola maps and horizontal contact accents",
     "library cupola is not hidden behind its own front roofline from the default exterior view",
     "all generated geometry and transforms are finite",
     "ground texture density is consistent across roads and lawns",
@@ -33,8 +35,8 @@
   "nodes": 34,
   "classrooms": 16,
   "trees": 305,
-  "colliders": 1801,
-  "meshes": 1691,
-  "vertices": 1068651,
+  "colliders": 1811,
+  "meshes": 1708,
+  "vertices": 1343987,
   "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }

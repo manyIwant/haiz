@@ -149,15 +149,18 @@
     if(form==='field'){x=c.x;z=c.z;}
     if(id==='library'){x=c.x-b.data.size[0]*.10;z=c.z+b.data.size[2]/2+30;}
     if(observation&&['yihao','erhao'].includes(id)){
-      // A long front setback can land inside the next teaching block. Prefer
-      // an oblique exterior view, never an apparently safe classroom interior.
-      const candidates=[{x:c.x+b.data.size[0]/2+15,z:c.z+b.data.size[2]/2+20},{x:c.x-b.data.size[0]/2-15,z:c.z+b.data.size[2]/2+20},{x:c.x,z:c.z+b.data.size[2]/2+15}];
+      // A long front setback can land inside the next teaching block. Try a
+      // closer front composition, then oblique fallbacks; never a classroom.
+      const candidates=[{x:c.x,z:c.z+b.data.size[2]/2+18},{x:c.x+b.data.size[0]/2+15,z:c.z+b.data.size[2]/2+20},{x:c.x-b.data.size[0]/2-15,z:c.z+b.data.size[2]/2+20}];
       const exterior=p=>!world.buildings.some(other=>other!==b&&other.data.size[1]>3&&!['gate','oldtree'].includes(other.data.form)&&Math.abs(p.x-other.center.x)<other.data.size[0]/2+1&&Math.abs(p.z-other.center.z)<other.data.size[2]/2+1);
       for(const desired of candidates){const candidate=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);if(candidate&&exterior(candidate)&&!window.CampusInteriors.currentRoom(candidate.x,candidate.z)){x=candidate.x;z=candidate.z;break;}}
     }
     const p=M.safePoint(x,z,world.colliders,world.bounds);
     if(!p){toast('附近暂时没有安全落点。');return false;}
-    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='library'?.22:id==='fengqitang'?.15:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
+    const entranceFrame=observation&&id==='yihao'&&Math.abs(p.x-c.x)<10;
+    state.observationLens=entranceFrame?62:48;
+    if(observation&&!state.photoFov){camera.fov=state.observationLens;camera.updateProjectionMatrix();}
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='library'?.22:id==='fengqitang'?.15:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     window.CampusWorkshop?.visit(id);
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
@@ -299,7 +302,7 @@
   function animate(now){
     frame=requestAnimationFrame(animate);if(!active||contextLost)return;
     const dt=Math.max(0,Math.min((now-last)/1000||0,.1));last=now;
-    const targetFov=state.photoFov||(observation?48:(touch?73:68));
+    const targetFov=state.photoFov||(observation?(state.observationLens||48):(touch?73:68));
     if((!arrivalMode||arrivalTaken)&&Math.abs(camera.fov-targetFov)>.01){camera.fov+=(targetFov-camera.fov)*(reduced?1:Math.min(1,dt*4));camera.updateProjectionMatrix();}
     if(!state.paused){
       const keyboardX=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
