@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "Unicode and schema-bounded local notes/letter",
+    "storage quota fallback",
+    "wall-clock timer, pause, resume, reset and completion",
+    "unchanged upstream models, modules, icons and licenses verified by SHA-256",
+    "standalone scene and application local assets/IDs",
+    "source offer and isolated AGPL application",
+    "no capture, upload or persistent audio fingerprints"
+  ],
+  "intactUpstreamFiles": 54,
+  "localLinks": 36
+}

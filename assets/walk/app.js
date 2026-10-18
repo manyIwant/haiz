@@ -13,6 +13,13 @@
   function status(p,msg){$('loadBar').style.width=Math.round(p*100)+'%';$('loadStatus').textContent=msg;}
   function toast(msg){$('toast').textContent=msg;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3600);}
   function error(title,msg){$('errorTitle').textContent=title;$('errorText').textContent=msg;$('errorPanel').hidden=false;$('enterButton').disabled=true;}
+  function syncClimateControls(){
+    if(!climate)return;const w=climate.weather;
+    for(const [id,key]of [['cloudCover','cloud'],['rainAmount','rain'],['groundWetness','wet']]){
+      $(id).value=Math.round(w[key]*100);$(id+'Value').textContent=$(id).value+'%';
+    }
+    $('climateLabel').textContent=climate.presets[climate.current].name+(climate.diagnostics.custom?' · 自定义气候':' · 模拟环境');
+  }
   function clearInput(){keys.clear();state.input={x:0,y:0,run:false};joyPointer=null;drag=null;lookTouch=null;$('stick').style.transform='';$('runButton').setAttribute('aria-pressed','false');}
   function pause(name='pauseDialog'){
     if(!state.started)return;state.paused=true;clearInput();
@@ -108,7 +115,11 @@
     $('observationToggle').onchange=e=>{observation=e.target.checked;document.body.classList.toggle('observation',observation);};
     observation=new URLSearchParams(location.search).get('observe')==='1';
     $('observationToggle').checked=observation;document.body.classList.toggle('observation',observation);
-    $('climate').onchange=e=>{if(climate.select(e.target.value))$('climateLabel').textContent=climate.presets[e.target.value].name+' · 模拟环境';};
+    $('climate').onchange=e=>{if(climate.select(e.target.value))syncClimateControls();};
+    for(const [id,key]of [['cloudCover','cloud'],['rainAmount','rain'],['groundWetness','wet']]){
+      $(id).oninput=()=>{climate.setWeather({[key]:Number($(id).value)/100});syncClimateControls();};
+    }
+    $('resetClimate').onclick=()=>{climate.resetWeather();syncClimateControls();};
     $('tourButton').onclick=()=>startTour(0);$('tourStop').onclick=()=>stopTour();$('tourNext').onclick=()=>startTour(tourIndex+1);
     $('quality').onchange=e=>{state.quality=e.target.value;setQuality();toast('画面精度已调整。');};
     window.addEventListener('resize',resize);
@@ -148,6 +159,19 @@
     if(form==='oldtree'){x=c.x-10;z=c.z-8;}
     if(form==='field'){x=c.x;z=c.z;}
     if(id==='library'){x=c.x-b.data.size[0]*.10;z=c.z+b.data.size[2]/2+30;}
+    if(form==='pond'){
+      // Avoid the neighbouring wall: choose a safe bank with a clear sight line.
+      const blockers=world.colliders.filter(o=>o.id!==id),w=b.data.size[0]/2+9,d=b.data.size[2]/2+9;
+      const candidates=[{x:c.x,z:c.z+d},{x:c.x,z:c.z-d},{x:c.x+w,z:c.z},{x:c.x-w,z:c.z},{x:c.x+w,z:c.z+d},{x:c.x-w,z:c.z-d}];
+      const ray=new THREE.Raycaster(),eye=new THREE.Vector3(),aim=new THREE.Vector3(c.x,.18,c.z),direction=new THREE.Vector3();b.group.updateMatrixWorld(true);
+      for(const desired of candidates){
+        const q=M.safePoint(desired.x,desired.z,world.colliders,world.bounds);if(!q||window.CampusInteriors.currentRoom(q.x,q.z))continue;
+        const distance=Math.hypot(q.x-c.x,q.z-c.z);let clear=distance<50;
+        for(let t=.02;clear&&t<.96;t+=.7/Math.max(1,distance))if(M.blocked(q.x+(c.x-q.x)*t,q.z+(c.z-q.z)*t,blockers,world.bounds,.15))clear=false;
+        if(clear){eye.set(q.x,1.85,q.z);direction.copy(aim).sub(eye);ray.far=direction.length()-.25;ray.set(eye,direction.normalize());if(ray.intersectObject(b.group,true).some(hit=>hit.object!==world.waterSurface))clear=false;}
+        if(clear){x=q.x;z=q.z;break;}
+      }
+    }
     if(observation&&['yihao','erhao'].includes(id)){
       // A long front setback can land inside the next teaching block. Try a
       // closer front composition, then oblique fallbacks; never a classroom.
@@ -160,7 +184,7 @@
     const entranceFrame=observation&&id==='yihao'&&Math.abs(p.x-c.x)<10;
     state.observationLens=entranceFrame?62:48;
     if(observation&&!state.photoFov){camera.fov=state.observationLens;camera.updateProjectionMatrix();}
-    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=id==='library'?.22:id==='fengqitang'?.15:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=form==='pond'?-.15:id==='library'?.22:id==='fengqitang'?.15:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     window.CampusWorkshop?.visit(id);
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
@@ -184,7 +208,7 @@
     const view=window.CampusJourneyCore?.camera(value,world.bounds);if(!view)return false;
     const point=M.safePoint(view.position.x,view.position.z,world.colliders,world.bounds);if(!point)return false;
     stopTour();state.pos=point;state.yaw=view.yaw;state.pitch=view.pitch;state.photoFov=view.lens;
-    climate.select(view.climate);$('climate').value=view.climate;$('climateLabel').textContent=climate.presets[view.climate].name+' · 模拟环境';
+    climate.select(view.climate);$('climate').value=view.climate;syncClimateControls();
     clearInput();camera.fov=view.lens;camera.updateProjectionMatrix();shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();window.CampusWorkshop?.syncView({...view,placeId:nearest?.data.id});return true;
   }
   function startJourney(ids){
@@ -399,12 +423,12 @@
     });
     const aniso=Math.min(16,renderer.capabilities?.getMaxAnisotropy?.()||8);
     scene.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material])for(const key of ['map','normalMap','roughnessMap'])if(m?.[key]){m[key].anisotropy=aniso;m[key].magFilter=THREE.LinearFilter;m[key].minFilter=THREE.LinearMipmapLinearFilter;m[key].needsUpdate=true;}});
-    climate=window.CampusClimate.create(scene,sky,sun,hemiLight,ambientLight,world,reduced);climate.tick(1,false);planner=window.CampusRoute.planner(world,M);
+    climate=window.CampusClimate.create(scene,sky,sun,hemiLight,ambientLight,world,reduced,{camera,quality:()=>state.effectiveQuality});climate.tick(1,false);planner=window.CampusRoute.planner(world,M);
     const requestedClimate=new URLSearchParams(location.search).get('climate');
     if(requestedClimate&&climate.select(requestedClimate)){
-      $('climate').value=requestedClimate;$('climateLabel').textContent=climate.presets[requestedClimate].name+' · 模拟环境';climate.tick(5,false);
+      $('climate').value=requestedClimate;climate.tick(5,false);
     }
-    reflections=window.CampusReflections.create(scene,camera,sun,world,reduced);
+    syncClimateControls();reflections=window.CampusReflections.create(scene,camera,sun,world,reduced);
     breeze=window.CampusBreeze?.create(scene,reduced);
     status(.94,'校准视角与安全落点…');
     buildDestinations();goTo('beimen',false);updateCamera(0);drawMaps();renderer.render(scene,camera);

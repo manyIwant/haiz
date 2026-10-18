@@ -6,6 +6,8 @@
 
 ## 本轮升级
 
+- 新增 [课间窗台](windowsill/index.html)：实际整合 TangfanOVO/qiaosi 的三维窗台、四件精修 glTF 家具与声音可视化，改为校园主题的六件可用工具：本机便签、专注时钟、未来书信、真实本机声音、原创小书、灵感罐。手机/电脑均可使用，3D 按需加载，声音默认关闭；WebGL 不可用时纸面功能仍完整。该独立应用保留 AGPL-3.0 完整对应源码与第三方许可，不重新授权原有校园照片，见 [原作、源码与许可](windowsill/SOURCE.md)。
+- 校园气候新增可分别调节的云量、阵雨、地面湿度：单层解析云、云雨联动光照和远景雾、原扫描铺装上的非均匀 GGX 湿润、雨量联动水面、室内与屋顶足迹雨丝抑制；兼容原三种气候与分享链接。研究过程与技术边界见 [窗台与气候迭代记录](docs/windowsill-climate-20261018.md)。
 - 新增 [共感暗房](darkroom.html)：在真实校园照片上显影，将自己的笔触译成八拍音乐，编辑四个合成声部，生成可在另一台手机/电脑继续改编的链接，并导出完整画幅 PNG 与 WAV。支持键盘、减少动态效果、无音频及存储受限回退；不冒充现场录音或实时联机。交互研究与边界见 [创作迭代说明](docs/creative-darkroom-20261018.md)。
 - 按用户指定的 `VoltAgent/awesome-design-md` 实际读取 Oura 与 Linear 分析，新增本项目 [DESIGN.md](DESIGN.md)：摄影优先的暖纸阅读层、克制的深色三维工具层、章节导航与有限时长动效，支持减少动态效果。
 - 不止贴图：凤栖堂改为真正的双层曲面屋顶、瓦端、细柱梁枋和内退木格窗；图书馆新增金属圆顶、弧窗、连续外廊和大台阶；教学楼增加窗洞层次，校正入口坡顶。
@@ -43,6 +45,7 @@
 | `architecture.html` | 实拍观察手册与互动 3D 材质实验室 |
 | `director.html` | 自选路线、校园平面图及本机取景集 |
 | `darkroom.html` | 手势显影、笔触转音乐、八拍编曲、跨设备作品接力及 PNG/WAV 导出 |
+| `windowsill/index.html` | 独立 AGPL 课间窗台：可互动书桌、便签、计时、信件、本机声音画布与原创小书 |
 | `memory-walk.html` | 树荫档案与轻量阅读 |
 | `about.html` | 学校历史、校园手图、地标 |
 | `news.html` | 原仓库新闻档案、搜索与类别筛选 |
@@ -77,6 +80,8 @@ python3 -m http.server 8000
 - 默认首页生成与共享资源注入：`scripts/build-experience.cjs`；编辑 `descent.html` 后执行完整构建
 - 第一人称交互、空间与室内：`assets/walk/`
 - 路线与机位：`assets/walk/journey-core.js`、`assets/walk/view-store.js`；导演台界面 `assets/js/director.js`
+- 云雨与湿润：`assets/walk/climate.js`；保持原有 Three r128 与晨光/雨后/薄暮标识
+- 独立窗台：`windowsill/`，场景首选修改源码在 `windowsill/scene/src/`，独立使用本地 Three r170；不要将 AGPL 代码直接导入旧主站后忽略其许可义务
 
 修改文案或页面模板后运行：
 
@@ -94,11 +99,15 @@ npm test
 npm run test:browser
 npm run test:atelier
 npm run test:darkroom
+npm run test:windowsill
+npm run test:climate
 ```
 
 检查包括15个页面的本地链接、锚点、图片说明与导航；根入口与电影源一致；新闻/社团筛选、照片与详情弹窗、本地保存、安全便笺渲染；50 项路线排序与机位数据检查、1024 组暗房声部分享往返；原校园坐标、几何、材质解码、门洞、碰撞、16间教室往返路线、自选四站建筑路线；桌面与手机输入事件模拟。真实浏览器另外验证降落首页、探索搜索、声景开关、3D 材质实验、生成釉面、湿度响应、明信片下载、机位重载与导演台路线启动。暗房单独验证原始触摸事件、笔触转音符、跨设备接力、实际 PNG/WAV 文件、无障碍及音频停止。
 
 `tests/*-results.json` 和 `tests/walk/*-results.json` 记录验证范围。`npm run test:browser` 使用 Playwright 与 Chromium 验证真实页面布局、交互和 WebGL 着色器，生成 `tests/browser-results.json` 和本地截图。本轮云端使用 SwiftShader 软件渲染，手机仅做视口模拟；未做硬件帧率与真实手机多点触控实测。浏览器可用 `CHROMIUM_PATH` 指定，缺少时需先安装 Chromium 或执行 `npx playwright install chromium`。
+
+新增测试核对窗台上游文件 SHA-256、两级真实 WAV 的响度差、TXT 下载、截止时间计时、清除后的页面离开行为、320/390/768 像素布局、触摸事件、四件家具、精细后处理、没有 WebGL 的回退，以及真实气候着色器和有上限的雨丝。`npm run capture:windowsill` 另外从实际精细场景重建 `windowsill/scene-preview.jpg`；不会从照片伪造三维截图。
 
 ## 来源与边界
 

@@ -1,0 +1,109 @@
+/* SPDX-License-Identifier: AGPL-3.0-only. haiz adaptation, 2026-10-18. */
+:root {
+  --bg: #f4f0e6;
+  --ink: #193b35;
+  --sub: #5d6f61;
+  --accent: #426c50;
+  --card: #fbf8f0;
+  --line: #193b3528;
+}
+#head b {
+  font-family: "Songti SC", "STSong", serif;
+  font-size: 17px;
+  font-weight: 400;
+}
+#head span {
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+#head {
+  max-width: 52%;
+}
+#ctl {
+  gap: 6px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+#ctl button {
+  min-height: 44px;
+  font-size: 11px;
+  padding: 0 12px;
+}
+#hint {
+  bottom: 130px;
+  font-size: 10px;
+  max-width: 85%;
+  white-space: normal;
+  text-align: center;
+}
+#card {
+  max-height: 45%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#card h2 {
+  font-family: "Songti SC", "STSong", serif;
+  font-weight: 400;
+}
+#card .go {
+  font-size: 12px;
+  min-height: 44px;
+}
+#k-note {
+  font-size: 12px;
+}
+#k-sub {
+  font-size: 11px;
+}
+#sceneSource {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  color: #fff9ed;
+  background: #153c30b8;
+  border: 1px solid #fff4;
+  border-radius: 20px;
+  padding: 9px 12px;
+  text-decoration: none;
+  font: 10px system-ui;
+  z-index: 4;
+  min-height: 36px;
+}
+body.focused #sceneSource {
+  display: none;
+}
+.lite #head,
+.lite .tag .p,
+.lite #ctl > button,
+.lite #wxp,
+.lite #card,
+.lite #hint,
+.lite #back {
+  background: #15352bcf !important;
+  box-shadow: 0 5px 20px #13281a15 !important;
+  backdrop-filter: blur(8px);
+}
+#err {
+  background: #f4f0e6;
+  z-index: 30;
+  box-sizing: border-box;
+  font: 14px/1.9 system-ui;
+  padding: 35px;
+  color: #193b35;
+}
+#c:focus-visible {
+  outline: 2px solid #c48553;
+  outline-offset: -4px;
+}
+#cPause:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  #ctl,
+  #head,
+  .tag,
+  #card,
+  #back {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "three backward-compatible climate IDs",
+    "bounded finite manual controls and reset",
+    "world-space patchy GGX water film preserves original PBR maps",
+    "rain budget: 48 low / 160 maximum, no extra reflection pass",
+    "rain hidden indoors and for reduced motion",
+    "clouds/waves/rain freeze when paused",
+    "rain-linked haze, diffuse daylight and pond response"
+  ],
+  "limits": "Shader source and simulation tests; actual shader compilation and visual appearance additionally checked in Chromium."
+}

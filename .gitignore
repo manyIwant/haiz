@@ -16,6 +16,9 @@ node_modules/
 # 构建产物
 dist/
 build/
+# This is a vendored browser dependency, not a project build-output folder.
+!windowsill/vendor/three/build/
+!windowsill/vendor/three/build/three.module.js
 *.log
 
 # Real-browser screenshots are generated locally by npm run test:browser.

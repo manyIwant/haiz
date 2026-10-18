@@ -15,7 +15,7 @@ function create(scene,camera,sun,world,reduced){
   if(!reduced&&!paused)time+=dt*.23;
   const u=water.material.uniforms;u.time.value=time;
   u.sunDirection.value.copy(sun.position).sub(sun.target.position).normalize();u.sunColor.value.copy(sun.color);
-  u.waterColor.value.copy(world.water.color);u.distortionScale.value=reduced?.2:.45;
+  u.waterColor.value.copy(world.water.color);u.distortionScale.value=reduced?.2:.35+(world.water.userData.climateRain||0)*.55;
  },get active(){return active;}};
 }
 root.CampusReflections={create};

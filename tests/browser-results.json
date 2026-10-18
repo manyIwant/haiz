@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18T00:34:29.800Z",
+  "date": "2026-10-18T05:42:40.275Z",
   "browser": "154.0.8037.57",
   "results": [
     {
@@ -127,8 +127,8 @@
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 548,
-          "triangles": 663019,
+          "drawCalls": 620,
+          "triangles": 511043,
           "fps": 60,
           "loaded": true,
           "position": {
@@ -147,7 +147,7 @@
       },
       "wetness": {
         "dry": 0.62,
-        "wet": 0.3,
+        "wet": 0.33840000000000003,
         "normal": true,
         "physical": true
       },

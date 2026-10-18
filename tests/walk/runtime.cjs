@@ -46,6 +46,9 @@ async function run(touch,startup='network'){
   ids.observationToggle.dispatch('change',{target:{checked:true}});
   assert(api.world.waterSurface,'reflection source must survive geometry merging');
   api.goTo('yanchi',false);api.reflections.tick(.1,'high',false,false);assert(api.reflections.active);
+  assert(api.state.pitch<0,'pond observation looks toward water, not the sky');
+  const pond=api.world.buildings.find(b=>b.data.id==='yanchi'),sightBlockers=api.world.colliders.filter(c=>c.id!=='yanchi');
+  for(let t=.05;t<.95;t+=.025)assert(!window.CampusMotion.blocked(api.state.pos.x+(pond.center.x-api.state.pos.x)*t,api.state.pos.z+(pond.center.z-api.state.pos.z)*t,sightBlockers,api.world.bounds,.15),'pond bank has an unobstructed ground-level view');
   api.reflections.tick(.1,'low',false,false);assert(!api.reflections.active);assert(api.world.waterSurface.visible);
   api.goTo('beimen',false);
   assert.equal(ids.enterButton.disabled,false);
