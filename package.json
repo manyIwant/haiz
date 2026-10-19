@@ -13,6 +13,8 @@
     "test:climate": "node tests/climate.cjs && node tests/climate-browser.cjs",
     "test:landscape": "node tests/landscape-browser.cjs",
     "test:performance": "node tests/performance-browser.cjs",
+    "test:loading": "node tests/loading-browser.cjs",
+    "test:forecourt": "node tests/forecourt-browser.cjs",
     "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview"
   },
   "devDependencies": {

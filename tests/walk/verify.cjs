@@ -29,7 +29,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
       const mat=m.material;kinds.add(mat.userData.surfaceStudy);assert(mat.bumpMap&&mat.roughnessMap&&mat.normalMap);assert.equal(mat.map.encoding,THREE.sRGBEncoding);assert.notEqual(mat.bumpMap.encoding,THREE.sRGBEncoding);assert.notEqual(mat.normalMap.encoding,THREE.sRGBEncoding);assert.equal(mat.normalMap.image.width,512);
       const uv=m.geometry.attributes.uv;assert(uv&&Array.from(uv.array).every(Number.isFinite));
       if(m.geometry.userData.metricUV)projected++;
-    });assert.equal(kinds.size,4);assert(projected>0);
+    });assert.deepEqual([...kinds].sort(),['ceramic','forecourt','granite','roof','stone','timber']);assert(projected>0);
     const mat=new THREE.MeshStandardMaterial();mat.userData.metricTile=2;
     const group=new THREE.Group(),mesh=new THREE.Mesh(new THREE.BoxGeometry(12,4,2),mat);group.add(mesh);context.window.CampusSurfaces.project(group);
     const uv=mesh.geometry.attributes.uv;assert(Math.max(...Array.from(uv.array))>=3,'12-unit wall must not stretch one tile');
@@ -92,6 +92,9 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('campus boundary blocks escape',()=>{assert(M.blocked(world.bounds.maxX,0,world.colliders,world.bounds));});
   test('contact shadow instances lie on the floor',()=>{scene.traverse(m=>{if(m.userData.interiorBatch==='contact'){const mat=new THREE.Matrix4(),normal=new THREE.Vector3(0,0,1);m.getMatrixAt(0,mat);normal.transformDirection(mat);assert(Math.abs(normal.y)>.99);}});});
   test('same-origin startup assets exist; no CDN runtime',()=>{const html=fs.readFileSync('campus-3d.html','utf8');for(const m of html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g))assert(fs.existsSync(m[1].split('?')[0]),m[1]);assert(!/src="https?:/.test(html));});
+  test('smallest palm template retains nonzero tapered leaf surfaces',()=>{
+    const landscape=context.window.CampusLandscape,g=new THREE.Group();landscape.init('low');landscape.palm(g,0,0,8,'low-leaf-area');let area=0;g.traverse(o=>{if(!o.userData.foliage)return;const p=o.geometry.attributes.position,a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();for(let i=0;i<p.count;i+=3){a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1);c.fromBufferAttribute(p,i+2);area+=b.sub(a).cross(c.sub(a)).length()/2;}});assert(area>1,'one-segment tapered leaves must not collapse');landscape.init('balanced');
+  });
   const summary={passed:results.length,checks:results,nodes:world.buildings.length,classrooms:world.rooms.length,trees:world.treeCount,colliders:world.colliders.length,meshes,vertices,browserQA:'Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified.'};
   fs.writeFileSync('tests/walk/results.json',JSON.stringify(summary,null,2));
   fs.writeFileSync('tests/walk/scene-summary.json',JSON.stringify(world.buildings.map(b=>({id:b.data.id,center:b.center})),null,2));

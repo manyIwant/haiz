@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-19T10:42:28.922Z",
+  "passed": true,
+  "evidence": {
+    "palms": 5,
+    "understory": 36,
+    "understoryArea": 5.589382091236034,
+    "finishes": [
+      {
+        "kind": "forecourt",
+        "normal": true,
+        "roughness": true,
+        "tile": 3.2
+      },
+      {
+        "kind": "painted-plaster",
+        "normal": true,
+        "roughness": true,
+        "tile": 3.2
+      },
+      {
+        "kind": "granite",
+        "normal": true,
+        "roughness": true,
+        "tile": 1.2
+      },
+      {
+        "kind": "granite",
+        "normal": true,
+        "roughness": true,
+        "tile": 1.2
+      }
+    ],
+    "blockedApproach": 0,
+    "drawCalls": 644,
+    "triangles": 1073225,
+    "pixelRatio": 1,
+    "position": {
+      "x": 44.857800000000005,
+      "z": 165.09745
+    }
+  },
+  "errors": [],
+  "limits": "Photo-informed planting and materials, not surveyed locations or photogrammetry. Software WebGL, not phone FPS."
+}

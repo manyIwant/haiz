@@ -108,7 +108,7 @@ let browser;
     const api=window.haizWalk,gl=api.renderer.getContext();
     return {diagnostics:api.diagnostics(),observation:document.body.classList.contains('observation'),webgl:gl.getParameter(gl.VERSION),surfaces:[...new Set((()=>{const a=[];api.scene.traverse(o=>{if(o.material?.userData.surfaceStudy)a.push(o.material.userData.surfaceStudy);});return a;})())]};
   });
-  assert.equal(evidence.diagnostics.climate,'afterrain');assert(evidence.observation);assert.equal(evidence.diagnostics.nodes,34);assert.equal(evidence.diagnostics.classrooms,16);assert.equal(evidence.surfaces.length,4);
+  assert.equal(evidence.diagnostics.climate,'afterrain');assert(evidence.observation);assert.equal(evidence.diagnostics.nodes,34);assert.equal(evidence.diagnostics.classrooms,16);assert.deepEqual(evidence.surfaces.sort(),['ceramic','forecourt','granite','roof','stone','timber']);
   await page.evaluate(()=>{haizWalk.resume(false);if(document.pointerLockElement)document.exitPointerLock();});
   await page.waitForFunction(()=>getComputedStyle(document.getElementById('intro')).visibility==='hidden');
   for(const [place,climate]of [['yihao','afterrain'],['fengqitang','morning'],['erhao','dusk']]){
@@ -149,7 +149,7 @@ let browser;
   await page.waitForFunction(()=>haizWalk.state.started&&(haizWalk.diagnostics().tour==='fengqitang'||(document.getElementById('poiDialog').open&&document.getElementById('poiName').textContent==='凤栖堂')));assert.match(await page.locator('#tourCaption').textContent(),/01 \/ 4 · 凤栖堂/);
   await page.evaluate(()=>{haizWalk.stopTour();haizWalk.pause(null);});
   assert.deepEqual(errors,[],'browser errors/shader failures');assert.deepEqual(failedRequests,[],'missing page assets');
-  results.push({target:'Chromium WebGL / software renderer',checks:['real WebGL and leaf/depth shader compilation','34 nodes and 16 classrooms','four PBR facade material families','1024px generated glaze with procedural normal and physical clearcoat','normal maps and wetness response','deep-linked climate and observation settings','three rendered architectural viewpoints','P releases pointer lock for camera controls','camera lens and downloaded postcard','saved camera archive and accurate URL restoration','custom journey launch from director studio','digital passport after campus travel','no browser errors or missing assets'],passed:true,evidence,wetness,glaze,restored});
+  results.push({target:'Chromium WebGL / software renderer',checks:['real WebGL and leaf/depth shader compilation','34 nodes and 16 classrooms','six PBR facade and forecourt material families','1024px generated glaze with procedural normal and physical clearcoat','normal maps and wetness response','deep-linked climate and observation settings','three rendered architectural viewpoints','P releases pointer lock for camera controls','camera lens and downloaded postcard','saved camera archive and accurate URL restoration','custom journey launch from director studio','digital passport after campus travel','no browser errors or missing assets'],passed:true,evidence,wetness,glaze,restored});
   fs.writeFileSync('tests/browser-results.json',JSON.stringify({date:new Date().toISOString(),browser:await browser.version(),results,errors,failedRequests,limitations:'SwiftShader software WebGL and mobile viewport emulation; no hardware FPS, physical touch or on-site measurements.'},null,2)+'\n');
   console.log(JSON.stringify(results,null,2));
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{await browser?.close();server.close();});

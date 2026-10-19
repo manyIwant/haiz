@@ -7,7 +7,7 @@ class Element{
   constructor(tag='div'){this.tagName=tag;this.listeners={};this.style={};this.children=[];this.hidden=false;this.disabled=false;this.open=false;this.value='auto';this.attrs={};this.textContent='';this.classList={add(){},remove(){},toggle(){}};if(tag==='canvas')this.native=createCanvas(360,360);}
   addEventListener(type,fn){(this.listeners[type]||(this.listeners[type]=[])).push(fn);}
   dispatch(type,event={}){event={preventDefault(){},target:this,...event};for(const fn of this.listeners[type]||[])fn(event);if(this['on'+type])this['on'+type](event);}
-  setAttribute(n,v){this.attrs[n]=v;}appendChild(e){this.children.push(e);}getContext(type){return this.native.getContext(type);}
+  setAttribute(n,v){this.attrs[n]=v;}appendChild(e){this.children.push(e);}getContext(type){const ctx=this.native.getContext(type);if(type==='2d'&&!ctx.acceptsMockCanvas){const draw=ctx.drawImage;ctx.drawImage=function(source,...args){return draw.call(this,source?.native||source,...args);};ctx.acceptsMockCanvas=true;}return ctx;}
   get width(){return this.native?.width||360;}set width(n){this.native.width=n;}get height(){return this.native?.height||360;}set height(n){this.native.height=n;}
   showModal(){this.open=true;}close(){this.open=false;}setPointerCapture(){}getBoundingClientRect(){return {left:28,top:500,width:120,height:120,right:148,bottom:620};}
 }

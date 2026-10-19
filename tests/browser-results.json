@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-19T04:36:04.617Z",
+  "date": "2026-10-19T10:40:15.951Z",
   "browser": "154.0.8037.57",
   "results": [
     {
@@ -8,7 +8,7 @@
         "root is the cinematic entry",
         "editorial home, darkroom and director studio remain accessible",
         "320/375/390 px mobile portals remain reachable without overlay interference",
-        "full 3D iframe preloads before cinematic playback",
+        "opening ready before user-initiated 3D loading",
         "chapter seek and speed controls",
         "sound off by default"
       ],
@@ -20,7 +20,7 @@
         "root is the cinematic entry",
         "editorial home, darkroom and director studio remain accessible",
         "320/375/390 px mobile portals remain reachable without overlay interference",
-        "full 3D iframe preloads before cinematic playback",
+        "opening ready before user-initiated 3D loading",
         "chapter seek and speed controls",
         "sound off by default"
       ],
@@ -91,7 +91,7 @@
     {
       "target": "cinematic → real campus iframe",
       "checks": [
-        "preloaded world startup",
+        "user-initiated world startup",
         "same-origin ready handshake",
         "arrival control takeover",
         "keyboard-focusable live campus"
@@ -103,7 +103,7 @@
       "checks": [
         "real WebGL and leaf/depth shader compilation",
         "34 nodes and 16 classrooms",
-        "four PBR facade material families",
+        "six PBR facade and forecourt material families",
         "1024px generated glaze with procedural normal and physical clearcoat",
         "normal maps and wetness response",
         "deep-linked climate and observation settings",
@@ -122,13 +122,13 @@
           "classrooms": 16,
           "environment": "HDR",
           "trees": 305,
-          "colliders": 1780,
+          "colliders": 1785,
           "quality": "high",
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
           "drawCalls": 527,
-          "triangles": 842407,
+          "triangles": 860791,
           "fps": 60,
           "loaded": true,
           "position": {
@@ -139,10 +139,12 @@
         "observation": true,
         "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
         "surfaces": [
+          "ceramic",
+          "forecourt",
+          "granite",
           "roof",
           "stone",
-          "timber",
-          "ceramic"
+          "timber"
         ]
       },
       "wetness": {

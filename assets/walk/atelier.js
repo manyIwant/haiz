@@ -181,7 +181,8 @@ function science(g,b,m,queueWindow){
   g.userData.atelier='science-open-galleries';
 }
 function arts(g,b,m,queueWindow){
-  const [w,h,d]=b.size,front=d/2,white=m.wallLight,portico=w*.27,depth=7.8;
+  const finish=root.CampusSurfaces.artsMaterials(m);
+  const [w,h,d]=b.size,front=d/2,white=finish.white,stone=finish.granite,portico=w*.27,depth=7.8;
   // The supplied elevated photograph shows a white low hall, red hipped rear
   // roofs and an open, square-pier entrance — not the former solid canopy box.
   box(g,m.plinth,w,.5,d,0,.25,0);box(g,white,w,h-.5,d,0,(h+.5)/2,0);
@@ -199,11 +200,17 @@ function arts(g,b,m,queueWindow){
     }
   }
   const deck=1.3,top=6.4,cz=front+depth/2;
-  box(g,m.step,portico+1,deck,depth,0,deck/2,cz);
+  box(g,stone,portico+1,deck,depth,0,deck/2,cz);
   for(const side of [-1,1])for(const z of [front+.7,front+depth-.6]){
     box(g,white,.95,top-deck,.95,side*(portico/2-.65),(top+deck)/2,z);
     box(g,m.baseStone,1.03,.38,1.03,side*(portico/2-.65),deck+.19,z);
   }
+  // A legible interpretation of the entrance plaque, using the existing campus
+  // building name; it is not a facsimile of the photograph's calligraphy.
+  const plaqueCanvas=document.createElement('canvas');plaqueCanvas.width=128;plaqueCanvas.height=768;const pc=plaqueCanvas.getContext('2d');pc.fillStyle='#292622';pc.fillRect(0,0,128,768);pc.fillStyle='#cfb16d';pc.textAlign='center';pc.textBaseline='middle';pc.font='42px serif';
+  [...'海南中学艺术教育活动中心'].forEach((char,i)=>pc.fillText(char,64,48+i*59));
+  const plaqueMap=new T.CanvasTexture(plaqueCanvas);plaqueMap.encoding=T.sRGBEncoding;
+  const plaque=mesh(g,new T.PlaneGeometry(.42,3.15),new T.MeshStandardMaterial({map:plaqueMap,roughness:.6}),portico/2-.65,deck+2.4,front+depth-.6+.482);plaque.castShadow=false;
   box(g,white,portico+.7,.36,depth+.5,0,top,cz);
   const entryRoof=roof(portico,depth,2.6,.65,m.roofRed,m.wallGrey,true);entryRoof.position.set(0,top+.2,cz);g.add(entryRoof);
   // Raised white ridge blocks and slim metal rails visible in the photograph.
@@ -211,12 +218,26 @@ function arts(g,b,m,queueWindow){
   for(const side of [-1,1])box(g,white,.7,.55,.8,side*(portico-depth)/2,top+3.35,cz);
   for(let i=0;i<8;i++){
     const sh=deck*(8-i)/8,z=front+depth+.45+i*.44;
-    box(g,m.step,portico+1,sh,.46,0,sh/2,z);
+    box(g,stone,portico+1,sh,.46,0,sh/2,z);
+    // Actual transverse slab joints, shallow nosing and drainage grooves.
+    for(let j=-3;j<=3;j++)box(g,m.metalDark,.009,.003,.44,j*(portico+1)/8,sh+.002,z);
+    box(g,stone,portico+1,.045,.035,0,sh-.018,z+.23);
     for(const side of [-1,1]){const x=side*(portico/2+.38);box(g,m.metalDark,.045,.85,.045,x,sh+.425,z);}
   }
   for(const side of [-1,1])tube(g,m.metalDark,[[side*(portico/2+.38),deck+.85,front+depth+.2],[side*(portico/2+.38),deck/8+.85,front+depth+3.65]],.04);
   queueWindow(0,deck+1.9,front+.06,5.6,3.8,'z',.15,m.glassTeal);
   for(const x of [-2.8,0,2.8])box(g,m.metalDark,.07,3.8,.16,x,deck+1.9,front+.22);
+  const plazaDepth=20,plazaWidth=portico+4,plazaZ=front+depth+3.8+plazaDepth/2;
+  box(g,finish.paving,plazaWidth,.14,plazaDepth,0,.09,plazaZ);
+  for(const side of [-1,1]){
+    box(g,finish.border,.28,.025,plazaDepth-.5,side*(plazaWidth/2-.5),.176,plazaZ);
+    box(g,finish.border,plazaWidth-1,.025,.28,0,.176,plazaZ+side*(plazaDepth/2-.5));
+  }
+  // Recessed trench drain along the lowest tread, repeated slots in one batch.
+  const drainZ=front+depth+3.65;box(g,m.metalDark,portico+1,.025,.22,0,.174,drainZ);
+  for(let x=-portico/2;x<portico/2;x+=.17)box(g,stone,.055,.03,.22,x,.18,drainZ);
+  root.CampusLandscape?.forecourt(g,b,m,plazaWidth,plazaZ);
+  g.userData.forecourt={width:plazaWidth,depth:plazaDepth,z:plazaZ};
   g.userData.atelier='arts-red-hipped-portico';
 }
 root.CampusAtelier={roof,hall,library,recessedFacade,science,arts};

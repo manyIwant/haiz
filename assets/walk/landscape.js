@@ -3,7 +3,7 @@
 (function(root){'use strict';
 const T=THREE,bank=new Map(),ponds=[];
 const worldPoint=new T.Vector3();
-let quality='balanced',assetStatus='pending',assetPromise,leafMat,barkMat,leafGeo,stele;
+let quality='balanced',assetStatus='pending',assetPromise,leafMat,barkMat,leafGeo,fernGeo,stele;
 function random(seed){let x=2166136261;for(const c of String(seed))x=Math.imul(x^c.charCodeAt(0),16777619);return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
 function geometry(p,uv,colors){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();g.computeBoundingSphere();return g;}
 function add(parent,geo,mat){const m=new T.Mesh(geo,mat);m.castShadow=m.receiveShadow=true;parent.add(m);return m;}
@@ -54,6 +54,9 @@ function init(q){
   barkMat=new T.MeshStandardMaterial({color:'#c5bda8',map,bumpMap:bump,bumpScale:.035,roughness:.95});
 }
 function blade(p,uv,colors,start,end,width,side,color,segments=3){
+  // Both tapered endpoints have zero width: a one-segment blade collapses
+  // entirely. Keep the interior row even for the smallest leaf template.
+  segments=Math.max(2,segments);
   const dir=end.clone().sub(start),fold=new T.Vector3(0,.035,0),rows=[];
   for(let j=0;j<=segments;j++){
     const t=j/segments,center=start.clone().addScaledVector(dir,t);center.y+=Math.sin(t*Math.PI)*dir.length()*.06;
@@ -107,6 +110,41 @@ function fallbackStone(seed){
   }
   g.computeVertexNormals();return g;
 }
+function fernLeaves(){
+  if(fernGeo)return fernGeo;
+  const p=[],uv=[],colors=[],r=random('arts-feathered-groundcover');
+  for(let f=0;f<9;f++){
+    const a=f*2.39996,len=.85+r()*.4,out=new T.Vector3(Math.cos(a),0,Math.sin(a)),side=new T.Vector3(-out.z,0,out.x);
+    for(let k=1;k<=10;k++)for(const sign of [-1,1]){
+      const t=k/11,start=out.clone().multiplyScalar(len*t);start.y=.10+Math.sin(t*Math.PI*.85)*(.4+r()*.06);
+      const length=.12+Math.sin(t*Math.PI)*.25,end=start.clone().addScaledVector(side,sign*length).addScaledVector(out,.13);end.y-=length*.25;
+      blade(p,uv,colors,start,end,.035,out,new T.Color().setHSL(.23+r()*.035,.42,.22+r()*.07),1);
+    }
+  }
+  fernGeo=geometry(p,uv,colors);return fernGeo;
+}
+function forecourt(g,b,m,width,centerZ){
+  const r=random('arts-photo-forecourt'),half=width/2;
+  const mulch=m.earth.clone();mulch.color.set('#515846');mulch.roughness=1;
+  // Photo-informed planting structure, not surveyed tree locations. Keep the
+  // central approach and the independent original pond footprint unchanged.
+  const palms=[[-half-3,centerZ+2,8.5],[-half-7,centerZ-4,12.5],[-half-5,centerZ-10,14],
+    [half+2.8,centerZ+3,7.8],[half+6,centerZ-7,11.4]];
+  for(const [i,[x,z,h]]of palms.entries())palm(g,x,z,h,'arts-palm-'+i);
+  for(const side of [-1,1]){
+    const shape=new T.Shape(),cx=side*(half+5),cz=centerZ-3;
+    for(let i=0;i<=48;i++){const a=i/48*Math.PI*2,x=cx+Math.cos(a)*(4.7+.25*Math.sin(a*3)),z=cz+Math.sin(a)*12;i?shape.lineTo(x,-z):shape.moveTo(x,-z);}
+    const bed=add(g,new T.ShapeGeometry(shape,24),mulch);bed.rotation.x=-Math.PI/2;bed.position.y=.14;bed.castShadow=false;bed.userData.artsPlantingBed=true;
+    const plants=new T.InstancedMesh(fernLeaves(),leafMat,18),dummy=new T.Object3D();
+    for(let i=0;i<18;i++){
+      const a=i*2.39996,rr=.4+Math.sqrt(r())*.6;
+      dummy.position.set(cx+Math.cos(a)*3.9*rr,.16,cz+Math.sin(a)*10.8*rr);dummy.rotation.set(0,r()*6.28,0);dummy.scale.setScalar(.7+r()*.7);dummy.updateMatrix();plants.setMatrixAt(i,dummy.matrix);
+    }
+    plants.castShadow=plants.receiveShadow=true;plants.userData.foliage=true;plants.userData.artsUnderstory=true;
+    plants.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,side:T.DoubleSide});g.add(plants);
+  }
+  g.userData.photoPlanting={palms:palms.length,understory:36,reference:'campus_yishu.jpg'};
+}
 function pond(g,b,waterLevel){
   const w=b.size[0],d=b.size[2],r=random('pond-shore-19'),high=new T.Group(),low=new T.Group();
   high.userData.noMerge=low.userData.noMerge=true;g.add(high,low);
@@ -148,5 +186,5 @@ function tick(camera,q,wet=0){
     for(const {m,color,rough}of pond.wetMaterials){m.color.copy(color).multiplyScalar(1-wet*.22);m.roughness=rough*(1-wet*.32);}
   }
 }
-root.CampusLandscape={load,init,palm,pond,tick,get diagnostics(){return {assetStatus,variants:bank.size,ponds:ponds.length,stones:ponds.reduce((n,p)=>n+p.stoneCount,0),highDetail:ponds.some(p=>p.high.visible)};}};
+root.CampusLandscape={load,init,palm,pond,forecourt,tick,get diagnostics(){return {assetStatus,variants:bank.size,ponds:ponds.length,stones:ponds.reduce((n,p)=>n+p.stoneCount,0),highDetail:ponds.some(p=>p.high.visible)};}};
 })(window);

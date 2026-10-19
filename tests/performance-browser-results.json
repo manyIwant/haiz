@@ -1,23 +1,23 @@
 {
-  "date": "2026-10-19T04:36:11.526Z",
+  "date": "2026-10-19T10:42:48.201Z",
   "passed": true,
   "result": {
-    "matrixCompositionsPerFrame": 98,
+    "matrixCompositionsPerFrame": 92,
     "submissionMs": [
-      11.899999991059303,
-      16.5,
-      8.5,
-      4.100000008940697,
-      5.199999988079071,
-      9.900000005960464,
-      23.900000005960464,
-      23.299999997019768
+      9.799999997019768,
+      11,
+      13.5,
+      3.2000000029802322,
+      26.400000005960464,
+      4.899999991059303,
+      20.200000002980232,
+      7.799999997019768
     ],
-    "drawCalls": 562,
-    "triangles": 714525,
+    "drawCalls": 564,
+    "triangles": 766365,
     "pixelRatio": 1,
     "shadowSize": 2048,
-    "programs": 55,
+    "programs": 52,
     "landscape": {
       "assetStatus": "ready",
       "variants": 6,
@@ -30,18 +30,18 @@
       "z": 62.399550000000005
     },
     "staticTransformComparison": {
-      "objects": 2069,
+      "objects": 2074,
       "differingChannels": 0,
       "totalChannels": 1024000
     },
     "indexPreservation": {
-      "savedVertices": 1521342,
+      "savedVertices": 1541815,
       "differingChannels": 0
     },
     "collision": {
       "samples": 4000,
       "mismatch": 0,
-      "linearMs": 41.8999999910593,
+      "linearMs": 44.29999999701977,
       "indexedMs": 1
     },
     "fanStillAnimates": true,

@@ -32,6 +32,13 @@
         const warp=Math.sin(y*tau/size)*2.6+Math.sin(y*tau*3/size)*.65;
         const grain=Math.sin(x*tau*24/size+warp)+Math.sin(x*tau*79/size+warp*.6)*.25,pores=Math.pow(Math.max(0,grain/1.25),7);
         color=208+grain*14+noise*7+macro*3;height=149+grain*7-pores*4;rough=192+grain*9+noise*8;
+      }else if(kind==='forecourt'){
+        const xx=x%64,yy=y%64,edge=Math.min(xx,64-xx,yy,64-yy),bevel=Math.min(1,Math.max(0,(edge-.65)/1.35));
+        const tile=hash(Math.floor(x/64),Math.floor(y/64))-.5;
+        color=150+bevel*(73+tile*12)+noise*8+macro*2;height=105+bevel*24+noise*1.8;rough=225+noise*9;
+      }else if(kind==='granite'){
+        const crystal=hash(Math.floor(x/2),Math.floor(y/2)),fleck=crystal>.84?22:crystal<.11?-23:0;
+        color=204+noise*16+fleck+macro*3;height=150+noise*2+fleck*.12;rough=206+noise*18;
       }
       heights[y*size+x]=height;
       for(const [type,value]of [['color',color],['height',height],['rough',rough]]){
@@ -131,6 +138,14 @@ diffuseColor.rgb*=mix(.8,paneInterior,paneView)*mix(.58,1.,paneEdge);`);
     result.color.multiplyScalar(1-wet*.22);result.roughness=.8*(1-wet)+.24*wet;result.clearcoat+=wet*.3;
     return result;
   }
+  function artsMaterials(m){
+    const white=m.wallCream.clone();white.color.set('#e6e8e1');white.normalScale.set(.045,.045);white.roughness=.93;white.userData={...white.userData,artsFinish:'painted-plaster'};
+    // White paint over the existing CC0 plaster scan: retain its small-scale
+    // variation, without interpreting the scan's dark patches as campus stains.
+    if(m.wallCream.map?.image){const c=document.createElement('canvas');c.width=c.height=512;const ctx=c.getContext('2d');ctx.drawImage(m.wallCream.map.image,0,0,512,512);const pixels=ctx.getImageData(0,0,512,512);for(let i=0;i<pixels.data.length;i+=4)for(let k=0;k<3;k++)pixels.data[i+k]=235+(pixels.data[i+k]-160)*.15;ctx.putImageData(pixels,0,0);white.map=new THREE.CanvasTexture(c);white.map.encoding=THREE.sRGBEncoding;white.map.wrapS=white.map.wrapT=THREE.RepeatWrapping;}
+    function mineral(kind,color,tile){const mat=new THREE.MeshStandardMaterial({color,roughness:.86});bind(mat,kind,tile,.003);mat.normalScale.set(.12,.12);mat.userData.artsFinish=kind;return mat;}
+    return {white,granite:mineral('granite','#8c9594',1.2),paving:mineral('forecourt','#e0c7a1',3.2),border:mineral('granite','#a0523c',1.2)};
+  }
   function project(group){
     group.traverse(mesh=>{
       if(!mesh.isMesh||mesh.isInstancedMesh||Array.isArray(mesh.material))return;
@@ -149,5 +164,5 @@ diffuseColor.rgb*=mix(.8,paneInterior,paneView)*mix(.58,1.,paneEdge);`);
       uv.needsUpdate=true;geo.userData.metricUV=true;
     });
   }
-  root.CampusSurfaces={init,project,maps,sample,setGlaze,brushedMetal,albedo:kind=>kind==='roof'&&glaze?glaze:maps(kind).color};
+  root.CampusSurfaces={init,project,maps,sample,setGlaze,brushedMetal,artsMaterials,albedo:kind=>kind==='roof'&&glaze?glaze:maps(kind).color};
 })(window);

@@ -1,5 +1,5 @@
 {
-  "passed": 32,
+  "passed": 33,
   "checks": [
     "indexed static batches preserve triangles and animated fan transforms",
     "indexed collision broad phase keeps complete walking trajectories identical",
@@ -32,13 +32,14 @@
     "touch joystick normalizes and look clamps pitch",
     "campus boundary blocks escape",
     "contact shadow instances lie on the floor",
-    "same-origin startup assets exist; no CDN runtime"
+    "same-origin startup assets exist; no CDN runtime",
+    "smallest palm template retains nonzero tapered leaf surfaces"
   ],
   "nodes": 34,
   "classrooms": 16,
   "trees": 305,
-  "colliders": 1778,
-  "meshes": 1503,
-  "vertices": 2109107,
+  "colliders": 1783,
+  "meshes": 1512,
+  "vertices": 2222822,
   "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }
