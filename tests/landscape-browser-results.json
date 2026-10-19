@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-18T23:19:49.855Z",
+  "passed": true,
+  "asset": "e3f645865a9aa1b7ff90c504f381f37e5a914e8d877c23281357a72d7ba51175",
+  "bytes": 5753376,
+  "evidence": [
+    {
+      "climate": "morning",
+      "quality": "high",
+      "assetStatus": "ready",
+      "variants": 6,
+      "ponds": 2,
+      "stones": 82,
+      "highDetail": true,
+      "visibleStoneTriangles": 74128,
+      "engraved": 1,
+      "palms": 75,
+      "glazing": 4,
+      "position": {
+        "x": 73.95030000000001,
+        "z": 62.399550000000005
+      },
+      "drawCalls": 709,
+      "triangles": 559221
+    },
+    {
+      "climate": "morning",
+      "quality": "low",
+      "assetStatus": "ready",
+      "variants": 6,
+      "ponds": 2,
+      "stones": 82,
+      "highDetail": false,
+      "visibleStoneTriangles": 11808,
+      "engraved": 1,
+      "palms": 75,
+      "glazing": 4,
+      "position": {
+        "x": 73.95030000000001,
+        "z": 62.399550000000005
+      },
+      "drawCalls": 485,
+      "triangles": 483433
+    },
+    {
+      "climate": "afterrain",
+      "quality": "high",
+      "assetStatus": "ready",
+      "variants": 6,
+      "ponds": 2,
+      "stones": 82,
+      "highDetail": true,
+      "visibleStoneTriangles": 74128,
+      "engraved": 1,
+      "palms": 75,
+      "glazing": 4,
+      "position": {
+        "x": 73.95030000000001,
+        "z": 62.399550000000005
+      },
+      "drawCalls": 709,
+      "triangles": 559221
+    }
+  ],
+  "errors": [],
+  "fallbackErrors": [],
+  "checks": [
+    "GLB integrity and portable PBR",
+    "engraved geometry, palms and real WebGL shaders",
+    "runtime LOD reduces pond stone triangles by over 80%",
+    "morning/afterrain and architecture screenshots",
+    "desktop/mobile photo comparison and modal state",
+    "real touch-emulated fallback with model request blocked"
+  ],
+  "limits": "Software WebGL and emulated touch. Geometry and lighting remain photo-informed approximations, not camera-calibrated photogrammetry or real-device FPS validation."
+}

@@ -147,5 +147,38 @@ function recessedFacade(g,b,m){
   }
   g.userData.recessedFacade=true;
 }
-root.CampusAtelier={roof,hall,library,recessedFacade};
+function science(g,b,m,queueWindow){
+  const [w,h,d]=b.size,fh=b.floorH,front=d/2,depth=2.15,n=Math.round(w/3.5),bay=w/n;
+  const white=m.wallLight,rail=m.metalDark;
+  // Photograph: deep open galleries behind continuous horizontal white bands.
+  // All components remain inside the inherited footprint; the core stays solid.
+  box(g,white,w,h,d-depth,0,h/2,-depth/2);
+  box(g,m.plinth,w,.5,d,0,.25,0);
+  for(let floor=0;floor<b.floors;floor++){
+    const y=floor*fh;
+    box(g,white,w+.10,.22,depth+.12,0,y+fh-.11,front-depth/2);
+    if(floor>0){
+      box(g,white,w,1.05,.18,0,y+.525,front-.09);
+      box(g,m.wallGrey,w,.06,.23,0,y+1.08,front-.08);
+      box(g,rail,w,.04,.045,0,y+1.37,front-.09);
+      for(let k=0;k<=n*3;k++)box(g,rail,.022,.28,.022,-w/2+k*w/(n*3),y+1.22,front-.09);
+    }
+    for(let k=0;k<n;k++){
+      const x=-w/2+(k+.5)*bay,wy=y+fh*.55,z=front-depth+.03,ww=1.55,wh=1.85;
+      queueWindow(x,wy,z,ww,wh,'z',.13,m.glassTeal);
+      for(let bar=0;bar<7;bar++)box(g,rail,.022,wh,.035,x-ww/2+bar*ww/6,wy,z+.22);
+      for(let bar=0;bar<5;bar++)box(g,rail,ww,.022,.035,x,wy-wh/2+bar*wh/4,z+.23);
+      if(floor>0)box(g,white,.26,fh-.22,.27,x+bay/2,y+fh/2,front-.25);
+      box(g,white,ww+.22,.10,.36,x,wy+wh/2+.12,z+.12);
+    }
+  }
+  box(g,white,w+.4,.25,d+.35,0,h+.12,0);
+  box(g,white,7,2.1,5,0,h+1.05,-.5);
+  box(g,white,7.7,.22,5.7,0,h+2.21,-.5);
+  for(const x of [-3.1,0,3.1])box(g,rail,.055,2.6,.055,x,h+2.5,-.4);
+  box(g,white,8.2,.26,3.2,0,3.45,front-1.5);
+  for(const x of [-3.5,3.5])box(g,white,.34,3.3,.34,x,1.65,front-.3);
+  g.userData.atelier='science-open-galleries';
+}
+root.CampusAtelier={roof,hall,library,recessedFacade,science};
 })(window);

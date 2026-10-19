@@ -66,6 +66,15 @@
     }
     coat('wallLight',.1,.45);coat('roofHerit',.16,.48);
     coat('roofRed',.06,.6);coat('roofPorch',.06,.6);coat('roofTile',.08,.5);
+    // The same scanned plaster spans metres, not one repeat per wall segment.
+    // Narrow piers and the broad hall wall now share the same grain scale.
+    for(const key of ['wallCream','wallPutty','wallGrey','wallHerit']){
+      for(const [channel,type]of [['map','color'],['normalMap','normal'],['roughnessMap','rough']]){
+        const source=bank.plaster?.[type];if(!source)continue;
+        const texture=source.clone();texture.repeat.set(1,1);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.needsUpdate=true;m[key][channel]=texture;
+      }
+      m[key].userData.metricTile=3.2;
+    }
     // Smaller tile joints read at facade scale instead of looking like masonry blocks.
     bind(m.wallLight,'ceramic',.8,.009);
     for(const k of ['roofHerit','roofRed','roofPorch','roofTile'])bind(m[k],'roof',1.6,.035);
@@ -75,7 +84,35 @@
     m.roofHerit.roughness=.62;m.roofRed.roughness=.85;m.roofPorch.roughness=.82;
     m.wallLight.color.set('#e8e6de');m.baseStone.color.set('#525953');
     if(bank.glaze){setGlaze(bank.glaze);m.roofHerit.map=glaze;m.roofHerit.color.set('#e4e4d6');m.roofHerit.userData.generatedGlaze=true;}
-    m.glassTeal.roughness=.22;m.glassTeal.envMapIntensity=.8;
+    // Architectural glazing is a dielectric. Dark depth, Fresnel reflections and
+    // varied blinds replace the former uniformly opaque turquoise rectangles.
+    coat('glassTeal',.7,.12);
+    m.glassTeal.color.set('#42636a');m.glassTeal.metalness=.03;
+    m.glassTeal.roughness=.18;m.glassTeal.envMapIntensity=.85;
+    glazing(m.glassTeal);
+    m.glassFacade=m.glassTeal.clone();glazing(m.glassFacade);
+  }
+  function glazing(material){
+    material.userData.facadeGlazing=true;
+    material.onBeforeCompile=shader=>{
+      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vPaneUV;varying float vPaneSeed;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+vPaneUV=uv;vec3 paneOrigin=vec3(0.);
+#ifdef USE_INSTANCING
+paneOrigin=instanceMatrix[3].xyz;
+#endif
+vPaneSeed=fract(sin(dot(paneOrigin,vec3(12.9898,78.233,35.719)))*43758.5453);`);
+      shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vPaneUV;varying float vPaneSeed;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec2 paneUV=vPaneUV;
+float paneView=clamp(dot(normalize(vNormal),normalize(vViewPosition)),0.,1.);
+float paneEdge=smoothstep(0.,.10,min(min(paneUV.x,1.-paneUV.x),min(paneUV.y,1.-paneUV.y)));
+float paneBlind=step(.65,vPaneSeed)*smoothstep(.40,.46,paneUV.y+vPaneSeed*.3);
+float paneSlat=.87+.13*smoothstep(.28,.48,fract(paneUV.y*19.));
+float paneInterior=mix(.38+.22*vPaneSeed,.70*paneSlat,paneBlind);
+diffuseColor.rgb*=mix(.8,paneInterior,paneView)*mix(.58,1.,paneEdge);`);
+    };
+    material.customProgramCacheKey=()=> 'haiz-dielectric-glazing-19';
   }
   let metalMaps;
   function brushedMetal(){

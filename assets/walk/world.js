@@ -245,7 +245,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       var mkey = b.mat ? b.mat.uuid : '_def';
       if (grpIdx[mkey] === undefined) {
         grpIdx[mkey] = grpList.length;
-        grpList.push({ mat: b.mat || MAT.glass, items: [] });
+        grpList.push({ mat: b.mat || MAT.glassFacade || MAT.glass, items: [] });
       }
       grpList[grpIdx[mkey]].items.push(b);
     }
@@ -533,6 +533,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
 
   /* --- 科学馆实验大楼：外廊 + 窗阵 + 屋顶设备 --- */
   FORMS.lab = function (g, b) {
+    if(b.id==='kexue'&&window.CampusAtelier?.science)return window.CampusAtelier.science(g,b,MAT,queueWindow);
     var w = b.size[0], d = b.size[2], H = b.size[1], f = b.floors, fh = b.floorH;
     box(w, H, d, MAT.wallPutty, 0, H / 2, 0, g);
     box(w + 0.28, 0.8, d + 0.28, MAT.plinth, 0, 0.4, 0, g);
@@ -769,12 +770,13 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     water.receiveShadow = false;
     // 睡莲
     var rnd = mulberry(b.id);
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < (b.id==='yanchi'?0:9); i++) {
       var px = (rnd() - 0.5) * w * 0.7, pz = (rnd() - 0.5) * d * 0.7;
       var pad = new THREE.Mesh(new THREE.CircleGeometry(0.55 + rnd() * 0.5, 10), MAT.leafB);
       pad.rotation.x = -Math.PI / 2; pad.position.set(px, LAY.water + 0.012, pz); g.add(pad);
     }
-    // Layered shore stone masses observed in campus_yanchi.jpg. Footprint unchanged.
+    if(window.CampusLandscape){window.CampusLandscape.pond(g,b,LAY.water);return;}
+    // Fallback for older integrations without the landscape module.
     for(var j=0;j<26;j++){
       var px=-w*.45+rnd()*w*.28,pz=-d*.42+rnd()*d*.8;
       var rock=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),MAT.stone);
@@ -1520,6 +1522,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     g.add(im);g.userData.treeRadius=trunkRadius;return g;
   }
   function palmTree(parent,x,z,h,seed){
+    if(window.CampusLandscape)return window.CampusLandscape.palm(parent,x,z,h,seed);
     var g=new THREE.Group(),rnd=mulberry(seed);g.position.set(x,0,z);parent.add(g);
     branch(g,[0,0,0],[.4,h,0],.32,.17);
     // Curving fronds, with separately tapered leaflets rather than solid boxes.
@@ -1595,17 +1598,21 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var inverse=new THREE.Matrix4().copy(root.matrixWorld).invert();
     Object.keys(groups).forEach(function(k){
       var list=groups[k];if(list.length<3)return;
-      var pos=[],normal=[],uv=[],cast=false,receive=false;
+      var pos=[],normal=[],uv=[],colors=[],cast=false,receive=false;
       list.forEach(function(m){
         var g=m.geometry.clone(),mat=new THREE.Matrix4().multiplyMatrices(inverse,m.matrixWorld);g.applyMatrix4(mat);
         var non=g.index?g.toNonIndexed():g;
         for(var pp of non.attributes.position.array)pos.push(pp);for(var nn of non.attributes.normal.array)normal.push(nn);
         if(non.attributes.uv){for(var uu of non.attributes.uv.array)uv.push(uu);}else for(var q=0;q<non.attributes.position.count;q++)uv.push(0,0);
+        if(list[0].material.vertexColors){if(non.attributes.color){for(var cc of non.attributes.color.array)colors.push(cc);}else for(var c=0;c<non.attributes.position.count;c++)colors.push(1,1,1);}
         cast=cast||m.castShadow;receive=receive||m.receiveShadow;
         if(non!==g)non.dispose();g.dispose();m.parent.remove(m);m.geometry.dispose();
       });
       var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(normal,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.computeBoundingSphere();
-      var mesh=new THREE.Mesh(geo,list[0].material);mesh.castShadow=cast;mesh.receiveShadow=receive;root.add(mesh);
+      if(colors.length)geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      var mesh=new THREE.Mesh(geo,list[0].material);mesh.castShadow=cast;mesh.receiveShadow=receive;
+      if(list.some(function(m){return m.userData.foliage;})){mesh.userData.foliage=true;mesh.customDepthMaterial=list.find(function(m){return m.customDepthMaterial;})?.customDepthMaterial;}
+      root.add(mesh);
     });
   }
 
@@ -1637,7 +1644,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     scene=target;data=input;pbrBank=pbr||{};scannedTextures={};OCCUPIED=[];vegetationTiles=[];waterMat=null;roadMats=[];
     TF.ox=data.meta.transform.originPx[0];TF.oy=data.meta.transform.originPx[1];TF.s=data.meta.transform.scale;
     var cfg={shadow:quality==='low'?0:1024,aniso:4,winK:1,lamps:true};
-    buildMaterials();var indoorMaterials=window.CampusInteriors.init(pbr||{});initFoliage();MAT.leafA.flatShading=MAT.leafB.flatShading=MAT.leafDry.flatShading=false;
+    buildMaterials();window.CampusLandscape?.init(quality);var indoorMaterials=window.CampusInteriors.init(pbr||{});initFoliage();MAT.leafA.flatShading=MAT.leafB.flatShading=MAT.leafDry.flatShading=false;
     // Neutral, subtly weathered plaster; no flat, featureless white blocks.
     var plaster=noiseTex('#d5d0c1',4500,256,.055);plaster.repeat.set(3,3);
     [MAT.wallCream,MAT.wallPutty,MAT.wallGrey,MAT.wallHerit,MAT.wallLight].forEach(function(m){m.map=indoorMaterials.plasterOutside.map||plaster;m.normalMap=indoorMaterials.plasterOutside.normalMap;m.roughnessMap=indoorMaterials.plasterOutside.roughnessMap;m.normalScale.set(.18,.18);m.roughness=.94;});

@@ -4,7 +4,7 @@ const {createCanvas,loadImage}=require(require.resolve('@napi-rs/canvas',{paths:
 const M=require('../../assets/walk/movement.js');
 const data=JSON.parse(fs.readFileSync('assets/walk/campus.json'));
 const context={THREE,console,setTimeout,window:{},document:{createElement(tag){assert.equal(tag,'canvas');return createCanvas(1,1);}}};
-vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
+vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
 const results=[];
 function test(name,fn){fn();results.push(name);console.log('PASS',name);}
 (async()=>{

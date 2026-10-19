@@ -3,7 +3,7 @@
 function create(scene,camera,sun,world,reduced){
  const surface=world.waterSurface;
  if(!surface||!THREE.Water)return {tick(){},get active(){return false;}};
- const water=new THREE.Water(surface.geometry.clone(),{textureWidth:256,textureHeight:256,
+ const water=new THREE.Water(surface.geometry.clone(),{textureWidth:512,textureHeight:512,
   waterNormals:world.water.normalMap,sunDirection:sun.position.clone().normalize(),
   sunColor:0xffefcf,waterColor:0x45665d,distortionScale:.45,alpha:1,fog:true});
  water.position.copy(surface.position);water.rotation.copy(surface.rotation);water.visible=false;

@@ -9,3 +9,20 @@
 - This is creative set dressing, **not evidence of the plant species, pots or placement on the real campus**. Three.js r128 renders the conventional alpha-cutout PBR fallback, not the newer diffuse-transmission extension.
 
 The license does not imply endorsement by the authors. Source and output hashes are recorded in `assets/walk/credits.json`.
+
+## Original landscape model
+
+`campus-limestone.glb` contains original Blender-authored layered limestone in
+three variants, two levels of detail, and a weathered pond-name stone with
+Boolean-cut lettering. The new mesh and baked-texture work is dedicated under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). The model is informed
+by the existing `campus_yanchi.jpg`; that photograph retains its own copyright
+and is not included in this dedication. This is not a scan of the actual stones.
+
+The inscription uses outlines from **Noto Serif CJK**, licensed under SIL OFL 1.1;
+no font file is embedded. It is a typographic interpretation, not a tracing of
+the photographed calligraphy. The complete generator is
+`scripts/build-landscape.py`; the version, byte count and SHA-256 are in
+`campus-limestone.json`. Three 1024-square baked images contain albedo, tangent
+normal, and packed occlusion/roughness/metalness. The browser model uses standard
+glTF PBR without external geometry decoders.

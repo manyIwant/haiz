@@ -117,7 +117,7 @@
       "path": "assets/vendor/Water.js",
       "license": "MIT",
       "license_file": "assets/vendor/THREE-LICENSE.txt",
-      "usage": "Official Three.js r128 Water source reused unchanged for the main pond. One 256x256 reflection target, enabled only nearby on non-low quality. Adapter: assets/walk/reflections.js."
+      "usage": "Official Three.js r128 Water source reused unchanged for the main pond. One 512x512 reflection target, enabled only nearby on non-low quality. Adapter: assets/walk/reflections.js."
     },
     {
       "url": "https://github.com/mrdoob/three.js/blob/dev/examples/games_fps.html",
@@ -163,6 +163,16 @@
     "license": "MIT",
     "license_file": "assets/vendor/THREE-LICENSE.txt",
     "sha256": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6"
+  },
+  "authored_landscape": {
+    "path": "assets/walk/models/campus-limestone.glb",
+    "manifest": "assets/walk/models/campus-limestone.json",
+    "sha256": "e3f645865a9aa1b7ff90c504f381f37e5a914e8d877c23281357a72d7ba51175",
+    "source": "Original Blender geometry and Cycles PBR bakes, informed by the bundled pond photograph. Not game assets or photogrammetry.",
+    "license": "CC0-1.0",
+    "pipeline": "scripts/build-landscape.py",
+    "runtime": "assets/walk/landscape.js",
+    "inscription": "Boolean-cut 砚池, using Noto Serif CJK (SIL OFL 1.1). Typeface interpretation, not traced historical calligraphy. No font file embedded."
   },
   "design_references": {
     "source": "https://github.com/VoltAgent/awesome-design-md/tree/3b605329240ce735b510037cca322f1831fdd7f8",

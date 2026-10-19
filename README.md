@@ -101,6 +101,7 @@ npm run test:atelier
 npm run test:darkroom
 npm run test:windowsill
 npm run test:climate
+npm run test:landscape
 ```
 
 检查包括15个页面的本地链接、锚点、图片说明与导航；根入口与电影源一致；新闻/社团筛选、照片与详情弹窗、本地保存、安全便笺渲染；50 项路线排序与机位数据检查、1024 组暗房声部分享往返；原校园坐标、几何、材质解码、门洞、碰撞、16间教室往返路线、自选四站建筑路线；桌面与手机输入事件模拟。真实浏览器另外验证降落首页、探索搜索、声景开关、3D 材质实验、生成釉面、湿度响应、明信片下载、机位重载与导演台路线启动。暗房单独验证原始触摸事件、笔触转音符、跨设备接力、实际 PNG/WAV 文件、无障碍及音频停止。
@@ -114,3 +115,5 @@ npm run test:climate
 校园照片、历史资料与人物信息沿用原仓库的公开资料；版权归原作者和发布机构。未核实资料与创作内容均有标记。数字建筑、室内和尺寸是近似表达，非测绘或真实教室复刻。
 
 材质与设计参考、生成叶簇的提示词和保存路径详见 [docs/design-notes.md](docs/design-notes.md)；素材清单与哈希见 [assets/walk/credits.json](assets/walk/credits.json)。
+
+砚池石材的 Blender 源生成器为 `scripts/build-landscape.py`。使用 Blender 4.3.2、Noto Serif CJK 字体执行 `blender -b -t 4 --python scripts/build-landscape.py`，可重建网页 GLB、哈希清单及本地可编辑的 `build/landscape/haiz-limestone.blend`。构建网站不需要运行 Blender。石岸分级细节、羽状椰叶、科学馆外廊和手机实拍对照见 [本轮画面记录](docs/landscape-fidelity-20261019.md)。

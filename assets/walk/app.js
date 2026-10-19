@@ -159,9 +159,10 @@
     if(form==='oldtree'){x=c.x-10;z=c.z-8;}
     if(form==='field'){x=c.x;z=c.z;}
     if(id==='library'){x=c.x-b.data.size[0]*.10;z=c.z+b.data.size[2]/2+30;}
+    if(id==='kexue'){x=c.x+b.data.size[0]*.18;z=c.z+b.data.size[2]/2+20;}
     if(form==='pond'){
       // Avoid the neighbouring wall: choose a safe bank with a clear sight line.
-      const blockers=world.colliders.filter(o=>o.id!==id),w=b.data.size[0]/2+9,d=b.data.size[2]/2+9;
+      const blockers=world.colliders.filter(o=>o.id!==id),w=b.data.size[0]/2+4,d=b.data.size[2]/2+4;
       const candidates=[{x:c.x,z:c.z+d},{x:c.x,z:c.z-d},{x:c.x+w,z:c.z},{x:c.x-w,z:c.z},{x:c.x+w,z:c.z+d},{x:c.x-w,z:c.z-d}];
       const ray=new THREE.Raycaster(),eye=new THREE.Vector3(),aim=new THREE.Vector3(c.x,.18,c.z),direction=new THREE.Vector3();b.group.updateMatrixWorld(true);
       for(const desired of candidates){
@@ -182,9 +183,9 @@
     const p=M.safePoint(x,z,world.colliders,world.bounds);
     if(!p){toast('附近暂时没有安全落点。');return false;}
     const entranceFrame=observation&&id==='yihao'&&Math.abs(p.x-c.x)<10;
-    state.observationLens=entranceFrame?62:48;
+    state.observationLens=entranceFrame?62:id==='kexue'?54:48;
     if(observation&&!state.photoFov){camera.fov=state.observationLens;camera.updateProjectionMatrix();}
-    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=form==='pond'?-.15:id==='library'?.22:id==='fengqitang'?.15:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=form==='pond'?-.15:id==='library'?.22:id==='fengqitang'?.15:id==='kexue'?.34:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     window.CampusWorkshop?.visit(id);
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
@@ -337,6 +338,7 @@
     }
     window.CampusInteriors.tick(state.pos.x,state.pos.z,state.paused?0:dt,reduced);
     const indoors=!!window.CampusInteriors.currentRoom(state.pos.x,state.pos.z);renderer.toneMappingExposure=climate.tick(dt,indoors,state.paused);
+    window.CampusLandscape?.tick(camera,state.effectiveQuality,climate.diagnostics.wet);
     reflections.tick(dt,state.effectiveQuality,indoors,state.paused);
     breeze?.tick(dt,state.effectiveQuality,state.paused);
     if(state.frames%24===0){
@@ -407,8 +409,9 @@
     setQuality();canvasEvents(renderer.domElement);
     status(.12,'加载扫描材质…');
     const environmentReady=loadEnvironment();
+    const landscapeReady=window.CampusLandscape?.load();
     const pbr=location.protocol==='file:'?{}:await window.CampusInteriors.loadMaterials(p=>status(.12+p*.09,'加载草地、铺装、树叶与室内材质…'));
-    await environmentReady;
+    await Promise.all([environmentReady,landscapeReady]);
     status(.22,'重建校道与开放教室…');
     world=await window.CampusWorld.build(scene,data,state.effectiveQuality,status,pbr);
     // r128 expects linear material colors. Palette hex values are sRGB;
@@ -418,7 +421,7 @@
       if(!o.isMesh)return;
       for(const m of Array.isArray(o.material)?o.material:[o.material]){
         if(!m?.isMeshStandardMaterial||managedMaterials.has(m))continue;
-        managedMaterials.add(m);m.color.convertSRGBToLinear();m.envMapIntensity=m.metalness>.15?.48:.24;
+        managedMaterials.add(m);if(!m.userData.linearColor)m.color.convertSRGBToLinear();m.envMapIntensity=m.metalness>.15?.48:.24;
       }
     });
     const aniso=Math.min(16,renderer.capabilities?.getMaxAnisotropy?.()||8);

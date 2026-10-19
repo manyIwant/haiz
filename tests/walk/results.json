@@ -35,8 +35,8 @@
   "nodes": 34,
   "classrooms": 16,
   "trees": 305,
-  "colliders": 1811,
-  "meshes": 1708,
-  "vertices": 1343987,
+  "colliders": 1746,
+  "meshes": 1727,
+  "vertices": 3121281,
   "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }
