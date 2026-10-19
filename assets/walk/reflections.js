@@ -7,9 +7,8 @@ function create(scene,camera,sun,world,reduced){
   waterNormals:world.water.normalMap,sunDirection:sun.position.clone().normalize(),
   sunColor:0xffefcf,waterColor:0x45665d,distortionScale:.45,alpha:1,fog:true});
  water.position.copy(surface.position);water.rotation.copy(surface.rotation);water.visible=false;
- surface.parent.add(water);let active=false,time=0;
+ surface.parent.add(water);let active=false,time=0;const pos=new THREE.Vector3();surface.getWorldPosition(pos);
  return {tick(dt,quality,indoors,paused){
-  const pos=new THREE.Vector3();surface.getWorldPosition(pos);
   active=quality!=='low'&&!indoors&&Math.hypot(pos.x-camera.position.x,pos.z-camera.position.z)<55;
   water.visible=active;surface.visible=!active;
   if(!reduced&&!paused)time+=dt*.23;

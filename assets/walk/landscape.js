@@ -2,6 +2,7 @@
    bundled pond photograph. See models/campus-limestone.json and build-landscape.py. */
 (function(root){'use strict';
 const T=THREE,bank=new Map(),ponds=[];
+const worldPoint=new T.Vector3();
 let quality='balanced',assetStatus='pending',assetPromise,leafMat,barkMat,leafGeo,stele;
 function random(seed){let x=2166136261;for(const c of String(seed))x=Math.imul(x^c.charCodeAt(0),16777619);return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
 function geometry(p,uv,colors){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();g.computeBoundingSphere();return g;}
@@ -142,7 +143,7 @@ function pond(g,b,waterLevel){
 }
 function tick(camera,q,wet=0){
   for(const pond of ponds){
-    const pos=pond.group.getWorldPosition(new T.Vector3()),distance=Math.hypot(pos.x-camera.position.x,pos.z-camera.position.z);
+    const pos=pond.group.getWorldPosition(worldPoint),distance=Math.hypot(pos.x-camera.position.x,pos.z-camera.position.z);
     pond.high.visible=q!=='low'&&distance<48;pond.low.visible=!pond.high.visible;
     for(const {m,color,rough}of pond.wetMaterials){m.color.copy(color).multiplyScalar(1-wet*.22);m.roughness=rough*(1-wet*.32);}
   }

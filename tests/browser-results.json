@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18T05:42:40.275Z",
+  "date": "2026-10-19T04:36:04.617Z",
   "browser": "154.0.8037.57",
   "results": [
     {
@@ -8,7 +8,7 @@
         "root is the cinematic entry",
         "editorial home, darkroom and director studio remain accessible",
         "320/375/390 px mobile portals remain reachable without overlay interference",
-        "3D iframe is user-initiated",
+        "full 3D iframe preloads before cinematic playback",
         "chapter seek and speed controls",
         "sound off by default"
       ],
@@ -20,7 +20,7 @@
         "root is the cinematic entry",
         "editorial home, darkroom and director studio remain accessible",
         "320/375/390 px mobile portals remain reachable without overlay interference",
-        "3D iframe is user-initiated",
+        "full 3D iframe preloads before cinematic playback",
         "chapter seek and speed controls",
         "sound off by default"
       ],
@@ -91,7 +91,7 @@
     {
       "target": "cinematic → real campus iframe",
       "checks": [
-        "lazy world startup",
+        "preloaded world startup",
         "same-origin ready handshake",
         "arrival control takeover",
         "keyboard-focusable live campus"
@@ -122,13 +122,13 @@
           "classrooms": 16,
           "environment": "HDR",
           "trees": 305,
-          "colliders": 1811,
+          "colliders": 1780,
           "quality": "high",
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 620,
-          "triangles": 511043,
+          "drawCalls": 527,
+          "triangles": 842407,
           "fps": 60,
           "loaded": true,
           "position": {

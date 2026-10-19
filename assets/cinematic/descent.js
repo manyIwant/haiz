@@ -1,10 +1,10 @@
 (function(){'use strict';
 const $=id=>document.getElementById(id),C=window.DescentCore,I=window.DescentImagery;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,origin=location.origin;
-let renderer,scene,camera,material,progress=0,target=0,playing=false,started=false,entered=false,ready=false,last=performance.now(),chapter=-1,visible=!document.hidden,speed=1,clock=0;
+let renderer,scene,camera,material,progress=0,target=0,playing=false,started=false,entered=false,ready=false,last=performance.now(),chapter=-1,visible=!document.hidden,speed=1,clock=0,prepared,lastArrival=null;
 const duration=C.duration,frame=$('campusFrame');
 function send(type,values={}){frame.contentWindow?.postMessage({type,...values},origin);}
-window.addEventListener('message',e=>{if(e.origin!==origin||e.source!==frame.contentWindow)return;if(e.data?.type==='haiz:arrival:ready'){ready=true;$('arrivalStatus').textContent='校园已就绪 · 可以接管行走';send('haiz:arrival:progress',{progress:C.frame(progress).arrival});}if(e.data?.type==='haiz:arrival:error')$('arrivalStatus').textContent='三维校园暂未就绪，可以使用下方独立入口。';});
+window.addEventListener('message',e=>{if(e.origin!==origin||e.source!==frame.contentWindow)return;if(e.data?.type==='haiz:arrival:ready'){ready=true;prepared?.();$('arrivalStatus').textContent='校园已就绪 · 可以接管行走';lastArrival=C.frame(progress).arrival;send('haiz:arrival:progress',{progress:lastArrival});}if(e.data?.type==='haiz:arrival:error'){prepared?.();$('arrivalStatus').textContent='三维校园暂未就绪，可以使用下方独立入口。';}});
 function start(){if(started)return;started=true;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.getAttribute('data-campus-src'));document.body.classList.add('is-playing');$('controls').hidden=false;$('caption').hidden=false;playing=!reduced;syncToggle();}
 function seek(p){start();playing=false;target=C.clamp(p);if(reduced)progress=target;syncToggle();}
 function syncToggle(){$('toggle').textContent=playing?'Ⅱ':'▶';$('toggle').setAttribute('aria-label',playing?'暂停下降':'继续下降');}
@@ -14,7 +14,7 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const dt=Math.m
  progress+= (target-progress)*(reduced?1:1-Math.exp(-dt*8));if(Math.abs(progress-target)<.00001)progress=target;
  const f=C.frame(progress);
  if(material&&progress<.94){clock+=reduced?0:dt;material.uniforms.clock.value=clock;material.uniforms.altitude.value=f.altitude/6371000;renderer.render(scene,camera);}
- if(ready){frame.style.opacity=String(f.model);send('haiz:arrival:progress',{progress:f.arrival});}else frame.style.opacity='0';
+ if(ready){frame.style.opacity=String(f.model);if(lastArrival!==f.arrival){lastArrival=f.arrival;send('haiz:arrival:progress',{progress:f.arrival});}}else frame.style.opacity='0';
  $('locator').style.opacity=String(C.smooth((progress-.23)/.1)*(1-C.smooth((progress-.77)/.05)));
  $('altitude').textContent=f.model>.5?'北门 · 即将抵达':f.altitude>1000?'距地表约 '+Math.round(f.altitude/1000).toLocaleString()+' km':'距地表约 '+Math.round(f.altitude)+' m';
  const ci=C.chapters.indexOf(f.chapter);if(ci!==chapter){chapter=ci;$('chapterLabel').textContent=f.chapter.label;$('chapterTitle').textContent=f.chapter.title;$('chapterText').textContent=f.chapter.text;document.querySelectorAll('[data-progress]').forEach((b,i)=>b.classList.toggle('active',i===ci));}
@@ -47,7 +47,12 @@ async function boot(){
   let count=0;const paths=['assets/cinematic/earth_2048.jpg',...I.layers.map(l=>l.path)];
   await Promise.all(paths.map(async(path,i)=>{const tex=await imageTexture(path);if(tex){tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());if(i===0)uniforms.earth.value=tex;else{uniforms['tile'+(i-1)].value=tex;uniforms['loaded'+(i-1)].value=1;}}count++;$('loadStatus').textContent='影像准备 '+count+' / '+paths.length;}));
  }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('fallback').hidden=false;}
- $('play').disabled=false;$('playText').textContent=reduced?'选择章节，静静观看':'开始下降 · 32 秒';$('loadStatus').textContent=reduced?'已遵循减少动态效果设置。':'可以暂停、回看，或拖动下方进度。';
+ // Build/upload the full campus before the cinematic, not in competition with
+ // its animation. A failed/slow iframe must not trap the geographic experience.
+ $('loadStatus').textContent='预备完整校园与材质 · 就绪后开始下降';
+ await new Promise(resolve=>{const timer=setTimeout(()=>{prepared=null;resolve();},120000);prepared=()=>{clearTimeout(timer);prepared=null;resolve();};if(ready)prepared();else if(!frame.getAttribute('src'))frame.setAttribute('src',frame.getAttribute('data-campus-src'));});
+ renderer?.compile?.(scene,camera);if(material)renderer.render(scene,camera);
+ $('play').disabled=false;$('playText').textContent=reduced?'选择章节，静静观看':'开始下降 · 32 秒';$('loadStatus').textContent=reduced?'已遵循减少动态效果设置。':ready?'完整校园已预热 · 可以暂停、回看或拖动进度。':'影像已就绪 · 校园仍在准备，可使用独立入口。';
  $('play').onclick=start;$('toggle').onclick=()=>{if(!started){start();return;}if(progress>=1){target=progress=0;}playing=!playing;syncToggle();};$('progress').oninput=e=>seek(Number(e.target.value));$('enterCampus').onclick=takeover;
  $('journeySpeed').onchange=e=>{const next=Number(e.target.value);if([.75,1,1.5,2].includes(next))speed=next;};
  document.querySelectorAll('[data-progress]').forEach(b=>b.onclick=()=>seek(Number(b.dataset.progress)));

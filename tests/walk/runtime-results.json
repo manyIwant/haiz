@@ -28,7 +28,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 7903
+    "elapsedMs": 9602
   },
   {
     "mode": "mobile 390×844",
@@ -57,7 +57,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 7446
+    "elapsedMs": 7990
   },
   {
     "mode": "desktop 1440×900",
@@ -86,7 +86,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 6954
+    "elapsedMs": 7537
   },
   {
     "mode": "mobile 390×844",
@@ -115,7 +115,7 @@
       "visibility input reset"
     ],
     "gpu": false,
-    "elapsedMs": 7763
+    "elapsedMs": 8310
   },
   {
     "mode": "descent handoff",

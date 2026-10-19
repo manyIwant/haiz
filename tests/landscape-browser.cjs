@@ -49,6 +49,8 @@ async function render(page,climate='morning',quality='high'){
   await page.evaluate(()=>{haizWalk.goTo('fengqitang',false);haizWalk.pause(null);});await render(page);await page.screenshot({path:dir+'/landscape-hall.png'});
   await page.evaluate(()=>{haizWalk.goTo('yihao',false);haizWalk.pause(null);});await render(page);await page.screenshot({path:dir+'/landscape-teaching.png'});
   await page.evaluate(()=>{haizWalk.goTo('kexue',false);haizWalk.pause(null);});await render(page);await page.screenshot({path:dir+'/landscape-science.png'});
+  await page.evaluate(()=>{haizWalk.goTo('yishu',false);haizWalk.pause(null);});await render(page);await page.screenshot({path:dir+'/landscape-arts.png'});
+  assert.equal(await page.evaluate(()=>haizWalk.world.buildings.find(b=>b.data.id==='yishu').group.userData.atelier),'arts-red-hipped-portico');
   await page.evaluate(()=>{haizWalk.goTo('yanchi',false);haizWalk.resume(false);CampusReview.open();});
   await page.getByRole('button',{name:'砚池',exact:true}).click();await page.click('#referenceCompare');
   assert(await page.locator('#referenceRender').isVisible());assert(await page.locator('#referenceRender').evaluate(i=>i.complete&&i.naturalWidth>0));

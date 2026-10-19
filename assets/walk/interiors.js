@@ -152,7 +152,7 @@
     for(const zoff of [-2.5,2.5]){
       // Long fluorescent fixture and a three-blade ceiling fan.
       put('light',materials.emissive,unitBox,sx*(core-6.1),fh-.34,zmid+zoff,[1.18,.055,.16]);
-      const fan=new T.Group();fan.position.set(sx*(core-7.1),fh-.69,zmid+zoff);fan.userData.noMerge=true;detail.add(fan);
+      const fan=new T.Group();fan.position.set(sx*(core-7.1),fh-.69,zmid+zoff);fan.userData.noMerge=true;fan.userData.dynamicTransform=true;detail.add(fan);
       const motor=new T.Mesh(new T.SphereGeometry(.16,12,8),materials.fan);motor.scale.y=.6;fan.add(motor);
       for(let blade=0;blade<3;blade++){const pivot=new T.Group();pivot.rotation.y=blade*Math.PI*2/3;fan.add(pivot);const plate=meshBox(pivot,materials.fan,.2,.025,.8,0,0,.39);plate.rotation.z=.1;}
       const rod=meshBox(detail,materials.frame,.045,.35,.045,fan.position.x,fh-.49,fan.position.z);

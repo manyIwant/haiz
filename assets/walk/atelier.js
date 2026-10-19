@@ -180,5 +180,44 @@ function science(g,b,m,queueWindow){
   for(const x of [-3.5,3.5])box(g,white,.34,3.3,.34,x,1.65,front-.3);
   g.userData.atelier='science-open-galleries';
 }
-root.CampusAtelier={roof,hall,library,recessedFacade,science};
+function arts(g,b,m,queueWindow){
+  const [w,h,d]=b.size,front=d/2,white=m.wallLight,portico=w*.27,depth=7.8;
+  // The supplied elevated photograph shows a white low hall, red hipped rear
+  // roofs and an open, square-pier entrance — not the former solid canopy box.
+  box(g,m.plinth,w,.5,d,0,.25,0);box(g,white,w,h-.5,d,0,(h+.5)/2,0);
+  box(g,white,w+.45,.24,d+.45,0,h+.12,0);
+  const rearRoof=roof(w*.96,d*.34,3.25,.8,m.roofRed,m.wallGrey,true);
+  rearRoof.position.set(0,h+.3,-d*.30);g.add(rearRoof);
+  // Low parapet on the flat intermediate roof, visible above the entrance.
+  for(const side of [-1,1])box(g,white,.24,.55,d*.62,side*w/2,h+.4,d*.18);
+  box(g,white,w,.55,.24,0,h+.4,front);
+  for(const side of [-1,1])for(let k=0;k<5;k++){
+    const x=side*(portico*.68+k*(w/2-portico*.72)/5);
+    for(let floor=0;floor<2;floor++){
+      const y=2.05+floor*3.45;queueWindow(x,y,front+.045,.78,2.15,'z',.12,m.glassTeal);
+      box(g,white,.10,2.3,.17,x-.45,y,front+.09);box(g,white,.10,2.3,.17,x+.45,y,front+.09);
+    }
+  }
+  const deck=1.3,top=6.4,cz=front+depth/2;
+  box(g,m.step,portico+1,deck,depth,0,deck/2,cz);
+  for(const side of [-1,1])for(const z of [front+.7,front+depth-.6]){
+    box(g,white,.95,top-deck,.95,side*(portico/2-.65),(top+deck)/2,z);
+    box(g,m.baseStone,1.03,.38,1.03,side*(portico/2-.65),deck+.19,z);
+  }
+  box(g,white,portico+.7,.36,depth+.5,0,top,cz);
+  const entryRoof=roof(portico,depth,2.6,.65,m.roofRed,m.wallGrey,true);entryRoof.position.set(0,top+.2,cz);g.add(entryRoof);
+  // Raised white ridge blocks and slim metal rails visible in the photograph.
+  box(g,white,portico-depth,.28,.7,0,top+3.03,cz);
+  for(const side of [-1,1])box(g,white,.7,.55,.8,side*(portico-depth)/2,top+3.35,cz);
+  for(let i=0;i<8;i++){
+    const sh=deck*(8-i)/8,z=front+depth+.45+i*.44;
+    box(g,m.step,portico+1,sh,.46,0,sh/2,z);
+    for(const side of [-1,1]){const x=side*(portico/2+.38);box(g,m.metalDark,.045,.85,.045,x,sh+.425,z);}
+  }
+  for(const side of [-1,1])tube(g,m.metalDark,[[side*(portico/2+.38),deck+.85,front+depth+.2],[side*(portico/2+.38),deck/8+.85,front+depth+3.65]],.04);
+  queueWindow(0,deck+1.9,front+.06,5.6,3.8,'z',.15,m.glassTeal);
+  for(const x of [-2.8,0,2.8])box(g,m.metalDark,.07,3.8,.16,x,deck+1.9,front+.22);
+  g.userData.atelier='arts-red-hipped-portico';
+}
+root.CampusAtelier={roof,hall,library,recessedFacade,science,arts};
 })(window);

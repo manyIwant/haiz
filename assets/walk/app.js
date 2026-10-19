@@ -160,6 +160,7 @@
     if(form==='field'){x=c.x;z=c.z;}
     if(id==='library'){x=c.x-b.data.size[0]*.10;z=c.z+b.data.size[2]/2+30;}
     if(id==='kexue'){x=c.x+b.data.size[0]*.18;z=c.z+b.data.size[2]/2+20;}
+    if(id==='yishu'){x=c.x+b.data.size[0]*.16;z=c.z+b.data.size[2]/2+27;lookZ=c.z+b.data.size[2]/2+3;}
     if(form==='pond'){
       // Avoid the neighbouring wall: choose a safe bank with a clear sight line.
       const blockers=world.colliders.filter(o=>o.id!==id),w=b.data.size[0]/2+4,d=b.data.size[2]/2+4;
@@ -183,9 +184,9 @@
     const p=M.safePoint(x,z,world.colliders,world.bounds);
     if(!p){toast('附近暂时没有安全落点。');return false;}
     const entranceFrame=observation&&id==='yihao'&&Math.abs(p.x-c.x)<10;
-    state.observationLens=entranceFrame?62:id==='kexue'?54:48;
+    state.observationLens=entranceFrame?62:['kexue','yishu'].includes(id)?54:48;
     if(observation&&!state.photoFov){camera.fov=state.observationLens;camera.updateProjectionMatrix();}
-    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=form==='pond'?-.15:id==='library'?.22:id==='fengqitang'?.15:id==='kexue'?.34:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
+    state.pos=p;state.yaw=Math.atan2(-(lookX-p.x),-(lookZ-p.z));state.pitch=form==='pond'?-.15:id==='library'?.22:id==='fengqitang'?.15:id==='kexue'?.34:id==='yishu'?.20:entranceFrame?.29:observation&&['yihao','erhao'].includes(id)?.16:.045;clearInput();
     shadowCenter.x=Infinity;updateCamera(0);updateHud();drawMaps();
     window.CampusWorkshop?.visit(id);
     if(notify)toast('已移步至'+b.data.name+'附近');return true;
@@ -327,13 +328,16 @@
   function animate(now){
     frame=requestAnimationFrame(animate);if(!active||contextLost)return;
     const dt=Math.max(0,Math.min((now-last)/1000||0,.1));last=now;
+    // The preloaded arrival iframe is completely invisible here. Preserve its
+    // prepared frame without competing with the geographic cinematic.
+    if(arrivalMode&&!arrivalTaken&&arrivalProgress===0)return;
     const targetFov=state.photoFov||(observation?(state.observationLens||48):(touch?73:68));
     if((!arrivalMode||arrivalTaken)&&Math.abs(camera.fov-targetFov)>.01){camera.fov+=(targetFov-camera.fov)*(reduced?1:Math.min(1,dt*4));camera.updateProjectionMatrix();}
     if(!state.paused){
       const keyboardX=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
       const keyboardY=(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0);
       const input={x:state.input.x+keyboardX,y:state.input.y+keyboardY,run:state.input.run||keys.has('shift'),speedScale:window.CampusInteriors.currentRoom(state.pos.x,state.pos.z) ? .72 : 1};
-      if(tour)advanceTour(dt);else state.walked+=M.step(state.pos,input,state.yaw,dt,world.colliders,world.bounds);updateCamera(now/1000);
+      if(tour)advanceTour(dt);else state.walked+=M.step(state.pos,input,state.yaw,dt,world.collisionIndex||world.colliders,world.bounds);updateCamera(now/1000);
       if(state.frames%10===0){updateHud();drawMaps();}
     }
     window.CampusInteriors.tick(state.pos.x,state.pos.z,state.paused?0:dt,reduced);
@@ -350,7 +354,8 @@
     state.frames++;adaptTime+=dt;adaptFrames++;
     if(adaptTime>4){
       state.fps=adaptFrames/adaptTime;
-      if(state.quality==='auto'&&state.fps<28&&state.started&&!state.paused&&pixelRatio>1){pixelRatio=Math.max(1,pixelRatio-.2);renderer.setPixelRatio(pixelRatio);renderer.setSize(innerWidth,innerHeight);}
+      // Keep the chosen resolution stable: performance must not silently trade
+      // away image quality or reallocate the drawing buffer during animation.
       adaptFrames=0;adaptTime=0;
     }
   }
@@ -414,6 +419,7 @@
     await Promise.all([environmentReady,landscapeReady]);
     status(.22,'重建校道与开放教室…');
     world=await window.CampusWorld.build(scene,data,state.effectiveQuality,status,pbr);
+    world.collisionIndex=M.spatialIndex?.(world.colliders);
     // r128 expects linear material colors. Palette hex values are sRGB;
     // convert each shared material once, after all photo-informed overrides.
     const managedMaterials=new Set();
@@ -434,7 +440,14 @@
     syncClimateControls();reflections=window.CampusReflections.create(scene,camera,sun,world,reduced);
     breeze=window.CampusBreeze?.create(scene,reduced);
     status(.94,'校准视角与安全落点…');
-    buildDestinations();goTo('beimen',false);updateCamera(0);drawMaps();renderer.render(scene,camera);
+    buildDestinations();goTo('beimen',false);updateCamera(0);drawMaps();
+    status(.96,'预热材质与阴影，保持完整画质…');
+    await window.CampusDecor?.prepare({state,scene,renderer});
+    await new Promise(resolve=>setTimeout(resolve,0));
+    const warmTextures=new Set();scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)for(const value of Object.values(m))if(value?.isTexture)warmTextures.add(value);});
+    let warmed=0;for(const texture of warmTextures){renderer.initTexture?.(texture);if(++warmed%8===0)await new Promise(resolve=>setTimeout(resolve,0));}
+    renderer.compile?.(scene,camera);
+    renderer.render(scene,camera);
     status(1,touch?'校园已就绪 · 左摇杆行走，右半屏环顾':'校园已就绪 · WASD 行走，鼠标环顾');$('enterText').textContent='开始漫游';$('enterButton').disabled=false;
     last=performance.now();frame=requestAnimationFrame(animate);
     window.haizWalk={state,world,climate,reflections,planner,startTour,stopTour,setArrivalProgress,takeArrivalControl,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,climate:climate.current,reflection:reflections.active,tour:tour?.place.id||null,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};

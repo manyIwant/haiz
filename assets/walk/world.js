@@ -505,6 +505,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
 
   /* --- 艺术教育活动中心：大空间 + 高窗 + 入口台阶 --- */
   FORMS.art = function (g, b) {
+    if(b.id==='yishu'&&window.CampusAtelier?.arts)return window.CampusAtelier.arts(g,b,MAT,queueWindow);
     var w = b.size[0], d = b.size[2], H = b.size[1], f = b.floors, fh = b.floorH;
     box(w + 0.5, 1.0, d + 0.5, MAT.plinth, 0, 0.5, 0, g);
     box(w, H - 1.0, d, MAT.wallCream, 0, 1.0 + (H - 1.0) / 2, 0, g);
@@ -1598,10 +1599,13 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var inverse=new THREE.Matrix4().copy(root.matrixWorld).invert();
     Object.keys(groups).forEach(function(k){
       var list=groups[k];if(list.length<3)return;
-      var pos=[],normal=[],uv=[],colors=[],cast=false,receive=false;
+      var pos=[],normal=[],uv=[],colors=[],indices=[],cast=false,receive=false;
       list.forEach(function(m){
         var g=m.geometry.clone(),mat=new THREE.Matrix4().multiplyMatrices(inverse,m.matrixWorld);g.applyMatrix4(mat);
-        var non=g.index?g.toNonIndexed():g;
+        // Keep the original indices. Expanding every triangle used to discard
+        // the GPU vertex cache and duplicate roof/wall attributes several times.
+        var non=g,offset=pos.length/3;
+        if(g.index){for(var ix of g.index.array)indices.push(offset+ix);}else for(var ix=0;ix<g.attributes.position.count;ix++)indices.push(offset+ix);
         for(var pp of non.attributes.position.array)pos.push(pp);for(var nn of non.attributes.normal.array)normal.push(nn);
         if(non.attributes.uv){for(var uu of non.attributes.uv.array)uv.push(uu);}else for(var q=0;q<non.attributes.position.count;q++)uv.push(0,0);
         if(list[0].material.vertexColors){if(non.attributes.color){for(var cc of non.attributes.color.array)colors.push(cc);}else for(var c=0;c<non.attributes.position.count;c++)colors.push(1,1,1);}
@@ -1609,6 +1613,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
         if(non!==g)non.dispose();g.dispose();m.parent.remove(m);m.geometry.dispose();
       });
       var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(normal,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.computeBoundingSphere();
+      geo.setIndex(indices);geo.userData.preservedIndexSavings=indices.length-pos.length/3;
       if(colors.length)geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
       var mesh=new THREE.Mesh(geo,list[0].material);mesh.castShadow=cast;mesh.receiveShadow=receive;
       if(list.some(function(m){return m.userData.foliage;})){mesh.userData.foliage=true;mesh.customDepthMaterial=list.find(function(m){return m.customDepthMaterial;})?.customDepthMaterial;}
@@ -1668,8 +1673,23 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var trees=makeVegetation(quality);vegetationTiles.forEach(function(t){mergeStatic(t.group);mergeInstances(t.group);});buildings.forEach(function(b){if(b.data.form==='oldtree'){var c=b.center;colliders.push({minX:c.x-1.9,maxX:c.x+1.9,minZ:c.z-1.9,maxZ:c.z+1.9,id:'heritage-trunk'});}});
     scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint;colliders.push({minX:p.x-p.r,maxX:p.x+p.r,minZ:p.z-p.r,maxZ:p.z+p.r,id:'trunk'});}});
     // Low contrast contact shade anchors tree trunks even on low graphics settings.
-    var ao=softGroundShadow();scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint,m=new THREE.Mesh(new THREE.PlaneGeometry(5,5),ao);m.rotation.x=-Math.PI/2;m.position.set(p.x,.14,p.z);scene.add(m);}});
+    // Identical coplanar contact shades: batch by spatial tile, keeping every
+    // original quad/UV/opacity. Local bounds retain normal frustum culling.
+    var ao=softGroundShadow(),shadeTiles=new Map();
+    scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint,key=Math.floor(p.x/48)+':'+Math.floor(p.z/48);if(!shadeTiles.has(key))shadeTiles.set(key,[]);shadeTiles.get(key).push(p);}});
+    shadeTiles.forEach(function(points){
+      var vertices=[],uv=[],indices=[];
+      points.forEach(function(p,i){vertices.push(p.x-2.5,.14,p.z-2.5,p.x+2.5,.14,p.z-2.5,p.x-2.5,.14,p.z+2.5,p.x+2.5,.14,p.z+2.5);uv.push(0,1,1,1,0,0,1,0);var a=i*4;indices.push(a,a+2,a+1,a+2,a+3,a+1);});
+      var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeBoundingSphere();
+      var shades=new THREE.Mesh(geo,ao);shades.userData.contactShadeCount=points.length;scene.add(shades);
+    });
     var waterSurface=null;scene.traverse(function(m){if(m.userData.reflectivePond)waterSurface=m;});
+    // Freeze only world-owned static transforms. Shader wind still runs every
+    // frame; animated fans keep automatic transforms, including their children.
+    scene.updateMatrixWorld(true);
+    var lightTargets=new Set();scene.traverse(function(o){if(o.isLight&&o.target)lightTargets.add(o.target);});
+    scene.traverse(function(o){if(o===scene||o.isLight||o.isCamera||lightTargets.has(o)||o.userData.dynamicTransform)return;o.updateMatrix();o.matrixAutoUpdate=false;});
+    scene.updateMatrix();scene.matrixAutoUpdate=false;
     return {rooms:window.CampusInteriors.rooms,buildings:buildings,colliders:colliders,treeCount:trees,vegetationTiles:vegetationTiles,rectWorld:rectWorld,water:waterMat,waterSurface:waterSurface,roadMaterials:roadMats,bounds:{minX:-data.meta.ground.width/2+3,maxX:data.meta.ground.width/2-3,minZ:-data.meta.ground.depth/2+3,maxZ:data.meta.ground.depth/2-3}};
   }
   global.CampusWorld={build:build};

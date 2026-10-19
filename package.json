@@ -12,6 +12,7 @@
     "test:windowsill": "node tests/windowsill.cjs && node tests/windowsill-browser.cjs",
     "test:climate": "node tests/climate.cjs && node tests/climate-browser.cjs",
     "test:landscape": "node tests/landscape-browser.cjs",
+    "test:performance": "node tests/performance-browser.cjs",
     "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview"
   },
   "devDependencies": {

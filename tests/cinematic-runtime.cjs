@@ -15,9 +15,10 @@ async function run({reduced=false,noWebGL=false}={}){
   const $=id=>document.getElementById(id);
   function ticks(count){for(let i=0;i<count;i++){now+=1000/60;const cb=raf.shift();assert(cb);cb(now);}}
   function message(origin){for(const fn of events.message)fn({origin,source:frame.contentWindow,data:{type:'haiz:arrival:ready'}});}
-  assert.equal($('play').disabled,false);assert(window.HMZCinematic);
   // Unknown origins cannot unlock the iframe; the campus handshake can.
-  message('https://other.invalid');ticks(1);assert.equal(sent.length,0);message(context.location.origin);
+  message('https://other.invalid');assert.equal(sent.length,0);message(context.location.origin);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal($('play').disabled,false);assert(window.HMZCinematic);
   $('play').onclick();ticks(120);
   if(reduced)assert.equal(window.HMZCinematic.progress(),0);else assert(window.HMZCinematic.progress()>.04);
   $('progress').oninput({target:{value:'.9'}});ticks(150);assert(Math.abs(window.HMZCinematic.progress()-.9)<.0001);assert(Number(frame.style.opacity)>.9);

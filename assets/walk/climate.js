@@ -223,6 +223,7 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
     scene.add(rainField);
     let rainCount = 0,
       rainBudget = 0;
+    const dropOffsets=Array.from({length:drops},(_,i)=>{const a=i*2.399963,r=3+Math.sqrt((i*.6180339887)%1)*17;return [Math.cos(a)*r,Math.sin(a)*r];});
     // Cheap roof-footprint rejection: do not draw falling streaks below a known
     // building roof. This is a rotated footprint approximation, not fluid physics.
     const openForms = new Set([
@@ -357,11 +358,9 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
           pz = camera.position.z,
           py = camera.position.y - 4;
         for (let i = 0; i < rainBudget; i++) {
-          const a = i * 2.399963,
-            r = 3 + Math.sqrt((i * 0.6180339887) % 1) * 17,
-            fall = (((i * 3.713 - time * (10 + rain * 8)) % 20) + 20) % 20,
-            x = px + Math.cos(a) * r,
-            z = pz + Math.sin(a) * r,
+          const fall = (((i * 3.713 - time * (10 + rain * 8)) % 20) + 20) % 20,
+            x = px + dropOffsets[i][0],
+            z = pz + dropOffsets[i][1],
             y = py + fall;
           if (y < 0 || underRoof(x, y, z)) continue;
           const k = rainCount++ * 6;

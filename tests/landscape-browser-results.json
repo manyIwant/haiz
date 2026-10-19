@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18T23:19:49.855Z",
+  "date": "2026-10-19T04:38:47.086Z",
   "passed": true,
   "asset": "e3f645865a9aa1b7ff90c504f381f37e5a914e8d877c23281357a72d7ba51175",
   "bytes": 5753376,
@@ -20,8 +20,8 @@
         "x": 73.95030000000001,
         "z": 62.399550000000005
       },
-      "drawCalls": 709,
-      "triangles": 559221
+      "drawCalls": 580,
+      "triangles": 738585
     },
     {
       "climate": "morning",
@@ -39,8 +39,8 @@
         "x": 73.95030000000001,
         "z": 62.399550000000005
       },
-      "drawCalls": 485,
-      "triangles": 483433
+      "drawCalls": 421,
+      "triangles": 662783
     },
     {
       "climate": "afterrain",
@@ -58,8 +58,8 @@
         "x": 73.95030000000001,
         "z": 62.399550000000005
       },
-      "drawCalls": 709,
-      "triangles": 559221
+      "drawCalls": 580,
+      "triangles": 738585
     }
   ],
   "errors": [],

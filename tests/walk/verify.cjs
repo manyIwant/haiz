@@ -14,6 +14,15 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   vm.runInContext(fs.readFileSync('assets/vendor/RGBELoader.js','utf8'),context);
   const hdr=fs.readFileSync('assets/walk/textures/campus-light.hdr');const environment=new THREE.RGBELoader().parse(hdr.buffer.slice(hdr.byteOffset,hdr.byteOffset+hdr.byteLength));assert.equal(environment.width,1024);assert.equal(environment.height,512);
   const scene=new THREE.Scene(),world=await context.window.CampusWorld.build(scene,data,'balanced',undefined,bank);
+  test('indexed static batches preserve triangles and animated fan transforms',()=>{
+    let saved=0,fans=0,shades=0;scene.traverse(o=>{saved+=o.geometry?.userData.preservedIndexSavings||0;shades+=o.userData.contactShadeCount||0;if(o.userData.dynamicTransform){assert(o.matrixAutoUpdate);fans++;}});
+    assert(saved>1000000);assert.equal(fans,32);assert.equal(shades,world.treeCount);
+    const arts=world.buildings.find(b=>b.data.id==='yishu');assert.equal(arts.group.userData.atelier,'arts-red-hipped-portico');
+    assert(!scene.matrixAutoUpdate);assert(!arts.group.matrixAutoUpdate);
+  });
+  test('indexed collision broad phase keeps complete walking trajectories identical',()=>{
+    const index=M.spatialIndex(world.colliders);for(const building of world.buildings){const start=M.safePoint(building.center.x,building.center.z,world.colliders,world.bounds);if(!start)continue;const a={...start},b={...start};for(let i=0;i<180;i++){const input={x:Math.sin(i*.13),y:Math.cos(i*.17),run:i%3===0},yaw=i*.03;M.step(a,input,yaw,1/30,world.colliders,world.bounds);M.step(b,input,yaw,1/30,index,world.bounds);assert.deepEqual(a,b);}}
+  });
   test('photo-informed facade materials have bump and roughness maps with metric UVs',()=>{
     const kinds=new Set();let projected=0;
     scene.traverse(m=>{if(!m.isMesh||!m.material?.userData.surfaceStudy)return;

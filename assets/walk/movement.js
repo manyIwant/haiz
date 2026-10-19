@@ -7,7 +7,20 @@
   }
   function blocked(x,z,colliders,bounds,r=RADIUS){
     if(x<bounds.minX+r||x>bounds.maxX-r||z<bounds.minZ+r||z>bounds.maxZ-r)return true;
-    return colliders.some(o=>intersects(x,z,o,r));
+    return colliders.queryBlocked?colliders.queryBlocked(x,z,r):colliders.some(o=>intersects(x,z,o,r));
+  }
+  // Exact broad phase for immutable world colliders. The same circle/AABB
+  // narrow phase and movement substeps remain; no simplified collisions.
+  function spatialIndex(colliders,cellSize=8){
+    const cells=new Map();
+    for(const o of colliders)for(let x=Math.floor(o.minX/cellSize);x<=Math.floor(o.maxX/cellSize);x++)for(let z=Math.floor(o.minZ/cellSize);z<=Math.floor(o.maxZ/cellSize);z++){
+      const key=x+':'+z;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(o);
+    }
+    return {size:colliders.length,queryBlocked(x,z,r){
+      for(let cx=Math.floor((x-r)/cellSize);cx<=Math.floor((x+r)/cellSize);cx++)for(let cz=Math.floor((z-r)/cellSize);cz<=Math.floor((z+r)/cellSize);cz++){
+        const list=cells.get(cx+':'+cz);if(list)for(const o of list)if(intersects(x,z,o,r))return true;
+      }return false;
+    }};
   }
   function step(pos,input,yaw,seconds,colliders,bounds){
     const dt=Math.min(Math.max(seconds,0),.1),len=Math.hypot(input.x,input.y);
@@ -37,6 +50,6 @@
     return {yaw:yaw-dx*gain,pitch:Math.max(-1.35,Math.min(1.35,pitch-dy*gain))};
   }
   function joystick(dx,dy,radius=40){const n=Math.max(1,Math.hypot(dx,dy)/radius);return {x:dx/(radius*n),y:-dy/(radius*n)};}
-  const api={RADIUS,intersects,blocked,step,safePoint,look,joystick};
+  const api={RADIUS,intersects,blocked,step,safePoint,look,joystick,spatialIndex};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.CampusMotion=api;
 })(typeof window==='undefined'?globalThis:window);
