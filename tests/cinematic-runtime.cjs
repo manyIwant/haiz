@@ -16,6 +16,7 @@ async function run({reduced=false,noWebGL=false}={}){
   function ticks(count){for(let i=0;i<count;i++){now+=1000/60;const cb=raf.shift();assert(cb);cb(now);}}
   function message(origin){for(const fn of events.message)fn({origin,source:frame.contentWindow,data:{type:'haiz:arrival:ready'}});}
   // Unknown origins cannot unlock the iframe; the campus handshake can.
+  assert.equal($('play').disabled,false,'play must unlock without a campus handshake');assert.equal(frame.getAttribute('src'),null);
   message('https://other.invalid');assert.equal(sent.length,0);message(context.location.origin);
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal($('play').disabled,false);assert(window.HMZCinematic);

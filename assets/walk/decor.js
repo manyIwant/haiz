@@ -19,11 +19,10 @@ function load(done=()=>{}){
     finish('ready');tick();
   },undefined,()=>finish('failed'));
 }
-function tick(){if(!api)return;const p=api.state.pos,quality=api.state.effectiveQuality;
+function tick(){if(!api?.state.started)return;const p=api.state.pos,quality=api.state.effectiveQuality;
   if(status==='pending'&&quality!=='low'&&slots.some(s=>Math.hypot(s.point.x-p.x,s.point.z-p.z)<75))load();
   if(status!=='ready')return;
   for(const s of slots){const visible=quality!=='low'&&Math.hypot(s.point.x-p.x,s.point.z-p.z)<75;s.plant.visible=visible;s.proxy.visible=!visible;}
 }
-async function prepare(value){attach(value);if(status==='pending'&&THREE.GLTFLoader&&location.protocol!=='file:')await new Promise(resolve=>load(resolve));}
-window.CampusDecor={attach,prepare,tick,get status(){return status;},get count(){return models.length;}};
+window.CampusDecor={attach,tick,get status(){return status;},get count(){return models.length;}};
 })();

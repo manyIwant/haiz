@@ -119,4 +119,4 @@ npm run test:performance
 
 砚池石材的 Blender 源生成器为 `scripts/build-landscape.py`。使用 Blender 4.3.2、Noto Serif CJK 字体执行 `blender -b -t 4 --python scripts/build-landscape.py`，可重建网页 GLB、哈希清单及本地可编辑的 `build/landscape/haiz-limestone.blend`。构建网站不需要运行 Blender。石岸分级细节、羽状椰叶、科学馆外廊和手机实拍对照见 [本轮画面记录](docs/landscape-fidelity-20261019.md)。
 
-完整校园现在在电影播放前准备并预热，低帧率不再自动降低分辨率。艺术中心实拍构件、静态缓存、索引合批及精确碰撞加速的实现与验证边界见 [保真性能记录](docs/fidelity-performance-20261019.md)。
+开场影像准备好即可播放，点击开始后才加载校园，盆栽在靠近后加载；已按用户反馈撤销阻塞式全量预热。低帧率不再自动降低分辨率。艺术中心实拍构件、静态缓存、索引合批及精确碰撞加速的实现与验证边界见 [保真性能记录](docs/fidelity-performance-20261019.md)。

@@ -7,8 +7,8 @@ for(const file of fs.readdirSync('.').filter(p=>p.endsWith('.html')&&p!=='index.
   html=html.replace(/assets\/(css\/experience\.css|js\/experience\.js)\?v=\d+/g,'assets/$1?v=12');
   if(!html.includes('assets/css/atelier-ui.css'))html=html.replace('</head>','<link rel="stylesheet" href="assets/css/atelier-ui.css?v=10"><script defer src="assets/js/atelier-ui.js?v=10"></script></head>');
   html=html.replace(/assets\/(css\/atelier-ui\.css|js\/atelier-ui\.js|js\/journal\.js)\?v=\d+/g,'assets/$1?v=12');
-  html=html.replace(/assets\/walk\/(surfaces|architecture|atelier|app|climate|reflections|world|landscape|review|interiors|movement|decor)\.js\?v=\d+/g,'assets/walk/$1.js?v=20');
-  html=html.replace(/assets\/cinematic\/descent\.js\?v=\d+/g,'assets/cinematic/descent.js?v=20');
+  html=html.replace(/assets\/walk\/(surfaces|architecture|atelier|app|climate|reflections|world|landscape|review|interiors|movement|decor)\.js\?v=\d+/g,'assets/walk/$1.js?v=21');
+  html=html.replace(/assets\/cinematic\/descent\.js\?v=\d+/g,'assets/cinematic/descent.js?v=21');
   html=html.replace(/assets\/walk\/style\.css\?v=\d+/g,'assets/walk/style.css?v=12');
   fs.writeFileSync(file,html);
 }

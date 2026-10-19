@@ -441,12 +441,6 @@
     breeze=window.CampusBreeze?.create(scene,reduced);
     status(.94,'校准视角与安全落点…');
     buildDestinations();goTo('beimen',false);updateCamera(0);drawMaps();
-    status(.96,'预热材质与阴影，保持完整画质…');
-    await window.CampusDecor?.prepare({state,scene,renderer});
-    await new Promise(resolve=>setTimeout(resolve,0));
-    const warmTextures=new Set();scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)for(const value of Object.values(m))if(value?.isTexture)warmTextures.add(value);});
-    let warmed=0;for(const texture of warmTextures){renderer.initTexture?.(texture);if(++warmed%8===0)await new Promise(resolve=>setTimeout(resolve,0));}
-    renderer.compile?.(scene,camera);
     renderer.render(scene,camera);
     status(1,touch?'校园已就绪 · 左摇杆行走，右半屏环顾':'校园已就绪 · WASD 行走，鼠标环顾');$('enterText').textContent='开始漫游';$('enterButton').disabled=false;
     last=performance.now();frame=requestAnimationFrame(animate);

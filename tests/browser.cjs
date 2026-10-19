@@ -19,7 +19,7 @@ let browser;
   for(const mobile of [false,true]){
     const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:900},hasTouch:mobile,isMobile:mobile,reducedMotion:mobile?'reduce':'no-preference'}),page=await context.newPage();observe(page);
     page.setDefaultTimeout(180000);await page.goto(base+'/');await page.waitForFunction(()=>window.HMZCinematic&&window.HaizExperience);
-    assert.equal(await page.locator('#campusFrame').getAttribute('src'),'campus-3d.html?arrival=descent','full campus must preload before animation');
+    assert.equal(await page.locator('#campusFrame').getAttribute('src'),null,'opening must not wait for or request the full campus before play');
     assert.equal(await page.locator('a[href="journal.html"]').count(),1);
     assert.equal(await page.locator('#opening a[href="director.html"]').count(),1);
     assert.equal(await page.locator('#opening a[href="darkroom.html"]').count(),1);
@@ -31,7 +31,7 @@ let browser;
     await page.evaluate(()=>HMZCinematic.setProgress(.68));await page.waitForFunction(()=>Math.abs(HMZCinematic.progress()-.68)<.0001&&document.getElementById('chapterTitle').textContent==='把远方，变成日常。');
     assert.equal(await page.locator('#chapterTitle').textContent(),'把远方，变成日常。');
     await page.selectOption('#journeySpeed','2');
-    results.push({target:mobile?'cinematic root / mobile':'cinematic root / desktop',checks:['root is the cinematic entry','editorial home, darkroom and director studio remain accessible','320/375/390 px mobile portals remain reachable without overlay interference','full 3D iframe preloads before cinematic playback','chapter seek and speed controls','sound off by default'],passed:true});console.log('PASS cinematic root',mobile?'mobile':'desktop');await context.close();
+    results.push({target:mobile?'cinematic root / mobile':'cinematic root / desktop',checks:['root is the cinematic entry','editorial home, darkroom and director studio remain accessible','320/375/390 px mobile portals remain reachable without overlay interference','opening ready before user-initiated 3D loading','chapter seek and speed controls','sound off by default'],passed:true});console.log('PASS cinematic root',mobile?'mobile':'desktop');await context.close();
   }
   for(const mobile of [false,true]){
     const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:960},hasTouch:mobile,isMobile:mobile,reducedMotion:'reduce'}),page=await context.newPage();observe(page);
@@ -95,7 +95,7 @@ let browser;
     assert(await frame.evaluate(()=>haizWalk.state.started&&!haizWalk.state.paused));
     assert.equal(await entry.locator('#campusFrame').getAttribute('tabindex'),null);
     await entry.screenshot({path:path.join(artifacts,'entry-handoff.png')});
-    results.push({target:'cinematic → real campus iframe',checks:['preloaded world startup','same-origin ready handshake','arrival control takeover','keyboard-focusable live campus'],passed:true});
+    results.push({target:'cinematic → real campus iframe',checks:['user-initiated world startup','same-origin ready handshake','arrival control takeover','keyboard-focusable live campus'],passed:true});
     console.log('PASS real cinematic to campus handoff');
     await context.close();
   }
