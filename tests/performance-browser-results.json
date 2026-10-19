@@ -1,20 +1,20 @@
 {
-  "date": "2026-10-19T10:42:48.201Z",
+  "date": "2026-10-19T23:21:44.622Z",
   "passed": true,
   "result": {
     "matrixCompositionsPerFrame": 92,
     "submissionMs": [
-      9.799999997019768,
-      11,
-      13.5,
-      3.2000000029802322,
-      26.400000005960464,
-      4.899999991059303,
-      20.200000002980232,
-      7.799999997019768
+      9.400000005960464,
+      6.5,
+      9.599999994039536,
+      6.4000000059604645,
+      5.5999999940395355,
+      6.800000011920929,
+      30,
+      14.900000005960464
     ],
-    "drawCalls": 564,
-    "triangles": 766365,
+    "drawCalls": 568,
+    "triangles": 794733,
     "pixelRatio": 1,
     "shadowSize": 2048,
     "programs": 52,
@@ -30,19 +30,19 @@
       "z": 62.399550000000005
     },
     "staticTransformComparison": {
-      "objects": 2074,
+      "objects": 2079,
       "differingChannels": 0,
       "totalChannels": 1024000
     },
     "indexPreservation": {
-      "savedVertices": 1541815,
+      "savedVertices": 2132677,
       "differingChannels": 0
     },
     "collision": {
       "samples": 4000,
       "mismatch": 0,
-      "linearMs": 44.29999999701977,
-      "indexedMs": 1
+      "linearMs": 42.80000001192093,
+      "indexedMs": 0.5999999940395355
     },
     "fanStillAnimates": true,
     "contactShadeCount": 305

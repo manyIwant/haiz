@@ -1,8 +1,9 @@
 {
-  "passed": 33,
+  "passed": 34,
   "checks": [
     "indexed static batches preserve triangles and animated fan transforms",
     "indexed collision broad phase keeps complete walking trajectories identical",
+    "arts entrance has a genuine recessed doorway and planted layers",
     "photo-informed facade materials have bump and roughness maps with metric UVs",
     "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
     "original generated glaze is decoded on green roofs without replacing red roof albedo",
@@ -38,8 +39,8 @@
   "nodes": 34,
   "classrooms": 16,
   "trees": 305,
-  "colliders": 1783,
-  "meshes": 1512,
-  "vertices": 2222822,
+  "colliders": 1788,
+  "meshes": 1517,
+  "vertices": 1572950,
   "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }

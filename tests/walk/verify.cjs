@@ -23,6 +23,15 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('indexed collision broad phase keeps complete walking trajectories identical',()=>{
     const index=M.spatialIndex(world.colliders);for(const building of world.buildings){const start=M.safePoint(building.center.x,building.center.z,world.colliders,world.bounds);if(!start)continue;const a={...start},b={...start};for(let i=0;i<180;i++){const input={x:Math.sin(i*.13),y:Math.cos(i*.17),run:i%3===0},yaw=i*.03;M.step(a,input,yaw,1/30,world.colliders,world.bounds);M.step(b,input,yaw,1/30,index,world.bounds);assert.deepEqual(a,b);}}
   });
+  test('arts entrance has a genuine recessed doorway and planted layers',()=>{
+    const art=world.buildings.find(b=>b.data.id==='yishu'),entry=art.group.userData.entranceRecess,front=art.data.size[2]/2;
+    assert(entry&&entry.depth>=2);scene.updateMatrixWorld(true);
+    const cast=x=>new THREE.Raycaster(new THREE.Vector3(art.center.x+x,3,art.center.z+front+.3),new THREE.Vector3(0,0,-1),0,4).intersectObject(art.group,true);
+    const center=cast(.7),jamb=cast(entry.width/2+.2);
+    assert(center.length&&jamb.length);assert(center[0].distance>1.9,'solid wall must not fill the doorway');assert(jamb[0].distance<.4,'wall must retain its doorway return');
+    let shrubs=0,palms=0,soil=0,clusters=0;art.group.traverse(o=>{if(o.userData.artsShrubs){shrubs+=o.count;assert(o.isInstancedMesh&&o.customDepthMaterial);}if(o.userData.artsLeafClusters){clusters+=o.count;assert.equal(o.material.map,bank.foliage);assert.equal(o.customDepthMaterial.map,o.material.map);assert.equal(o.customDepthMaterial.alphaTest,o.material.alphaTest);assert(o.material.alphaTest>0&&!o.material.transparent);}if(o.userData.palmCrown){palms++;assert.equal(o.userData.palmCrown.layers,3);assert.equal(o.userData.palmCrown.fronds,20);}if(o.material?.userData.artsSoil){soil++;assert(o.material.map&&o.material.normalMap&&o.material.roughnessMap);assert(o.geometry.userData.metricUV);}});
+    assert.equal(shrubs,48);assert.equal(palms,5);assert.equal(soil,2);assert.equal(clusters,192);
+  });
   test('photo-informed facade materials have bump and roughness maps with metric UVs',()=>{
     const kinds=new Set();let projected=0;
     scene.traverse(m=>{if(!m.isMesh||!m.material?.userData.surfaceStudy)return;
@@ -93,7 +102,7 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('contact shadow instances lie on the floor',()=>{scene.traverse(m=>{if(m.userData.interiorBatch==='contact'){const mat=new THREE.Matrix4(),normal=new THREE.Vector3(0,0,1);m.getMatrixAt(0,mat);normal.transformDirection(mat);assert(Math.abs(normal.y)>.99);}});});
   test('same-origin startup assets exist; no CDN runtime',()=>{const html=fs.readFileSync('campus-3d.html','utf8');for(const m of html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g))assert(fs.existsSync(m[1].split('?')[0]),m[1]);assert(!/src="https?:/.test(html));});
   test('smallest palm template retains nonzero tapered leaf surfaces',()=>{
-    const landscape=context.window.CampusLandscape,g=new THREE.Group();landscape.init('low');landscape.palm(g,0,0,8,'low-leaf-area');let area=0;g.traverse(o=>{if(!o.userData.foliage)return;const p=o.geometry.attributes.position,a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();for(let i=0;i<p.count;i+=3){a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1);c.fromBufferAttribute(p,i+2);area+=b.sub(a).cross(c.sub(a)).length()/2;}});assert(area>1,'one-segment tapered leaves must not collapse');landscape.init('balanced');
+    const landscape=context.window.CampusLandscape,g=new THREE.Group();landscape.init('low');landscape.palm(g,0,0,8,'low-leaf-area');let area=0;g.traverse(o=>{if(!o.userData.foliage)return;const p=o.geometry.attributes.position,index=o.geometry.index,a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();assert(index&&index.count>p.count,'leaflets should reuse vertices');assert.equal(index.count,12*12*2*12,'only the four zero-area tip triangles per leaflet are omitted');for(let i=0;i<index.count;i+=3){a.fromBufferAttribute(p,index.getX(i));b.fromBufferAttribute(p,index.getX(i+1));c.fromBufferAttribute(p,index.getX(i+2));const triangleArea=b.sub(a).cross(c.sub(a)).length()/2;assert(triangleArea>1e-10,'no collapsed leaf triangles');area+=triangleArea;}});assert(area>1,'one-segment tapered leaves must not collapse');landscape.init('balanced');
   });
   const summary={passed:results.length,checks:results,nodes:world.buildings.length,classrooms:world.rooms.length,trees:world.treeCount,colliders:world.colliders.length,meshes,vertices,browserQA:'Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified.'};
   fs.writeFileSync('tests/walk/results.json',JSON.stringify(summary,null,2));

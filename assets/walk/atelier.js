@@ -182,10 +182,17 @@ function science(g,b,m,queueWindow){
 }
 function arts(g,b,m,queueWindow){
   const finish=root.CampusSurfaces.artsMaterials(m);
-  const [w,h,d]=b.size,front=d/2,white=finish.white,stone=finish.granite,portico=w*.27,depth=7.8;
+  const [w,h,d]=b.size,front=d/2,white=finish.white,stone=finish.granite,portico=w*.22,depth=7.8;
   // The supplied elevated photograph shows a white low hall, red hipped rear
   // roofs and an open, square-pier entrance — not the former solid canopy box.
-  box(g,m.plinth,w,.5,d,0,.25,0);box(g,white,w,h-.5,d,0,(h+.5)/2,0);
+  const entryWidth=6.6,entryDepth=2.1,entryBottom=1.3,entryTop=5.6;
+  box(g,m.plinth,w,.5,d,0,.25,0);
+  // Build the reveal into the wall volume. A glass rectangle in front of a
+  // solid box cannot produce the doorway's side returns or interior shade.
+  box(g,white,w,h-.5,d-entryDepth,0,(h+.5)/2,-entryDepth/2);
+  for(const side of [-1,1])box(g,white,(w-entryWidth)/2,h-.5,entryDepth,side*(w+entryWidth)/4,(h+.5)/2,front-entryDepth/2);
+  box(g,white,entryWidth,h-entryTop,entryDepth,0,(h+entryTop)/2,front-entryDepth/2);
+  box(g,stone,entryWidth,entryBottom-.5,entryDepth,0,(entryBottom+.5)/2,front-entryDepth/2);
   box(g,white,w+.45,.24,d+.45,0,h+.12,0);
   const rearRoof=roof(w*.96,d*.34,3.25,.8,m.roofRed,m.wallGrey,true);
   rearRoof.position.set(0,h+.3,-d*.30);g.add(rearRoof);
@@ -199,7 +206,7 @@ function arts(g,b,m,queueWindow){
       box(g,white,.10,2.3,.17,x-.45,y,front+.09);box(g,white,.10,2.3,.17,x+.45,y,front+.09);
     }
   }
-  const deck=1.3,top=6.4,cz=front+depth/2;
+  const deck=entryBottom,top=7.3,cz=front+depth/2;
   box(g,stone,portico+1,deck,depth,0,deck/2,cz);
   for(const side of [-1,1])for(const z of [front+.7,front+depth-.6]){
     box(g,white,.95,top-deck,.95,side*(portico/2-.65),(top+deck)/2,z);
@@ -216,6 +223,8 @@ function arts(g,b,m,queueWindow){
   // Raised white ridge blocks and slim metal rails visible in the photograph.
   box(g,white,portico-depth,.28,.7,0,top+3.03,cz);
   for(const side of [-1,1])box(g,white,.7,.55,.8,side*(portico-depth)/2,top+3.35,cz);
+  for(const y of [top+3.28,top+3.55])box(g,m.metalDark,portico-depth,.025,.025,0,y,cz+.2);
+  for(let x=-(portico-depth)/2;x<=(portico-depth)/2;x+=.8)box(g,m.metalDark,.025,.28,.025,x,top+3.41,cz+.2);
   for(let i=0;i<8;i++){
     const sh=deck*(8-i)/8,z=front+depth+.45+i*.44;
     box(g,stone,portico+1,sh,.46,0,sh/2,z);
@@ -225,8 +234,20 @@ function arts(g,b,m,queueWindow){
     for(const side of [-1,1]){const x=side*(portico/2+.38);box(g,m.metalDark,.045,.85,.045,x,sh+.425,z);}
   }
   for(const side of [-1,1])tube(g,m.metalDark,[[side*(portico/2+.38),deck+.85,front+depth+.2],[side*(portico/2+.38),deck/8+.85,front+depth+3.65]],.04);
-  queueWindow(0,deck+1.9,front+.06,5.6,3.8,'z',.15,m.glassTeal);
-  for(const x of [-2.8,0,2.8])box(g,m.metalDark,.07,3.8,.16,x,deck+1.9,front+.22);
+  const doorZ=front-entryDepth+.12,doorHeight=entryTop-deck-.16;
+  const entranceGlass=recessGlass.clone();entranceGlass.color.set('#35443f');entranceGlass.roughness=.24;
+  box(g,entranceGlass,entryWidth-.16,doorHeight,.06,0,deck+doorHeight/2,doorZ);
+  for(const x of [-entryWidth/2+.06,-1.5,0,1.5,entryWidth/2-.06])box(g,m.metalDark,.065,doorHeight,.11,x,deck+doorHeight/2,doorZ+.06);
+  for(const y of [deck+.06,entryTop-.19,entryTop-1])box(g,m.metalDark,entryWidth,.065,.11,0,y,doorZ+.06);
+  for(const x of [-.16,.16])tube(g,m.metalDark,[[x,deck+1.1,doorZ+.1],[x,deck+1.1,doorZ+.22],[x,deck+1.8,doorZ+.22],[x,deck+1.8,doorZ+.1]],.025);
+  box(g,stone,entryWidth,.035,entryDepth,0,deck+.017,front-entryDepth/2);
+  // Deck edge rails are structural geometry, not painted dark stripes.
+  for(const side of [-1,1]){
+    const x=side*(portico/2+.38);
+    for(const y of [deck+.15,deck+.86])box(g,m.metalDark,.045,.045,depth-.7,x,y,cz-.15);
+    for(let z=front+.4;z<front+depth-.3;z+=1.15)box(g,m.metalDark,.045,.85,.045,x,deck+.425,z);
+  }
+  g.userData.entranceRecess={width:entryWidth,depth:entryDepth,bottom:deck,top:entryTop,doorZ};
   const plazaDepth=20,plazaWidth=portico+4,plazaZ=front+depth+3.8+plazaDepth/2;
   box(g,finish.paving,plazaWidth,.14,plazaDepth,0,.09,plazaZ);
   for(const side of [-1,1]){

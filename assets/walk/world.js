@@ -1649,7 +1649,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     scene=target;data=input;pbrBank=pbr||{};scannedTextures={};OCCUPIED=[];vegetationTiles=[];waterMat=null;roadMats=[];
     TF.ox=data.meta.transform.originPx[0];TF.oy=data.meta.transform.originPx[1];TF.s=data.meta.transform.scale;
     var cfg={shadow:quality==='low'?0:1024,aniso:4,winK:1,lamps:true};
-    buildMaterials();window.CampusLandscape?.init(quality);var indoorMaterials=window.CampusInteriors.init(pbr||{});initFoliage();MAT.leafA.flatShading=MAT.leafB.flatShading=MAT.leafDry.flatShading=false;
+    buildMaterials();window.CampusLandscape?.init(quality,pbrBank);var indoorMaterials=window.CampusInteriors.init(pbr||{});initFoliage();MAT.leafA.flatShading=MAT.leafB.flatShading=MAT.leafDry.flatShading=false;
     // Neutral, subtly weathered plaster; no flat, featureless white blocks.
     var plaster=noiseTex('#d5d0c1',4500,256,.055);plaster.repeat.set(3,3);
     [MAT.wallCream,MAT.wallPutty,MAT.wallGrey,MAT.wallHerit,MAT.wallLight].forEach(function(m){m.map=indoorMaterials.plasterOutside.map||plaster;m.normalMap=indoorMaterials.plasterOutside.normalMap;m.roughnessMap=indoorMaterials.plasterOutside.roughnessMap;m.normalScale.set(.18,.18);m.roughness=.94;});

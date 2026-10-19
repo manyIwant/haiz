@@ -1,10 +1,16 @@
 {
-  "date": "2026-10-19T10:42:28.922Z",
+  "date": "2026-10-19T23:20:54.213Z",
   "passed": true,
   "evidence": {
     "palms": 5,
     "understory": 36,
     "understoryArea": 5.589382091236034,
+    "shrubs": 48,
+    "crownLayers": 15,
+    "leafClusters": 192,
+    "matchedAlphaShadows": true,
+    "entranceDepth": 2.1,
+    "doorRayDistance": 2.2500000006705534,
     "finishes": [
       {
         "kind": "forecourt",
@@ -32,8 +38,8 @@
       }
     ],
     "blockedApproach": 0,
-    "drawCalls": 644,
-    "triangles": 1073225,
+    "drawCalls": 649,
+    "triangles": 1127109,
     "pixelRatio": 1,
     "position": {
       "x": 44.857800000000005,

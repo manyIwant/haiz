@@ -3,9 +3,9 @@
 (function(root){'use strict';
 const T=THREE,bank=new Map(),ponds=[];
 const worldPoint=new T.Vector3();
-let quality='balanced',assetStatus='pending',assetPromise,leafMat,barkMat,leafGeo,fernGeo,stele;
+let quality='balanced',assetStatus='pending',assetPromise,leafMat,barkMat,leafGeo,fernGeo,shrubGeo,shrubAtlasMat,shrubAtlasGeo,stele;
 function random(seed){let x=2166136261;for(const c of String(seed))x=Math.imul(x^c.charCodeAt(0),16777619);return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
-function geometry(p,uv,colors){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();g.computeBoundingSphere();return g;}
+function geometry(p,uv,colors){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(p.indices)g.setIndex(p.indices);g.computeVertexNormals();g.computeBoundingSphere();return g;}
 function add(parent,geo,mat){const m=new T.Mesh(geo,mat);m.castShadow=m.receiveShadow=true;parent.add(m);return m;}
 function load(){
   if(assetPromise)return assetPromise;
@@ -30,8 +30,12 @@ function load(){
     new T.GLTFLoader().load('assets/walk/models/campus-limestone.glb',finish,undefined,()=>finish(null));
   });return assetPromise;
 }
-function init(q){
+function init(q,bank={}){
   quality=q;ponds.length=0;
+  // Reuse the already-loaded, original generated leaf atlas. It is not a
+  // campus photograph. Missing/failed textures keep the geometric shrub.
+  if(!bank.foliage)shrubAtlasMat=null;
+  else if(shrubAtlasMat?.map!==bank.foliage)shrubAtlasMat=new T.MeshStandardMaterial({map:bank.foliage,color:'#cdd4b0',side:T.DoubleSide,alphaTest:.46,roughness:.94});
   if(leafMat)return;
   leafMat=new T.MeshStandardMaterial({color:'#91aa70',vertexColors:true,roughness:.58,side:T.DoubleSide});
   const veinCanvas=document.createElement('canvas');veinCanvas.width=256;veinCanvas.height=512;
@@ -63,9 +67,19 @@ function blade(p,uv,colors,start,end,width,side,color,segments=3){
     const w=Math.sin(Math.PI*Math.pow(t,.74))*width;
     rows.push([center.clone().addScaledVector(side,-w),center.clone().addScaledVector(fold,Math.sin(t*Math.PI)),center.clone().addScaledVector(side,w)]);
   }
-  for(let j=0;j<segments;j++)for(let k=0;k<2;k++)for(const [a,b] of [[j,k],[j+1,k],[j,k+1],[j,k+1],[j+1,k],[j+1,k+1]]){
+  // Share each row within a blade, never between separate leaflets. This keeps
+  // the folded surface and silhouette while smoothing the curved leaf skin.
+  const base=p.length/3;const indices=p.indices||(p.indices=[]);
+  for(let a=0;a<=segments;a++)for(let b=0;b<3;b++){
     const point=rows[a][b];p.push(point.x,point.y,point.z);uv.push(b/2,a/segments);
     const factor=.8+.2*a/segments;colors.push(color.r*factor,color.g*factor,color.b*factor);
+  }
+  for(let j=0;j<segments;j++)for(let k=0;k<2;k++){
+    const a=base+j*3+k,b=a+3;
+    // At each tapered tip the entire row coincides. Omit only the four
+    // zero-area triangles, never a visible surface or leaflet.
+    if(j>0)indices.push(a,b,a+1);
+    if(j<segments-1)indices.push(a+1,b,b+1);
   }
 }
 function palm(parent,x,z,h,seed){
@@ -74,15 +88,21 @@ function palm(parent,x,z,h,seed){
   const a=trunk.attributes.position;
   for(let i=0;i<a.count;i++){const t=(a.getY(i)+h/2)/h,ring=1+.04*Math.sin(t*92);a.setXYZ(i,a.getX(i)*ring+.52*t*t,a.getY(i)+h/2,a.getZ(i)*ring+.23*Math.sin(t*1.8));}
   trunk.computeVertexNormals();add(g,trunk,barkMat);
-  const p=[],uv=[],colors=[],fronds=quality==='low'?9:12,leaflets=quality==='low'?12:22;
+  const p=[],uv=[],colors=[],fronds=quality==='low'?12:20,leaflets=quality==='low'?12:22;
+  const crownRadius=Math.min(4.6,2.4+h*.15);
   for(let f=0;f<fronds;f++){
-    const angle=f/fronds*Math.PI*2+r()*.25,len=3.6+r()*1.6,lift=.65+r()*.8,drop=1.5+r()*1.5;
+    // Interleaved emerging, mature and hanging fronds form a volume, not a
+    // single umbrella ring. The golden angle avoids stacked radial spokes.
+    const layer=f%3,angle=f*2.39996+r()*.22;
+    const len=crownRadius*(layer===0?.52:layer===1?.95:1.06)*(.88+r()*.22);
+    const lift=layer===0?2.0+r()*.65:layer===1?1.25+r()*.5:.45+r()*.4;
+    const drop=layer===0?-.45:layer===1?.75+r()*.6:2.4+r()*.9;
     const out=new T.Vector3(Math.cos(angle),0,Math.sin(angle)),side=new T.Vector3(-out.z,0,out.x);
     const point=t=>new T.Vector3(.52,h,.23).addScaledVector(out,len*t).add(new T.Vector3(0,Math.sin(t*Math.PI)*lift-t*t*drop,0));
     for(let k=1;k<=leaflets;k++)for(const sign of [-1,1]){
       const t=.05+k/(leaflets+1)*.91,start=point(t),length=Math.sin(Math.pow(t,.65)*Math.PI)*(.82+r()*.22)+.10;
       const end=start.clone().addScaledVector(side,sign*length).addScaledVector(out,length*.31);end.y-=length*(.35+r()*.25);
-      const color=new T.Color().setHSL(.22+r()*.035,.38,.23+r()*.11);
+      const color=new T.Color().setHSL((layer===2?.21:.24)+r()*.025,.42,.25+r()*.12);
       blade(p,uv,colors,start,end,.07,out,color,quality==='low'?1:3);
     }
     const points=[];for(let k=0;k<=12;k++)points.push(point(k/12));
@@ -90,6 +110,7 @@ function palm(parent,x,z,h,seed){
   }
   const leaves=add(g,geometry(p,uv,colors),leafMat);leaves.userData.foliage=true;
   leaves.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,side:T.DoubleSide});
+  g.userData.palmCrown={layers:3,fronds,radius:crownRadius};
   return g;
 }
 function broadLeaves(){
@@ -123,9 +144,34 @@ function fernLeaves(){
   }
   fernGeo=geometry(p,uv,colors);return fernGeo;
 }
+function shrubLeaves(){
+  if(shrubGeo)return shrubGeo;
+  const p=[],uv=[],colors=[],r=random('arts-small-leaf-shrub');
+  for(let shoot=0;shoot<8;shoot++){
+    const a=shoot*2.39996,out=new T.Vector3(Math.cos(a),0,Math.sin(a)),side=new T.Vector3(-out.z,0,out.x);
+    const start=out.clone().multiplyScalar(.06),tip=out.clone().multiplyScalar(.52+r()*.2);start.y=.04;tip.y=.65+r()*.4;
+    blade(p,uv,colors,start,tip,.012,side,new T.Color('#8d9866'),3);
+    for(let k=1;k<=4;k++)for(const sign of [-1,1]){
+      const t=.2+k*.17,base=start.clone().lerp(tip,t),end=base.clone().addScaledVector(side,sign*(.26+r()*.12)).addScaledVector(out,.18);end.y+=.08+(1-t)*.12;
+      blade(p,uv,colors,base,end,.095+r()*.035,out,new T.Color().setHSL(.25+r()*.035,.36,.27+r()*.1),4);
+    }
+  }
+  shrubGeo=geometry(p,uv,colors);return shrubGeo;
+}
+function shrubClusters(){
+  if(shrubAtlasGeo)return shrubAtlasGeo;
+  const geo=new T.PlaneGeometry(1,1,2,2),p=geo.attributes.position;
+  for(let i=0;i<p.count;i++)p.setZ(i,.13*(1-4*p.getX(i)*p.getX(i)));
+  geo.computeVertexNormals();shrubAtlasGeo=geo;return geo;
+}
 function forecourt(g,b,m,width,centerZ){
   const r=random('arts-photo-forecourt'),half=width/2;
-  const mulch=m.earth.clone();mulch.color.set('#515846');mulch.roughness=1;
+  const mulch=m.earth.clone();mulch.color.set('#b5b69a');mulch.roughness=1;
+  const soil=document.createElement('canvas');soil.width=soil.height=256;const ctx=soil.getContext('2d'),soilRandom=random('arts-leaf-litter');
+  ctx.fillStyle='#55513e';ctx.fillRect(0,0,256,256);
+  for(let i=0;i<1800;i++){ctx.fillStyle=['#4b4939','#6b6448','#83765a','#404735','#777657'][i%5];ctx.beginPath();ctx.ellipse(soilRandom()*256,soilRandom()*256,.4+soilRandom()*2,.3+soilRandom()*.65,soilRandom()*Math.PI,0,Math.PI*2);ctx.fill();}
+  mulch.map=new T.CanvasTexture(soil);mulch.map.encoding=T.sRGBEncoding;mulch.map.wrapS=mulch.map.wrapT=T.RepeatWrapping;mulch.map.anisotropy=4;
+  const grain=root.CampusSurfaces.maps('granite');mulch.normalMap=grain.normal;mulch.normalScale.set(.10,.10);mulch.roughnessMap=grain.rough;mulch.userData={metricTile:1.4,artsSoil:true};
   // Photo-informed planting structure, not surveyed tree locations. Keep the
   // central approach and the independent original pond footprint unchanged.
   const palms=[[-half-3,centerZ+2,8.5],[-half-7,centerZ-4,12.5],[-half-5,centerZ-10,14],
@@ -142,8 +188,26 @@ function forecourt(g,b,m,width,centerZ){
     }
     plants.castShadow=plants.receiveShadow=true;plants.userData.foliage=true;plants.userData.artsUnderstory=true;
     plants.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,side:T.DoubleSide});g.add(plants);
+    // A second, taller stratum masks the bare bed without adding downloads or
+    // one draw per plant. Actual folded leaves retain silhouettes at eye level.
+    const shrubs=new T.InstancedMesh(shrubLeaves(),leafMat,24);
+    const clusters=shrubAtlasMat?new T.InstancedMesh(shrubClusters(),shrubAtlasMat,24*4):null,clusterDummy=new T.Object3D();
+    for(let i=0;i<24;i++){
+      const a=i*2.39996,rr=Math.sqrt((i+.5)/24);
+      dummy.position.set(cx+Math.cos(a)*3.4*rr,.17,cz+Math.sin(a)*10.2*rr);
+      dummy.rotation.set(0,r()*6.28,0);const s=.85+r()*.55;dummy.scale.set(s,s*(1.1+r()*.45),s);dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);
+      if(clusters)for(let k=0;k<4;k++){
+        const angle=dummy.rotation.y+k*Math.PI/2;
+        clusterDummy.position.copy(dummy.position).add(new T.Vector3(Math.cos(angle)*.24*s,(.62+(k%2)*.2)*s,Math.sin(angle)*.24*s));
+        clusterDummy.rotation.set(k%2?.48:-.28,angle,.15*Math.sin(i+k));clusterDummy.scale.set(.95*s,.85*s,1);clusterDummy.updateMatrix();clusters.setMatrixAt(i*4+k,clusterDummy.matrix);
+      }
+    }
+    shrubs.castShadow=shrubs.receiveShadow=true;shrubs.userData.foliage=true;shrubs.userData.artsShrubs=true;
+    shrubs.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,side:T.DoubleSide});g.add(shrubs);
+    if(clusters){clusters.castShadow=clusters.receiveShadow=true;clusters.userData.foliage=true;clusters.userData.artsLeafClusters=true;
+      clusters.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,map:shrubAtlasMat.map,alphaTest:shrubAtlasMat.alphaTest,side:T.DoubleSide});g.add(clusters);}
   }
-  g.userData.photoPlanting={palms:palms.length,understory:36,reference:'campus_yishu.jpg'};
+  g.userData.photoPlanting={palms:palms.length,understory:36,shrubs:48,reference:'campus_yishu.jpg'};
 }
 function pond(g,b,waterLevel){
   const w=b.size[0],d=b.size[2],r=random('pond-shore-19'),high=new T.Group(),low=new T.Group();
