@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-20T04:33:27.667Z",
+  "date": "2026-10-20T06:58:09.576Z",
   "passed": true,
   "evidence": {
     "areas": [
@@ -7,7 +7,7 @@
         "id": "court_basket",
         "courts": 6,
         "hoops": 12,
-        "meshes": 8,
+        "meshes": 9,
         "netBatches": 1,
         "insideFootprint": true,
         "clearCourts": true

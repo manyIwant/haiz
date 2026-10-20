@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-19T04:38:57.692Z",
+  "date": "2026-10-20T06:50:31.220Z",
   "passed": true,
   "checks": [
     "real r128 shaders compile without errors",
@@ -19,14 +19,20 @@
       "rainCount": 0,
       "rainBudget": 0,
       "shelterCount": 28,
-      "time": 6.033300000000001,
+      "time": 6.0214000000178824,
       "custom": false,
       "reduced": false,
       "cloudDrawCalls": 1,
       "extraReflectionPasses": 0,
       "roadWaterFilms": 11,
+      "roofLookup": {
+        "queries": 0,
+        "tests": 0,
+        "cells": 116
+      },
+      "cachedRainColumns": 0,
       "climate": "morning",
-      "programs": 35,
+      "programs": 33,
       "fogNear": 210,
       "fogFar": 620
     },
@@ -37,14 +43,20 @@
       "rainCount": 0,
       "rainBudget": 0,
       "shelterCount": 28,
-      "time": 6.033300000000001,
+      "time": 6.0214000000178824,
       "custom": false,
       "reduced": false,
       "cloudDrawCalls": 1,
       "extraReflectionPasses": 0,
       "roadWaterFilms": 11,
+      "roofLookup": {
+        "queries": 0,
+        "tests": 0,
+        "cells": 116
+      },
+      "cachedRainColumns": 0,
       "climate": "afterrain",
-      "programs": 35,
+      "programs": 33,
       "fogNear": 150,
       "fogFar": 480
     },
@@ -55,14 +67,20 @@
       "rainCount": 0,
       "rainBudget": 0,
       "shelterCount": 28,
-      "time": 6.033300000000001,
+      "time": 6.0214000000178824,
       "custom": false,
       "reduced": false,
       "cloudDrawCalls": 1,
       "extraReflectionPasses": 0,
       "roadWaterFilms": 11,
+      "roofLookup": {
+        "queries": 0,
+        "tests": 0,
+        "cells": 116
+      },
+      "cachedRainColumns": 0,
       "climate": "dusk",
-      "programs": 35,
+      "programs": 33,
       "fogNear": 190,
       "fogFar": 550
     }

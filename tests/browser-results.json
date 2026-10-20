@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-20T04:31:27.856Z",
+  "date": "2026-10-20T06:54:41.261Z",
   "browser": "154.0.8037.57",
   "results": [
     {
@@ -121,14 +121,14 @@
           "nodes": 34,
           "classrooms": 16,
           "environment": "HDR",
-          "trees": 295,
-          "colliders": 1798,
+          "trees": 301,
+          "colliders": 1810,
           "quality": "high",
           "climate": "afterrain",
           "reflection": false,
           "tour": null,
-          "drawCalls": 499,
-          "triangles": 999891,
+          "drawCalls": 507,
+          "triangles": 1004459,
           "fps": 60,
           "loaded": true,
           "position": {

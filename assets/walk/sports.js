@@ -17,6 +17,7 @@ function init(){
   // Paint lies only millimetres above the floor. Keep it stable at long aerial
   // distances without moving the court, increasing resolution or adding a pass.
   for(const [material,offset]of [[key,-1],[materials.line,-2]]){material.polygonOffset=true;material.polygonOffsetFactor=offset;material.polygonOffsetUnits=offset;}
+  materials.soil=new T.MeshStandardMaterial({color:'#68694d',map:grain.color,roughnessMap:grain.rough,roughness:1});materials.soil.userData.metricTile=.8;
   return materials;
 }
 function mesh(g,geometry,material,x,y,z){const o=new T.Mesh(geometry,material);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o;}
@@ -63,8 +64,12 @@ function create(spec,center){
       box(g,m.board,w+1,.035,.035,x,2.43,z);
     }
   }
+  const planting=root.CampusAtlasDetails.planting(spec,center);
+  for(const p of planting){
+    box(g,m.apron,p.w,.18,p.d,p.x,.24,p.z);plane(g,m.soil,p.w-.16,p.d-.16,p.x,p.z,.338);
+  }
   g.userData.courtCount=courts.length;
-  return {data:spec,center,group:g,courts};
+  return {data:spec,center,group:g,courts,planting};
 }
 root.CampusSports={create};
 })(window);

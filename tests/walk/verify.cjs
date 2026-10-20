@@ -4,7 +4,7 @@ const {createCanvas,loadImage}=require(require.resolve('@napi-rs/canvas',{paths:
 const M=require('../../assets/walk/movement.js');
 const data=JSON.parse(fs.readFileSync('assets/walk/campus.json'));
 const context={THREE,console,setTimeout,window:{},document:{createElement(tag){assert.equal(tag,'canvas');return createCanvas(1,1);}}};
-vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','sports.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
+vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','atlas-details.js','sports.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
 const results=[];
 function test(name,fn){fn();results.push(name);console.log('PASS',name);}
 (async()=>{
@@ -53,8 +53,18 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
       for(const court of area.courts){assert(!M.blocked(court.x,court.z+3,world.colliders,world.bounds),'court access must remain open');}
       const posts=world.colliders.filter(o=>o.id===area.data.id);assert(posts.length>=6);assert(M.blocked((posts[0].minX+posts[0].maxX)/2,(posts[0].minZ+posts[0].maxZ)/2,world.colliders,world.bounds));
       let meshes=0,nets=0;area.group.traverse(o=>{if(o.isMesh)meshes++;if(o.material?.alphaTest>0&&o.material?.map)nets++;});assert(meshes<12,'court markings and hardware should be statically batched');assert.equal(nets,1,'basketball and volleyball nets should each use one alpha batch');
-      assert(!world.colliders.some(o=>o.id==='trunk'&&(o.minX+o.maxX)/2>c.x-c.w/2&&(o.minX+o.maxX)/2<c.x+c.w/2&&(o.minZ+o.maxZ)/2>c.z-c.d/2&&(o.minZ+o.maxZ)/2<c.z+c.d/2),'scattered trees must not grow through the courts');
+      for(const court of area.courts)assert(!world.colliders.some(o=>o.id==='trunk'&&(o.minX+o.maxX)/2>court.x-court.width/2&&(o.minX+o.maxX)/2<court.x+court.width/2&&(o.minZ+o.maxZ)/2>court.z-court.depth/2&&(o.minZ+o.maxZ)/2<court.z+court.depth/2),'trees must not grow inside playing boundaries');
     }assert.equal(hoops,12);
+  });
+  test('aerial median planting leaves all court aisles clear and pitch markings face inward',()=>{
+    const a=world.sports[0];assert.equal(a.planting.length,6);let shadeTrees=0;a.shadeGroup.traverse(o=>{if(o.userData.sportsMedian)shadeTrees++;});assert.equal(shadeTrees,6);
+    for(const p of a.planting){assert(M.blocked(a.center.x+p.x,a.center.z+p.z,world.colliders,world.bounds),'planters need solid walking boundaries');for(const court of a.courts)assert(Math.abs(a.center.z+p.z-court.z)-p.d/2>court.depth/2,'planters must not intrude into play');}
+    for(let col=0;col<3;col++){const x=a.center.x-a.center.w/2+(col+.5)*a.center.w/3;for(let z=-1;z<=1;z+=.1)assert(!M.blocked(x,a.center.z+z,world.colliders,world.bounds),'center aisle must stay passable');}
+    const field=world.buildings.find(b=>b.data.form==='field'),p=field.group.userData.pitch;assert.equal(p.penalties.length,2);for(const box of p.penalties){assert(Math.abs(box.box)<p.width/2);assert(Math.abs(box.spot)<p.width/2);assert(Math.abs(box.goalBox)<p.width/2);assert.equal(Math.sign(box.end),Math.sign(box.box));}
+    const lines=field.group.children.filter(o=>o.geometry?.type==='PlaneGeometry'&&o.material?.isMeshBasicMaterial);
+    assert(lines.some(o=>Math.abs(o.position.x)<1e-5&&Math.abs(o.position.z)<1e-5&&o.geometry.parameters.width===.18&&o.geometry.parameters.height===p.depth),'actual halfway-line geometry must cross the short axis');
+    assert.equal(lines.filter(o=>o.geometry.parameters.width===.14&&o.position.z>p.depth/2).length,8,'eight short start lines belong on the running track');
+    for(const o of lines)if(Math.abs(o.position.z)<=p.depth/2)assert(Math.abs(o.position.x)+o.geometry.parameters.width/2<=p.width/2+.1,'actual penalty lines must stay inside the football end lines');
   });
   test('curved hip surfaces face upward and double-eave tile geometry is quality-scalable',()=>{const mat=new THREE.MeshStandardMaterial(),roof=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,true);assert(roof.userData.architecturalRoof&&roof.userData.tileDetail);const faces=roof.children.filter(o=>o.geometry?.userData.metricUV);assert.equal(faces.length,4);for(const o of faces){const n=o.geometry.attributes.normal;let y=0;for(let i=0;i<n.count;i++)y+=n.getY(i);assert(y/n.count>.2,'roof normals must face the sky');}const simple=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,false);assert(simple.children[0].geometry.attributes.position.count<faces[0].geometry.attributes.position.count/5);});
   test('roof intrados face downward so slopes are not transparent from an eye-level porch view',()=>{const mat=new THREE.MeshStandardMaterial(),roof=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,false),inside=roof.children.filter(o=>o.geometry?.userData.architecturalIntrados);assert.equal(inside.length,4);for(const o of inside){const n=o.geometry.attributes.normal;let y=0;for(let i=0;i<n.count;i++)y+=n.getY(i);assert(y/n.count<-.2);}});

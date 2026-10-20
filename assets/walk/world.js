@@ -978,7 +978,8 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var hw = fw / 2, hh = fh / 2;
     line(0, -hh, fw, 0.18); line(0, hh, fw, 0.18);              // 边线
     line(-hw, 0, 0.18, fh); line(hw, 0, 0.18, fh);              // 端线
-    line(0, 0, fw, 0.18);                                        // 中线
+    line(0, 0, 0.18, fh);                                        // 中线垂直于长轴
+    g.userData.pitch={width:fw,depth:fh,penalties:[]};
     // 中圈
     var cc = new THREE.Mesh(new THREE.RingGeometry(9.0, 9.18, 40), lineMat);
     cc.rotation.x = -Math.PI / 2; cc.position.y = LAY.mark; g.add(cc);
@@ -995,25 +996,26 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     [-1, 1].forEach(function (s) {
       var px = s * hw, pn = -s;
       // 禁区
-      line(px - pn * penaltyD, 0, 0.16, penaltyW);
-      line(px - pn * penaltyD * 0.5, -penaltyW / 2, penaltyD, 0.16);
-      line(px - pn * penaltyD * 0.5, penaltyW / 2, penaltyD, 0.16);
+      line(px + pn * penaltyD, 0, 0.16, penaltyW);
+      line(px + pn * penaltyD * 0.5, -penaltyW / 2, penaltyD, 0.16);
+      line(px + pn * penaltyD * 0.5, penaltyW / 2, penaltyD, 0.16);
       // 球门区
-      line(px - pn * goalD, 0, 0.16, goalW);
-      line(px - pn * goalD * 0.5, -goalW / 2, goalD, 0.16);
-      line(px - pn * goalD * 0.5, goalW / 2, goalD, 0.16);
+      line(px + pn * goalD, 0, 0.16, goalW);
+      line(px + pn * goalD * 0.5, -goalW / 2, goalD, 0.16);
+      line(px + pn * goalD * 0.5, goalW / 2, goalD, 0.16);
       // 点球点
       var sp = new THREE.Mesh(new THREE.CircleGeometry(0.26, 12), lineMat);
-      sp.rotation.x = -Math.PI / 2; sp.position.set(px - pn * spotD, LAY.mark, 0); g.add(sp);
+      sp.rotation.x = -Math.PI / 2; sp.position.set(px + pn * spotD, LAY.mark, 0); g.add(sp);
       // 罚球弧（只保留禁区外那段圆弧）
       // 角度约定：RingGeometry 经 rotation.x = -PI/2 后，θ 映射到世界方向 (cosθ, -sinθ)。
-      // 弧需朝场地中央凸出（即朝 -pn 方向），故右侧取 π 附近、左侧取 0 附近。
+      // 弧需朝场地中央凸出（即朝 pn 方向），故右侧取 π 附近、左侧取 0 附近。
       var arcHalf = Math.acos(Math.min(1, (penaltyD - spotD) / arcR));
       var arc = new THREE.Mesh(
         new THREE.RingGeometry(arcR - 0.09, arcR, 28, 1,
-          pn > 0 ? Math.PI - arcHalf : -arcHalf, arcHalf * 2), lineMat);
+          pn > 0 ? -arcHalf : Math.PI - arcHalf, arcHalf * 2), lineMat);
       arc.rotation.x = -Math.PI / 2;
-      arc.position.set(px - pn * spotD, LAY.mark, 0);
+      arc.position.set(px + pn * spotD, LAY.mark, 0);
+      g.userData.pitch.penalties.push({end:px,box:px+pn*penaltyD,spot:px+pn*spotD,goalBox:px+pn*goalD});
       g.add(arc);
       // 球门（简化门框：两柱一横梁）
       var goalW2 = Math.min(7.32, goalW * 0.5), goalH = 2.44, goalD2 = 0.22;
@@ -1024,9 +1026,9 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       box(0.16, 0.16, goalW2 + 0.16, postMat, px - pn * goalD2, goalH, 0, g);
     });
 
-    // ③ 起跑区（西侧直道端，错开的前伸线）
-    for (var k = 0; k < 4; k++) {
-      line(-halfLen + 6 + k * 3, R_in * 0.42, 0.14, R_in * 0.86);
+    // ③ 分道起跑短线留在跑道内，不再穿过足球草坪。错位为示意，非赛道认证。
+    for (var k = 0; k < lanes; k++) {
+      line(-halfLen + 6 + k * .65, R_in + (k + .5) * laneW, .14, laneW);
     }
 
     // ④ 主席台（南侧中段，紧邻看台外侧；看台加宽后随之外移）
@@ -1446,6 +1448,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     for(var i=0;i<count;i++){
       var phi=rnd()*Math.PI*2,rad=Math.sqrt(rnd())*r;
       var yy=kind==='terminalia'?h*(.64+Math.floor(rnd()*3)*.14):h*.78+rnd()*r*.8;
+      if(kind==='court-shade'){var u=rnd()*2-1;rad*=Math.sqrt(1-u*u);yy=h*.84+u*r*.8;}
       points.push([Math.cos(phi)*rad,yy,Math.sin(phi)*rad]);
     }
     var im=new THREE.InstancedMesh(foliageGeo,foliageMat,count*3),dummy=new THREE.Object3D();
@@ -1453,6 +1456,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       var s=1.8+rnd()*1.8;
       for(var j=0;j<3;j++){
         dummy.position.set(p[0],p[1],p[2]);dummy.rotation.set(j===2?Math.PI/2:(rnd()-.5)*.5,j*Math.PI/2+rnd()*.2,rnd()*.5);
+        if(kind==='court-shade')dummy.rotation.set((rnd()-.5)*1.3,rnd()*Math.PI*2,(rnd()-.5)*1.3);
         dummy.scale.set(s,s*.88,1);dummy.updateMatrix();im.setMatrixAt(i*3+j,dummy.matrix);
       }
     });
@@ -1607,15 +1611,24 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       if(onProgress)onProgress(.22+.48*(i+1)/data.buildings.length,'还原 '+b.name+'…');
       if(i%4===0)await new Promise(function(resolve){setTimeout(resolve,0);});
     }
-    var sports=[];
+    var sports=[],sportsTrees=0;
     if(global.CampusSports)(data.sports||[]).forEach(function(spec){
       var center=rectWorld(spec.rect),area=global.CampusSports.create(spec,center);
       global.CampusSurfaces?.project(area.group);scene.add(area.group);
       collectColliders(area.group,colliders,spec.id);mergeStatic(area.group);sports.push(area);
+      if(area.planting.length){
+        var shade=new THREE.Group();scene.add(shade);area.shadeGroup=shade;
+        area.planting.forEach(function(p,i){
+          var x=center.x+p.x,z=center.z+p.z,tree=leafyTree(shade,x,z,p.height,1.65,spec.id+'-median-'+i,'court-shade',quality);
+          tree.userData.trunkPoint={x:x,z:z,r:Math.max(.2,p.height*.045)};tree.userData.sportsMedian=true;sportsTrees++;
+          colliders.push({minX:x-p.w/2,maxX:x+p.w/2,minZ:z-p.d/2,maxZ:z+p.d/2,id:'sports-planter'});
+        });
+        vegetationTiles.push({group:shade,x:center.x,z:center.z});
+      }
       markOccupied(center.x,center.z,center.w,center.d,spec.id);
     });
     flushWindows(scene,cfg);if(onProgress)onProgress(.74,'种植林荫与椰树…');
-    var trees=makeVegetation(quality);vegetationTiles.forEach(function(t){mergeStatic(t.group);mergeInstances(t.group);});buildings.forEach(function(b){if(b.data.form==='oldtree'){var c=b.center;colliders.push({minX:c.x-1.9,maxX:c.x+1.9,minZ:c.z-1.9,maxZ:c.z+1.9,id:'heritage-trunk'});}});
+    var trees=makeVegetation(quality)+sportsTrees;vegetationTiles.forEach(function(t){mergeStatic(t.group);mergeInstances(t.group);});buildings.forEach(function(b){if(b.data.form==='oldtree'){var c=b.center;colliders.push({minX:c.x-1.9,maxX:c.x+1.9,minZ:c.z-1.9,maxZ:c.z+1.9,id:'heritage-trunk'});}});
     scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint;colliders.push({minX:p.x-p.r,maxX:p.x+p.r,minZ:p.z-p.r,maxZ:p.z+p.r,id:'trunk'});}});
     // Low contrast contact shade anchors tree trunks even on low graphics settings.
     // Identical coplanar contact shades: batch by spatial tile, keeping every

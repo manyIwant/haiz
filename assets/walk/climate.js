@@ -62,6 +62,26 @@
 float climateHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float climateNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(climateHash(i),climateHash(i+vec2(1.,0.)),f.x),mix(climateHash(i+vec2(0.,1.)),climateHash(i+vec2(1.,1.)),f.x),f.y);}
 `;
+  // Same rotated-footprint test, with conservative XZ buckets. Keep the exact
+  // narrow-phase predicate; roof edges and rain coverage must not be simplified.
+  function shelterIndex(shelters,cellSize=24){
+    const cells=new Map(),stats={queries:0,tests:0};
+    for(const s of shelters){
+      const ex=Math.abs(s.cos)*s.w+Math.abs(s.sin)*s.d+1e-7,ez=Math.abs(s.sin)*s.w+Math.abs(s.cos)*s.d+1e-7;
+      for(let x=Math.floor((s.x-ex)/cellSize);x<=Math.floor((s.x+ex)/cellSize);x++)for(let z=Math.floor((s.z-ez)/cellSize);z<=Math.floor((s.z+ez)/cellSize);z++){
+        const key=x+','+z;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(s);
+      }
+    }
+    function height(x,z){
+      stats.queries++;let highest=-Infinity;
+      for(const s of cells.get(Math.floor(x/cellSize)+','+Math.floor(z/cellSize))||[]){
+        stats.tests++;const dx=x-s.x,dz=z-s.z;
+        if(Math.abs(dx*s.cos-dz*s.sin)<s.w&&Math.abs(dx*s.sin+dz*s.cos)<s.d)highest=Math.max(highest,s.top);
+      }
+      return highest;
+    }
+    return {height,get diagnostics(){return {...stats,cells:cells.size};}};
+  }
   function create(
     scene,
     sky,
@@ -253,16 +273,8 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
           sin: Math.sin(angle),
         };
       });
-    const underRoof = (x, y, z) =>
-      shelters.some((s) => {
-        const dx = x - s.x,
-          dz = z - s.z;
-        return (
-          y < s.top &&
-          Math.abs(dx * s.cos - dz * s.sin) < s.w &&
-          Math.abs(dx * s.sin + dz * s.cos) < s.d
-        );
-      });
+    const roofIndex=shelterIndex(shelters),roofHeights=new Float64Array(drops);
+    let roofX=NaN,roofZ=NaN,roofCached=0;
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 128;
     const c = canvas.getContext("2d"),
@@ -357,12 +369,17 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
         const px = camera.position.x,
           pz = camera.position.z,
           py = camera.position.y - 4;
+        // Drop columns move only with the camera, not time or rain strength.
+        // Retain Float64 heights and invalidate on every exact XZ change.
+        if(px!==roofX||pz!==roofZ){roofX=px;roofZ=pz;roofCached=0;}
+        for(let i=roofCached;i<rainBudget;i++)roofHeights[i]=roofIndex.height(px+dropOffsets[i][0],pz+dropOffsets[i][1]);
+        roofCached=Math.max(roofCached,rainBudget);
         for (let i = 0; i < rainBudget; i++) {
           const fall = (((i * 3.713 - time * (10 + rain * 8)) % 20) + 20) % 20,
             x = px + dropOffsets[i][0],
             z = pz + dropOffsets[i][1],
             y = py + fall;
-          if (y < 0 || underRoof(x, y, z)) continue;
+          if (y < 0 || y < roofHeights[i]) continue;
           const k = rainCount++ * 6;
           dropPositions[k] = x;
           dropPositions[k + 1] = y;
@@ -447,10 +464,12 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
           cloudDrawCalls: 1,
           extraReflectionPasses: 0,
           roadWaterFilms: roads.length,
+          roofLookup: roofIndex.diagnostics,
+          cachedRainColumns: roofCached,
         };
       },
       presets,
     };
   }
-  root.CampusClimate = { create, presets };
+  root.CampusClimate = { create, presets, shelterIndex };
 })(window);

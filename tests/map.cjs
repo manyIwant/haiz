@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{createCanvas}=require('@napi-rs/canvas');
 const data=JSON.parse(fs.readFileSync('assets/walk/campus.json')),t=data.meta.transform;
 const rectWorld=r=>({x:((r[0]+r[2])/2-t.originPx[0])*t.scale,z:-((r[1]+r[3])/2-t.originPx[1])*t.scale,w:(r[2]-r[0])*t.scale,d:(r[3]-r[1])*t.scale});
-const context={window:{},document:{createElement:()=>createCanvas(1,1)}};vm.createContext(context);vm.runInContext(fs.readFileSync('assets/walk/map.js','utf8'),context);
+const context={window:{},document:{createElement:()=>createCanvas(1,1)}};vm.createContext(context);for(const file of ['atlas-details.js','map.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
 const world={rectWorld,buildings:data.buildings.map(b=>({data:b,center:rectWorld(b.rect)}))};
 const evidence=[];
 for(const [size,large]of [[360,false],[1000,true]]){

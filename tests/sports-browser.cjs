@@ -52,9 +52,11 @@ function observe(page){page.on('pageerror',e=>errors.push(e.message));page.on('c
   for(const [file,selector]of [['director.html','#directorMap'],['about.html','#campusAtlas']]){
     await mapPage.goto(base+'/'+file);await mapPage.waitForSelector(selector+' [data-sports-area]');assert.equal(await mapPage.locator(selector+' [data-sports-area]').count(),2);
     assert.match(await mapPage.locator(selector+' [data-sports-area="court_volley"] title').textContent(),/推演/);
+    assert.equal(await mapPage.locator(selector+' [data-atlas-detail="court_basket-shade"] circle').count(),6);
+    assert.equal(await mapPage.locator(selector+' [data-atlas-detail="yundong"]').count(),1);
     assert(await mapPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(file==='director.html'){await mapPage.tap('[data-preset="afterclass"]');assert.deepEqual(await mapPage.evaluate(()=>HaizDirector.stops),['yihao','library','yundong','yanchi']);}
-    else{await mapPage.tap('#campusAtlas [data-atlas="yihao"]');assert.match(await mapPage.locator('#atlasDetail').textContent(),/一号教学楼/);}
+    else{await mapPage.tap('#campusAtlas [data-atlas="yundong"]');assert(await mapPage.locator('[data-map-building="yundong"]').evaluate(n=>n.classList.contains('active')));await mapPage.tap('#campusAtlas [data-atlas="yihao"]');assert.match(await mapPage.locator('#atlasDetail').textContent(),/一号教学楼/);assert.equal(await mapPage.locator('[data-map-building="yundong"]').evaluate(n=>n.classList.contains('active')),false);}
   }
   await mobile.close();assert.deepEqual(errors,[]);assert.deepEqual(failedRequests,[]);
   const report={date:new Date().toISOString(),passed:true,evidence,mobileMaps:'390px; modal open/close and touch-enabled director/atlas controls',errors,failedRequests,limits:'Original coordinates retained, volleyball subdivision inferred, no photogrammetry claim. Chromium SwiftShader; no real-phone FPS measurement.'};

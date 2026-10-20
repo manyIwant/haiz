@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-20T04:32:19.324Z",
+  "date": "2026-10-20T06:54:50.685Z",
   "passed": true,
   "evidence": [
     {
@@ -7,16 +7,16 @@
       "large": false,
       "exactPixelMatch": true,
       "unchangedFramesSkipped": 100,
-      "cachedMs": 6.725321000000008,
-      "uncachedMs": 37.32936699999999
+      "cachedMs": 6.890625,
+      "uncachedMs": 56.17559699999998
     },
     {
       "size": 1000,
       "large": true,
       "exactPixelMatch": true,
       "unchangedFramesSkipped": 100,
-      "cachedMs": 47.76099700000003,
-      "uncachedMs": 171.682564
+      "cachedMs": 43.29262299999999,
+      "uncachedMs": 168.03466300000002
     }
   ],
   "limits": "Native Canvas2D CPU timing, not browser or mobile FPS. Footprints are retained legacy data; volleyball count is explicitly inferred."

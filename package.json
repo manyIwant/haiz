@@ -16,6 +16,7 @@
     "test:loading": "node tests/loading-browser.cjs",
     "test:forecourt": "node tests/forecourt-browser.cjs",
     "test:map": "node tests/map.cjs && node tests/sports-browser.cjs",
+    "test:rain-performance": "node tests/rain-index.cjs && node tests/rain-performance-browser.cjs",
     "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview"
   },
   "devDependencies": {

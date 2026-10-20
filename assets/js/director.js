@@ -12,8 +12,9 @@ function map(){
   const defs=svg('defs',{},root),pattern=svg('pattern',{id:'directorGrid',width:25,height:25,patternUnits:'userSpaceOnUse'},defs);svg('path',{d:'M25 0H0V25',fill:'none',stroke:'currentColor','stroke-width':.5,opacity:.1},pattern);
   svg('rect',{x:-310,y:-290,width:620,height:580,fill:'url(#directorGrid)'},root);
   for(const lawn of data.lawns||[]){if((data.sports||[]).some(area=>area.sourceLawn===lawn.id))continue;const p=world(lawn.rect);svg('rect',{x:p.x-p.w/2,y:-p.z-p.d/2,width:p.w,height:p.d,class:'map-lawn'},root);}
-  for(const b of data.buildings){const p=world(b.rect);svg('rect',{x:p.x-p.w/2,y:-p.z-p.d/2,width:p.w,height:p.d,rx:b.form==='field'?30:1,class:'map-footprint '+b.form},root);}
+  for(const b of data.buildings){if(b.form==='field')continue;const p=world(b.rect);svg('rect',{x:p.x-p.w/2,y:-p.z-p.d/2,width:p.w,height:p.d,rx:1,class:'map-footprint '+b.form},root);}
   for(const area of data.sports||[]){const p=world(area.rect),g=svg('g',{'data-sports-area':area.id},root),[cols,rows]=area.grid;svg('title',{},g).textContent=area.name+' · '+area.limit;svg('rect',{x:p.x-p.w/2,y:-p.z-p.d/2,width:p.w,height:p.d,fill:area.color},g);for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)svg('rect',{x:p.x-p.w/2+(c+.1)*p.w/cols,y:-p.z-p.d/2+(r+.1)*p.d/rows,width:p.w/cols*.8,height:p.d/rows*.8,fill:'none',stroke:'#eeeadc','stroke-width':.6},g);}
+  root.insertAdjacentHTML('beforeend',CampusAtlasDetails.svg(CampusAtlasDetails.details(data,world)));
   const points=selected.map(id=>catalog.find(p=>p.id===id));
   if(points.length>1)svg('polyline',{points:points.map(p=>p.x+','+-p.z).join(' '),fill:'none',class:'map-order'},root);
   for(const p of catalog){const index=selected.indexOf(p.id),g=svg('g',{class:'director-pin'+(index>=0?' selected':''),role:'button',tabindex:0,'data-pin':p.id,'aria-label':(index>=0?'移除':'加入')+p.name,'aria-pressed':index>=0,transform:'translate('+p.x+','+-p.z+')'},root);
@@ -54,7 +55,7 @@ function views(){
   }));
 }
 try{
-  const response=await fetch('assets/walk/campus.json?v=24');if(!response.ok)throw Error('campus data');data=await response.json();
+  const response=await fetch('assets/walk/campus.json?v=25');if(!response.ok)throw Error('campus data');data=await response.json();
   catalog=ids.map(id=>{const b=data.buildings.find(p=>p.id===id);return {id,name:b.name,...world(b.rect)};});
   let saved={};try{saved=JSON.parse(localStorage.getItem('haiz.director.route.v1')||'{}')||{};}catch{}
   const query=new URLSearchParams(location.search);selected=C.stops(query.get('journey')||saved.stops||presets.shade,catalog);

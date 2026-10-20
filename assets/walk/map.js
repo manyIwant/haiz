@@ -13,7 +13,7 @@ function create(data,world,destinations){
     for(const road of data.roads||[]){
       ctx.fillStyle='#dedbcf';if(road.poly){ctx.beginPath();road.poly.forEach((v,i)=>{const p=point(v[0],v[1],s,pad);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.closePath();ctx.fill();}else rect(road.rect,'#dedbcf');
     }
-    for(const b of world.buildings){let color='#b0b9a4';if(b.data.form==='pond')color='#8eafa5';else if(b.data.form==='field')color='#bb866e';else if(['garden','oldtree','botanic'].includes(b.data.form))color='#a8b791';else if(b.data.form==='gate')color='#a87852';rect(b.data.rect,color);}
+    for(const b of world.buildings){if(b.data.form==='field')continue;let color='#b0b9a4';if(b.data.form==='pond')color='#8eafa5';else if(['garden','oldtree','botanic'].includes(b.data.form))color='#a8b791';else if(b.data.form==='gate')color='#a87852';rect(b.data.rect,color);}
     for(const area of data.sports||[]){
       const c=world.rectWorld(area.rect),p=point(c.x,c.z,s,pad),[cols,rows]=area.grid;rect(area.rect,area.color);
       ctx.strokeStyle='#eeeadc';ctx.lineWidth=large?1.2:.6;
@@ -22,6 +22,7 @@ function create(data,world,destinations){
         ctx.strokeRect(x+cw*.1,y+cd*.1,cw*.8,cd*.8);ctx.beginPath();ctx.moveTo(x+cw*.1,y+cd/2);ctx.lineTo(x+cw*.9,y+cd/2);ctx.stroke();
       }
     }
+    root.CampusAtlasDetails.canvas(ctx,root.CampusAtlasDetails.details(data,world.rectWorld),(x,z)=>point(x,z,s,pad));
     if(large){ctx.font='16px sans-serif';ctx.textAlign='center';for(const d of destinations){const b=world.buildings.find(b=>b.data.id===d.id),p=point(b.center.x,b.center.z,s,pad);ctx.fillStyle='#f5f1e5';ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8e4a32';ctx.fillText(d.tag,p.x,p.y+6);}}
     ctx.fillStyle='#64715b';ctx.font=(large?'14':'17')+'px serif';ctx.textAlign='left';ctx.fillText('南',pad,pad+15);ctx.fillText('北',pad,s-pad-5);
     if(large){ctx.fillStyle='#8d947f';ctx.fillRect(s-160,s-45,80,2);ctx.font='13px sans-serif';ctx.fillText('约 50 m',s-160,s-55);ctx.fillText('蓝：篮球区 · 棕：排球区（配置推演）',pad,s-pad-24);}

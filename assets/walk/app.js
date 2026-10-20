@@ -365,7 +365,7 @@
     }else{
       const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),15000);
       try{
-        const response=await fetch('assets/walk/campus.json?v=24',{signal:abort.signal});
+        const response=await fetch('assets/walk/campus.json?v=25',{signal:abort.signal});
         if(!response.ok)throw new Error('校园空间数据暂时不可用（'+response.status+'）。');
         data=await response.json();
       }catch(fetchError){

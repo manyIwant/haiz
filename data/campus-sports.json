@@ -1,5 +1,5 @@
 {
-  "revision": "aerial-review-20261020",
+  "revision": "aerial-review-20261020-r2",
   "reference": {
     "url": "https://github.com/Aakkkk121/HNZX-TUXUN/blob/b75786e5da00738d6daabd87d62686a1b5145768/%24((2I%5DK%5D0M%5DP9YT0(MJZ%24UR_%E5%89%AF%E6%9C%AC.png",
     "repository": "https://github.com/Aakkkk121/HNZX-TUXUN",
@@ -12,8 +12,9 @@
     {
       "id": "court_basket", "sourceLawn": "court_basket", "name": "篮球场区", "kind": "basketball",
       "grid": [3, 2], "play": [15, 28], "color": "#657f91",
+      "median": {"width": 1.6, "bedLength": 3.4, "offsets": [-3.8, 3.8], "treeHeight": 6.5},
       "evidence": "俯视影像可辨识六片篮球场；占地沿用原数据中 court_basket 的矩形，不声称实测。",
-      "limit": "场线按通用规格布置，篮架样式、缓冲距离与色彩为解释性重建。"
+      "limit": "场线按通用规格布置，篮架样式、缓冲距离与色彩为解释性重建。航拍可见两排之间的树荫带；六处树池的细分位置、株数和树形为推演，并非实测。"
     },
     {
       "id": "court_volley", "sourceLawn": "court_volley", "name": "排球场区（推演）", "kind": "volleyball",

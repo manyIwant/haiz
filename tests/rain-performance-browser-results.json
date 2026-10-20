@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20T06:48:21.268Z",
+  "passed": true,
+  "evidence": {
+    "stationary": {
+      "frames": 240,
+      "indexQueries": 0,
+      "footprintTests": 0,
+      "oldFootprintTests": 614660,
+      "rainAdvanced": true,
+      "bufferChanged": true
+    },
+    "moving": {
+      "frames": 120,
+      "indexQueries": 19200,
+      "footprintTests": 30153,
+      "oldFootprintTests": 276285
+    },
+    "framebuffer": {
+      "differingChannels": 0,
+      "totalChannels": 1600000
+    },
+    "rainBudget": 160,
+    "rainCount": 81,
+    "shadowSize": 2048,
+    "pixelRatio": 1
+  },
+  "errors": [],
+  "limits": "Exact same rain vertex positions and image, not physical rainfall/roof accuracy. Software WebGL, not phone FPS."
+}
