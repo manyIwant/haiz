@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-20T22:47:20.118Z",
+  "environment": "Chromium headless / SwiftShader, viewport simulation only",
+  "results": [
+    {
+      "label": "待办重载后保留",
+      "passed": true
+    },
+    {
+      "label": "仅标题即可创建活动草稿",
+      "passed": true
+    },
+    {
+      "label": "社团类型筛选",
+      "passed": true
+    },
+    {
+      "label": "搜索空状态",
+      "passed": true
+    },
+    {
+      "label": "满额演示可候补",
+      "passed": true
+    },
+    {
+      "label": "作品文本安全渲染",
+      "passed": true
+    },
+    {
+      "label": "教师审核前无公开展签",
+      "passed": true
+    },
+    {
+      "label": "作者同意前管理员无法发布",
+      "passed": true
+    },
+    {
+      "label": "作品审核闭环到校园展签",
+      "passed": true
+    },
+    {
+      "label": "撤回后展签同步消失",
+      "passed": true
+    },
+    {
+      "label": "便笺持久化",
+      "passed": true
+    },
+    {
+      "label": "专注计时跨重载",
+      "passed": true
+    },
+    {
+      "label": "world 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "walk 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "软件 WebGL 场景指标",
+      "ready": "true",
+      "drawCalls": "57",
+      "triangles": "37488",
+      "renderMs": "21.53"
+    },
+    {
+      "label": "study 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "desk 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "lesson 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "activities 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "constellation 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "works 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "world 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "walk 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "study 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "desk 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "lesson 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "activities 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "constellation 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "works 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "world 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "walk 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "study 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "desk 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "lesson 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "activities 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "constellation 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "works 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "地点机位切换",
+      "passed": true
+    },
+    {
+      "label": "机位收藏",
+      "passed": true
+    },
+    {
+      "label": "实际渲染截图导出",
+      "passed": true
+    },
+    {
+      "label": "PWA 首页离线重载",
+      "passed": true
+    },
+    {
+      "label": "PWA 离线工作台",
+      "passed": true
+    },
+    {
+      "label": "禁用 WebGL 后静态回退",
+      "passed": true
+    },
+    {
+      "label": "浏览器无未捕获错误",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

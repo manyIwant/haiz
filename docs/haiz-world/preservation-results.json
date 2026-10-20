@@ -1,0 +1,10 @@
+{
+  "base": "55638e8ad1d35bc5f9e480ccf33061d33ecbc9fc",
+  "unchanged": 362,
+  "missing": [],
+  "changed": [
+    "windowsill/SOURCE.md",
+    "windowsill/scene/scene.mjs",
+    "windowsill/scene/src/js/20-campus-adapter.js"
+  ]
+}
