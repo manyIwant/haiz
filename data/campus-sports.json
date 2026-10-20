@@ -1,0 +1,25 @@
+{
+  "revision": "aerial-review-20261020",
+  "reference": {
+    "url": "https://github.com/Aakkkk121/HNZX-TUXUN/blob/b75786e5da00738d6daabd87d62686a1b5145768/%24((2I%5DK%5D0M%5DP9YT0(MJZ%24UR_%E5%89%AF%E6%9C%AC.png",
+    "repository": "https://github.com/Aakkkk121/HNZX-TUXUN",
+    "commit": "b75786e5da00738d6daabd87d62686a1b5145768",
+    "sha256": "3e7b2ffa95337b1a5a6c260b273dcabd4e2264a5bd7265e0427eb3f587063bcf",
+    "accessed": "2026-10-20",
+    "note": "公开仓库俯视影像，与项目原有卫星图和斜向航拍交叉观察。拍摄日期、原始供应商及再分发许可未确认；仅作研究引用，不复制图片到网站。"
+  },
+  "areas": [
+    {
+      "id": "court_basket", "sourceLawn": "court_basket", "name": "篮球场区", "kind": "basketball",
+      "grid": [3, 2], "play": [15, 28], "color": "#657f91",
+      "evidence": "俯视影像可辨识六片篮球场；占地沿用原数据中 court_basket 的矩形，不声称实测。",
+      "limit": "场线按通用规格布置，篮架样式、缓冲距离与色彩为解释性重建。"
+    },
+    {
+      "id": "court_volley", "sourceLawn": "court_volley", "name": "排球场区（推演）", "kind": "volleyball",
+      "grid": [3, 1], "play": [9, 18], "color": "#a77d67",
+      "evidence": "影像可见相邻硬地球场带；用途名称与占地来自原数据 court_volley。",
+      "limit": "三片排球场是按原占地容纳通用场地的推演，影像未能确认细分数量、网柱和当前配置。"
+    }
+  ]
+}

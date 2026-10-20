@@ -1,17 +1,17 @@
 {
-  "date": "2026-10-19T23:10:35.358Z",
+  "date": "2026-10-20T04:31:41.686Z",
   "passed": true,
   "evidence": [
     {
       "mobile": false,
-      "openingReadyMs": 685.2784280000001,
+      "openingReadyMs": 522.600124,
       "campusRequestedBeforePlay": false,
       "openingWorksWithoutCampusHandshake": true,
       "errors": []
     },
     {
       "mobile": true,
-      "openingReadyMs": 492.7911960000001,
+      "openingReadyMs": 261.108514,
       "campusRequestedBeforePlay": false,
       "openingWorksWithoutCampusHandshake": true,
       "errors": []

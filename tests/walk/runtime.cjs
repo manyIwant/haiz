@@ -29,7 +29,7 @@ async function run(touch,startup='network'){
   window.THREE=ctx.THREE;vm.createContext(ctx);
   vm.runInContext(fs.readFileSync('assets/vendor/Water.js','utf8'),ctx);
   vm.runInContext(fs.readFileSync('assets/vendor/Sky.js','utf8'),ctx);
-  for(const file of ['campus-data.js','movement.js','journey-core.js','interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','world.js','memory.js','climate.js','route.js','reflections.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),ctx);
+  for(const file of ['campus-data.js','movement.js','journey-core.js','interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','sports.js','map.js','world.js','memory.js','climate.js','route.js','reflections.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),ctx);
   vm.runInContext(source,ctx);
   const start=performance.now();while(!window.haizWalk&&!ids.errorPanel.hidden){if(ids.errorText.textContent)throw new Error(ids.errorText.textContent);if(performance.now()-start>20000)throw Error('startup timeout');await new Promise(r=>setTimeout(r,10));}
   if(!window.haizWalk){while(!window.haizWalk&&performance.now()-start<20000){if(ids.errorText.textContent)throw Error(ids.errorText.textContent);await new Promise(r=>setTimeout(r,10));}}

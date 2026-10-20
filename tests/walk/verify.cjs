@@ -4,7 +4,7 @@ const {createCanvas,loadImage}=require(require.resolve('@napi-rs/canvas',{paths:
 const M=require('../../assets/walk/movement.js');
 const data=JSON.parse(fs.readFileSync('assets/walk/campus.json'));
 const context={THREE,console,setTimeout,window:{},document:{createElement(tag){assert.equal(tag,'canvas');return createCanvas(1,1);}}};
-vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
+vm.createContext(context);for(const file of ['interiors.js','memory-art.js','surfaces.js','architecture.js','atelier.js','landscape.js','sports.js','world.js'])vm.runInContext(fs.readFileSync('assets/walk/'+file,'utf8'),context);
 const results=[];
 function test(name,fn){fn();results.push(name);console.log('PASS',name);}
 (async()=>{
@@ -46,6 +46,16 @@ function test(name,fn){fn();results.push(name);console.log('PASS',name);}
   test('fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces',()=>{const mats=context.window.CampusInteriors.materials;for(const m of [mats.floor,mats.desk,mats.wall]){assert(m.map&&m.normalMap&&m.roughnessMap);assert.equal(m.map.encoding,THREE.sRGBEncoding);assert.equal(m.normalMap.image.width,512);}});
   test('original generated glaze is decoded on green roofs without replacing red roof albedo',()=>{let green=0,red=0;scene.traverse(o=>{const m=o.material;if(m?.userData.surfaceStudy!=='roof')return;if(m.userData.generatedGlaze){green++;assert.equal(m.map.image.width,1024);assert.equal(m.map.wrapS,THREE.MirroredRepeatWrapping);assert.equal(m.map.encoding,THREE.sRGBEncoding);}else{red++;assert.equal(m.map.image.width,512);}});assert(green&&red);});
   test('existing KML anchors and 34 nodes preserved',()=>{assert.equal(world.buildings.length,34);assert.deepEqual(data.anchors.center,[19.996067,110.347227]);assert.deepEqual(data.anchors.southGate,[19.994326,110.348012]);});
+  test('aerial-reviewed courts stay within source footprints with clear approaches and solid posts',()=>{
+    assert.equal(world.sports.length,2);assert.equal(world.sports.flatMap(a=>a.courts).length,9);scene.updateMatrixWorld(true);
+    let hoops=0;for(const area of world.sports){const c=area.center,bounds=new THREE.Box3().setFromObject(area.group);hoops+=area.group.userData.hoops||0;
+      assert(bounds.min.x>=c.x-c.w/2-.01&&bounds.max.x<=c.x+c.w/2+.01&&bounds.min.z>=c.z-c.d/2-.01&&bounds.max.z<=c.z+c.d/2+.01,'sports hardware must stay within its footprint');
+      for(const court of area.courts){assert(!M.blocked(court.x,court.z+3,world.colliders,world.bounds),'court access must remain open');}
+      const posts=world.colliders.filter(o=>o.id===area.data.id);assert(posts.length>=6);assert(M.blocked((posts[0].minX+posts[0].maxX)/2,(posts[0].minZ+posts[0].maxZ)/2,world.colliders,world.bounds));
+      let meshes=0,nets=0;area.group.traverse(o=>{if(o.isMesh)meshes++;if(o.material?.alphaTest>0&&o.material?.map)nets++;});assert(meshes<12,'court markings and hardware should be statically batched');assert.equal(nets,1,'basketball and volleyball nets should each use one alpha batch');
+      assert(!world.colliders.some(o=>o.id==='trunk'&&(o.minX+o.maxX)/2>c.x-c.w/2&&(o.minX+o.maxX)/2<c.x+c.w/2&&(o.minZ+o.maxZ)/2>c.z-c.d/2&&(o.minZ+o.maxZ)/2<c.z+c.d/2),'scattered trees must not grow through the courts');
+    }assert.equal(hoops,12);
+  });
   test('curved hip surfaces face upward and double-eave tile geometry is quality-scalable',()=>{const mat=new THREE.MeshStandardMaterial(),roof=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,true);assert(roof.userData.architecturalRoof&&roof.userData.tileDetail);const faces=roof.children.filter(o=>o.geometry?.userData.metricUV);assert.equal(faces.length,4);for(const o of faces){const n=o.geometry.attributes.normal;let y=0;for(let i=0;i<n.count;i++)y+=n.getY(i);assert(y/n.count>.2,'roof normals must face the sky');}const simple=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,false);assert(simple.children[0].geometry.attributes.position.count<faces[0].geometry.attributes.position.count/5);});
   test('roof intrados face downward so slopes are not transparent from an eye-level porch view',()=>{const mat=new THREE.MeshStandardMaterial(),roof=context.window.CampusAtelier.roof(30,10,2,1,mat,mat,false),inside=roof.children.filter(o=>o.geometry?.userData.architecturalIntrados);assert.equal(inside.length,4);for(const o of inside){const n=o.geometry.attributes.normal;let y=0;for(let i=0;i<n.count;i++)y+=n.getY(i);assert(y/n.count<-.2);}});
   test('photograph-informed hall, library silhouette and recessed academic facade replace generic forms',()=>{let hall=0,library=0,slots=0;scene.traverse(o=>{if(o.userData.atelier==='double-eave-hall')hall++;if(o.userData.atelier==='library-dome-arcade')library++;if(o.userData.openPlantSlot)slots++;});assert.equal(hall,1);assert.equal(library,1);assert.equal(slots,3);assert(world.buildings.find(b=>b.data.id==='yihao').group.userData.recessedFacade);});

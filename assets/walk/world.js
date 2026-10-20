@@ -1035,69 +1035,6 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     podium.castShadow = true;
     box(17, 0.4, 7, MAT.roofHerit, 0, 3.4, podiumZ, g);
 
-    /* ⑤ 篮球场区（6 个，3 列 × 2 行，篮框连线南北走向）
-       【v12】整体旋转 90°：长轴由 X 改为 Z（南北），两个篮框一北一南；
-       场地由 15×12 放大到 15×33（含 2.5m 端线外缓冲区，标准划线区仍为 15×28），
-       整片排布填满「操场南沿 ↔ 女生宿舍北沿」的走廊。
-       注意：以下坐标是 FORMS.field 的「局部坐标」，原点在操场中心
-             (操场世界中心 X=-152.25, Z=-136.9 → 世界 X = 局部 X - 152.25)。 */
-    var courtW = 15.0, courtD = 33.0;      // 单场：X 宽 15m，Z 长 33m（南北）
-    var runOut = 2.5;                      // 端线外缓冲（两侧各 2.5m）
-    var playD = courtD - runOut * 2;       // 划线区长度 = 28m（标准）
-    var gapX = 2.0, gapZ = 9.0;            // 场地之间通道
-    var clusterW = courtW * 3 + gapX * 2;  // 3 列 = 49.0m
-    var clusterD = courtD * 2 + gapZ;      // 2 行 = 75.0m
-    // 可用走廊（局部）：X = 33.75…86.75（世界 -118.5…-65.5，女生宿舍东西边界）
-    //                  Z = 看台外沿 54.0 + 9.9 起 … 146.4（世界 9.5，女生宿舍北沿）
-    var centerX = (33.75 + 86.75) / 2;                 // = 60.25
-    var bandZ0 = R_out + st.standW + 0.30 + 9.9;       // = 63.9
-    var bandZ1 = 146.4 - 3.0;                          // = 143.4
-    var centerZ = (bandZ0 + bandZ1) / 2;               // = 102.9
-    var startX = centerX - clusterW / 2 + courtW / 2;  // 第 1 列中心 X
-    var startZ = centerZ - clusterD / 2 + courtD / 2;  // 第 1 行中心 Z
-
-    var courtMat = M('#2f6b52', 0.94);     // 深绿塑胶场地
-    var apronMat = M('#b9b3a4', 0.96);     // 场地外圈水泥缓冲
-    var courtLine = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.88 });
-    var keyMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42 });
-    // 整片场地的水泥缓冲台（把 6 片连成一块球场区）
-    plane(clusterW + 3.0, clusterD + 3.0, apronMat, centerX, 0.04, centerZ, g);
-
-    for (var row = 0; row < 2; row++) {
-      for (var col = 0; col < 3; col++) {
-        var cx = startX + col * (courtW + gapX);
-        var cz = startZ + row * (courtD + gapZ);
-        // 场地（含端线外缓冲区）
-        var court = plane(courtW, courtD, courtMat, cx, 0.06, cz, g);
-        court.receiveShadow = true;
-        // —— 以下为 15×28 标准划线区，南北两端各留 2.5m 缓冲 ——
-        var hw = courtW / 2, hl = playD / 2;
-        plane(0.14, playD, courtLine, cx - hw + 0.07, LAY.mark, cz, g);   // 左边线（南北）
-        plane(0.14, playD, courtLine, cx + hw - 0.07, LAY.mark, cz, g);   // 右边线（南北）
-        plane(courtW, 0.14, courtLine, cx, LAY.mark, cz - hl + 0.07, g);  // 北端线
-        plane(courtW, 0.14, courtLine, cx, LAY.mark, cz + hl - 0.07, g);  // 南端线
-        plane(courtW, 0.12, courtLine, cx, LAY.mark, cz, g);              // 中线（东西向）
-        var ccl = new THREE.Mesh(new THREE.RingGeometry(1.72, 1.86, 28), courtLine);
-        ccl.rotation.x = -Math.PI / 2; ccl.position.set(cx, LAY.mark, cz); g.add(ccl);
-        [-1, 1].forEach(function (s) {                                 // s=-1 北筐, +1 南筐
-          var baseZ = cz + s * hl;                                     // 该端端线
-          var keyW = 4.9, keyD = 5.8;
-          plane(keyW, keyD, keyMat, cx, LAY.field, baseZ - s * keyD / 2, g);          // 三秒区
-          plane(keyW, 0.12, courtLine, cx, LAY.mark, baseZ - s * keyD, g);          // 罚球线
-          var fc = new THREE.Mesh(new THREE.RingGeometry(1.72, 1.86, 24), courtLine);
-          fc.rotation.x = -Math.PI / 2; fc.position.set(cx, LAY.mark, baseZ - s * keyD); g.add(fc);
-          // 三分线：以篮筐为圆心的半圆，开口朝场地中央
-          var hoopZ = baseZ - s * 1.575;
-          var arc = new THREE.Mesh(new THREE.RingGeometry(6.70, 6.84, 40, 1,
-                              (s > 0 ? 0 : Math.PI), Math.PI), courtLine);
-          arc.rotation.x = -Math.PI / 2; arc.position.set(cx, LAY.mark, hoopZ); g.add(arc);
-          // 篮筐（红点，南北两端 → 两筐连线为南北向）
-          var hoop = new THREE.Mesh(new THREE.CircleGeometry(0.24, 14),
-                                    new THREE.MeshBasicMaterial({ color: 0xdd4b39 }));
-          hoop.rotation.x = -Math.PI / 2; hoop.position.set(cx, LAY.mark + 0.005, hoopZ); g.add(hoop);
-        });
-      }
-    }
   };
 
   /* --- 太湖石"虎踞龙盘"：实拍纠正版 —— 宽扁横卧、多孔洞、深灰黑 --- */
@@ -1391,6 +1328,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
 
     // 绿地组团
     (data.lawns || []).forEach(function (L) {
+      if(global.CampusSports&&(data.sports||[]).some(function(s){return s.sourceLawn===L.id;}))return;
       var o = rectWorld(L.rect);
       // 【官网实证】校园草坪为台湾草（细叶结缕草，色偏黄绿）
       var mat = L.kind === 'lawn' ? MAT.grassTaiwan : (L.kind === 'botanic' ? MAT.grassDark : M('#54744a', 0.97));
@@ -1669,6 +1607,13 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       if(onProgress)onProgress(.22+.48*(i+1)/data.buildings.length,'还原 '+b.name+'…');
       if(i%4===0)await new Promise(function(resolve){setTimeout(resolve,0);});
     }
+    var sports=[];
+    if(global.CampusSports)(data.sports||[]).forEach(function(spec){
+      var center=rectWorld(spec.rect),area=global.CampusSports.create(spec,center);
+      global.CampusSurfaces?.project(area.group);scene.add(area.group);
+      collectColliders(area.group,colliders,spec.id);mergeStatic(area.group);sports.push(area);
+      markOccupied(center.x,center.z,center.w,center.d,spec.id);
+    });
     flushWindows(scene,cfg);if(onProgress)onProgress(.74,'种植林荫与椰树…');
     var trees=makeVegetation(quality);vegetationTiles.forEach(function(t){mergeStatic(t.group);mergeInstances(t.group);});buildings.forEach(function(b){if(b.data.form==='oldtree'){var c=b.center;colliders.push({minX:c.x-1.9,maxX:c.x+1.9,minZ:c.z-1.9,maxZ:c.z+1.9,id:'heritage-trunk'});}});
     scene.traverse(function(g){if(g.userData.trunkPoint){var p=g.userData.trunkPoint;colliders.push({minX:p.x-p.r,maxX:p.x+p.r,minZ:p.z-p.r,maxZ:p.z+p.r,id:'trunk'});}});
@@ -1690,7 +1635,7 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
     var lightTargets=new Set();scene.traverse(function(o){if(o.isLight&&o.target)lightTargets.add(o.target);});
     scene.traverse(function(o){if(o===scene||o.isLight||o.isCamera||lightTargets.has(o)||o.userData.dynamicTransform)return;o.updateMatrix();o.matrixAutoUpdate=false;});
     scene.updateMatrix();scene.matrixAutoUpdate=false;
-    return {rooms:window.CampusInteriors.rooms,buildings:buildings,colliders:colliders,treeCount:trees,vegetationTiles:vegetationTiles,rectWorld:rectWorld,water:waterMat,waterSurface:waterSurface,roadMaterials:roadMats,bounds:{minX:-data.meta.ground.width/2+3,maxX:data.meta.ground.width/2-3,minZ:-data.meta.ground.depth/2+3,maxZ:data.meta.ground.depth/2-3}};
+    return {rooms:window.CampusInteriors.rooms,buildings:buildings,sports:sports,colliders:colliders,treeCount:trees,vegetationTiles:vegetationTiles,rectWorld:rectWorld,water:waterMat,waterSurface:waterSurface,roadMaterials:roadMats,bounds:{minX:-data.meta.ground.width/2+3,maxX:data.meta.ground.width/2-3,minZ:-data.meta.ground.depth/2+3,maxZ:data.meta.ground.depth/2-3}};
   }
   global.CampusWorld={build:build};
 })(window);

@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-20T04:33:27.667Z",
+  "passed": true,
+  "evidence": {
+    "areas": [
+      {
+        "id": "court_basket",
+        "courts": 6,
+        "hoops": 12,
+        "meshes": 8,
+        "netBatches": 1,
+        "insideFootprint": true,
+        "clearCourts": true
+      },
+      {
+        "id": "court_volley",
+        "courts": 3,
+        "hoops": 0,
+        "meshes": 6,
+        "netBatches": 1,
+        "insideFootprint": true,
+        "clearCourts": true
+      }
+    ],
+    "mapChecks": [
+      {
+        "size": 360,
+        "large": false,
+        "differences": 0,
+        "arrowUpdates": 3,
+        "skipped": 100,
+        "additionalBlits": 0
+      },
+      {
+        "size": 1000,
+        "large": true,
+        "differences": 0,
+        "arrowUpdates": 3,
+        "skipped": 100,
+        "additionalBlits": 0
+      }
+    ],
+    "pixelRatio": 1,
+    "shadowSize": 2048
+  },
+  "mobileMaps": "390px; modal open/close and touch-enabled director/atlas controls",
+  "errors": [],
+  "failedRequests": [],
+  "limits": "Original coordinates retained, volleyball subdivision inferred, no photogrammetry claim. Chromium SwiftShader; no real-phone FPS measurement."
+}

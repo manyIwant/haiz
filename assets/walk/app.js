@@ -6,7 +6,7 @@
   let arrivalProgress=0,arrivalTaken=false,arrivalPoint=null;
   const state={started:false,paused:true,yaw:Math.PI,pitch:.04,walked:0,input:{x:0,y:0,run:false},pos:{x:13,z:-172},quality:'auto',sensitivity:1,bob:false,frames:0,fps:60};
   const keys=new Set(),dialogs=['pauseDialog','mapDialog','poiDialog','aboutDialog'];
-  let sky,climate,reflections,breeze,planner,tour=null,tourIndex=-1,tourSequence=null,observation=false;
+  let sky,climate,reflections,breeze,planner,mapRenderer,tour=null,tourIndex=-1,tourSequence=null,observation=false;
   let renderer,scene,camera,sun,hemiLight,ambientLight,world,data,nearest=null,last=0,frame=0,toastTimer,drag=null,lookTouch=null,joyPointer=null;
   let active=true,contextLost=false,shadowCenter={x:Infinity,z:Infinity},adaptTime=0,adaptFrames=0,pixelRatio=1,shadowEnabled=true;
   const destinations=[{id:'beimen',label:'北门',tag:'01'},{id:'fengqitang',label:'凤栖堂',tag:'02'},{id:'yanlintang',label:'衍林堂',tag:'03'},{id:'lanshu',label:'百年榄仁树',tag:'04'},{id:'yihao',label:'一号教学楼',tag:'05'},{id:'library',label:'图书馆',tag:'06'},{id:'yanchi',label:'砚池',tag:'07'},{id:'yundong',label:'操场',tag:'08'},{id:'nanmen',label:'南门',tag:'09'},{id:'kexue',label:'科学馆',tag:'10'},{id:'erhao',label:'二号教学楼',tag:'11'}];
@@ -275,30 +275,7 @@
     $('distanceWalked').textContent=Math.floor(state.walked);$('motionState').textContent=tour?'沿路行走':(state.input.run||keys.has('shift'))?'快步行走':'自由漫游';
     $('inspectButton').hidden=best>65||!!room;$('inspectName').textContent=close.data.name;$('inspectDistance').textContent=Math.round(best)+' m';
   }
-  function mapPoint(x,z,size,pad){const w=620,d=580,scale=(size-2*pad)/Math.max(w,d);return {x:size/2+x*scale,y:size/2-z*scale,s:scale};}
-  function drawMap(canvas,large){
-    if(!world)return;const ctx=canvas.getContext('2d'),s=canvas.width,pad=large?40:12;
-    ctx.fillStyle='#eeeadc';ctx.fillRect(0,0,s,s);
-    ctx.strokeStyle='#203f350c';ctx.lineWidth=1;
-    for(let i=0;i<s;i+=s/10){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,s);ctx.moveTo(0,i);ctx.lineTo(s,i);ctx.stroke();}
-    function rect(r,color){const c=world.rectWorld(r),p=mapPoint(c.x,c.z,s,pad);ctx.fillStyle=color;ctx.fillRect(p.x-c.w*p.s/2,p.y-c.d*p.s/2,c.w*p.s,c.d*p.s);}
-    (data.lawns||[]).forEach(l=>rect(l.rect,'#d0d8bc'));
-    (data.roads||[]).forEach(r=>{
-      ctx.fillStyle='#dedbcf';if(r.poly){ctx.beginPath();r.poly.forEach((v,i)=>{const p=mapPoint(v[0],v[1],s,pad);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.closePath();ctx.fill();}else rect(r.rect,'#dedbcf');
-    });
-    for(const b of world.buildings){let color='#b0b9a4';if(b.data.form==='pond')color='#8eafa5';else if(b.data.form==='field')color='#bb866e';else if(['garden','oldtree','botanic'].includes(b.data.form))color='#a8b791';else if(b.data.form==='gate')color='#a87852';rect(b.data.rect,color);}
-    if(large){
-      ctx.font='16px sans-serif';ctx.textAlign='center';
-      for(const d of destinations){const b=world.buildings.find(b=>b.data.id===d.id),p=mapPoint(b.center.x,b.center.z,s,pad);ctx.fillStyle='#f5f1e5';ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8e4a32';ctx.fillText(d.tag,p.x,p.y+6);}
-    }
-    const p=mapPoint(state.pos.x,state.pos.z,s,pad),angle=state.yaw;
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
-    ctx.fillStyle='#a6533630';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,large?38:26,Math.PI*.22,Math.PI*.78);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#a65336';ctx.strokeStyle='#f5f1e5';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,large?8:6,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
-    ctx.fillStyle='#64715b';ctx.font=(large?'14':'17')+'px serif';ctx.textAlign='left';ctx.fillText('南',pad,pad+15);ctx.fillText('北',pad,s-pad-5);
-    if(large){ctx.fillStyle='#8d947f';ctx.fillRect(s-160,s-45,80,2);ctx.font='13px sans-serif';ctx.fillText('约 50 m',s-160,s-55);}
-  }
-  function drawMaps(){drawMap($('miniMap'),false);if($('mapDialog').open)drawMap($('largeMap'),true);}
+  function drawMaps(){if(!mapRenderer)return;mapRenderer.draw($('miniMap'),false,state.pos,state.yaw);if($('mapDialog').open)mapRenderer.draw($('largeMap'),true,state.pos,state.yaw);}
   function buildDestinations(){
     const list=$('destinationList');for(const d of destinations){const button=document.createElement('button');button.innerHTML='<span><b>'+d.tag+'</b>'+d.label+'</span><small>移步 ↗</small>';button.onclick=()=>{goTo(d.id);resume();};list.appendChild(button);}
     const roomButton=document.createElement('button');roomButton.innerHTML='<span><b>12</b>开放教室 · 一号楼</span><small>进入 ↗</small>';roomButton.onclick=()=>{goToClassroom();resume();};list.appendChild(roomButton);
@@ -388,7 +365,7 @@
     }else{
       const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),15000);
       try{
-        const response=await fetch('assets/walk/campus.json',{signal:abort.signal});
+        const response=await fetch('assets/walk/campus.json?v=24',{signal:abort.signal});
         if(!response.ok)throw new Error('校园空间数据暂时不可用（'+response.status+'）。');
         data=await response.json();
       }catch(fetchError){
@@ -419,6 +396,7 @@
     await Promise.all([environmentReady,landscapeReady]);
     status(.22,'重建校道与开放教室…');
     world=await window.CampusWorld.build(scene,data,state.effectiveQuality,status,pbr);
+    mapRenderer=window.CampusMap.create(data,world,destinations);
     world.collisionIndex=M.spatialIndex?.(world.colliders);
     // r128 expects linear material colors. Palette hex values are sRGB;
     // convert each shared material once, after all photo-informed overrides.
@@ -445,6 +423,7 @@
     status(1,touch?'校园已就绪 · 左摇杆行走，右半屏环顾':'校园已就绪 · WASD 行走，鼠标环顾');$('enterText').textContent='开始漫游';$('enterButton').disabled=false;
     last=performance.now();frame=requestAnimationFrame(animate);
     window.haizWalk={state,world,climate,reflections,planner,startTour,stopTour,setArrivalProgress,takeArrivalControl,scene,camera,renderer,goTo,goToClassroom,pause,resume,diagnostics:()=>({nodes:world.buildings.length,classrooms:world.rooms.length,environment:state.environment||'daylight',trees:world.treeCount,colliders:world.colliders.length,quality:state.effectiveQuality,climate:climate.current,reflection:reflections.active,tour:tour?.place.id||null,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:Math.round(state.fps),loaded:true,position:{...state.pos}})};
+    window.haizWalk.map=mapRenderer;
     window.CampusWorkshop?.attach(window.haizWalk);
     Object.assign(window.haizWalk,{startJourney,restoreView});
     window.CampusDecor?.attach(window.haizWalk);window.CampusReview?.attach(window.haizWalk);

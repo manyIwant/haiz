@@ -1,5 +1,5 @@
 {
-  "passed": 34,
+  "passed": 35,
   "checks": [
     "indexed static batches preserve triangles and animated fan transforms",
     "indexed collision broad phase keeps complete walking trajectories identical",
@@ -8,6 +8,7 @@
     "fifteen bundled PBR maps, alpha foliage and HDR decode and are bound to classroom surfaces",
     "original generated glaze is decoded on green roofs without replacing red roof albedo",
     "existing KML anchors and 34 nodes preserved",
+    "aerial-reviewed courts stay within source footprints with clear approaches and solid posts",
     "curved hip surfaces face upward and double-eave tile geometry is quality-scalable",
     "roof intrados face downward so slopes are not transparent from an eye-level porch view",
     "photograph-informed hall, library silhouette and recessed academic facade replace generic forms",
@@ -38,9 +39,9 @@
   ],
   "nodes": 34,
   "classrooms": 16,
-  "trees": 305,
-  "colliders": 1788,
-  "meshes": 1517,
-  "vertices": 1572950,
+  "trees": 295,
+  "colliders": 1796,
+  "meshes": 1423,
+  "vertices": 1528370,
   "browserQA": "Node geometry checks only; see tests/browser-results.json for Chromium WebGL. Real-device touch and hardware FPS unverified."
 }
