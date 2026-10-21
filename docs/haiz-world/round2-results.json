@@ -1,0 +1,250 @@
+{
+  "at": "2026-10-21T04:39:23.508Z",
+  "checks": [
+    {
+      "label": "键盘 Enter 打开对话框",
+      "passed": true
+    },
+    {
+      "label": "Esc 离开对话框",
+      "passed": true
+    },
+    {
+      "label": "自习默认不加载 Three.js",
+      "passed": true
+    },
+    {
+      "label": "温和启动三步后恢复下一步",
+      "passed": true
+    },
+    {
+      "label": "完整思维上下文跨重载",
+      "passed": true
+    },
+    {
+      "label": "不同空间便笺相互隔离",
+      "passed": true
+    },
+    {
+      "label": "地点保留各自的空间记忆",
+      "passed": true
+    },
+    {
+      "label": "榄仁树工具将理解带入书架",
+      "passed": true
+    },
+    {
+      "label": "纯工具模式彻底隐藏场景",
+      "passed": true
+    },
+    {
+      "label": "纯工具偏好持久化",
+      "passed": true
+    },
+    {
+      "label": "书架记录理解变化",
+      "passed": true
+    },
+    {
+      "label": "书架支持编辑",
+      "passed": true
+    },
+    {
+      "label": "私人备份实际下载",
+      "passed": true
+    },
+    {
+      "label": "纸笔卡带出当前上下文",
+      "passed": true
+    },
+    {
+      "label": "打印版隐藏导航",
+      "passed": true
+    },
+    {
+      "label": "学生角色没有发布入口",
+      "passed": true
+    },
+    {
+      "label": "发布前可检查正文和时段",
+      "passed": true
+    },
+    {
+      "label": "教师发布在同源公共屏同步",
+      "passed": true
+    },
+    {
+      "label": "上课模式隐藏全部普通通知",
+      "passed": true
+    },
+    {
+      "label": "放学展示已审核公共学习资源",
+      "passed": true
+    },
+    {
+      "label": "教师一键隐藏",
+      "passed": true
+    },
+    {
+      "label": "隐藏状态不会因重载取消",
+      "passed": true
+    },
+    {
+      "label": "教师演示不显示紧急优先级",
+      "passed": true
+    },
+    {
+      "label": "紧急发布必须填写审计原因",
+      "passed": true
+    },
+    {
+      "label": "管理员演示可发布有原因的紧急内容",
+      "passed": true
+    },
+    {
+      "label": "紧急原因进入本机审计",
+      "passed": true
+    },
+    {
+      "label": "公共包没有私人记录",
+      "passed": true
+    },
+    {
+      "label": "公共入口拒绝私人备份",
+      "passed": true
+    },
+    {
+      "label": "导入内容不自动发布",
+      "passed": true
+    },
+    {
+      "label": "接收端明确审核后生效",
+      "passed": true
+    },
+    {
+      "label": "撤回从当前区进入归档",
+      "passed": true
+    },
+    {
+      "label": "课程冲突暂停增强提示",
+      "passed": true
+    },
+    {
+      "label": "课程来源由教师确认",
+      "passed": true
+    },
+    {
+      "label": "个人输入按文本转义",
+      "passed": true
+    },
+    {
+      "label": "study 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "shelf 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "teach 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "classroom 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "resources 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "paper 1440px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "study 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "shelf 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "teach 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "classroom 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "resources 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "paper 390px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "study 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "shelf 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "teach 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "classroom 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "resources 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "paper 320px 无横向溢出",
+      "passed": true
+    },
+    {
+      "label": "课堂静音计时实际运行",
+      "passed": true
+    },
+    {
+      "label": "离线刷新后仍能读写私人便笺",
+      "passed": true
+    },
+    {
+      "label": "离线教师发布台可打开",
+      "passed": true
+    },
+    {
+      "label": "单文件 HTTP 模拟可展示教室屏（file 协议被环境策略阻止）",
+      "passed": true
+    },
+    {
+      "label": "单文件加载后断网仍能发布与读取",
+      "passed": true
+    },
+    {
+      "label": "单文件 HTTP 模拟仅请求自身，随后离线可运行",
+      "passed": true
+    },
+    {
+      "label": "WebGL 不可用时自习工具仍可读写",
+      "passed": true
+    },
+    {
+      "label": "第二轮浏览器无未捕获异常",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "portableRequests": [
+    "http://127.0.0.1:8010/downloads/HAIZ-Classroom.html"
+  ],
+  "portableFileProtocol": "Not tested: managed Chromium returned ERR_BLOCKED_BY_ADMINISTRATOR; single-file HTTP load then offline tested"
+}

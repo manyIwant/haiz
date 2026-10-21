@@ -30,3 +30,8 @@
 ## 回滚
 
 删除新增 `world/` 及本轮新增文档即可回到旧站；原目录未被修改。新数据键为 `haiz.world.demo.v1`，不会覆盖原站便笺或机位键。PWA 缓存以 `haiz-shell-` 为前缀，只清理自身旧版本；设置中的清除数据仅移除本轮数据键。
+
+
+## ROUND 02 增量
+
+在第一轮提交 cd815ea 上建立独立分支 `feat/haiz-round02-classroom`，main 基线仍为 55638e8。原 #study 移到 #windowsill，原数据键未动；新 #study、#classroom、#teach 等在新增模块中实现。加入两个独立 v2 数据键、loopback 服务、模拟 Bridge、单文件便携版、测试与研究报告。公共服务数据和随机凭据位于被忽略的 .haiz-demo，不进入 Git 或 ZIP。回滚第二轮提交即可恢复第一轮入口。

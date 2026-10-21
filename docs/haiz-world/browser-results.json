@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-20T22:47:20.118Z",
+  "date": "2026-10-21T04:36:56.660Z",
   "environment": "Chromium headless / SwiftShader, viewport simulation only",
   "results": [
     {
@@ -63,10 +63,10 @@
       "ready": "true",
       "drawCalls": "57",
       "triangles": "37488",
-      "renderMs": "21.53"
+      "renderMs": "32.80"
     },
     {
-      "label": "study 1440px 无横向溢出",
+      "label": "windowsill 1440px 无横向溢出",
       "passed": true
     },
     {
@@ -98,7 +98,7 @@
       "passed": true
     },
     {
-      "label": "study 390px 无横向溢出",
+      "label": "windowsill 390px 无横向溢出",
       "passed": true
     },
     {
@@ -130,7 +130,7 @@
       "passed": true
     },
     {
-      "label": "study 320px 无横向溢出",
+      "label": "windowsill 320px 无横向溢出",
       "passed": true
     },
     {
