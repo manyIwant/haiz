@@ -16,3 +16,9 @@
 | 旧设计研究文件 | MIT | legacy/assets/vendor/AWESOME-DESIGN-MD-LICENSE.txt |
 
 雨夜预设的修改仍位于独立 AGPL 应用内，未删除任何上游版权、源码或模型生成工具。站内来源入口能访问同版本完整对应源码；独立 ZIP 同时包含这些文件。新应用不把既有学校照片重新标记为原创或 CC0。
+
+## 移动外壳增量（2026-10-22）
+
+Capacitor core/android/ios/cli 固定 7.6.9，MIT。原生生成模板保留自身注释，完整传递依赖锁在 apps/mobile/package-lock.json；npm 生产依赖漏洞审计 0 项（仅该次已知漏洞数据库结果，不等同许可证全面审计或安全保证）。生成过程使用的 CLI 属开发依赖，不打进业务网页。源站照片、字体、Three.js 和 AGPL 窗台的原许可证仍分别适用。未发布商店安装包。
+
+ClassIsland SDK 工程只声明外部 ClassIsland.Core 包，不分发宿主或包 DLL；构建未完成，其直接及传递依赖许可证必须在恢复依赖后继续单独审计。本轮不宣称已完成原生插件分发许可核查。

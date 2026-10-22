@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <base href="../">
+  <meta name="haiz-root" content="world/">
+  <script defer src="world/campus-shell.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173e35">
+  <meta name="description" content="走过绿瓦、长廊与榄仁树。海南中学府城校区第一人称校园漫游，16 间可步入的想象教室。">
+  <title>HAIZ WORLD · 完整校园漫游</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/walk/style.css?v=12">
+  <link rel="stylesheet" href="assets/walk/workshop.css?v=9">
+  <script defer src="assets/walk/atlas-details.js?v=25"></script>
+<script defer src="assets/vendor/three.min.js"></script>
+  <script defer src="assets/vendor/RGBELoader.js"></script>
+  <script defer src="assets/vendor/GLTFLoader.js"></script>
+  <script defer src="assets/vendor/Water.js"></script>
+  <script defer src="assets/vendor/Sky.js"></script>
+  <script defer src="assets/walk/movement.js?v=25"></script>
+  <script defer src="assets/walk/journey-core.js?v=9"></script>
+  <script defer src="assets/walk/view-store.js?v=9"></script>
+  <script defer src="assets/walk/interiors.js?v=25"></script>
+  <script defer src="assets/walk/memory-art.js?v=6"></script>
+  <script defer src="assets/walk/campus-data.js?v=25"></script>
+  <script defer src="assets/walk/surfaces.js?v=25"></script>
+  <script defer src="assets/walk/atelier.js?v=25"></script>
+  <script defer src="assets/walk/landscape.js?v=25"></script>
+  <script defer src="assets/walk/sports.js?v=25"></script>
+  <script defer src="assets/walk/map.js?v=25"></script>
+  <script defer src="assets/walk/world.js?v=25"></script>
+  <script defer src="assets/walk/architecture.js?v=25"></script>
+  <script defer src="assets/walk/memory.js?v=6"></script>
+  <script defer src="assets/walk/climate.js?v=25"></script>
+  <script defer src="assets/walk/route.js?v=6"></script>
+  <script defer src="assets/walk/reflections.js?v=25"></script>
+  <script defer src="assets/walk/breeze.js?v=8"></script>
+  <script defer src="world/campus-runtime.js"></script>
+  <script defer src="assets/walk/workshop.js?v=9"></script>
+  <script defer src="assets/walk/decor.js?v=25"></script>
+  <script defer src="assets/walk/review.js?v=25"></script>
+  <link rel="stylesheet" href="assets/walk/review.css?v=19">
+<link rel="stylesheet" href="assets/css/experience.css?v=12"><script defer src="assets/js/experience.js?v=12"></script><link rel="stylesheet" href="assets/css/atelier-ui.css?v=12"><script defer src="assets/js/atelier-ui.js?v=12"></script><link rel="stylesheet" href="world/campus-shell.css"></head>
+<body>
+  <div id="viewport" aria-label="第一人称校园场景"></div>
+  <header class="masthead">
+    <a class="wordmark" href="index.html" aria-label="haiz.space 首页">haiz<span>.space</span><i></i><small>海南中学</small></a>
+    <div class="header-right"><span class="edition">FUCHENG CAMPUS <b>府城校区</b></span><button id="mapButton" class="paper-button in-world" aria-label="打开校园地图">地图 <kbd>M</kbd></button><button id="classroomButton" class="paper-button in-world" aria-label="前往开放教室">教室 <span>↗</span></button><button id="pauseButton" class="paper-button in-world" aria-label="暂停与设置">暂停 <span>Ⅱ</span></button></div>
+  </header>
+
+  <main id="intro" class="intro">
+    <img class="intro-image" src="assets/images/web/hero-1600.jpg" alt="海南中学府城校区北门，绿瓦校门后是一号教学楼" fetchpriority="high">
+    <div class="intro-shade"></div>
+    <div class="intro-copy">
+      <p class="eyebrow">HAIKOU, HAINAN · EST. 1923</p>
+      <h1>从校门，<br>走进海中<span>。</span></h1>
+      <p class="intro-sub">北门、榄仁树、砚池。<br>走过 34 个校园节点，走进 16 间开放教室。</p>
+      <button id="enterButton" class="enter" disabled><span id="enterText">正在准备校园</span><span class="enter-arrow">↗</span></button>
+      <a class="reading-link" href="architecture.html">建筑观察手册 · 带着实拍去漫游 ↗</a><a class="reading-link" href="memory-walk.html">先读这条路线 · 无需加载三维 ↗</a><div class="loading-line"><span id="loadBar"></span></div>
+      <p id="loadStatus" class="load-status" role="status">读取校园空间…</p>
+    </div>
+    <aside class="intro-note"><span class="note-number">01 / WALK THE CAMPUS</span><p>一座校园，<br>不止一种走法。</p><div class="note-rule"></div><span id="deviceHint">W A S D 行走 · 鼠标环顾</span><small>第一人称 · 室内外探索 · 16 间想象教室</small></aside>
+    <footer class="intro-footer"><span>20°N · 岛屿上的日常</span><span>北门 — 凤栖堂 — 榄仁树 — 教学楼</span><span class="prototype">HAIZ WORLD / 完整校园 · 第一人称</span></footer>
+  </main>
+
+  <div id="hud" class="hud" hidden>
+    <div class="climate-note"><span id="climateLabel">晨光 · 模拟环境</span><small>非实时天气</small></div><button id="tourStop" class="tour-stop" hidden><span id="tourCaption"></span> · 接管行走</button>
+    <div id="reticle" class="reticle" aria-hidden="true"></div>
+    <div class="location-paper"><span class="eyebrow">YOU ARE HERE</span><h2 id="locationName">北门</h2><p><span id="distanceWalked">0</span> m <i></i><span id="motionState">自由漫游</span></p></div>
+    <button id="inspectButton" class="inspect" hidden><span id="inspectName">地点</span><small id="inspectDistance"></small><kbd>E</kbd><span>了解这里 ↗</span></button>
+    <div id="indoorStatus" class="indoor-status" hidden><span>CLASSROOM NOTES</span><b id="indoorName">想象教室</b><small>室内为创作还原 · 可沿原路返回校园</small></div>
+    <div id="walkHint" class="walk-hint">WASD / 方向键 行走 <i>·</i> 按住 Shift 快走 <i>·</i> Esc 暂停</div>
+    <div class="minimap-paper" id="minimapPaper"><button id="miniMapButton" aria-label="展开校园地图"><canvas id="miniMap" width="360" height="360"></canvas><span>校园手图 <b>↗</b></span></button></div>
+    <div id="touchControls" class="touch-controls" hidden>
+      <button id="runButton" class="run-button" aria-pressed="false">快走</button>
+      <div id="joystick" class="joystick" role="group" aria-label="触屏行走摇杆"><span class="joystick-north">↑</span><div id="stick" class="stick"></div><small>行走</small></div>
+      <div class="look-hint" aria-hidden="true"><span>↔</span><small>右侧滑动 · 环顾</small></div>
+    </div>
+  </div>
+
+  <dialog id="pauseDialog" class="pause-dialog">
+    <div class="dialog-top"><span class="eyebrow">TAKE A BREATH</span><button class="close-icon" data-close="pauseDialog" aria-label="关闭暂停">×</button></div>
+    <h2>停一会儿。</h2><p class="muted" id="pauseHelp">点击继续，鼠标即可控制视角。Esc 随时释放鼠标。</p>
+    <button id="resumeButton" class="solid-button">继续行走 <span>↗</span></button>
+    <button id="tourButton" class="solid-button">树荫下的三次停留 · 开始路线 ↗</button><p class="muted">北门 → 一号楼前榄仁树 → 砚池。模型内路线，可随时接管。</p><div class="settings"><label>校园气候 · 艺术模拟<select id="climate"><option value="morning">晨光 / 暖色树影</option><option value="afterrain">雨后 / 潮湿铺装</option><option value="dusk">薄暮 / 低角度日光</option></select></label><label>画面精度<select id="quality"><option value="auto">自动适配</option><option value="high">精细</option><option value="balanced">均衡</option><option value="low">轻量</option></select></label><label>视角灵敏度<input id="sensitivity" type="range" min="0.4" max="2" step="0.1" value="1"></label><label>行走轻微起伏<input id="bobToggle" type="checkbox"></label></div>
+    <fieldset class="weather-study"><legend>把天气慢慢调到你喜欢的样子</legend><label for="cloudCover">云量 <output id="cloudCoverValue" for="cloudCover">24%</output><input id="cloudCover" type="range" min="0" max="100" step="1" value="24"></label><label for="rainAmount">阵雨 <output id="rainAmountValue" for="rainAmount">0%</output><input id="rainAmount" type="range" min="0" max="100" step="1" value="0"></label><label for="groundWetness">地面湿润 <output id="groundWetnessValue" for="groundWetness">0%</output><input id="groundWetness" type="range" min="0" max="100" step="1" value="0"></label><button id="resetClimate" class="line-button">恢复当前预设</button><small>艺术气候，非实时天气。阵雨会润湿铺装；室内不落雨，减少动态模式隐藏雨丝。本次细调不写入路线链接。</small></fieldset>
+    <div class="settings"><label>建筑观察镜头<input id="observationToggle" type="checkbox"></label></div><p class="muted">收窄视角，隐藏准星与小地图，慢慢看窗、檐口与树影。</p>
+    <div class="pause-actions"><button id="resetButton">回到北门 ↗</button><button id="aboutButton">关于此原型 ↗</button></div><p><a href="architecture.html">打开建筑观察手册 ↗</a> · <a href="director.html">编排自己的路线 ↗</a></p>
+    <p class="control-note">WASD / 方向键 行走　Shift 快走<br>鼠标环顾（或按住场景拖动）　M 地图　E 地点<br>手机：左摇杆行走，右半屏滑动环顾</p>
+  </dialog>
+
+  <dialog id="mapDialog" class="map-dialog">
+    <div class="dialog-top"><span class="eyebrow">A LITTLE ATLAS</span><button class="close-icon" data-close="mapDialog" aria-label="关闭校园地图">×</button></div>
+    <h2>校园手图<span>走到哪里，都有方向。</span></h2>
+    <div class="map-content"><div class="map-canvas-wrap"><canvas id="largeMap" width="1000" height="1000" aria-label="校园地图：上南下北，点击地点列表可移步到入口"></canvas><p>上南 · 下北 / 沿用原校园平面图方向</p></div><div class="map-destinations"><p class="muted">选择地点，移步到附近校道。</p><div id="destinationList"></div><small>34 个场景节点 · 校园本地坐标<br>建筑与立面为近似模型，供漫游体验。<br>排球配置及树池位置为推演。</small></div></div>
+  </dialog>
+
+  <dialog id="poiDialog" class="poi-dialog">
+    <div class="dialog-top"><span class="eyebrow" id="poiCategory">CAMPUS NOTES</span><button class="close-icon" data-close="poiDialog" aria-label="关闭地点介绍">×</button></div><span class="poi-index" id="poiIndex">01</span><h2 id="poiName"></h2><p id="poiEnglish" class="poi-english"></p><div class="note-rule"></div><p id="poiDescription"></p><section id="memoryLayer" hidden><p id="memoryEvidence" class="eyebrow"></p><img id="memoryPhoto" class="memory-photo" alt=""><p id="memoryObservation"></p><p id="memoryText"></p><small id="memoryLimit" class="muted"></small><p><a id="memorySource" target="_blank" rel="noopener"></a></p><a id="memoryRead">完整地点档案 ↗</a><small class="muted">照片沿用现有项目；转载授权待确认。</small></section><button id="tourNext" class="solid-button" hidden>下一站</button><small class="muted">地点介绍沿用 haiz.space 府城校区资料。建筑立面为概念还原。</small><button id="poiEnterClassroom" class="solid-button" hidden>前往首层教室 <span>↗</span></button><button id="poiContinue" class="solid-button">继续探索 <span>↗</span></button>
+  </dialog>
+
+  <dialog id="aboutDialog" class="about-dialog">
+    <div class="dialog-top"><span class="eyebrow">FIELD NOTES / PROTOTYPE 03</span><button class="close-icon" data-close="aboutDialog" aria-label="关闭说明">×</button></div><h2>关于这次行走</h2>
+    <p>这是 haiz.space 的府城校区第一人称原型。校园轮廓、道路与 34 个节点继承现有站点的 KML 转换数据；中心锚点 19.996067, 110.347227，南门锚点 19.994326, 110.348012。</p>
+    <p>气候为艺术模拟，不是实时天气。原 KML 与转换脚本未随仓库提供，方向和高度尚未重新测绘；路线仅通过模型碰撞验证。</p><p>树位、楼层与建筑体量沿用已有构想。门窗、瓦面、植被和历史建筑细节是近似表达，不代表完整实景复刻。四栋教学楼首层共开放 16 间想象教室，可从校道连续步入。桌椅、黑板、吊扇和教学内容按创作补充，不代表真实班级布置；上层与楼梯仍未开放。</p>
+    <p>参考开放世界项目的空间分块、实例化植被与距离裁剪方式，适配浏览器与手机。桌椅按材质实例化，并按距离显示室内细节；地面、桌面与墙体使用 Poly Haven 的 CC0 扫描材质，室外新增草地与混凝土铺装扫描材质、HDR环境反射和原创透明叶簇。</p>
+    <div class="source-links"><a href="about.html#campus" target="_blank" rel="noopener">haiz.space 现有校园 ↗</a><a href="https://github.com/Soromytko/godot-open-world" target="_blank" rel="noopener">Godot Open World ↗</a><a href="https://github.com/DigitallyTailored/Godot-Open-World-Database" target="_blank" rel="noopener">Open World Database ↗</a></div><a href="https://github.com/mrdoob/three.js/blob/dev/examples/games_fps.html" target="_blank" rel="noopener">Three.js 第一人称示例 ↗</a><a href="https://github.com/Abdulrezak-halid/3d-classroom" target="_blank" rel="noopener">3D Classroom 场景参考 ↗</a><a href="https://polyhaven.com/license" target="_blank" rel="noopener">Poly Haven · CC0 材质 ↗</a><small class="muted">封面照片沿用 haiz.space：海南中学官网校园图片。非官方学习项目。</small>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <section id="errorPanel" class="error-panel" hidden><span class="eyebrow">CAMPUS WALK</span><h2 id="errorTitle">校园暂未加载</h2><p id="errorText"></p><button onclick="location.reload()" class="solid-button">重新加载 ↻</button><a href="memory-walk.html">阅读轻量路线与真实照片 ↗</a></section>
+  <noscript><div class="error-panel"><h2>启用 JavaScript 后开始行走</h2><p>此校园漫游需要 JavaScript 与 WebGL。</p><a href="memory-walk.html">阅读轻量路线 ↗</a></div></noscript>
+</body>
+</html>

@@ -1,3 +1,6 @@
 .haiz-demo/
 node_modules/
 tests/artifacts/
+apps/mobile/www/
+**/bin/
+**/obj/

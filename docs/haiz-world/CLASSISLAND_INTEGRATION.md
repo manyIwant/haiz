@@ -39,3 +39,11 @@
 
 
 第二轮续文补充后，新增本地 Backend 与模拟适配器，源代码 scripts/classroom-server.mjs，客户端 dist/bridge-client.js。它们是真实 HTTP/SSE 实验，而非 ClassIsland 接通证明。权限与运行见 LOCAL_SYNC.md。
+
+## 2026-10-22 增量：官方 SDK 源码研究
+
+用户指定以当天课表最后两节自习识别晚修，不设平行时间表。已检查官方公开源码 PluginBase、PluginEntrance、ILessonsService（含 GetClassPlanByDate）、IProfileService / IPublicProfileService、ClassPlan.Classes、ClassInfo.CurrentTimeLayoutItem、TimeLayoutItem.StartTime/EndTime。NuGet 索引可见 ClassIsland.Core 2.1.1.1，实验工程固定此版本。公开 master 源码与发布包仍须编译核对。
+
+实验代码在 plugins/classisland，使用 SDK 独立后台服务，只读课程和当前课表。两个方案本轮选择 SDK 继续验证；IPC 已确认有公开接口，但尚未验证连接握手及版本保障，不实现第二套并行假接口。
+
+Linux 环境安装 .NET 8.0.426 成功，但 NuGet RestoreTask 报 `System.IO.IOException: NuGet-Migrations` 命名互斥锁错误，依赖恢复和构建未完成。因此本轮只交源码，不交安装包；真实 Windows 加载、1.x 适配、宿主不受异常影响的实机验收均未完成。Web 晚修闭环通过模拟课表和实际授权 HTTP/SSE 服务验证，不能据此声称 ClassIsland 已联通。

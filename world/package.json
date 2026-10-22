@@ -1,11 +1,12 @@
 {
   "name": "haiz-round02",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start:sync": "node scripts/classroom-server.mjs",
-    "test": "node tests/core.test.mjs && node tests/round2.test.mjs",
-    "test:server": "node tests/server.test.mjs"
+    "test": "node --test tests/core.test.mjs tests/round2.test.mjs tests/focus.test.mjs tests/homework.test.mjs",
+    "test:server": "node --test tests/server.test.mjs tests/homework-server.test.mjs",
+    "test:homework": "node tests/homework-browser.mjs"
   }
 }

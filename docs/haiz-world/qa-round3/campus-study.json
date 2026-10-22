@@ -1,0 +1,324 @@
+{
+  "date": "2026-10-21T23:05:38.129Z",
+  "checks": [
+    {
+      "label": "完整地图展示 34 个真实数据节点",
+      "passed": true
+    },
+    {
+      "label": "二维全校地图不加载 Three.js",
+      "passed": true
+    },
+    {
+      "label": "全校地图搜索食堂",
+      "passed": true
+    },
+    {
+      "label": "地图分类覆盖教学楼、图书馆和实验楼",
+      "passed": true
+    },
+    {
+      "label": "键盘选择平面图地点",
+      "passed": true
+    },
+    {
+      "label": "打开完整专注书桌",
+      "passed": true
+    },
+    {
+      "label": "专注倒计时真实运行并显示暂停按钮",
+      "passed": true
+    },
+    {
+      "label": "暂停不扣除剩余时间",
+      "passed": true
+    },
+    {
+      "label": "私人线索跨刷新保留",
+      "passed": true
+    },
+    {
+      "label": "专注低负荷模式隐藏背景",
+      "passed": true
+    },
+    {
+      "label": "结束时下一步回到思维续航卡",
+      "passed": true
+    },
+    {
+      "label": "结束时保存真实思考上下文",
+      "passed": true
+    },
+    {
+      "label": "课前模板填入可编辑文本",
+      "passed": true
+    },
+    {
+      "label": "教师预览随输入变化",
+      "passed": true
+    },
+    {
+      "label": "教师草稿自动恢复",
+      "passed": true
+    },
+    {
+      "label": "非空草稿替换先确认",
+      "passed": true
+    },
+    {
+      "label": "取消替换保留草稿",
+      "passed": true
+    },
+    {
+      "label": "成功发布后清空对应草稿",
+      "passed": true
+    },
+    {
+      "label": "多条教室通知提供手动翻页",
+      "passed": true
+    },
+    {
+      "label": "下一条切换真实通知",
+      "passed": true
+    },
+    {
+      "label": "私人专注线索不会出现在教室",
+      "passed": true
+    },
+    {
+      "label": "atlas 390px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "teach 390px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "study 390px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "atlas 320px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "teach 320px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "study 320px 无溢出",
+      "passed": true
+    },
+    {
+      "label": "手机专注书桌无溢出",
+      "passed": true
+    },
+    {
+      "label": "实际 WebGL 引擎加载 34 节点与 16 教室",
+      "passed": true
+    },
+    {
+      "label": "默认相机是 1.85m 第一人称",
+      "passed": true
+    },
+    {
+      "label": "WASD 实际改变地面位置",
+      "passed": true
+    },
+    {
+      "label": "34 个目的地均通过碰撞安全落点检查",
+      "passed": true
+    },
+    {
+      "label": "俯瞰视角真实升高相机",
+      "passed": true
+    },
+    {
+      "label": "三维内置地图也列出全部节点",
+      "passed": true
+    },
+    {
+      "label": "三维内置地图搜索有效",
+      "passed": true
+    },
+    {
+      "label": "从地图进入教学楼时恢复第一人称",
+      "passed": true
+    },
+    {
+      "label": "从入口连续步行进入真实教室几何",
+      "passed": true
+    },
+    {
+      "label": "暂停时停止三维帧更新",
+      "passed": true
+    },
+    {
+      "label": "完整校园手机外框无溢出",
+      "passed": true
+    },
+    {
+      "label": "本轮没有未捕获浏览器异常",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "diagnostics": {
+    "nodes": 34,
+    "classrooms": 16,
+    "environment": "daylight",
+    "trees": 301,
+    "colliders": 1810,
+    "quality": "low",
+    "climate": "morning",
+    "reflection": false,
+    "tour": null,
+    "drawCalls": 547,
+    "triangles": 746055,
+    "fps": 60,
+    "loaded": true,
+    "position": {
+      "x": 13.000949999999996,
+      "z": -171.5999
+    }
+  },
+  "collision": [
+    {
+      "id": "beimen",
+      "ok": true
+    },
+    {
+      "id": "keji",
+      "ok": true
+    },
+    {
+      "id": "xiaoyouhui",
+      "ok": true
+    },
+    {
+      "id": "yihao",
+      "ok": true
+    },
+    {
+      "id": "erhao",
+      "ok": true
+    },
+    {
+      "id": "kexue",
+      "ok": true
+    },
+    {
+      "id": "chem",
+      "ok": true
+    },
+    {
+      "id": "sanhao",
+      "ok": true
+    },
+    {
+      "id": "sihao",
+      "ok": true
+    },
+    {
+      "id": "library",
+      "ok": true
+    },
+    {
+      "id": "canteen1",
+      "ok": true
+    },
+    {
+      "id": "canteen3",
+      "ok": true
+    },
+    {
+      "id": "dorm_f",
+      "ok": true
+    },
+    {
+      "id": "yishu",
+      "ok": true
+    },
+    {
+      "id": "nanmen",
+      "ok": true
+    },
+    {
+      "id": "lanshu",
+      "ok": true
+    },
+    {
+      "id": "yanchi",
+      "ok": true
+    },
+    {
+      "id": "hujulongpan",
+      "ok": true
+    },
+    {
+      "id": "corr_w12",
+      "ok": true
+    },
+    {
+      "id": "corr_e12",
+      "ok": true
+    },
+    {
+      "id": "corr_sci2",
+      "ok": true
+    },
+    {
+      "id": "corr_big",
+      "ok": true
+    },
+    {
+      "id": "corr_34",
+      "ok": true
+    },
+    {
+      "id": "yundong",
+      "ok": true
+    },
+    {
+      "id": "zhiwuyuan",
+      "ok": true
+    },
+    {
+      "id": "zhiwuyuan_pond",
+      "ok": true
+    },
+    {
+      "id": "fengqitang",
+      "ok": true
+    },
+    {
+      "id": "fengqitang_ting",
+      "ok": true
+    },
+    {
+      "id": "yanlintang",
+      "ok": true
+    },
+    {
+      "id": "yanlintang_ting",
+      "ok": true
+    },
+    {
+      "id": "dorm_m",
+      "ok": true
+    },
+    {
+      "id": "dorm_m_n",
+      "ok": true
+    },
+    {
+      "id": "dorm_m_m",
+      "ok": true
+    },
+    {
+      "id": "dorm_m_s",
+      "ok": true
+    }
+  ],
+  "environment": "Linux Chromium SwiftShader; simulated viewports; not Windows or physical device"
+}
