@@ -14,5 +14,5 @@ if(standalone){copy(source,target);entry=target}else{
 }
 const index=path.join(entry,'index.html');writeFileSync(index,readFileSync(index,'utf8').replace('</head>','<link rel="stylesheet" href="mobile-shell.css"><script defer src="mobile-shell.js"></script></head>'));
 for(const file of ['mobile-shell.js','mobile-shell.css'])cpSync(new URL(file,import.meta.url),path.join(entry,file));
-writeFileSync(path.join(target,'build-info.json'),JSON.stringify({version:'0.4.0-preview.1',builtAt:new Date().toISOString(),dataMode:'offline-local-demo',entry:standalone?'/':'/world/'},null,2));
+writeFileSync(path.join(target,'build-info.json'),JSON.stringify({version:'0.4.0-preview.2',builtAt:new Date().toISOString(),dataMode:'offline-local-demo',entry:standalone?'/':'/world/'},null,2));
 console.log('Native assets prepared: original campus assets + shared app; no backend address or credentials embedded.');
