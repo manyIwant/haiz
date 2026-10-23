@@ -25,3 +25,5 @@ Windows布局有独立导航、工作区和可折叠上下文。手机优先快�
 无学校SSO、真实课表/审批部门、通知推送、语音识别、共享附件上传、真实社团报名、批量审核。本地教师演示角色被策略授权向本班发布；不是冒充学校审批完成。三端通过2.5秒轮询同步。多份未同步草稿可在列表恢复，当前打开的草稿联网后自动重试，其余逐份打开后保存。不能描述为生产级队列服务。
 
 iOS/Android既有0.4.0-preview.2安装包不包含本轮新增Flow。新代码可被现有Capacitor打包脚本复制，但本地App没有办公室后端地址，不能把loopback Demo冒充手机跨设备互联。本轮交付Web/PWA源码和证据；新IPA/APK未构建、未签名安装。原生发布继续使用独立现有工作流，稳定服务接入需另外设计授权和HTTPS。
+
+审阅入口：https://github.com/manyIwant/haiz/pull/1（草稿PR，叠加在上一开发分支上）。下载完整功能分支源码：https://github.com/manyIwant/haiz/archive/refs/heads/feat/haiz-flow-handoff.zip 。此ZIP包含本轮及既有工程，不包含运行时凭据或私人Demo数据库。

@@ -26,3 +26,5 @@
 WINDOWS_HARDWARE_PENDING、CLASSISLAND_HARDWARE_PENDING、IOS_HARDWARE_PENDING、ANDROID_HARDWARE_PENDING。未做Mac人工审核、WebKit/iOS软键盘/发热/后台测试、Windows白板遮挡、真实校园端到端延迟。新Flow未构建IPA/APK。保留原有安装包不冒充新包。
 
 局限：自动化并非完整WCAG认证；尚未覆盖所有权限失效/磁盘耗尽/时钟跨日组合；没有三名真实试用者结果；只有本地受控模拟学校角色。不可据此部署学校设备。
+
+云端实际结果：提交42551d6的[Actions 39958810937](https://github.com/manyIwant/haiz/actions/runs/39958810937)中Ubuntu与Windows两个浏览器任务均success。之后补充模拟当前/下一节课程展示、公共屏每12秒翻页和280字摘要上限，Flow API与完整浏览器本地复跑退出码0；最新单次回环延迟2370ms。后续提交的CI以PR检查为准。
