@@ -779,3 +779,95 @@ body[data-theme="contrast"] {
 .deskgrid.collapsed .context {
   display: none;
 }
+/* Task-first pilot improvements */
+.intro.compact h1 {
+  font-size: 28px;
+}
+.intro.compact {
+  align-items: center;
+  margin-bottom: 20px;
+}
+.quick form {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+}
+.quick form input {
+  flex: 1;
+}
+.quick form button {
+  flex-shrink: 0;
+}
+.filepicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+.filepicker input[hidden] {
+  display: none;
+}
+.consent {
+  display: flex !important;
+  align-items: start;
+  gap: 12px;
+}
+.consent input {
+  flex-shrink: 0;
+  margin: 0;
+}
+.conflict details {
+  margin: 15px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.conflict summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.conflict textarea {
+  min-height: 80px;
+  margin-top: 8px;
+}
+.invite-output {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.quick label {
+  font-weight: 600;
+}
+.editor textarea#materialNotes {
+  min-height: 80px;
+}
+@media (max-width: 650px) {
+  .intro.compact h1 {
+    font-size: 24px;
+  }
+  .intro.compact > button {
+    margin-top: 12px;
+  }
+  .quick form {
+    flex-direction: column;
+  }
+  .intro.compact .eyebrow {
+    margin-bottom: 6px;
+  }
+  .workspace .card {
+    margin-bottom: 14px;
+  }
+  .keyboard-open .bottomnav {
+    display: none;
+  }
+  .keyboard-open .toolbar {
+    position: static;
+    padding-bottom: 16px;
+  }
+  .keyboard-open .workspace {
+    padding-bottom: 20px;
+  }
+  .login .consent {
+    font-size: 14px;
+  }
+}

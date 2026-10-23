@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#151b1b" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="description" content="STILLROOM｜一个听得见雨、看得见光的沉浸式自习室。专注、声音、时间与手记，安静地发生。" />
+  <title>HAIZ · STILLROOM 自习参考版</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-room="rain" data-lamp="on" data-quality="high">
+  <div id="app" class="app">
+    <div class="environment" id="environment" aria-hidden="true">
+      <div class="scene-image" id="sceneImage"></div>
+      <div class="scene-painting"></div>
+      <div class="scene-tint"></div>
+      <div class="window-glow"></div>
+      <div class="lamp-glow"></div>
+      <canvas id="weather" class="weather"></canvas>
+      <div class="film-grain"></div>
+      <div class="edge-vignette"></div>
+    </div>
+
+    <header class="topbar">
+      <a href="#" class="brand" aria-label="STILLROOM 首页">
+        <span class="brand-symbol"><i></i><i></i><i></i></span>
+        <span class="brand-type">STILLROOM<span class="brand-sub">一 室 之 间</span></span>
+      </a>
+      <div class="header-middle"><span class="pulse-dot"></span> HERE, NOW, ENOUGH. <span class="small-slash">/</span> 本地艺术场景 · 非真实校园</div>
+      <div class="header-actions"><a class="haiz-return" href="../flow/">返回 HAIZ</a>
+        <span class="wall-clock" id="wallClock">00:00</span>
+        <button class="icon-button" id="soundBtn" title="打开环境声音" aria-label="切换环境声音" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="sound-waves" d="M17 9a5 5 0 0 1 0 6M19 6a9 9 0 0 1 0 12"/></svg>
+        </button>
+        <button class="icon-button" id="fullscreenBtn" title="全屏" aria-label="切换全屏">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg>
+        </button>
+        <button class="zen-button" id="zenBtn"><span class="zen-icon">◌</span> 沉浸模式 <kbd>Z</kbd></button>
+      </div>
+    </header>
+
+    <main class="mainstage">
+      <div class="editorial-label"><span>01 / AN INNER SANCTUARY</span><span class="thin-line"></span><span id="seasonLabel">AUTUMN · RAIN</span></div>
+      <div class="stage-copy">
+        <p class="eyebrow" id="sceneEyebrow">THE RAIN HAS NO DEADLINES</p>
+        <h1 id="heroTitle">把世界<br><em>调低一点。</em></h1>
+        <p class="scene-description" id="sceneDescription">窗外的雨正在落下，书页还停在昨天。<br>没关系，今晚只需要安静地开始。</p>
+        <button class="enter-button" id="startHeroBtn"><span class="play-triangle">▶</span><span>开始这一段专注</span><span class="enter-arrow">↗</span></button>
+      </div>
+      <div class="corner-coordinate"><span>EST. THE PRESENT MOMENT</span><span>SOMEWHERE QUIET&nbsp; / &nbsp;HERE AND NOW</span></div>
+
+      <div class="scene-hotspots" id="sceneHotspots">
+        <button class="scene-hotspot lamp-hotspot" id="lampBtn" title="切换阅读灯"><span class="hotspot-cross">＋</span><span>阅读灯 <small id="lampState">开</small></span></button>
+        <button class="scene-hotspot rain-hotspot" id="weatherBtn" title="切换天气"><span class="hotspot-cross">＋</span><span>窗外的雨 <small id="weatherState">中雨</small></span></button>
+      </div>
+      <div class="stage-bottom">
+        <div class="space-index"><span class="index-top">YOUR SPACE / 你的座位</span><strong id="roomNumber">ROOM 001</strong></div>
+        <div class="room-nav" aria-label="场景选择">
+          <button class="room-tab active" data-room-target="rain"><span class="room-tab-number">01</span><span>雨夜书房</span></button>
+          <button class="room-tab" data-room-target="morning"><span class="room-tab-number">02</span><span>晨光阅览室</span></button>
+          <button class="room-tab" data-room-target="cafe"><span class="room-tab-number">03</span><span>深夜咖啡馆</span></button>
+        </div>
+        <div class="scene-weather"><span class="little-orbit"></span><span id="weatherText">RAIN / 16°C · 想象中的天气</span></div>
+      </div>
+    </main>
+
+    <aside class="focus-panel" id="focusPanel" aria-label="专注工作台">
+      <div class="panel-inner">
+        <div class="panel-head"><span class="section-kicker">THE QUIET DESK</span><button class="panel-minimize" id="collapseBtn" aria-label="收起工作台"><span>收起</span> <span>↗</span></button></div>
+        <div class="focus-title-row"><h2>留一段时间<br>给自己。</h2><div class="petal-symbol" aria-hidden="true">✳</div></div>
+        <div class="focus-mode"><span class="mode-dot"></span> <span id="modeTitle">FOCUS / 专注</span><span class="mode-tail" id="modeTail">ONE THING AT A TIME</span></div>
+        <div class="timer-block">
+          <div class="timer-ring" id="timerRing"><span class="timer-text" id="timerText">25:00</span><span class="timer-under" id="timerUnder">MINUTES REMAINING</span></div>
+          <div class="timer-meta"><span id="timerState">尚未开始 · 随时可以出发</span><span id="sessionCounter">今日 0 次完成</span></div>
+        </div>
+        <div class="length-select" id="lengthSelect" aria-label="专注时长">
+          <button data-minutes="15">15</button><button class="selected" data-minutes="25">25</button><button data-minutes="45">45</button><button data-minutes="60">60</button><span class="length-unit">MIN</span>
+        </div>
+        <div class="timer-buttons"><button class="timer-start" id="timerStart"><span id="startButtonIcon">▶</span><span id="startButtonText">开始专注</span><span class="button-arrow">↗</span></button><button class="timer-reset" id="resetBtn" aria-label="重置计时器" title="重置">↺</button></div>
+        <div class="panel-rule"><span></span><b>01 / TODAY'S INTENTION</b><span></span></div>
+        <div class="intention"><label for="intentionInput">今天，只做这一件事。</label><div class="intention-row"><input id="intentionInput" type="text" maxlength="90" placeholder="例如：认真读完那一章……" autocomplete="off"/><span>↵</span></div></div>
+        <div class="mini-tabs"><button id="openJournal" class="mini-tab"><span>✎</span> 留下手记 <span>↗</span></button><button id="openRhythm" class="mini-tab"><span>⌁</span> 我的节律 <span>↗</span></button></div>
+        <p class="panel-footnote">你不需要赢过时间。<br>坐在这里，本身就是一种开始。</p>
+      </div>
+    </aside>
+
+    <div class="mobile-dock" id="mobileDock"><button id="mobileStart" class="mobile-start"><span>▶</span><span id="mobileStartText">开始专注</span></button><span id="mobileTime">25:00</span><button id="mobilePanelBtn" class="mobile-panel-btn">工作台 ↑</button></div>
+    <button id="revealBtn" class="reveal-button" aria-label="退出沉浸模式">退出沉浸 <span>Z</span></button>
+    <div class="ambient-status" id="ambientStatus" role="status" aria-live="polite"></div>
+
+    <div class="overlay" id="overlay" aria-hidden="true">
+      <div class="overlay-backdrop" data-close-overlay="true"></div>
+      <section class="overlay-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+        <div class="sheet-top"><span class="section-kicker" id="sheetKicker">A LITTLE NOTE</span><button id="closeSheet" class="sheet-close" aria-label="关闭">✕</button></div>
+        <div id="journalView" class="sheet-view"><h2 id="sheetTitle">在时间里，<br><em>留下一行字。</em></h2><p>不必写心得。不必总结得失。只记录此刻。</p><textarea id="journalInput" maxlength="500" placeholder="窗外正在下雨。今天我想……" rows="5"></textarea><div class="journal-bottom"><span id="noteCount">0 / 500</span><button id="saveNote">保存这一刻 ↗</button></div><div class="saved-notes" id="savedNotes"></div></div>
+        <div id="rhythmView" class="sheet-view" hidden><h2 id="rhythmTitle">这些安静的时刻，<br><em>会慢慢相连。</em></h2><p>这里只记录你的时间，不比较谁更努力。</p><div class="rhythm-stats"><div><small>SESSIONS</small><strong id="rhythmSessions">0</strong><span>完成的专注</span></div><div><small>TIME INVESTED</small><strong id="rhythmMinutes">0</strong><span>累积分钟</span></div></div><div class="rhythm-chart-head"><span>最近七天 / FOCUS TRACE</span><span>MINUTES</span></div><div id="rhythmGraph" class="rhythm-graph" aria-label="最近七天专注时长"></div><p class="rhythm-note">一张温柔的时间地图。空白的日子，也是生活的一部分。</p></div>
+      </section>
+    </div>
+    <div class="intro-mask" id="introMask"><span>STILLROOM</span><div class="intro-bar"><i></i></div><p>MAKE ROOM FOR QUIET</p></div>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>

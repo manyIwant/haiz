@@ -76,6 +76,8 @@ try {
   await shot(mobile, "teacher-390-conflict");
   await mobile.setViewportSize({ width: 1440, height: 1000 });
   await shot(mobile, "desk-1440-conflict");
+  await mobile.locator('[data-field-choice="body"]').selectOption('manual');
+  await mobile.locator('[data-field-manual="body"]').fill('手机补充：私人备用材料；桌面补充：私人器材检查');
   await mobile.locator('[data-resolve="merge"]').click();
   assert.ok((await mobile.locator("#body").inputValue()).includes("桌面补充"));
   await mobile.locator("[data-save]").click();
@@ -164,7 +166,7 @@ try {
   );
   await shot(student, "student-390-work");
   checks.push("student club detail → private work persisted");
-  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+  for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
     await desk.setViewportSize({ width, height: 1000 });
     await desk.goto(url + "#compose");
     await desk.locator("#editor").waitFor();

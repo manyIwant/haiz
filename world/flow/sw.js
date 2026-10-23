@@ -1,9 +1,10 @@
-const CACHE = "haiz-flow-v1";
+const CACHE = "haiz-flow-pilot-v2";
 const ASSETS = [
   "./",
   "index.html",
   "style.css",
   "app.js",
+  "rules.js",
   "manifest.webmanifest",
   "../assets/icon-192.png",
   "../assets/icon-512.png",

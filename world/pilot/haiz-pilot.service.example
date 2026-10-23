@@ -1,0 +1,19 @@
+[Unit]
+Description=HAIZ fictional-data pilot
+After=network.target
+[Service]
+Type=simple
+User=haiz
+Group=haiz
+WorkingDirectory=/opt/haiz
+EnvironmentFile=/etc/haiz-pilot.env
+ExecStart=/usr/bin/node /opt/haiz/world/pilot/server.mjs
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/haiz-pilot
+UMask=0077
+[Install]
+WantedBy=multi-user.target

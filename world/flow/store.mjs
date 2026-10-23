@@ -6,9 +6,17 @@ const text = (v, max) =>
   String(v ?? "")
     .trim()
     .slice(0, max);
-export function createFlowStore(file, persist = true, getBridge = () => null) {
+export function createFlowStore(
+  file,
+  persist = true,
+  getBridge = () => null,
+  limits = {},
+) {
   let db = { drafts: [], notices: [], audit: [], requests: {}, sequence: 0 };
   if (persist && existsSync(file)) db = JSON.parse(readFileSync(file, "utf8"));
+  db.courses ||= [];
+  db.tasks ||= [];
+  const allowed = (who, scope) => (who.scopes || [who.scope]).includes(scope);
   const save = () => {
     if (persist) {
       writeFileSync(file + ".tmp", JSON.stringify(db), { mode: 0o600 });
@@ -77,6 +85,11 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
             serverTime: new Date().toISOString(),
           });
         if (who.role !== "teacher") throw error(403, "仅教师可读自己的草稿");
+        if (url.pathname === "/api/flow/workspace")
+          return reply(200, {
+            courses: db.courses.filter((c) => c.ownerId === who.name),
+            tasks: db.tasks.filter((t) => t.ownerId === who.name),
+          });
         if (url.pathname === "/api/flow/drafts")
           return reply(200, {
             drafts: db.drafts.filter((d) => d.ownerId === who.name),
@@ -113,9 +126,46 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
         if (r.hash !== hash) throw error(409, "同一请求键不能用于不同操作");
         return reply(200, r.result);
       }
+      if (Object.keys(db.requests).length >= (limits.maxRequests ?? 10000))
+        throw error(
+          429,
+          "试用写入配额已满，请管理员清理后继续；重复请求仍可安全重试",
+        );
       before = structuredClone(db);
       let result, action;
-      if (url.pathname === "/api/flow/drafts") {
+      if (url.pathname === "/api/flow/workspace") {
+        if (!["course", "task"].includes(input.kind))
+          throw error(400, "未知工作区对象");
+        const list = input.kind === "course" ? db.courses : db.tasks;
+        if (!allowed(who, input.scope)) throw error(403, "未获该班级授权");
+        const old = input.id
+          ? list.find((x) => x.id === input.id && x.ownerId === who.name)
+          : null;
+        if (input.id && !old) throw error(404, "对象不存在");
+        if (old && old.revision !== input.expectedRevision)
+          throw error(409, "内容已更新，请刷新");
+        if (!old && list.filter((x) => x.ownerId === who.name).length >= 100)
+          throw error(429, "工作区最多100条对象");
+        const item = {
+          id: old?.id || randomUUID(),
+          ownerId: who.name,
+          scope: input.scope,
+          title: text(input.title, 100),
+          startsAt: new Date(input.startsAt).toISOString(),
+          period: text(input.period, 30),
+          materialNotes: text(input.materialNotes, 1500),
+          source: "manual-demo",
+          visibility: "private",
+          status: input.status === "done" ? "done" : "open",
+          revision: (old?.revision || 0) + 1,
+          updatedAt: new Date().toISOString(),
+        };
+        if (!item.title) throw error(400, "标题不能为空");
+        if (old) list[list.indexOf(old)] = item;
+        else list.push(item);
+        result = { draft: item };
+        action = input.kind === "course" ? "course_saved" : "task_saved";
+      } else if (url.pathname === "/api/flow/drafts") {
         const id = text(input.id, 80);
         if (!/^[\w-]{8,80}$/.test(id)) throw error(400, "草稿ID无效");
         const old = db.drafts.find((d) => d.id === id);
@@ -124,21 +174,27 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
           throw error(409, "另一台设备已更新，请选择如何合并", { remote: old });
         if (
           old &&
-          db.notices.some((n) => n.draftId === id && n.state === "published")
+          db.notices.some(
+            (n) =>
+              n.draftId === id &&
+              n.state === "published" &&
+              Date.parse(n.expiresAt) > Date.now(),
+          )
         )
           throw error(409, "请先撤回已发布内容，再修改草稿");
         const startsAt = new Date(input.startsAt).toISOString(),
           expiresAt = new Date(input.expiresAt).toISOString();
         if (Date.parse(expiresAt) <= Date.parse(startsAt))
           throw error(400, "失效时间必须晚于生效时间");
-        if (input.scope !== who.scope)
+        if (!allowed(who, input.scope))
           throw error(403, "当前身份未获该班级授权");
         const d = {
           id,
           ownerId: who.name,
-          scope: who.scope,
+          scope: input.scope,
           title: text(input.title, 100),
           body: text(input.body, 8000),
+          materialNotes: text(input.materialNotes, 1500),
           summary: text(input.summary, 280).replace(/\s+/g, " "),
           startsAt,
           expiresAt,
@@ -152,7 +208,14 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
         };
         if (!d.title) throw error(400, "请填写标题");
         if (old) db.drafts[db.drafts.indexOf(old)] = d;
-        else db.drafts.push(d);
+        else {
+          if (
+            db.drafts.filter((x) => x.ownerId === who.name).length >=
+            (limits.maxDrafts ?? 100)
+          )
+            throw error(429, "私人草稿配额已满");
+          db.drafts.push(d);
+        }
         result = { draft: d };
         action = "draft_saved";
       } else if (url.pathname === "/api/flow/publish") {
@@ -164,14 +227,22 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
         if (!d.summary || Date.parse(d.expiresAt) <= Date.now())
           throw error(400, "摘要为空或内容已过期");
         if (
-          db.notices.some((n) => n.draftId === d.id && n.state === "published")
+          db.notices.some(
+            (n) =>
+              n.draftId === d.id &&
+              n.state === "published" &&
+              Date.parse(n.expiresAt) > Date.now(),
+          )
         )
           throw error(409, "该草稿已发布");
+        if (!allowed(who, d.scope)) throw error(403, "班级授权已失效");
+        if (db.notices.length >= (limits.maxNotices ?? 1000))
+          throw error(429, "公开通知配额已满，请管理员清理");
         const n = {
           id: randomUUID(),
           draftId: d.id,
           ownerId: who.name,
-          scope: who.scope,
+          scope: d.scope,
           title: d.title,
           summary: d.summary,
           startsAt: d.startsAt,
@@ -211,6 +282,7 @@ export function createFlowStore(file, persist = true, getBridge = () => null) {
         revision: result.draft?.revision || result.notice.revision,
         at: new Date().toISOString(),
       });
+      db.audit = db.audit.slice(-(limits.maxAudit ?? 2000));
       db.requests[requestKey] = { hash, result: structuredClone(result) };
       save();
       return reply(200, result);

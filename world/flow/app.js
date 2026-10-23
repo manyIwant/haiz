@@ -1,3 +1,7 @@
+import { suggestActions } from "./rules.js";
+const pilot = Boolean(window.HAIZ_PILOT);
+let authEpoch = 0;
+let workspace = { courses: [], tasks: [] };
 const $ = (s) => document.querySelector(s),
   esc = (s) =>
     String(s ?? "").replace(
@@ -11,15 +15,23 @@ const $ = (s) => document.querySelector(s),
           "'": "&#39;",
         })[c],
     );
-const read = (key, fallback, store = localStorage) => {
+const read = (key, fallback, store) => {
   try {
+    store ||=
+      pilot && key.startsWith("haiz.flow.private.")
+        ? sessionStorage
+        : localStorage;
     return JSON.parse(store.getItem(key)) ?? fallback;
   } catch {
     return fallback;
   }
 };
-const write = (key, value, store = localStorage) => {
+const write = (key, value, store) => {
   try {
+    store ||=
+      pilot && key.startsWith("haiz.flow.private.")
+        ? sessionStorage
+        : localStorage;
     store.setItem(key, JSON.stringify(value));
     return true;
   } catch {
@@ -66,11 +78,12 @@ function toast(text) {
   toast.timer = setTimeout(() => ($("#message").style.display = "none"), 4500);
 }
 async function api(path, body, id = crypto.randomUUID()) {
-  const requestToken = token;
+  const requestToken = token,
+    requestEpoch = authEpoch;
   const r = await fetch("/api/flow/" + path, {
     method: body ? "POST" : "GET",
     headers: {
-      Authorization: "Bearer " + token,
+      ...(!pilot ? { Authorization: "Bearer " + token } : {}),
       ...(body
         ? { "Content-Type": "application/json", "Idempotency-Key": id }
         : {}),
@@ -79,7 +92,9 @@ async function api(path, body, id = crypto.randomUUID()) {
     signal: AbortSignal.timeout(7000),
   });
   const value = await r.json();
-  if (token !== requestToken) throw new Error("身份已切换，请重新操作");
+  if (token !== requestToken || authEpoch !== requestEpoch)
+    throw new Error("身份已切换，请重新操作");
+  if (pilot && r.status === 401 && path !== "login" && who) expireSession();
   if (!r.ok)
     throw Object.assign(new Error(value.error), {
       status: r.status,
@@ -98,7 +113,7 @@ function themeButton() {
   return '<button data-theme aria-label="切换浅色深色高对比主题">◐</button>';
 }
 function top() {
-  return `<div class="topbar"><div class="eyebrow">HAIZ / ${who?.role === "teacher" ? "TEACHER DESK" : "CAMPUS"}<br><span class="badge">本地 DEMO · ${esc(who?.name || "访客")}</span></div><div class="actions">${who?.role === "teacher" ? '<button class="desktoponly" data-context>收起侧栏</button>' : ""}${themeButton()}<button data-logout>退出</button></div></div>`;
+  return `<div class="topbar"><div class="eyebrow">HAIZ / ${who?.role === "teacher" ? "TEACHER DESK" : "CAMPUS"}<br><span class="badge">${pilot ? "HTTPS 试用 · 虚构数据" : "本地 DEMO"} · ${esc(who?.name || "访客")}</span></div><div class="actions">${who?.role === "teacher" ? '<button class="desktoponly" data-context>收起侧栏</button>' : ""}${themeButton()}<button data-logout>退出</button></div></div>`;
 }
 function nav(student = false) {
   const links = student
@@ -131,24 +146,34 @@ function shell(content, aside = true) {
     )}<a href="../#homework">▤　晚修作业</a><a href="../#world">↗　校园世界</a></nav><button data-command>搜索 / Ctrl K</button><div class="foot">先整理，再确认。<br>公共屏只看见你允许的内容。<div class="line"></div>演示环境 · 未接入学校系统</div></aside><main class="workspace">${top()}${aside ? `<div class="deskgrid"><div>${content}</div>${context()}</div>` : content}</main></div>${nav()}`;
 }
 function context() {
-  return `<aside class="context"><div class="card"><div class="eyebrow">YOUR RHYTHM</div><h2>此刻，${esc(mode)}</h2><label>工作情境<select id="mode">${["晨间", "课前", "办公", "收工"].map((x) => `<option ${mode === x ? "selected" : ""}>${x}</option>`).join("")}</select></label><p class="muted spaced modecopy">${{ 晨间: "从今天最重要的一件事开始。", 课前: "核对课程与材料，准备好再出发。", 办公: "把零散想法收成一份清晰的草稿。", 收工: "留下下一步，明天不用重新想起。" }[mode]}</p></div><div class="card"><div class="eyebrow">HANDOFF / 任务接力</div><h3>换一块屏幕，<br>继续同一件事。</h3><p class="muted spaced">在另一浏览器窗口使用同一教师演示凭据。已同步的草稿会出现在工作台。</p><div class="line"></div><small id="syncstamp">${lastSync ? "最近同步 " + fmt(lastSync) : "等待连接本地服务"}</small></div><div class="quiet"><h3>公开前，再看一眼。</h3><p>私人正文不会投屏。仅你确认的摘要进入本班教室。</p></div></aside>`;
+  return `<aside class="context"><div class="card"><div class="eyebrow">YOUR RHYTHM</div><h2>此刻，${esc(mode)}</h2><label>工作情境<select id="mode">${["晨间", "课前", "办公", "收工"].map((x) => `<option ${mode === x ? "selected" : ""}>${x}</option>`).join("")}</select></label><p class="muted spaced modecopy">${{ 晨间: "从今天最重要的一件事开始。", 课前: "核对课程与材料，准备好再出发。", 办公: "把零散想法收成一份清晰的草稿。", 收工: "留下下一步，明天不用重新想起。" }[mode]}</p></div><div class="card"><div class="eyebrow">HANDOFF / 任务接力</div><h3>换一块屏幕，<br>继续同一件事。</h3><p class="muted spaced">${pilot ? "请管理员为另一设备签发同一教师身份的新邀请。服务端确认后的草稿会出现在工作台。" : "在另一浏览器窗口使用同一教师演示凭据。已同步的草稿会出现在工作台。"}</p><div class="line"></div><small id="syncstamp">${lastSync ? "最近同步 " + fmt(lastSync) : "等待连接本地服务"}</small></div><div class="quiet"><h3>公开前，再看一眼。</h3><p>私人正文不会投屏。仅你确认的摘要进入本班教室。</p></div></aside>`;
 }
 function dashboard() {
   const merged = new Map(data.drafts.map((d) => [d.id, d]));
   Object.values(local()).forEach((d) => {
     if (d.pending || !merged.has(d.id)) merged.set(d.id, d);
   });
+  const next = workspace.courses
+    .filter((c) => Date.parse(c.startsAt) >= Date.now() - 3600000)
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))[0];
   return shell(
-    `<div class="intro"><div><div class="eyebrow">LESS BUSYWORK. MORE TEACHING.</div><h1>重要的事，<br><span class="serif">有序发生。</span></h1><p>从一份草稿开始，把重复的步骤留在这里。</p></div><button class="primary" data-new>＋ 快速记一份</button></div><div class="card course"><div class="eyebrow">教学日程 · 示例，未关联真实课表</div><h2>实验课准备</h2><p>高一演示班 · 科学实验室</p><div class="spaced"><button data-material>查看材料建议 ↗</button></div></div><div class="card"><div class="row"><h2>继续手上的事</h2><button data-refresh>刷新</button></div><div id="draftlist">${
+    `<div class="intro compact"><div><div class="eyebrow">HAIZ DESK / 虚构试用数据</div><h1>下一步，已经在这里。</h1></div><button class="primary" data-new>＋ 新建通知草稿</button></div><section class="card quick"><label for="quicknote">随手记 · 私人草稿</label><form id="quickform"><input id="quicknote" maxlength="200" placeholder="一句话记下，稍后完善…" required><button class="primary">记下并同步</button></form><small id="queuestatus">${pilot ? "私人缓存只在当前浏览器会话暂存，退出前请同步或导出。" : "仅私人草稿；未确认不会公开。"}</small></section><div class="twocol"><section class="card"><div class="eyebrow">下一节 · 手动录入</div><h2>${next ? esc(next.title) : "尚未录入课程"}</h2><p>${next ? esc(next.scope) + " · " + fmt(next.startsAt) : "添加虚构课程与资料描述，验证课前准备流程。"}</p><div class="actions spaced">${next ? `<button data-course-material="${next.id}">打开课前资料</button>` : ""}<button data-workspace="course">录入课程</button><button data-importcourses>导入示例</button></div></section><section class="card"><h2>待完成事项</h2>${
+      workspace.tasks
+        .filter((t) => t.status !== "done")
+        .map(
+          (t) =>
+            `<div class="row"><div><h3>${esc(t.title)}</h3><small>${esc(t.scope)} · ${fmt(t.startsAt)}</small></div><button data-taskdone="${t.id}">完成</button></div>`,
+        )
+        .join("") || '<p class="muted">没有待办。需要时再记下一件。</p>'
+    }<button class="spaced" data-workspace="task">添加待办</button></section></div><section class="card"><div class="row"><h2>继续未完成的草稿</h2><div class="actions"><button data-queue>同步全部</button><button data-refresh>刷新</button></div></div><div id="draftlist">${
       [...merged.values()]
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
         .map(
           (d) =>
-            `<div class="row"><div><h3>${esc(d.title)}</h3><small>${esc(d.sourceDevice || "浏览器")} · ${d.pending ? "仅本机 / 等待同步" : "已同步 · v" + d.revision}</small></div><button data-open="${esc(d.id)}">继续 →</button></div>`,
+            `<div class="row"><div><h3>${esc(d.title || "未命名草稿")}</h3><small>${esc(d.sourceDevice || "浏览器")} · ${d.remoteConflict ? "需要逐字段解决冲突" : d.pending ? "等待同步 / 仅本机" : "已同步 · v" + d.revision}</small></div><button data-open="${esc(d.id)}">继续 →</button></div>`,
         )
-        .join("") ||
-      '<p class="empty">还没有草稿。先记下想让班级知道的那件事。</p>'
-    }</div></div><div class="quiet"><h3>手机捕捉，桌面完善。</h3><p>这里只同步你的草稿；不会把私人备课内容自动变成公告。</p></div>`,
+        .join("") || '<p class="empty">尚无草稿。用上面的随手记开始。</p>'
+    }</div></section><section class="quiet"><h3>待确认通知</h3><p>${data.drafts.filter((d) => d.summary && !data.notices.some((n) => n.draftId === d.id && n.state === "published")).length} 份已有摘要，可进入草稿核对班级和有效期。</p><a href="#history">查看发布与撤回记录 →</a></section>`,
   );
 }
 function newDraft() {
@@ -177,7 +202,7 @@ function openDraft(id) {
     : data.drafts.find((d) => d.id === id) || local()[id];
   current = structuredClone(current);
   write(key() + ".selected", current.id, sessionStorage);
-  conflict = null;
+  conflict = current.remoteConflict || null;
   location.hash = "compose";
   render();
   $("#body")?.setSelectionRange(current.cursor || 0, current.cursor || 0);
@@ -197,17 +222,19 @@ function compose() {
       );
   }
   return shell(
-    `<div class="intro"><div><div class="eyebrow">DRAFT / PRIVATE UNTIL CONFIRMED</div><h1>把话说清楚。</h1><p>01 记录　→　02 核对　→　03 公开摘要</p></div></div><div id="conflict"></div><div class="status" id="editstatus">${current.pending ? (privateStorageAvailable ? "仅本机保存 · 等待同步" : "仅内存保留 · 存储不可用，请导出") : "已同步 · v" + current.revision} · ${esc(current.sourceDevice)}</div><form class="editor" id="editor"><div class="card"><label>通知标题<input id="title" maxlength="100" value="${esc(current.title)}" placeholder="例如：明日实验课材料提醒"></label><label>私人正文 · 不进入教室公共屏<textarea id="body" maxlength="8000" placeholder="先留下背景、准备事项或尚未确定的想法…">${esc(current.body)}</textarea></label><div class="actions"><button type="button" data-suggest>整理成摘要建议</button><button type="button" data-export>导出文字</button></div><p class="note">本地规则建议，可关闭，无在线 AI 调用。应用建议后仍需你预览确认。</p><label>本机参考图片 · 不上传、不跨端传输<input id="file" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="attachment" class="attachment"></div></div><div class="card"><h2>接收范围与公开内容</h2><label>授权班级<select id="scope"><option>${esc(who.scope)}</option></select></label><label>教室公开摘要<textarea class="summary" id="summary" maxlength="280" placeholder="只写允许出现在教室屏上的内容">${esc(current.summary)}</textarea></label><div class="twocol"><label>生效时间<input id="startsAt" type="datetime-local" value="${toLocal(current.startsAt)}"></label><label>失效时间<input id="expiresAt" type="datetime-local" value="${toLocal(current.expiresAt)}"></label></div><p class="muted">不包含私人正文、图片、个人成绩或学生身份信息。</p></div><div class="toolbar"><button class="primary" type="button" data-save>保存并同步</button><button type="button" data-preview>预览公开屏 →</button></div></form>`,
+    `<div class="intro"><div><div class="eyebrow">DRAFT / PRIVATE UNTIL CONFIRMED</div><h1>把话说清楚。</h1><p>01 记录　→　02 核对　→　03 公开摘要</p></div></div><div id="conflict"></div><div class="status" id="editstatus">${current.pending ? (privateStorageAvailable ? "仅本机保存 · 等待同步" : "仅内存保留 · 存储不可用，请导出") : "已同步 · v" + current.revision} · ${esc(current.sourceDevice)}</div><form class="editor" id="editor"><div class="card"><label>通知标题<input id="title" maxlength="100" value="${esc(current.title)}" placeholder="例如：明日实验课材料提醒"></label><label>私人正文 · 不进入教室公共屏<textarea id="body" maxlength="8000" placeholder="先留下背景、准备事项或尚未确定的想法…">${esc(current.body)}</textarea></label><div class="actions"><button type="button" data-suggest>整理成摘要建议</button><button type="button" data-export>导出文字</button></div><p class="note">本地规则建议，可关闭，无在线 AI 调用。应用建议后仍需你预览确认。</p><label>资料名称 / 描述 · 只同步文字<textarea id="materialNotes" maxlength="1500" placeholder="例如：实验记录纸.pdf · 请从学校授权资料库取原文件">${esc(current.materialNotes || "")}</textarea></label><div class="filepicker"><button type="button" data-filepick>选择本机参考图片</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><span>图片只在当前会话预览，未上传</span></div><div id="attachment" class="attachment"></div></div><div class="card"><h2>接收范围与公开内容</h2><label>授权班级<select id="scope">${(who.scopes || [who.scope]).map((scope) => `<option ${scope === current.scope ? "selected" : ""}>${esc(scope)}</option>`).join("")}</select><small>切换班级后，发布前必须重新核对公开预览。</small></label><label>教室公开摘要<textarea class="summary" id="summary" maxlength="280" placeholder="只写允许出现在教室屏上的内容">${esc(current.summary)}</textarea></label><div class="twocol"><label>生效时间<input id="startsAt" type="text" inputmode="numeric" placeholder="年-月-日 时:分" value="${toLocal(current.startsAt).replace("T", " ")}"></label><label>失效时间<input id="expiresAt" type="text" inputmode="numeric" placeholder="年-月-日 时:分" value="${toLocal(current.expiresAt).replace("T", " ")}"></label></div><p class="muted">不包含私人正文、图片、个人成绩或学生身份信息。</p></div><div class="toolbar"><button class="primary" type="button" data-save>保存并同步</button><button type="button" data-preview>预览公开屏 →</button></div></form>`,
   );
 }
 function collect() {
   if (!current || !$("#editor")) return;
-  for (const f of ["title", "body", "summary", "scope"])
+  for (const f of ["title", "body", "summary", "scope", "materialNotes"])
     current[f] = $("#" + f).value;
+  current.invalidDates = false;
   for (const f of ["startsAt", "expiresAt"]) {
-    const v = $("#" + f).value;
+    const v = $("#" + f).value.replace(" ", "T");
     if (v && Number.isFinite(Date.parse(v)))
       current[f] = new Date(v).toISOString();
+    else current.invalidDates = true;
   }
   current.cursor = $("#body").selectionStart;
   current.pending = true;
@@ -221,6 +248,10 @@ function collect() {
 }
 async function syncDraft() {
   if (!current || busy) return false;
+  if (current.invalidDates) {
+    toast("日期格式应为年-月-日 时:分，请修正后保存");
+    return false;
+  }
   busy = true;
   const version = current.revision,
     id = current.id,
@@ -267,9 +298,18 @@ async function syncDraft() {
   }
 }
 function showConflict() {
-  if (!$("#conflict")) return;
+  if (!$("#conflict") || !conflict) return;
+  const fields = [
+    ["title", "标题"],
+    ["body", "私人正文"],
+    ["summary", "公开摘要"],
+    ["startsAt", "生效时间"],
+    ["expiresAt", "失效时间"],
+    ["scope", "班级范围"],
+    ["materialNotes", "资料名称与描述"],
+  ];
   $("#conflict").innerHTML =
-    `<div class="conflict"><h2>两块屏幕，都留下了新想法。</h2><p>服务端 v${conflict.revision} 与当前编辑不同。两份文字会保留在本机恢复历史。</p><div class="twocol"><div><h3>本机版本</h3><pre>${esc(current.body)}</pre></div><div><h3>远端版本</h3><pre>${esc(conflict.body)}</pre></div></div><div class="actions"><button data-resolve="local">保留本机</button><button data-resolve="remote">保留远端</button><button data-resolve="merge">合并到编辑器</button></div></div>`;
+    `<section class="conflict"><h2>逐项核对，两端的更改。</h2><p>本机 ${esc(current.sourceDevice)} / ${fmt(current.updatedAt)}；远端 ${esc(conflict.sourceDevice)} / ${fmt(conflict.updatedAt)} · v${conflict.revision}</p><p>先选择每一项，再保存新版本。公开摘要、班级和时间会影响接收范围，不会自动拼接正文。</p>${fields.map(([f, label]) => `<details ${String(current[f] || "") !== String(conflict[f] || "") ? "open" : ""}><summary>${label} · ${String(current[f] || "") !== String(conflict[f] || "") ? "两端不同" : "一致"}</summary><div class="twocol"><pre>本机：${esc(current[f])}</pre><pre>远端：${esc(conflict[f])}</pre></div><label>采用哪一份<select data-field-choice="${f}"><option value="local">本机</option><option value="remote">远端</option><option value="manual">手工编辑下方内容</option></select></label><textarea data-field-manual="${f}" aria-label="手工编辑${label}">${esc(current[f])}</textarea></details>`).join("")}<div class="actions spaced"><button data-resolve="local">全部保留本机</button><button data-resolve="remote">全部保留远端</button><button data-resolve="merge">应用逐字段选择</button></div></section>`;
   $("#editstatus").textContent = "版本冲突 · 未覆盖任何一端";
   $("#conflict")
     .querySelectorAll("[data-resolve]")
@@ -278,8 +318,8 @@ function showConflict() {
         (b.onclick = () => {
           const history = read(key() + ".recovery", []);
           history.push({
-            local: current,
-            remote: conflict,
+            local: structuredClone(current),
+            remote: structuredClone(conflict),
             at: new Date().toISOString(),
           });
           write(key() + ".recovery", history);
@@ -287,14 +327,21 @@ function showConflict() {
             current = { ...conflict, pending: false };
           else {
             if (b.dataset.resolve === "merge")
-              current.body += "\n\n——另一端的记录——\n" + conflict.body;
+              for (const [f] of fields) {
+                const choice = $(`[data-field-choice="${f}"]`).value;
+                if (choice === "remote") current[f] = conflict[f] || "";
+                if (choice === "manual")
+                  current[f] = $(`[data-field-manual="${f}"]`).value;
+              }
             current.revision = conflict.revision;
             current.pending = true;
             delete current.request;
+            delete current.remoteConflict;
           }
           saveLocal();
           conflict = null;
           render();
+          toast("已应用选择；请核对并保存，再预览发布");
         }),
     );
 }
@@ -336,7 +383,7 @@ function history() {
       .reverse()
       .map(
         (a) =>
-          `<div class="row"><span>${{ draft_saved: "保存草稿", notice_published: "确认发布", notice_revoked: "撤回公告" }[a.action]} · v${a.revision}</span><small>${fmt(a.at)}</small></div>`,
+          `<div class="row"><span>${{ draft_saved: "保存草稿", notice_published: "确认发布", notice_revoked: "撤回公告", course_saved: "保存课程", task_saved: "更新待办" }[a.action]} · v${a.revision}</span><small>${fmt(a.at)}</small></div>`,
       )
       .join("")}</div>`,
   );
@@ -365,7 +412,7 @@ const clubs = [
   },
 ];
 function student() {
-  return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">A SCHOOL, MANY WORLDS</div><h1>今天也有<br><span class="serif">值得期待的事。</span></h1><p>${tone === "quiet" ? "按自己的节奏，开始今天。" : tone === "abstract" ? "今天的灵感，还没有被上课铃点名。" : "校园的一角，留给你的好奇心。"}</p></div></div><div class="card course"><div class="eyebrow">示例课程 / 未连接教务</div><h2>英语</h2><p>下一节课程示意 · 教学楼 A403</p><small>具体时间以本班正式课表为准</small></div><div class="card"><h2>班级公共信息</h2><div id="studentfeed">连接后显示经过确认的公开摘要。</div></div><div class="clubgrid"><a class="card art green" href="#clubs"><h2>一些有趣的人，<br>正在相遇。</h2><p>探索示例社团 ↗</p></a><a class="card art peach" href="../#study"><h2>留一会儿<br>安静。</h2><p>思维续航与自习 ↗</p></a></div><a class="btn" href="../#assignments">查看晚修作业</a></main>${nav(true)}`;
+  return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">A SCHOOL, MANY WORLDS</div><h1>今天也有<br><span class="serif">值得期待的事。</span></h1><p>${tone === "quiet" ? "按自己的节奏，开始今天。" : tone === "abstract" ? "今天的灵感，还没有被上课铃点名。" : "校园的一角，留给你的好奇心。"}</p></div></div><div class="card course"><div class="eyebrow">示例课程 / 未连接教务</div><h2>英语</h2><p>下一节课程示意 · 教学楼 A403</p><small>具体时间以本班正式课表为准</small></div><div class="card"><h2>班级公共信息</h2><div id="studentfeed">连接后显示经过确认的公开摘要。</div></div><div class="clubgrid"><a class="card art green" href="#clubs"><h2>一些有趣的人，<br>正在相遇。</h2><p>探索示例社团 ↗</p></a><a class="card art peach" href="../stillroom/"><h2>留一会儿<br>安静。</h2><p>思维续航与自习 ↗</p></a></div><a class="btn" href="../#assignments">查看晚修作业</a></main>${nav(true)}`;
 }
 function clubPage() {
   return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">FIND YOUR PEOPLE</div><h1>和有趣的人，<br><span class="serif">一起做有趣的事。</span></h1><p>以下均为示例社团，无真实报名或人数。</p></div></div><input id="clubsearch" aria-label="搜索社团" placeholder="搜索名称、摄影、科技、文学"><div class="clubgrid spaced" id="clublist">${clubCards(clubs)}</div></main>${nav(true)}`;
@@ -418,18 +465,30 @@ function login() {
 }
 function render() {
   if (!who) {
-    $("#app").innerHTML = login();
+    $("#app").innerHTML = pilot ? pilotLogin() : login();
     $("#login").onsubmit = async (e) => {
       e.preventDefault();
-      token = $("#token").value;
+      if (!pilot) token = $("#token").value;
       try {
-        const r = await api("me");
+        const r = pilot
+          ? await api("login", {
+              invite: $("#token").value,
+              fictionalOnly: $("#fictional").checked,
+            })
+          : await api("me");
         who = r.identity;
-        if (!["teacher", "student", "display"].includes(who.role)) {
+        if (
+          ![
+            "teacher",
+            "student",
+            "display",
+            ...(pilot ? ["admin"] : []),
+          ].includes(who.role)
+        ) {
           who = null;
           return toast("请使用教师、学生或教室凭据");
         }
-        write("haiz.flow.token", token, sessionStorage);
+        if (!pilot) write("haiz.flow.token", token, sessionStorage);
         write("haiz.flow.identity", who, sessionStorage);
         await refresh(false);
         location.hash =
@@ -446,6 +505,13 @@ function render() {
     return;
   }
   const r = route();
+  if (who.role === "admin") {
+    $("#app").innerHTML =
+      `<main class="student">${top()}<h1>短期试用管理</h1><div id="adminpanel" class="spaced">读取管理状态…</div></main>`;
+    bind();
+    loadAdmin();
+    return;
+  }
   if (who.role === "display") $("#app").innerHTML = classroom();
   else if (who.role === "student")
     $("#app").innerHTML =
@@ -465,6 +531,17 @@ function render() {
           : r === "settings"
             ? settings()
             : dashboard();
+  if (pilot)
+    document
+      .querySelectorAll('a[href^="../"]:not([href="../stillroom/"])')
+      .forEach((a) => {
+        a.href =
+          "https://github.com/manyIwant/haiz/tree/feat/haiz-pilot-hardening";
+        a.textContent = a.getAttribute("data-source-label") || "查看完整校园项目 ↗";
+        if (a.previousElementSibling?.href === a.href) a.remove();
+        a.rel = "noopener noreferrer";
+        a.target = "_blank";
+      });
   bind();
   if (conflict) showConflict();
   if (who.role !== "teacher") refreshFeed();
@@ -480,6 +557,7 @@ function download(name, text) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function bind() {
+  bindWorkspace();
   $("[data-context]")?.addEventListener("click", (e) => {
     const g = $(".deskgrid");
     if (!g) return;
@@ -503,14 +581,27 @@ function bind() {
         modal(
           '<h2>退出当前演示身份</h2><p>将清理本机私人草稿、作品和冲突历史。服务端已同步草稿仍会保留。</p><div class="actions"><button id="logout-confirm" class="danger">清理并退出</button><button data-close>取消</button></div>',
         );
-        $("#logout-confirm").onclick = () => {
-          for (const k of [key(), key() + ".work", key() + ".recovery"])
+        $("#logout-confirm").onclick = async () => {
+          if (pilot) {
+            try {
+              await api("logout", {});
+            } catch (e) {
+              if (e.status !== 401)
+                return toast("服务器未确认撤销，请联网后重试");
+            }
+          }
+          authEpoch++;
+          for (const k of [key(), key() + ".work", key() + ".recovery"]) {
             localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+          }
           sessionStorage.removeItem("haiz.flow.token");
           sessionStorage.removeItem("haiz.flow.identity");
+          sessionStorage.removeItem("haiz-stillroom-v1");
           who = null;
           token = "";
           current = null;
+          workspace = { courses: [], tasks: [] };
           feedCache = null;
           data = { drafts: [], notices: [], audit: [] };
           $("#modal").close();
@@ -559,18 +650,16 @@ function bind() {
     $("[data-suggest]").onclick = () => {
       if (read("haiz.flow.noai", false))
         return toast("本地建议已关闭，仍可手动编辑");
-      const suggestion = current.body
-        .split(/[。\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, 3)
-        .join("。")
-        .slice(0, 280);
+      const candidates = suggestActions(current.body);
       modal(
-        `<h2>本地整理建议 · 尚未应用</h2><p>${esc(suggestion || "先写下正文，再整理建议。")}</p><div class="actions"><button id="applysuggestion">应用到公开摘要</button><button data-close>取消</button></div>`,
+        `<h2>本地规则候选 · 不代表理解上下文</h2><p>关键词匹配，日期只提示、不自动换算。逐项选择后可继续编辑，未确认不会发布。</p>${candidates.map((c, i) => `<label><input type="checkbox" data-candidate="${i}"><span>${esc(c.text)}<br><small>${c.kind} · ${c.dateHint}</small></span></label>`).join("") || "<p>没有识别出明确行动词，请直接手动填写。</p>"}<div class="actions"><button id="applysuggestion">将选中项放入摘要</button><button data-close>取消</button></div>`,
       );
       $("#applysuggestion").onclick = () => {
-        $("#summary").value = suggestion;
+        const selected = [
+          ...document.querySelectorAll("[data-candidate]:checked"),
+        ].map((e) => candidates[Number(e.dataset.candidate)].text);
+        if (!selected.length) return toast("请至少选择一项，或返回手工编辑");
+        $("#summary").value = selected.join("。").slice(0, 280);
         collect();
         $("#modal").close();
       };
@@ -582,17 +671,30 @@ function bind() {
         f.size > 2 * 1024 * 1024
       )
         return toast("只接受2MB以内PNG、JPEG、WebP");
+      $("#materialNotes").value = (
+        $("#materialNotes").value +
+        "\n" +
+        f.name +
+        "（仅名称；原文件未上传）"
+      )
+        .trim()
+        .slice(0, 1500);
+      collect();
       const url = URL.createObjectURL(f);
       $("#attachment").innerHTML =
         `<img alt="主动选择的本机参考图"><small>${esc(f.name)}<br>仅当前会话可预览；不会自动上传。</small>`;
       $("#attachment img").src = url;
       $("#attachment img").onload = () => URL.revokeObjectURL(url);
     };
-    $("#file").onchange = (e) => importFile(e.target.files[0]);
+    $("[data-filepick]").onclick = () => $("#file").click();
+    $("#file").onchange = (e) => {
+      for (const file of [...e.target.files].slice(0, 5)) importFile(file);
+    };
     $("#editor").ondragover = (e) => e.preventDefault();
     $("#editor").ondrop = (e) => {
       e.preventDefault();
-      importFile(e.dataTransfer.files[0]);
+      for (const file of [...e.dataTransfer.files].slice(0, 5))
+        importFile(file);
     };
   }
   document.querySelectorAll("[data-revoke]").forEach(
@@ -712,6 +814,13 @@ function command() {
       data.drafts
         .filter((d) => d.title.includes(q))
         .map((d) => `<button data-id="${d.id}">${esc(d.title)}</button>`)
+        .join("") +
+      workspace.courses
+        .filter((c) => (c.title + c.materialNotes).includes(q))
+        .map(
+          (c) =>
+            `<button data-course="${c.id}">课程与资料 · ${esc(c.title)}</button>`,
+        )
         .join("");
     $("#commandresults")
       .querySelectorAll("button")
@@ -719,6 +828,15 @@ function command() {
         (b) =>
           (b.onclick = () => {
             $("#modal").close();
+            if (b.dataset.course) {
+              const c = workspace.courses.find(
+                (c) => c.id === b.dataset.course,
+              );
+              modal(
+                `<h2>${esc(c.title)}</h2><p>${esc(c.materialNotes || "暂无资料描述")}</p><p>原文件未上传，仅同步名称和说明。</p><button data-close>关闭</button>`,
+              );
+              return;
+            }
             if (b.dataset.id) openDraft(b.dataset.id);
             else if (b.dataset.route === "new") newDraft();
             else location.hash = b.dataset.route;
@@ -733,9 +851,11 @@ async function refresh(rerender = false) {
   if (!who || who.role !== "teacher") return;
   try {
     const next = await api("drafts");
+    const nextWorkspace = await api("workspace");
     const changed =
-      JSON.stringify([data.drafts, data.notices, data.audit]) !==
-      JSON.stringify([next.drafts, next.notices, next.audit]);
+      JSON.stringify([data.drafts, data.notices, data.audit, workspace]) !==
+      JSON.stringify([next.drafts, next.notices, next.audit, nextWorkspace]);
+    workspace = nextWorkspace;
     data = next;
     lastSync = data.serverTime;
     online = true;
@@ -749,13 +869,17 @@ async function refresh(rerender = false) {
 }
 let feedCache = null;
 function paintFeed() {
-  if (!who || who.role === "teacher") return;
+  if (!who || ["teacher", "admin"].includes(who.role)) return;
   const cache =
     feedCache || read("haiz.flow.public." + who.scope, { notices: [] });
   const clockKey = "haiz.flow.clock." + who.scope;
   const now = Math.max(Date.now(), read(clockKey, 0));
   write(clockKey, now);
-  const notices = cache.notices.filter(
+  const notices = (
+    pilot && Date.now() - Date.parse(cache.serverTime) > 15 * 60000
+      ? []
+      : cache.notices
+  ).filter(
     (n) => Date.parse(n.startsAt) <= now && Date.parse(n.expiresAt) > now,
   );
   const pageIndex = notices.length
@@ -782,7 +906,9 @@ function paintFeed() {
         .join("") || '<p class="empty">当前没有有效公共提醒。</p>';
   if ($("#feedstate"))
     $("#feedstate").textContent =
-      (online ? "已连接本地演示服务" : "离线 · 保留有效缓存") +
+      (online
+        ? "已连接本地演示服务"
+        : "离线 · 内容可能已撤回，仅保留未到期缓存") +
       " · 上次成功同步 " +
       fmt(cache.serverTime) +
       (notices.length > 1
@@ -796,7 +922,7 @@ function paintFeed() {
     });
 }
 async function refreshFeed() {
-  if (!who || who.role === "teacher") return;
+  if (!who || ["teacher", "admin"].includes(who.role)) return;
   try {
     feedCache = await api("feed");
     write("haiz.flow.public." + who.scope, feedCache);
@@ -810,10 +936,244 @@ async function refreshFeed() {
   }
   paintFeed();
 }
+function pilotLogin() {
+  return `<main class="login"><div class="brand">haiz<span>三人远程试用 · 仅虚构数据</span></div><h1>接着做，<br><span class="serif">不必重新开始。</span></h1><p>邀请码一次有效、30分钟到期。同一教师在另一台设备使用管理员单独签发的新邀请。</p><form id="login"><label>短期邀请码<input id="token" type="password" autocomplete="off" required placeholder="粘贴管理员私下提供的邀请码"></label><label class="consent"><input type="checkbox" id="fictional" required>我只录入虚构数据，并在个人可信浏览器试用；私人草稿仅在当前会话暂存。</label><button class="primary" type="submit">连接试用服务 →</button></form><p class="note">无需学校账号、Apple ID或设备权限。退出前同步或导出未完成文字。请勿输入真实姓名、成绩或教学机密。</p></main>`;
+}
+function expireSession() {
+  const backup =
+    who?.role === "teacher"
+      ? Object.values(local()).filter((d) => d.pending)
+      : [];
+  if (current?.pending && !backup.some((d) => d.id === current.id))
+    backup.push(current);
+  const ownerKey = key();
+  for (const store of [localStorage, sessionStorage])
+    for (const k of [ownerKey, ownerKey + ".work", ownerKey + ".recovery"])
+      store.removeItem(k);
+  if (who) localStorage.removeItem("haiz.flow.public." + who.scope);
+  sessionStorage.removeItem("haiz.flow.identity");
+  who = null;
+  authEpoch++;
+  current = null;
+  feedCache = null;
+  render();
+  if (backup.length) {
+    modal(
+      '<h2>会话已失效</h2><p>服务端已拒绝访问。未同步文字保留在此窗口供你导出；重新进入前请保存备份。</p><div class="actions"><button id="expiredexport">导出未同步文字</button><button data-close>关闭</button></div>',
+    );
+    $("#expiredexport").onclick = () =>
+      download("HAIZ-unsynced.json", JSON.stringify(backup, null, 2));
+  } else toast("会话已失效，请使用新邀请重新进入");
+}
+async function loadAdmin() {
+  try {
+    const state = await api("admin");
+    if (!$("#adminpanel")) return;
+    $("#adminpanel").innerHTML =
+      `<section class="card"><h2>为每台设备签发邀请</h2><p>同一教师的手机与桌面，选择相同身份，分别签发。邀请码一次有效，30分钟过期；会话8小时过期。</p><label>演示身份<select id="inviteaccount">${state.accounts.map((a) => `<option value="${a.name}">${a.name} · ${a.role} · ${esc(a.scope)}</option>`).join("")}</select></label><button class="primary spaced" id="makeinvite">签发一次性邀请</button><p id="inviteoutput" class="invite-output" role="status"></p></section><section class="card"><h2>设备会话</h2>${state.sessions.map((s) => `<div class="row"><div><h3>${s.account}</h3><small>${fmt(s.createdAt)} → ${fmt(s.expiresAt)} · ${s.revoked ? "已撤销" : "有效期内"}</small><small>${s.id}</small></div>${!s.revoked ? `<button data-revokesession="${s.id}">撤销</button>` : ""}</div>`).join("")}</section><section class="card"><h2>结束本次试用</h2><p>最多24个会话；每位教师100份草稿；公开通知200条。清理会删除服务器业务数据、撤销其他会话及未使用邀请，保留当前管理员会话和不含正文的安全日志。</p><button id="resetpilot" class="danger spaced">清理虚构数据</button></section>`;
+    $("#makeinvite").onclick = async () => {
+      try {
+        const r = await api("admin/invite", {
+          account: $("#inviteaccount").value,
+        });
+        $("#inviteoutput").textContent =
+          r.invite +
+          "\n有效至 " +
+          fmt(r.expiresAt) +
+          "\n仅私下交给测试者，不要放进截图或仓库。";
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+    document.querySelectorAll("[data-revokesession]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          try {
+            await api("admin/revoke", { id: b.dataset.revokesession });
+            await loadAdmin();
+          } catch (e) {
+            toast(e.message);
+          }
+        }),
+    );
+    $("#resetpilot").onclick = () => {
+      modal(
+        '<h2>清理服务器上的虚构数据</h2><p>此操作不可恢复。其他设备会话将被撤销。离线设备无法接收清理，须在这些设备上主动退出或清理站点缓存。</p><input id="resettext" aria-label="输入清理虚构数据" placeholder="输入：清理虚构数据"><div class="actions spaced"><button id="resetconfirm" class="danger">确认清理</button><button data-close>取消</button></div>',
+      );
+      $("#resetconfirm").onclick = async () => {
+        try {
+          await api("admin/reset", { confirm: $("#resettext").value });
+          $("#modal").close();
+          loadAdmin();
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+    };
+  } catch (e) {
+    toast(e.message);
+  }
+}
+let queueBusy = false;
+async function syncQueue() {
+  if (queueBusy || busy || who?.role !== "teacher" || !navigator.onLine) return;
+  queueBusy = true;
+  let synced = 0,
+    conflicts = 0;
+  try {
+    for (const cached of Object.values(local()).filter(
+      (d) => d.pending && d.title && !d.invalidDates,
+    )) {
+      if (cached.id === current?.id) {
+        if (!conflict && (await syncDraft())) synced++;
+        continue;
+      }
+      if (cached.remoteConflict) {
+        conflicts++;
+        continue;
+      }
+      const payload = structuredClone(cached);
+      payload.request ||= {
+        id: crypto.randomUUID(),
+        body: { ...payload, expectedRevision: payload.revision },
+      };
+      let rows = local();
+      rows[payload.id] = payload;
+      write(key(), rows);
+      try {
+        const r = await api("drafts", payload.request.body, payload.request.id);
+        rows = local();
+        rows[payload.id] = { ...r.draft, pending: false };
+        write(key(), rows);
+        synced++;
+      } catch (e) {
+        if (e.status === 409 && e.remote) {
+          rows = local();
+          rows[payload.id] = { ...payload, remoteConflict: e.remote };
+          write(key(), rows);
+          conflicts++;
+          continue;
+        }
+        throw e;
+      }
+    }
+    if ($("#queuestatus"))
+      $("#queuestatus").textContent =
+        `同步成功 ${synced} 份 · 需要人工解决冲突 ${conflicts} 份`;
+    await refresh(route() === "desk");
+  } catch (e) {
+    toast("同步尚未完成；本机队列保留。" + (e.message || ""));
+  } finally {
+    queueBusy = false;
+  }
+}
+function bindWorkspace() {
+  $("[data-queue]")?.addEventListener("click", syncQueue);
+  $("#quickform")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("#quicknote").value.trim();
+    if (!text) return;
+    current = {
+      id: crypto.randomUUID(),
+      revision: 0,
+      scope: who.scope,
+      title: text.slice(0, 100),
+      body: text,
+      summary: "",
+      materialNotes: "",
+      ...dates(),
+      updatedAt: new Date().toISOString(),
+      sourceDevice: innerWidth < 650 ? "手机浏览器" : "桌面浏览器",
+      pending: true,
+    };
+    saveLocal();
+    const saved = await syncDraft();
+    $("#quicknote") && ($("#quicknote").value = "");
+    if (saved) toast("私人草稿已同步，尚未公开");
+    await refresh(false);
+    if (route() === "desk") render();
+  });
+  document
+    .querySelectorAll("[data-workspace]")
+    .forEach((b) => (b.onclick = () => workspaceEditor(b.dataset.workspace)));
+  document.querySelectorAll("[data-course-material]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const c = workspace.courses.find(
+          (c) => c.id === b.dataset.courseMaterial,
+        );
+        modal(
+          `<div class="eyebrow">课前资料 / 手动录入</div><h2>${esc(c.title)}</h2><p>${esc(c.materialNotes || "尚未填写资料描述")}</p><p class="note">这里只同步文件名和说明，未上传原文件。请从已有授权资料库取用。</p><button data-close>已查看</button>`,
+        );
+      }),
+  );
+  document.querySelectorAll("[data-taskdone]").forEach(
+    (b) =>
+      (b.onclick = async () => {
+        const t = workspace.tasks.find((t) => t.id === b.dataset.taskdone);
+        try {
+          await api("workspace", {
+            ...t,
+            kind: "task",
+            expectedRevision: t.revision,
+            status: "done",
+          });
+          await refresh(true);
+        } catch (e) {
+          toast(e.message);
+        }
+      }),
+  );
+  $("[data-importcourses]")?.addEventListener("click", () => {
+    modal(
+      '<h2>导入一节虚构示例课程</h2><p>这会在你的私人工作区建立“实验课准备”，时间为30分钟后，并附一份材料描述。不是读取学校教务。</p><div class="actions"><button id="importconfirm">确认导入示例</button><button data-close>取消</button></div>',
+    );
+    $("#importconfirm").onclick = async () => {
+      try {
+        await api("workspace", {
+          kind: "course",
+          title: "实验课准备",
+          scope: who.scope,
+          startsAt: new Date(Date.now() + 1800000).toISOString(),
+          period: "示例第一节",
+          materialNotes:
+            "实验记录纸.pdf · 从授权资料库获取原文件\n器材检查表 · 核对两套备用器材",
+        });
+        $("#modal").close();
+        await refresh(true);
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+  });
+}
+function workspaceEditor(kind) {
+  modal(
+    `<h2>${kind === "course" ? "手动录入虚构课程" : "添加私人待办"}</h2><form id="workspaceform" class="editor"><label>标题<input id="wtitle" required maxlength="100"></label><label>授权班级<select id="wscope">${(who.scopes || [who.scope]).map((s) => `<option>${esc(s)}</option>`).join("")}</select></label><label>日期和时间<input id="wdate" type="datetime-local" value="${toLocal(new Date(Date.now() + 1800000))}" required></label><label>节次 / 备注<input id="wperiod" maxlength="30"></label><label>资料名称与描述（原文件未上传）<textarea id="wmaterial" maxlength="1500"></textarea></label><div class="actions"><button class="primary">保存到私人工作区</button><button type="button" data-close>取消</button></div></form>`,
+  );
+  $("#workspaceform").onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api("workspace", {
+        kind,
+        title: $("#wtitle").value,
+        scope: $("#wscope").value,
+        startsAt: new Date($("#wdate").value).toISOString(),
+        period: $("#wperiod").value,
+        materialNotes: $("#wmaterial").value,
+      });
+      $("#modal").close();
+      await refresh(true);
+    } catch (e) {
+      toast(e.message);
+    }
+  };
+}
+
 window.addEventListener("hashchange", render);
 window.addEventListener("online", async () => {
   await refresh();
-  if (current?.pending && !conflict) await syncDraft();
+  await syncQueue();
   await refreshFeed();
 });
 document.addEventListener("keydown", (e) => {
@@ -829,16 +1189,34 @@ document.addEventListener("keydown", (e) => {
 });
 setInterval(() => {
   if (document.hidden) return;
-  if (who?.role === "teacher") refresh(route() === "desk");
+  if (who?.role === "teacher")
+    refresh(
+      route() === "desk" &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(
+          document.activeElement?.tagName,
+        ),
+    );
   else refreshFeed();
 }, 2500);
 setInterval(paintFeed, 1000);
+setInterval(() => {
+  if (!document.hidden) syncQueue();
+}, 15000);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     refresh();
     refreshFeed();
   }
 });
+if (pilot) {
+  try {
+    const session = await api("me");
+    who = session.identity;
+    write("haiz.flow.identity", who, sessionStorage);
+  } catch (e) {
+    if (e.status === 401) who = null;
+  }
+}
 render();
 if (who) {
   refresh(true);
@@ -846,3 +1224,12 @@ if (who) {
 }
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("./sw.js").catch(() => {});
+if (window.visualViewport) {
+  const adaptKeyboard = () =>
+    document.body.classList.toggle(
+      "keyboard-open",
+      innerHeight - visualViewport.height > 150,
+    );
+  visualViewport.addEventListener("resize", adaptKeyboard);
+  adaptKeyboard();
+}
