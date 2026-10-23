@@ -1,0 +1,272 @@
+import { createRequire } from "node:module";
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import assert from "node:assert/strict";
+import { createDemoServer } from "../scripts/classroom-server.mjs";
+const require = createRequire(import.meta.url);
+let chromium;
+try {
+  ({ chromium } = require("playwright"));
+} catch {
+  ({ chromium } = require("/opt/codex/cua_node/lib/node_modules/playwright"));
+}
+const dir = mkdtempSync(join(tmpdir(), "haiz-flow-e2e-")),
+  demo = createDemoServer({ directory: dir });
+await new Promise((r) => demo.server.listen(0, "127.0.0.1", r));
+const url = `http://127.0.0.1:${demo.server.address().port}/world/flow/`,
+  shots = resolve("docs/haiz-flow/screenshots");
+mkdirSync(shots, { recursive: true });
+const checks = [],
+  errors = [];
+const browser = await chromium.launch({
+  headless: true,
+  ...(process.env.HAIZ_CHROMIUM
+    ? { executablePath: process.env.HAIZ_CHROMIUM }
+    : {}),
+  args: ["--no-sandbox"],
+});
+const shot = (p, name) =>
+  p.screenshot({ path: join(shots, name + ".png"), fullPage: true });
+async function page(role, width) {
+  const ctx = await browser.newContext({
+    viewport: { width, height: 1000 },
+    reducedMotion: "reduce",
+  });
+  const p = await ctx.newPage();
+  p.on("pageerror", (e) => errors.push(e.message));
+  await p.goto(url);
+  await p.locator("#token").fill(demo.credentials[role]);
+  await p.getByRole("button", { name: "连接演示服务" }).click();
+  await p.locator("[data-logout]").waitFor();
+  return p;
+}
+try {
+  const mobile = await page("teacher-a", 390),
+    desk = await page("teacher-a", 1440),
+    screen = await page("display-a", 1920),
+    student = await page("student-a", 390);
+  await shot(mobile, "teacher-390-home");
+  await shot(desk, "desk-1440-dashboard");
+  await shot(student, "student-390-home-light");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("实验课材料提醒");
+  await mobile.locator("#body").fill("私人备课：需要另备两套器材。");
+  await mobile.locator("#summary").fill("请带好实验记录纸。");
+  await mobile.locator("[data-save]").click();
+  await mobile.waitForFunction(() =>
+    document.querySelector("#editstatus").textContent.startsWith("已同步"),
+  );
+  await shot(mobile, "teacher-390-compose");
+  await desk.getByRole("button", { name: "继续 →" }).waitFor();
+  await desk.getByRole("button", { name: "继续 →" }).click();
+  assert.equal(
+    await desk.locator("#body").inputValue(),
+    "私人备课：需要另备两套器材。",
+  );
+  checks.push("E2E-01 mobile → separate desktop context, same draft");
+  await desk.locator("#body").fill("桌面补充：私人器材检查");
+  await desk.locator("[data-save]").click();
+  await desk.waitForFunction(() =>
+    document.querySelector("#editstatus").textContent.startsWith("已同步"),
+  );
+  await mobile.locator("#body").fill("手机补充：私人备用材料");
+  await mobile.locator("[data-save]").click();
+  await mobile.locator('[data-resolve="merge"]').waitFor();
+  await shot(mobile, "teacher-390-conflict");
+  await mobile.setViewportSize({ width: 1440, height: 1000 });
+  await shot(mobile, "desk-1440-conflict");
+  await mobile.locator('[data-resolve="merge"]').click();
+  assert.ok((await mobile.locator("#body").inputValue()).includes("桌面补充"));
+  await mobile.locator("[data-save]").click();
+  await mobile.waitForFunction(() =>
+    document.querySelector("#editstatus").textContent.startsWith("已同步"),
+  );
+  checks.push("E2E-05 visible 409, merge retains both edits");
+  await mobile.setViewportSize({ width: 390, height: 1000 });
+  await mobile.context().setOffline(true);
+  await mobile.locator("#body").fill("离线留下的私人上下文");
+  await shot(mobile, "teacher-390-sync-error");
+  await mobile.reload();
+  await mobile.locator("#body").waitFor();
+  assert.equal(
+    await mobile.locator("#body").inputValue(),
+    "离线留下的私人上下文",
+  );
+  await mobile.context().setOffline(false);
+  await mobile.waitForFunction(() =>
+    document.querySelector("#editstatus").textContent.startsWith("已同步"),
+  );
+  checks.push("E2E-06 offline edit survives reload and reconnect");
+  await mobile.locator("[data-preview]").click();
+  await mobile.locator("#confirm").waitFor();
+  await shot(mobile, "teacher-390-preview");
+  await mobile.setViewportSize({ width: 1440, height: 1000 });
+  await shot(mobile, "desk-1440-preview");
+  await mobile.locator("#confirm").check();
+  const start = Date.now();
+  await mobile.locator("#publish").click();
+  await screen.getByText("请带好实验记录纸。", { exact: true }).waitFor();
+  const latency = Date.now() - start;
+  assert.ok(!(await screen.locator("body").innerText()).includes("私人上下文"));
+  checks.push(
+    `E2E-02/03 explicit confirmation and public projection, ${latency}ms loopback observed`,
+  );
+  await shot(screen, "classroom-1920-active");
+  await screen.context().setOffline(true);
+  await screen.waitForFunction(() =>
+    document.querySelector("#feedstate").textContent.includes("离线"),
+  );
+  await shot(screen, "classroom-1920-offline");
+  await mobile.locator("[data-revoke]").click();
+  await mobile.locator("#revoke-confirm").click();
+  await screen.context().setOffline(false);
+  await screen.waitForFunction(
+    () => !document.querySelector("#feed").textContent.includes("请带好"),
+  );
+  await shot(screen, "classroom-1920-revoked");
+  checks.push("E2E-04 revoke while display offline removed on reconnect");
+  const denied = await student.evaluate(async (token) => {
+    const r = await fetch("/api/flow/publish", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: "{}",
+    });
+    return r.status;
+  }, demo.credentials["student-a"]);
+  assert.equal(denied, 403);
+  checks.push("E2E-07 student publication rejected");
+  await mobile.goto(url + "#settings");
+  await mobile.locator("#ai").selectOption("off");
+  await mobile.goto(url + "#desk");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("无AI仍可保存");
+  await mobile.locator("#body").fill("人工输入");
+  await mobile.locator("[data-save]").click();
+  await mobile.waitForFunction(() =>
+    document.querySelector("#editstatus").textContent.startsWith("已同步"),
+  );
+  checks.push("E2E-08 no AI service, draft operation works");
+  await student.goto(url + "#clubs");
+  await shot(student, "student-390-club");
+  await student.locator("[data-club]").first().click();
+  await student.locator("#startwork").click();
+  await student.locator("#workbody").fill("树影是校园的另一张课表。");
+  await student.locator("[data-worksave]").click();
+  await student.reload();
+  assert.equal(
+    await student.locator("#workbody").inputValue(),
+    "树影是校园的另一张课表。",
+  );
+  await shot(student, "student-390-work");
+  checks.push("student club detail → private work persisted");
+  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+    await desk.setViewportSize({ width, height: 1000 });
+    await desk.goto(url + "#compose");
+    await desk.locator("#editor").waitFor();
+    const overflow = await desk.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    );
+    assert.equal(overflow, false, `overflow ${width}`);
+    await shot(desk, "desk-" + width + "-compose");
+  }
+  await desk.locator("button[data-theme]").click();
+  await shot(desk, "desk-1920-dark");
+  await desk.locator("button[data-theme]").click();
+  await shot(desk, "desk-1920-contrast");
+  await desk.keyboard.press("Control+k");
+  await desk.locator("#commandquery").fill("发布记录");
+  await desk.locator("#commandresults button").press("Enter");
+  assert.ok(desk.url().endsWith("#history"));
+  checks.push(
+    "E2E-09/10 six widths, dark/contrast, reduced motion, Ctrl K keyboard navigation",
+  );
+  await screen.locator("[data-pure]").click();
+  assert.ok(
+    await screen
+      .locator(".screen")
+      .evaluate((e) => e.classList.contains("pure")),
+  );
+  checks.push("classroom pure mode");
+  assert.deepEqual(errors, []);
+  checks.push("no browser page errors");
+  await screen.context().setOffline(true);
+  await screen.evaluate(() => {
+    const who = JSON.parse(sessionStorage.getItem("haiz.flow.identity"));
+    localStorage.setItem(
+      "haiz.flow.public." + who.scope,
+      JSON.stringify({
+        serverTime: new Date().toISOString(),
+        notices: [
+          {
+            title: "即将过期测试",
+            summary: "不应无限期保留",
+            startsAt: new Date(Date.now() - 1000).toISOString(),
+            expiresAt: new Date(Date.now() + 1500).toISOString(),
+            revision: 1,
+          },
+        ],
+      }),
+    );
+  });
+  await screen.reload();
+  await screen.waitForFunction(
+    () => !document.querySelector("#feed").textContent.includes("不应无限期"),
+  );
+  checks.push("E2E-11 offline cache expires without reconnect");
+  await mobile.goto(url + "#desk");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("第一份未同步草稿");
+  await mobile.goto(url + "#desk");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("第二份未同步草稿");
+  await mobile.reload();
+  assert.equal(await mobile.locator("#title").inputValue(), "第二份未同步草稿");
+  checks.push("multiple local drafts reopen the selected object");
+  await mobile.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) {
+      if (k.startsWith("haiz.flow.private."))
+        throw new DOMException("quota", "QuotaExceededError");
+      return original.call(this, k, v);
+    };
+  });
+  await mobile.locator("#body").fill("存储失败时保留的文字");
+  assert.ok(
+    (await mobile.locator("#editstatus").innerText()).includes("仅内存"),
+  );
+  checks.push("storage failure does not falsely report persisted draft");
+  const perf = await desk.evaluate(() => ({
+    userAgent: navigator.userAgent,
+    resources: performance
+      .getEntriesByType("resource")
+      .filter((x) => !x.name.includes("/api/"))
+      .map((x) => ({ name: x.name.split("/").pop(), bytes: x.transferSize })),
+    heap: performance.memory?.usedJSHeapSize,
+  }));
+  writeFileSync(
+    resolve("docs/haiz-flow/browser-results.json"),
+    JSON.stringify(
+      {
+        status: "WEB_CI_PASS",
+        platform: process.platform,
+        checks,
+        latencyMs: latency,
+        perf,
+        hardware: "PENDING_HARDWARE",
+        errors,
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(JSON.stringify({ checks, latencyMs: latency, errors }, null, 2));
+} finally {
+  await browser.close();
+  await demo.close();
+  rmSync(dir, { recursive: true, force: true });
+}

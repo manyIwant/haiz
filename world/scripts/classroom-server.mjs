@@ -1,3 +1,4 @@
+import {createFlowStore} from '../flow/store.mjs';
 import {upsertAssignment,assignmentAction,cleanAssignments,mockEveningBridge} from '../homework-core.js';
 // Authorized localhost-only DEMO backend. No production school integration.
 import http from 'node:http';
@@ -22,6 +23,7 @@ export function createDemoServer({directory=path.join(ROOT,'.haiz-demo'),tokens=
  let state=seedPublic(),revision=1,courseNotes={},adapter={source:'simulator',version:'SIM-1',available:true,state:'break',conflict:false,sequence:1,current:'课间',next:'物理',schedule:[{period:'第三节',time:'10:10–10:50',subject:'语文'},{period:'第四节',time:'11:00–11:40',subject:'物理'},{period:'第五节',time:'14:30–15:10',subject:'数学'}]};
  if(persist&&existsSync(dbPath)){try{const stored=JSON.parse(readFileSync(dbPath,'utf8'));if(stored.format==='haiz-local-server-v1'){state=stored.state;revision=stored.revision;courseNotes=stored.courseNotes||{};adapter={...adapter,...stored.adapter}}}catch{throw Error('本地服务数据损坏；请先备份并修复 public-state.json，服务未覆盖原数据。')}}
  state.assignments=cleanAssignments(state.assignments);
+ const flowHandler=createFlowStore(path.join(directory,'flow-state.json'),persist,()=>({source:'simulator',current:adapter.current,next:adapter.next,available:adapter.available}));
  const peers=new Map();
  function snapshot(who){const scope=who.scope,allowed=n=>who.role==='admin'||[scope,SCOPES[2]].includes(n.scope);let notices=state.notices.filter(allowed);if(['display','student'].includes(who.role))notices=notices.filter(n=>n.review==='approved'&&n.status==='published');return {format:'haiz-local-sync',version:1,revision,serverTime:new Date().toISOString(),identity:who,notices,assignments:state.assignments.filter(n=>(who.role==='admin'||n.scope===scope)&&(!['display','student'].includes(who.role)||(n.review==='approved'&&n.status==='published'))),audit:['teacher','admin'].includes(who.role)?state.audit.filter(a=>who.role==='admin'||a.actor===who.name):[],bridge:{...adapter,receivedAt:new Date().toISOString(),label:'本地模拟适配器 · 不是 ClassIsland 实时数据'},courseNote:courseNotes[scope]||null}}
  function save(){if(persist){const payload=JSON.stringify({format:'haiz-local-server-v1',state,revision,courseNotes,adapter});writeFileSync(dbPath+'.tmp',payload,{mode:0o600});renameSync(dbPath+'.tmp',dbPath)}}
@@ -31,6 +33,7 @@ export function createDemoServer({directory=path.join(ROOT,'.haiz-demo'),tokens=
    if(url.pathname==='/api/health'&&req.method==='GET')return json(res,200,{demo:true,service:'HAIZ localhost classroom',authRequired:true});
    if(url.pathname.startsWith('/api/')){
     const token=req.headers.authorization?.replace(/^Bearer /,'');const who=identities.get(token);if(!who)throw fault(401,'请输入本地演示凭据；这不是学校账号密码。');
+    if(await flowHandler(req,res,url,who))return;
     if(req.method==='GET'&&url.pathname==='/api/snapshot')return json(res,200,snapshot(who));
     if(req.method==='GET'&&url.pathname==='/api/events'){if(peers.size>=24)throw fault(429,'本地演示连接数已达上限');res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-store','Connection':'keep-alive','X-Content-Type-Options':'nosniff'});res.write(`event: snapshot\ndata: ${JSON.stringify(snapshot(who))}\n\n`);peers.set(res,who);req.on('close',()=>peers.delete(res));return}
     if(req.method!=='POST')throw fault(405,'不支持此请求');if(!['teacher','admin'].includes(who.role))throw fault(403,'当前凭据仅可读取公共内容');if(!String(req.headers['content-type']).startsWith('application/json'))throw fault(415,'只接受 JSON');
