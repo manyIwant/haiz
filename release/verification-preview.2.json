@@ -1,0 +1,22 @@
+{
+  "android": {
+    "sha256": "db5040322724e89985151b5ee5f7ad2fe8ef728cf2151fc6324717248f47a711",
+    "bytes": 43892596,
+    "dex": true,
+    "fullCampusAssets": true
+  },
+  "ios": {
+    "sha256": "db4ddd9d1a3d574b008911f2457c5d9c3f0384d3fbc7371edb3397087367a0b8",
+    "bytes": 39344093,
+    "architecture": "arm64",
+    "bundleId": "space.haiz.study",
+    "version": "0.4.0",
+    "build": "5",
+    "minimumOS": "14.0",
+    "hasProvisioningProfile": false,
+    "fullCampusAssets": true
+  },
+  "release": "https://github.com/manyIwant/haiz/releases/tag/haiz-v0.4.0-preview.2",
+  "commit": "2cadecf077b77cd3d89a5301bd20a49be5666169",
+  "deviceTested": false
+}
