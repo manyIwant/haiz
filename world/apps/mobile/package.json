@@ -1,1 +1,21 @@
-{"name":"haiz-mobile","version":"0.3.0","private":true,"type":"module","scripts":{"prepare:web":"node prepare-web.mjs","sync":"npm run prepare:web && cap sync","android":"cap open android","ios":"cap open ios"},"dependencies":{"@capacitor/core":"7.6.9","@capacitor/android":"7.6.9","@capacitor/ios":"7.6.9"},"devDependencies":{"@capacitor/cli":"7.6.9"}}
+{
+  "name": "haiz-mobile",
+  "version": "0.4.0-preview.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:web": "node prepare-web.mjs",
+    "sync": "npm run prepare:web && cap sync",
+    "android": "cap open android",
+    "ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.6.9",
+    "@capacitor/android": "7.6.9",
+    "@capacitor/ios": "7.6.9",
+    "@capacitor/app": "7.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.9"
+  }
+}

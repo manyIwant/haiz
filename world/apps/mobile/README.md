@@ -1,9 +1,11 @@
-# HAIZ Study · iOS / Android
+# HAIZ Study · iOS / Android 0.4.0 预览版
 
-Capacitor 原生外壳复用网页模块，默认打开今日作业。学习记录仅保存在设备 WebView 本地，公开作业遵循同一数据结构。
+共享网页功能，保留完整校园资源；底部导航、安全区、Android 返回键。默认进入思维书桌。学习记录只存设备本地；卸载或清除应用数据前主动导出。
 
-`npm ci` → `npm run sync` → `npm run android` 或 `npm run ios`。Android 需 Android Studio/JDK/SDK；iOS 需 macOS/Xcode 与签名。已生成原生项目，不代表 APK/IPA 已构建或真机验证。
+`npm ci` → `npm run sync` → `npm run android` / `npm run ios`。Android JDK 21 / SDK 35；iOS macOS/Xcode/CocoaPods、iOS 14+。
 
-本轮云端网页是本机演示，本地 Node 服务只监听电脑回环地址。手机无法把自己的 localhost 当作办公室电脑；没有嵌入服务器地址、API 密钥或教师密码。当前原生包用于离线学习与本机演示。正式跨设备作业同步需经学校授权部署 HTTPS API、统一身份、移动端安全令牌存储和 CORS 策略后接入，不允许改成明文校园内网广播。
+仓库根 `.github/workflows/haiz-release.yml` 在 haiz-v* 标签推送时构建：先验证领域/API，再并行生成 Android 开发签名 APK 和 iPhone arm64 未签名 IPA。两者成功后发布 GitHub 预览发行版及 SHA256SUMS。未签名 IPA 必须个人签名后安装，不是 TestFlight；开发 APK 不承诺跨构建签名一致。详见 release/INSTALL.zh-CN.md。
 
-`prepare:web` 每次从 dist 复制共享前端，排除下载归档；www、原生 public 资源、构建产物均不提交。生成/同步后再由本机 IDE 构建。Capacitor 7.6.9 的 MIT 许可证见 node_modules 对应包；原站其他许可证仍适用，不能将 AGPL 窗台重许可。
+当前为离线/本机演示，不嵌入学校服务器或凭据。电脑 Node 服务仅监听回环，手机不能通过自己的 localhost 访问办公室电脑。正式校内多端同步仍需授权 HTTPS 后端、统一身份、安全凭据存储与真机测试。无学生行为监控；Android 禁用系统自动备份。
+
+`prepare:web` 同时支持集成版 world/ 和独立版 dist/，避免原始 campus.html 相对路径丢失。www 与原生生成 public 目录不提交；从当前源码重新生成。Capacitor 7.6.9 / App 7.1.2，MIT；旧窗台 AGPL 与照片、字体、模型许可分别保留。
