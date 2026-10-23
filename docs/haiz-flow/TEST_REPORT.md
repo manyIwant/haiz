@@ -9,7 +9,7 @@
 | npm --prefix world test | 0 / 17领域测试 |
 | npm --prefix world run test:server | 0 / 2旧HTTP回归 |
 | npm --prefix world run test:flow | 0 / 新Flow集成测试：权限、所有权、409、幂等、确认、公开白名单、撤回、重启持久化 |
-| HAIZ_CHROMIUM=/usr/bin/chromium node world/tests/flow-browser.mjs | 0 / 12组浏览器检查 |
+| HAIZ_CHROMIUM=/usr/bin/chromium node world/tests/flow-browser.mjs | 0 / 14组浏览器检查 |
 
 浏览器：E2E01手机独立会话创建，Windows独立会话继续；02预览确认；03教室只收摘要；04离线教室重连后移除撤回；05双端冲突与合并；06离线编辑、重载、联网恢复；07学生发布403；08关闭规则仍可保存；09六种屏宽无横向溢出；10命令面板键盘导航与减少动态；11离线有效缓存到期隐藏。学生示例社团到作品草稿刷新恢复通过，纯净课堂通过，pageerror为0。
 
@@ -27,4 +27,8 @@ WINDOWS_HARDWARE_PENDING、CLASSISLAND_HARDWARE_PENDING、IOS_HARDWARE_PENDING�
 
 局限：自动化并非完整WCAG认证；尚未覆盖所有权限失效/磁盘耗尽/时钟跨日组合；没有三名真实试用者结果；只有本地受控模拟学校角色。不可据此部署学校设备。
 
-云端实际结果：提交42551d6的[Actions 39958810937](https://github.com/manyIwant/haiz/actions/runs/39958810937)中Ubuntu与Windows两个浏览器任务均success。之后补充模拟当前/下一节课程展示、公共屏每12秒翻页和280字摘要上限，Flow API与完整浏览器本地复跑退出码0；最新单次回环延迟2370ms。后续提交的CI以PR检查为准。
+云端实际结果：提交42551d6的[Actions 39958810937](https://github.com/manyIwant/haiz/actions/runs/39958810937)中Ubuntu与Windows两个浏览器任务均success。之后补充模拟当前/下一节课程展示、公共屏每12秒翻页和280字摘要上限，Flow API与完整浏览器本地复跑退出码0；该次回环延迟2370ms。后续提交的CI以PR检查为准。
+
+补充边界验证：多份未同步草稿重载后恢复当前所选对象；模拟QuotaExceededError时明确显示“仅内存保留”，不误报本机保存。提交d3be60c的[Actions 39959288906](https://github.com/manyIwant/haiz/actions/runs/39959288906)已在Ubuntu和Windows均通过。
+
+最后本地复跑14组检查全部通过、pageerror=0，单次回环2967ms；各次结果差异来自浏览器轮询与渲染时序，不承诺固定延迟。

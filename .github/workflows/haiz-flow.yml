@@ -1,7 +1,5 @@
 name: HAIZ Flow browser evidence
 on:
-  push:
-    branches: [feat/haiz-flow-handoff]
   pull_request:
     paths: ['world/flow/**', 'world/tests/flow*', 'world/scripts/classroom-server.mjs', '.github/workflows/haiz-flow.yml']
   workflow_dispatch:

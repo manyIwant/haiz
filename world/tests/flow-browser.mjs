@@ -218,6 +218,28 @@ try {
     () => !document.querySelector("#feed").textContent.includes("不应无限期"),
   );
   checks.push("E2E-11 offline cache expires without reconnect");
+  await mobile.goto(url + "#desk");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("第一份未同步草稿");
+  await mobile.goto(url + "#desk");
+  await mobile.locator("[data-new]").click();
+  await mobile.locator("#title").fill("第二份未同步草稿");
+  await mobile.reload();
+  assert.equal(await mobile.locator("#title").inputValue(), "第二份未同步草稿");
+  checks.push("multiple local drafts reopen the selected object");
+  await mobile.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) {
+      if (k.startsWith("haiz.flow.private."))
+        throw new DOMException("quota", "QuotaExceededError");
+      return original.call(this, k, v);
+    };
+  });
+  await mobile.locator("#body").fill("存储失败时保留的文字");
+  assert.ok(
+    (await mobile.locator("#editstatus").innerText()).includes("仅内存"),
+  );
+  checks.push("storage failure does not falsely report persisted draft");
   const perf = await desk.evaluate(() => ({
     userAgent: navigator.userAgent,
     resources: performance

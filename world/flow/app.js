@@ -35,6 +35,7 @@ let token = read("haiz.flow.token", "", sessionStorage),
   busy = false,
   lastSync = "",
   online = false;
+let privateStorageAvailable = true;
 let mode = read("haiz.flow.mode", "办公"),
   tone = read("haiz.flow.tone", "playful"),
   theme = read("haiz.flow.theme", "light");
@@ -44,7 +45,8 @@ const key = () => `haiz.flow.private.${who?.name}`,
   saveLocal = () => {
     const rows = local();
     rows[current.id] = current;
-    return write(key(), rows);
+    privateStorageAvailable = write(key(), rows);
+    return privateStorageAvailable;
   },
   route = () => location.hash.slice(1) || "desk";
 const dates = () => ({
@@ -165,6 +167,7 @@ function newDraft() {
   };
   conflict = null;
   saveLocal();
+  write(key() + ".selected", current.id, sessionStorage);
   location.hash = "compose";
   render();
 }
@@ -173,6 +176,7 @@ function openDraft(id) {
     ? local()[id]
     : data.drafts.find((d) => d.id === id) || local()[id];
   current = structuredClone(current);
+  write(key() + ".selected", current.id, sessionStorage);
   conflict = null;
   location.hash = "compose";
   render();
@@ -180,7 +184,12 @@ function openDraft(id) {
 }
 function compose() {
   if (!current) {
-    const d = Object.values(local()).find((d) => d.pending) || data.drafts[0];
+    const selected = read(key() + ".selected", null, sessionStorage);
+    const d =
+      local()[selected] ||
+      data.drafts.find((d) => d.id === selected) ||
+      Object.values(local()).find((d) => d.pending) ||
+      data.drafts[0];
     if (d) current = structuredClone(d);
     else
       return shell(
@@ -188,7 +197,7 @@ function compose() {
       );
   }
   return shell(
-    `<div class="intro"><div><div class="eyebrow">DRAFT / PRIVATE UNTIL CONFIRMED</div><h1>把话说清楚。</h1><p>01 记录　→　02 核对　→　03 公开摘要</p></div></div><div id="conflict"></div><div class="status" id="editstatus">${current.pending ? "仅本机保存 · 等待同步" : "已同步 · v" + current.revision} · ${esc(current.sourceDevice)}</div><form class="editor" id="editor"><div class="card"><label>通知标题<input id="title" maxlength="100" value="${esc(current.title)}" placeholder="例如：明日实验课材料提醒"></label><label>私人正文 · 不进入教室公共屏<textarea id="body" maxlength="8000" placeholder="先留下背景、准备事项或尚未确定的想法…">${esc(current.body)}</textarea></label><div class="actions"><button type="button" data-suggest>整理成摘要建议</button><button type="button" data-export>导出文字</button></div><p class="note">本地规则建议，可关闭，无在线 AI 调用。应用建议后仍需你预览确认。</p><label>本机参考图片 · 不上传、不跨端传输<input id="file" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="attachment" class="attachment"></div></div><div class="card"><h2>接收范围与公开内容</h2><label>授权班级<select id="scope"><option>${esc(who.scope)}</option></select></label><label>教室公开摘要<textarea class="summary" id="summary" maxlength="280" placeholder="只写允许出现在教室屏上的内容">${esc(current.summary)}</textarea></label><div class="twocol"><label>生效时间<input id="startsAt" type="datetime-local" value="${toLocal(current.startsAt)}"></label><label>失效时间<input id="expiresAt" type="datetime-local" value="${toLocal(current.expiresAt)}"></label></div><p class="muted">不包含私人正文、图片、个人成绩或学生身份信息。</p></div><div class="toolbar"><button class="primary" type="button" data-save>保存并同步</button><button type="button" data-preview>预览公开屏 →</button></div></form>`,
+    `<div class="intro"><div><div class="eyebrow">DRAFT / PRIVATE UNTIL CONFIRMED</div><h1>把话说清楚。</h1><p>01 记录　→　02 核对　→　03 公开摘要</p></div></div><div id="conflict"></div><div class="status" id="editstatus">${current.pending ? (privateStorageAvailable ? "仅本机保存 · 等待同步" : "仅内存保留 · 存储不可用，请导出") : "已同步 · v" + current.revision} · ${esc(current.sourceDevice)}</div><form class="editor" id="editor"><div class="card"><label>通知标题<input id="title" maxlength="100" value="${esc(current.title)}" placeholder="例如：明日实验课材料提醒"></label><label>私人正文 · 不进入教室公共屏<textarea id="body" maxlength="8000" placeholder="先留下背景、准备事项或尚未确定的想法…">${esc(current.body)}</textarea></label><div class="actions"><button type="button" data-suggest>整理成摘要建议</button><button type="button" data-export>导出文字</button></div><p class="note">本地规则建议，可关闭，无在线 AI 调用。应用建议后仍需你预览确认。</p><label>本机参考图片 · 不上传、不跨端传输<input id="file" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="attachment" class="attachment"></div></div><div class="card"><h2>接收范围与公开内容</h2><label>授权班级<select id="scope"><option>${esc(who.scope)}</option></select></label><label>教室公开摘要<textarea class="summary" id="summary" maxlength="280" placeholder="只写允许出现在教室屏上的内容">${esc(current.summary)}</textarea></label><div class="twocol"><label>生效时间<input id="startsAt" type="datetime-local" value="${toLocal(current.startsAt)}"></label><label>失效时间<input id="expiresAt" type="datetime-local" value="${toLocal(current.expiresAt)}"></label></div><p class="muted">不包含私人正文、图片、个人成绩或学生身份信息。</p></div><div class="toolbar"><button class="primary" type="button" data-save>保存并同步</button><button type="button" data-preview>预览公开屏 →</button></div></form>`,
   );
 }
 function collect() {
@@ -205,8 +214,10 @@ function collect() {
   current.updatedAt = new Date().toISOString();
   current.sourceDevice = innerWidth < 650 ? "手机浏览器" : "桌面浏览器";
   delete current.request;
-  saveLocal();
-  $("#editstatus").textContent = "仅本机保存 · 等待同步";
+  const saved = saveLocal();
+  $("#editstatus").textContent = saved
+    ? "仅本机保存 · 等待同步"
+    : "仅内存保留 · 存储不可用，请导出";
 }
 async function syncDraft() {
   if (!current || busy) return false;
