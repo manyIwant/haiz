@@ -13,6 +13,9 @@ const required=[
 for(const name of required)assert.ok(existsSync(path.join(www,name)),'Missing native asset: '+name);
 const root=readFileSync(path.join(www,'index.html'),'utf8');
 assert.match(root,/\.\/world\/index\.html#study/,'Native entry must target an actual HTML file');
+assert.match(root,/getRegistrations/,'Old WebView service workers must be unregistered on native entry');
+const nativeApp=readFileSync(path.join(www,'world/app.js'),'utf8');
+assert.ok(!nativeApp.includes("navigator.serviceWorker.register('./sw.js')"),'Native app must not register a PWA cache worker');
 const entry=readFileSync(path.join(www,'world/index.html'),'utf8');
 assert.match(entry,/<script src="mobile-boot\.js"><\/script><script type="module" src="app\.js"><\/script>/);
 assert.ok(entry.includes('mobile-shell.js') && entry.includes('mobile-shell.css'));
