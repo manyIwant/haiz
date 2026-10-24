@@ -8,6 +8,7 @@ on:
   push:
     branches: ['fix/mobile-startup-icons-v040']
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
