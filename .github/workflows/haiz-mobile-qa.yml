@@ -88,7 +88,7 @@ jobs:
             adb exec-out screencap -p > mobile-test-output/android-screen.png
             adb logcat -d -s AndroidRuntime:E chromium:E Capacitor:V > mobile-test-output/android-logcat.txt
             adb exec-out uiautomator dump /dev/tty > mobile-test-output/android-window.xml
-            if ! grep -Eq 'HAIZ|我的书桌|我的自习室|思路|专注' mobile-test-output/android-window.xml; then
+            if ! grep -Eq '思路不必重来|你的第一张思路卡|开始一件小事|打开专注书桌|把思路留下来' mobile-test-output/android-window.xml; then
               echo 'FAIL: Native page not accessible; inspect screenshot and logcat'
               exit 1
             fi
