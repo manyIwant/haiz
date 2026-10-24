@@ -1,0 +1,27 @@
+/* Fieldnotes palettes for the REAL Flow workspace, not for the fake role demo.
+   Keep Flow's high-contrast option authoritative. */
+body[data-haiz-lucent="porcelain"]:not([data-theme="contrast"]){
+ --canvas:#f4f2ee;--surface:#fcfbf8;--ink:#202837;--muted:#637180;
+ --brand:#355bc0;--soft:#e4eaf8;--line:#d6dce6;--accent:#b06b51;
+ --radius:16px;color-scheme:light;
+}
+body[data-haiz-lucent="obsidian"]:not([data-theme="contrast"]){
+ --canvas:#10151e;--surface:#1b222e;--ink:#f2f3f6;--muted:#a6aebc;
+ --brand:#b6c8ff;--soft:#283446;--line:#424f62;--accent:#efa989;
+ --radius:16px;color-scheme:dark;
+}
+body[data-haiz-lucent="ocean"]:not([data-theme="contrast"]){
+ --canvas:#0c2029;--surface:#17343d;--ink:#f0f4f3;--muted:#a1b7bb;
+ --brand:#9bdfd4;--soft:#21444d;--line:#45626a;--accent:#e5ad87;
+ --radius:16px;color-scheme:dark;
+}
+body[data-haiz-lucent="porcelain"] .course{background:#284877;color:#f8f9ff}
+body[data-haiz-lucent="obsidian"] .course{background:#2b3b60;color:#f7f7ff}
+body[data-haiz-lucent="ocean"] .course{background:#124757;color:#efffff}
+body[data-haiz-lucent]:not([data-theme="contrast"]) .card{box-shadow:0 3px 19px rgba(13,22,31,.035)}
+body[data-haiz-lucent]:not([data-theme="contrast"]) h1{font-weight:660;letter-spacing:-1.35px}
+body[data-haiz-lucent]:not([data-theme="contrast"]) button,
+body[data-haiz-lucent]:not([data-theme="contrast"]) a.btn{border-radius:11px}
+body[data-haiz-lucent="obsidian"] button.primary,
+body[data-haiz-lucent="ocean"] button.primary{color:#11202d}
+@media(prefers-reduced-motion:reduce){body[data-haiz-lucent] *{scroll-behavior:auto!important}}
