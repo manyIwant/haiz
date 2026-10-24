@@ -80,18 +80,7 @@ jobs:
           arch: x86_64
           profile: pixel_5
           script: |
-            mkdir -p mobile-test-output
-            adb install -r world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n space.haiz.study/.MainActivity
-            sleep 18
-            adb shell pidof space.haiz.study > mobile-test-output/pid.txt
-            adb exec-out screencap -p > mobile-test-output/android-screen.png
-            adb logcat -d -s AndroidRuntime:E chromium:E Capacitor:V > mobile-test-output/android-logcat.txt
-            adb exec-out uiautomator dump /dev/tty > mobile-test-output/android-window.xml
-            if ! grep -Eq '思路不必重来|你的第一张思路卡|开始一件小事|打开专注书桌|把思路留下来' mobile-test-output/android-window.xml; then
-              echo 'FAIL: Native page not accessible; inspect screenshot and logcat'
-              exit 1
-            fi
+            bash world/apps/mobile/tests/android-emulator-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
