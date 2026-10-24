@@ -69,6 +69,11 @@ jobs:
         working-directory: world/apps/mobile
       - run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
         working-directory: world/apps/mobile/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-android-fix-preview-apk
+          path: world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -136,3 +141,15 @@ jobs:
         with:
           name: haiz-ios-ui-evidence
           path: world/apps/mobile/mobile-test-output/
+      - name: Build unsigned iPhone arm64 IPA for testing
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ios-device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
+          mkdir -p build/unsigned/Payload
+          cp -R build/ios-device/Build/Products/Release-iphoneos/App.app build/unsigned/Payload/HAIZ.app
+          cd build/unsigned
+          ditto -c -k --keepParent Payload HAIZ-Study-iOS-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-ios-fix-preview-unsigned-ipa
+          path: world/apps/mobile/build/unsigned/HAIZ-Study-iOS-unsigned.ipa
+          if-no-files-found: error

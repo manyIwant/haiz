@@ -126,4 +126,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" release-artifacts/* --verify-tag --prerelease --title "HAIZ WORLD 0.4.0 · 校园与晚修作业预览版" --notes-file release/NOTES.zh-CN.md
+          gh release create "$RELEASE_TAG" release-artifacts/* --verify-tag --prerelease --title "HAIZ WORLD 0.4.1 · 双端启动及图标修复预览版" --notes-file release/NOTES.zh-CN.md

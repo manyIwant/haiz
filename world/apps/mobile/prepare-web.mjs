@@ -20,5 +20,5 @@ html=html.replace('</head>','<link rel="stylesheet" href="mobile-shell.css"><scr
  .replace(appScript,'<script src="mobile-boot.js"></script>'+appScript);
 writeFileSync(index,html);
 for(const file of ['mobile-shell.js','mobile-shell.css','mobile-boot.js'])cpSync(new URL(file,import.meta.url),path.join(entry,file));
-writeFileSync(path.join(target,'build-info.json'),JSON.stringify({version:'0.4.0-preview.2',builtAt:new Date().toISOString(),dataMode:'offline-local-demo',entry:standalone?'/':'/world/'},null,2));
+writeFileSync(path.join(target,'build-info.json'),JSON.stringify({version:'0.4.1-preview.1',builtAt:new Date().toISOString(),dataMode:'offline-local-demo',entry:standalone?'/':'/world/'},null,2));
 console.log('Native assets prepared: branded entry + startup diagnostics + offline campus assets.');
