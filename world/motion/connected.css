@@ -20,3 +20,5 @@
 .haiz-real-bottom button{background:transparent;color:#355bc0;padding:8px 0;border:0;font-size:12px;font-weight:650}
 @media (prefers-reduced-motion:reduce){.haiz-real-dialog::backdrop{backdrop-filter:none}}
 @media(max-width:350px){.haiz-connect-trigger{padding:0 6px!important;font-size:11px!important}}
+
+.haiz-real-probe{display:block;width:100%;background:transparent;color:#355bc0;border:1px solid #c8d3e5;border-radius:11px;padding:11px;font-size:12px;font-weight:600;margin-bottom:12px;min-height:44px}
