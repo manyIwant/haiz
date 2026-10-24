@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "timer reload pauses without fabricating attended time",
+    "room switch and private session note recovery",
+    "own service worker does not delete sibling application caches",
+    "local art and controls load offline"
+  ],
+  "external": [],
+  "errors": [],
+  "device": "Linux Chromium; not physical phone"
+}
