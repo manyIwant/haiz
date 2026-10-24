@@ -7,7 +7,10 @@ const www=path.join(home,'www');
 const required=[
  'index.html','world/index.html','world/app.js','world/mobile-boot.js',
  'world/mobile-shell.js','world/mobile-shell.css','world/style.css',
- 'world/lucent/dock.mjs','world/lucent/spring.mjs','asset-manifest.json','build-info.json',
+ 'world/lucent/dock.mjs','world/lucent/spring.mjs',
+ 'world/motion/index.html','world/motion/theme-before.js','world/motion/connected.js','world/motion/connected.css',
+ 'world/flow/index.html','world/flow/appearance-start.js','world/flow/appearance-watch.js','world/flow/fieldnotes-tone.css',
+ 'asset-manifest.json','build-info.json',
  'world/round2-ui.js','world/room/scene/index.html',
  'world/assets/campus.webp','world/campus.html','assets/js/three-campus.js'
 ];
@@ -32,3 +35,7 @@ console.log('PASS: Native Android and iOS web bundle entry, boot fallback, start
 assert.ok(!existsSync(path.join(www,'world/pilot/server.mjs')),'Server must not ship in native package');
 const manifest=JSON.parse(readFileSync(path.join(www,'asset-manifest.json')));
 for(const item of manifest.files)assert.ok(existsSync(path.join(www,item.path)),'Manifest resource missing '+item.path);
+
+// Design-only Remotion workspace and production backend must not enter native bundles.
+assert.ok(!existsSync(path.join(www,'world/motion/remotion/package.json')),'Remotion editor should not ship in APK/IPA');
+assert.ok(!existsSync(path.join(www,'world/flow/store.mjs')),'Flow backend storage must remain server-only');

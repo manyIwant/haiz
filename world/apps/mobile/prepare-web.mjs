@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const project=fileURLToPath(new URL('../../',import.meta.url));
 const home=fileURLToPath(new URL('./',import.meta.url));
-const excluded=new Set(['downloads','apps','plugins','scripts','tests','portable','node_modules','docs','build','dist','release','pilot']);
+const excluded=new Set(['downloads','apps','plugins','scripts','tests','portable','node_modules','docs','build','dist','release','pilot','remotion']);
 const serverOnly=new Set(['store.mjs','classroom-server.mjs','identities.json','flow.json','bootstrap-invite.txt','local-demo-keys.json']);
 const assetExtensions=new Set(['.html','.js','.mjs','.css','.json','.webmanifest','.svg','.png','.webp','.jpg','.jpeg','.gif','.avif','.woff','.woff2','.ttf','.mp4','.webm','.mp3','.ogg','.wav','.glb','.gltf','.bin','.txt','.md','.ico','.pdf']);
 function copyRuntime(from,to){

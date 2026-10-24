@@ -1,0 +1,24 @@
+/* Bridge chrome stays secondary to the typography-first Fieldnotes interface. */
+.haiz-connect-trigger{width:auto!important;min-width:49px!important;padding:0 10px!important;font-size:12px!important;font-weight:650!important;letter-spacing:.02em}
+.haiz-real-dialog{position:fixed;inset:0;margin:auto;width:min(430px,calc(100vw - 28px));max-height:min(760px,calc(100dvh - 40px));overflow:auto;background:var(--haiz-dialog-bg,#fffefa);color:var(--haiz-dialog-ink,#202837);border:1px solid #e1e4ea;box-shadow:0 28px 90px #0b193744;border-radius:24px;padding:22px 20px 20px;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}
+.haiz-real-dialog::backdrop{background:rgba(8,15,25,.65);backdrop-filter:blur(8px)}
+.haiz-real-dialog *{box-sizing:border-box}
+.haiz-real-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.haiz-real-heading small{font-size:10px;color:#647385;letter-spacing:.14em}
+.haiz-real-heading h2{font-size:23px;line-height:1.2;letter-spacing:-.6px;margin:7px 0 13px;font-weight:650}
+.haiz-real-heading button{border:1px solid #dce1e8;background:transparent;border-radius:50%;width:34px;height:34px;color:inherit;font-size:20px}
+.haiz-real-info,.haiz-real-warning{font-size:12px;color:#617083;line-height:1.7;margin:0 0 16px}
+.haiz-real-links{border-top:1px solid #e0e5ec;margin-bottom:20px}
+.haiz-real-links a{display:block;padding:14px 1px;color:#23364d;border-bottom:1px solid #e0e5ec;text-decoration:none}
+.haiz-real-links strong{font-weight:600;display:flex;align-items:center;justify-content:space-between;font-size:15px}
+.haiz-real-links strong span{color:#4669b0}
+.haiz-real-links small{font-size:12px;color:#647385;line-height:1.55;display:block;margin-top:5px}
+.haiz-real-label{display:block;font-weight:650;font-size:12px;margin-bottom:9px}
+.haiz-real-dialog input{width:100%;border:1px solid #cbd4e0;border-radius:12px;padding:13px;font-size:13px;background:#fff;color:#192a41;margin-bottom:10px}
+.haiz-real-dialog .haiz-real-primary{display:block;width:100%;background:#263a5d;color:#fff;border:0;border-radius:12px;padding:12px;font-size:14px;font-weight:600;min-height:45px;margin-bottom:9px}
+.haiz-real-bottom{border-top:1px solid #e0e5ec;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:6px;color:#677586;font-size:11px}
+.haiz-real-bottom button{background:transparent;color:#355bc0;padding:8px 0;border:0;font-size:12px;font-weight:650}
+@media (prefers-reduced-motion:reduce){.haiz-real-dialog::backdrop{backdrop-filter:none}}
+@media(max-width:350px){.haiz-connect-trigger{padding:0 6px!important;font-size:11px!important}}
+
+.haiz-real-probe{display:block;width:100%;background:transparent;color:#355bc0;border:1px solid #c8d3e5;border-radius:11px;padding:11px;font-size:12px;font-weight:600;margin-bottom:12px;min-height:44px}

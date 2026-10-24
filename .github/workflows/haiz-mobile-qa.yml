@@ -30,6 +30,10 @@ jobs:
       - run: bash -n tests/android-smoke.sh tests/ios-smoke.sh && node --check tests/android-ui.mjs
       - run: npm run sync
       - run: node tests/verify-assets.mjs
+      - name: Check new mobile/Flow bridge scripts
+        run: node --check ../../motion/connected.js && node --check ../../motion/theme-before.js && node --check ../../flow/appearance-start.js && node --check ../../flow/appearance-watch.js
+      - name: Cross-system source and routing contracts
+        run: node --test ../../tests/cross-system-bridge.test.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
