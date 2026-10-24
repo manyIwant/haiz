@@ -1,5 +1,6 @@
 /* Fieldnotes palettes for the REAL Flow workspace, not for the fake role demo.
    Keep Flow's high-contrast option authoritative. */
+body[data-haiz-lucent]{background:var(--canvas);min-height:100dvh}
 body[data-haiz-lucent="porcelain"]:not([data-theme="contrast"]){
  --canvas:#f4f2ee;--surface:#fcfbf8;--ink:#202837;--muted:#637180;
  --brand:#355bc0;--soft:#e4eaf8;--line:#d6dce6;--accent:#b06b51;
