@@ -6,7 +6,7 @@ on:
       - 'world/**'
       - '.github/workflows/haiz-mobile-qa.yml'
   push:
-    branches: ['fix/mobile-startup-icons-v040']
+    branches: ['fix/mobile-startup-icons-v040', 'feat/haiz-lucent-integration']
   workflow_dispatch:
   workflow_call:
 
@@ -27,6 +27,7 @@ jobs:
           cache: npm
           cache-dependency-path: world/apps/mobile/package-lock.json
       - run: npm ci
+      - run: bash -n tests/android-smoke.sh tests/ios-smoke.sh && node --check tests/android-ui.mjs
       - run: npm run sync
       - run: node tests/verify-assets.mjs
       - uses: actions/setup-python@v5
@@ -48,6 +49,11 @@ jobs:
           PY
 
   android-emulator:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [33, 35]
+    timeout-minutes: 35
     needs: web-assets
     runs-on: ubuntu-latest
     steps:
@@ -71,34 +77,32 @@ jobs:
         working-directory: world/apps/mobile/android
       - uses: actions/upload-artifact@v4
         with:
-          name: haiz-android-fix-preview-apk
+          name: haiz-android-api-${{ matrix.api }}-preview-apk
           path: world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+      - name: Enable runner KVM for hardware accelerated emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm && test -w /dev/kvm
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
+          api-level: ${{ matrix.api }}
           arch: x86_64
           profile: pixel_5
-          script: |
-            mkdir -p mobile-test-output
-            adb install -r world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n space.haiz.study/.MainActivity
-            sleep 18
-            adb shell pidof space.haiz.study > mobile-test-output/pid.txt
-            adb exec-out screencap -p > mobile-test-output/android-screen.png
-            adb logcat -d -s AndroidRuntime:E chromium:E Capacitor:V > mobile-test-output/android-logcat.txt
-            adb exec-out uiautomator dump /dev/tty > mobile-test-output/android-window.xml
-            if ! grep -Eq '思路不必重来|你的第一张思路卡|开始一件小事|打开专注书桌|把思路留下来' mobile-test-output/android-window.xml; then
-              echo 'FAIL: Native page not accessible; inspect screenshot and logcat'
-              exit 1
-            fi
+          disable-animations: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
+          script: bash world/apps/mobile/tests/android-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: haiz-android-ui-evidence
+          name: haiz-android-api-${{ matrix.api }}-ui-evidence
           path: mobile-test-output/
 
   ios-simulator:
+    timeout-minutes: 40
     needs: web-assets
     runs-on: macos-15
     defaults:
@@ -125,17 +129,8 @@ jobs:
           if not phones: raise SystemExit('No supported iPhone simulator installed')
           print('HAIZ_SIM='+phones[0]['udid'])
           PY
-      - name: Build, install and launch on simulator
-        run: |
-          xcrun simctl boot "$HAIZ_SIM"
-          xcrun simctl bootstatus "$HAIZ_SIM" -b
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim CODE_SIGNING_ALLOWED=NO build
-          xcrun simctl install "$HAIZ_SIM" build/ios-sim/Build/Products/Debug-iphonesimulator/App.app
-          xcrun simctl launch "$HAIZ_SIM" space.haiz.study
-          sleep 12
-          mkdir -p mobile-test-output
-          xcrun simctl io "$HAIZ_SIM" screenshot mobile-test-output/ios-screen.png
-          xcrun simctl spawn "$HAIZ_SIM" log show --last 2m --style compact --predicate 'process == "HAIZ Study" OR process == "App"' > mobile-test-output/ios-log.txt || true
+      - name: Build and exercise real WKWebView on simulator
+        run: bash tests/ios-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

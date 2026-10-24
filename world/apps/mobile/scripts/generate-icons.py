@@ -1,85 +1,129 @@
 #!/usr/bin/env python3
-"""Deterministic HAIZ mobile art: iOS opaque icon, Android adaptive/legacy icons and both launch images.
-Requires Pillow (build-time only): python -m pip install pillow
-Run: python world/apps/mobile/scripts/generate-icons.py
+"""Original LUCENT native artwork. Pillow only; no external fonts/images.
+SVG masters and raster resources share the same geometry. Run from any directory.
 """
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
-import math
+import json
+from PIL import Image, ImageDraw
 
 MOBILE = Path(__file__).resolve().parents[1]
-ANDROID = MOBILE / "android/app/src/main/res"
-IOS = MOBILE / "ios/App/App/Assets.xcassets"
-CREAM = (244, 241, 229)
-DARK = (25, 58, 49)
-WARM = (218, 182, 129)
+BRAND = MOBILE / 'brand'
+ANDROID = MOBILE / 'android/app/src/main/res'
+IOS = MOBILE / 'ios/App/App/Assets.xcassets'
+DARK = '#0E121D'
+PAPER = '#F0F2F8'
+PORCELAIN = '#F3F1EC'
+WARM = '#F0A77B'
+# Folded H: two paper edges with opposite cuts; a warm folded connective page.
+H = [([(250,280),(366,314),(366,744),(250,710)], PAPER),
+     ([(658,280),(774,314),(774,744),(658,710)], PAPER),
+     ([(366,462),(658,370),(658,492),(366,584)], WARM)]
+TREE = [([(476,440),(548,440),(548,750),(476,750)], WARM),
+        ([(302,754),(722,754),(722,790),(302,790)], PAPER)]
+COAST = [([(512,236),(584,456),(788,512),(584,568),(512,788),(440,568),(236,512),(440,456)], PAPER),
+         ([(512,356),(554,484),(678,512),(554,540),(512,668),(470,540),(346,512),(470,484)], DARK)]
 
-def emblem(size, foreground=False, dark=False):
-    scale = size / 1024
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    def p(v): return round(v * scale)
-    ink = DARK if dark else (246, 237, 218)
-    if foreground:
-        # Safe central ~58% for adaptive mask crops; leave outer 21% transparent.
-        factor = .66
-        ox = (1024-1024*factor)/2
-        def v(x): return p(ox + x*factor)
-        width = p(71*factor)
-        d.arc((v(300),v(276),v(724),v(712)),180,360,fill=ink,width=width)
-        d.line((v(300),v(494),v(300),v(765)),fill=ink,width=width)
-        d.line((v(724),v(494),v(724),v(765)),fill=ink,width=width)
-        d.ellipse((v(459),v(418),v(565),v(524)),fill=WARM)
-        d.line((v(430),v(740),v(594),v(740)),fill=ink,width=p(37*factor))
-    else:
-        width = p(70)
-        d.arc((p(300),p(276),p(724),p(712)),180,360,fill=ink,width=width)
-        d.line((p(300),p(494),p(300),p(765)),fill=ink,width=width)
-        d.line((p(724),p(494),p(724),p(765)),fill=ink,width=width)
-        d.ellipse((p(459),p(418),p(565),p(524)),fill=WARM)
-        d.line((p(430),p(740),p(594),p(740)),fill=ink,width=p(37))
-    return img
+def polygons(direction):
+    return H if direction == 'fold' else TREE if direction == 'canopy' else COAST
 
-def icon(size):
-    img = Image.new("RGBA",(size,size))
-    pix = img.load()
-    for y in range(size):
-        t=y/max(1,size-1)
-        for x in range(size):
-            fx=x/max(1,size-1)
-            bloom=max(0,1-math.hypot(fx-.18,t-.07)*.85)
-            pix[x,y]=(round(10+25*(1-t)+8*bloom),round(34+28*(1-t)+8*bloom),round(32+16*(1-t)+6*bloom),255)
-    img.alpha_composite(emblem(size))
-    return img.convert("RGB")
+def svg(direction, background=True):
+    shapes = [f'<rect width="1024" height="1024" fill="{DARK}"/>'] if background else []
+    for points, fill in polygons(direction):
+        shapes.append(f'<polygon points="{" ".join(f"{x},{y}" for x,y in points)}" fill="{fill}"/>')
+    if direction == 'canopy':
+        shapes += [f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{PAPER}"/>' for x,y,rx,ry in [(368,386,158,106),(642,386,158,106),(512,286,146,96)]]
+    if direction == 'coast':
+        shapes.append(f'<circle cx="512" cy="512" r="32" fill="{WARM}"/>')
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">\n'+'\n'.join(shapes)+'\n</svg>\n'
 
-def save(img, path):
+def emblem(size, direction='fold', adaptive=False, dark=False, mono=False):
+    # Supersample all sizes, including the 48px launcher; no jagged fractional cuts.
+    canvas = Image.new('RGBA', (size*4,size*4), (0,0,0,0))
+    draw = ImageDraw.Draw(canvas)
+    factor = .82 if adaptive else 1
+    def p(x): return (512+(x-512)*factor)*size*4/1024
+    for points, fill in polygons(direction):
+        if mono: fill = '#FFFFFF'
+        elif dark and fill == PAPER: fill = DARK
+        draw.polygon([(p(x),p(y)) for x,y in points], fill=fill)
+    if direction == 'canopy':
+        for x,y,rx,ry in [(368,386,158,106),(642,386,158,106),(512,286,146,96)]:
+            draw.ellipse((p(x-rx),p(y-ry),p(x+rx),p(y+ry)), fill=DARK if dark else PAPER)
+    if direction == 'coast':
+        draw.ellipse((p(480),p(480),p(544),p(544)), fill=WARM)
+    return canvas.resize((size,size),Image.Resampling.LANCZOS)
+
+def icon(size, direction='fold'):
+    image=Image.new('RGBA',(size,size),DARK)
+    image.alpha_composite(emblem(size,direction))
+    return image.convert('RGB')
+
+def save(image,path):
     path.parent.mkdir(parents=True,exist_ok=True)
-    img.save(path,format="PNG",optimize=True)
+    image.save(path,format='PNG',optimize=True)
 
-def round_icon(size):
-    square=icon(size).convert("RGBA")
-    mask=Image.new("L",(size,size),0)
-    ImageDraw.Draw(mask).ellipse((0,0,size-1,size-1),fill=255)
-    square.putalpha(mask)
-    return square
+def splash(dimensions,night=False):
+    image=Image.new('RGB',dimensions,DARK if night else PORCELAIN)
+    # Artwork is modest and never becomes an obstructive launch film.
+    art=emblem(round(min(dimensions)*.30),dark=not night)
+    image.paste(art,((image.width-art.width)//2,(image.height-art.height)//2),art)
+    return image
 
-def splash(size):
-    img=Image.new("RGB",(size,size),CREAM)
-    art=emblem(round(size*.30),dark=True)
-    img.paste(art,((size-art.width)//2,(size-art.height)//2),art)
-    return img
+def vector(mono=True, adaptive=True):
+    paths=[]
+    for points, fill in H:
+        value='M'+' L'.join(f'{x},{y}' for x,y in points)+' Z'
+        paths.append(f'    <path android:fillColor="{"#FFFFFFFF" if mono else fill}" android:pathData="{value}"/>')
+    return '<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="1024" android:viewportHeight="1024">\n'+f'<group android:scaleX="{.82 if adaptive else 1.4}" android:scaleY="{.82 if adaptive else 1.4}" android:pivotX="512" android:pivotY="512">\n'+'\n'.join(paths)+'\n</group>\n</vector>\n'
 
 def main():
-    save(icon(1024),IOS/"AppIcon.appiconset/AppIcon-512@2x.png")
-    for density,icon_size in {"mdpi":48,"hdpi":72,"xhdpi":96,"xxhdpi":144,"xxxhdpi":192}.items():
-        dest=ANDROID/("mipmap-"+density)
-        save(icon(icon_size),dest/"ic_launcher.png")
-        save(round_icon(icon_size),dest/"ic_launcher_round.png")
-        save(emblem(round(icon_size*2.25),foreground=True),dest/"ic_launcher_foreground.png")
-    for dest in sorted(ANDROID.glob("drawable*/splash.png")):
-        save(splash(512),dest)
-    for name in ["splash-2732x2732.png","splash-2732x2732-1.png","splash-2732x2732-2.png"]:
-        save(splash(2732),IOS/"Splash.imageset"/name)
-    print("HAIZ visual assets generated for Android and iOS.")
+    BRAND.mkdir(exist_ok=True)
+    for direction in ['fold','canopy','coast']:
+        (BRAND/f'direction-{direction}.svg').write_text(svg(direction))
+        save(icon(512,direction),BRAND/f'direction-{direction}.png')
+        save(icon(48,direction),BRAND/f'direction-{direction}-48.png')
+    (BRAND/'app-icon.svg').write_text(svg('fold'))
+    save(icon(1024),IOS/'AppIcon.appiconset/AppIcon-512@2x.png')
+    for density,size in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
+        dest=ANDROID/('mipmap-'+density)
+        save(icon(size),dest/'ic_launcher.png')
+        rounded=icon(size).convert('RGBA')
+        mask=Image.new('L',(size*4,size*4),0)
+        ImageDraw.Draw(mask).ellipse((0,0,size*4-1,size*4-1),fill=255)
+        rounded.putalpha(mask.resize((size,size),Image.Resampling.LANCZOS))
+        save(rounded,dest/'ic_launcher_round.png')
+        save(emblem(round(size*2.25),adaptive=True),dest/'ic_launcher_foreground.png')
+    (ANDROID/'values/ic_launcher_background.xml').write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="ic_launcher_background">#0E121D</color></resources>\n')
+    for name in ['ic_launcher','ic_launcher_round']:
+        for qualifier in ['mipmap-anydpi-v26','mipmap-anydpi-v33']:
+            directory=ANDROID/qualifier;directory.mkdir(exist_ok=True)
+            mono='\n    <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>' if qualifier.endswith('33') else ''
+            (directory/(name+'.xml')).write_text('<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background"/>\n    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>'+mono+'\n</adaptive-icon>\n')
+    (ANDROID/'drawable/ic_launcher_monochrome.xml').write_text(vector())
+    (ANDROID/'drawable/ic_stat_haiz.xml').write_text(vector(adaptive=False))
+    for destination in sorted(ANDROID.glob('drawable*/splash.png')):
+        if '-night' in destination.parent.name: continue
+        dimensions=Image.open(destination).size
+        save(splash(dimensions),destination)
+        nightdir=destination.parent.name.replace('drawable-port','drawable-port-night',1).replace('drawable-land','drawable-land-night',1)
+        if nightdir == 'drawable': nightdir='drawable-night'
+        save(splash(dimensions,True),ANDROID/nightdir/'splash.png')
+    images=[]
+    for scale,name in [('1x','splash-2732x2732-2.png'),('2x','splash-2732x2732-1.png'),('3x','splash-2732x2732.png')]:
+        save(splash((2732,2732)),IOS/'Splash.imageset'/name)
+        nightname=name.replace('.png','-dark.png')
+        save(splash((2732,2732),True),IOS/'Splash.imageset'/nightname)
+        images += [{'idiom':'universal','filename':name,'scale':scale},{'idiom':'universal','filename':nightname,'scale':scale,'appearances':[{'appearance':'luminosity','value':'dark'}]}]
+    (IOS/'Splash.imageset/Contents.json').write_text(json.dumps({'images':images,'info':{'version':1,'author':'xcode'}},indent=2)+'\n')
+    sheet=Image.new('RGB',(1200,490),PORCELAIN)
+    draw=ImageDraw.Draw(sheet)
+    for i,(direction,label) in enumerate([('fold','A / FOLDED H — SELECTED'),('canopy','B / TREE CANOPY'),('coast','C / COAST COMPASS')]):
+        x=i*400
+        sheet.paste(icon(300,direction),(x+50,40))
+        sheet.paste(icon(48,direction),(x+50,380))
+        draw.text((x+115,386),label,fill=DARK)
+        draw.text((x+115,410),'48 px / native size',fill=DARK)
+    save(sheet,BRAND/'directions-review.png')
+    print('PASS: LUCENT SVG, adaptive/themed icons and light/dark launch assets generated.')
 
-if __name__=="__main__": main()
+if __name__=='__main__': main()

@@ -1,11 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="field" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#2c5146"/><stop offset=".62" stop-color="#17362e"/><stop offset="1" stop-color="#0c2422"/></linearGradient>
-    <linearGradient id="stone" x1="0" x2=".7" y1="0" y2="1"><stop stop-color="#fff8e8"/><stop offset="1" stop-color="#dddac9"/></linearGradient>
-  </defs>
-  <rect width="1024" height="1024" fill="url(#field)"/>
-  <path d="M300 765 V494 C300 367 395 276 512 276 C629 276 724 367 724 494 V765" fill="none" stroke="url(#stone)" stroke-width="71" stroke-linecap="round"/>
-  <circle cx="512" cy="471" r="53" fill="#dab681"/>
-  <path d="M430 740 H594" fill="none" stroke="#ecddbf" stroke-width="37" stroke-linecap="round"/>
-  <path d="M256 833 H768" fill="none" stroke="#6e8a77" stroke-opacity=".56" stroke-width="9" stroke-linecap="round"/>
+<rect width="1024" height="1024" fill="#0E121D"/>
+<polygon points="250,280 366,314 366,744 250,710" fill="#F0F2F8"/>
+<polygon points="658,280 774,314 774,744 658,710" fill="#F0F2F8"/>
+<polygon points="366,462 658,370 658,492 366,584" fill="#F0A77B"/>
 </svg>
