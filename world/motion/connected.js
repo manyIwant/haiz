@@ -38,6 +38,7 @@
     <input id="haiz-remote-origin" type="url" inputmode="url" spellcheck="false" placeholder="https://your-authorized-server.example">
     <button type="button" id="haiz-open-remote" class="haiz-real-primary">在浏览器打开同步工作台 ↗</button>
     <p class="haiz-real-warning" id="haiz-real-status" role="status">不在 URL 中携带邀请码或密码；手机的 localhost 不是电脑上的服务器。</p>
+    <button type="button" id="haiz-probe-api" class="haiz-real-probe">检查当前设备上的 Flow API 连接</button>
     <div class="haiz-real-bottom"><button type="button" id="haiz-export-demo">导出本页笔记</button><span>仅导出，不自动上传</span></div>`;
   document.body.append(dialog);
   const close=()=>dialog.close();
@@ -52,6 +53,22 @@
     status.textContent='打开外部服务；登录与访问权限由服务器校验。';
     const dest = new URL('/world/flow/', u.origin).href;
     const a=document.createElement('a');a.href=dest;a.target='_blank';a.rel='noopener noreferrer';a.click();
+  });
+  dialog.querySelector('#haiz-probe-api').addEventListener('click',async()=>{
+    status.textContent='正在检测同源 Flow API（不会上传本页笔记）…';
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),3500);
+    try{
+      const r=await fetch('/api/flow/me',{method:'GET',credentials:'same-origin',cache:'no-store',headers:{'Accept':'application/json'},signal:controller.signal});
+      const type=r.headers.get('content-type')||'';
+      if(!type.includes('application/json')){status.textContent='未确认 Flow API：响应不是 JSON，可能只是静态网页或安装包。';return;}
+      if(r.status===401||r.status===403){status.textContent='Flow API 可以响应；当前设备尚未通过服务端身份验证。';return;}
+      if(!r.ok){status.textContent='Flow API 有响应，但返回 HTTP '+r.status+'；请检查服务器状态。';return;}
+      const body=await r.json();
+      if(body && (body.user||body.role||body.me)){status.textContent='已联系 Flow 服务并收到身份状态。权限仍由服务器控制。';}
+      else status.textContent='API 返回成功，但身份字段未符合预期；请在 Flow 登录页确认。';
+    }catch{status.textContent='无法联系同源 Flow API。纯静态网页和离线 APK 没有自动连接到学校服务器。';}
+    finally{clearTimeout(timer);}
   });
   dialog.querySelector('#haiz-export-demo').addEventListener('click',()=>{
     const text = (()=>{try{return localStorage.getItem('haiz-editorial-note')||''}catch{return ''}})();
