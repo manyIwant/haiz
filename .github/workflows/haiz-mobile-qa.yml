@@ -1,0 +1,137 @@
+name: HAIZ mobile startup smoke QA
+
+on:
+  pull_request:
+    paths:
+      - 'world/**'
+      - '.github/workflows/haiz-mobile-qa.yml'
+  push:
+    branches: ['fix/mobile-startup-icons-v040']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-assets:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: world/apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: world/apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm run sync
+      - run: node tests/verify-assets.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install Pillow==11.3.0
+      - run: python scripts/generate-icons.py
+      - name: Check generated icons on both platforms
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          i=Path('ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png')
+          a=Path('android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png')
+          assert Image.open(i).size == (1024,1024)
+          assert Image.open(i).mode == 'RGB'
+          assert Image.open(a).size == (324,324)
+          print('PASS: iOS opaque 1024 icon and Android adaptive launcher.')
+          PY
+
+  android-emulator:
+    needs: web-assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install Pillow==11.3.0
+      - run: npm ci
+        working-directory: world/apps/mobile
+      - run: npm run sync && node tests/verify-assets.mjs && python scripts/generate-icons.py
+        working-directory: world/apps/mobile
+      - run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+        working-directory: world/apps/mobile/android
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          profile: pixel_5
+          script: |
+            mkdir -p mobile-test-output
+            adb install -r world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n space.haiz.study/.MainActivity
+            sleep 18
+            adb shell pidof space.haiz.study > mobile-test-output/pid.txt
+            adb exec-out screencap -p > mobile-test-output/android-screen.png
+            adb logcat -d -s AndroidRuntime:E chromium:E Capacitor:V > mobile-test-output/android-logcat.txt
+            adb exec-out uiautomator dump /dev/tty > mobile-test-output/android-window.xml
+            if ! grep -Eq 'HAIZ|我的书桌|我的自习室|思路|专注' mobile-test-output/android-window.xml; then
+              echo 'FAIL: Native page not accessible; inspect screenshot and logcat'
+              exit 1
+            fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haiz-android-ui-evidence
+          path: mobile-test-output/
+
+  ios-simulator:
+    needs: web-assets
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: world/apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install Pillow==11.3.0
+      - run: npm ci
+      - run: npm run sync && node tests/verify-assets.mjs && python scripts/generate-icons.py
+      - name: Choose a supported iPhone simulator
+        run: |
+          xcrun simctl list devices available -j > simulator-devices.json
+          python - <<'PY' >> "$GITHUB_ENV"
+          import json
+          info=json.load(open('simulator-devices.json'))
+          phones=[d for devices in info['devices'].values() for d in devices if d['state']=='Shutdown' and 'iPhone' in d['name']]
+          if not phones: raise SystemExit('No supported iPhone simulator installed')
+          print('HAIZ_SIM='+phones[0]['udid'])
+          PY
+      - name: Build, install and launch on simulator
+        run: |
+          xcrun simctl boot "$HAIZ_SIM"
+          xcrun simctl bootstatus "$HAIZ_SIM" -b
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim CODE_SIGNING_ALLOWED=NO build
+          xcrun simctl install "$HAIZ_SIM" build/ios-sim/Build/Products/Debug-iphonesimulator/App.app
+          xcrun simctl launch "$HAIZ_SIM" space.haiz.study
+          sleep 12
+          mkdir -p mobile-test-output
+          xcrun simctl io "$HAIZ_SIM" screenshot mobile-test-output/ios-screen.png
+          xcrun simctl spawn "$HAIZ_SIM" log show --last 2m --style compact --predicate 'process == "HAIZ Study" OR process == "App"' > mobile-test-output/ios-log.txt || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haiz-ios-ui-evidence
+          path: world/apps/mobile/mobile-test-output/
