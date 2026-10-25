@@ -33,3 +33,6 @@ body.touch .walk-hint{display:none}body.touch .location-paper{bottom:230px}body.
 
 /* Keep the compact light-director accessible above the independently layered experience dock. */
 #hud:has(.climate-shift){z-index:125}
+
+.immersive-invite{display:block;max-width:max-content;margin:14px 0 19px;padding:12px 16px;background:#d7c09b;color:#2a3832;text-decoration:none;border-radius:2px;font:600 12px/1.5 system-ui,-apple-system,"PingFang SC",sans-serif;letter-spacing:.02em}
+.immersive-invite:hover{background:#f0d9b2}.immersive-invite:focus-visible{outline:3px solid #a65a39;outline-offset:3px}
