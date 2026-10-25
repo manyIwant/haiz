@@ -223,9 +223,29 @@
   leaves.count=leafCount;leaves.instanceMatrix.needsUpdate=true;if(leaves.instanceColor)leaves.instanceColor.needsUpdate=true;
   // A naturally cluttered desk: books, paper, warm ceramic, lamp and chair. Everything is original geometry.
   const desks=[];const legMaterial=material('#414a47',.48,.24);
-  const deskTop=material('#c0a487',.7);deskTop.map=readTexture(textures+'wood-color.jpg',1.8,.9,true);
+  // Regrade the ORIGINAL locally shipped timber photo into natural warm walnut:
+  // preserve every real grain variation instead of painting synthetic stripes.
+  // The texture is recolored once on image load, never in the render loop.
+  const deskTop=material('#e5d8c8',.79);
+  const woodAlbedo=loader.load(textures+'wood-color.jpg',loaded=>{
+    const image=loaded.image;if(!image)return;
+    const tile=document.createElement('canvas');tile.width=image.width;tile.height=image.height;
+    const context=tile.getContext('2d',{willReadFrequently:true});if(!context)return;
+    context.drawImage(image,0,0);
+    const pixels=context.getImageData(0,0,tile.width,tile.height),a=pixels.data;
+    for(let k=0;k<a.length;k+=4){
+      const luminance=a[k]*.26+a[k+1]*.62+a[k+2]*.12;
+      const detail=(luminance-115)*.58;
+      a[k]=Math.max(0,Math.min(255,153+detail));
+      a[k+1]=Math.max(0,Math.min(255,117+detail*.83));
+      a[k+2]=Math.max(0,Math.min(255,85+detail*.72));
+    }
+    context.putImageData(pixels,0,0);loaded.image=tile;loaded.needsUpdate=true;
+  },undefined,()=>{});
+  woodAlbedo.encoding=THREE.sRGBEncoding;woodAlbedo.wrapS=woodAlbedo.wrapT=THREE.RepeatWrapping;
+  woodAlbedo.repeat.set(1.8,.9);woodAlbedo.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  deskTop.map=woodAlbedo;
   deskTop.normalMap=readTexture(textures+'wood-normal.jpg',1.8,.9);
-  deskTop.roughnessMap=readTexture(textures+'wood-rough.jpg',1.8,.9);
   const chairMat=material('#45645c',.79);
   const ink=material('#455961',.38);const gold=material('#bc9763',.52,.45);
   let heroAsset=null;
