@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172326">
+<meta name="description" content="HAIZ 内景实验室：可行走的概念教室、真实比例、电影化天光与沉浸学习入口。建筑为艺术设计，并非校园实景。">
+<title>HAIZ · 光落进教室的时候</title>
+<link rel="stylesheet" href="scene.css">
+<script defer src="../../../assets/vendor/three.min.js"></script>
+<script defer src="scene.js"></script>
+</head>
+<body data-climate="sunbreak">
+<a class="skip" href="#explore">跳过介绍，进入教室</a>
+<main id="experience" class="experience" aria-label="HAIZ 概念教室三维体验">
+  <div id="viewport" aria-label="可交互的三维概念教室"></div>
+  <div class="cinema-grain" aria-hidden="true"></div>
+  <header class="topline">
+    <a class="back" href="../../../campus-3d.html" aria-label="返回校园漫游"><span>←</span><span>返回校园</span></a>
+    <div class="identity"><strong>HAIZ <span>/</span> INNER WORLD</strong><small>LIGHT STUDY · 001</small></div>
+    <div class="live"><span class="live-dot"></span> 写实概念场景 <span class="live-divider">/</span> 非校园实拍</div>
+  </header>
+  <div class="scene-title" id="sceneTitle">
+    <span class="eyebrow">A ROOM BETWEEN WEATHER AND TIME · 01</span>
+    <h1>光落进<br><em>教室的时候。</em></h1>
+    <p>风吹过老楼的屋檐。课本还摊在桌上，<br>窗外的雨已经停了一半。</p>
+    <div class="title-actions"><button id="explore" class="primary" type="button">走进这间教室 <span>↗</span></button><a class="secondary" href="../scene/">课间窗台 · 精细桌面 ↗</a></div>
+  </div>
+  <aside class="atmosphere" aria-label="模拟气候选择">
+    <span class="small-kicker">LIGHT DIRECTOR</span>
+    <div class="weather-tabs" role="group" aria-label="模拟天气">
+      <button type="button" class="active" data-weather="sunbreak" aria-pressed="true">雨隙金光</button>
+      <button type="button" data-weather="monsoon" aria-pressed="false">海岛骤雨</button>
+      <button type="button" data-weather="morning" aria-pressed="false">早课晨光</button>
+    </div>
+    <p id="atmosphereNote">雨刚停，低角度的光正从云间穿过。</p>
+  </aside>
+  <div id="loading" class="loading" role="status" aria-live="polite">正在布置一间有温度的教室…</div>
+  <div class="explore-ui" id="exploreUI" hidden>
+    <div class="crosshair" aria-hidden="true"></div>
+    <div class="walk-hint" id="walkHint">W A S D 行走 <span>·</span> 拖动或鼠标环顾 <span>·</span> 点击桌灯开关</div>
+    <div class="floor-mark"><small>YOU ARE HERE / FIRST FLOOR</small><strong>01</strong><span>靠窗的座位</span></div>
+    <button id="deskAction" class="desk-action" type="button">坐下来，开始专注 <span>↗</span></button>
+  </div>
+  <div class="touch-controls" id="touchControls" hidden>
+    <div id="movePad" class="move-pad" aria-label="触摸方向控制"><div id="moveKnob"></div></div>
+    <span>左手移动 · 右侧拖动环顾</span>
+  </div>
+  <aside class="quality"><span id="qualityText">均衡 · 实际设备自动适配</span><button id="qualityToggle" type="button">切换画质</button></aside>
+  <div id="fallback" class="fallback" hidden role="alert"><h2>当前设备暂时无法开启三维场景</h2><p>学习工具并不依赖 WebGL。可以直接进入 STILLROOM，手记与计时仍可使用。</p><a href="../../stillroom/">打开专注书桌 ↗</a></div>
+</main>
+</body>
+</html>
