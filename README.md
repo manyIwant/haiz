@@ -1,5 +1,7 @@
 # haiz.space · 校园正在发生
 
+[简体中文](README.md) · [English](README.en.md)
+
 海南中学府城校区的非官方校园杂志与第一人称校园原型，由 manyIwant 创作。
 
 **Still learning. Still making.**
