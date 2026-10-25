@@ -11,3 +11,5 @@
 验证：`npm --prefix world test`、`npm --prefix world run test:server`、`node --test world/tests/flow-server.test.mjs world/tests/pilot-server.test.mjs`、`node world/tests/operations-browser.mjs`。浏览器测试需Playwright；可通过HAIZ_CHROMIUM指定本机Chromium。CI见`.github/workflows/haiz-operations.yml`。
 
 [验证与变更记录](docs/haiz-operations/VERIFICATION.md)。已有动画、第一人称校园和学习工具保留。本轮不替换先前发行文件，也未完成HTTPS作业服务、SSO、设备回执或真实ClassIsland部署。
+
+HTTPS增量已加入：在现有试用服务的Flow登录后选择“班级作业”，无需重复登录。教师与授权只读会话可验证真实HTTP同步和客户端状态回执。详见[HTTPS链路](docs/haiz-operations/HTTPS-CLASSROOM.md)。新HTTPS教室页当前手动展示，未连接真实ClassIsland；原localhost课表模拟链路继续保留。

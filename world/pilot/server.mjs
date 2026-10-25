@@ -12,6 +12,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {createClassroomStore} from "../classroom/store.mjs";
 import { createFlowStore } from "../flow/store.mjs";
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const hash = (s) => createHash("sha256").update(s).digest("hex");
@@ -107,6 +108,9 @@ export function createPilotServer({
     }),
     { maxDrafts: 100, maxNotices: 200, maxRequests: 2000, maxAudit: 1000 },
   );
+  const classroomFile=path.join(directory,"classroom.json");
+  const classroomScopes=[...new Set(accounts.filter(a=>a.role!=="admin").flatMap(a=>a.scopes||[a.scope]))];
+  let classroom=createClassroomStore(classroomFile,{now,scopes:classroomScopes});
   const buckets = new Map();
   function limit(key, max) {
     const t = now();
@@ -282,6 +286,8 @@ export function createPilotServer({
               maxRequests: 2000,
               maxAudit: 1000,
             });
+            if(existsSync(classroomFile))unlinkSync(classroomFile);
+            classroom=createClassroomStore(classroomFile,{now,scopes:classroomScopes});
             auth.sessions.forEach((s) => {
               if (s.id !== session.id) s.revoked = true;
             });
@@ -291,6 +297,16 @@ export function createPilotServer({
             return reply(res, 200, { ok: true });
           }
           throw fail(404, "管理接口不存在");
+        }
+        if(url.pathname.startsWith("/api/classroom/")){
+          if(url.pathname==="/api/classroom/assignments"&&req.method==="GET")return reply(res,200,classroom.snapshot(who,session.id));
+          if(url.pathname==="/api/classroom/deliveries"&&req.method==="GET")return reply(res,200,classroom.deliveries(who,auth.sessions.filter(s=>!s.revoked&&s.expiresAt>now()).map(s=>({...s,...accounts.find(a=>a.name===s.account)}))));
+          if(req.method!=="POST")throw fail(405,"请求方法不支持");
+          const input=await json(req);
+          if(req.headers["x-haiz-actor"]&&req.headers["x-haiz-actor"]!==who.name)throw fail(409,"会话身份已改变，请重新进入班级作业");
+          if(url.pathname==="/api/classroom/receipt")return reply(res,200,classroom.receipt(who,session.id,input,auth.sessions.filter(s=>!s.revoked&&s.expiresAt>now()).map(s=>s.id)));
+          if(["/api/classroom/assignments","/api/classroom/assignment-action"].includes(url.pathname))return reply(res,200,classroom.command(who,input,url.pathname.endsWith("assignment-action")?"action":"upsert",req.headers["idempotency-key"]));
+          throw fail(404,"公共作业接口不存在");
         }
         if (await flow(req, res, url, who)) return;
         throw fail(404, "接口不存在");
@@ -334,6 +350,10 @@ export function createPilotServer({
         });
         return res.end(html);
       }
+      if(["/world/classroom/","/world/classroom/index.html"].includes(url.pathname)){
+        res.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store"});
+        return res.end(readFileSync(path.join(ROOT,"classroom/index.html"),"utf8"));
+      }
       const assets = new Map(
         [
           "app.js",
@@ -343,6 +363,8 @@ export function createPilotServer({
           "sw.js",
         ].map((f) => ["/world/flow/" + f, "flow/" + f]),
       );
+      for(const f of ["app.js","style.css"])assets.set("/world/classroom/"+f,"classroom/"+f);
+      assets.set("/world/homework-core.js","homework-core.js");
       for (const f of ["icon-192.png", "icon-512.png"])
         assets.set("/world/assets/" + f, "assets/" + f);
       for (const f of [

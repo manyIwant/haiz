@@ -5,9 +5,9 @@
     {
       "name": "teacher task walkthrough",
       "materialClicks": 1,
-      "materialMs": 234,
+      "materialMs": 42,
       "quickActions": "填一句文字 + 一次保存",
-      "quickMs": 1396,
+      "quickMs": 110,
       "realTeacher": false
     },
     {
@@ -25,7 +25,7 @@
     },
     {
       "name": "preview → publish → public-only display → revoke",
-      "latency": 1962
+      "latency": 831
     },
     {
       "name": "student example project → private work survives reload"

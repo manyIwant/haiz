@@ -1,8 +1,9 @@
+import {assignmentCommand} from '../classroom/assignments.mjs';
 import {createFlowStore} from '../flow/store.mjs';
-import {upsertAssignment,assignmentAction,cleanAssignments,mockEveningBridge} from '../homework-core.js';
+import {cleanAssignments,mockEveningBridge} from '../homework-core.js';
 // Authorized localhost-only DEMO backend. No production school integration.
 import http from 'node:http';
-import {randomBytes,createHash} from 'node:crypto';
+import {randomBytes} from 'node:crypto';
 import {readFileSync,writeFileSync,mkdirSync,existsSync,statSync,renameSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -40,26 +41,12 @@ export function createDemoServer({directory=path.join(ROOT,'.haiz-demo'),tokens=
     let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>32768)throw fault(413,'请求内容过大')}let input;try{input=JSON.parse(raw)}catch{throw fault(400,'JSON 格式错误')}
     const findOwned=key=>{const old=state.notices.find(n=>n.id===key);if(!old)throw fault(404,'内容不存在');if(who.role!=='admin'&&(old.scope!==who.scope||old.actor!==who.name))throw fault(403,'不能修改其他班级或发布者的内容');if(Number(input.version)!==old.version)throw fault(409,'内容已有新版本，请刷新后重新核对');return old};
     if(url.pathname==='/api/assignments'||url.pathname==='/api/assignment-action'){
-     // Optional retry contract, persisted atomically with the assignment snapshot.
-     const requestId=req.headers['idempotency-key'];
-     if(requestId!==undefined&&(typeof requestId!=='string'||!/^[A-Za-z0-9_-]{8,100}$/.test(requestId)))throw fault(400,'发布请求标识无效');
-     const requestKey=requestId?createHash('sha256').update(JSON.stringify([who.name,url.pathname,requestId])).digest('hex'):null;
-     const requestHash=createHash('sha256').update(JSON.stringify(input)).digest('hex');
-     const previous=requestKey&&assignmentRequests[requestKey];
-     if(previous){if(previous.hash!==requestHash)throw fault(409,'同一发布请求内容已改变，请重新预览');return json(res,200,{...previous.result,replayed:true});}
-     if(requestKey&&Object.keys(assignmentRequests).length>=5000)throw fault(503,'演示发布记录容量已满，请管理员备份处理；未丢弃已有内容');
-     const policy={scope:who.scope,actor:who.name,admin:who.role==='admin'};
-     if(input.id){const old=state.assignments.find(x=>x.id===input.id);if(!old)throw fault(404,'作业不存在');if(!policy.admin&&(old.actor!==who.name||old.scope!==who.scope))throw fault(403,'无权修改此作业');if(Number(input.version)!==old.version)throw fault(409,'作业已有新版本，请刷新后重试');}
-     if(!policy.admin&&url.pathname==='/api/assignments'&&input.scope!==who.scope)throw fault(403,'凭据不允许向此班发布作业');
-     if(url.pathname==='/api/assignment-action'&&input.operation==='approve'&&!policy.admin)throw fault(403,'待审作业需要管理员审核');
-     const priorState=state,priorRevision=revision;state={...state,audit:[...state.audit]};try{
-     state.assignments=url.pathname==='/api/assignments'?upsertAssignment(state.assignments,input,policy):assignmentAction(state.assignments,input,policy);
-     state.audit.push({actor:who.name,role:who.role,at:new Date().toISOString(),message:url.pathname==='/api/assignments'?'发布或修改班级作业':'审核或撤回班级作业'});state.audit=state.audit.slice(-200);
-     const item=state.assignments.find(n=>input.id?n.id===input.id:n.actor===who.name&&n.scope===input.scope&&n.studyDate===input.studyDate&&n.subject===input.subject);
-     const result={revision:revision+1,id:item?.id,version:item?.version,review:item?.review};
-     if(requestKey)assignmentRequests[requestKey]={hash:requestHash,result};
-     broadcast();return json(res,200,result);
-     }catch(error){state=priorState;revision=priorRevision;if(requestKey)delete assignmentRequests[requestKey];throw error}
+     const output=assignmentCommand({assignments:state.assignments,requests:assignmentRequests,audit:state.audit,revision},input,{who,operation:url.pathname==='/api/assignments'?'upsert':'action',requestId:req.headers['idempotency-key']});
+     if(output.result.replayed)return json(res,200,output.result);
+     const before={state,assignmentRequests,revision};
+     state={...state,assignments:output.state.assignments,audit:output.state.audit};assignmentRequests=output.state.requests;
+     try{broadcast()}catch(error){state=before.state;assignmentRequests=before.assignmentRequests;revision=before.revision;throw error}
+     return json(res,200,output.result);
     }
     if(url.pathname==='/api/notices'){
      if(who.role!=='admin'&&input.scope!==who.scope)throw fault(403,'凭据不允许向此班发布');if(input.id)findOwned(input.id);const oldIds=new Set(state.notices.map(n=>n.id));state=publishNotice({...state,scope:who.scope},input,who.role);const n=state.notices.find(n=>input.id?n.id===input.id:!oldIds.has(n.id));n.actor=who.name;n.review=input.submitForReview?'pending':'approved';state.audit.at(-1).actor=who.name;state.audit.at(-1).message=(input.submitForReview?'提交审核：':'')+state.audit.at(-1).message;broadcast();return json(res,200,{id:n.id,version:n.version,revision,review:n.review});

@@ -113,7 +113,7 @@ function themeButton() {
   return '<button data-theme aria-label="切换浅色深色高对比主题">◐</button>';
 }
 function top() {
-  return `<div class="topbar"><div class="eyebrow">HAIZ / ${who?.role === "teacher" ? "TEACHER DESK" : "CAMPUS"}<br><span class="badge">${pilot ? "HTTPS 试用 · 虚构数据" : "本地 DEMO"} · ${esc(who?.name || "访客")}</span></div><div class="actions">${who?.role === "teacher" ? '<button class="desktoponly" data-context>收起侧栏</button>' : ""}${themeButton()}<button data-logout>退出</button></div></div>`;
+  return `<div class="topbar"><div class="eyebrow">HAIZ / ${who?.role === "teacher" ? "TEACHER DESK" : "CAMPUS"}<br><span class="badge">${pilot ? "HTTPS 试用 · 虚构数据" : "本地 DEMO"} · ${esc(who?.name || "访客")}</span></div><div class="actions">${who?.role === "teacher" ? '<button class="desktoponly" data-context>收起侧栏</button>' : ""}${pilot?'<a href="/world/classroom/">班级作业</a>':''}${themeButton()}<button data-logout>退出</button></div></div>`;
 }
 function nav(student = false) {
   const links = student
@@ -128,7 +128,7 @@ function nav(student = false) {
         ["compose", "草稿"],
         ["history", "发布记录"],
       ];
-  return `<nav class="bottomnav ${student ? "" : "mobileonly"}">${links.map(([id, t]) => `<a class="${route() === id ? "active" : ""}" href="#${id}">${t}</a>`).join("")}<a href="../#world">世界 ↗</a></nav>`;
+  return `<nav class="bottomnav ${student ? "" : "mobileonly"}">${links.map(([id, t]) => `<a class="${route() === id ? "active" : ""}" href="#${id}">${t}</a>`).join("")}<a href="${pilot?'/world/classroom/':'../#world'}">${pilot?'班级作业':'世界 ↗'}</a></nav>`;
 }
 function shell(content, aside = true) {
   return `<div class="layout"><aside class="sidebar"><div class="brand">haiz<span>A SCHOOL THAT REMEMBERS</span></div><nav>${[
@@ -143,7 +143,7 @@ function shell(content, aside = true) {
     )
     .join(
       "",
-    )}<a href="../#homework">▤　晚修作业</a><a href="../#world">↗　校园世界</a></nav><button data-command>搜索 / Ctrl K</button><div class="foot">先整理，再确认。<br>公共屏只看见你允许的内容。<div class="line"></div>演示环境 · 未接入学校系统</div></aside><main class="workspace">${top()}${aside ? `<div class="deskgrid"><div>${content}</div>${context()}</div>` : content}</main></div>${nav()}`;
+    )}<a href="${pilot?'/world/classroom/':'../#homework'}">▤　班级作业</a><a href="${pilot?'/world/stillroom/':'../#world'}">${pilot?'↗　自习工具':'↗　校园世界'}</a></nav><button data-command>搜索 / Ctrl K</button><div class="foot">先整理，再确认。<br>公共屏只看见你允许的内容。<div class="line"></div>演示环境 · 未接入学校系统</div></aside><main class="workspace">${top()}${aside ? `<div class="deskgrid"><div>${content}</div>${context()}</div>` : content}</main></div>${nav()}`;
 }
 function context() {
   return `<aside class="context"><div class="card"><div class="eyebrow">YOUR RHYTHM</div><h2>此刻，${esc(mode)}</h2><label>工作情境<select id="mode">${["晨间", "课前", "办公", "收工"].map((x) => `<option ${mode === x ? "selected" : ""}>${x}</option>`).join("")}</select></label><p class="muted spaced modecopy">${{ 晨间: "从今天最重要的一件事开始。", 课前: "核对课程与材料，准备好再出发。", 办公: "把零散想法收成一份清晰的草稿。", 收工: "留下下一步，明天不用重新想起。" }[mode]}</p></div><div class="card"><div class="eyebrow">HANDOFF / 任务接力</div><h3>换一块屏幕，<br>继续同一件事。</h3><p class="muted spaced">${pilot ? "请管理员为另一设备签发同一教师身份的新邀请。服务端确认后的草稿会出现在工作台。" : "在另一浏览器窗口使用同一教师演示凭据。已同步的草稿会出现在工作台。"}</p><div class="line"></div><small id="syncstamp">${lastSync ? "最近同步 " + fmt(lastSync) : "等待连接本地服务"}</small></div><div class="quiet"><h3>公开前，再看一眼。</h3><p>私人正文不会投屏。仅你确认的摘要进入本班教室。</p></div></aside>`;
@@ -412,7 +412,7 @@ const clubs = [
   },
 ];
 function student() {
-  return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">A SCHOOL, MANY WORLDS</div><h1>今天也有<br><span class="serif">值得期待的事。</span></h1><p>${tone === "quiet" ? "按自己的节奏，开始今天。" : tone === "abstract" ? "今天的灵感，还没有被上课铃点名。" : "校园的一角，留给你的好奇心。"}</p></div></div><div class="card course"><div class="eyebrow">示例课程 / 未连接教务</div><h2>英语</h2><p>下一节课程示意 · 教学楼 A403</p><small>具体时间以本班正式课表为准</small></div><div class="card"><h2>班级公共信息</h2><div id="studentfeed">连接后显示经过确认的公开摘要。</div></div><div class="clubgrid"><a class="card art green" href="#clubs"><h2>一些有趣的人，<br>正在相遇。</h2><p>探索示例社团 ↗</p></a><a class="card art peach" href="../stillroom/"><h2>留一会儿<br>安静。</h2><p>思维续航与自习 ↗</p></a></div><a class="btn" href="../#assignments">查看晚修作业</a></main>${nav(true)}`;
+  return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">A SCHOOL, MANY WORLDS</div><h1>今天也有<br><span class="serif">值得期待的事。</span></h1><p>${tone === "quiet" ? "按自己的节奏，开始今天。" : tone === "abstract" ? "今天的灵感，还没有被上课铃点名。" : "校园的一角，留给你的好奇心。"}</p></div></div><div class="card course"><div class="eyebrow">示例课程 / 未连接教务</div><h2>英语</h2><p>下一节课程示意 · 教学楼 A403</p><small>具体时间以本班正式课表为准</small></div><div class="card"><h2>班级公共信息</h2><div id="studentfeed">连接后显示经过确认的公开摘要。</div></div><div class="clubgrid"><a class="card art green" href="#clubs"><h2>一些有趣的人，<br>正在相遇。</h2><p>探索示例社团 ↗</p></a><a class="card art peach" href="../stillroom/"><h2>留一会儿<br>安静。</h2><p>思维续航与自习 ↗</p></a></div><a class="btn" href="${pilot?'/world/classroom/':'../#assignments'}">查看班级作业</a></main>${nav(true)}`;
 }
 function clubPage() {
   return `<main class="student">${top()}<div class="intro"><div><div class="eyebrow">FIND YOUR PEOPLE</div><h1>和有趣的人，<br><span class="serif">一起做有趣的事。</span></h1><p>以下均为示例社团，无真实报名或人数。</p></div></div><input id="clubsearch" aria-label="搜索社团" placeholder="搜索名称、摄影、科技、文学"><div class="clubgrid spaced" id="clublist">${clubCards(clubs)}</div></main>${nav(true)}`;
@@ -458,7 +458,7 @@ function settings() {
     : `<main class="student">${top()}${inner}</main>${nav(true)}`;
 }
 function classroom() {
-  return `<main class="screen"><section><div class="eyebrow">HAIZ CLASSROOM · ${esc(who.scope)}</div><div class="clock" id="clock"></div><h1 id="current-course">安心上课。</h1><h2 id="next-course"></h2><p style="font-size:24px">课程来源：独立 Demo<br>ClassIsland 未连接</p><p class="spaced" style="font-size:20px">晚修作业按现有模块中的最后两节自习判定。</p></section><section><div class="eyebrow">PUBLIC / CONFIRMED</div><h1>班级提醒</h1><div id="feed"></div></section><footer class="screenfoot"><div id="feedstate">等待同步</div><div class="screen-controls"><button data-pure>纯净课堂</button><button data-hide>手动隐藏</button><button data-logout>退出</button><a href="../#classroom">原晚修大屏 ↗</a></div></footer></main>`;
+  return `<main class="screen"><section><div class="eyebrow">HAIZ CLASSROOM · ${esc(who.scope)}</div><div class="clock" id="clock"></div><h1 id="current-course">安心上课。</h1><h2 id="next-course"></h2><p style="font-size:24px">课程来源：独立 Demo<br>ClassIsland 未连接</p><p class="spaced" style="font-size:20px">晚修作业按现有模块中的最后两节自习判定。</p></section><section><div class="eyebrow">PUBLIC / CONFIRMED</div><h1>班级提醒</h1><div id="feed"></div></section><footer class="screenfoot"><div id="feedstate">等待同步</div><div class="screen-controls"><button data-pure>纯净课堂</button><button data-hide>手动隐藏</button><button data-logout>退出</button><a href="${pilot?'/world/classroom/':'../#classroom'}">${pilot?'班级作业清单 ↗':'原晚修大屏 ↗'}</a></div></footer></main>`;
 }
 function login() {
   return `<main class="login"><div class="brand">haiz<span>A SCHOOL THAT REMEMBERS</span></div><h1>换一块屏幕，<br><span class="serif">继续同一件事。</span></h1><p class="muted">进入本地演示。教师、学生和教室使用各自的演示凭据，权限由服务端校验。</p><form id="login"><label>本地演示凭据<input id="token" type="password" autocomplete="off" required placeholder="输入服务启动时生成的凭据"></label><button class="primary" type="submit">连接演示服务 →</button></form><p class="note">启动：node world/scripts/classroom-server.mjs<br>凭据位于 world/.haiz-demo/local-demo-keys.json。这不是学校账号。服务仅监听本机，跨端通过独立浏览器会话验证。</p><a href="../#world">返回校园世界</a></main>`;

@@ -1,0 +1,290 @@
+:root {
+  font-family: system-ui, "Microsoft YaHei", sans-serif;
+  color: #22362f;
+  background: #f2f3ee;
+  font-synthesis: none;
+  --surface: #fff;
+  --line: #d4ddd7;
+  --muted: #54655d;
+  --accent: #245f49;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px clamp(16px, 4vw, 70px);
+  border-bottom: 1px solid var(--line);
+}
+header a {
+  margin-right: auto;
+}
+a {
+  color: var(--accent);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  min-height: 44px;
+}
+button {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 16px;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+button.primary {
+  background: var(--accent);
+  color: white;
+  border: 0;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #478ac2;
+  outline-offset: 3px;
+}
+main {
+  max-width: 1380px;
+  margin: auto;
+  padding: 30px clamp(16px, 4vw, 70px);
+}
+h1 {
+  font-size: clamp(28px, 3vw, 48px);
+  letter-spacing: -0.04em;
+  margin: 12px 0;
+}
+h2 {
+  font-size: 22px;
+}
+.muted,
+small {
+  color: var(--muted);
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  gap: 28px;
+}
+section {
+  min-width: 0;
+}
+form {
+  background: var(--surface);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+label {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  color: inherit;
+  background: var(--surface);
+}
+textarea {
+  min-height: 125px;
+  resize: vertical;
+}
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cards {
+  display: grid;
+  gap: 14px;
+}
+.assignment {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.assignment h2 {
+  margin: 0 0 12px;
+}
+.assignment p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.assignment small {
+  display: block;
+  margin: 12px 0;
+}
+.assignment dl {
+  display: grid;
+  grid-template-columns: 3em 1fr;
+  gap: 8px;
+  font-size: 14px;
+}
+.assignment dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.device {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.device strong,
+.device small {
+  display: block;
+  margin: 6px 0;
+}
+.summary {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.summary span {
+  color: var(--muted);
+}
+#message {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #172f27;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  max-width: 95vw;
+  z-index: 5;
+}
+#message:empty {
+  display: none;
+}
+body > footer {
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.screen .cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.screen .assignment {
+  padding: 28px;
+}
+.screen .assignment h2 {
+  font-size: 36px;
+}
+.screen .assignment p {
+  font-size: clamp(26px, 2.2vw, 42px);
+  line-height: 1.5;
+  margin: 8px 0;
+}
+.screen .assignment dl {
+  font-size: 22px;
+}
+.screen .assignment small {
+  font-size: 16px;
+}
+.screen #hide {
+  margin-left: auto;
+}
+dialog {
+  max-width: min(650px, 92vw);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  background: var(--surface);
+  color: inherit;
+}
+dialog::backdrop {
+  background: #091b2570;
+}
+dialog p {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+dialog .actions {
+  margin-top: 24px;
+}
+@media (max-width: 760px) {
+  header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .grid,
+  .screen .cards {
+    grid-template-columns: 1fr;
+  }
+  .screen .assignment p {
+    font-size: 25px;
+  }
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  header #identity {
+    font-size: 13px;
+  }
+  .screen .assignment dl {
+    font-size: 18px;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #edf1e9;
+    background: #12221e;
+    --surface: #1d3029;
+    --line: #395146;
+    --muted: #bed0c4;
+    --accent: #a0d6bb;
+  }
+  button.primary {
+    color: #13261d;
+  }
+}
+@media print {
+  header,
+  #message,
+  button,
+  body > footer {
+    display: none !important;
+  }
+  main {
+    padding: 0;
+  }
+  .cards {
+    display: block;
+  }
+  .assignment {
+    break-inside: avoid;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}
