@@ -544,7 +544,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
