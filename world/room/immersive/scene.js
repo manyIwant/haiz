@@ -19,9 +19,9 @@
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
   const presets = {
-    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:2.65,hemi:.86,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
-    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.86,hemi:.98,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
-    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.8,hemi:.88,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
+    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:2.35,hemi:.66,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
+    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.68,hemi:.72,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
+    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.4,hemi:.7,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
   let climate='sunbreak',entered=false,focused=false,last=0,fpsFrames=0,fpsTime=0,slowSamples=0,goodSamples=0,frame=0;
   let renderer;
@@ -37,7 +37,7 @@
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1,specs[quality].dpr));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.05;
+  renderer.toneMappingExposure=.88;
   renderer.shadowMap.enabled=!!specs[quality].shadow;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
@@ -54,8 +54,8 @@
   sun.shadow.camera.near=.3;sun.shadow.camera.far=100;sun.shadow.bias=-.00025;sun.shadow.normalBias=.025;
   scene.add(sun,sun.target);
   const hemi = new THREE.HemisphereLight('#cedee1','#5d5143',presets.sunbreak.hemi);scene.add(hemi);
-  const ambient=new THREE.AmbientLight('#cfddd3',.22);scene.add(ambient);
-  const windowFill=new THREE.PointLight('#ffddad',.65,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
+  const ambient=new THREE.AmbientLight('#cfddd3',.12);scene.add(ambient);
+  const windowFill=new THREE.PointLight('#ffddad',.36,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
   const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,.1);scene.add(lampLight);
   let lampOn=true;
 
@@ -81,6 +81,19 @@
   mats.terrazzo.map=readTexture(textures+'terrazzo-color.jpg',4,5,true);
   mats.terrazzo.normalMap=readTexture(textures+'terrazzo-normal.jpg',4,5);
   mats.terrazzo.roughnessMap=readTexture(textures+'terrazzo-rough.jpg',4,5);
+  mats.brick.map=mats.wall.map;mats.brick.normalMap=mats.wall.normalMap;mats.brick.roughnessMap=mats.wall.roughnessMap;
+  mats.tile.map=readTexture(textures+'jade-glaze-generated.webp',2,2,true);
+  // An original HDR already bundled with the campus. Asset is local and optional.
+  if(THREE.RGBELoader){
+    new THREE.RGBELoader().load(textures+'campus-light.hdr', hdr=>{
+      try{
+        const pmrem=new THREE.PMREMGenerator(renderer);
+        pmrem.compileEquirectangularShader();
+        scene.environment=pmrem.fromEquirectangular(hdr).texture;
+        pmrem.dispose();hdr.dispose();
+      }catch(error){console.warn('Local environment reflection unavailable');}
+    },undefined,()=>{});
+  }
   mats.wall.map=readTexture(textures+'plaster-color.jpg',3,2,true);
   mats.wall.normalMap=readTexture(textures+'plaster-normal.jpg',3,2);
   mats.wall.roughnessMap=readTexture(textures+'plaster-rough.jpg',3,2);
@@ -93,7 +106,7 @@
     mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
   };
   // 1 unit = 1 meter. A believable 14 × 11 m teaching room, NOT a measured school interior.
-  const floor=box(14,.23,11,0,-.13,.5,mats.wood);floor.castShadow=false;
+  const floor=box(14,.23,11,0,-.13,.5,mats.terrazzo);floor.castShadow=false;
   box(14,.17,11,0,4.2,.5,mats.ceiling,scene,false);
   box(.22,4.2,11,-7,2.1,.5,mats.wall);
   box(.22,4.2,11,7,2.1,.5,mats.wall);
@@ -118,7 +131,7 @@
   }
   // Ceiling coffers, repeated without separate expensive dynamic lights.
   for(const x of [-6.1,-2.1,1.9,5.9])box(.12,.19,11,x,4.01,.5,mats.plaster);
-  const areaLampMat=new THREE.MeshBasicMaterial({color:'#e6dfc6'});
+  const areaLampMat=new THREE.MeshBasicMaterial({color:'#d9cbb6'});
   for(const x of [-4,0,4])for(const z of [-2.8,1.4]){
     box(1.4,.035,.21,x,4.005,z,areaLampMat,scene,false);
     box(1.4,.016,.014,x,3.977,z+.11,mats.frame,scene,false);
@@ -129,7 +142,13 @@
   for(let i=0;i<5;i++){
     const x=-32+i*16,depth=-29-(i%2)*15;
     box(11,6.3,6.2,x,3,depth,mats.brick,exterior);
-    box(12.5,.6,7.4,x,6.5,depth,mats.tile,exterior);
+    box(12.5,.42,7.4,x,6.45,depth,mats.tile,exterior);
+    // Shallow projecting eaves and a sheltered hall make the skyline read as architecture.
+    box(13.1,.14,7.75,x,6.17,depth,mats.frame,exterior);
+    box(12.8,.11,7.65,x,6.72,depth,mats.tile,exterior);
+    for(const xx of [-4.65,4.65]){
+      box(.15,5.25,.15,x+xx,3.28,depth+3.50,mats.plaster,exterior);
+    }
     for(let k=0;k<5;k++){
       const wx=x-4.2+k*2.05;
       box(1.13,1.9,.07,wx,3,depth+3.15,mats.frame,exterior,false);
@@ -137,7 +156,7 @@
     }
     box(11.7,.35,.8,x,1.0,depth+3.2,mats.terrazzo,exterior);
   }
-  const branchGeo=new THREE.CylinderGeometry(.07,.18,1,5),leafGeo=new THREE.IcosahedronGeometry(1,1);
+  const leafGeo=new THREE.SphereGeometry(1,8,6);
   const branchMats=[material('#6e5945',.91),material('#4a4a3b',.88)];
   const leaves=new THREE.InstancedMesh(leafGeo,mats.leaf,specs.high.foliage);
   leaves.castShadow=quality==='high';leaves.receiveShadow=false;scene.add(leaves);
@@ -157,7 +176,10 @@
   leaves.count=leafCount;leaves.instanceMatrix.needsUpdate=true;if(leaves.instanceColor)leaves.instanceColor.needsUpdate=true;
   // A naturally cluttered desk: books, paper, warm ceramic, lamp and chair. Everything is original geometry.
   const desks=[];const legMaterial=material('#414a47',.48,.24);
-  const deskTop=material('#bc976e',.67);const chairMat=material('#718078',.78);
+  const deskTop=material('#c0a487',.7);deskTop.map=readTexture(textures+'wood-color.jpg',1.8,.9,true);
+  deskTop.normalMap=readTexture(textures+'wood-normal.jpg',1.8,.9);
+  deskTop.roughnessMap=readTexture(textures+'wood-rough.jpg',1.8,.9);
+  const chairMat=material('#45645c',.79);
   const ink=material('#455961',.38);const gold=material('#bc9763',.52,.45);
   function buildDesk(x,z,featured=false) {
     const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
@@ -202,7 +224,7 @@
   ctx.fillStyle='#29413e';ctx.fillRect(0,0,1024,400);
   ctx.fillStyle='#dfddd0';ctx.textAlign='center';ctx.font='400 60px serif';ctx.fillText('此间有光',512,175);
   ctx.font='24px sans-serif';ctx.letterSpacing='5px';ctx.fillText('THE ROOM WHERE THOUGHTS BEGIN',512,244);
-  const signTexture=new THREE.CanvasTexture(sign);
+  const signTexture=new THREE.CanvasTexture(sign);signTexture.encoding=THREE.sRGBEncoding;
   box(6.2,2.13,.12,0,2.3,5.85,new THREE.MeshStandardMaterial({map:signTexture,color:'#ffffff',roughness:.94}));
   box(6.45,.07,.19,0,1.2,5.69,mats.warm);
   for(const x of [-6.35,6.35])box(.11,4.3,.12,x,2.1,.4,mats.frame);
@@ -223,7 +245,10 @@
     vec3 shadow=mix(base*.46,base*.76,clamp(mass,0.,1.));
     vec3 lit=mix(vec3(.79,.80,.81),horizon, .45)*(.9+glow*.5);
     vec3 col=mix(base,mix(shadow,lit,smoothstep(.35,.75,mass)),cover*.86);
-    col+=horizon*glow*.10;gl_FragColor=vec4(col*brightness,1.);}`
+    col+=horizon*glow*.10;gl_FragColor=vec4(col*brightness,1.);
+    #include <tonemapping_fragment>
+    #include <encodings_fragment>
+    }`
   }));
   sky.renderOrder=-10;sky.frustumCulled=false;scene.add(sky);
   const rainMax=specs.high.rain,rainPositions=new Float32Array(rainMax*6),drops=[];
