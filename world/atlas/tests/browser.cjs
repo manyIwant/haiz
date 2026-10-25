@@ -101,7 +101,13 @@ const server = http.createServer((request,response) => {
       await page.setViewportSize({width,height:844});
       await page.goto(origin+"/world/atlas/#home");
       await page.evaluate(() => document.fonts.ready);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1),true,"overflow width="+width);
+      const overflow = await page.evaluate(() => {
+        const w = innerWidth;
+        return { viewport:w,scrollWidth:document.documentElement.scrollWidth,
+          offenders:[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({rect})=>rect.width>0&&(rect.right>w+2||rect.left < -2)).slice(0,12).map(({el,rect})=>({tag:el.tagName,cls:typeof el.className==="string"?el.className:"",id:el.id,left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}))};
+      });
+      console.log("OVERFLOW_INSPECT "+JSON.stringify(overflow));
+      assert.ok(overflow.scrollWidth <= width+1,"overflow width="+width);
       assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","mobile Ocean theme must not flash pale background");
       assert.equal(await page.locator("#spatialStage").isVisible(),true);
       await page.locator('[data-spatial-place="classroom"]').click();
