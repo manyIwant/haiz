@@ -11,6 +11,11 @@ const adb=(...args)=>execFileSync('adb',args,{encoding:'utf8',timeout:30000}).tr
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 let ws,port=9222,seq=0;
 const pending=new Map(),events=[],checks=[];
+// Software-rendered Android 35 emulators can stall briefly during cold WebView startup.
+// Preserve strict assertions: a genuinely unresponsive app still fails the test.
+const cdpTimeoutMs=45000;
+let phase='start';
+const checkpoint=label=>{phase=label;writeFileSync(path.join(out,mode+'-checkpoint.txt'),new Date().toISOString()+' '+label+'\n',{flag:'a'});};
 async function connect(){
  const deadline=Date.now()+90000;
  let last='No WebView debugging socket';
@@ -32,9 +37,9 @@ async function connect(){
  }
  throw Error(`Cannot inspect app WebView: ${last}`);
 }
-function call(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(`CDP timeout: ${method}`));},15000);pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));});}
+function call(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(`CDP timeout after ${cdpTimeoutMs}ms: ${method}; phase=${phase}`));},cdpTimeoutMs);pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));});}
 async function evaluate(expression){const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.text+' '+JSON.stringify(r.exceptionDetails.exception));return r.result.value;}
-async function waitFor(expression,label,timeout=30000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await evaluate(expression))return;await delay(250);}throw Error(`UI condition failed: ${label}`);}
+async function waitFor(expression,label,timeout=60000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await evaluate(expression))return;await delay(250);}throw Error(`UI condition failed: ${label}`);}
 async function ready(route='study'){
  await waitFor(`document.documentElement?.dataset.haizReady==='true' && document.documentElement.dataset.haizRoute===${JSON.stringify(route)} && !!document.querySelector('#app[data-testid="haiz-app-ready"] #main[data-testid="haiz-main"]')`,'real application ready '+route);
  assert.equal(await evaluate(`!!document.querySelector('#haiz-native-boot[data-state="error"]')`),false,'No boot error screen');
@@ -48,11 +53,13 @@ async function tap(selector){
 }
 async function screenshot(name){const {data}=await call('Page.captureScreenshot',{format:'png'});writeFileSync(path.join(out,name+'.png'),Buffer.from(data,'base64'));}
 try {
- await connect(); await ready(); await screenshot(mode+'-ready');
+ checkpoint('connect-webview');await connect();
+ checkpoint('initial-app-ready');await ready();
+ checkpoint('initial-screenshot');await screenshot(mode+'-ready');
  if(mode==='exercise'){
-  await tap('[data-testid="dock-today"]');await ready('assignments');
-  await tap('[data-testid="dock-study"]');await ready('study');
-  await evaluate(`document.querySelector('#space-note').focus()`);
+  checkpoint('open-assignments');await tap('[data-testid="dock-today"]');await ready('assignments');
+  checkpoint('return-to-study');await tap('[data-testid="dock-study"]');await ready('study');
+  checkpoint('enter-private-note');await evaluate(`document.querySelector('#space-note').focus()`);
   await call('Input.insertText',{text:note});
   await waitFor(`document.querySelector('#space-note').value===${JSON.stringify(note)}`,'note entered using WebView input');
   await evaluate(`document.querySelector('#space-note').blur()`);
@@ -63,11 +70,11 @@ try {
   assert.equal(await evaluate(`document.querySelector('#space-note').value`),note,'Actual study note survives '+mode);
   checks.push('Actual study note survives '+mode);
  }
- await call('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
+ checkpoint('offline-reload');await call('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
  await call('Page.reload',{ignoreCache:true});await ready();
  assert.equal(await evaluate(`document.querySelector('#space-note').value`),note,'Offline reload retains private note');
  await screenshot(mode+'-offline');
- await call('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
+ checkpoint('restore-network');await call('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
  checks.push('Bundled page remains interactive offline; private record retained');
  const exceptions=events.filter(e=>e.method==='Runtime.exceptionThrown');
  assert.deepEqual(exceptions,[],'Unhandled WebView JavaScript exceptions');

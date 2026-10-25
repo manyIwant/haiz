@@ -157,6 +157,11 @@ jobs:
       - run: python -m pip install Pillow==11.3.0
       - run: npm ci
       - run: npm run sync && node tests/verify-assets.mjs && python scripts/generate-icons.py
+      - name: Verify checked-in iOS release scheme
+        run: |
+          test -f ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme
+          xcodebuild -workspace ios/App/App.xcworkspace -list | tee ios-schemes.txt
+          grep -Eq '^[[:space:]]+App$' ios-schemes.txt
       - name: Choose a supported iPhone simulator
         run: |
           xcrun simctl list devices available -j > simulator-devices.json
