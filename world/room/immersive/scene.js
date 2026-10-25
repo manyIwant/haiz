@@ -163,7 +163,7 @@
   box(74,.13,110,0,-.28,-53,material('#8eaaa5',.86),scene,false);
   const exterior=new THREE.Group();scene.add(exterior);
   for(let i=0;i<5;i++){
-    const x=-32+i*16,depth=-29-(i%2)*15;
+    const x=-33+i*17,depth=-48-(i%2)*18;
     box(11,6.3,6.2,x,3,depth,mats.brick,exterior);
     box(12.5,.42,7.4,x,6.45,depth,mats.tile,exterior);
     // Shallow projecting eaves and a sheltered hall make the skyline read as architecture.
