@@ -89,6 +89,18 @@ assert(water.userData.climateRain > 0.9);
 api.resetWeather();
 assert.equal(api.weather.rain, 0);
 assert.equal(api.weather.wet, 0.88);
+// Cinematic grades must preserve physically bounded weather controls and one cloud draw.
+assert.equal(api.select("sunbreak"), true);
+api.tick(5, false);
+assert(api.weather.wet > .9 && api.weather.cloud > .6);
+const cloud = scene.getObjectByName("Tropical analytic cloud shell");
+assert(cloud.material.uniforms.uRim.value > .65,"Warm cloud edges must be scene-directed");
+assert.equal(api.select("monsoon"), true);
+api.tick(5, false);
+assert(api.weather.rain > .7 && api.weather.wet === 1);
+assert(api.diagnostics.rainBudget <= 48,"Low tier rain must keep its existing cap");
+assert.equal(api.diagnostics.extraReflectionPasses,0);
+api.select("afterrain");
 const lowMotion = setup(true).api;
 lowMotion.setWeather({ rain: 1, cloud: 1 });
 lowMotion.tick(5, false);
@@ -99,7 +111,7 @@ assert(scene.getObjectByName("Tropical analytic cloud shell"));
 const result = {
   passed: true,
   checks: [
-    "three backward-compatible climate IDs",
+    "five presets: backward-compatible grades and two cinematic weather directions",
     "bounded finite manual controls and reset",
     "world-space patchy GGX water film preserves original PBR maps",
     "rain budget: 48 low / 160 maximum, no extra reflection pass",
