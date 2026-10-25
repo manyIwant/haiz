@@ -56,6 +56,8 @@ const results=[];
       await page.keyboard.up('w');
       await page.locator('#deskAction').click();
       assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().focused),true);
+      await page.waitForTimeout(1500);
+      await page.screenshot({path:path.join(out,size.width+'-desk-closeup.png')});
       await page.locator('#qualityToggle').click();
       const latest=await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics());
       assert(['low','balanced','high'].includes(latest.quality));
