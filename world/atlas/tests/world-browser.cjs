@@ -5,6 +5,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require("playwright");
 const root = path.resolve(__dirname,"../../..");
+const visualOut=path.join(__dirname,"artifacts");
+fs.mkdirSync(visualOut,{recursive:true});
 const types={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".json":"application/json",".jpg":"image/jpeg",".png":"image/png",".webp":"image/webp",".svg":"image/svg+xml",".hdr":"application/octet-stream",".woff2":"font/woff2"};
 const server=http.createServer((req,res)=>{
   try {
@@ -45,11 +47,13 @@ const server=http.createServer((req,res)=>{
     assert.equal(state.focused,"library");
     assert.equal(state.isStarted,true);
     assert.ok(state.distance<90,"engine must arrive near selected library model, not at north gate: "+state.distance);
+    await page.screenshot({path:path.join(visualOut,"campus-library-webgl-1280.png"),timeout:60000});
     await page.evaluate(()=>window.haizWalk.pause(null));
     await page.locator("#mapButton").evaluate(el=>el.click());
     assert.equal(await page.locator("#mapDialog").getAttribute("open"),"");
     const mapPanel=page.locator("#mapDialog .haiz-place-connection");
     assert.equal(await mapPanel.locator(".haiz-connection-title").innerText(),"图书馆");
+    await page.screenshot({path:path.join(visualOut,"campus-map-contextual-1280.png"),timeout:60000});
     await page.locator('#destinationList [data-destination="yihao"]').evaluate(el=>el.click());
     assert.equal(await page.evaluate(()=>window.HAIZPlaceConnections.selected),"yihao");
     const room=page.locator("#pauseDialog .haiz-connection-route");
