@@ -555,7 +555,11 @@
   function animate(ts){
     requestAnimationFrame(animate);
     if(document.hidden){last=ts;return;}
-    const dt=Math.min(.05,Math.max(0,(ts-(last||ts))/1000));last=ts;
+    // Simulation movement and raindrop positions must cap delta to prevent
+    // collision jumps, but weather color/illumination interpolation should use
+    // wall-clock time, even when SwiftShader/mobile is rendering at 3 FPS.
+    const wallDt=Math.min(.6,Math.max(0,(ts-(last||ts))/1000));
+    const dt=Math.min(.05,wallDt);last=ts;
     if(seatTween){
       const t=Math.min(1,(ts-seatTween.start)/seatTween.duration),ease=1-Math.pow(1-t,3);
       camera.position.copy(seatTween.from).lerp(seatTween.to,ease);
@@ -572,7 +576,7 @@
       if(!collision(camera.position.x,camera.position.z+dz))camera.position.z+=dz;
     }
     camera.rotation.set(pitch,yaw,0,'YXZ');
-    applyWeather(dt,ts);
+    applyWeather(wallDt,ts);
     renderer.render(scene,camera);qualityStats.rendered++;
     if(!entered||reduced||manualQuality)return;
     if(dt>.005&&dt<.25){fpsTime+=dt;fpsFrames++;}
@@ -586,7 +590,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,humanScaleRoom:roomLife?.areEssentialVisible()===true,curtainInstances:roomLife?.counts.curtains||0,rainWindowInstances:roomLife?.counts.rainPanes||0,rainGlazingVisible:roomLife?.isRainVisible()||false,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,humanScaleRoom:roomLife?.areEssentialVisible()===true,curtainInstances:roomLife?.counts.curtains||0,rainWindowInstances:roomLife?.counts.rainPanes||0,rainGlazingVisible:roomLife?.isRainVisible()||false,weatherRain:Math.round(weatherCurrent.rain*1000)/1000,weatherFog:Number(scene.fog.density.toFixed(4)),webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
