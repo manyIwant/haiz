@@ -23,6 +23,13 @@
     monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.60,hemi:.55,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
     morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.10,hemi:.60,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
+  // Cache color triples once: weather blending otherwise allocated five
+  // THREE.Color objects every animation frame (hundreds of objects/sec).
+  const climatePalette={};
+  for(const [name,p] of Object.entries(presets)){
+    climatePalette[name]={sky:new THREE.Color(p.sky),horizon:new THREE.Color(p.horizon),
+      fog:new THREE.Color(p.fog),sun:new THREE.Color(p.sun),fill:new THREE.Color(p.fill)};
+  }
   let climate='sunbreak',entered=false,focused=false,last=0,fpsFrames=0,fpsTime=0,slowSamples=0,goodSamples=0,frame=0;
   let renderer;
   try {
@@ -426,12 +433,12 @@
     // animation frames; selecting another climate must still have visible
     // daylight, fog and rainfall feedback. RAF eases the remaining 58%.
     const target=presets[name],lead=.42;
-    skyUniforms.top.value.lerp(new THREE.Color(target.sky),lead);
-    skyUniforms.horizon.value.lerp(new THREE.Color(target.horizon),lead);
+    skyUniforms.top.value.lerp(climatePalette[name].sky,lead);
+    skyUniforms.horizon.value.lerp(climatePalette[name].horizon,lead);
     skyUniforms.cloud.value+=(target.cloud-skyUniforms.cloud.value)*lead;
-    scene.fog.color.lerp(new THREE.Color(target.fog),lead);
+    scene.fog.color.lerp(climatePalette[name].fog,lead);
     scene.fog.density+=(target.fogDensity-scene.fog.density)*lead;
-    sun.color.lerp(new THREE.Color(target.sun),lead);
+    sun.color.lerp(climatePalette[name].sun,lead);
     sun.intensity+=(target.sunPower-sun.intensity)*lead;
     hemi.intensity+=(target.hemi-hemi.intensity)*lead;
     weatherCurrent.rain+=(target.rain-weatherCurrent.rain)*lead;
@@ -442,11 +449,11 @@
   }
   function applyWeather(dt,elapsed){
     const p=presets[climate],alpha=reduced?1:1-Math.exp(-dt*1.2);
-    skyUniforms.top.value.lerp(new THREE.Color(p.sky),alpha);skyUniforms.horizon.value.lerp(new THREE.Color(p.horizon),alpha);
+    skyUniforms.top.value.lerp(climatePalette[climate].sky,alpha);skyUniforms.horizon.value.lerp(climatePalette[climate].horizon,alpha);
     skyUniforms.cloud.value+=(p.cloud-skyUniforms.cloud.value)*alpha;
-    scene.fog.color.lerp(new THREE.Color(p.fog),alpha);scene.fog.density+=(p.fogDensity-scene.fog.density)*alpha;
-    sun.color.lerp(new THREE.Color(p.sun),alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
-    windowFill.color.lerp(new THREE.Color(p.fill),alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
+    scene.fog.color.lerp(climatePalette[climate].fog,alpha);scene.fog.density+=(p.fogDensity-scene.fog.density)*alpha;
+    sun.color.lerp(climatePalette[climate].sun,alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
+    windowFill.color.lerp(climatePalette[climate].fill,alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
     weatherCurrent.rain+=(p.rain-weatherCurrent.rain)*alpha;weatherCurrent.cloud+=(p.cloud-weatherCurrent.cloud)*alpha;weatherCurrent.wet+=(p.wet-weatherCurrent.wet)*alpha;
     roomLife?.update(climate,weatherCurrent.rain,elapsed,quality);
     if(authoredBounce){
@@ -611,7 +618,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,humanScaleRoom:roomLife?.areEssentialVisible()===true,curtainInstances:roomLife?.counts.curtains||0,rainWindowInstances:roomLife?.counts.rainPanes||0,rainGlazingVisible:roomLife?.isRainVisible()||false,weatherRain:Math.round(weatherCurrent.rain*1000)/1000,weatherFog:Number(scene.fog.density.toFixed(4)),webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,humanScaleRoom:roomLife?.areEssentialVisible()===true,curtainInstances:roomLife?.counts.curtains||0,rainWindowInstances:roomLife?.counts.rainPanes||0,rainGlazingVisible:roomLife?.isRainVisible()||false,weatherRain:Math.round(weatherCurrent.rain*1000)/1000,weatherFog:Number(scene.fog.density.toFixed(4)),cachedWeatherPalette:Object.keys(climatePalette).length===3,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
