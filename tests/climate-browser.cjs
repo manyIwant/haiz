@@ -74,7 +74,7 @@ const server = http.createServer((req, res) => {
     haizWalk.pause(null);
   });
   console.log("PASS actual campus and water-film/cloud shaders initialized");
-  for (const id of ["morning", "afterrain", "dusk"]) {
+  for (const id of ["morning", "afterrain", "dusk", "sunbreak", "monsoon"]) {
     const d = await page.evaluate((id) => {
       const a = haizWalk,
         select = document.getElementById("climate");
@@ -94,10 +94,20 @@ const server = http.createServer((req, res) => {
     assert.equal(d.roadWaterFilms, 11);
     assert.equal(d.extraReflectionPasses, 0);
     assert(d.programs > 0);
+    assert(d.fogFar > d.fogNear && d.fogNear > 0, 'Atmospheric depth is finite');
+    if(id==='sunbreak')assert(d.wet > .85 && d.cloud > .6, 'Rainbreak requires warm wet foreground');
+    if(id==='monsoon')assert(d.rain > .65 && d.rainBudget <= 160, 'Monsoon respects rain budget');
     evidence.push(d);
     await page.screenshot({ path: dir + "/climate-" + id + ".png" });
     console.log("PASS rendered tropical climate", id);
   }
+  await page.evaluate(() => {
+    document.getElementById('climate').value='morning';
+    document.getElementById('climate').dispatchEvent(new Event('change'));
+  });
+  await page.locator('#cinematicLight').click();
+  assert.equal(await page.evaluate(()=>haizWalk.climate.current),'sunbreak','HUD light switch selects the cinematic grade');
+  assert.equal(await page.locator('#climate').inputValue(),'sunbreak');
   for (const id of ["fengqitang", "yanchi"]) {
     await page.evaluate((id) => {
       const a = haizWalk;
@@ -178,7 +188,7 @@ const server = http.createServer((req, res) => {
     passed: true,
     checks: [
       "real r128 shaders compile without errors",
-      "same photographic-observation viewpoint in three climates",
+      "same photographic-observation viewpoint in five climates",
       "11 scanned road materials keep maps and receive irregular GGX water films",
       "desktop sliders drive actual scene state",
       "bounded local rain: 120 at 75%, 48 in low mode",
