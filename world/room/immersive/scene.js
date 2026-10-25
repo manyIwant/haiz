@@ -291,7 +291,7 @@
   const pressed=new Set();let moving={x:0,y:0},lookId=null,lastTouch=null;
   function begin(){
     if(entered)return;entered=true;root.classList.add('entered');$('exploreUI').hidden=false;$('loading').hidden=true;
-    if(touch){$('touchControls').hidden=false;}else renderer.domElement.requestPointerLock?.();
+    if(touch){$('touchControls').hidden=false;}else $('walkHint').textContent='W A S D 行走 · 点击画面锁定鼠标 · Esc 释放后可操作书桌按钮';
   }
   $('explore').addEventListener('click',begin);
   for(const btn of document.querySelectorAll('[data-weather]'))btn.addEventListener('click',()=>selectClimate(btn.dataset.weather));
