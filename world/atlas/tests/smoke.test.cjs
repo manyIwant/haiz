@@ -47,7 +47,9 @@ test("local tasks never render user text as raw HTML", () => {
 });
 
 test("spring math converges after rapid target changes and long tab pauses", () => {
-  const { step, settled } = require("../dock-spring.js");
+  const sandbox = { window:{} };
+  require("node:vm").runInNewContext(fs.readFileSync(path.join(root, "dock-spring.js"), "utf8"), sandbox, { filename:"dock-spring.js" });
+  const { step, settled } = sandbox.window.HAIZ_DOCK_SPRING;
   let state = { x:0, v:0 };
   for (let i = 0; i < 15; i++) state = step(state, 240, 1/60);
   for (let i = 0; i < 120; i++) state = step(state, 70, 1/60);
