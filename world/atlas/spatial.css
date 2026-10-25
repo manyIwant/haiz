@@ -64,3 +64,13 @@ body[data-atlas-view=study] .spatial-stage+.editorial .edition-title h1,body[dat
 /* Decorative bottom layer cannot steal clicks from the hero CTA on compact desktops. */
 .spatial-bottom{pointer-events:none}
 .spatial-detail,.spatial-detail a{pointer-events:auto}
+
+/* WebGL arrival is an explicit second action; no decorative click-target overlays. */
+.spatial-detail{min-height:162px;align-items:center}
+.spatial-detail img{height:132px}
+.spatial-three-link{display:block;margin-top:7px;padding-top:6px;border-top:1px solid rgba(241,246,229,.26);color:#e5dbc1!important;text-decoration:none!important;font-size:11px!important}
+.spatial-three-link:hover,.spatial-three-link:focus-visible{color:white!important;text-decoration:underline!important;text-underline-offset:3px!important}
+@media(max-width:760px){.spatial-detail{min-height:148px}.spatial-detail img{height:126px}.spatial-pins{bottom:215px}.spatial-disclaimer{bottom:196px}.spatial-stage{height:max(660px,80svh)}}
+@media(max-width:390px){.spatial-stage{height:690px;min-height:690px}.spatial-pins{bottom:228px}.spatial-disclaimer{bottom:208px}}
+/* Tablet landscape: clamp flex and translated content within the stage, not page viewport. */
+@media(min-width:761px) and (max-width:990px){.spatial-copy{width:50%;left:30px}.spatial-copy h2{font-size:clamp(39px,5vw,52px)}.spatial-copy .spatial-lede{max-width:250px}.spatial-cta-row{gap:10px}.spatial-cta{gap:8px;padding:10px 12px}.spatial-detail{width:300px}.spatial-bottom{left:30px;right:30px}.spatial-pin[data-spatial-place=classroom]{left:79%;top:19%}.spatial-pin[data-spatial-place=pond]{left:82%;top:46%}.spatial-pin[data-spatial-place=library]{left:66%;top:68%}.spatial-pin[data-spatial-place=fengqi]{left:74%;top:32%}}
