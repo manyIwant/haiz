@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="porcelain">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e7e6df">
+  <meta name="description" content="HAIZ ATLAS — 一处真实校园的数字入口。校园、学习与社团，安静地连接起来。">
+  <title>HAIZ ATLAS · 校园工作台概念</title>
+  <link rel="icon" href="../assets/icon.svg">
+  <link rel="preload" as="image" href="../../assets/images/campus/campus_fengqitang.jpg">
+  <script src="theme-boot.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="spatial.css">
+  <script src="dock-spring.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="spatial.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳转到主要内容</a>
+  <div class="app-shell">
+    <aside class="rail" aria-label="工作台导航">
+      <a class="monogram" href="../index.html" aria-label="返回 HAIZ WORLD">H<span>.</span></a>
+      <div class="rail-track" aria-hidden="true"><span></span></div>
+      <nav class="rail-nav" aria-label="模块">
+        <button data-view="home" class="rail-tab is-active" aria-current="page" aria-label="今日概览" title="今日概览"><span class="glyph">⌂</span><span class="rail-label">今日</span></button>
+        <button data-view="campus" class="rail-tab" aria-label="校园空间" title="校园空间"><span class="glyph">⌖</span><span class="rail-label">校园</span></button>
+        <button data-view="study" class="rail-tab" aria-label="自习书桌" title="自习书桌"><span class="glyph">◷</span><span class="rail-label">自习</span></button>
+        <button data-view="community" class="rail-tab" aria-label="校园生活" title="校园生活"><span class="glyph">✳</span><span class="rail-label">生活</span></button>
+      </nav>
+      <div class="rail-tail"><span class="rail-coordinate">19°59′ N</span><span class="rail-coordinate">110°20′ E</span><span class="rail-dot"></span></div>
+    </aside>
+    <div class="workspace">
+      <header class="masthead">
+        <div class="masthead-left"><span class="eyebrow">HAIZ / SPACE</span><span class="masthead-divider"></span><span class="subtitle">校园的另一种打开方式</span></div>
+        <div class="masthead-right">
+          <span class="prototype-flag">独立概念预览 · 非学校官方服务</span>
+          <button class="search-trigger" id="openSearch" type="button" aria-keyshortcuts="Control+K Meta+K"><span>⌕</span> 搜索校园 <kbd>⌘ K</kbd></button>
+          <div class="theme-select-wrap"><label for="themeSelect">外观</label><select id="themeSelect" aria-label="选择主题"><option value="porcelain">Porcelain</option><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option></select></div>
+        </div>
+      </header>
+      <main class="main" id="main">
+        <section class="spatial-stage" id="spatialStage" data-mood="day" data-place="overview" aria-labelledby="spatialTitle">
+          <div class="spatial-photo" aria-hidden="true"></div>
+          <div class="spatial-shade" aria-hidden="true"></div>
+          <div class="spatial-grain" aria-hidden="true"></div>
+          <div class="spatial-topline">
+            <span class="spatial-signature">HAIZ / PLACE</span>
+            <div class="spatial-mode" role="group" aria-label="选择摄影画面色调，非实时天气">
+              <button type="button" data-spatial-mood="day" aria-pressed="true">白昼</button>
+              <button type="button" data-spatial-mood="dusk" aria-pressed="false">黄昏</button>
+              <button type="button" data-spatial-mood="night" aria-pressed="false">夜读</button>
+            </div>
+          </div>
+          <span class="spatial-disclaimer">真实校园影像 · 地点标识为主题导航，非精确地图定位</span>
+          <div class="spatial-copy">
+            <p>HAINAN MIDDLE SCHOOL / FUCHENG CAMPUS</p>
+            <h2 id="spatialTitle">沿着光，<br><em>走进这所学校。</em></h2>
+            <span class="spatial-lede">不是要把校园缩进一张网页。<br>而是把我们熟悉的地方，重新打开。</span>
+            <div class="spatial-cta-row">
+              <a class="spatial-cta" href="../campus.html">进入数字校园 <span aria-hidden="true">↗</span></a>
+              <button id="spatialReset" type="button" class="spatial-cta">回到全景 <span aria-hidden="true">↺</span></button>
+            </div>
+          </div>
+          <nav class="spatial-pins" aria-label="选择校园里的一个空间">
+            <button class="spatial-pin" type="button" data-spatial-place="fengqi" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">凤栖堂</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="pond" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">砚池</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="library" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">图书馆</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="classroom" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">教学楼</span></button>
+          </nav>
+          <div class="spatial-bottom">
+            <div class="spatial-footnote" aria-hidden="true"><span class="spatial-rule"></span><small>FOUR PLACES / FOUR WAYS TO BEGIN</small><small>选择右侧地点，或直接走进数字校园。</small></div>
+            <div class="spatial-detail" role="group" aria-label="当前选择的校园空间">
+              <img id="spatialLocationPhoto" src="../../assets/images/campus/aerial_campus.jpg" alt="校园航拍影像" decoding="async">
+              <div class="spatial-detail-copy" aria-live="polite" aria-atomic="true">
+                <small id="spatialLocationMeta">00 / THE GROUND WE SHARE</small>
+                <h3 id="spatialLocationName">府城校区</h3>
+                <p id="spatialLocationText">四处入口，一所熟悉的学校。</p>
+                <a id="spatialLocationAction" href="../campus.html">打开数字校园 ↗</a><a id="spatialLocation3d" class="spatial-three-link" href="../campus.html?focus=beimen&amp;observe=1">从校门进入三维世界 ↗</a>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="editorial" aria-labelledby="editionTitle">
+          <div class="edition-top"><span>THE DAILY EDITION</span><span id="todayDate">LOCAL EDITION</span><span>HAINAN · FUCHENG</span></div>
+          <div class="edition-title"><div><p class="edition-index">HAIZ ATLAS <span> / 001</span></p><h1 id="editionTitle">在这里，<br><em>生活有了坐标。</em></h1><p class="edition-description" id="editionDescription">课程之外，仍有许多值得走近的地方。<br>从今天出发，发现熟悉校园的另一面。</p></div><div class="edition-aside"><span class="stamp">HAIZ <i>2026</i></span><span class="thin">DIGITAL CAMPUS<br>FIELD NOTES</span></div></div>
+        </section>
+        <section class="content-grid">
+          <div class="main-column">
+            <article class="scene-card" aria-label="校园视野">
+              <div class="scene-visual" id="sceneVisual" style="--scene-image:url('../../assets/images/campus/campus_fengqitang.jpg')"><div class="scene-vignette"></div><div class="scene-grid" aria-hidden="true"></div><div class="scene-spot" aria-hidden="true"></div></div>
+              <div class="scene-bar"><div class="scene-indicator"><span class="signal-dot"></span> FIELD RECORD <span class="scene-slash">/</span> 真实校园影像</div><div class="scene-pagination"><span id="sceneCount">01</span> / 03</div></div>
+              <div class="scene-content"><p class="scene-kicker" id="sceneKicker">01 · 建筑 / ARCHITECTURE</p><h2 id="sceneTitle">阳光走过凤栖堂。</h2><p id="sceneBody">从砖墙的温度，重新认识这所学校。</p><div class="scene-bottom"><a id="sceneLink" class="scene-cta" href="../campus.html">进入校园 <span>↗</span></a><div class="scene-controls"><button id="scenePrev" aria-label="上一处校园地点" type="button">←</button><button id="sceneNext" aria-label="下一处校园地点" type="button">→</button></div></div></div>
+              <p class="scene-attribution">影像为仓库既有校园资料 · 三维场景为概念重建</p>
+            </article>
+            <section class="pathways" aria-label="快速入口"><div class="section-heading"><div><span class="section-tag">CURATED ROUTES</span><h2>下一站，去哪里？</h2></div><span class="section-counter">03 EXPERIENCES</span></div>
+              <div class="pathway-grid">
+                <a class="pathway" href="../room/immersive/"><span class="pathway-number">01 / INNER WORLD</span><span class="pathway-icon">◫</span><strong>光落进教室</strong><small>第一人称 · 写实概念场景</small><span class="pathway-arrow">↗</span></a>
+                <a class="pathway" href="../stillroom/"><span class="pathway-number">02 / STILLROOM</span><span class="pathway-icon">◷</span><strong>把世界调低</strong><small>沉浸自习 · 专注与手记</small><span class="pathway-arrow">↗</span></a>
+                <a class="pathway" href="../campus.html"><span class="pathway-number">03 / THE ATLAS</span><span class="pathway-icon">⌖</span><strong>重新走进校园</strong><small>数字地图 · 自由漫游</small><span class="pathway-arrow">↗</span></a>
+              </div>
+            </section>
+          </div>
+          <aside class="side-column" aria-label="今日工作台">
+            <div class="side-top"><span class="section-tag">YOUR LITTLE CORNER</span><span class="side-counter">NO. 01</span></div>
+            <section class="day-panel" aria-labelledby="dayTitle"><div class="day-head"><span class="day-icon">✳</span><span class="day-kicker">A PLACE TO BEGIN</span></div><h2 id="dayTitle">今天，<br><em>想留住什么？</em></h2><p>这里不是成绩单。写下一件想做的事就好，内容只保存在当前浏览器。</p>
+              <form id="taskForm" class="task-form"><label for="taskInput">我的一件小事</label><div class="task-entry"><input id="taskInput" name="task" maxlength="80" autocomplete="off" placeholder="例如：读完那本书的第三章" required><button type="submit" aria-label="添加一件小事">↗</button></div></form>
+              <ul class="task-list" id="taskList" aria-label="保存在本机的小事清单"></ul><div class="day-foot"><span id="taskSummary">尚无记录</span><button id="clearDone" type="button">清理已完成</button></div>
+            </section>
+            <section class="reading-note" aria-label="设计理念"><span class="section-tag">A QUIET REMINDER</span><blockquote>一个地方之所以重要，<br>是因为有人在这里，<em>认真地生活。</em></blockquote><span>HAIZ / NOT JUST A MAP</span></section>
+            <section class="shortcuts"><span class="section-tag">AROUND THE CAMPUS</span><a href="../../journal.html">校园杂志 <span>↗</span></a><a href="../../clubs.html">社团与活动 <span>↗</span></a><a href="../flow/">Flow 协作工作台 <span>↗</span></a><small>Flow 真实协作功能以服务端授权和部署为准。</small></section>
+          </aside>
+        </section>
+      </main>
+      <footer class="foot"><span>HAIZ / AN INDEPENDENT CAMPUS EXPERIMENT</span><span>原创界面探索 · 真实功能入口 · 数据本地保存</span><a href="../index.html">返回 HAIZ WORLD ↗</a></footer>
+    </div>
+  </div>
+  <nav class="float-dock" aria-label="移动与桌面快捷导航"><div class="dock-lens" id="dockLens" aria-hidden="true"></div><button data-view="home" class="dock-item is-active" aria-current="page"><span>⌂</span><small>今日</small></button><button data-view="campus" class="dock-item"><span>⌖</span><small>校园</small></button><button data-view="study" class="dock-item"><span>◷</span><small>自习</small></button><button data-view="community" class="dock-item"><span>✳</span><small>生活</small></button></nav>
+  <dialog class="command-dialog" id="commandDialog" aria-labelledby="commandTitle"><form method="dialog" class="command-shell"><div class="command-top"><label id="commandTitle" for="commandInput">⌕ <span>快速找到一个地方</span></label><button type="submit" aria-label="关闭搜索">✕</button></div><input id="commandInput" autocomplete="off" placeholder="试试：校园、专注、社团、老师…" aria-label="搜索页面"><ul id="commandResults" class="command-results"></ul><p>↑ ↓ 选择 · Enter 前往 · Esc 关闭</p></form></dialog>
+  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+  <!-- Finite cinematic hand-off only; the real destination loads on its own page. -->
+  <section class="scene-portal" id="scenePortal" role="dialog" aria-modal="true" aria-labelledby="portalTitle" aria-describedby="portalNote" hidden tabindex="-1">
+    <div class="portal-picture"><img id="portalPhoto" src="../../assets/images/campus/campus_fengqitang.jpg" alt="" decoding="async"><div class="portal-curtain"></div></div>
+    <div class="portal-aperture" aria-hidden="true"><span class="portal-axis"></span><span class="portal-reticle"></span></div>
+    <div class="portal-heading"><span class="portal-kicker">HAIZ / BETWEEN PLACES</span><span class="portal-rule"></span><h2 id="portalTitle">靠近另一处风景。</h2><p id="portalNote">即将进入已存在的 HAIZ 页面 · 不是同一 WebGL 场景的无缝切换</p><div class="portal-progress" aria-hidden="true"><span></span></div></div>
+    <div class="portal-actions"><button id="portalCancel" type="button">← 留在这里</button><button id="portalSkip" type="button">立即进入 ↗</button></div>
+  </section>
+</body></html>
