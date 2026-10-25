@@ -16,7 +16,7 @@ Open **http://localhost:8000/world/atlas/**. The project uses only local CSS, lo
 
 - Three persistent visual settings: Porcelain, Obsidian, Ocean.
 - Keyboard and pointer-accessible search (`Cmd/Ctrl + K`), with destinations already in the HAIZ source tree.
-- Four switchable editorial views: today, campus, study, life, each with three photographs and actionable destinations.
+- A spatial-photo home/campus first screen with four narrative landmark selections grounded in existing project images (凤栖堂、砚池、图书馆、教学楼); each chosen record offers a real route to an existing HAIZ experience. Pin placement is *editorial navigation*, not a coordinate-accurate GIS plot. Study/community retain their original editorial view.\n- Three optional, locally remembered art-directed visual times (day/dusk/night). These are **not live weather or true astronomical lighting**. Bounded pointer parallax only on fine pointing devices; reduced motion and tab-hidden are respected.\n- Four switchable editorial views: today, campus, study, life, each with three photographs and actionable destinations.
 - Responsive sidebar and translucent bottom dock with a bounded physical spring integrator, mouse/keyboard preview and reduced-motion instant positioning. Frames stop once the lens settles.
 - A personal "one small thing" list saved only in current browser localStorage, with safe text rendering, completion, deletion and no fake cross-device sync.
 - Deep links to existing campus model, INNER WORLD, STILLROOM, community and Flow. The campus/INNER WORLD/STILLROOM links use a **brief, cancelable, skippable cinematic page transition**; the destination is still an independent page load, not seamless streaming of a shared 3D renderer. Flow's authorization and server prerequisites remain unchanged.
@@ -26,7 +26,7 @@ Open **http://localhost:8000/world/atlas/**. The project uses only local CSS, lo
 
 ## Design constraint
 
-The campus itself is the hero: restrained editorial composition with large authentic photography, carefully weighted Chinese serif headlines, small clear utility text, generous white space, and controls that leave the scene visible. No indistinguishable card-grid dashboard, simulated school data, or AI-generated announcements.
+The campus itself is the hero: a full-width aerial-photo first screen, landmark navigation, and restrained editorial composition with large authentic photography, carefully weighted Chinese serif headlines, small clear utility text, generous white space, and controls that leave the scene visible. No indistinguishable card-grid dashboard, simulated school data, or AI-generated announcements.
 
 ## OpenUI workflow
 
