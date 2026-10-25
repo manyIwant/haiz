@@ -137,6 +137,7 @@
   function selectView(view) {
     if (!Object.hasOwn(scenes, view)) return;
     activeView = view;
+    document.body.dataset.atlasView = view;
     photoIndex = 0;
     $$("[data-view]").forEach(button => {
       const selected = button.dataset.view === view;
@@ -353,7 +354,8 @@
       if (!event.shiftKey && index === controls.length - 1) { event.preventDefault(); portalCancel.focus(); }
     }
   });
-  document.addEventListener("visibilitychange", () => { if (document.hidden && pendingPortal) finishPortal(); });
+  // A hidden tab must never silently navigate somewhere the user did not see.
+  document.addEventListener("visibilitychange", () => { if (document.hidden && pendingPortal) cancelPortal(); });
   const date = new Intl.DateTimeFormat("zh-CN",{month:"long",day:"numeric",weekday:"long"}).format(new Date());
   $("#todayDate").textContent = date;
   // Browsers may reuse the same document for #study, including back/forward navigation.
