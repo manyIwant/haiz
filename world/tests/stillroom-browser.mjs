@@ -35,6 +35,9 @@ try {
   });
   await p.goto(f.origin + "/world/stillroom/");
   await p.locator("#introMask.done").waitFor({state:"attached"});
+  assert.equal(await p.evaluate(() => typeof window.HAIZQualityGovernor?.createQualityGovernor), "function", "Adaptive quality controller must load on pilot HTTPS");
+  assert.match(await p.locator("body").getAttribute("data-quality"), /^(low|medium|high)$/, "Atmospheric renderer must pick a bounded quality tier");
+  checks.push("adaptive-quality runtime loads in the actual browser");
   await p.screenshot({
     path: "docs/haiz-pilot/screenshots/stillroom/desktop.png",
   });
@@ -67,7 +70,8 @@ try {
   await c.setOffline(true);
   await p.reload();
   await p.locator("#introMask.done").waitFor({state:"attached"});
-  checks.push("local art and controls load offline");
+  assert.equal(await p.evaluate(() => typeof window.HAIZQualityGovernor?.createQualityGovernor), "function", "Offline cache must include the adaptive quality runtime");
+  checks.push("local art, controls and adaptive-quality runtime load offline");
   await c.setOffline(false);
   for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
     await p.setViewportSize({ width, height: 900 });
