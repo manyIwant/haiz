@@ -19,9 +19,9 @@
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
   const presets = {
-    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:2.35,hemi:.66,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
-    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.68,hemi:.72,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
-    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.4,hemi:.7,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
+    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
+    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.60,hemi:.55,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
+    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.10,hemi:.60,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
   let climate='sunbreak',entered=false,focused=false,last=0,fpsFrames=0,fpsTime=0,slowSamples=0,goodSamples=0,frame=0;
   let renderer;
@@ -37,7 +37,7 @@
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1,specs[quality].dpr));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=.88;
+  renderer.toneMappingExposure=.79;
   renderer.shadowMap.enabled=!!specs[quality].shadow;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
@@ -54,15 +54,15 @@
   sun.shadow.camera.near=.3;sun.shadow.camera.far=100;sun.shadow.bias=-.00025;sun.shadow.normalBias=.025;
   scene.add(sun,sun.target);
   const hemi = new THREE.HemisphereLight('#cedee1','#5d5143',presets.sunbreak.hemi);scene.add(hemi);
-  const ambient=new THREE.AmbientLight('#cfddd3',.12);scene.add(ambient);
-  const windowFill=new THREE.PointLight('#ffddad',.36,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
-  const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,.1);scene.add(lampLight);
+  const ambient=new THREE.AmbientLight('#cfddd3',.085);scene.add(ambient);
+  const windowFill=new THREE.PointLight('#ffddad',.27,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
+  const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,-2.38);scene.add(lampLight);
   let lampOn=true;
 
   const material = (color,roughness=.76,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
   const mats={
-    wall:material('#c4c3b4',.96),plaster:material('#e0d7c7',.92),wood:material('#a17853',.75),frame:material('#2f4145',.47,.42),
-    terrazzo:material('#9da39c',.76),ceiling:material('#dbd4c8',1),tile:material('#5a857f',.38),brick:material('#a76455',.83),
+    wall:material('#b6b5a9',.96),plaster:material('#c7c1b5',.92),wood:material('#a17853',.75),frame:material('#2f4145',.47,.42),
+    terrazzo:material('#8f9690',.79),ceiling:material('#c5c2b9',1),tile:material('#5a857f',.38),brick:material('#a76455',.83),
     leaf:material('#506d5b',.92),trunk:material('#4f453b',.95),warm:material('#e3b682',.73),
     cloth:material('#697f7b',.94),paper:material('#e5ddc9',.96),blackboard:material('#354c48',.98),
     glass:new THREE.MeshPhysicalMaterial({color:'#d7e8e9',roughness:.055,metalness:0,transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide})
@@ -107,6 +107,7 @@
   };
   // 1 unit = 1 meter. A believable 14 × 11 m teaching room, NOT a measured school interior.
   const floor=box(14,.23,11,0,-.13,.5,mats.terrazzo);floor.castShadow=false;
+  const authoredBounce=window.HAIZHeroAssets?.buildBounce(THREE,scene)||null;
   box(14,.17,11,0,4.2,.5,mats.ceiling,scene,false);
   box(.22,4.2,11,-7,2.1,.5,mats.wall);
   box(.22,4.2,11,7,2.1,.5,mats.wall);
@@ -159,26 +160,67 @@
     box(1.4,.035,.21,x,4.005,z,areaLampMat,scene,false);
     box(1.4,.016,.014,x,3.977,z+.11,mats.frame,scene,false);
   }
-  // Real-world model silhouettes, depth and broad reflection on architecture outside.
-  box(74,.13,110,0,-.28,-53,material('#8eaaa5',.86),scene,false);
-  const exterior=new THREE.Group();scene.add(exterior);
-  for(let i=0;i<5;i++){
-    const x=-33+i*17,depth=-48-(i%2)*18;
-    box(11,6.3,6.2,x,3,depth,mats.brick,exterior);
-    box(12.5,.42,7.4,x,6.45,depth,mats.tile,exterior);
-    // Shallow projecting eaves and a sheltered hall make the skyline read as architecture.
-    box(13.1,.14,7.75,x,6.17,depth,mats.frame,exterior);
-    box(12.8,.11,7.65,x,6.72,depth,mats.tile,exterior);
-    for(const xx of [-4.65,4.65]){
-      box(.15,5.25,.15,x+xx,3.28,depth+3.50,mats.plaster,exterior);
+  // Original Hainan-style academic wing. Concept architecture, never claimed
+  // to be a surveyed model of the real 海南中学 buildings.
+  // Bring the facade into a believable courtyard distance: the old five tiny
+  // buildings were 48-66m away and faded to uninformative flat rectangles.
+  const courtyardPaving=material('#9b9c91',.90);
+  courtyardPaving.map=readTexture(textures+'paving-color.jpg',11,6,true);
+  courtyardPaving.normalMap=readTexture(textures+'paving-normal.jpg',11,6);
+  courtyardPaving.roughnessMap=readTexture(textures+'paving-rough.jpg',11,6);
+  box(74,.13,110,0,-.28,-53,material('#73827b',.94),scene,false);
+  box(70,.032,40,0,-.198,-26,courtyardPaving,scene,false);
+  const exterior=new THREE.Group();exterior.name='Original conceptual campus courtyard';scene.add(exterior);
+  const distantPlaster=material('#b6ac98',.94),trimStone=material('#736f62',.81);
+  const darkRecess=material('#3f5d5d',.79);
+  const balconyStone=material('#968a75',.86);
+  const exteriorGlass=material('#809da0',.31,.06);
+  const shelteredHall=material('#414f50',.83);
+  const wingZ=-32;
+  const wingWidth=58,wingDepth=7.6,wingHeight=10.15;
+  box(wingWidth,wingHeight,wingDepth,0,wingHeight/2-.15,wingZ,distantPlaster,exterior);
+  // The continuous sheltered three-level corridor and recessed windows form a
+  // single readable building, not the old row of identical toy houses.
+  for(let floorIndex=0;floorIndex<3;floorIndex++){
+    const baseY=floorIndex*3.27;
+    box(wingWidth+1.5,.16,3.06,0,baseY+.29,wingZ+4.38,balconyStone,exterior);
+    box(wingWidth+1,.14,.19,0,baseY+3.12,wingZ+5.66,trimStone,exterior);
+    // balcony parapet with open upper half and thin original stone balusters
+    box(wingWidth+1,.13,.20,0,baseY+1.08,wingZ+5.61,trimStone,exterior);
+    for(let bay=0;bay<17;bay++){
+      const x=-25.6+bay*3.2;
+      const windowZ=wingZ+wingDepth/2+.046;
+      box(2.11,2.16,.045,x,baseY+1.79,windowZ,darkRecess,exterior,false);
+      box(1.88,1.94,.032,x,baseY+1.79,windowZ+.038,exteriorGlass,exterior,false);
+      box(.057,1.93,.10,x,baseY+1.79,windowZ+.064,trimStone,exterior,false);
+      box(1.88,.053,.10,x,baseY+1.76,windowZ+.068,trimStone,exterior,false);
+      // Solid corridor piers are brighter nearer the sky, with no particle effect.
+      box(.17,3.10,.20,x+1.56,baseY+1.71,wingZ+5.32,distantPlaster,exterior);
     }
-    for(let k=0;k<5;k++){
-      const wx=x-4.2+k*2.05;
-      box(1.13,1.9,.07,wx,3,depth+3.15,mats.frame,exterior,false);
-      box(.93,1.6,.08,wx,3,depth+3.21,material('#728e94',.2,.09),exterior,false);
-    }
-    box(11.7,.35,.8,x,1.0,depth+3.2,mats.terrazzo,exterior);
   }
+  // Broad projecting hipped eaves and a distinct central gateway give a
+  // recognizable architecture silhouette at both desk and room cameras.
+  box(wingWidth+2.0,.30,wingDepth+4.0,0,10.24,wingZ+1.1,mats.frame,exterior);
+  for(const [offset,tilt] of [[-2.15,-.15],[2.15,.15]]){
+    const roof=box(wingWidth+2.8,.20,5.38,0,10.63,wingZ+offset,mats.tile,exterior);
+    roof.rotation.x=tilt;
+  }
+  box(10.3,10.55,1.2,0,5.2,wingZ+5.10,trimStone,exterior);
+  box(8.8,9.60,.68,0,5.10,wingZ+5.78,distantPlaster,exterior);
+  for(const y of [2.0,5.25,8.5]){
+    box(5.25,1.62,.10,0,y,wingZ+6.17,darkRecess,exterior,false);
+    box(4.92,1.42,.08,0,y,wingZ+6.23,exteriorGlass,exterior,false);
+    box(5.34,.085,.27,0,y+1.0,wingZ+6.21,balconyStone,exterior);
+  }
+  box(11.4,.25,3.2,0,10.70,wingZ+5.8,mats.tile,exterior);
+  // A restrained axial rain-darkened courtyard walk and low raised planting
+  // beds ground the building in metres, unlike the former featureless white void.
+  box(4.5,.042,20,0,-.145,-14.5,balconyStone,exterior,false);
+  for(const x of [-10.5,10.5]){
+    box(3.8,.32,5.3,x,-.03,-11,trimStone,exterior);
+    box(3.35,.035,4.9,x,.14,-11,material('#46574b',.98),exterior,false);
+  }
+  const courtyardBays=17*3;
   // Crossed alpha-cutout foliage clusters share the locally generated campus
   // leaf atlas. Three planes give volume without solid toy-sphere silhouettes.
   function foliageGeometry(){
@@ -222,24 +264,53 @@
   leaves.count=leafCount;leaves.instanceMatrix.needsUpdate=true;if(leaves.instanceColor)leaves.instanceColor.needsUpdate=true;
   // A naturally cluttered desk: books, paper, warm ceramic, lamp and chair. Everything is original geometry.
   const desks=[];const legMaterial=material('#414a47',.48,.24);
-  const deskTop=material('#c0a487',.7);deskTop.map=readTexture(textures+'wood-color.jpg',1.8,.9,true);
+  // Regrade the ORIGINAL locally shipped timber photo into natural warm walnut:
+  // preserve every real grain variation instead of painting synthetic stripes.
+  // The texture is recolored once on image load, never in the render loop.
+  const deskTop=material('#e5d8c8',.79);
+  const woodAlbedo=loader.load(textures+'wood-color.jpg',loaded=>{
+    const image=loaded.image;if(!image)return;
+    const tile=document.createElement('canvas');tile.width=image.width;tile.height=image.height;
+    const context=tile.getContext('2d',{willReadFrequently:true});if(!context)return;
+    context.drawImage(image,0,0);
+    const pixels=context.getImageData(0,0,tile.width,tile.height),a=pixels.data;
+    for(let k=0;k<a.length;k+=4){
+      const luminance=a[k]*.26+a[k+1]*.62+a[k+2]*.12;
+      const detail=(luminance-115)*.58;
+      a[k]=Math.max(0,Math.min(255,153+detail));
+      a[k+1]=Math.max(0,Math.min(255,117+detail*.83));
+      a[k+2]=Math.max(0,Math.min(255,85+detail*.72));
+    }
+    context.putImageData(pixels,0,0);loaded.image=tile;loaded.needsUpdate=true;
+  },undefined,()=>{});
+  woodAlbedo.encoding=THREE.sRGBEncoding;woodAlbedo.wrapS=woodAlbedo.wrapT=THREE.RepeatWrapping;
+  woodAlbedo.repeat.set(1.8,.9);woodAlbedo.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  deskTop.map=woodAlbedo;
   deskTop.normalMap=readTexture(textures+'wood-normal.jpg',1.8,.9);
-  deskTop.roughnessMap=readTexture(textures+'wood-rough.jpg',1.8,.9);
   const chairMat=material('#45645c',.79);
   const ink=material('#455961',.38);const gold=material('#bc9763',.52,.45);
+  let heroAsset=null;
   function buildDesk(x,z,featured=false) {
     const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
-    box(1.76,.07,.78,0,.79,0,deskTop,g);
-    for(const dx of [-.79,.79])for(const dz of [-.3,.3])box(.055,.72,.055,dx,.38,dz,legMaterial,g);
-    box(1.55,.09,.04,0,.49,-.29,legMaterial,g);
-    // A stack of tactile paper pages and coloured book spines.
-    box(.33,.025,.37,-.43,.85,-.10,mats.paper,g);
-    for(let b=0;b<4;b++){
-      const bm=material(['#7e8879','#9c785d','#657e8b','#b28f68'][b],.87);
-      box(.095,.023,.28,-.44+b*.10,.89,-.12,bm,g,false);
+    // The hero kit provides its OWN legs, chair and braces. Do not draw the
+    // ordinary class furniture again beneath it (the old model overlapped).
+    if(!featured || !window.HAIZHeroAssets){
+      box(1.76,.07,.78,0,.79,0,deskTop,g);
+      for(const dx of [-.79,.79])for(const dz of [-.3,.3])box(.055,.72,.055,dx,.38,dz,legMaterial,g);
+      box(1.55,.09,.04,0,.49,-.29,legMaterial,g);
+    }
+    // Economical base furniture stays instanced; the hero station adds fine geometry.
+    if(!featured || !window.HAIZHeroAssets){
+      box(.33,.025,.37,-.43,.85,-.10,mats.paper,g);
+      for(let b=0;b<4;b++){
+        const bm=material(['#7e8879','#9c785d','#657e8b','#b28f68'][b],.87);
+        box(.095,.023,.28,-.44+b*.10,.89,-.12,bm,g,false);
+      }
     }
     const laptop=material('#485056',.42,.30);
-    if(featured){
+    if(featured && window.HAIZHeroAssets){
+      heroAsset=window.HAIZHeroAssets.build(THREE,g,{wood:deskTop,metal:legMaterial,chairFabric:chairMat,paper:mats.paper});
+    } else if(featured){
       box(.38,.026,.29,.24,.845,.04,laptop,g);
       const screen=box(.38,.24,.019,.24,.99,-.102,laptop,g);
       screen.rotation.x=-.14;
@@ -256,14 +327,16 @@
       box(.14,.02,.30,-.57,.84,.11,ink,g,false);
     }
     // Chair beside table, with thin metal structure instead of a solid block.
-    const chair=new THREE.Group();chair.position.set(.18,0,.92);g.add(chair);
-    box(.66,.08,.61,0,.49,0,chairMat,chair);
-    box(.66,.64,.065,0,.82,.275,chairMat,chair);
-    for(const dx of [-.27,.27])for(const dz of [-.22,.22])box(.042,.47,.042,dx,.24,dz,legMaterial,chair);
+    if(!featured || !window.HAIZHeroAssets){
+      const chair=new THREE.Group();chair.position.set(.18,0,.92);g.add(chair);
+      box(.66,.08,.61,0,.49,0,chairMat,chair);
+      box(.66,.64,.065,0,.82,.275,chairMat,chair);
+      for(const dx of [-.27,.27])for(const dz of [-.22,.22])box(.042,.47,.042,dx,.24,dz,legMaterial,chair);
+    }
     const footprint={x,z,w:.98,d:1.03};desks.push(footprint);return g;
   }
   for(const x of [-4.25,-1.55,1.15,3.85])for(const z of [-2.95,-.48,2.00]){
-    buildDesk(x,z,x===-1.55&&z===-.48);
+    buildDesk(x,z,x===-1.55&&z===-2.95);
   }
   // Blackboard with subtle actual writing, rasterized locally once.
   const sign=document.createElement('canvas');sign.width=1024;sign.height=400;const ctx=sign.getContext('2d');
@@ -319,6 +392,11 @@
     sun.color.lerp(new THREE.Color(p.sun),alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
     windowFill.color.lerp(new THREE.Color(p.fill),alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
     weatherCurrent.rain+=(p.rain-weatherCurrent.rain)*alpha;weatherCurrent.cloud+=(p.cloud-weatherCurrent.cloud)*alpha;weatherCurrent.wet+=(p.wet-weatherCurrent.wet)*alpha;
+    if(authoredBounce){
+      // The atlas represents static diffuse bounce, not a costly global-illumination pass.
+      const target=climate==='sunbreak'?.25:climate==='morning'?.12:.025;
+      authoredBounce.setIntensity(authoredBounce.mesh.material.opacity+(target-authoredBounce.mesh.material.opacity)*alpha);
+    }
     const rays=quality==='low'||reduced?0:(climate==='sunbreak'?.12:climate==='morning'?.06:0);
     for(const beam of shafts)beam.material.opacity+=(rays-beam.material.opacity)*alpha;
     mats.tile.roughness=.5-weatherCurrent.wet*.23;mats.terrazzo.roughness=.76-weatherCurrent.wet*.12;
@@ -337,6 +415,7 @@
   // instanced draw call even when mobile dynamic shadows are disabled.
   const roomContacts=window.HAIZRoomGeometry?.addContactShadows(scene,THREE,desks)||null;
   const geometryStats=window.HAIZRoomGeometry?.batchBoxes(scene,THREE,2)||{instances:0,batches:0,drawCallsSaved:0};
+  if(heroAsset?.detailMeshes && quality==='low')for(const detail of heroAsset.detailMeshes)detail.visible=false;
   const collision=(x,z)=>{
     if(x < -6.48 || x>6.48 || z< -4.62 || z>5.48)return true;
     return desks.some(d=>Math.abs(x-d.x)<d.w+.25&&Math.abs(z-d.z)<d.d+.13);
@@ -360,6 +439,7 @@
     }
     leaves.count=Math.min(leafCount,specs[quality].foliage);
     leaves.castShadow=quality==='high';
+    if(heroAsset?.detailMeshes)for(const detail of heroAsset.detailMeshes)detail.visible=quality!=='low';
     updateQualityText();qualityChangedAt=performance.now();
     resize();
   }
@@ -418,7 +498,7 @@
     if(focused){location.href='../../stillroom/';return;}
     focused=true;
     $('deskAction').innerHTML='打开 STILLROOM 专注书桌 <span>↗</span>';
-    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-1.55,1.54,.76),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
+    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-1.55,1.54,-1.72),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
     if(document.pointerLockElement)document.exitPointerLock();
     $('walkHint').textContent='座位已准备好 · 继续进入原有专注工具';
   });
@@ -464,7 +544,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.

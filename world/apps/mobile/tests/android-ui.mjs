@@ -48,8 +48,24 @@ async function ready(route='study'){
 }
 async function tap(selector){
  const point=await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw Error('Missing control');e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
- await call('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,radiusX:2,radiusY:2,force:1,id:1}]});
- await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ // CDP touch dispatch can hang when a software-rendered emulator's UI compositor
+ // is overloaded. Android's own input stack is more representative here.
+ // Keep DOM-based coordinate targeting and post-tap assertions on the real WebView.
+ const bounds=await evaluate('({w: window.innerWidth, h: window.innerHeight})');
+ // The WebView is letterboxed between Android status and navigation bars.
+ // Scaling CSS y to the FULL physical display sends bottom-dock taps into the
+ // wrong area (observed on the API 33 screenshot: AppBounds starts at y=136).
+ const activity=adb('shell','dumpsys','activity','activities');
+ const app=activity.match(/mAppBounds=Rect\((\d+),\s*(\d+)\s*-\s*(\d+),\s*(\d+)\)/);
+ assert.ok(app,'Require Android real application viewport bounds for touch targeting');
+ const [left,top,right,bottom]=app.slice(1).map(Number);
+ assert.ok(right>left&&bottom>top&&bounds.w>100&&bounds.h>100,'Valid native/WebView viewport');
+ const sx=(right-left)/bounds.w,sy=(bottom-top)/bounds.h;
+ assert.ok(Math.abs(sx-sy)/sx<.08,'WebView CSS scale matches actual native viewport');
+ const x=Math.round(left+point.x*sx),y=Math.round(top+point.y*sy);
+ writeFileSync(path.join(out,mode+'-touch-coordinates.txt'),
+   JSON.stringify({selector,css:point,webview:bounds,appBounds:{left,top,right,bottom},physical:{x,y}},null,2)+'\n',{flag:'a'});
+ adb('shell','input','tap',String(x),String(y));
 }
 // ADB captures the actual device compositor, whereas Page.captureScreenshot can
 // stall indefinitely on software-emulated Android WebViews. All UI/read/write,
