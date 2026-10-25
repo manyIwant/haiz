@@ -6,7 +6,7 @@
 
 HAIZ is an independent, unofficial campus journal and spatial web experiment centered on the Fucheng campus of Hainan Middle School in Haikou, China. It combines editorial storytelling, campus photography, approximate 3D architecture, and small interactive creative tools.
 
-Built by [manyIWant](https://github.com/manyIWant). HAIZ is **not** an official school website, admissions service, student-information system, or school-endorsed product.
+Built by [manyIwant](https://github.com/manyIwant). HAIZ is **not** an official school website, admissions service, student-information system, or school-endorsed product.
 
 ## What is in `main`
 
@@ -29,7 +29,7 @@ The project includes locally bundled browser assets, including Three.js and font
 Clone the repository and serve its root directory over HTTP:
 
 ```bash
-git clone https://github.com/manyIWant/haiz.git
+git clone https://github.com/manyIwant/haiz.git
 cd haiz
 python3 -m http.server 8000
 ```
