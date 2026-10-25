@@ -36,6 +36,7 @@ const results=[];
       assert.equal(init.units,'meters');
       assert(init.heroDeskGeometry===true&&init.heroDetailCount>=12,'Hero furniture geometry must load');
       assert(init.staticBounceAtlas===true,'Original local daylight-bounce map must load');
+      assert.equal(init.courtyardWindows,51,'Continuous three-level courtyard facade and windows must be present');
       console.log('HAIZ ROOM GPU DIAGNOSTICS',size.width,JSON.stringify(init));
       assert(init.instancedBoxes>=60 && init.geometryBatches>=4,'Repeatable classroom furniture must use GPU instancing');
       assert(init.drawCallsSaved>=55,'Instancing must remove substantial redundant draw calls');
