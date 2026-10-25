@@ -75,3 +75,17 @@ test("stored theme is read before first stylesheet paint", () => {
   assert.ok(fs.existsSync(path.join(root, "theme-boot.js")));
   assert.match(fs.readFileSync(path.join(root, "theme-boot.js"), "utf8"), /haiz-atlas-theme-v1/);
 });
+
+test("spatial campus scene remains accessible, progressive, and non-geographic", () => {
+  const spatial = fs.readFileSync(path.join(root, "spatial.js"),"utf8");
+  assert.ok(html.indexOf('id="spatialStage"') < html.indexOf('class="editorial"'), "photo hero must precede magazine");
+  assert.equal((html.match(/class="spatial-pin"/g) || []).length,4);
+  assert.match(html,/非精确地图定位/);
+  assert.match(html,/aria-pressed="false"/);
+  assert.match(html,/aria-label="选择校园里的一个空间"/);
+  assert.match(spatial,/prefers-reduced-motion: reduce/);
+  assert.match(spatial,/localStorage/);
+  assert.match(spatial,/document\.hidden/);
+  assert.match(js,/document\.body\.dataset\.atlasView/);
+  assert.match(js,/if \(document\.hidden && pendingPortal\) cancelPortal\(\)/);
+});
