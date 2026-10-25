@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- HAIZ original authored, static, physically motivated window bounce.
+       Approximation only. NOT path-traced or Blender-baked GI. -->
+  <defs>
+    <radialGradient id="puddle">
+      <stop offset="0" stop-color="#ffe6b9" stop-opacity=".49"/>
+      <stop offset=".28" stop-color="#f8c996" stop-opacity=".35"/>
+      <stop offset=".64" stop-color="#e8ab7e" stop-opacity=".17"/>
+      <stop offset="1" stop-color="#edbb91" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="91" cy="94" rx="117" ry="355" fill="url(#puddle)"/>
+  <ellipse cx="193" cy="94" rx="133" ry="355" fill="url(#puddle)"/>
+  <ellipse cx="295" cy="94" rx="121" ry="355" fill="url(#puddle)"/>
+  <ellipse cx="396" cy="94" rx="128" ry="355" fill="url(#puddle)"/>
+</svg>
