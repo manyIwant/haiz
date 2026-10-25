@@ -19,9 +19,9 @@
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
   const presets = {
-    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:2.35,hemi:.66,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
-    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.68,hemi:.72,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
-    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.4,hemi:.7,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
+    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
+    monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.60,hemi:.55,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
+    morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.10,hemi:.60,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
   let climate='sunbreak',entered=false,focused=false,last=0,fpsFrames=0,fpsTime=0,slowSamples=0,goodSamples=0,frame=0;
   let renderer;
@@ -37,7 +37,7 @@
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1,specs[quality].dpr));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=.88;
+  renderer.toneMappingExposure=.79;
   renderer.shadowMap.enabled=!!specs[quality].shadow;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
@@ -54,15 +54,15 @@
   sun.shadow.camera.near=.3;sun.shadow.camera.far=100;sun.shadow.bias=-.00025;sun.shadow.normalBias=.025;
   scene.add(sun,sun.target);
   const hemi = new THREE.HemisphereLight('#cedee1','#5d5143',presets.sunbreak.hemi);scene.add(hemi);
-  const ambient=new THREE.AmbientLight('#cfddd3',.12);scene.add(ambient);
-  const windowFill=new THREE.PointLight('#ffddad',.36,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
+  const ambient=new THREE.AmbientLight('#cfddd3',.085);scene.add(ambient);
+  const windowFill=new THREE.PointLight('#ffddad',.27,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
   const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,.1);scene.add(lampLight);
   let lampOn=true;
 
   const material = (color,roughness=.76,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
   const mats={
-    wall:material('#c4c3b4',.96),plaster:material('#e0d7c7',.92),wood:material('#a17853',.75),frame:material('#2f4145',.47,.42),
-    terrazzo:material('#9da39c',.76),ceiling:material('#dbd4c8',1),tile:material('#5a857f',.38),brick:material('#a76455',.83),
+    wall:material('#b6b5a9',.96),plaster:material('#c7c1b5',.92),wood:material('#a17853',.75),frame:material('#2f4145',.47,.42),
+    terrazzo:material('#8f9690',.79),ceiling:material('#c5c2b9',1),tile:material('#5a857f',.38),brick:material('#a76455',.83),
     leaf:material('#506d5b',.92),trunk:material('#4f453b',.95),warm:material('#e3b682',.73),
     cloth:material('#697f7b',.94),paper:material('#e5ddc9',.96),blackboard:material('#354c48',.98),
     glass:new THREE.MeshPhysicalMaterial({color:'#d7e8e9',roughness:.055,metalness:0,transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide})
