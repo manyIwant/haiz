@@ -1,0 +1,58 @@
+name: HAIZ cinematic climate QA
+
+on:
+  push:
+    paths:
+      - 'assets/walk/**'
+      - 'campus-3d.html'
+      - 'world/campus.html'
+      - 'tests/climate*'
+      - 'tests/walk/**'
+      - '.github/workflows/haiz-cinematic-climate.yml'
+  pull_request:
+    paths:
+      - 'assets/walk/**'
+      - 'campus-3d.html'
+      - 'world/campus.html'
+      - 'tests/climate*'
+      - 'tests/walk/**'
+      - '.github/workflows/haiz-cinematic-climate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spatial-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned source dependencies
+        run: npm ci
+      - name: Static climate and geometry assertions
+        run: |
+          node --check assets/walk/climate.js
+          node --check assets/walk/app.js
+          node tests/climate.cjs
+          node tests/walk/runtime.cjs
+      - name: Prepare headless real WebGL renderer
+        run: |
+          npx playwright install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -p "require('playwright').chromium.executablePath()")" >> "$GITHUB_ENV"
+      - name: Verify actual cloud shader and five fixed-camera screenshots
+        run: node tests/climate-browser.cjs
+      - name: Preserve climate screenshot evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haiz-cinematic-weather-screenshots
+          path: |
+            tests/artifacts/climate-*.png
+            tests/climate-results.json
+            tests/walk/runtime-results.json
+          if-no-files-found: warn
