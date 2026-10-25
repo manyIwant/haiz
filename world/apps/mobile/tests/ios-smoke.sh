@@ -8,7 +8,7 @@ xcrun simctl list devices available -j > "$OUT/simulator-devices.json"
 xcrun simctl boot "$HAIZ_SIM"
 xcrun simctl bootstatus "$HAIZ_SIM" -b
 ruby tests/ios/create-ui-target.rb
-xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -sdk iphonesimulator -configuration Debug -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim CODE_SIGNING_ALLOWED=NO build-for-testing > "$OUT/build-for-testing.log" 2>&1
+xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -sdk iphonesimulator -configuration Debug -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim CODE_SIGNING_ALLOWED=NO build-for-testing 2>&1 | tee "$OUT/build-for-testing.log"
 xcrun simctl install "$HAIZ_SIM" build/ios-sim/Build/Products/Debug-iphonesimulator/App.app
 video_pid=''
 collect() {
@@ -22,10 +22,10 @@ collect() {
 }
 trap collect EXIT
 xcrun simctl io "$HAIZ_SIM" recordVideo "$OUT/ios-session.mp4" > "$OUT/video.log" 2>&1 & video_pid=$!
-xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim -resultBundlePath "$OUT/startup.xcresult" -only-testing:HAIZUITests/StartupTests/testColdNavigationAndRecovery CODE_SIGNING_ALLOWED=NO test-without-building > "$OUT/startup-ui.log" 2>&1
+xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim -resultBundlePath "$OUT/startup.xcresult" -only-testing:HAIZUITests/StartupTests/testColdNavigationAndRecovery CODE_SIGNING_ALLOWED=NO test-without-building 2>&1 | tee "$OUT/startup-ui.log"
 # Reinstall the same build without uninstall or data reset, then verify the saved UI value.
 xcrun simctl install "$HAIZ_SIM" build/ios-sim/Build/Products/Debug-iphonesimulator/App.app
-xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim -resultBundlePath "$OUT/reinstall.xcresult" -only-testing:HAIZUITests/StartupTests/testReinstallKeepsNote CODE_SIGNING_ALLOWED=NO test-without-building > "$OUT/reinstall-ui.log" 2>&1
+xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZQA -destination "platform=iOS Simulator,id=$HAIZ_SIM" -derivedDataPath build/ios-sim -resultBundlePath "$OUT/reinstall.xcresult" -only-testing:HAIZUITests/StartupTests/testReinstallKeepsNote CODE_SIGNING_ALLOWED=NO test-without-building 2>&1 | tee "$OUT/reinstall-ui.log"
 xcrun xcresulttool export attachments --path "$OUT/startup.xcresult" --output-path "$OUT/startup-screenshots"
 xcrun xcresulttool export attachments --path "$OUT/reinstall.xcresult" --output-path "$OUT/reinstall-screenshots"
 printf 'PASS: WKWebView touch navigation, editable note, warm/cold recovery and same-build reinstall\n'

@@ -16,7 +16,20 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (System.getenv("HAIZ_KEYSTORE_PATH")) {
+            protectedPreview {
+                storeFile file(System.getenv("HAIZ_KEYSTORE_PATH"))
+                storePassword System.getenv("HAIZ_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("HAIZ_KEY_ALIAS")
+                keyPassword System.getenv("HAIZ_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (System.getenv("HAIZ_KEYSTORE_PATH")) signingConfig signingConfigs.protectedPreview
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

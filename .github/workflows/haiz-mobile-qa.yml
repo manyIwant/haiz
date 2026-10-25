@@ -48,14 +48,10 @@ jobs:
           print('PASS: iOS opaque 1024 icon and Android adaptive launcher.')
           PY
 
-  android-emulator:
-    strategy:
-      fail-fast: false
-      matrix:
-        api: [33, 35]
-    timeout-minutes: 35
+  android-build:
     needs: web-assets
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -73,13 +69,51 @@ jobs:
         working-directory: world/apps/mobile
       - run: npm run sync && node tests/verify-assets.mjs && python scripts/generate-icons.py
         working-directory: world/apps/mobile
+      - name: Select optional protected preview signing
+        run: node scripts/prepare-signing.mjs
+        working-directory: world/apps/mobile
+        env:
+          HAIZ_ANDROID_KEYSTORE_BASE64: ${{ secrets.HAIZ_ANDROID_KEYSTORE_BASE64 }}
+          HAIZ_KEYSTORE_PASSWORD: ${{ secrets.HAIZ_KEYSTORE_PASSWORD }}
+          HAIZ_KEY_ALIAS: ${{ secrets.HAIZ_KEY_ALIAS }}
+          HAIZ_KEY_PASSWORD: ${{ secrets.HAIZ_KEY_PASSWORD }}
       - run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+        env:
+          HAIZ_KEYSTORE_PASSWORD: ${{ secrets.HAIZ_KEYSTORE_PASSWORD }}
+          HAIZ_KEY_ALIAS: ${{ secrets.HAIZ_KEY_ALIAS }}
+          HAIZ_KEY_PASSWORD: ${{ secrets.HAIZ_KEY_PASSWORD }}
         working-directory: world/apps/mobile/android
+      - name: Inspect the actual APK and record signing certificate
+        working-directory: world/apps/mobile
+        run: |
+          mkdir -p candidate
+          python tests/verify-package.py android/app/build/outputs/apk/debug/app-debug.apk --commit "$GITHUB_SHA" --version "$(node -p 'require("./package.json").version')" --output candidate/package-report.json
+          TOOL="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          "$TOOL" verify --verbose --print-certs android/app/build/outputs/apk/debug/app-debug.apk > candidate/signature.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk candidate/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: haiz-android-api-${{ matrix.api }}-preview-apk
-          path: world/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          name: haiz-android-candidate-apk
+          path: world/apps/mobile/candidate/
           if-no-files-found: error
+
+  android-emulator:
+    needs: android-build
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [33, 35]
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: haiz-android-candidate-apk
+          path: mobile-candidate
       - name: Enable runner KVM for hardware accelerated emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -87,6 +121,8 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           test -r /dev/kvm && test -w /dev/kvm
       - uses: reactivecircus/android-emulator-runner@v2
+        env:
+          HAIZ_QA_APK: mobile-candidate/app-debug.apk
         with:
           api-level: ${{ matrix.api }}
           arch: x86_64
@@ -143,8 +179,12 @@ jobs:
           cp -R build/ios-device/Build/Products/Release-iphoneos/App.app build/unsigned/Payload/HAIZ.app
           cd build/unsigned
           ditto -c -k --keepParent Payload HAIZ-Study-iOS-unsigned.ipa
+          cd ../..
+          python tests/verify-package.py build/unsigned/HAIZ-Study-iOS-unsigned.ipa --commit "$GITHUB_SHA" --version "$(node -p 'require("./package.json").version')" --output build/unsigned/package-report.json
       - uses: actions/upload-artifact@v4
         with:
-          name: haiz-ios-fix-preview-unsigned-ipa
-          path: world/apps/mobile/build/unsigned/HAIZ-Study-iOS-unsigned.ipa
+          name: haiz-ios-candidate-unsigned-ipa
+          path: |
+            world/apps/mobile/build/unsigned/HAIZ-Study-iOS-unsigned.ipa
+            world/apps/mobile/build/unsigned/package-report.json
           if-no-files-found: error

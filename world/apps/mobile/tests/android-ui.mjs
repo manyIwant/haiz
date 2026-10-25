@@ -36,7 +36,7 @@ function call(method,params={}){return new Promise((resolve,reject)=>{const id=+
 async function evaluate(expression){const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.text+' '+JSON.stringify(r.exceptionDetails.exception));return r.result.value;}
 async function waitFor(expression,label,timeout=30000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await evaluate(expression))return;await delay(250);}throw Error(`UI condition failed: ${label}`);}
 async function ready(route='study'){
- await waitFor(`document.documentElement.dataset.haizReady==='true' && document.documentElement.dataset.haizRoute===${JSON.stringify(route)} && !!document.querySelector('#app[data-testid="haiz-app-ready"] #main[data-testid="haiz-main"]')`,'real application ready '+route);
+ await waitFor(`document.documentElement?.dataset.haizReady==='true' && document.documentElement.dataset.haizRoute===${JSON.stringify(route)} && !!document.querySelector('#app[data-testid="haiz-app-ready"] #main[data-testid="haiz-main"]')`,'real application ready '+route);
  assert.equal(await evaluate(`!!document.querySelector('#haiz-native-boot[data-state="error"]')`),false,'No boot error screen');
  const rect=await evaluate(`(()=>{const r=document.querySelector('#main').getBoundingClientRect();return {w:r.width,h:r.height}})()`);
  assert.ok(rect.w>200&&rect.h>100,'Main surface has visible geometry');
