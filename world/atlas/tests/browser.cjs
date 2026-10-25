@@ -39,7 +39,8 @@ const server = http.createServer((request,response) => {
     assert.equal(await page.locator("html").getAttribute("data-theme"),"ocean");
     await page.reload();
     assert.equal(await page.locator("html").getAttribute("data-theme"),"ocean");
-    pass("three-theme persistence");
+    assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","saved Ocean theme must paint immediately, without a Porcelain flash");
+    pass("three-theme persistence and first-paint fidelity");
     await page.locator("#taskInput").fill("<img src=x onerror=alert(1)>");
     await page.locator("#taskForm button").click();
     assert.equal(await page.locator("#taskList li span").first().innerText(),"<img src=x onerror=alert(1)>");
@@ -77,6 +78,7 @@ const server = http.createServer((request,response) => {
       await page.goto(origin+"/world/atlas/#home");
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1),true,"overflow width="+width);
+      assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","mobile Ocean theme must not flash pale background");
       const geometry = await page.evaluate(() => ({
         viewport:innerWidth,
         workspace:document.querySelector(".workspace").getBoundingClientRect().width,
