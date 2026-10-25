@@ -44,7 +44,8 @@ def cube(name, loc, dims, material, bevel=0, steps=3):
         modifier = obj.modifiers.new("real edge highlight", 'BEVEL')
         modifier.width = bevel
         modifier.segments = steps
-        modifier.affect = 'EDGES' if hasattr(modifier, "affect") else modifier.affect if hasattr(modifier, "affect") else None
+        if hasattr(modifier, "affect"):
+            modifier.affect = 'EDGES'
     norm = obj.modifiers.new("weighted planar normals", 'WEIGHTED_NORMAL')
     norm.keep_sharp = True
     return obj
