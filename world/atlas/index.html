@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="porcelain">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e7e6df">
+  <meta name="description" content="HAIZ ATLAS — 一处真实校园的数字入口。校园、学习与社团，安静地连接起来。">
+  <title>HAIZ ATLAS · 校园工作台概念</title>
+  <link rel="icon" href="../assets/icon.svg">
+  <link rel="preload" as="image" href="../../assets/images/campus/campus_fengqitang.jpg">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳转到主要内容</a>
+  <div class="app-shell">
+    <aside class="rail" aria-label="工作台导航">
+      <a class="monogram" href="../index.html" aria-label="返回 HAIZ WORLD">H<span>.</span></a>
+      <div class="rail-track" aria-hidden="true"><span></span></div>
+      <nav class="rail-nav" aria-label="模块">
+        <button data-view="home" class="rail-tab is-active" aria-current="page" aria-label="今日概览" title="今日概览"><span class="glyph">⌂</span><span class="rail-label">今日</span></button>
+        <button data-view="campus" class="rail-tab" aria-label="校园空间" title="校园空间"><span class="glyph">⌖</span><span class="rail-label">校园</span></button>
+        <button data-view="study" class="rail-tab" aria-label="自习书桌" title="自习书桌"><span class="glyph">◷</span><span class="rail-label">自习</span></button>
+        <button data-view="community" class="rail-tab" aria-label="校园生活" title="校园生活"><span class="glyph">✳</span><span class="rail-label">生活</span></button>
+      </nav>
+      <div class="rail-tail"><span class="rail-coordinate">19°59′ N</span><span class="rail-coordinate">110°20′ E</span><span class="rail-dot"></span></div>
+    </aside>
+    <div class="workspace">
+      <header class="masthead">
+        <div class="masthead-left"><span class="eyebrow">HAIZ / SPACE</span><span class="masthead-divider"></span><span class="subtitle">校园的另一种打开方式</span></div>
+        <div class="masthead-right">
+          <span class="prototype-flag">独立概念预览 · 非学校官方服务</span>
+          <button class="search-trigger" id="openSearch" type="button" aria-keyshortcuts="Control+K Meta+K"><span>⌕</span> 搜索校园 <kbd>⌘ K</kbd></button>
+          <div class="theme-select-wrap"><label for="themeSelect">外观</label><select id="themeSelect" aria-label="选择主题"><option value="porcelain">Porcelain</option><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option></select></div>
+        </div>
+      </header>
+      <main class="main" id="main">
+        <section class="editorial" aria-labelledby="editionTitle">
+          <div class="edition-top"><span>THE DAILY EDITION</span><span id="todayDate">LOCAL EDITION</span><span>HAINAN · FUCHENG</span></div>
+          <div class="edition-title"><div><p class="edition-index">HAIZ ATLAS <span> / 001</span></p><h1 id="editionTitle">在这里，<br><em>生活有了坐标。</em></h1><p class="edition-description" id="editionDescription">课程之外，仍有许多值得走近的地方。<br>从今天出发，发现熟悉校园的另一面。</p></div><div class="edition-aside"><span class="stamp">HAIZ <i>2026</i></span><span class="thin">DIGITAL CAMPUS<br>FIELD NOTES</span></div></div>
+        </section>
+        <section class="content-grid">
+          <div class="main-column">
+            <article class="scene-card" aria-label="校园视野">
+              <div class="scene-visual" id="sceneVisual" style="--scene-image:url('../../assets/images/campus/campus_fengqitang.jpg')"><div class="scene-vignette"></div><div class="scene-grid" aria-hidden="true"></div><div class="scene-spot" aria-hidden="true"></div></div>
+              <div class="scene-bar"><div class="scene-indicator"><span class="signal-dot"></span> FIELD RECORD <span class="scene-slash">/</span> 真实校园影像</div><div class="scene-pagination"><span id="sceneCount">01</span> / 03</div></div>
+              <div class="scene-content"><p class="scene-kicker" id="sceneKicker">01 · 建筑 / ARCHITECTURE</p><h2 id="sceneTitle">阳光走过凤栖堂。</h2><p id="sceneBody">从砖墙的温度，重新认识这所学校。</p><div class="scene-bottom"><a id="sceneLink" class="scene-cta" href="../campus.html">进入校园 <span>↗</span></a><div class="scene-controls"><button id="scenePrev" aria-label="上一处校园地点" type="button">←</button><button id="sceneNext" aria-label="下一处校园地点" type="button">→</button></div></div></div>
+              <p class="scene-attribution">影像为仓库既有校园资料 · 三维场景为概念重建</p>
+            </article>
+            <section class="pathways" aria-label="快速入口"><div class="section-heading"><div><span class="section-tag">CURATED ROUTES</span><h2>下一站，去哪里？</h2></div><span class="section-counter">03 EXPERIENCES</span></div>
+              <div class="pathway-grid">
+                <a class="pathway" href="../room/immersive/"><span class="pathway-number">01 / INNER WORLD</span><span class="pathway-icon">◫</span><strong>光落进教室</strong><small>第一人称 · 写实概念场景</small><span class="pathway-arrow">↗</span></a>
+                <a class="pathway" href="../stillroom/"><span class="pathway-number">02 / STILLROOM</span><span class="pathway-icon">◷</span><strong>把世界调低</strong><small>沉浸自习 · 专注与手记</small><span class="pathway-arrow">↗</span></a>
+                <a class="pathway" href="../campus.html"><span class="pathway-number">03 / THE ATLAS</span><span class="pathway-icon">⌖</span><strong>重新走进校园</strong><small>数字地图 · 自由漫游</small><span class="pathway-arrow">↗</span></a>
+              </div>
+            </section>
+          </div>
+          <aside class="side-column" aria-label="今日工作台">
+            <div class="side-top"><span class="section-tag">YOUR LITTLE CORNER</span><span class="side-counter">NO. 01</span></div>
+            <section class="day-panel" aria-labelledby="dayTitle"><div class="day-head"><span class="day-icon">✳</span><span class="day-kicker">A PLACE TO BEGIN</span></div><h2 id="dayTitle">今天，<br><em>想留住什么？</em></h2><p>这里不是成绩单。写下一件想做的事就好，内容只保存在当前浏览器。</p>
+              <form id="taskForm" class="task-form"><label for="taskInput">我的一件小事</label><div class="task-entry"><input id="taskInput" name="task" maxlength="80" autocomplete="off" placeholder="例如：读完那本书的第三章" required><button type="submit" aria-label="添加一件小事">↗</button></div></form>
+              <ul class="task-list" id="taskList" aria-label="保存在本机的小事清单"></ul><div class="day-foot"><span id="taskSummary">尚无记录</span><button id="clearDone" type="button">清理已完成</button></div>
+            </section>
+            <section class="reading-note" aria-label="设计理念"><span class="section-tag">A QUIET REMINDER</span><blockquote>一个地方之所以重要，<br>是因为有人在这里，<em>认真地生活。</em></blockquote><span>HAIZ / NOT JUST A MAP</span></section>
+            <section class="shortcuts"><span class="section-tag">AROUND THE CAMPUS</span><a href="../../journal.html">校园杂志 <span>↗</span></a><a href="../../clubs.html">社团与活动 <span>↗</span></a><a href="../flow/">Flow 协作工作台 <span>↗</span></a><small>Flow 真实协作功能以服务端授权和部署为准。</small></section>
+          </aside>
+        </section>
+      </main>
+      <footer class="foot"><span>HAIZ / AN INDEPENDENT CAMPUS EXPERIMENT</span><span>原创界面探索 · 真实功能入口 · 数据本地保存</span><a href="../index.html">返回 HAIZ WORLD ↗</a></footer>
+    </div>
+  </div>
+  <nav class="float-dock" aria-label="移动与桌面快捷导航"><div class="dock-lens" id="dockLens" aria-hidden="true"></div><button data-view="home" class="dock-item is-active" aria-current="page"><span>⌂</span><small>今日</small></button><button data-view="campus" class="dock-item"><span>⌖</span><small>校园</small></button><button data-view="study" class="dock-item"><span>◷</span><small>自习</small></button><button data-view="community" class="dock-item"><span>✳</span><small>生活</small></button></nav>
+  <dialog class="command-dialog" id="commandDialog" aria-labelledby="commandTitle"><form method="dialog" class="command-shell"><div class="command-top"><label id="commandTitle" for="commandInput">⌕ <span>快速找到一个地方</span></label><button type="submit" aria-label="关闭搜索">✕</button></div><input id="commandInput" autocomplete="off" placeholder="试试：校园、专注、社团、老师…" aria-label="搜索页面"><ul id="commandResults" class="command-results"></ul><p>↑ ↓ 选择 · Enter 前往 · Esc 关闭</p></form></dialog>
+  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+</body></html>
