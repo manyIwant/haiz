@@ -34,6 +34,7 @@ const results=[];
       const init=await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics());
       assert(init.webgl&&init.drawCalls>5&&init.triangles>100,'Must render real room geometry rather than a CSS image');
       assert.equal(init.units,'meters');
+      console.log('HAIZ ROOM GPU DIAGNOSTICS',size.width,JSON.stringify(init));
       assert(init.instancedBoxes>=60 && init.geometryBatches>=4,'Repeatable classroom furniture must use GPU instancing');
       assert(init.drawCallsSaved>=55,'Instancing must remove substantial redundant draw calls');
       assert(init.groundedContactShadows,'Desks require a single cheap grounding pass');
