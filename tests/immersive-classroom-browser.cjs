@@ -38,6 +38,11 @@ const results=[];
       assert.equal(init.heroEssentialsVisible,true,'Desk, chair and lamp silhouette must all render');
       assert(init.staticBounceAtlas===true,'Original local daylight-bounce map must load');
       assert.equal(init.courtyardWindows,51,'Continuous three-level courtyard facade and windows must be present');
+      assert.equal(init.bakedFloorAO,true,'Actual floor PBR requires a static local AO texture and UV2 layout');
+      assert.equal(init.bakedFacadePBR,true,'Campus exterior must use original albedo, normal and roughness maps');
+      await page.waitForFunction(()=>['floor-ambient-occlusion.svg','floor-window-bounce.svg'].every(name=>
+        performance.getEntriesByType('resource').some(entry=>entry.name.includes('/maps/'+name))),{timeout:30000});
+      assert(init.drawCalls<175,'Detailed campus geometry must fit the mobile-friendly draw budget');
       console.log('HAIZ ROOM GPU DIAGNOSTICS',size.width,JSON.stringify(init));
       assert(init.instancedBoxes>=60 && init.geometryBatches>=4,'Repeatable classroom furniture must use GPU instancing');
       assert(init.drawCallsSaved>=55,'Instancing must remove substantial redundant draw calls');
@@ -66,7 +71,7 @@ const results=[];
       assert.equal(latest.heroEssentialsVisible,true,'Low/balanced/high must preserve actual chair and lamp geometry');
       assert.deepEqual(errors,[],'No uncaught runtime errors');
       assert.deepEqual(requests,[],'No failed assets or unapproved external requests');
-      results.push({viewport:size,initial:init,after:latest,checks:['measurable GPU instancing draw-call savings','single-pass furniture grounding','real WebGL draw calls','PBR room render','three weather grades','first-person entry','study-desk handoff','quality switch','local assets only'],errors,requests});
+      results.push({viewport:size,initial:init,after:latest,checks:['measurable GPU instancing draw-call savings','single-pass furniture grounding','real WebGL draw calls','PBR room render','offline UV2 baked floor ambient occlusion','original architectural PBR maps','three weather grades','first-person entry','study-desk handoff','quality switch','local assets only'],errors,requests});
       await page.close();await context.close();
     }
     fs.writeFileSync(path.join(out,'results.json'),JSON.stringify(results,null,2));
