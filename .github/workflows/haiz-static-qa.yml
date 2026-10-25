@@ -1,0 +1,53 @@
+name: HAIZ static site QA
+
+on:
+  pull_request:
+    paths:
+      - '*.html'
+      - '*.md'
+      - '.gitignore'
+      - '.github/workflows/haiz-static-qa.yml'
+      - 'assets/**'
+      - 'data/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'windowsill/**'
+      - 'package*.json'
+  push:
+    branches: ['main']
+    paths:
+      - '*.html'
+      - '*.md'
+      - '.gitignore'
+      - '.github/workflows/haiz-static-qa.yml'
+      - 'assets/**'
+      - 'data/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'windowsill/**'
+      - 'package*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Validate source syntax
+        run: |
+          node --check scripts/build-pages.mjs
+          node --check tests/site.cjs
+      - name: Regenerate published static assets
+        run: npm run build
+      - name: Check site, routes, accessibility contracts and privacy
+        run: npm test
