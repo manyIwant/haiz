@@ -41,6 +41,7 @@ const results=[];
       assert.equal(init.bakedFloorAO,true,'Actual floor PBR requires a static local AO texture and UV2 layout');
       assert.equal(init.bakedFacadePBR,true,'Campus exterior must use original albedo, normal and roughness maps');
       assert.equal(init.humanScaleRoom,true,'Clock, AC and original classroom curtain rails must render');
+      assert.equal(init.cachedWeatherPalette,true,'All three weather color palettes are constructed once, not per frame');
       assert.equal(init.curtainInstances,8,'Eight independently folded curtain panels must be GPU instanced');
       assert.equal(init.rainWindowInstances,4,'Four window panes must share a single rain shader mesh');
       await page.waitForFunction(()=>['floor-ambient-occlusion.svg','floor-window-bounce.svg'].every(name=>
