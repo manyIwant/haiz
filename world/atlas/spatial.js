@@ -8,31 +8,31 @@
   const $ = selector => stage.querySelector(selector);
   const records = Object.freeze({
     overview: {
-      name:"府城校区",meta:"00 / THE GROUND WE SHARE",
+      name:"府城校区",campusId:"beimen",meta:"00 / THE GROUND WE SHARE",
       text:"四处入口，一所熟悉的学校。先选一个地方，再决定走向哪里。",
       photo:"../../assets/images/campus/aerial_campus.jpg",
       href:"../campus.html",action:"打开数字校园"
     },
     fengqi: {
-      name:"凤栖堂",meta:"01 / ARCHITECTURE",
+      name:"凤栖堂",campusId:"fengqitang",meta:"01 / ARCHITECTURE",
       text:"从砖墙和檐影出发，慢慢认识一座建筑。",
       photo:"../../assets/images/campus/campus_fengqitang.jpg",
       href:"../campus.html",action:"走进校园"
     },
     pond: {
-      name:"砚池",meta:"02 / FIELD NOTES",
+      name:"砚池",campusId:"yanchi",meta:"02 / FIELD NOTES",
       text:"那些每天路过的水面，也值得停下来看看。",
       photo:"../../assets/images/campus/campus_yanchi.jpg",
       href:"../../architecture.html",action:"阅读建筑观察"
     },
     library: {
-      name:"图书馆",meta:"03 / STUDY SPACE",
+      name:"图书馆",campusId:"library",meta:"03 / STUDY SPACE",
       text:"从校园中的一处地点，转入数字世界里的安静书桌。",
       photo:"../../assets/images/campus/campus_library.jpg",
       href:"../stillroom/",action:"进入 STILLROOM"
     },
     classroom: {
-      name:"教学楼",meta:"04 / INNER WORLD",
+      name:"教学楼",campusId:"yihao",meta:"04 / INNER WORLD",
       text:"熟悉的走廊，在概念场景里变成可以行走的空间。",
       photo:"../../assets/images/campus/campus_yihao.jpg",
       href:"../room/immersive/",action:"进入概念教室"
@@ -57,6 +57,15 @@
     image.alt = name === "overview" ? "校园航拍影像" : record.name+"的校园图片";
     $("#spatialLocationAction").href = record.href;
     $("#spatialLocationAction").textContent = record.action+" ↗";
+    // The retained WebGL engine already accepts validated focus ids on entry.
+    // Low quality is an initial hint for coarse/mobile devices, not a permanent preference.
+    const walk = new URL("../campus.html", document.baseURI);
+    walk.searchParams.set("focus",record.campusId);
+    walk.searchParams.set("observe","1");
+    if (matchMedia("(pointer: coarse)").matches) walk.searchParams.set("quality","low");
+    const enter3d = $("#spatialLocation3d");
+    enter3d.href = walk.href;
+    enter3d.textContent = name === "overview" ? "从校门进入三维世界 ↗" : "在三维校园中抵达这里 ↗";
     if (focus) $("#spatialLocationAction").focus({preventScroll:true});
   }
   function mood(mode) {
