@@ -17,3 +17,43 @@ body.view-switching .scene-content{animation:rise .42s both}body.view-switching 
 @media(max-width:650px){.masthead{height:68px;padding:0 18px}.masthead-left{gap:9px}.masthead-divider{height:13px}.subtitle{font-size:9px}.masthead-right{gap:8px}.search-trigger{font-size:0;border:0;background:transparent;padding:8px}.search-trigger span{font-size:24px}.search-trigger kbd{display:none}.theme-select-wrap label{display:none}.theme-select-wrap select{font-size:10px;max-width:94px}.main{padding:0 17px 115px}.editorial{padding:21px 0 27px}.edition-top{font-size:8px;letter-spacing:.10em;gap:7px}.edition-top span:nth-child(2){display:none}.edition-title{padding-top:23px}.edition-title h1{font-size:clamp(36px,9vw,50px)}.edition-description{font-size:11px;margin-top:11px}.edition-aside{display:none}.content-grid{gap:20px}.scene-card{min-height:520px;border-radius:8px}.scene-bar{padding:20px 19px 0}.scene-indicator,.scene-pagination{font-size:8px;letter-spacing:.08em}.scene-content{padding:70px 22px 26px}.scene-content h2{font-size:34px}.scene-content p:not(.scene-kicker){font-size:11px}.scene-bottom{margin-top:23px}.scene-attribution{display:none}.pathway-grid{grid-template-columns:1fr;gap:8px}.pathway{min-height:117px;padding:15px 17px 14px 84px;justify-content:center}.pathway-number{font-size:8px}.pathway-icon{position:absolute;left:20px;top:50%;transform:translateY(-50%);margin:0;font-size:37px}.pathway strong{font-size:19px;margin-top:6px}.pathway small{font-size:10px}.pathway-arrow{right:15px;bottom:42px}.section-heading h2{font-size:23px}.side-column{display:block}.side-top{padding:18px 0}.day-panel{padding:25px}.reading-note{padding:30px 8px}.shortcuts{padding:24px 8px}.foot{padding:18px 18px 95px;display:grid;gap:4px}.foot span:nth-child(2){display:none}.float-dock{bottom:calc(12px + env(safe-area-inset-bottom,0px));border-radius:23px}.dock-item{width:66px}.dock-lens{width:66px}.scene-grid{background-size:50% 25%}}
 @media(max-width:360px){.subtitle{display:none}.scene-content h2{font-size:30px}.dock-item{width:61px}.dock-lens{width:61px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.scene-visual,.scene-card:hover .scene-visual{transform:none}}
+
+/* V2 — finite tactile dock + scene-to-scene editorial handoff */
+.float-dock[data-motion="spring"] .dock-lens{transition:width .22s cubic-bezier(.2,1,.3,1),background-color .35s;will-change:transform}
+.float-dock .dock-item{isolation:isolate;touch-action:manipulation}
+.float-dock .dock-item span{display:inline-block;transform:translateY(0) scale(1);transition:transform .32s cubic-bezier(.18,1.35,.38,1)}
+@media(hover:hover) and (pointer:fine){.float-dock .dock-item:hover span,.float-dock .dock-item:focus-visible span{transform:translateY(-2px) scale(1.08)}}
+.float-dock .dock-item:active span{transform:translateY(1px) scale(.91)}
+body.portal-open{overflow:hidden}
+.scene-portal[hidden]{display:none!important}
+.scene-portal{position:fixed;inset:0;z-index:900;display:grid;align-content:center;justify-items:center;overflow:hidden;background:#0c1a1a;color:#f0f2ec;opacity:0;pointer-events:none;transition:opacity .28s ease;isolation:isolate}
+.scene-portal.is-visible{opacity:1;pointer-events:auto}
+.portal-picture{position:absolute;inset:-2%;z-index:-3;background:linear-gradient(120deg,#203b34,#071615)}
+.portal-picture img{width:100%;height:100%;display:block;object-fit:cover;object-position:center;opacity:.62;transform:scale(1.025);filter:saturate(.72);transition:transform .9s cubic-bezier(.14,.7,.12,1),opacity .35s}
+.scene-portal.is-visible .portal-picture img{transform:scale(1.2);opacity:.80}
+.portal-curtain{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,20,19,.78) 0%,rgba(7,20,19,.26) 47%,rgba(7,20,19,.87) 100%),radial-gradient(ellipse at center,transparent 14%,rgba(5,14,13,.62) 100%)}
+.portal-curtain:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(240,246,242,.04) 0 1px,transparent 1px 120px);opacity:.5;mix-blend-mode:screen}
+.portal-aperture{pointer-events:none;position:absolute;inset:0;display:grid;place-items:center;z-index:-1;opacity:.55}
+.portal-aperture:before,.portal-aperture:after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:1px solid rgba(242,244,235,.43);border-radius:50%;width:min(36vw,440px);aspect-ratio:1;transition:width .9s cubic-bezier(.1,.75,.12,1),opacity .9s}
+.portal-aperture:after{width:min(23vw,290px);border-style:dashed;opacity:.3}
+.scene-portal.is-visible .portal-aperture:before{width:min(110vw,1600px);opacity:.07}
+.scene-portal.is-visible .portal-aperture:after{width:min(65vw,940px);opacity:.04}
+.portal-axis{position:absolute;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(240,245,234,.17),transparent)}
+.portal-axis:before{content:"";position:absolute;top:50%;left:50%;width:100vw;height:1px;transform:translate(-50%,-50%);background:linear-gradient(90deg,transparent,rgba(240,245,234,.17),transparent)}
+.portal-reticle{position:relative;width:11px;height:11px;border:1px solid rgba(252,249,230,.85);border-radius:50%}
+.portal-heading{position:relative;max-width:min(760px,calc(100vw - 38px));padding:0 25px;text-align:center;transform:translateY(14px);opacity:.25;transition:transform .7s cubic-bezier(.2,1,.3,1),opacity .6s}
+.scene-portal.is-visible .portal-heading{transform:translateY(0);opacity:1}
+.portal-kicker{display:block;letter-spacing:.32em;font-size:10px;font-weight:700;color:#d2dfcc}
+.portal-rule{display:block;margin:29px auto;width:1px;height:43px;background:rgba(244,247,232,.58)}
+.portal-heading h2{font:400 clamp(29px,4.8vw,65px)/1.45 "Songti SC","STSong",Georgia,serif;letter-spacing:-.035em;margin:0 0 16px;text-wrap:balance}
+.portal-heading p{font-size:11px;line-height:1.85;letter-spacing:.05em;color:rgba(241,248,241,.70)}
+.portal-progress{width:min(210px,60vw);height:1px;margin:35px auto 0;background:rgba(244,250,245,.25);overflow:hidden}
+.portal-progress span{display:block;width:100%;height:1px;background:#e2e8d7;transform:scaleX(0);transform-origin:left}
+.scene-portal.is-visible .portal-progress span{animation:portal-travel .83s linear both}
+.portal-actions{display:flex;gap:16px;align-items:center;position:absolute;bottom:max(26px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:max-content}
+.portal-actions button{color:#eef5eb;border:1px solid rgba(238,246,235,.35);border-radius:22px;background:rgba(8,25,21,.36);padding:9px 17px;min-height:44px;min-width:128px;backdrop-filter:blur(12px);font-size:11px;letter-spacing:.04em;transition:background .2s,border .2s}
+.portal-actions button:hover,.portal-actions button:focus-visible{background:rgba(244,249,242,.17);border-color:rgba(243,250,241,.8)}
+.portal-actions button:last-child{background:rgba(237,243,232,.89);color:#20352e;border-color:rgba(237,243,232,.9)}
+@keyframes portal-travel{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(max-width:650px){.portal-heading{padding:0 19px}.portal-heading h2{font-size:clamp(28px,8vw,43px)}.portal-heading p{font-size:10px}.portal-progress{margin-top:25px}.portal-actions{gap:9px;bottom:max(18px,env(safe-area-inset-bottom,0px))}.portal-actions button{min-width:118px;padding:9px 12px}.portal-rule{margin:18px auto;height:35px}}
+@media(prefers-reduced-motion:reduce){.scene-portal,.scene-portal *,.scene-portal *:before,.scene-portal *:after{animation:none!important;transition:none!important}.float-dock .dock-item span{transition:none!important}}
