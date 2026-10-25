@@ -60,3 +60,7 @@ body[data-atlas-view=study] .spatial-stage+.editorial .edition-title h1,body[dat
 
 /* On narrow screens the pins are inline chips; disable desktop centering even in reduced-motion mode. */
 @media(max-width:760px) and (prefers-reduced-motion:reduce){.spatial-stage .spatial-pin{transform:none!important}}
+
+/* Decorative bottom layer cannot steal clicks from the hero CTA on compact desktops. */
+.spatial-bottom{pointer-events:none}
+.spatial-detail,.spatial-detail a{pointer-events:auto}
