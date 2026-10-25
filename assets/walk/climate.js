@@ -57,6 +57,48 @@
       rain: 0,
       water: "#667786",
     },
+    // A second season in a single moment: the downpour has just opened.
+    // Low sun meets retreating slate clouds over still-wet campus paving.
+    sunbreak: {
+      name: "雨隙金光",
+      top: "#435773",
+      bottom: "#f1c49b",
+      fog: "#b3b3b3",
+      near: 165,
+      far: 505,
+      sun: "#ffcc91",
+      power: 2.5,
+      hemi: 0.52,
+      ambient: 0.11,
+      exposure: 1.02,
+      offset: [124, 34, 55],
+      wet: 0.92,
+      cloud: 0.69,
+      rain: 0.03,
+      water: "#5a7380",
+      rim: 0.72,
+    },
+    // The coastline's dense rainy air flattens distant details,
+    // while nearby wet material keeps its normals and roughness.
+    monsoon: {
+      name: "海岛骤雨",
+      top: "#435262",
+      bottom: "#93a5ac",
+      fog: "#8f9fa4",
+      near: 105,
+      far: 365,
+      sun: "#c9dce6",
+      power: 0.85,
+      hemi: 0.66,
+      ambient: 0.14,
+      exposure: 1.04,
+      offset: [-72, 95, 65],
+      wet: 1,
+      cloud: 0.93,
+      rain: 0.72,
+      water: "#405c62",
+      rim: 0.04,
+    },
   };
   const noiseGLSL = `
 float climateHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -177,6 +219,7 @@ roughnessFactor=mix(roughnessFactor,.095,campusPuddle);`,
       wet = 0,
       cloud = target.cloud,
       rain = 0,
+      rim = 0,
       manual = {},
       exposure = target.exposure,
       offset = target.offset.slice();
@@ -194,6 +237,7 @@ roughnessFactor=mix(roughnessFactor,.095,campusPuddle);`,
       uSun: { value: new THREE.Vector3(...offset).normalize() },
       uLight: { value: colors.morning.sun.clone() },
       uShade: { value: colors.morning.fog.clone() },
+      uRim: { value: 0 },
     };
     // One analytic cloud shell over the Preetham sky, not volumetric ray marching.
     const cloudLayer = new THREE.Mesh(
@@ -207,10 +251,12 @@ roughnessFactor=mix(roughnessFactor,.095,campusPuddle);`,
         uniforms: cloudUniforms,
         vertexShader:
           "varying vec3 vClimateDirection;void main(){vClimateDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
-        fragmentShader: `uniform float uTime,uCover,uRain,uDetail;uniform vec3 uSun,uLight,uShade;varying vec3 vClimateDirection;
+        fragmentShader: `uniform float uTime,uCover,uRain,uDetail,uRim;uniform vec3 uSun,uLight,uShade;varying vec3 vClimateDirection;
 ${noiseGLSL}
 float cloudFbm(vec2 p){float a=.5,n=0.;for(int i=0;i<5;i++){if(i>=3&&uDetail<.5)break;n+=climateNoise(p)*a;p=mat2(1.6,-1.2,1.2,1.6)*p+vec2(1.7,9.2);a*=.5;}return n;}
-void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.19,d.y);vec2 p=d.xz/(max(d.y,0.)+.22)*1.65+vec2(uTime*.003,uTime*.0012);float mass=cloudFbm(p);float threshold=mix(.91,.20,uCover);float density=smoothstep(threshold,threshold+.18,mass)*horizon;float fine=cloudFbm(p*2.3+4.2);float volume=clamp(mass*.8+fine*.2,0.,1.);float sunward=pow(max(0.,dot(d,uSun)),12.);vec3 shade=mix(uShade*.48,uShade*.70,volume);vec3 light=mix(vec3(.96,.98,1.),uLight,.28);vec3 col=mix(shade,light,smoothstep(threshold+.04,threshold+.32,mass)*(1.-uRain*.4));col+=uLight*sunward*(1.-density)*.12;gl_FragColor=vec4(col,density*.94);
+void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.19,d.y);vec2 p=d.xz/(max(d.y,0.)+.22)*1.65+vec2(uTime*.003,uTime*.0012);float mass=cloudFbm(p);float threshold=mix(.91,.20,uCover);float density=smoothstep(threshold,threshold+.18,mass)*horizon;float fine=cloudFbm(p*2.3+4.2);float volume=clamp(mass*.8+fine*.2,0.,1.);float sunward=pow(max(0.,dot(d,uSun)),12.);vec3 shade=mix(uShade*.48,uShade*.70,volume);vec3 light=mix(vec3(.96,.98,1.),uLight,.28);vec3 col=mix(shade,light,smoothstep(threshold+.04,threshold+.32,mass)*(1.-uRain*.4));col+=uLight*sunward*(1.-density)*.12;
+float silver=pow(max(0.,dot(d,uSun)),18.)*smoothstep(.12,.55,density)*(1.-smoothstep(.83,.98,density));
+col+=uLight*silver*uRim*.58;gl_FragColor=vec4(col,density*.94);
 #include <tonemapping_fragment>
 #include <encodings_fragment>
 }`,
@@ -311,6 +357,7 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
         w = weather();
       cloud += (w.cloud - cloud) * t;
       rain += (w.rain - rain) * t;
+      rim += ((target.rim || 0) - rim) * t;
       wet += (Math.max(w.wet, rain * 0.8) - wet) * t;
       uniforms.time.value = time;
       uniforms.wet.value = wet;
@@ -352,6 +399,7 @@ void main(){vec3 d=normalize(vClimateDirection);float horizon=smoothstep(.015,.1
       cloudUniforms.uLight.value.copy(col.sun);
       cloudUniforms.uShade.value.copy(col.fog);
       cloudUniforms.uDetail.value = quality() === "low" ? 0 : 1;
+      cloudUniforms.uRim.value = rim;
       if (camera)
         cloudLayer.position.set(camera.position.x, 0, camera.position.z);
       rainField.visible =
