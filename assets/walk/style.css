@@ -23,3 +23,10 @@ body.touch .walk-hint{display:none}body.touch .location-paper{bottom:230px}body.
 @media(max-width:650px){.climate-note{top:83px;left:17px;right:auto;font-size:11px;padding:7px 10px}.tour-stop{top:220px;width:230px;font-size:12px}.poi-dialog{max-height:84dvh;overflow:auto}.memory-photo{max-height:180px}}
 /* Climate workbench: touch/keyboard controls, no live weather or telemetry. */
 .weather-study{border:1px solid var(--line);padding:16px;margin:24px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.weather-study legend{font-size:12px;padding:0 6px}.weather-study label{font-size:10px;display:grid;grid-template-columns:1fr auto;gap:8px}.weather-study input{grid-column:1/-1;width:100%;min-height:44px;accent-color:var(--ink);margin:0}.weather-study output{font-variant-numeric:tabular-nums;opacity:.65}.weather-study button{grid-column:1/-1;min-height:44px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--ink)}.weather-study small{grid-column:1/-1;font-size:10px;line-height:1.8;opacity:.65}.weather-study :focus-visible{outline:2px solid var(--rust);outline-offset:4px}@media(max-width:400px){.weather-study{gap:8px;padding:12px}.weather-study label{font-size:9px}}
+
+/* Cinematic weather direction: quiet, accessible, and never an intrusive HUD animation. */
+.climate-note{border-radius:0 12px 12px 0;max-width:235px;background:rgba(246,242,232,.93);border-left:2px solid #b76c45;box-shadow:0 9px 28px rgba(17,30,29,.13);padding:10px 14px 5px}
+.climate-shift{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;min-height:44px;margin-top:5px;padding:6px 0 4px;color:#34574d;background:transparent;border:0;border-top:1px solid rgba(32,63,53,.16);font-size:11px;font-weight:600;letter-spacing:.05em;text-align:left;pointer-events:auto;touch-action:manipulation}
+.climate-shift:hover{color:#a05337}
+.climate-shift:focus-visible{outline:2px solid #a05337;outline-offset:2px;border-radius:3px}
+@media(max-width:650px){.climate-note{max-width:175px;padding:8px 10px 4px}.climate-shift{font-size:10px;min-height:44px}}
