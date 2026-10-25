@@ -48,8 +48,15 @@ async function ready(route='study'){
 }
 async function tap(selector){
  const point=await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw Error('Missing control');e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
- await call('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,radiusX:2,radiusY:2,force:1,id:1}]});
- await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ // CDP touch dispatch can hang when a software-rendered emulator's UI compositor
+ // is overloaded. Android's own input stack is more representative here.
+ // Keep DOM-based coordinate targeting and post-tap assertions on the real WebView.
+ const dpr=await evaluate('window.devicePixelRatio || 1');
+ const bounds=await evaluate('({w: window.innerWidth, h: window.innerHeight})');
+ const screen=adb('shell','wm','size').match(/(\\d+)x(\\d+)/);
+ const sx=screen?+screen[1]/bounds.w:dpr;
+ const sy=screen?+screen[2]/bounds.h:dpr;
+ adb('shell','input','tap',String(Math.round(point.x*sx)),String(Math.round(point.y*sy)));
 }
 // ADB captures the actual device compositor, whereas Page.captureScreenshot can
 // stall indefinitely on software-emulated Android WebViews. All UI/read/write,
