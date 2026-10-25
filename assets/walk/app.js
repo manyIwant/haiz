@@ -15,6 +15,7 @@
   function error(title,msg){$('errorTitle').textContent=title;$('errorText').textContent=msg;$('errorPanel').hidden=false;$('enterButton').disabled=true;}
   function syncClimateControls(){
     if(!climate)return;const w=climate.weather;
+    if($('climate'))$('climate').value=climate.current;
     for(const [id,key]of [['cloudCover','cloud'],['rainAmount','rain'],['groundWetness','wet']]){
       $(id).value=Math.round(w[key]*100);$(id+'Value').textContent=$(id).value+'%';
     }
@@ -116,6 +117,16 @@
     observation=new URLSearchParams(location.search).get('observe')==='1';
     $('observationToggle').checked=observation;document.body.classList.toggle('observation',observation);
     $('climate').onchange=e=>{if(climate.select(e.target.value))syncClimateControls();};
+    // One-tap atmosphere changes do not interrupt movement or enter a dialog.
+    // These are artistic presets; this never accesses location or live weather.
+    $('cinematicLight').onclick=()=>{
+      const sequence=['morning','sunbreak','monsoon','dusk','afterrain'];
+      const next=sequence[(sequence.indexOf(climate.current)+1)%sequence.length];
+      if(climate.select(next)){
+        syncClimateControls();
+        toast(climate.presets[next].name+' · 模拟光影');
+      }
+    };
     for(const [id,key]of [['cloudCover','cloud'],['rainAmount','rain'],['groundWetness','wet']]){
       $(id).oninput=()=>{climate.setWeather({[key]:Number($(id).value)/100});syncClimateControls();};
     }
