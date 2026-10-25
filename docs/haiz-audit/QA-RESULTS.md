@@ -32,3 +32,7 @@ CI 40149556899：web-assets、android-build、Android API33均PASS。API35失败
 ## 完整集成提交87578d7
 
 CI 40150157883：Android API33和API35均PASS；iOS的WKWebView导航、笔记输入、前后台、强制重开、同包重装保留记录均PASS。iOS随后在arm64打包阶段失败：显式生成HAIZQA后，不能依赖自动生成的App scheme。现增加只含应用的共享HAIZDevice scheme，待新CI验证。并行PR任务的API35出现一次CDP Runtime.evaluate超时，保留失败记录，不抹为全部稳定通过。移除该集成分支重复push触发，保留PR与手动/复用工作流，降低重复模拟器任务。
+
+## 发行门禁失败（6b0bfb3）
+
+标签haiz-v0.5.0-preview.1的CI 40168247866：资源和APK编译核验PASS，但Android API33/API35都出现CDP Runtime.evaluate超时，发布被阻止。iOS仍排队。不能将旧运行通过替代本次失败。新的排查修订将调试连接限定到完成目录跳转的/world/index.html实际页面，避免连接根入口的短暂调试目标；同步求值关闭awaitPromise，记录页面生命周期、JS对话框及超时命令。尚需重跑证明，不能预先宣布修复。

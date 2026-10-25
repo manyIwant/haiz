@@ -20,20 +20,20 @@ async function connect(){
    for(const socket of sockets){
     adb('forward',`tcp:${port}`,`localabstract:${socket}`);
     const targets=await fetch(`http://127.0.0.1:${port}/json`,{signal:AbortSignal.timeout(3000)}).then(r=>r.json());
-    const target=targets.find(t=>t.type==='page'&&/localhost.*(?:world\/|index\.html)/.test(t.url))||targets.find(t=>t.type==='page'&&/localhost/.test(t.url));
+    const target=targets.find(t=>t.type==='page'&&/^https?:\/\/localhost(?::\d+)?\/world\/index\.html(?:[?#]|$)/.test(t.url));
     if(!target?.webSocketDebuggerUrl)continue;
     ws=new WebSocket(target.webSocketDebuggerUrl);
     await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true});});
-    ws.addEventListener('message',({data})=>{const msg=JSON.parse(data);if(msg.id){const p=pending.get(msg.id);if(p){pending.delete(msg.id);clearTimeout(p.timer);msg.error?p.reject(Error(JSON.stringify(msg.error))):p.resolve(msg.result);}}else if(['Runtime.exceptionThrown','Log.entryAdded','Network.loadingFailed'].includes(msg.method))events.push(msg);});
-    await call('Runtime.enable');await call('Log.enable');await call('Network.enable');return;
+    ws.addEventListener('message',({data})=>{const msg=JSON.parse(data);if(msg.id){const p=pending.get(msg.id);if(p){pending.delete(msg.id);clearTimeout(p.timer);msg.error?p.reject(Error(JSON.stringify(msg.error))):p.resolve(msg.result);}}else if(['Runtime.exceptionThrown','Runtime.executionContextsCleared','Page.frameNavigated','Page.javascriptDialogOpening','Log.entryAdded','Network.loadingFailed'].includes(msg.method))events.push(msg);});
+    await call('Page.enable');await call('Runtime.enable');await call('Log.enable');await call('Network.enable');return;
    }
   }catch(e){last=e.message;}
   await delay(1000);
  }
  throw Error(`Cannot inspect app WebView: ${last}`);
 }
-function call(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(`CDP timeout: ${method}`));},15000);pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));});}
-async function evaluate(expression){const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.text+' '+JSON.stringify(r.exceptionDetails.exception));return r.result.value;}
+function call(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);writeFileSync(path.join(out,'cdp-timeout.json'),JSON.stringify({method,mode,events},null,2));reject(Error(`CDP timeout: ${method}`));},15000);pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));});}
+async function evaluate(expression){const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:false});if(r.exceptionDetails)throw Error(r.exceptionDetails.text+' '+JSON.stringify(r.exceptionDetails.exception));return r.result.value;}
 async function waitFor(expression,label,timeout=30000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await evaluate(expression))return;await delay(250);}throw Error(`UI condition failed: ${label}`);}
 async function ready(route='study'){
  await waitFor(`document.documentElement?.dataset.haizReady==='true' && document.documentElement.dataset.haizRoute===${JSON.stringify(route)} && !!document.querySelector('#app[data-testid="haiz-app-ready"] #main[data-testid="haiz-main"]')`,'real application ready '+route);
