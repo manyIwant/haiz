@@ -1,0 +1,31 @@
+name: HAIZ ATLAS UI smoke
+on:
+  pull_request:
+    paths:
+      - 'world/atlas/**'
+      - 'world/app.js'
+      - '.github/workflows/haiz-atlas-ui.yml'
+  push:
+    branches:
+      - 'feat/openui-campus-console-20261025'
+    paths:
+      - 'world/atlas/**'
+      - 'world/app.js'
+      - '.github/workflows/haiz-atlas-ui.yml'
+permissions:
+  contents: read
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check
+        run: |
+          node --check world/app.js
+          node --check world/atlas/app.js
+      - name: Route and accessibility smoke
+        run: node --test world/atlas/tests/smoke.test.cjs
