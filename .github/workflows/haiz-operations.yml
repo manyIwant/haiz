@@ -1,7 +1,7 @@
 name: HAIZ classroom operations reliability
 on:
   pull_request:
-    paths: ['world/classroom/**', 'world/pilot/server.mjs', 'world/flow/app.js', 'world/tests/classroom-*', 'world/homework-*.js', 'world/bridge-client.js', 'world/scripts/classroom-server.mjs', 'world/tests/operations*', 'world/package.json', '.github/workflows/haiz-operations.yml']
+    paths: ['world/classroom/**', 'world/pilot/server.mjs', 'world/flow/app.js', 'world/tests/classroom-*', 'world/tests/draft-merge*', 'world/homework-*.js', 'world/bridge-client.js', 'world/scripts/classroom-server.mjs', 'world/tests/operations*', 'world/package.json', '.github/workflows/haiz-operations.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,6 +25,7 @@ jobs:
       - run: node world/tests/operations-browser.mjs
       - run: node world/tests/classroom-pilot-browser.mjs
       - run: node world/tests/classroom-workbench-browser.mjs
+      - run: node world/tests/classroom-conflict-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

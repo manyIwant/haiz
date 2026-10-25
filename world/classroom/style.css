@@ -332,3 +332,51 @@ dialog .actions {
 #devices-section {
   scroll-margin-top: 20px;
 }
+dialog[data-draft-conflict] {
+  width: min(850px, 94vw);
+  max-width: 94vw;
+  max-height: 90dvh;
+  overflow: auto;
+}
+.merge-field {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.merge-field h3 {
+  margin: 8px 0;
+}
+.merge-field label {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 8px;
+}
+.merge-field input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 0;
+}
+.merge-value {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  grid-column: 2;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 8px 0;
+}
+.conflict-warning {
+  border-inline-start: 4px solid #bf7b3a;
+  padding: 12px;
+  background: var(--surface);
+  font-weight: 600;
+}
+dialog .actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  padding: 12px 0;
+}

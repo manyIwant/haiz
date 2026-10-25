@@ -363,7 +363,7 @@ export function createPilotServer({
           "sw.js",
         ].map((f) => ["/world/flow/" + f, "flow/" + f]),
       );
-      for(const f of ["app.js","style.css"])assets.set("/world/classroom/"+f,"classroom/"+f);
+      for(const f of ["app.js","style.css","draft-merge.js"])assets.set("/world/classroom/"+f,"classroom/"+f);
       assets.set("/world/homework-core.js","homework-core.js");
       for (const f of ["icon-192.png", "icon-512.png"])
         assets.set("/world/assets/" + f, "assets/" + f);

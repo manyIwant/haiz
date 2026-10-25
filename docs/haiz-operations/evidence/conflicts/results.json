@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-25T08:29:31.962Z",
+  "environment": "Linux Chromium; independent authenticated loopback TLS sessions; fictional public assignments; not school hardware",
+  "checks": [
+    "Two authenticated devices editing the same version receive a real conflict dialog with safely rendered server/local text",
+    "A conflicting field requires an explicit selection and resolving never publishes automatically",
+    "Independent changes are preserved and explicit conflict selection returns to editing against the latest version",
+    "The merged draft still requires preview and a real version-checked publish",
+    "Reload restores outdated draft text and offers comparison instead of leaving it inaccessible or replacing it",
+    "A concurrent withdrawal is highlighted and cannot be silently reversed by merging",
+    "Current draft can be downloaded as text without session credentials on a 390px layout",
+    "Expired or revoked session removes the public view while preserving an explicit local draft export"
+  ],
+  "errors": []
+}

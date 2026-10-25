@@ -15,3 +15,5 @@
 HTTPS增量已加入：在现有试用服务的Flow登录后选择“班级作业”，无需重复登录。教师与授权只读会话可验证真实HTTP同步和客户端状态回执。详见[HTTPS链路](docs/haiz-operations/HTTPS-CLASSROOM.md)。新HTTPS教室页当前手动展示，未连接真实ClassIsland；原localhost课表模拟链路继续保留。
 
 教师清单现在可按班级、日期和审核/撤回状态筛选；筛选不改变草稿，发布明日作业后自动切换到对应范围。回执会在教师端离线时本地到期，其他班级更新不影响本班清单。新走查命令：`npm --prefix world run test:workbench:browser`。
+
+多设备修改同一作业时，现在可比较本机与服务器版本，选择冲突字段后回到编辑，再预览发布；刷新后的旧草稿可继续比较。新增“导出草稿”，会话失效后原页面也可导出尚未发布的本机文字，不含会话凭据。走查：`npm --prefix world run test:conflicts:browser`。TXT为人工恢复文字，不是完整数据包导入功能。
