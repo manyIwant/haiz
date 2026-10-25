@@ -67,3 +67,11 @@ test("portal links stay semantic and include accessible skip and cancel", () => 
   assert.match(js, /pendingPortal/);
   assert.ok(fs.existsSync(path.join(root, "dock-spring.js")));
 });
+
+test("stored theme is read before first stylesheet paint", () => {
+  const boot = html.indexOf('<script src="theme-boot.js"></script>');
+  const sheet = html.indexOf('<link rel="stylesheet" href="style.css">');
+  assert.ok(boot > 0 && sheet > boot, "boot must run ahead of CSS parsing");
+  assert.ok(fs.existsSync(path.join(root, "theme-boot.js")));
+  assert.match(fs.readFileSync(path.join(root, "theme-boot.js"), "utf8"), /haiz-atlas-theme-v1/);
+});
