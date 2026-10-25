@@ -56,7 +56,7 @@
   const hemi = new THREE.HemisphereLight('#cedee1','#5d5143',presets.sunbreak.hemi);scene.add(hemi);
   const ambient=new THREE.AmbientLight('#cfddd3',.085);scene.add(ambient);
   const windowFill=new THREE.PointLight('#ffddad',.27,16,2);windowFill.position.set(-1.5,2.7,-3.65);scene.add(windowFill);
-  const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,.1);scene.add(lampLight);
+  const lampLight=new THREE.PointLight('#ffc88a',.55,5,2);lampLight.position.set(-1.18,2.16,-2.38);scene.add(lampLight);
   let lampOn=true;
 
   const material = (color,roughness=.76,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
@@ -269,7 +269,7 @@
     const footprint={x,z,w:.98,d:1.03};desks.push(footprint);return g;
   }
   for(const x of [-4.25,-1.55,1.15,3.85])for(const z of [-2.95,-.48,2.00]){
-    buildDesk(x,z,x===-1.55&&z===-.48);
+    buildDesk(x,z,x===-1.55&&z===-2.95);
   }
   // Blackboard with subtle actual writing, rasterized locally once.
   const sign=document.createElement('canvas');sign.width=1024;sign.height=400;const ctx=sign.getContext('2d');
@@ -431,7 +431,7 @@
     if(focused){location.href='../../stillroom/';return;}
     focused=true;
     $('deskAction').innerHTML='打开 STILLROOM 专注书桌 <span>↗</span>';
-    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-1.55,1.54,.76),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
+    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-1.55,1.54,-1.72),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
     if(document.pointerLockElement)document.exitPointerLock();
     $('walkHint').textContent='座位已准备好 · 继续进入原有专注工具';
   });
