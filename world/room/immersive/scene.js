@@ -94,17 +94,13 @@
   };
   // 1 unit = 1 meter. A believable 14 × 11 m teaching room, NOT a measured school interior.
   const floor=box(14,.23,11,0,-.13,.5,mats.wood);floor.castShadow=false;
-  box(14,.17,11,0,4.2,.5,mats.ceiling,false);
+  box(14,.17,11,0,4.2,.5,mats.ceiling,scene,false);
   box(.22,4.2,11,-7,2.1,.5,mats.wall);
   box(.22,4.2,11,7,2.1,.5,mats.wall);
   box(14,4.2,.25,0,2.1,6,mats.plaster);
   // Window wall: continuous lintel and parapet, alternating solid piers and real glazed openings.
   box(14,1.06,.28,0,3.67,-5,mats.wall);
   box(14,.85,.28,0,.425,-5,mats.wall);
-  for(const x of [-7,-5.35,-2.58,.18,2.94,5.68]){
-    // Transform these into piers, not solid dark boxes between the windows.
-    if(x===-7||x===5.68)continue;
-  }
   for(const x of [-5.9,-3.12,-.34,2.44,5.22]){
     box(.40,2.34,.34,x,2.06,-5,mats.plaster);
   }
@@ -307,7 +303,7 @@
   canvas.addEventListener('click',e=>{
     if(!entered)return;
     if(!touch && document.pointerLockElement!==canvas)canvas.requestPointerLock?.();
-    const rect=canvas.getBoundingClientRect(),point=new THREE.Vector2(e.clientX/rect.width*2-1,-e.clientY/rect.height*2+1);
+    const rect=canvas.getBoundingClientRect(),point=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
     const ray=new THREE.Raycaster();ray.setFromCamera(point,camera);
     const hits=ray.intersectObjects(scene.children,true);
     if(hits.some(hit=>hit.object.userData.lamp)){lampOn=!lampOn;$('walkHint').textContent=lampOn?'灯亮了 · 就从这一页开始':'灯关了 · 雨还在窗外';}
@@ -344,7 +340,7 @@
     if(focused){location.href='../../stillroom/';return;}
     focused=true;
     $('deskAction').innerHTML='打开 STILLROOM 专注书桌 <span>↗</span>';
-    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-.6,1.54,1.53),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
+    seatTween={from:camera.position.clone(),to:new THREE.Vector3(-1.55,1.54,.76),start:performance.now(),duration:1200,yaw,yawTo:0,pitch,pitchTo:-.18};
     if(document.pointerLockElement)document.exitPointerLock();
     $('walkHint').textContent='座位已准备好 · 继续进入原有专注工具';
   });
