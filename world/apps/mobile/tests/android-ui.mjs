@@ -53,7 +53,7 @@ async function tap(selector){
  // Keep DOM-based coordinate targeting and post-tap assertions on the real WebView.
  const dpr=await evaluate('window.devicePixelRatio || 1');
  const bounds=await evaluate('({w: window.innerWidth, h: window.innerHeight})');
- const screen=adb('shell','wm','size').match(/(\\d+)x(\\d+)/);
+ const screen=adb('shell','wm','size').match(/(\d+)x(\d+)/);
  const sx=screen?+screen[1]/bounds.w:dpr;
  const sy=screen?+screen[2]/bounds.h:dpr;
  adb('shell','input','tap',String(Math.round(point.x*sx)),String(Math.round(point.y*sy)));
