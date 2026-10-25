@@ -22,7 +22,7 @@
   splash.id = 'haiz-native-boot';
   splash.dataset.state = 'loading';
   splash.setAttribute('aria-label', 'HAIZ 启动与恢复');
-  splash.innerHTML = '<div><h1>HAIZ</h1><p id="haiz-boot-message" role="status">正在打开书桌…</p><div><button id="haiz-boot-offline" class="secondary" type="button">导出本机记录</button><button id="haiz-boot-retry" type="button" hidden>重试启动</button><button id="haiz-boot-copy" type="button" class="secondary" hidden>复制诊断</button></div><small id="haiz-boot-detail">记录保留在这台设备。恢复操作不会清空数据。</small><textarea id="haiz-boot-diagnostic" aria-label="不含私人内容的诊断" readonly hidden></textarea></div>';
+  splash.innerHTML = '<div><h1>HAIZ</h1><p id="haiz-boot-message" role="status">正在打开书桌…</p><div><button id="haiz-boot-offline" class="secondary" type="button">导出原始恢复副本</button><button id="haiz-boot-retry" type="button" hidden>重试启动</button><button id="haiz-boot-copy" type="button" class="secondary" hidden>复制诊断</button></div><small id="haiz-boot-detail">记录保留在这台设备。恢复操作不会清空数据。</small><textarea id="haiz-boot-diagnostic" aria-label="不含私人内容的诊断" readonly hidden></textarea></div>';
   document.body.append(splash);
   const message = splash.querySelector('#haiz-boot-message');
   const detail = splash.querySelector('#haiz-boot-detail');
@@ -79,7 +79,7 @@
       const url = URL.createObjectURL(blob);
       link.href = url; link.download = 'HAIZ-local-recovery.json'; link.click();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      detail.textContent = '已请求导出本机备份；请确认系统已保存文件。不要公开分享私人备份。';
+      detail.textContent = '已请求导出原始恢复副本；此格式需技术恢复，不能直接导入学习工具。请确认文件已保存，勿公开分享。';
     } catch { detail.textContent = '系统暂不允许读取或导出。请保留应用数据，查看原生日志；不要卸载。'; }
   };
   retry.onclick = () => { retry.disabled = true; location.reload(); };

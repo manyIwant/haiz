@@ -44,3 +44,13 @@
 @media(max-height:500px){.lucent-dock{bottom:calc(8px + env(safe-area-inset-bottom));width:330px}.lucent-tray>a{height:44px;flex-direction:row;gap:6px}.lucent-lens{height:44px}.lucent-orb{width:52px;height:52px}.haiz-native .lucent-search{bottom:70px;max-height:calc(100dvh - 90px)}#lucent-results{max-height:24dvh}}
 @media(prefers-reduced-motion:reduce){.haiz-native:not([data-lucent-motion=full]) :is(.lucent-dock,.lucent-tray>a svg,.lucent-tray>a span){transition:none}}
 @supports not (backdrop-filter:blur(2px)){.lucent-tray,.lucent-orb{background:var(--surface-raised)}}
+/* One optical surface; the moving highlight follows lens velocity, not another blur layer. */
+.lucent-lens::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(ellipse at var(--glint-x,50%) 0%,var(--glass-highlight),transparent 62%);opacity:.6}
+.lucent-tray>a svg{will-change:transform}.lucent-tray>a>span{transform:translateY(calc(var(--selection-weight,0)*-.5px));font-weight:calc(500 + var(--selection-weight,0)*100)}
+
+/* Icon lift is sampled from the same spring. CSS must not chase a second easing curve. */
+.lucent-tray>a>svg{transform:translateY(calc(var(--icon-lift,0px) + var(--compact-offset,0px)));transition:none}
+.lucent-dock.is-compact .lucent-tray>a>svg{--compact-offset:8px;transform:translateY(calc(var(--icon-lift,0px) + var(--compact-offset)))}
+.lucent-dialog header button,.lucent-search header button{background:var(--surface-secondary);border:1px solid var(--border-subtle);cursor:pointer}
+
+.haiz-native .r2-page .pill{background:var(--surface-secondary);color:var(--text-primary);border:1px solid var(--border-subtle)}

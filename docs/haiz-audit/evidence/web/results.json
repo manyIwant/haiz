@@ -1,11 +1,12 @@
 {
   "status": "PASS",
-  "at": "2026-10-24T08:44:23.159Z",
+  "at": "2026-10-25T01:18:05.471Z",
   "checks": [
     "Bundled root redirects to interactive study, boot overlay removed",
     "Real study note survives reload",
     "Three palettes and persisted selection",
     "30 real route switches",
+    "20 interrupted pointer clicks and 8 pointer drags keep selected tab and real route aligned",
     "Search orb reaches real shelf and returns",
     "Seven viewport widths without horizontal overflow",
     "Missing module displays diagnostic without clearing private storage"

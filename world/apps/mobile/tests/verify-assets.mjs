@@ -12,7 +12,7 @@ export function verifyBundle(directory,{syncedCopies=[]}={}) {
  assert.match(build.commit,/^[a-f0-9]{40}$/,'Bundle must record actual Git SHA');
  assert.match(build.version,/^\d+\.\d+\.\d+(?:-[\w.]+)?$/,'Bundle version required');
  const prefix=build.sourceMode==='integrated'?'world/':'';
- const required=['index.html','app.js','mobile-boot.js','mobile-shell.js','mobile-shell.css','style.css','lucent/dock.mjs','lucent/spring.mjs','round2-ui.js','room/scene/index.html','assets/campus.webp','campus.html'].map(n=>prefix+n);
+ const required=['index.html','app.js','mobile-boot.js','mobile-shell.js','mobile-shell.css','style.css','lucent/dock.js','lucent/spring.js','cinema/player.js','cinema/identity.js','cinema/media/HAIZ-porcelain.mp4','cinema/media/HAIZ-obsidian.mp4','cinema/media/HAIZ-ocean.mp4','cinema/media/poster.png','round2-ui.js','room/scene/index.html','assets/campus.webp','campus.html'].map(n=>prefix+n);
  if(build.sourceMode==='integrated')required.push('assets/js/three-campus.js');
  for(const name of required)assert.ok(existsSync(path.join(www,name)),'Missing native asset: '+name);
  if(prefix){const root=read('index.html').toString();assert.match(root,/\.\/world\/index\.html#study/,'Native entry must target an actual HTML file');assert.match(root,/getRegistrations/,'Native entry must migrate old static workers');}

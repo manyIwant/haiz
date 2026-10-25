@@ -53,3 +53,7 @@ body.zen .topbar,body.zen .mainstage .editorial-label,body.zen .stage-copy,body.
 
 /* Keep essential controls readable above the local artwork. */
 .app { color:#e9e6dd; } .room-tab,.mobile-panel-btn,.mini-tab,.timer-start {font-size:14px;} .room-tab {min-height:44px;} .panel-footnote {color:#bcc4bc;}
+
+.haiz-cinema-background .scene-painting{background-image:url('../cinema/media/poster.png');background-position:center;background-size:cover}.haiz-cinema-background .scene-tint{opacity:.23}.haiz-cinema-background .weather,.haiz-cinema-background .film-grain{display:none}.haiz-cinema-background .stage-copy{text-shadow:0 2px 16px #000}.haiz-cinema-background .intro-mask{display:none}.haiz-cinema-embedded .haiz-return{visibility:hidden}
+
+.haiz-export-notes{min-height:44px;margin-top:20px;padding:10px 16px;border:1px solid #8e968c;background:transparent;color:#28332f;font-size:14px}

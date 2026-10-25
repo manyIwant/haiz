@@ -1,27 +1,12 @@
-教师在办公室发布作业，教室按当天课表最后两节自习显示今日清单。本次提供 Android APK、iOS 未签名 IPA、完整源码及便携教室 HTML，是可运行的本地实验预览版。
+# HAIZ LUCENT 0.5.0-preview.1 · 测试候选版
 
-## 下载
+这是新的集成分支产物，不是旧0.4.0 APK/IPA改名。基于round02、Flow/Pilot以及PR3的启动修复候选，保留校园漫游与原有学习记录。
 
-- **HAIZ-Study-Android-preview.apk**：Android 6+，开发预览签名，可侧载；不是商店正式签名版。
-- **HAIZ-Study-iOS-unsigned.ipa**：iOS 14+、真实 iPhone arm64 构建，未签名；需要自行使用个人或开发者签名后安装，不能直接点击安装，不是 TestFlight 包。
-- **HAIZ-WORLD-source.zip**：完整网页、Android/iOS 项目、ClassIsland 实验源码、测试与文档。
-- **HAIZ-Classroom.html**：独立单文件本机演示。
-- **SHA256SUMS.txt**：发行文件校验值；安装与数据说明见 INSTALL.zh-CN.md。
+- 原生打包入口与逐文件SHA清单；模块缺失诊断、手动重试和保留数据的导出。
+- Obsidian、Porcelain、Ocean与跟随系统，实体内容表面和浮动玻璃导航；可中断透镜、拖动、搜索、减少动效与低耗电。
+- 原创HAIZ字形构件连续路径插值，概念学习空间预渲染镜头；实际自习工具独立初始化，跳过/失败直接使用。建筑是原创概念空间，不是真实校园还原；美术质量限制见源码docs/haiz-cinema。
+- Android13/15使用同一构建APK做WebView交互与笔记保留检查；iOS使用真正的WKWebView XCTest交互。发行工作流只在必须项通过后发布，不重新生成一个未经测试的APK。
 
-## 这一版
+Android签名类型与指纹见ANDROID-SIGNATURE.txt。iOS为unsigned arm64 IPA，不能直接安装。BUILD-INFO.json及包内build-info.json标明实际源码SHA与版本，SHA256SUMS.txt标明下载文件哈希。
 
-- preview.1 (0.4.1) 修复原生启动阶段空白绿屏的可诊断性，提供错误页和重新打开入口；Android/iOS 更换统一品牌图标与启动画面，Android 启动主题设定明确的后续主题，iOS 移除旧设备能力声明。保留地图按钮修正。
-
-- 教师作业创建、预览、审核、修改、撤回；班级隔离与消息版本；本地 HTTP/SSE 服务联动。
-- 晚修取当天最后两节自习，不另设固定时刻；隐藏优先、纯净课堂和离线到期退出。
-- 完整校园 34 个地点与 16 间想象教室，恢复第一人称、全校地图、搜索和安全落点。
-- 移动端增加底部导航、安全区适配、返回键处理和本机数据说明；修复原生打包丢失原校园资源路径的问题。
-- 专注书桌、思维中断/恢复、下一步记录与低负荷模式。
-
-## 真实边界
-
-App 当前是离线/本机数据预览，不连接学校账号或校园服务器。办公室到教室的同步需在电脑运行附带 Node.js 本地服务；手机不能通过 localhost 连接办公室电脑。发布内容、角色和课表均明确区分模拟与本地服务授权状态。
-
-建筑全量精确还原仍待逐栋核对。ClassIsland 2.x 插件仅为实验源码，不附未验证的安装包。尚未做希沃、真实 ClassIsland 宿主、Android/iPhone 真机性能和授课遮挡验收。测试签名可能随构建改变，更新前请导出私密学习记录；不要卸载后才备份。
-
-本发行版由 GitHub Actions 分别在 Linux/Android 构建环境和 macOS/Xcode 环境构建。只有 APK 与 IPA 均成功产生、模拟器冒烟测试通过，工作流才创建 Release；真实手机仍需另外验证。不是把网页 ZIP 改后缀充当安装包。
+模拟器PASS不等于真机PASS：vivo S10、iPhone、希沃/ClassIsland、校方授权、公网正式服务与Apple分发签名均需独立验收。旧版不同签名覆盖升级不作保证，先导出并保留数据。查看QA-RESULTS.md、INSTALL.zh-CN.md和native-qa-evidence.zip。没有质量门禁通过时，不应存在标记“已修复”的正式发行。

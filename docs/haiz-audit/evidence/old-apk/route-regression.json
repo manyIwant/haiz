@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "environment": "Chromium with the documented Capacitor Android asset routing contract, NOT native emulator",
+  "oldPaths": [
+    "/",
+    "/world/",
+    "/world/world/",
+    "/world/world/world/",
+    "/world/world/world/world/",
+    "/world/world/world/world/world/",
+    "/world/world/world/world/world/world/",
+    "/world/world/world/world/world/world/world/",
+    "/world/world/world/world/world/world/world/world/",
+    "/favicon.ico"
+  ],
+  "newPath": "/world/index.html",
+  "oldApkSha256": "db5040322724e89985151b5ee5f7ad2fe8ef728cf2151fc6324717248f47a711",
+  "at": "2026-10-24T16:02:20.987Z"
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Inspect actual APK/IPA ZIP bytes. Does not assert signature validity or device success."""
-import argparse,hashlib,json,pathlib,struct,zipfile
+import argparse,hashlib,json,pathlib,plistlib,struct,zipfile
 p=argparse.ArgumentParser();p.add_argument('package');p.add_argument('--commit',required=True);p.add_argument('--version',required=True);p.add_argument('--output');a=p.parse_args()
 file=pathlib.Path(a.package)
 with zipfile.ZipFile(file) as z:
@@ -22,6 +22,10 @@ with zipfile.ZipFile(file) as z:
         assert header[:4]==b'\xcf\xfa\xed\xfe', 'Expected real 64-bit Mach-O application'
         assert struct.unpack('<I',header[4:8])[0]==0x0100000c, 'Expected iPhone arm64, not simulator executable'
         platform='ios'
+        info=plistlib.loads(z.read('Payload/'+apps[0]+'/Info.plist'))
+        assert info['CFBundleIdentifier']=='space.haiz.study', 'Wrong iOS bundle identifier'
+        assert info['CFBundleShortVersionString']==a.version.split('-')[0], 'Wrong native iOS version'
+        assert str(info['CFBundleVersion'])=='7', 'Wrong native iOS build'
     else: raise AssertionError('Expected .apk or .ipa')
     build=json.loads(z.read(prefix+'build-info.json'))
     assert build['commit']==a.commit, 'Package contains wrong source commit'

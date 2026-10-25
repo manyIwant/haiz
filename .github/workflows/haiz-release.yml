@@ -1,4 +1,4 @@
-name: HAIZ mobile release
+name: HAIZ verified mobile candidate release
 on:
   push:
     tags: ['haiz-v*']
@@ -16,114 +16,44 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify domain and authenticated server behavior
-        working-directory: world
-        run: node --test tests/core.test.mjs tests/round2.test.mjs tests/focus.test.mjs tests/homework.test.mjs tests/server.test.mjs tests/homework-server.test.mjs
-  android:
+      - run: npm --prefix world test
+      - run: npm --prefix world run test:server
+      - run: node --test world/tests/flow-server.test.mjs world/tests/pilot-server.test.mjs world/lucent/tests/motion.test.mjs
+      - name: Reject mismatched release tag
+        env:
+          RELEASE_REF: ${{ github.ref_name }}
+        run: node world/apps/mobile/scripts/verify-version.mjs
+  native-qa:
     needs: verify
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: world/apps/mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: world/apps/mobile/package-lock.json
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: python -m pip install Pillow==11.3.0
-      - run: npm ci
-      - run: npm run sync
-      - run: node tests/verify-assets.mjs
-      - run: python scripts/generate-icons.py
-      - name: Build installable preview APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
-      - name: Verify APK signature
-        run: |
-          TOOL=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          "$TOOL" verify --verbose --print-certs android/app/build/outputs/apk/debug/app-debug.apk
-          mkdir -p ../../../release-artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk ../../../release-artifacts/HAIZ-Study-Android-preview.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: haiz-android
-          path: release-artifacts/*.apk
-          if-no-files-found: error
-  ios:
-    needs: verify
-    runs-on: macos-15
-    defaults:
-      run:
-        working-directory: world/apps/mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: world/apps/mobile/package-lock.json
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: python -m pip install Pillow==11.3.0
-      - run: npm ci
-      - run: npm run sync
-      - run: node tests/verify-assets.mjs
-      - run: python scripts/generate-icons.py
-      - name: Build real iPhone arm64 app without distribution signing
-        run: >-
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App
-          -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
-          -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO
-          CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
-      - name: Package unsigned IPA and verify architecture
-        run: |
-          APP=build/ios/Build/Products/Release-iphoneos/App.app
-          test -d "$APP"
-          lipo -info "$APP/App"
-          mkdir -p build/ipa/Payload ../../../release-artifacts
-          cp -R "$APP" build/ipa/Payload/HAIZ.app
-          cd build/ipa
-          ditto -c -k --keepParent Payload ../../../../../release-artifacts/HAIZ-Study-iOS-unsigned.ipa
-      - uses: actions/upload-artifact@v4
-        with:
-          name: haiz-ios
-          path: release-artifacts/*.ipa
-          if-no-files-found: error
-  native-smoke:
-    needs: [android, ios]
     uses: ./.github/workflows/haiz-mobile-qa.yml
+    secrets: inherit
   publish:
-    needs: [android, ios, native-smoke]
+    needs: [verify, native-qa]
     if: startsWith(github.ref, 'refs/tags/haiz-v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/download-artifact@v4
         with:
-          pattern: haiz-*
-          path: release-artifacts
-          merge-multiple: true
-      - name: Package runnable sources and portable classroom
-        run: |
-          git archive --format=zip --prefix=HAIZ-WORLD/ HEAD > release-artifacts/HAIZ-WORLD-source.zip
-          cp world/portable/HAIZ-Classroom.html release-artifacts/HAIZ-Classroom.html
-          cp release/INSTALL.zh-CN.md release-artifacts/INSTALL.zh-CN.md
-          cd release-artifacts
-          sha256sum *.apk *.ipa *.zip *.html INSTALL.zh-CN.md > SHA256SUMS.txt
-      - name: Publish preview release with both mobile packages
+          name: haiz-android-candidate-apk
+          path: candidate/android
+      - uses: actions/download-artifact@v4
+        with:
+          name: haiz-ios-candidate-unsigned-ipa
+          path: candidate/ios
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: haiz-*-ui-evidence
+          path: candidate/evidence
+      - name: Inspect exactly the tested packages and prepare reviewable assets
+        run: python release/package-candidate.py
+      - name: Create new preview release; never replace old assets
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          gh release create "$RELEASE_TAG" release-artifacts/* --verify-tag --prerelease --title "HAIZ WORLD 0.4.1 · 双端启动及图标修复预览版" --notes-file release/NOTES.zh-CN.md
+        run: gh release create "$RELEASE_TAG" release-artifacts/* --verify-tag --prerelease --title "HAIZ LUCENT 0.5.0 · 测试候选版" --notes-file release/NOTES.zh-CN.md
