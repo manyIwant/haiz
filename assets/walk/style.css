@@ -30,3 +30,6 @@ body.touch .walk-hint{display:none}body.touch .location-paper{bottom:230px}body.
 .climate-shift:hover{color:#a05337}
 .climate-shift:focus-visible{outline:2px solid #a05337;outline-offset:2px;border-radius:3px}
 @media(max-width:650px){.climate-note{max-width:175px;padding:8px 10px 4px}.climate-shift{font-size:10px;min-height:44px}}
+
+/* Keep the compact light-director accessible above the independently layered experience dock. */
+#hud:has(.climate-shift){z-index:125}
