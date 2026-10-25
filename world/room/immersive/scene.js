@@ -309,6 +309,11 @@
     }
     rainGeo.attributes.position.needsUpdate=true;rainGeo.setDrawRange(0,count*2);
   }
+  // Meshes that share static PBR materials and box topology are batched only
+  // after the authored room is assembled. Furniture contacts are one transparent
+  // instanced draw call even when mobile dynamic shadows are disabled.
+  const roomContacts=window.HAIZRoomGeometry?.addContactShadows(scene,THREE,desks)||null;
+  const geometryStats=window.HAIZRoomGeometry?.batchBoxes(scene,THREE,2)||{instances:0,batches:0,drawCallsSaved:0};
   const collision=(x,z)=>{
     if(x < -6.48 || x>6.48 || z< -4.62 || z>5.48)return true;
     return desks.some(d=>Math.abs(x-d.x)<d.w+.25&&Math.abs(z-d.z)<d.d+.13);
@@ -436,7 +441,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
