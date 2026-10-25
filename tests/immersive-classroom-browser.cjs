@@ -40,6 +40,9 @@ const results=[];
       assert.equal(init.courtyardWindows,51,'Continuous three-level courtyard facade and windows must be present');
       assert.equal(init.bakedFloorAO,true,'Actual floor PBR requires a static local AO texture and UV2 layout');
       assert.equal(init.bakedFacadePBR,true,'Campus exterior must use original albedo, normal and roughness maps');
+      assert.equal(init.humanScaleRoom,true,'Clock, AC and original classroom curtain rails must render');
+      assert.equal(init.curtainInstances,8,'Eight independently folded curtain panels must be GPU instanced');
+      assert.equal(init.rainWindowInstances,4,'Four window panes must share a single rain shader mesh');
       await page.waitForFunction(()=>['floor-ambient-occlusion.svg','floor-window-bounce.svg'].every(name=>
         performance.getEntriesByType('resource').some(entry=>entry.name.includes('/maps/'+name))),{timeout:30000});
       assert(init.drawCalls<175,'Detailed campus geometry must fit the mobile-friendly draw budget');
@@ -53,6 +56,10 @@ const results=[];
         await page.locator('[data-weather="'+mode+'"]').click();
         assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().climate),mode);
         await page.waitForTimeout(900);
+        if(mode==='monsoon' && size.width===1440){
+          assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().rainGlazingVisible),
+            true,'Monsoon must visibly wet glass with an instanced shader');
+        }
         await page.screenshot({path:path.join(out,size.width+'-'+mode+'.png')});
       }
       await page.locator('#explore').click();
