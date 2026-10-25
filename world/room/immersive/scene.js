@@ -107,6 +107,7 @@
   };
   // 1 unit = 1 meter. A believable 14 × 11 m teaching room, NOT a measured school interior.
   const floor=box(14,.23,11,0,-.13,.5,mats.terrazzo);floor.castShadow=false;
+  const authoredBounce=window.HAIZHeroAssets?.buildBounce(THREE,scene)||null;
   box(14,.17,11,0,4.2,.5,mats.ceiling,scene,false);
   box(.22,4.2,11,-7,2.1,.5,mats.wall);
   box(.22,4.2,11,7,2.1,.5,mats.wall);
@@ -227,19 +228,24 @@
   deskTop.roughnessMap=readTexture(textures+'wood-rough.jpg',1.8,.9);
   const chairMat=material('#45645c',.79);
   const ink=material('#455961',.38);const gold=material('#bc9763',.52,.45);
+  let heroAsset=null;
   function buildDesk(x,z,featured=false) {
     const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
-    box(1.76,.07,.78,0,.79,0,deskTop,g);
+    if(!featured || !window.HAIZHeroAssets)box(1.76,.07,.78,0,.79,0,deskTop,g);
     for(const dx of [-.79,.79])for(const dz of [-.3,.3])box(.055,.72,.055,dx,.38,dz,legMaterial,g);
     box(1.55,.09,.04,0,.49,-.29,legMaterial,g);
-    // A stack of tactile paper pages and coloured book spines.
-    box(.33,.025,.37,-.43,.85,-.10,mats.paper,g);
-    for(let b=0;b<4;b++){
-      const bm=material(['#7e8879','#9c785d','#657e8b','#b28f68'][b],.87);
-      box(.095,.023,.28,-.44+b*.10,.89,-.12,bm,g,false);
+    // Economical base furniture stays instanced; the hero station adds fine geometry.
+    if(!featured || !window.HAIZHeroAssets){
+      box(.33,.025,.37,-.43,.85,-.10,mats.paper,g);
+      for(let b=0;b<4;b++){
+        const bm=material(['#7e8879','#9c785d','#657e8b','#b28f68'][b],.87);
+        box(.095,.023,.28,-.44+b*.10,.89,-.12,bm,g,false);
+      }
     }
     const laptop=material('#485056',.42,.30);
-    if(featured){
+    if(featured && window.HAIZHeroAssets){
+      heroAsset=window.HAIZHeroAssets.build(THREE,g,{wood:deskTop,metal:legMaterial,chairFabric:chairMat,paper:mats.paper});
+    } else if(featured){
       box(.38,.026,.29,.24,.845,.04,laptop,g);
       const screen=box(.38,.24,.019,.24,.99,-.102,laptop,g);
       screen.rotation.x=-.14;
@@ -319,6 +325,11 @@
     sun.color.lerp(new THREE.Color(p.sun),alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
     windowFill.color.lerp(new THREE.Color(p.fill),alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
     weatherCurrent.rain+=(p.rain-weatherCurrent.rain)*alpha;weatherCurrent.cloud+=(p.cloud-weatherCurrent.cloud)*alpha;weatherCurrent.wet+=(p.wet-weatherCurrent.wet)*alpha;
+    if(authoredBounce){
+      // The atlas represents static diffuse bounce, not a costly global-illumination pass.
+      const target=climate==='sunbreak'?.25:climate==='morning'?.12:.025;
+      authoredBounce.setIntensity(authoredBounce.mesh.material.opacity+(target-authoredBounce.mesh.material.opacity)*alpha);
+    }
     const rays=quality==='low'||reduced?0:(climate==='sunbreak'?.12:climate==='morning'?.06:0);
     for(const beam of shafts)beam.material.opacity+=(rays-beam.material.opacity)*alpha;
     mats.tile.roughness=.5-weatherCurrent.wet*.23;mats.terrazzo.roughness=.76-weatherCurrent.wet*.12;
@@ -337,6 +348,7 @@
   // instanced draw call even when mobile dynamic shadows are disabled.
   const roomContacts=window.HAIZRoomGeometry?.addContactShadows(scene,THREE,desks)||null;
   const geometryStats=window.HAIZRoomGeometry?.batchBoxes(scene,THREE,2)||{instances:0,batches:0,drawCallsSaved:0};
+  if(heroAsset?.detailMeshes && quality==='low')for(const detail of heroAsset.detailMeshes)detail.visible=false;
   const collision=(x,z)=>{
     if(x < -6.48 || x>6.48 || z< -4.62 || z>5.48)return true;
     return desks.some(d=>Math.abs(x-d.x)<d.w+.25&&Math.abs(z-d.z)<d.d+.13);
@@ -360,6 +372,7 @@
     }
     leaves.count=Math.min(leafCount,specs[quality].foliage);
     leaves.castShadow=quality==='high';
+    if(heroAsset?.detailMeshes)for(const detail of heroAsset.detailMeshes)detail.visible=quality!=='low';
     updateQualityText();qualityChangedAt=performance.now();
     resize();
   }
@@ -464,7 +477,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,staticBounceAtlas:!!authoredBounce,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
