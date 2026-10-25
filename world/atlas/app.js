@@ -79,15 +79,61 @@
     document.body.classList.add("view-switching");
     announce("已切换到" + record[2]);
   }
-  function dockLens() {
-    const dock = $(".float-dock");
-    const active = $(".dock-item.is-active", dock);
-    const lens = $("#dockLens");
-    if (!dock || !active || !lens) return;
-    const x = active.getBoundingClientRect().left - dock.getBoundingClientRect().left - 7;
-    lens.style.setProperty("--lens-x", Math.round(x) + "px");
-    lens.style.width = active.getBoundingClientRect().width + "px";
+  const dock = $(".float-dock");
+  const lens = $("#dockLens");
+  const motion = window.HAIZ_DOCK_SPRING;
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let lensState = { x:0, v:0 };
+  let lensTarget = 0;
+  let lensFrame = 0;
+  let lensTime = 0;
+  let lensReady = false;
+  let previewButton = null;
+  const drawLens = (time) => {
+    lensFrame = 0;
+    const dt = lensTime ? (time - lensTime) / 1000 : 1 / 60;
+    lensTime = time;
+    lensState = motion.step(lensState, lensTarget, dt);
+    if (motion.settled(lensState, lensTarget)) {
+      lensState = { x:lensTarget, v:0 };
+    } else {
+      lensFrame = requestAnimationFrame(drawLens);
+    }
+    lens.style.setProperty("--lens-x", lensState.x.toFixed(2) + "px");
+  };
+  function dockLens(instant = false) {
+    const button = previewButton || $(".dock-item.is-active", dock);
+    if (!button || !lens) return;
+    lensTarget = button.getBoundingClientRect().left - dock.getBoundingClientRect().left - 7;
+    lens.style.width = button.getBoundingClientRect().width + "px";
+    // Reduced-motion, startup, resize and hidden-tab paths snap instantly.
+    if (instant || !lensReady || reduceMotion.matches || document.hidden || !motion) {
+      if (lensFrame) cancelAnimationFrame(lensFrame);
+      lensFrame = 0;
+      lensState = { x:lensTarget, v:0 };
+      lens.style.setProperty("--lens-x", lensTarget.toFixed(2) + "px");
+      lensTime = 0;
+      lensReady = true;
+      return;
+    }
+    if (!lensFrame) { lensTime = 0; lensFrame = requestAnimationFrame(drawLens); }
   }
+  dock.dataset.motion = "spring";
+  dock.addEventListener("pointerover", event => {
+    if (event.pointerType === "touch") return;
+    const button = event.target.closest(".dock-item");
+    if (button && previewButton !== button) { previewButton = button; dockLens(); }
+  });
+  dock.addEventListener("pointerleave", () => { previewButton = null; dockLens(); });
+  dock.addEventListener("focusin", event => {
+    const button = event.target.closest(".dock-item");
+    if (button) { previewButton = button; dockLens(); }
+  });
+  dock.addEventListener("focusout", event => {
+    if (!dock.contains(event.relatedTarget)) { previewButton = null; dockLens(); }
+  });
+  reduceMotion.addEventListener?.("change", () => dockLens(true));
+  document.addEventListener("visibilitychange", () => { if (document.hidden) dockLens(true); });
   function selectView(view) {
     if (!Object.hasOwn(scenes, view)) return;
     activeView = view;
@@ -222,13 +268,92 @@
     }
     if (event.key === "Enter" && matches[resultIndex]) {
       event.preventDefault();
-      window.location.assign(matches[resultIndex].url);
+      navigateTo(matches[resultIndex].url);
     }
   });
   window.addEventListener("keydown", event => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); if (command.open) command.close(); else openCommand(); }
   });
-  window.addEventListener("resize", dockLens, { passive:true });
+  window.addEventListener("resize", () => dockLens(true), { passive:true });
+  const portal = $("#scenePortal");
+  const portalSkip = $("#portalSkip");
+  const portalCancel = $("#portalCancel");
+  const portalTypes = [
+    { match:/\\/world\\/room\\/immersive\\/(?:index\\.html)?$/, name:"走进光落下的教室。", image:"../../assets/images/campus/campus_yihao.jpg", type:"INNER WORLD / IMMERSIVE" },
+    { match:/\\/world\\/stillroom\\/(?:index\\.html)?$/, name:"把世界，调低一点。", image:"../../assets/images/campus/campus_library.jpg", type:"STILLROOM / FOCUS" },
+    { match:/\\/world\\/campus\\.html$/, name:"从一张地图，走进校园。", image:"../../assets/images/campus/aerial_campus.jpg", type:"CAMPUS / ATLAS" },
+    { match:/\\/campus-3d\\.html$/, name:"朝着熟悉的校门出发。", image:"../../assets/images/campus/campus_fucheng_gate.jpg", type:"THE WALK / WORLD" }
+  ];
+  let pendingPortal = null;
+  let portalTimer = null;
+  let previousFocus = null;
+  function portalKind(url) {
+    return portalTypes.find(item => item.match.test(url.pathname)) || null;
+  }
+  function finishPortal() {
+    if (!pendingPortal) return;
+    const target = pendingPortal;
+    pendingPortal = null;
+    if (portalTimer != null) clearTimeout(portalTimer);
+    portalTimer = null;
+    window.location.assign(target);
+  }
+  function cancelPortal() {
+    if (!pendingPortal) return;
+    pendingPortal = null;
+    clearTimeout(portalTimer);
+    portalTimer = null;
+    portal.classList.remove("is-visible");
+    portal.hidden = true;
+    $(".app-shell").inert = false;
+    dock.inert = false;
+    document.body.classList.remove("portal-open");
+    if (previousFocus?.isConnected) previousFocus.focus({ preventScroll:true });
+    announce("已取消转场，仍留在 ATLAS");
+  }
+  function navigateTo(href) {
+    const url = new URL(href, document.baseURI);
+    if (url.origin !== location.origin) { window.location.assign(url.href); return; }
+    const kind = portalKind(url);
+    if (!kind || reduceMotion.matches || document.hidden) { window.location.assign(url.href); return; }
+    if (pendingPortal) return;
+    if (command.open) command.close();
+    previousFocus = document.activeElement;
+    pendingPortal = url.href;
+    $("#portalPhoto").src = kind.image;
+    $("#portalTitle").textContent = kind.name;
+    $(".portal-kicker").textContent = "HAIZ / " + kind.type;
+    portal.hidden = false;
+    $(".app-shell").inert = true;
+    dock.inert = true;
+    document.body.classList.add("portal-open");
+    portalSkip.focus({ preventScroll:true });
+    requestAnimationFrame(() => { if (pendingPortal) portal.classList.add("is-visible"); });
+    portalTimer = setTimeout(finishPortal, matchMedia("(max-width: 650px)").matches ? 600 : 830);
+    announce("正在前往" + kind.name + "。可跳过转场或返回。");
+  }
+  portalSkip.addEventListener("click", finishPortal);
+  portalCancel.addEventListener("click", cancelPortal);
+  document.addEventListener("click", event => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const anchor = event.target.closest("a[href]");
+    if (!anchor || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
+    const url = new URL(anchor.href, document.baseURI);
+    if (url.origin !== location.origin || !portalKind(url)) return;
+    event.preventDefault();
+    navigateTo(url.href);
+  });
+  document.addEventListener("keydown", event => {
+    if (!pendingPortal) return;
+    if (event.key === "Escape") { event.preventDefault(); cancelPortal(); }
+    if (event.key === "Tab") {
+      const controls = [portalCancel, portalSkip];
+      const index = controls.indexOf(document.activeElement);
+      if (event.shiftKey && index <= 0) { event.preventDefault(); portalSkip.focus(); }
+      if (!event.shiftKey && index === controls.length - 1) { event.preventDefault(); portalCancel.focus(); }
+    }
+  });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && pendingPortal) finishPortal(); });
   const date = new Intl.DateTimeFormat("zh-CN",{month:"long",day:"numeric",weekday:"long"}).format(new Date());
   $("#todayDate").textContent = date;
   const initialView = location.hash.replace("#","");
