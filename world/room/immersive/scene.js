@@ -19,7 +19,7 @@
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
   const presets = {
-    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
+    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.0085,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
     monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.60,hemi:.55,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
     morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.10,hemi:.60,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
@@ -182,12 +182,12 @@
   const distantPlaster=material('#b6ac98',.94),trimStone=material('#736f62',.81);
   // Licensed source is the locally generated HAIZ plaster/paving bank, not any
   // proprietary game texture. Albedo, micro-normal and roughness stay separate.
-  const agedFacade=material('#ddd4c7',.96);
+  const agedFacade=material('#b5a898',.96);
   agedFacade.map=readTexture(textures+'plaster-color.jpg',15,3,true);
   agedFacade.normalMap=readTexture(textures+'plaster-normal.jpg',15,3);
   agedFacade.roughnessMap=readTexture(textures+'plaster-rough.jpg',15,3);
   agedFacade.normalScale.set(.40,.40);
-  const lowerCornice=material('#a3a092',.89);
+  const lowerCornice=material('#89867d',.89);
   lowerCornice.map=readTexture(textures+'terrazzo-color.jpg',9,.4,true);
   lowerCornice.normalMap=readTexture(textures+'terrazzo-normal.jpg',9,.4);
   const wornPlaster=material('#a59c89',.98);
@@ -196,7 +196,7 @@
   wornPlaster.normalScale.set(.23,.23);
   const darkRecess=material('#3f5d5d',.79);
   const balconyStone=material('#968a75',.86);
-  const exteriorGlass=material('#809da0',.31,.06);
+  const exteriorGlass=material('#66888c',.35,.06);
   const shelteredHall=material('#414f50',.83);
   const wingZ=-32;
   const wingWidth=58,wingDepth=7.6,wingHeight=10.15;
