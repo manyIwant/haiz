@@ -56,9 +56,17 @@ const results=[];
         await page.locator('[data-weather="'+mode+'"]').click();
         assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().climate),mode);
         await page.waitForTimeout(900);
-        if(mode==='monsoon' && size.width===1440){
-          assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().rainGlazingVisible),
-            true,'Monsoon must visibly wet glass with an instanced shader');
+        if(mode==='monsoon'){
+          // Headless SwiftShader can legitimately switch to low quality while
+          // generating 8 screenshots. Low tier MUST suppress transparent wet
+          // glass; manually select balanced through the real UI to inspect it.
+          let state=await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics());
+          if(state.quality==='low')await page.locator('#qualityToggle').click();
+          await page.waitForTimeout(180);
+          state=await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics());
+          assert.notEqual(state.quality,'low','Manual quality control restores wet glass capability');
+          assert.equal(state.rainGlazingVisible,true,
+            'Monsoon wet glass appears at non-low quality via real weather tab');
         }
         await page.screenshot({path:path.join(out,size.width+'-'+mode+'.png')});
       }
