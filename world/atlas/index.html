@@ -9,6 +9,7 @@
   <link rel="icon" href="../assets/icon.svg">
   <link rel="preload" as="image" href="../../assets/images/campus/campus_fengqitang.jpg">
   <link rel="stylesheet" href="style.css">
+  <script src="dock-spring.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -72,4 +73,11 @@
   <nav class="float-dock" aria-label="移动与桌面快捷导航"><div class="dock-lens" id="dockLens" aria-hidden="true"></div><button data-view="home" class="dock-item is-active" aria-current="page"><span>⌂</span><small>今日</small></button><button data-view="campus" class="dock-item"><span>⌖</span><small>校园</small></button><button data-view="study" class="dock-item"><span>◷</span><small>自习</small></button><button data-view="community" class="dock-item"><span>✳</span><small>生活</small></button></nav>
   <dialog class="command-dialog" id="commandDialog" aria-labelledby="commandTitle"><form method="dialog" class="command-shell"><div class="command-top"><label id="commandTitle" for="commandInput">⌕ <span>快速找到一个地方</span></label><button type="submit" aria-label="关闭搜索">✕</button></div><input id="commandInput" autocomplete="off" placeholder="试试：校园、专注、社团、老师…" aria-label="搜索页面"><ul id="commandResults" class="command-results"></ul><p>↑ ↓ 选择 · Enter 前往 · Esc 关闭</p></form></dialog>
   <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+  <!-- Finite cinematic hand-off only; the real destination loads on its own page. -->
+  <section class="scene-portal" id="scenePortal" role="dialog" aria-modal="true" aria-labelledby="portalTitle" aria-describedby="portalNote" hidden tabindex="-1">
+    <div class="portal-picture"><img id="portalPhoto" src="../../assets/images/campus/campus_fengqitang.jpg" alt="" decoding="async"><div class="portal-curtain"></div></div>
+    <div class="portal-aperture" aria-hidden="true"><span class="portal-axis"></span><span class="portal-reticle"></span></div>
+    <div class="portal-heading"><span class="portal-kicker">HAIZ / BETWEEN PLACES</span><span class="portal-rule"></span><h2 id="portalTitle">靠近另一处风景。</h2><p id="portalNote">即将进入已存在的 HAIZ 页面 · 不是同一 WebGL 场景的无缝切换</p><div class="portal-progress" aria-hidden="true"><span></span></div></div>
+    <div class="portal-actions"><button id="portalCancel" type="button">← 留在这里</button><button id="portalSkip" type="button">立即进入 ↗</button></div>
+  </section>
 </body></html>
