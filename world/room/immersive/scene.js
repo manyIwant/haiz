@@ -430,6 +430,7 @@
     sun.color.lerp(new THREE.Color(p.sun),alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
     windowFill.color.lerp(new THREE.Color(p.fill),alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
     weatherCurrent.rain+=(p.rain-weatherCurrent.rain)*alpha;weatherCurrent.cloud+=(p.cloud-weatherCurrent.cloud)*alpha;weatherCurrent.wet+=(p.wet-weatherCurrent.wet)*alpha;
+    roomLife?.update(climate,weatherCurrent.rain,elapsed,quality);
     if(authoredBounce){
       // The atlas represents static diffuse bounce, not a costly global-illumination pass.
       const target=climate==='sunbreak'?.25:climate==='morning'?.12:.025;
@@ -451,6 +452,9 @@
   // Meshes that share static PBR materials and box topology are batched only
   // after the authored room is assembled. Furniture contacts are one transparent
   // instanced draw call even when mobile dynamic shadows are disabled.
+  // Original lived-in room details are created once. Instanced curtains and
+  // four rain-glazing panes are updated by climate, not a particle emitter.
+  const roomLife=window.HAIZRoomLife?.build(THREE,scene,quality)||null;
   const roomContacts=window.HAIZRoomGeometry?.addContactShadows(scene,THREE,desks)||null;
   const geometryStats=window.HAIZRoomGeometry?.batchBoxes(scene,THREE,2)||{instances:0,batches:0,drawCallsSaved:0};
   if(heroAsset?.detailMeshes && quality==='low')for(const detail of heroAsset.detailMeshes)detail.visible=false;
@@ -582,7 +586,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,humanScaleRoom:roomLife?.areEssentialVisible()===true,curtainInstances:roomLife?.counts.curtains||0,rainWindowInstances:roomLife?.counts.rainPanes||0,rainGlazingVisible:roomLife?.isRainVisible()||false,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
