@@ -82,7 +82,13 @@
    const trim=new T.Mesh(new T.TorusGeometry(.026,.004,8,15),brass);
    trim.rotation.x=Math.PI/2;trim.position.set(.18,.84,1.235);marker.add(trim);
    marker.userData.haizHero=true;
-   return {root:marker,detailCount:marker.children.length,detailMeshes:marker.children.slice(3)};
+   // Essential shape silhouettes survive the low tier. Hide only fine ornaments,
+   // not the chair, lamp or book (removing those would turn LOD into missing props).
+   return {
+     root:marker,detailCount:marker.children.length,
+     detailMeshes:[penBody,penCap,tea,handle,socket,trim],
+     essentialMeshes:[top,cushion,back,head]
+   };
  }
  // A single hand-authored light-bounce atlas: floor illumination roughly obeys
  // the location of four windows. It is computed once on scene construction,
