@@ -41,3 +41,16 @@ From repo root, run `node --test world/atlas/tests/smoke.test.cjs`. The GitHub A
 ## Avoid integration conflicts
 
 This preview adds a single footer link in `world/app.js` but deliberately **does not** replace `world/style.css`, the Lucent native dock, service workers, build manifests or Android/iOS binaries. This makes the preview reviewable while pending Draft PRs for Flow, the real campus WebGL engine, and the native shell remain unresolved.
+
+
+## V3 / real campus place connections
+
+The cinematic reference inspired a distinction between a full-screen *introduction* and an actual place interaction. ATLAS's first image remains a real campus photo; the landing page **does not pretend that aerial photograph is WebGL**.
+
+- Select 凤栖堂 / 砚池 / 图书馆 / 教学楼 in the lightweight atlas, then choose **在三维校园中抵达这里** to load `world/campus.html` with the WebGL engine's existing `focus=<validated id>` and `observe=1` query controls. Mobile coarse-pointer hardware requests the existing `low` tier as an initial preference; full 3D is not fetched on the atlas page.
+- The retained engine handles safe arrival points, shadows, collisions, map, walk controls and optional internal route planning. No fake cinematic camera flight is claimed: `focus` currently positions the first-person camera *near* the selected model location after the user presses the enter button.
+- `world/campus-journey-ui.js` complements, but never replaces, the engine: when accessed via a focus link it personalizes the intro with the project-owned location photo and name; the retained map and pause dialogs gain contextual links to genuine project pages (STILLROOM, independent conceptual classroom, architecture articles) and a way back to ATLAS.
+- These structures are intentionally separate from the industrial monitoring/dashboard aesthetic. The creative reference is interaction architecture rather than copied video, 3-D meshes, text, or brand visuals.
+- Public release still needs representative device tests and permission review for the retained campus photographs. Do not describe the project model as a survey-faithful reconstruction or the editorial day/dusk/night palette as true weather.
+
+**Verification:** `node --test world/atlas/tests/smoke.test.cjs` exercises relative routes, source syntax, UMD spring math, semantic photo hotspots and WebGL `focus` contracts. The CI Playwright job checks mouse/touch-width DOM interactions and screenshots. Static contracts are not a substitute for playing through the full WebGL arrival on a physical Android/iOS device.
