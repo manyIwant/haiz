@@ -251,9 +251,13 @@
   let heroAsset=null;
   function buildDesk(x,z,featured=false) {
     const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
-    if(!featured || !window.HAIZHeroAssets)box(1.76,.07,.78,0,.79,0,deskTop,g);
-    for(const dx of [-.79,.79])for(const dz of [-.3,.3])box(.055,.72,.055,dx,.38,dz,legMaterial,g);
-    box(1.55,.09,.04,0,.49,-.29,legMaterial,g);
+    // The hero kit provides its OWN legs, chair and braces. Do not draw the
+    // ordinary class furniture again beneath it (the old model overlapped).
+    if(!featured || !window.HAIZHeroAssets){
+      box(1.76,.07,.78,0,.79,0,deskTop,g);
+      for(const dx of [-.79,.79])for(const dz of [-.3,.3])box(.055,.72,.055,dx,.38,dz,legMaterial,g);
+      box(1.55,.09,.04,0,.49,-.29,legMaterial,g);
+    }
     // Economical base furniture stays instanced; the hero station adds fine geometry.
     if(!featured || !window.HAIZHeroAssets){
       box(.33,.025,.37,-.43,.85,-.10,mats.paper,g);
@@ -282,10 +286,12 @@
       box(.14,.02,.30,-.57,.84,.11,ink,g,false);
     }
     // Chair beside table, with thin metal structure instead of a solid block.
-    const chair=new THREE.Group();chair.position.set(.18,0,.92);g.add(chair);
-    box(.66,.08,.61,0,.49,0,chairMat,chair);
-    box(.66,.64,.065,0,.82,.275,chairMat,chair);
-    for(const dx of [-.27,.27])for(const dz of [-.22,.22])box(.042,.47,.042,dx,.24,dz,legMaterial,chair);
+    if(!featured || !window.HAIZHeroAssets){
+      const chair=new THREE.Group();chair.position.set(.18,0,.92);g.add(chair);
+      box(.66,.08,.61,0,.49,0,chairMat,chair);
+      box(.66,.64,.065,0,.82,.275,chairMat,chair);
+      for(const dx of [-.27,.27])for(const dz of [-.22,.22])box(.042,.47,.042,dx,.24,dz,legMaterial,chair);
+    }
     const footprint={x,z,w:.98,d:1.03};desks.push(footprint);return g;
   }
   for(const x of [-4.25,-1.55,1.15,3.85])for(const z of [-2.95,-.48,2.00]){
