@@ -32,3 +32,18 @@ Blender is **not installed** on the connected Mac. The current additions are ori
 An artist-generated desk/room GLB with optimized UVs and true AO/lightmaps, material texture atlases, three LODs, meshopt/Draco/KTX2 as appropriate, then rendering/footprint measurements on the actual vivo S10. The scene should keep a small lightweight fallback for unsupported WebGL devices.
 
 CI should not be green-lit purely for feature existence: inspect weather and close-up screenshots for clipped highlights, unreadable title, unrealistic geometry, and any desk overlap.
+
+
+## V3.1 follow-up: visual and actual-device fixes
+
+A rendering review of the original V3.0 seated-camera screenshot showed a repeated toy skyline and overly pale empty courtyard. The scene now replaces five distant, nearly identical rectangular buildings with one **original conceptual** 58-metre wide, three-level teaching-wing composition: continuous sheltered gallery, distinct eaves, recessed window/column hierarchy, central vertical landmark, subdued masonry and a paved/landscaped forecourt at believable viewing distance. It is deliberately not described as the actual measured 海南中学 architecture.
+
+The scene continues to use the existing bundled HAIZ paving atlas plus locally authored geometry. No copied game geometry or WebGL network calls.
+
+**Furniture overlap:** formerly the hero set was instantiated on top of a second primitive chair, desk top and duplicate leg framework. The redundant base geometry is now omitted only for that detailed workstation. Ordinary 11 student desks remain cheap, instanced primitives.
+
+**Low tier fidelity:** first V3 incorrectly hid the complete hero chair and lamp when toggling to low quality. The refined LOD hides the pen body/cap, surface tea, cup handle, lamp socket and chair trim, *not* primary desk/chair/lamp silhouette. Browser QA now asserts hero-essential visibility after a real quality toggle.
+
+**Actual native QA reliability:** review of the API 33 failure artifact showed a working native app screenshot still on the study screen, despite the scripted dock tap. The tester incorrectly treated the whole Android display as the WebView when projecting touch Y positions. `mAppBounds` from Android activities explicitly reveals a status-bar start at y=136 pixels on the 1080×2340 emulator. Test taps now map actual DOM element coordinates to native app bounds, not the status/navigation bars. Capture and UI readiness assertions are preserved.
+
+All these are engineering improvements, not device GPU/fps benchmarks or proof of visual parity with Dream Road.
