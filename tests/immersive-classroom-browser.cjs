@@ -21,7 +21,7 @@ const results=[];
   const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'],...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
   try{
     for(const size of [{width:1440,height:900},{width:390,height:844}]){
-      const context=await browser.newContext({viewport:size,deviceScaleFactor:1});
+      const context=await browser.newContext({viewport:size,deviceScaleFactor:1,isMobile:size.width<600,hasTouch:size.width<600});
       const page=await context.newPage();
       page.setDefaultTimeout(45000);
       const errors=[],requests=[];
@@ -42,11 +42,11 @@ const results=[];
         await page.screenshot({path:path.join(out,size.width+'-'+mode+'.png')});
       }
       await page.locator('#explore').click();
-      assert.equal(await page.locator('#exploreUI').isVisible(),true);
+      assert.equal(await page.locator('#exploreUI').evaluate(el=>el.hidden),false,'The world HUD is enabled after entering');
       assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().entered),true);
-      await page.keyboard.down('KeyW').catch(()=>{});
+      await page.keyboard.down('w');
       await page.waitForTimeout(120);
-      await page.keyboard.up('KeyW').catch(()=>{});
+      await page.keyboard.up('w');
       await page.locator('#deskAction').click();
       assert.equal(await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics().focused),true);
       await page.locator('#qualityToggle').click();
