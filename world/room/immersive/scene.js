@@ -124,6 +124,29 @@
     box(2.38,2.23,.018,x,2.05,-5.02,mats.glass,scene,false);
     // Rain streaks can catch some environmental light without extra reflection passes.
   }
+  // Extremely cheap stained-air sunlight: one alpha texture reused across three
+  // planes. Only visible when a real low sun shines through a window, no postprocess.
+  const rayCanvas=document.createElement('canvas');rayCanvas.width=96;rayCanvas.height=256;
+  const rayContext=rayCanvas.getContext('2d');
+  const rayHorizontal=rayContext.createLinearGradient(0,0,96,0);
+  rayHorizontal.addColorStop(0,'rgba(255,239,206,0)');rayHorizontal.addColorStop(.5,'rgba(255,239,206,.55)');rayHorizontal.addColorStop(1,'rgba(255,239,206,0)');
+  rayContext.fillStyle=rayHorizontal;rayContext.fillRect(0,0,96,256);
+  rayContext.globalCompositeOperation='destination-in';
+  const rayVertical=rayContext.createLinearGradient(0,0,0,256);
+  rayVertical.addColorStop(0,'rgba(0,0,0,0)');rayVertical.addColorStop(.35,'rgba(0,0,0,.32)');rayVertical.addColorStop(.75,'rgba(0,0,0,.72)');rayVertical.addColorStop(1,'rgba(0,0,0,0)');
+  rayContext.fillStyle=rayVertical;rayContext.fillRect(0,0,96,256);
+  const rayTexture=new THREE.CanvasTexture(rayCanvas);
+  const shafts=[];
+  for(const x of [-4.45,-1.67,1.11]){
+    const beam=new THREE.Mesh(new THREE.PlaneGeometry(1.9,5.4),new THREE.MeshBasicMaterial({
+      color:'#ffdbad',map:rayTexture,transparent:true,opacity:.1,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false
+    }));
+    beam.position.set(x+.35,1.85,-2.65);
+    beam.rotation.set(-.60,-.20,-.09);
+    beam.renderOrder=8;beam.castShadow=false;beam.receiveShadow=false;
+    scene.add(beam);shafts.push(beam);
+  }
   box(14,.12,.43,0,.88,-4.7,mats.terrazzo);
   for(let i=0;i<9;i++){
     const z=-4.3+i*1.27;
@@ -273,6 +296,8 @@
     sun.color.lerp(new THREE.Color(p.sun),alpha);sun.intensity+=(p.sunPower-sun.intensity)*alpha;hemi.intensity+=(p.hemi-hemi.intensity)*alpha;
     windowFill.color.lerp(new THREE.Color(p.fill),alpha);lampLight.intensity+=((lampOn?p.lamp:0)-lampLight.intensity)*alpha;
     weatherCurrent.rain+=(p.rain-weatherCurrent.rain)*alpha;weatherCurrent.cloud+=(p.cloud-weatherCurrent.cloud)*alpha;weatherCurrent.wet+=(p.wet-weatherCurrent.wet)*alpha;
+    const rays=quality==='low'||reduced?0:(climate==='sunbreak'?.12:climate==='morning'?.06:0);
+    for(const beam of shafts)beam.material.opacity+=(rays-beam.material.opacity)*alpha;
     mats.tile.roughness=.5-weatherCurrent.wet*.23;mats.terrazzo.roughness=.76-weatherCurrent.wet*.12;
     rainMesh.visible=weatherCurrent.rain>.06&&!reduced;
     if(!rainMesh.visible){rainGeo.setDrawRange(0,0);return;}
