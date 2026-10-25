@@ -39,6 +39,12 @@ const server = http.createServer((request,response) => {
     await page.locator('[data-spatial-place="library"]').click();
     assert.equal(await page.locator("#spatialLocationName").innerText(),"图书馆");
     assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../stillroom/");
+    const arrival = new URL(await page.locator("#spatialLocation3d").getAttribute("href"), page.url());
+    assert.equal(arrival.pathname,"/world/campus.html");
+    assert.equal(arrival.searchParams.get("focus"),"library");
+    assert.equal(arrival.searchParams.get("observe"),"1");
+    assert.equal(arrival.searchParams.get("quality"),null,"desktop arrives at balanced quality");
+
     await page.locator('[data-spatial-place="fengqi"]').click();
     assert.equal(await page.locator("#spatialLocationName").innerText(),"凤栖堂");
     await page.locator('[data-spatial-place="pond"]').click();
@@ -112,6 +118,10 @@ const server = http.createServer((request,response) => {
       assert.equal(await page.locator("#spatialStage").isVisible(),true);
       await page.locator('[data-spatial-place="classroom"]').click();
       assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../room/immersive/");
+      const arrival = new URL(await page.locator("#spatialLocation3d").getAttribute("href"),page.url());
+      assert.equal(arrival.searchParams.get("focus"),"yihao");
+      assert.equal(arrival.searchParams.get("observe"),"1");
+
       const geometry = await page.evaluate(() => ({
         viewport:innerWidth,
         workspace:document.querySelector(".workspace").getBoundingClientRect().width,
