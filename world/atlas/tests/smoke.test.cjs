@@ -89,3 +89,21 @@ test("spatial campus scene remains accessible, progressive, and non-geographic",
   assert.match(js,/document\.body\.dataset\.atlasView/);
   assert.match(js,/if \(document\.hidden && pendingPortal\) cancelPortal\(\)/);
 });
+
+test("campus model deep links only use supported world destinations and contextual routes", () => {
+  const bridge = fs.readFileSync(path.join(root, "../campus-journey-ui.js"), "utf8");
+  const campus = fs.readFileSync(path.join(root, "../campus.html"), "utf8");
+  const spatial = fs.readFileSync(path.join(root, "spatial.js"), "utf8");
+  for (const id of ["beimen","fengqitang","yanchi","library","yihao"]) {
+    assert.ok(bridge.includes(id), "bridge must recognize "+id);
+    assert.ok(spatial.includes('campusId:"'+id+'"'), "atlas must name actual engine id "+id);
+  }
+  assert.match(spatial, /walk\.searchParams\.set\("focus",record\.campusId\)/);
+  assert.match(spatial, /walk\.searchParams\.set\("observe","1"\)/);
+  assert.match(campus, /world\/campus-journey-ui\.js/);
+  assert.match(campus, /world\/campus-journey-ui\.css/);
+  assert.match(bridge, /window\.HaizCampus/);
+  assert.match(bridge, /world\/stillroom\//);
+  assert.match(bridge, /world\/room\/immersive\//);
+  assert.ok(!bridge.includes("eval("));
+});
