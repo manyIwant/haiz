@@ -57,3 +57,7 @@ body.zen .topbar,body.zen .mainstage .editorial-label,body.zen .stage-copy,body.
 .haiz-cinema-background .scene-painting{background-image:url('../cinema/media/poster.png');background-position:center;background-size:cover}.haiz-cinema-background .scene-tint{opacity:.23}.haiz-cinema-background .weather,.haiz-cinema-background .film-grain{display:none}.haiz-cinema-background .stage-copy{text-shadow:0 2px 16px #000}.haiz-cinema-background .intro-mask{display:none}.haiz-cinema-embedded .haiz-return{visibility:hidden}
 
 .haiz-export-notes{min-height:44px;margin-top:20px;padding:10px 16px;border:1px solid #8e968c;background:transparent;color:#28332f;font-size:14px}
+
+/* Optional spatial companion: never replaces STILLROOM's lightweight focus UI. */
+.enter-spatial{display:inline-flex;align-items:center;justify-content:space-between;gap:25px;max-width:max-content;margin-top:15px;padding:9px 1px;border-bottom:1px solid rgba(238,222,190,.5);color:#f0e7d7;text-decoration:none;font-size:12px;letter-spacing:.08em;text-shadow:0 1px 12px rgba(0,0,0,.36)}
+.enter-spatial span{font-size:15px}.enter-spatial:hover{color:#fbdab2;border-color:#fbdab2}.enter-spatial:focus-visible{outline:2px solid #fbdab2;outline-offset:3px}
