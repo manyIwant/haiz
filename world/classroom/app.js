@@ -21,7 +21,11 @@ let who = null,
   polling = false,
   edit = null,
   pending = null,
-  listSignature = "";
+  listSignature = "",
+  devicesCheckedAt = -Infinity,
+  devicesCheckedWall = 0,
+  syncFailureActive = false;
+const filters = { scope: "all", date: schoolDate(), status: "active" };
 const key = () => `haiz.pilot.assignment.draft.${who?.name}`;
 function toast(text) {
   $("#message").textContent = text;
@@ -57,6 +61,7 @@ async function api(path, body, requestId) {
 function invalidate(reason = "当前会话已过期或撤销，公开缓存已收起。") {
   snapshot = null;
   devices = [];
+  devicesCheckedAt = -Infinity;
   who = null;
   document.querySelectorAll("dialog").forEach((d) => d.close());
   $("#identity").textContent = "会话已失效";
@@ -108,17 +113,64 @@ function currentRows() {
       n.review === "approved",
   );
 }
+function filteredRows() {
+  return snapshot.assignments.filter(
+    (n) =>
+      (filters.scope === "all" || n.scope === filters.scope) &&
+      n.studyDate === filters.date &&
+      (filters.status === "all" ||
+        (filters.status === "withdrawn" && n.status === "withdrawn") ||
+        (filters.status === "pending" &&
+          n.status === "published" &&
+          n.review === "pending") ||
+        (filters.status === "active" && n.status === "published")),
+  );
+}
+function setFilters(next) {
+  Object.assign(filters, next);
+  for (const name of ["scope", "date", "status"]) {
+    const control = $("#filter-" + name);
+    if (control) control.value = filters[name];
+  }
+  updateLists();
+}
+function renderDevices() {
+  if (!isTeacher() || !$("#devices")) return;
+  const age = Math.max(
+    0,
+    performance.now() - devicesCheckedAt,
+    Date.now() - devicesCheckedWall,
+  );
+  $("#devices").innerHTML = devices.length
+    ? devices
+        .map((d) => {
+          const fresh =
+            d.fresh && Number.isFinite(d.freshForMs) && age < d.freshForMs;
+          return `<div class="device" data-fresh="${fresh}"><strong>${esc(d.scope)} · ${esc(d.account)} 试用会话</strong><span>${fresh ? { received: "客户端已接收", rendered: "客户端报告已呈现", suppressed: "客户端已隐藏" }[d.state] || "未确认" : "当前版本接收状态已过期或未确认"}</span><small>${d.at ? "最近报告 " + new Date(d.at).toLocaleTimeString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : "尚无回执"} · ${{ "manual-hidden": "手动隐藏", "document-hidden": "页面不在前台", "clock-mismatch": "设备日期需核对" }[d.reason] || ""} · ${d.itemCount ?? 0} 项今日作业 · 不代表学生已阅读</small></div>`;
+        })
+        .join("")
+    : '<p class="muted">当前没有已登录的授权教室会话；未确认送达。</p>';
+}
 function updateLists() {
   if (!who || !snapshot) return;
-  const rows = isTeacher() ? snapshot.assignments : currentRows();
+  const rows = isTeacher() ? filteredRows() : currentRows();
   const wrongDate = !isTeacher() && snapshot.schoolDate !== schoolDate();
-  const signature = JSON.stringify([rows, hidden, who.name]);
+  const signature = JSON.stringify([
+    rows,
+    hidden,
+    who.name,
+    wrongDate,
+    isTeacher() ? filters : null,
+  ]);
   if (signature !== listSignature) {
     $("#assignment-list").innerHTML = hidden
       ? '<div class="status">已手动隐藏。恢复前不会自动展示。</div>'
       : wrongDate
         ? '<div class="status">设备日期与学校数据不一致，已收起清单。请核对设备时间后刷新。</div>'
         : rows.map(card).join("") ||
+          (isTeacher()
+            ? '<div class="status">所选班级、日期或状态没有匹配的作业。可切换筛选查看其他已同步记录；筛选不会修改草稿。</div>'
+            : "") ||
           '<div class="status">当前没有可显示的作业。未同步或断网时，空清单不代表没有作业；请以教师说明为准。</div>';
     listSignature = signature;
   }
@@ -130,15 +182,18 @@ function updateLists() {
         hour12: false,
       })
     : "尚未同步";
-  if (isTeacher())
-    $("#devices").innerHTML = devices.length
-      ? devices
-          .map(
-            (d) =>
-              `<div class="device"><strong>${esc(d.scope)} · ${esc(d.account)} 试用会话</strong><span>${d.fresh ? { received: "客户端已接收", rendered: "客户端报告已呈现", suppressed: "客户端已隐藏" }[d.state] || "未确认" : "未收到当前版本的有效回执"}</span><small>${d.at ? "最近报告 " + new Date(d.at).toLocaleTimeString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : "尚无回执"} · ${{ "manual-hidden": "手动隐藏", "document-hidden": "页面不在前台", "clock-mismatch": "设备日期需核对" }[d.reason] || ""} · ${d.itemCount ?? 0} 项今日作业 · 不代表学生已阅读</small></div>`,
-          )
-          .join("")
-      : '<p class="muted">当前没有已登录的授权教室会话；未确认送达。</p>';
+  if (isTeacher()) {
+    $("#list-summary").textContent =
+      filters.date +
+      " · " +
+      (filters.scope === "all" ? "全部授权班级" : filters.scope) +
+      " · " +
+      rows.length +
+      " 项匹配 / " +
+      snapshot.assignments.length +
+      " 项已同步";
+    renderDevices();
+  }
 }
 function fill(input) {
   const f = $("#assignment-form");
@@ -158,7 +213,7 @@ function build() {
   $("#main").className = who.role === "display" ? "screen" : "";
   $("#main").setAttribute("aria-busy", "false");
   $("#main").innerHTML =
-    `<h1>${isTeacher() ? "班级作业工作台" : "今日班级作业"}</h1><div class="summary"><b id="count"></b><span id="sync"></span>${who.role === "display" ? '<button id="hide">隐藏清单</button>' : ""}</div><p class="muted">${who.role === "display" ? "手动展示模式；未连接 ClassIsland，不自动宣称已识别晚修。" : "与通知工作台共用本次授权会话，无需重新输入凭据。"}</p><div class="grid">${isTeacher() ? `<section><form id="assignment-form"><h2 id="form-title">布置作业</h2><div class="columns"><label>授权班级<select name="scope">${snapshot.scopes.map((s) => `<option>${esc(s)}</option>`).join("")}</select></label><label>学科<select name="subject">${SUBJECTS.map((s) => `<option>${s}</option>`).join("")}</select></label></div><label>展示日期<input name="studyDate" type="date" value="${schoolDate()}" required></label><label>公开要求<textarea name="content" maxlength="400" required placeholder="写清题目、范围和要求；勿输入学生个人信息"></textarea></label><label>需要准备<input name="materials" maxlength="100"></label><label>交付说明<input name="due" maxlength="100"></label><p id="draft-state" class="muted" role="status">只在当前可信浏览器会话保存草稿；退出前请完成或复制。</p><div class="actions"><button class="primary" type="submit">预览作业</button><button type="button" id="cancel-edit">新建作业</button></div></form></section>` : ""}<section>${isTeacher() ? '<section class="status"><h2>今日清单接收状态</h2><p class="muted">只确认当天有效公开内容，不含待审、撤回或未来日期作业。</p><div id="devices"></div></section>' : ""}<h2>公开清单</h2><div id="assignment-list" class="cards"></div></section></div>`;
+    `<h1>${isTeacher() ? "班级作业工作台" : "今日班级作业"}</h1><div class="summary"><b id="count"></b><span id="sync"></span>${who.role === "display" ? '<button id="hide">隐藏清单</button>' : ""}</div><p class="muted">${who.role === "display" ? "课表尚未连接，当前由教师手动展示。" : "与通知工作台共用本次授权会话，无需重新输入凭据。"}</p>${isTeacher() ? '<nav class="workbench-jumps" aria-label="工作台区域"><a href="#assignment-form">填写作业</a><a href="#list-controls">筛选与清单</a><a href="#devices-section">接收状态</a></nav>' : ""}<div class="grid">${isTeacher() ? `<section><form id="assignment-form"><h2 id="form-title">布置作业</h2><div class="columns"><label>授权班级<select name="scope">${snapshot.scopes.map((s) => `<option>${esc(s)}</option>`).join("")}</select></label><label>学科<select name="subject">${SUBJECTS.map((s) => `<option>${s}</option>`).join("")}</select></label></div><label>展示日期<input name="studyDate" type="date" value="${schoolDate()}" required></label><label>公开要求<textarea name="content" maxlength="400" required placeholder="写清题目、范围和要求；勿输入学生个人信息"></textarea></label><label>需要准备<input name="materials" maxlength="100"></label><label>交付说明<input name="due" maxlength="100"></label><p id="draft-state" class="muted" role="status">只在当前可信浏览器会话保存草稿；退出前请完成或复制。</p><div class="actions"><button class="primary" type="submit">预览作业</button><button type="button" id="cancel-edit">新建作业</button></div></form></section>` : ""}<section>${isTeacher() ? '<section id="devices-section" class="status"><h2>今日清单接收状态</h2><p class="muted">只确认当天有效公开内容，不含待审、撤回或未来日期作业。</p><div id="devices"></div></section>' : ""}<h2>作业清单</h2>${isTeacher() ? `<div id="list-controls" class="list-filters" aria-label="作业清单筛选"><label>查看班级<select id="filter-scope"><option value="all">全部授权班级</option>${snapshot.scopes.map((s) => `<option>${esc(s)}</option>`).join("")}</select></label><label>查看日期<input id="filter-date" type="date" value="${filters.date}"></label><label>查看状态<select id="filter-status"><option value="active">有效与待审</option><option value="pending">待审核</option><option value="withdrawn">已撤回</option><option value="all">所有状态</option></select></label><button id="filter-today">查看今天</button><button id="filter-reset">重置筛选</button></div><p id="list-summary" class="muted" role="status"></p><p class="muted">筛选只改变清单，不会改变左侧草稿的发布班级和日期。</p>` : ""}<div id="assignment-list" class="cards"></div></section></div>`;
   if (!isTeacher()) $("#main .grid").classList.remove("grid");
   const saved = draft();
   if (isTeacher() && saved?.input) {
@@ -172,6 +227,10 @@ function build() {
     } else
       $("#draft-state").textContent =
         "服务端已有新版本，旧草稿仍保留，未自动覆盖";
+  }
+  for (const name of ["scope", "date", "status"]) {
+    const control = $("#filter-" + name);
+    if (control) control.value = filters[name];
   }
   updateLists();
 }
@@ -209,10 +268,22 @@ async function sync() {
     }
     snapshot = next;
     lastSync = next.serverTime;
-    if (isTeacher()) devices = (await api("deliveries")).devices;
+    if (isTeacher()) {
+      const checkedAt = performance.now(),
+        checkedWall = Date.now();
+      const status = await api("deliveries");
+      devices = status.devices;
+      devicesCheckedAt = checkedAt;
+      devicesCheckedWall = checkedWall;
+    }
     if (!$("#assignment-list")) build();
     else updateLists();
     $("#refresh").textContent = "刷新清单";
+    if (syncFailureActive) {
+      syncFailureActive = false;
+      clearTimeout(toast.timer);
+      $("#message").textContent = "";
+    }
     await acknowledge();
   } catch (e) {
     if (who) {
@@ -223,7 +294,14 @@ async function sync() {
         $("#main").innerHTML =
           "<h1>暂时无法读取班级清单</h1><p>点击上方刷新清单重试；不要据此判断今天没有作业。</p>";
       }
-      if (e.status !== 409) toast(e.message);
+      if (e.status !== 409 && !syncFailureActive) {
+        syncFailureActive = true;
+        toast(
+          e.status
+            ? e.message
+            : "连接中断，当前显示最后一次有效清单；恢复网络后可刷新。",
+        );
+      }
     }
   } finally {
     polling = false;
@@ -286,7 +364,14 @@ async function publish(input, dialog) {
     $("#form-title").textContent = "布置作业";
     $("#draft-state").textContent = "已保存；当前工作草稿已清除";
     dialog.close();
-    toast("服务端已保存，请查看教室接收状态。");
+    setFilters({
+      scope: input.scope,
+      date: input.studyDate,
+      status: input.submitForReview ? "pending" : "active",
+    });
+    toast(
+      "服务端已保存，清单已切换到这次发布的班级和日期；请查看今日接收状态。",
+    );
     await sync();
   } catch (e) {
     toast(
@@ -304,6 +389,20 @@ async function publish(input, dialog) {
 document.addEventListener("input", (e) => {
   if (e.target.closest("#assignment-form")) saveDraft();
 });
+document.addEventListener("change", (e) => {
+  const name = e.target.id?.replace("filter-", "");
+  if (!isTeacher() || !["scope", "date", "status"].includes(name)) return;
+  const value = e.target.value;
+  if (name === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+  if (name === "scope" && value !== "all" && !snapshot.scopes.includes(value))
+    return;
+  if (
+    name === "status" &&
+    !["active", "pending", "withdrawn", "all"].includes(value)
+  )
+    return;
+  setFilters({ [name]: value });
+});
 document.addEventListener("submit", (e) => {
   if (e.target.id === "assignment-form") {
     e.preventDefault();
@@ -319,6 +418,10 @@ document.addEventListener("click", async (e) => {
   if (!b || busy) return;
   try {
     if (b.id === "refresh") return sync();
+    if (b.id === "filter-today")
+      return setFilters({ date: schoolDate(), status: "active" });
+    if (b.id === "filter-reset")
+      return setFilters({ scope: "all", date: schoolDate(), status: "active" });
     if (b.id === "hide") {
       hidden = !hidden;
       b.textContent = hidden ? "恢复清单" : "隐藏清单";
@@ -384,6 +487,7 @@ document.addEventListener("visibilitychange", () => {
   if (who?.role === "display" && document.hidden)
     report("suppressed", "document-hidden").catch(() => {});
   if (!document.hidden) {
+    devicesCheckedAt = -Infinity;
     if ($("#assignment-list")) updateLists();
     sync();
   }
@@ -392,6 +496,7 @@ setInterval(() => {
   if (who && !document.hidden) sync();
 }, 10000);
 setInterval(() => {
+  if (isTeacher() && !document.hidden) renderDevices();
   if (
     who &&
     !isTeacher() &&

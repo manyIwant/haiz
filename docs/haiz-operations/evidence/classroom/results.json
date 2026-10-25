@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-25T07:03:27.251Z",
+  "at": "2026-10-25T07:49:43.212Z",
   "environment": "Linux Chromium; TLS loopback fixture with isolated test certificate; independent browser sessions; not school network or native device",
   "checks": [
     "Teacher, student and display enter classroom from Flow with the same secure cookie; read-only identities have no edit controls",

@@ -131,6 +131,55 @@ test("HTTPS classroom shares identity, permissions, restart-safe mutations and v
       false,
     );
     assert.equal((await req(student, "deliveries")).status, 403);
+    await req(a, "assignments", {
+      ...input,
+      scope: "演示二班",
+      content: "其他班的更新不应干扰一班",
+    });
+    assert.equal(
+      (await req(a, "deliveries")).body.devices.find(
+        (d) => d.scope === "演示一班",
+      ).fresh,
+      true,
+    );
+    assert.equal(
+      (
+        await req(display, "receipt", {
+          token: snap.body.receiptToken,
+          state: "rendered",
+        })
+      ).status,
+      200,
+    );
+    assert.ok(
+      (await req(a, "deliveries")).body.devices.find((d) => d.fresh)
+        .freshForMs > 0,
+    );
+    await req(a, "assignments", {
+      ...input,
+      studyDate: schoolDate(time + 86400000),
+      content: "同班明日作业不改变今日清单",
+    });
+    await req(a, "assignments", {
+      ...input,
+      submitForReview: true,
+      content: "未审核内容不改变公开清单",
+    });
+    assert.equal(
+      (await req(a, "deliveries")).body.devices.find(
+        (d) => d.scope === "演示一班",
+      ).fresh,
+      true,
+    );
+    assert.equal(
+      (
+        await req(display, "receipt", {
+          token: snap.body.receiptToken,
+          state: "rendered",
+        })
+      ).status,
+      200,
+    );
     const beforeToken = snap.body.receiptToken;
     await req(a, "assignments", {
       ...input,

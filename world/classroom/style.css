@@ -288,3 +288,47 @@ dialog .actions {
     color: black;
   }
 }
+.list-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.list-filters label {
+  margin: 0;
+}
+.device[data-fresh="false"] span {
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .list-filters {
+    grid-template-columns: 1fr;
+  }
+  .list-filters button {
+    width: 100%;
+  }
+}
+.workbench-jumps {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.workbench-jumps a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+#assignment-form,
+#list-controls,
+#devices-section {
+  scroll-margin-top: 20px;
+}

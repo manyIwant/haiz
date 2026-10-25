@@ -24,6 +24,7 @@ jobs:
       - run: npm --prefix world run test:classroom
       - run: node world/tests/operations-browser.mjs
       - run: node world/tests/classroom-pilot-browser.mjs
+      - run: node world/tests/classroom-workbench-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

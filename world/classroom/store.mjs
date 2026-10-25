@@ -128,7 +128,6 @@ export function createClassroomStore(
     if (
       proof.expires <= now() ||
       proof.issued > now() ||
-      proof.revision !== state.revision ||
       proof.date !== schoolDate(now()) ||
       proof.digest !== digest(publicRows(who.scope))
     )
@@ -196,9 +195,16 @@ export function createClassroomStore(
             account: s.account,
             scope: s.scope,
             ...publicRow,
+            // Remaining freshness is measured on the server, then ages in the UI.
+            freshForMs:
+              row &&
+              row.digest === digest(publicRows(s.scope)) &&
+              row.date === schoolDate(now()) &&
+              now() >= Date.parse(row.at)
+                ? Math.max(0, 90000 - (now() - Date.parse(row.at)))
+                : 0,
             fresh:
               !!row &&
-              row.revision === state.revision &&
               row.digest === digest(publicRows(s.scope)) &&
               row.date === schoolDate(now()) &&
               now() - Date.parse(row.at) >= 0 &&

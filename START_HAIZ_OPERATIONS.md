@@ -13,3 +13,5 @@
 [验证与变更记录](docs/haiz-operations/VERIFICATION.md)。已有动画、第一人称校园和学习工具保留。本轮不替换先前发行文件，也未完成HTTPS作业服务、SSO、设备回执或真实ClassIsland部署。
 
 HTTPS增量已加入：在现有试用服务的Flow登录后选择“班级作业”，无需重复登录。教师与授权只读会话可验证真实HTTP同步和客户端状态回执。详见[HTTPS链路](docs/haiz-operations/HTTPS-CLASSROOM.md)。新HTTPS教室页当前手动展示，未连接真实ClassIsland；原localhost课表模拟链路继续保留。
+
+教师清单现在可按班级、日期和审核/撤回状态筛选；筛选不改变草稿，发布明日作业后自动切换到对应范围。回执会在教师端离线时本地到期，其他班级更新不影响本班清单。新走查命令：`npm --prefix world run test:workbench:browser`。
