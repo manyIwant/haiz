@@ -77,6 +77,17 @@ const server = http.createServer((request,response) => {
       await page.goto(origin+"/world/atlas/#home");
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1),true,"overflow width="+width);
+      const geometry = await page.evaluate(() => ({
+        viewport:innerWidth,
+        workspace:document.querySelector(".workspace").getBoundingClientRect().width,
+        main:document.querySelector("#main").getBoundingClientRect().width,
+        scene:document.querySelector(".scene-card").getBoundingClientRect().width,
+        heading:document.querySelector("#editionTitle").getBoundingClientRect().height,
+        documentHeight:document.documentElement.scrollHeight
+      }));
+      console.log("MOBILE_GEOMETRY "+JSON.stringify(geometry));
+      assert.ok(geometry.main >= width*.85 && geometry.scene >= width*.68,"mobile main must use the viewport width");
+      assert.ok(geometry.heading < 240 && geometry.documentHeight < 4300,"mobile content cannot collapse into a tall narrow column");
       if(width===390) await page.screenshot({path:path.join(output,"atlas-390.png"),fullPage:true});
       if(width===320) await page.screenshot({path:path.join(output,"atlas-320.png"),fullPage:true});
     }
