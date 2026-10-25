@@ -160,26 +160,67 @@
     box(1.4,.035,.21,x,4.005,z,areaLampMat,scene,false);
     box(1.4,.016,.014,x,3.977,z+.11,mats.frame,scene,false);
   }
-  // Real-world model silhouettes, depth and broad reflection on architecture outside.
-  box(74,.13,110,0,-.28,-53,material('#8eaaa5',.86),scene,false);
-  const exterior=new THREE.Group();scene.add(exterior);
-  for(let i=0;i<5;i++){
-    const x=-33+i*17,depth=-48-(i%2)*18;
-    box(11,6.3,6.2,x,3,depth,mats.brick,exterior);
-    box(12.5,.42,7.4,x,6.45,depth,mats.tile,exterior);
-    // Shallow projecting eaves and a sheltered hall make the skyline read as architecture.
-    box(13.1,.14,7.75,x,6.17,depth,mats.frame,exterior);
-    box(12.8,.11,7.65,x,6.72,depth,mats.tile,exterior);
-    for(const xx of [-4.65,4.65]){
-      box(.15,5.25,.15,x+xx,3.28,depth+3.50,mats.plaster,exterior);
+  // Original Hainan-style academic wing. Concept architecture, never claimed
+  // to be a surveyed model of the real 海南中学 buildings.
+  // Bring the facade into a believable courtyard distance: the old five tiny
+  // buildings were 48-66m away and faded to uninformative flat rectangles.
+  const courtyardPaving=material('#9b9c91',.90);
+  courtyardPaving.map=readTexture(textures+'paving-color.jpg',11,6,true);
+  courtyardPaving.normalMap=readTexture(textures+'paving-normal.jpg',11,6);
+  courtyardPaving.roughnessMap=readTexture(textures+'paving-rough.jpg',11,6);
+  box(74,.13,110,0,-.28,-53,material('#73827b',.94),scene,false);
+  box(70,.032,40,0,-.198,-26,courtyardPaving,scene,false);
+  const exterior=new THREE.Group();exterior.name='Original conceptual campus courtyard';scene.add(exterior);
+  const distantPlaster=material('#b6ac98',.94),trimStone=material('#736f62',.81);
+  const darkRecess=material('#3f5d5d',.79);
+  const balconyStone=material('#968a75',.86);
+  const exteriorGlass=material('#809da0',.31,.06);
+  const shelteredHall=material('#414f50',.83);
+  const wingZ=-32;
+  const wingWidth=58,wingDepth=7.6,wingHeight=10.15;
+  box(wingWidth,wingHeight,wingDepth,0,wingHeight/2-.15,wingZ,distantPlaster,exterior);
+  // The continuous sheltered three-level corridor and recessed windows form a
+  // single readable building, not the old row of identical toy houses.
+  for(let floorIndex=0;floorIndex<3;floorIndex++){
+    const baseY=floorIndex*3.27;
+    box(wingWidth+1.5,.16,3.06,0,baseY+.29,wingZ+4.38,balconyStone,exterior);
+    box(wingWidth+1,.14,.19,0,baseY+3.12,wingZ+5.66,trimStone,exterior);
+    // balcony parapet with open upper half and thin original stone balusters
+    box(wingWidth+1,.13,.20,0,baseY+1.08,wingZ+5.61,trimStone,exterior);
+    for(let bay=0;bay<17;bay++){
+      const x=-25.6+bay*3.2;
+      const windowZ=wingZ+wingDepth/2+.046;
+      box(2.11,2.16,.045,x,baseY+1.79,windowZ,darkRecess,exterior,false);
+      box(1.88,1.94,.032,x,baseY+1.79,windowZ+.038,exteriorGlass,exterior,false);
+      box(.057,1.93,.10,x,baseY+1.79,windowZ+.064,trimStone,exterior,false);
+      box(1.88,.053,.10,x,baseY+1.76,windowZ+.068,trimStone,exterior,false);
+      // Solid corridor piers are brighter nearer the sky, with no particle effect.
+      box(.17,3.10,.20,x+1.56,baseY+1.71,wingZ+5.32,distantPlaster,exterior);
     }
-    for(let k=0;k<5;k++){
-      const wx=x-4.2+k*2.05;
-      box(1.13,1.9,.07,wx,3,depth+3.15,mats.frame,exterior,false);
-      box(.93,1.6,.08,wx,3,depth+3.21,material('#728e94',.2,.09),exterior,false);
-    }
-    box(11.7,.35,.8,x,1.0,depth+3.2,mats.terrazzo,exterior);
   }
+  // Broad projecting hipped eaves and a distinct central gateway give a
+  // recognizable architecture silhouette at both desk and room cameras.
+  box(wingWidth+2.0,.30,wingDepth+4.0,0,10.24,wingZ+1.1,mats.frame,exterior);
+  for(const [offset,tilt] of [[-2.15,-.15],[2.15,.15]]){
+    const roof=box(wingWidth+2.8,.20,5.38,0,10.63,wingZ+offset,mats.tile,exterior);
+    roof.rotation.x=tilt;
+  }
+  box(10.3,10.55,1.2,0,5.2,wingZ+5.10,trimStone,exterior);
+  box(8.8,9.60,.68,0,5.10,wingZ+5.78,distantPlaster,exterior);
+  for(const y of [2.0,5.25,8.5]){
+    box(5.25,1.62,.10,0,y,wingZ+6.17,darkRecess,exterior,false);
+    box(4.92,1.42,.08,0,y,wingZ+6.23,exteriorGlass,exterior,false);
+    box(5.34,.085,.27,0,y+1.0,wingZ+6.21,balconyStone,exterior);
+  }
+  box(11.4,.25,3.2,0,10.70,wingZ+5.8,mats.tile,exterior);
+  // A restrained axial rain-darkened courtyard walk and low raised planting
+  // beds ground the building in metres, unlike the former featureless white void.
+  box(4.5,.042,20,0,-.145,-14.5,balconyStone,exterior,false);
+  for(const x of [-10.5,10.5]){
+    box(3.8,.32,5.3,x,-.03,-11,trimStone,exterior);
+    box(3.35,.035,4.9,x,.14,-11,material('#46574b',.98),exterior,false);
+  }
+  const courtyardBays=17*3;
   // Crossed alpha-cutout foliage clusters share the locally generated campus
   // leaf atlas. Three planes give volume without solid toy-sphere silhouettes.
   function foliageGeometry(){
@@ -503,7 +544,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,staticBounceAtlas:!!authoredBounce,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
