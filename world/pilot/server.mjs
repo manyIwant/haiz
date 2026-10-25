@@ -347,6 +347,7 @@ export function createPilotServer({
         assets.set("/world/assets/" + f, "assets/" + f);
       for (const f of [
         "app.js",
+        "quality-governor.js",
         "styles.css",
         "sw.js",
         "manifest.webmanifest",
