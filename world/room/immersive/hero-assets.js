@@ -94,23 +94,13 @@
  // the location of four windows. It is computed once on scene construction,
  // is not physically baked global illumination and does not require runtime GI.
  function bounceAtlas(T){
-   const size=256,c=document.createElement('canvas');c.width=c.height=size;
-   const ctx=c.getContext('2d');ctx.clearRect(0,0,size,size);
-   const image=ctx.createImageData(size,size);
-   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-     const xx=(x/size-.5)*14,zz=(y/size-.5)*11+.5;
-     let strength=0;
-     for(const windowX of [-4.5,-1.72,1.06,3.84]){
-       const dx=xx-windowX,dz=zz+5,spread=Math.max(.6,dz*.53);
-       const beam=Math.exp(-dx*dx/(spread*spread)) * Math.exp(-dz*.27);
-       strength=Math.max(strength,beam);
-     }
-     const falloff=Math.max(0,Math.min(1,strength));
-     const value=Math.pow(falloff,.8);
-     const i=(y*size+x)*4;
-     image.data[i]=255;image.data[i+1]=195;image.data[i+2]=133;image.data[i+3]=Math.floor(165*value);
-   }
-   ctx.putImageData(image,0,0);const texture=new T.CanvasTexture(c);texture.encoding=T.sRGBEncoding;
+   // Former V3 created 65,536 RGBA pixels on every cold load. The original
+   // window attenuation pattern is now a pre-authored local SVG light atlas:
+   // same single transparent draw call, no runtime CPU pixel loops.
+   const texture=new T.TextureLoader().load('maps/floor-window-bounce.svg');
+   texture.encoding=T.sRGBEncoding;
+   texture.wrapS=texture.wrapT=T.ClampToEdgeWrapping;
+   texture.anisotropy=1;
    return texture;
  }
  function buildBounce(T,scene){

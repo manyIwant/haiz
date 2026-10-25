@@ -19,7 +19,7 @@
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
   const presets = {
-    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.012,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
+    sunbreak:{sky:'#465872',horizon:'#f5c8a2',fog:'#a4abae',fogDensity:.0085,sun:'#ffce96',sunPower:1.75,hemi:.52,fill:'#ffddad',lamp:.55,wet:.95,cloud:.74,rain:.03,label:'雨隙金光',desc:'雨刚停，低角度的光正从云间穿过。'},
     monsoon:{sky:'#344758',horizon:'#8fa4ae',fog:'#87989b',fogDensity:.021,sun:'#c7dae7',sunPower:.60,hemi:.55,fill:'#b9d1df',lamp:1.15,wet:1,cloud:.96,rain:.85,label:'海岛骤雨',desc:'近处的窗棂清晰，远处的老楼隐进海岛雨幕。'},
     morning:{sky:'#87aab7',horizon:'#f0e1c7',fog:'#bacbca',fogDensity:.008,sun:'#fff0cf',sunPower:2.10,hemi:.60,fill:'#f5e5cc',lamp:.26,wet:.12,cloud:.25,rain:0,label:'早课晨光',desc:'光沿着书页和桌角，慢慢移动。'}
   };
@@ -107,6 +107,14 @@
   };
   // 1 unit = 1 meter. A believable 14 × 11 m teaching room, NOT a measured school interior.
   const floor=box(14,.23,11,0,-.13,.5,mats.terrazzo);floor.castShadow=false;
+  // UV2-authored, *static* local ambient-occlusion map adds wall/furniture grounding
+  // inside the floor's existing PBR shading pass. No live SSAO postprocessing.
+  floor.material=mats.terrazzo.clone();
+  floor.geometry.setAttribute('uv2',floor.geometry.getAttribute('uv').clone());
+  const floorAmbientMap=readTexture('maps/floor-ambient-occlusion.svg',1,1);
+  floorAmbientMap.encoding=THREE.LinearEncoding;
+  floor.material.aoMap=floorAmbientMap;
+  floor.material.aoMapIntensity=.80;
   const authoredBounce=window.HAIZHeroAssets?.buildBounce(THREE,scene)||null;
   box(14,.17,11,0,4.2,.5,mats.ceiling,scene,false);
   box(.22,4.2,11,-7,2.1,.5,mats.wall);
@@ -172,18 +180,32 @@
   box(70,.032,40,0,-.198,-26,courtyardPaving,scene,false);
   const exterior=new THREE.Group();exterior.name='Original conceptual campus courtyard';scene.add(exterior);
   const distantPlaster=material('#b6ac98',.94),trimStone=material('#736f62',.81);
+  // Licensed source is the locally generated HAIZ plaster/paving bank, not any
+  // proprietary game texture. Albedo, micro-normal and roughness stay separate.
+  const agedFacade=material('#b5a898',.96);
+  agedFacade.map=readTexture(textures+'plaster-color.jpg',15,3,true);
+  agedFacade.normalMap=readTexture(textures+'plaster-normal.jpg',15,3);
+  agedFacade.roughnessMap=readTexture(textures+'plaster-rough.jpg',15,3);
+  agedFacade.normalScale.set(.40,.40);
+  const lowerCornice=material('#89867d',.89);
+  lowerCornice.map=readTexture(textures+'terrazzo-color.jpg',9,.4,true);
+  lowerCornice.normalMap=readTexture(textures+'terrazzo-normal.jpg',9,.4);
+  const wornPlaster=material('#a59c89',.98);
+  wornPlaster.map=agedFacade.map;
+  wornPlaster.normalMap=agedFacade.normalMap;
+  wornPlaster.normalScale.set(.23,.23);
   const darkRecess=material('#3f5d5d',.79);
   const balconyStone=material('#968a75',.86);
-  const exteriorGlass=material('#809da0',.31,.06);
+  const exteriorGlass=material('#66888c',.35,.06);
   const shelteredHall=material('#414f50',.83);
   const wingZ=-32;
   const wingWidth=58,wingDepth=7.6,wingHeight=10.15;
-  box(wingWidth,wingHeight,wingDepth,0,wingHeight/2-.15,wingZ,distantPlaster,exterior);
+  box(wingWidth,wingHeight,wingDepth,0,wingHeight/2-.15,wingZ,agedFacade,exterior);
   // The continuous sheltered three-level corridor and recessed windows form a
   // single readable building, not the old row of identical toy houses.
   for(let floorIndex=0;floorIndex<3;floorIndex++){
     const baseY=floorIndex*3.27;
-    box(wingWidth+1.5,.16,3.06,0,baseY+.29,wingZ+4.38,balconyStone,exterior);
+    box(wingWidth+1.5,.16,3.06,0,baseY+.29,wingZ+4.38,lowerCornice,exterior);
     box(wingWidth+1,.14,.19,0,baseY+3.12,wingZ+5.66,trimStone,exterior);
     // balcony parapet with open upper half and thin original stone balusters
     box(wingWidth+1,.13,.20,0,baseY+1.08,wingZ+5.61,trimStone,exterior);
@@ -194,9 +216,25 @@
       box(1.88,1.94,.032,x,baseY+1.79,windowZ+.038,exteriorGlass,exterior,false);
       box(.057,1.93,.10,x,baseY+1.79,windowZ+.064,trimStone,exterior,false);
       box(1.88,.053,.10,x,baseY+1.76,windowZ+.068,trimStone,exterior,false);
+      // Raised sill, side reveal and reflected glazing glint: reused materials
+      // allow the GPU instancer to batch 51 bays across all three floors.
+      box(2.19,.075,.24,x,baseY+.69,windowZ+.14,lowerCornice,exterior,false);
+      box(.047,2.13,.12,x-1.02,baseY+1.80,windowZ+.11,agedFacade,exterior,false);
+      box(.047,2.13,.12,x+1.02,baseY+1.80,windowZ+.11,agedFacade,exterior,false);
+      box(.028,1.82,.017,x-.69,baseY+1.81,windowZ+.12,balconyStone,exterior,false);
       // Solid corridor piers are brighter nearer the sky, with no particle effect.
-      box(.17,3.10,.20,x+1.56,baseY+1.71,wingZ+5.32,distantPlaster,exterior);
+      box(.17,3.10,.20,x+1.56,baseY+1.71,wingZ+5.32,agedFacade,exterior);
     }
+  }
+  // Façade age is authored, not tiled random noise: downpipes, mild wet-wall
+  // streaks under the roof edge and a continuous projecting lower course.
+  box(wingWidth+1,.22,.43,0,.40,wingZ+3.85,lowerCornice,exterior);
+  for(const x of [-27.8,-17.9,-7.4,7.4,17.9,27.8]){
+    box(.07,9.5,.10,x,5.03,wingZ+3.96,trimStone,exterior,false);
+    box(.43,.13,.20,x,.32,wingZ+4.04,wornPlaster,exterior,false);
+  }
+  for(const x of [-20.0,-6.4,13.6,24.9]){
+    box(.56,5.5,.016,x,4.16,wingZ+3.88,wornPlaster,exterior,false);
   }
   // Broad projecting hipped eaves and a distinct central gateway give a
   // recognizable architecture silhouette at both desk and room cameras.
@@ -544,7 +582,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,heroDeskGeometry:!!heroAsset,heroDetailCount:heroAsset?.detailCount||0,heroEssentialsVisible:heroAsset?.essentialMeshes.every(mesh=>mesh.visible)===true,staticBounceAtlas:!!authoredBounce,courtyardWindows:courtyardBays,bakedFloorAO:!!floor.material.aoMap&&!!floor.geometry.getAttribute('uv2'),bakedFacadePBR:!!agedFacade.map&&!!agedFacade.normalMap&&!!agedFacade.roughnessMap,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.

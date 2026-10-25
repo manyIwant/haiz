@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- HAIZ original analytic-baked ambient occlusion. 512x512 UV2 atlas.
+       Static room layout approximation, not path-traced global illumination. -->
+  <defs>
+    <linearGradient id="left"><stop offset="0" stop-color="#6c6c6c" stop-opacity=".39"/><stop offset=".12" stop-color="#dedede" stop-opacity="0"/></linearGradient>
+    <linearGradient id="right" x1="1" x2="0"><stop offset="0" stop-color="#6c6c6c" stop-opacity=".39"/><stop offset=".12" stop-color="#dedede" stop-opacity="0"/></linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#535353" stop-opacity=".43"/><stop offset=".20" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="bottom" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4d4d4d" stop-opacity=".45"/><stop offset=".21" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <radialGradient id="contact"><stop offset="0" stop-color="#777" stop-opacity=".25"/><stop offset=".55" stop-color="#aaa" stop-opacity=".10"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#f6f6f6"/>
+  <rect width="512" height="512" fill="url(#left)"/>
+  <rect width="512" height="512" fill="url(#right)"/>
+  <rect width="512" height="512" fill="url(#top)"/>
+  <rect width="512" height="512" fill="url(#bottom)"/>
+  <ellipse cx="101" cy="95" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="101" cy="210" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="101" cy="326" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="199" cy="95" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="199" cy="210" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="199" cy="326" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="298" cy="95" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="298" cy="210" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="298" cy="326" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="397" cy="95" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="397" cy="210" rx="37" ry="32" fill="url(#contact)"/>
+  <ellipse cx="397" cy="326" rx="37" ry="32" fill="url(#contact)"/>
+</svg>
