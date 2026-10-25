@@ -5,7 +5,7 @@
     scene.updateMatrixWorld(true);
     const buckets=new Map();
     scene.traverse(mesh=>{
-      if(!mesh.isMesh||mesh.isInstancedMesh||!mesh.geometry?.isBoxGeometry)return;
+      if(!mesh.isMesh||mesh.isInstancedMesh||mesh.geometry?.type!=='BoxGeometry')return;
       if(!mesh.visible||!mesh.material||Array.isArray(mesh.material)||mesh.material.transparent||mesh.material.opacity<1)return;
       // r128 inherits onBeforeRender from Object3D rather than Mesh.prototype.
       // Never infer custom render callbacks by comparing those prototype slots.
