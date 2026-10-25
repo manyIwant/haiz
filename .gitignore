@@ -1,7 +1,7 @@
-# 开发过程备份与临时文件（不进仓库）
+# Local development backups
 data/backup/
 
-# 系统与编辑器
+# Operating systems and editors
 .DS_Store
 Thumbs.db
 .idea/
@@ -10,16 +10,39 @@ Thumbs.db
 *.swo
 *~
 
-# Node（如果有）
+# Node dependencies
 node_modules/
 
-# 构建产物
+# Build outputs
 dist/
 build/
 # This is a vendored browser dependency, not a project build-output folder.
 !windowsill/vendor/three/build/
 !windowsill/vendor/three/build/three.module.js
 *.log
+
+# Secrets and local-only configuration. Commit only sanitized examples.
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.p12
+*.pfx
+*.p8
+*.jks
+*.keystore
+*.mobileprovision
+*.secrets.json
+id_rsa
+id_ed25519
+.netrc
+
+# Local test sessions, private pilot state and generated native bundles
+world/pilot/.data/
+world/apps/mobile/www/
+world/apps/mobile/candidate/
+world/apps/mobile/build/
 
 # Real-browser screenshots are generated locally by npm run test:browser.
 tests/artifacts/
