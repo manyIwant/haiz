@@ -279,10 +279,10 @@
   const portalSkip = $("#portalSkip");
   const portalCancel = $("#portalCancel");
   const portalTypes = [
-    { match:/\\/world\\/room\\/immersive\\/(?:index\\.html)?$/, name:"走进光落下的教室。", image:"../../assets/images/campus/campus_yihao.jpg", type:"INNER WORLD / IMMERSIVE" },
-    { match:/\\/world\\/stillroom\\/(?:index\\.html)?$/, name:"把世界，调低一点。", image:"../../assets/images/campus/campus_library.jpg", type:"STILLROOM / FOCUS" },
-    { match:/\\/world\\/campus\\.html$/, name:"从一张地图，走进校园。", image:"../../assets/images/campus/aerial_campus.jpg", type:"CAMPUS / ATLAS" },
-    { match:/\\/campus-3d\\.html$/, name:"朝着熟悉的校门出发。", image:"../../assets/images/campus/campus_fucheng_gate.jpg", type:"THE WALK / WORLD" }
+    { match:/\/world\/room\/immersive\/(?:index\.html)?$/, name:"走进光落下的教室。", image:"../../assets/images/campus/campus_yihao.jpg", type:"INNER WORLD / IMMERSIVE" },
+    { match:/\/world\/stillroom\/(?:index\.html)?$/, name:"把世界，调低一点。", image:"../../assets/images/campus/campus_library.jpg", type:"STILLROOM / FOCUS" },
+    { match:/\/world\/campus\.html$/, name:"从一张地图，走进校园。", image:"../../assets/images/campus/aerial_campus.jpg", type:"CAMPUS / ATLAS" },
+    { match:/\/campus-3d\.html$/, name:"朝着熟悉的校门出发。", image:"../../assets/images/campus/campus_fucheng_gate.jpg", type:"THE WALK / WORLD" }
   ];
   let pendingPortal = null;
   let portalTimer = null;
