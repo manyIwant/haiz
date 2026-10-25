@@ -7,7 +7,9 @@
     scene.traverse(mesh=>{
       if(!mesh.isMesh||mesh.isInstancedMesh||!mesh.geometry?.isBoxGeometry)return;
       if(!mesh.visible||!mesh.material||Array.isArray(mesh.material)||mesh.material.transparent||mesh.material.opacity<1)return;
-      if(mesh.userData?.lamp||mesh.userData?.dynamic||mesh.onBeforeRender!==THREE.Mesh.prototype.onBeforeRender)return;
+      // r128 inherits onBeforeRender from Object3D rather than Mesh.prototype.
+      // Never infer custom render callbacks by comparing those prototype slots.
+      if(mesh.userData?.lamp||mesh.userData?.dynamic||Object.prototype.hasOwnProperty.call(mesh,'onBeforeRender'))return;
       const p=mesh.geometry.parameters;
       if(!p||![p.width,p.height,p.depth].every(n=>Number.isFinite(n)&&n>0))return;
       const key=[mesh.material.uuid,mesh.castShadow?1:0,mesh.receiveShadow?1:0,mesh.renderOrder].join(':');
