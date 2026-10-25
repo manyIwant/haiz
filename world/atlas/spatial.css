@@ -74,3 +74,12 @@ body[data-atlas-view=study] .spatial-stage+.editorial .edition-title h1,body[dat
 @media(max-width:390px){.spatial-stage{height:690px;min-height:690px}.spatial-pins{bottom:228px}.spatial-disclaimer{bottom:208px}}
 /* Tablet landscape: clamp flex and translated content within the stage, not page viewport. */
 @media(min-width:761px) and (max-width:990px){.spatial-copy{width:50%;left:30px}.spatial-copy h2{font-size:clamp(39px,5vw,52px)}.spatial-copy .spatial-lede{max-width:250px}.spatial-cta-row{gap:10px}.spatial-cta{gap:8px;padding:10px 12px}.spatial-detail{width:300px}.spatial-bottom{left:30px;right:30px}.spatial-pin[data-spatial-place=classroom]{left:79%;top:19%}.spatial-pin[data-spatial-place=pond]{left:82%;top:46%}.spatial-pin[data-spatial-place=library]{left:66%;top:68%}.spatial-pin[data-spatial-place=fengqi]{left:74%;top:32%}}
+
+/* Chromium identified a 2px overshoot at 768px from fractional clamp gutters.
+   Keep the cinematic image almost edge-to-edge without masking overflow. */
+@media(min-width:761px) and (max-width:990px){
+  .spatial-stage{
+    margin-left:calc(-1 * clamp(22px,4.2vw,82px) + 3px);
+    margin-right:calc(-1 * clamp(22px,4.2vw,82px) + 3px);
+  }
+}
