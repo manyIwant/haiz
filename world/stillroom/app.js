@@ -26,7 +26,7 @@ const rooms = {
 let running = false, endAt = 0, remaining = data.minutes*60*1000, sessionStart=0, sessionPlanned=data.minutes*60*1000, isBreak=false;
 let soundOn=false, audioContext=null, noiseSource=null, gainMaster=null, gainRain=null, noiseBuffer=null;
 let toastTimer=0, rafId=0, weatherCtx=null, droplets=[], lastFrame=0, weatherWidth=0, weatherHeight=0;
-let quality='high';
+let quality='high', qualityGovernor=null;
 const fmt = ms => { const n = Math.max(0,Math.ceil(ms/1000)); return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`; };
 const notify = msg => { const el=$('#ambientStatus'); el.textContent=msg;el.classList.add('show'); clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2400);};
 function setRoom(room, quiet=false) {
@@ -72,7 +72,23 @@ function exportNotes(){
 function renderNotes(){const el=$('#savedNotes');el.replaceChildren();data.notes.slice().reverse().forEach(item=>{const row=document.createElement('article');row.className='saved-note';const tm=document.createElement('time');tm.textContent=new Date(item.at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});const txt=document.createElement('p');txt.textContent=item.text;const remove=document.createElement('button');remove.textContent='删除这条记录';remove.addEventListener('click',()=>{data.notes=data.notes.filter(n=>n.id!==item.id);persist();renderNotes()});row.append(tm,txt,remove);el.append(row);});}
 function saveNote(){const str=$('#journalInput').value.trim();if(!str){notify('写下一点想法，再保存吧');return}data.notes.push({id:Date.now()+'-'+Math.floor(Math.random()*1000),text:str,at:Date.now()});data.notes=data.notes.slice(-100);if(!persist()){notify('存储不可用，文字仅在当前页面，请复制保留');return;}$('#journalInput').value='';$('#noteCount').textContent='0 / 500';renderNotes();notify('这一刻，已经留下');}
 function renderRhythm(){const total=data.sessions.reduce((n,s)=>n+s.minutes,0);$('#rhythmSessions').textContent=data.sessions.length;$('#rhythmMinutes').textContent=total;const days=Array.from({length:7},(_,i)=>{let d=new Date();d.setDate(d.getDate()-(6-i));const day=d.toLocaleDateString('en-CA');return{day,label:`${d.getMonth()+1}/${d.getDate()}`,minutes:data.sessions.filter(s=>s.day===day).reduce((n,s)=>n+s.minutes,0)}});const max=Math.max(25,...days.map(d=>d.minutes));$('#rhythmGraph').replaceChildren();days.forEach(d=>{const col=document.createElement('div');col.className='rhythm-col';const value=document.createElement('span');value.className='bar-value';value.textContent=d.minutes||'·';const bar=document.createElement('div');bar.className='bar';bar.style.height=(d.minutes?(d.minutes/max)*104:2)+'px';bar.setAttribute('title',`${d.day}: ${d.minutes} 分钟`);const label=document.createElement('span');label.className='bar-day';label.textContent=d.label;col.append(value,bar,label);$('#rhythmGraph').append(col);});}
-function pickQuality(){const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;const memory=navigator.deviceMemory||4;const cores=navigator.hardwareConcurrency||4;const small=innerWidth<800||/Android|iPhone|iPad/i.test(navigator.userAgent);quality=reduced||memory<=2||cores<=2?'low':small?'medium':'high';document.body.dataset.quality=quality;/* User-provided local architectural art only; no external font/photo request. */
+function pickQuality(){
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const memory=navigator.deviceMemory||4, cores=navigator.hardwareConcurrency||4;
+  const small=innerWidth<800||/Android|iPhone|iPad/i.test(navigator.userAgent);
+  const saveData=navigator.connection?.saveData===true;
+  // Hardware hints are ceilings, not benchmarks; frame-time evidence governs changes below that ceiling.
+  quality=reduced||saveData||memory<=2||cores<=2?'low':small?'medium':'high';
+  document.body.dataset.quality=quality;
+  qualityGovernor=window.HAIZQualityGovernor?.createQualityGovernor({
+    initial:quality,ceiling:quality,
+    onChange(next,{reason,fps}){
+      quality=next;document.body.dataset.quality=next;lastFrame=0;
+      if(weatherCtx)resizeWeather();
+      document.dispatchEvent(new CustomEvent('haiz:ambient-quality',{detail:{quality:next,reason,fps}}));
+    }
+  })||null;
+  // All atmospheric imagery remains local; no analytics or outside assets are loaded.
 }
 
 function createNoise(){if(noiseBuffer||!audioContext)return;const rate=audioContext.sampleRate;noiseBuffer=audioContext.createBuffer(1,Math.round(rate*2),rate);const b=noiseBuffer.getChannelData(0);let brown=0;for(let i=0;i<b.length;i++){const white=Math.random()*2-1;brown=(brown+.02*white)/1.02;b[i]=brown*3.5;}}
@@ -82,7 +98,7 @@ function pauseAmbient(){soundOn=false;setSoundTexture();audioContext?.suspend().
 window.addEventListener('pagehide',pauseAmbient);document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseAmbient()});
 function toggleSound(){soundOn=!soundOn;ensureAudio();$('#soundBtn').setAttribute('aria-pressed',String(soundOn));$('#soundBtn').title=soundOn?'关闭环境声音':'打开环境声音';setSoundTexture();notify(soundOn?'声音已开启 · 为避免打扰，音量保持轻柔':'环境声音已关闭');}
 function resizeWeather(){const canvas=$('#weather'),rect=canvas.getBoundingClientRect();const ratio=Math.min(devicePixelRatio||1,quality==='high'?1.4:1);weatherWidth=rect.width;weatherHeight=rect.height;canvas.width=Math.floor(weatherWidth*ratio);canvas.height=Math.floor(weatherHeight*ratio);weatherCtx=canvas.getContext('2d',{alpha:true,desynchronized:true});if(weatherCtx)weatherCtx.setTransform(ratio,0,0,ratio,0,0);const n=quality==='low'?24:quality==='medium'?75:145;droplets=Array.from({length:n},()=>({x:Math.random()*weatherWidth,y:Math.random()*weatherHeight,speed:1.4+Math.random()*2.8,len:7+Math.random()*20,opacity:.06+Math.random()*.27,width:.4+Math.random()*.7}));}
-function paintRain(ts){rafId=requestAnimationFrame(paintRain);if(document.hidden||document.body.classList.contains('haiz-cinema-background')||data.room!=='rain'||data.rain===0||!weatherCtx||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;const frameMs=quality==='low'?50:quality==='medium'?34:20;if(ts-lastFrame<frameMs)return;const delta=Math.min(2.8,(ts-lastFrame)/16.7||1);lastFrame=ts;const c=weatherCtx;c.clearRect(0,0,weatherWidth,weatherHeight);c.save();c.lineCap='round';const multiplier=[0,.45,.75,1][data.rain];for(let i=0;i<Math.floor(droplets.length*multiplier);i++){const d=droplets[i];d.y+=d.speed*delta*(data.rain===3?1.4:1);d.x-=.28*delta;if(d.y>weatherHeight+30){d.y=-30;d.x=Math.random()*weatherWidth}if(d.x<0)d.x=weatherWidth;c.strokeStyle=`rgba(204,223,218,${d.opacity})`;c.lineWidth=d.width;c.beginPath();c.moveTo(d.x,d.y);c.lineTo(d.x-1.1,d.y+d.len);c.stroke()}c.restore();}
+function paintRain(ts){rafId=requestAnimationFrame(paintRain);const active=!document.hidden&&!document.body.classList.contains('haiz-cinema-background')&&data.room==='rain'&&data.rain>0&&!!weatherCtx&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;qualityGovernor?.sample(ts,active);if(!active)return;const frameMs=quality==='low'?50:quality==='medium'?34:20;if(ts-lastFrame<frameMs)return;const delta=Math.min(2.8,(ts-lastFrame)/16.7||1);lastFrame=ts;const c=weatherCtx;c.clearRect(0,0,weatherWidth,weatherHeight);c.save();c.lineCap='round';const multiplier=[0,.45,.75,1][data.rain];for(let i=0;i<Math.floor(droplets.length*multiplier);i++){const d=droplets[i];d.y+=d.speed*delta*(data.rain===3?1.4:1);d.x-=.28*delta;if(d.y>weatherHeight+30){d.y=-30;d.x=Math.random()*weatherWidth}if(d.x<0)d.x=weatherWidth;c.strokeStyle=`rgba(204,223,218,${d.opacity})`;c.lineWidth=d.width;c.beginPath();c.moveTo(d.x,d.y);c.lineTo(d.x-1.1,d.y+d.len);c.stroke()}c.restore();}
 function pointerParallax(){if(new URLSearchParams(location.search).has('cinema'))return;if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return;let rx=0,ry=0,x=0,y=0;window.addEventListener('pointermove',e=>{if(document.hidden)return;rx=(e.clientX/innerWidth-.5)*-14;ry=(e.clientY/innerHeight-.5)*-9},{passive:true});function animate(){x+=(rx-x)*.04;y+=(ry-y)*.04;$('#environment').style.setProperty('--photo-shift-x',x.toFixed(2)+'px');$('#environment').style.setProperty('--photo-shift-y',y.toFixed(2)+'px');if(!document.hidden)requestAnimationFrame(animate);else setTimeout(()=>requestAnimationFrame(animate),1000)}animate()}
 function bind(){
   $$('.room-tab').forEach(b=>b.addEventListener('click',()=>setRoom(b.dataset.roomTarget)));
