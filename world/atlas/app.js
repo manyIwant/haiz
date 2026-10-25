@@ -356,6 +356,11 @@
   document.addEventListener("visibilitychange", () => { if (document.hidden && pendingPortal) finishPortal(); });
   const date = new Intl.DateTimeFormat("zh-CN",{month:"long",day:"numeric",weekday:"long"}).format(new Date());
   $("#todayDate").textContent = date;
+  // Browsers may reuse the same document for #study, including back/forward navigation.
+  window.addEventListener("hashchange", () => {
+    const next = location.hash.slice(1);
+    if (Object.hasOwn(scenes, next) && next !== activeView) selectView(next);
+  });
   const initialView = location.hash.replace("#","");
   selectView(Object.hasOwn(scenes, initialView) ? initialView : "home");
 })();
