@@ -29,3 +29,10 @@ scheme.add_test_target(target)
 scheme.set_launch_target(app)
 scheme.save_as(project_path, 'HAIZQA', true)
 puts 'Generated HAIZQA scheme and real WKWebView UI test target'
+
+# Explicit device scheme: generating HAIZQA disables reliance on Xcode autoschemes.
+device_scheme = Xcodeproj::XCScheme.new
+device_scheme.add_build_target(app)
+device_scheme.set_launch_target(app)
+device_scheme.save_as(project_path, 'HAIZDevice', true)
+puts 'Generated explicit HAIZDevice scheme for unsigned arm64 application build'

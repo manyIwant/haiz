@@ -28,3 +28,7 @@ CI 40149556899：web-assets、android-build、Android API33均PASS。API35失败
 三主题Remotion影片已实际导出：1080×1920、30fps、168帧、5.6秒、H.264/yuv420p，无音轨；探测记录在world/cinema/media/*.probe.json。空间输入为720×1280低采样概念镜头，美术尚待深化。17项核心测试与2项服务器测试也已重新通过。
 
 三套完整MP4已在实际打包Web界面逐一播放至ended并进入已初始化工具，PASS；跳过/重复/连续五次媒体失败/减少动效也PASS，0个pageerror。未剪辑浏览器录像：evidence/cinema/integrated-three-theme-playback.webm。
+
+## 完整集成提交87578d7
+
+CI 40150157883：Android API33和API35均PASS；iOS的WKWebView导航、笔记输入、前后台、强制重开、同包重装保留记录均PASS。iOS随后在arm64打包阶段失败：显式生成HAIZQA后，不能依赖自动生成的App scheme。现增加只含应用的共享HAIZDevice scheme，待新CI验证。并行PR任务的API35出现一次CDP Runtime.evaluate超时，保留失败记录，不抹为全部稳定通过。移除该集成分支重复push触发，保留PR与手动/复用工作流，降低重复模拟器任务。

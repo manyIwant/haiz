@@ -6,7 +6,7 @@ on:
       - 'world/**'
       - '.github/workflows/haiz-mobile-qa.yml'
   push:
-    branches: ['fix/mobile-startup-icons-v040', 'feat/haiz-lucent-integration']
+    branches: ['fix/mobile-startup-icons-v040']
   workflow_dispatch:
   workflow_call:
 
@@ -176,7 +176,7 @@ jobs:
           path: world/apps/mobile/mobile-test-output/
       - name: Build unsigned iPhone arm64 IPA for testing
         run: |
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ios-device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme HAIZDevice -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ios-device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
           mkdir -p build/unsigned/Payload
           cp -R build/ios-device/Build/Products/Release-iphoneos/App.app build/unsigned/Payload/HAIZ.app
           cd build/unsigned
