@@ -1,6 +1,6 @@
 {
   "name": "haiz-round02",
-  "version": "2.1.0",
+  "version": "0.5.0-preview.1",
   "private": true,
   "type": "module",
   "scripts": {

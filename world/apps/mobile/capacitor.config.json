@@ -1,1 +1,12 @@
-{"appId":"space.haiz.study","appName":"HAIZ Study","webDir":"www","backgroundColor":"#152b20","android":{"allowMixedContent":false},"ios":{"contentInset":"automatic"}}
+{
+  "appId": "space.haiz.study",
+  "appName": "HAIZ Study",
+  "webDir": "www",
+  "backgroundColor": "#F5F3EA",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
