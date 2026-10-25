@@ -52,7 +52,23 @@ async function run(touch,startup='network'){
   api.reflections.tick(.1,'low',false,false);assert(!api.reflections.active);assert(api.world.waterSurface.visible);
   api.goTo('beimen',false);
   assert.equal(ids.enterButton.disabled,false);
-  for(const mode of ['afterrain','dusk','morning']){ids.climate.dispatch('change',{target:{value:mode}});api.climate.tick(5,false);assert.equal(api.climate.current,mode);assert(Number.isFinite(api.scene.fog.near));}
+  for(const mode of ['afterrain','dusk','sunbreak','monsoon','morning']){
+    ids.climate.dispatch('change',{target:{value:mode}});
+    api.climate.tick(5,false);
+    assert.equal(api.climate.current,mode);
+    assert(Number.isFinite(api.scene.fog.near)&&api.scene.fog.near>0);
+    assert(Number.isFinite(api.scene.fog.far)&&api.scene.fog.far>api.scene.fog.near);
+    assert(api.climate.weather.wet>=0&&api.climate.weather.wet<=1);
+    assert.equal(ids.climate.value,mode,'weather selector follows directed atmosphere');
+  }
+  ids.cinematicLight.dispatch('click');
+  assert.equal(api.climate.current,'sunbreak','one-tap light direction should reach rainbreak');
+  assert(api.climate.weather.wet>.85&&api.climate.weather.cloud>.5);
+  ids.cinematicLight.dispatch('click');
+  assert.equal(api.climate.current,'monsoon','second tap should reach tropical downpour');
+  assert(api.climate.weather.rain>.65);
+  ids.climate.dispatch('change',{target:{value:'morning'}});
+  assert.equal(api.climate.current,'morning');
   assert(api.world.roadMaterials.every(m=>Number.isFinite(m.roughness)));
 assert.equal(api.diagnostics().nodes,34);
   ids.enterButton.dispatch('click');assert(api.state.started&&!api.state.paused);assert.equal(ids.touchControls.hidden,!touch);
@@ -109,6 +125,6 @@ assert.equal(api.diagnostics().nodes,34);
   ids.resetButton.dispatch('click');assert(!api.state.paused);assert(api.state.pos.z<-160);
   ctx.innerWidth=touch?844:1024;ctx.innerHeight=touch?390:768;window.dispatch('resize');assert(Math.abs(api.camera.aspect-ctx.innerWidth/ctx.innerHeight)<.0001);
   document.hidden=true;document.dispatch('visibilitychange');assert(api.state.paused);assert.equal(api.state.input.x,0);
-  return {mode:touch?'mobile 390×844':'desktop 1440×900',startup,loaded:true,checks:['startup JSON fallback','pond reflection quality switch','architectural observation control','all three climate presets','continuous three-stop route without collision',...(!touch&&startup==='network'?['custom four-stop architecture route without collision','validated camera restoration and invalid-position rejection']:[]),'route pause and manual takeover','memory archive at each stop','startup','enter','movement','view control','map','safe teleport','POI dialog','classroom entry and exit','indoor HUD','pause/reset','quality fallback','resize','visibility input reset'],gpu:false,elapsedMs:Math.round(performance.now()-start)};
+  return {mode:touch?'mobile 390×844':'desktop 1440×900',startup,loaded:true,checks:['startup JSON fallback','pond reflection quality switch','architectural observation control','five climate presets with two cinematic lighting directions','continuous three-stop route without collision',...(!touch&&startup==='network'?['custom four-stop architecture route without collision','validated camera restoration and invalid-position rejection']:[]),'route pause and manual takeover','memory archive at each stop','startup','enter','movement','view control','map','safe teleport','POI dialog','classroom entry and exit','indoor HUD','pause/reset','quality fallback','resize','visibility input reset'],gpu:false,elapsedMs:Math.round(performance.now()-start)};
 }
 (async()=>{const results=[await run(false),await run(true),await run(false,'file'),await run(true,'failed'),await run(false,'arrival'),await run(false,'journey')];fs.writeFileSync('tests/walk/runtime-results.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results,null,2));})().catch(e=>{console.error(e);process.exit(1)});
