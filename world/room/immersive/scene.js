@@ -421,9 +421,24 @@
       const yes=button.dataset.weather===name;button.classList.toggle('active',yes);button.setAttribute('aria-pressed',String(yes));
     }
     $('atmosphereNote').textContent=presets[name].desc;
-    // Shader switches should react instantly to user weather controls even if
-    // a slow software GPU has not delivered its next animation frame.
-    roomLife?.update(name,presets[name].rain,performance.now(),quality);
+    // Commit the first 42% of the grade at the *user event* boundary. Extremely
+    // throttled WebGL (or background-to-foreground mobile tabs) may miss several
+    // animation frames; selecting another climate must still have visible
+    // daylight, fog and rainfall feedback. RAF eases the remaining 58%.
+    const target=presets[name],lead=.42;
+    skyUniforms.top.value.lerp(new THREE.Color(target.sky),lead);
+    skyUniforms.horizon.value.lerp(new THREE.Color(target.horizon),lead);
+    skyUniforms.cloud.value+=(target.cloud-skyUniforms.cloud.value)*lead;
+    scene.fog.color.lerp(new THREE.Color(target.fog),lead);
+    scene.fog.density+=(target.fogDensity-scene.fog.density)*lead;
+    sun.color.lerp(new THREE.Color(target.sun),lead);
+    sun.intensity+=(target.sunPower-sun.intensity)*lead;
+    hemi.intensity+=(target.hemi-hemi.intensity)*lead;
+    weatherCurrent.rain+=(target.rain-weatherCurrent.rain)*lead;
+    weatherCurrent.wet+=(target.wet-weatherCurrent.wet)*lead;
+    weatherCurrent.cloud+=(target.cloud-weatherCurrent.cloud)*lead;
+    // Wet panes still respect a strict low-tier shader exclusion.
+    roomLife?.update(name,weatherCurrent.rain,performance.now(),quality);
   }
   function applyWeather(dt,elapsed){
     const p=presets[climate],alpha=reduced?1:1-Math.exp(-dt*1.2);
