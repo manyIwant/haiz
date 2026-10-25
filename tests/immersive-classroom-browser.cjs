@@ -65,6 +65,7 @@ const results=[];
           await page.waitForTimeout(180);
           state=await page.evaluate(()=>window.HAIZ_IMMERSIVE.getDiagnostics());
           assert.notEqual(state.quality,'low','Manual quality control restores wet glass capability');
+          assert(state.weatherRain>.14,'Weather animation must advance in wall-clock time on slow GPU fallback');
           assert.equal(state.rainGlazingVisible,true,
             'Monsoon wet glass appears at non-low quality via real weather tab');
         }
