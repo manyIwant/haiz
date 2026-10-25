@@ -28,10 +28,10 @@
 .spatial-explain{font-size:10px!important;letter-spacing:.05em!important;color:rgba(234,239,225,.72)!important;margin:0!important}
 .spatial-pins{position:absolute;inset:0;z-index:3;pointer-events:none}
 .spatial-pin{position:absolute;display:flex;align-items:center;gap:10px;color:#fff7df;transform:translate(-50%,-50%);pointer-events:auto;padding:13px 15px;border-radius:30px;min-height:48px;min-width:48px;transition:background-color .2s,filter .3s}
-.spatial-pin[data-place=fengqi]{left:67%;top:36%}
-.spatial-pin[data-place=pond]{left:80%;top:56%}
-.spatial-pin[data-place=library]{left:61%;top:70%}
-.spatial-pin[data-place=classroom]{left:83%;top:27%}
+.spatial-pin[data-spatial-place=fengqi]{left:67%;top:36%}
+.spatial-pin[data-spatial-place=pond]{left:80%;top:56%}
+.spatial-pin[data-spatial-place=library]{left:61%;top:70%}
+.spatial-pin[data-spatial-place=classroom]{left:83%;top:27%}
 .spatial-pin .pin-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;border:3px solid #f2e9d4;background:#a58f70;box-shadow:0 0 0 7px rgba(241,231,210,.14),0 0 0 1px rgba(0,0,0,.22)}
 .spatial-pin .pin-label{padding:7px 11px;border:1px solid rgba(239,239,224,.33);border-radius:3px;background:rgba(7,28,29,.69);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:11px;letter-spacing:.12em;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.45)}
 .spatial-pin[aria-pressed=true] .pin-dot{border-color:#fff;background:#caab6e;box-shadow:0 0 0 7px rgba(229,215,170,.35),0 0 0 15px rgba(239,220,168,.09)}
@@ -51,9 +51,12 @@ body[data-atlas-view=study] .spatial-stage,body[data-atlas-view=community] .spat
 body[data-atlas-view=study] .spatial-stage+.editorial,body[data-atlas-view=community] .spatial-stage+.editorial{padding-top:42px}
 body[data-atlas-view=study] .spatial-stage+.editorial .edition-title h1,body[data-atlas-view=community] .spatial-stage+.editorial .edition-title h1{font-size:clamp(40px,4.2vw,72px)}
 /* Small screens retain real pins as labeled horizontal choices rather than placing fictitious map markers. */
-@media(max-width:1080px){.spatial-copy{top:25%;width:min(480px,60%)}.spatial-pin[data-place=fengqi]{left:73%;top:35%}.spatial-pin[data-place=pond]{left:85%;top:55%}.spatial-pin[data-place=library]{left:65%;top:69%}.spatial-pin[data-place=classroom]{left:86%;top:22%}.spatial-detail{width:300px;grid-template-columns:75px 1fr;gap:10px}.spatial-detail img{width:75px;height:90px}.spatial-copy h2{font-size:clamp(40px,5vw,65px)}}
+@media(max-width:1080px){.spatial-copy{top:25%;width:min(480px,60%)}.spatial-pin[data-spatial-place=fengqi]{left:73%;top:35%}.spatial-pin[data-spatial-place=pond]{left:85%;top:55%}.spatial-pin[data-spatial-place=library]{left:65%;top:69%}.spatial-pin[data-spatial-place=classroom]{left:86%;top:22%}.spatial-detail{width:300px;grid-template-columns:75px 1fr;gap:10px}.spatial-detail img{width:75px;height:90px}.spatial-copy h2{font-size:clamp(40px,5vw,65px)}}
 @media(max-width:760px){.spatial-stage{height:min(80svh,670px);min-height:560px;margin:0 -17px}.spatial-topline{top:16px;left:19px;right:19px}.spatial-topline span{font-size:9px}.spatial-mode button{min-height:34px;padding:5px 8px}.spatial-copy{top:88px;left:24px;width:calc(100% - 48px)}.spatial-copy h2{font-size:clamp(37px,9.1vw,57px);line-height:1.32}.spatial-copy p{font-size:9px;margin-bottom:15px}.spatial-copy .spatial-lede{font-size:11px;margin-top:12px;line-height:1.85}.spatial-cta-row{margin-top:14px;gap:11px}.spatial-cta{min-height:42px;font-size:11px;padding:8px 12px}.spatial-shade{background:linear-gradient(180deg,rgba(5,20,21,.84) 0%,rgba(7,25,26,.55) 45%,rgba(6,22,22,.91) 100%),linear-gradient(90deg,rgba(5,19,18,.24),transparent 75%)}.spatial-pin{position:relative!important;left:auto!important;top:auto!important;transform:none!important;min-height:37px;padding:6px 7px;gap:7px}.spatial-pin .pin-label{padding:6px 9px;font-size:10px}.spatial-pin .pin-dot{width:8px;height:8px;flex-basis:8px;border-width:2px;box-shadow:0 0 0 4px rgba(241,231,210,.14)}.spatial-pins{top:auto;inset:auto 15px 195px 15px;display:flex;justify-content:center;flex-wrap:wrap;gap:1px 3px}.spatial-detail{width:100%;min-height:112px;margin:0;padding:9px;grid-template-columns:82px 1fr;gap:13px}.spatial-detail img{width:82px;height:92px}.spatial-bottom{left:18px;right:18px;bottom:18px;display:block}.spatial-footnote{display:none}.spatial-disclaimer{right:18px;top:auto;bottom:167px;font-size:8px}.spatial-grain{opacity:.09}.spatial-stage+.editorial{padding-top:28px}}
 @media(max-width:390px){.spatial-stage{min-height:570px;height:min(84svh,620px)}.spatial-copy{top:82px}.spatial-copy h2{font-size:clamp(34px,9vw,39px)}.spatial-mode button{font-size:10px;padding:5px 7px}.spatial-pins{bottom:188px}.spatial-disclaimer{bottom:177px}.spatial-detail-copy h3{font-size:20px}.spatial-detail-copy p{font-size:10px}.spatial-signature{gap:7px}}
 @media(max-height:740px) and (max-width:760px){.spatial-stage{height:620px;min-height:620px}}
 @media(hover:none){.spatial-photo{will-change:auto}}
 @media(prefers-reduced-motion:reduce){.spatial-photo,.spatial-photo:before,.spatial-pin,.spatial-detail{transform:none!important;transition:none!important}.spatial-pin{transform:translate(-50%,-50%)!important}}
+
+/* On narrow screens the pins are inline chips; disable desktop centering even in reduced-motion mode. */
+@media(max-width:760px) and (prefers-reduced-motion:reduce){.spatial-stage .spatial-pin{transform:none!important}}
