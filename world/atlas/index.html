@@ -10,8 +10,10 @@
   <link rel="preload" as="image" href="../../assets/images/campus/campus_fengqitang.jpg">
   <script src="theme-boot.js"></script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="spatial.css">
   <script src="dock-spring.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="spatial.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">跳转到主要内容</a>
@@ -37,6 +39,47 @@
         </div>
       </header>
       <main class="main" id="main">
+        <section class="spatial-stage" id="spatialStage" data-mood="day" data-place="overview" aria-labelledby="spatialTitle">
+          <div class="spatial-photo" aria-hidden="true"></div>
+          <div class="spatial-shade" aria-hidden="true"></div>
+          <div class="spatial-grain" aria-hidden="true"></div>
+          <div class="spatial-topline">
+            <span class="spatial-signature">HAIZ / A PLACE TO BELONG</span>
+            <div class="spatial-mode" role="group" aria-label="选择摄影画面色调，非实时天气">
+              <button type="button" data-spatial-mood="day" aria-pressed="true">白昼</button>
+              <button type="button" data-spatial-mood="dusk" aria-pressed="false">黄昏</button>
+              <button type="button" data-spatial-mood="night" aria-pressed="false">夜读</button>
+            </div>
+          </div>
+          <span class="spatial-disclaimer">真实校园影像 · 地点标识为主题导航，非精确地图定位</span>
+          <div class="spatial-copy">
+            <p>HAINAN MIDDLE SCHOOL / FUCHENG CAMPUS</p>
+            <h2 id="spatialTitle">沿着光，<br><em>走进这所学校。</em></h2>
+            <span class="spatial-lede">不是要把校园缩进一张网页。<br>而是把我们熟悉的地方，重新打开。</span>
+            <div class="spatial-cta-row">
+              <a class="spatial-cta" href="../campus.html">进入数字校园 <span aria-hidden="true">↗</span></a>
+              <button id="spatialReset" type="button" class="spatial-cta">回到全景 <span aria-hidden="true">↺</span></button>
+            </div>
+          </div>
+          <nav class="spatial-pins" aria-label="选择校园里的一个空间">
+            <button class="spatial-pin" type="button" data-spatial-place="fengqi" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">凤栖堂</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="pond" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">砚池</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="library" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">图书馆</span></button>
+            <button class="spatial-pin" type="button" data-spatial-place="classroom" aria-pressed="false"><span class="pin-dot" aria-hidden="true"></span><span class="pin-label">教学楼</span></button>
+          </nav>
+          <div class="spatial-bottom">
+            <div class="spatial-footnote" aria-hidden="true"><span class="spatial-rule"></span><small>FOUR PLACES / FOUR WAYS TO BEGIN</small><small>选择右侧地点，或直接走进数字校园。</small></div>
+            <div class="spatial-detail" role="group" aria-label="当前选择的校园空间">
+              <img id="spatialLocationPhoto" src="../../assets/images/campus/aerial_campus.jpg" alt="校园航拍影像" decoding="async">
+              <div class="spatial-detail-copy" aria-live="polite" aria-atomic="true">
+                <small id="spatialLocationMeta">00 / THE GROUND WE SHARE</small>
+                <h3 id="spatialLocationName">府城校区</h3>
+                <p id="spatialLocationText">四处入口，一所熟悉的学校。</p>
+                <a id="spatialLocationAction" href="../campus.html">打开数字校园 ↗</a>
+              </div>
+            </div>
+          </div>
+        </section>
         <section class="editorial" aria-labelledby="editionTitle">
           <div class="edition-top"><span>THE DAILY EDITION</span><span id="todayDate">LOCAL EDITION</span><span>HAINAN · FUCHENG</span></div>
           <div class="edition-title"><div><p class="edition-index">HAIZ ATLAS <span> / 001</span></p><h1 id="editionTitle">在这里，<br><em>生活有了坐标。</em></h1><p class="edition-description" id="editionDescription">课程之外，仍有许多值得走近的地方。<br>从今天出发，发现熟悉校园的另一面。</p></div><div class="edition-aside"><span class="stamp">HAIZ <i>2026</i></span><span class="thin">DIGITAL CAMPUS<br>FIELD NOTES</span></div></div>
