@@ -82,7 +82,7 @@
    const trim=new T.Mesh(new T.TorusGeometry(.026,.004,8,15),brass);
    trim.rotation.x=Math.PI/2;trim.position.set(.18,.84,1.235);marker.add(trim);
    marker.userData.haizHero=true;
-   return {root:marker,detailCount:marker.children.length};
+   return {root:marker,detailCount:marker.children.length,detailMeshes:marker.children.slice(3)};
  }
  // A single hand-authored light-bounce atlas: floor illumination roughly obeys
  // the location of four windows. It is computed once on scene construction,
