@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-25T08:27:51.334Z",
+  "environment": "Linux Chromium; TLS loopback fixture with isolated test certificate; independent browser sessions; not school network or native device",
+  "checks": [
+    "Teacher, student and display enter classroom from Flow with the same secure cookie; read-only identities have no edit controls",
+    "HTTPS working draft survives page reload within the same browser session",
+    "Real HTTPS publish reaches correct independent display/student contexts and never the other class",
+    "Teacher sees a version-bound receipt only after the display browser reports presentation",
+    "Manual hide reports suppression and remains in force across synchronization",
+    "Revision preserves assignment identity and replaces the old display content",
+    "An open offline display retains the valid public snapshot, then removes it when school date changes",
+    "Withdrawal reaches the authorized student list; old receipts cannot stand for a new revision",
+    "Initial API failure offers an explicit retry that restores the authenticated list",
+    "Revoked or signed-out session cannot retain an active public list after its next sync"
+  ],
+  "errors": []
+}

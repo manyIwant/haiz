@@ -14,6 +14,7 @@ export function upsertAssignment(list,input,{scope,actor,admin=false},now=Date.n
  if(!admin&&input.scope!==scope)fail('不能向其他班级发布作业。');
  if(old&&!admin&&(old.scope!==scope||old.actor!==actor))fail('只能修改自己发布的本班作业。');
  if(old&&Number(input.version)!==old.version)fail('作业已有新版本，请刷新后再修改。');
+ if(!old&&list.length>=500)fail('作业存储已达演示容量，请管理员先备份归档；本次未发布。');
  const n=cleanAssignment({...input,id:old?.id||crypto.randomUUID(),version:(old?.version||0)+1,actor:old?.actor||actor,updatedAt:new Date(now).toISOString(),status:'published',review:input.submitForReview?'pending':'approved'});
  return [n,...list.filter(x=>x.id!==n.id)].slice(0,500);
 }

@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-25T08:27:50.037Z",
+  "environment": "Linux Chromium with authenticated loopback TLS; browser/server clocks controlled; fictional data; not school device",
+  "checks": [
+    "Publishing tomorrow to another authorized class automatically reveals exactly that date/class",
+    "List filters and Today shortcut never retarget or erase an unfinished assignment draft",
+    "Class/date/review/withdrawn filters and counts distinguish today from future assignments",
+    "Teacher filters do not alter the display projection: only its own approved current-day assignment appears",
+    "Teacher going offline cannot retain a permanently fresh presentation receipt; it ages locally without a server reply",
+    "Reconnect revalidates receipt freshness, clears the offline warning and preserves the unsaved form",
+    "Teacher filtering and device state fit a 390px viewport",
+    "Submitting for review automatically selects pending items while leaving the approved display projection unchanged",
+    "A confirmed write immediately invalidates cached presentation status when its subsequent receipt read fails",
+    "A delayed pre-publication receipt response cannot restore old freshness; the current snapshot is immediately revalidated"
+  ],
+  "errors": []
+}

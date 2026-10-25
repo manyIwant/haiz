@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-25T06:56:34.764Z",
+  "environment": "Linux Chromium + authenticated localhost SSE; fictional data; not school/Windows hardware",
+  "checks": [
+    "No valid timetable displays zero rather than a fixed two sessions",
+    "Public assignment draft and subject survive reload for the same teacher and class",
+    "Returning from preview retains input; rapid duplicate click sends a single mutation",
+    "Successful publish clears only its own working draft",
+    "Changing teacher/class does not load another identity draft; switching back restores the original",
+    "A successful server save remains successful when subsequent snapshot read fails"
+  ],
+  "errors": []
+}
