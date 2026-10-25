@@ -84,7 +84,20 @@ const server = http.createServer((request,response) => {
     await page.emulateMedia({reducedMotion:"reduce"});
     await page.goto(origin+"/world/atlas/#study");
     assert.equal(await page.locator(".dock-item.is-active").getAttribute("data-view"),"study");
-    await Promise.all([page.waitForURL("**/world/stillroom/"),page.locator("#sceneLink").click()]);
+    const reducedProbe = await page.evaluate(() => ({
+      media:matchMedia("(prefers-reduced-motion: reduce)").matches,
+      view:document.querySelector(".dock-item.is-active")?.dataset.view,
+      target:document.querySelector("#sceneLink")?.getAttribute("href"),
+      portal:document.querySelector("#scenePortal")?.hidden,
+      hash:location.hash
+    }));
+    console.log("REDUCED_PREFLIGHT "+JSON.stringify(reducedProbe));
+    assert.equal(reducedProbe.media,true,"reduced motion media must be active");
+    assert.equal(reducedProbe.target,"../stillroom/","deep-linked study must target real STILLROOM");
+    await page.locator("#sceneLink").click();
+    await page.waitForTimeout(350);
+    console.log("REDUCED_RESULT "+JSON.stringify({url:page.url(),errors}));
+    assert.ok(page.url().endsWith("/world/stillroom/"),"reduced-motion navigation should be direct");
     pass("reduced motion skips cinematic delay");
     assert.deepEqual(outside,[],"all resources should remain same-origin");
     assert.deepEqual(errors,[],"no uncaught browser errors");
