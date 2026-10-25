@@ -40,6 +40,7 @@ jobs:
           node --check world/room/immersive/scene.js
           node --check world/room/immersive/geometry-optimizer.js
           node --check world/room/immersive/hero-assets.js
+          node --check world/room/immersive/room-life.js
           node --check tests/immersive-classroom-browser.cjs
           python3 -m py_compile tools/innerworld/build_hero_blender.py
       - name: Install Chromium WebGL runtime
