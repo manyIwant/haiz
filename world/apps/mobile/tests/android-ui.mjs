@@ -51,7 +51,15 @@ async function tap(selector){
  await call('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,radiusX:2,radiusY:2,force:1,id:1}]});
  await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
 }
-async function screenshot(name){const {data}=await call('Page.captureScreenshot',{format:'png'});writeFileSync(path.join(out,name+'.png'),Buffer.from(data,'base64'));}
+// ADB captures the actual device compositor, whereas Page.captureScreenshot can
+// stall indefinitely on software-emulated Android WebViews. All UI/read/write,
+// offline, persistence and exception assertions still execute through real CDP.
+async function screenshot(name){
+ const bytes=execFileSync('adb',['exec-out','screencap','-p'],{timeout:30000,maxBuffer:20*1024*1024});
+ const png=Buffer.from([137,80,78,71,13,10,26,10]);
+ assert.ok(bytes.length>1024&&bytes.subarray(0,8).equals(png),'Actual Android screen capture must be valid PNG');
+ writeFileSync(path.join(out,name+'.png'),bytes);
+}
 try {
  checkpoint('connect-webview');await connect();
  checkpoint('initial-app-ready');await ready();

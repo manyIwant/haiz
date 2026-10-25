@@ -14,7 +14,7 @@
   const reduced = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const touch = matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 1;
   const lowMemory = (navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 4) <= 2;
-  const specs = {low:{dpr:1,shadow:0,rain:48,foliage:65},balanced:{dpr:1.35,shadow:1024,rain:92,foliage:110},high:{dpr:1.8,shadow:1536,rain:156,foliage:160}};
+  const specs = {low:{dpr:1,shadow:0,rain:48,foliage:75},balanced:{dpr:1.35,shadow:1024,rain:92,foliage:140},high:{dpr:1.8,shadow:1536,rain:156,foliage:240}};
   const levels = ['low','balanced','high'];
   let quality = reduced || lowMemory ? 'low' : touch ? 'balanced' : 'high';
   let qualityCap = levels.indexOf(quality), manualQuality=false, qualityChangedAt=0;
@@ -179,9 +179,32 @@
     }
     box(11.7,.35,.8,x,1.0,depth+3.2,mats.terrazzo,exterior);
   }
-  const leafGeo=new THREE.SphereGeometry(1,8,6);
+  // Crossed alpha-cutout foliage clusters share the locally generated campus
+  // leaf atlas. Three planes give volume without solid toy-sphere silhouettes.
+  function foliageGeometry(){
+    const points=[],uvs=[],indices=[];
+    for(let layer=0;layer<3;layer++){
+      const angle=layer*Math.PI/3,cs=Math.cos(angle),sn=Math.sin(angle),base=points.length/3;
+      for(const [u,v] of [[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]]){
+        points.push(cs*u,v,sn*u);uvs.push(u+.5,v+.5);
+      }
+      indices.push(base,base+1,base+2,base+2,base+1,base+3);
+    }
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geometry.setIndex(indices);geometry.computeVertexNormals();
+    return geometry;
+  }
+  const leafGeo=foliageGeometry();
+  const leafAtlas=readTexture(textures+'terminalia-leaves.webp',1,1,true);
+  leafAtlas.wrapS=leafAtlas.wrapT=THREE.ClampToEdgeWrapping;
+  const naturalLeafMaterial=new THREE.MeshStandardMaterial({
+    map:leafAtlas,color:'#c4d5af',roughness:.93,metalness:0,
+    alphaTest:.45,side:THREE.DoubleSide,depthWrite:true
+  });
   const branchMats=[material('#6e5945',.91),material('#4a4a3b',.88)];
-  const leaves=new THREE.InstancedMesh(leafGeo,mats.leaf,specs.high.foliage);
+  const leaves=new THREE.InstancedMesh(leafGeo,naturalLeafMaterial,specs.high.foliage);
   leaves.castShadow=quality==='high';leaves.receiveShadow=false;scene.add(leaves);
   const dummy=new THREE.Object3D();let leafCount=0;const palette=['#48685a','#57725f','#6b8469','#3f5c50','#759276','#526e5f'];
   const leafColors=palette.map(c=>new THREE.Color(c));
@@ -190,7 +213,7 @@
     const height=6.5+rnd()*5;
     const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.14,.28,height,7),branchMats[idx%2]);
     trunk.position.set(cx,height/2-.1,cz);trunk.castShadow=true;scene.add(trunk);
-    for(let j=0;j<32 && leafCount<specs.high.foliage;j++){
+    for(let j=0;j<48 && leafCount<specs.high.foliage;j++){
       dummy.position.set(cx+(rnd()-.5)*6,3.9+rnd()*height*.7,cz+(rnd()-.5)*4.8);
       dummy.scale.set(.8+rnd()*1.4,.48+rnd()*.94,.75+rnd()*1.2);dummy.rotation.set(rnd()*1.2,rnd()*6.28,rnd()*.7);dummy.updateMatrix();
       leaves.setMatrixAt(leafCount,dummy.matrix);leaves.setColorAt(leafCount,leafColors[Math.floor(rnd()*leafColors.length)]);leafCount++;
@@ -309,6 +332,11 @@
     }
     rainGeo.attributes.position.needsUpdate=true;rainGeo.setDrawRange(0,count*2);
   }
+  // Meshes that share static PBR materials and box topology are batched only
+  // after the authored room is assembled. Furniture contacts are one transparent
+  // instanced draw call even when mobile dynamic shadows are disabled.
+  const roomContacts=window.HAIZRoomGeometry?.addContactShadows(scene,THREE,desks)||null;
+  const geometryStats=window.HAIZRoomGeometry?.batchBoxes(scene,THREE,2)||{instances:0,batches:0,drawCallsSaved:0};
   const collision=(x,z)=>{
     if(x < -6.48 || x>6.48 || z< -4.62 || z>5.48)return true;
     return desks.some(d=>Math.abs(x-d.x)<d.w+.25&&Math.abs(z-d.z)<d.d+.13);
@@ -436,7 +464,7 @@
   // Expose only read-only diagnostics for real-device acceptance and test automation.
   window.HAIZ_IMMERSIVE={
     ready:true,kind:'original-concept-room',version:1,
-    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
+    getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,instancedBoxes:geometryStats.instances,geometryBatches:geometryStats.batches,drawCallsSaved:geometryStats.drawCallsSaved,groundedContactShadows:!!roomContacts,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
   // Carry only the user-selected artistic weather across campus and room routes.
