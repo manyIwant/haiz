@@ -17,9 +17,9 @@ Open **http://localhost:8000/world/atlas/**. The project uses only local CSS, lo
 - Three persistent visual settings: Porcelain, Obsidian, Ocean.
 - Keyboard and pointer-accessible search (`Cmd/Ctrl + K`), with destinations already in the HAIZ source tree.
 - Four switchable editorial views: today, campus, study, life, each with three photographs and actionable destinations.
-- Responsive sidebar and liquid-glass-inspired bottom dock with finite spring-like movement; no perpetual animation loop.
+- Responsive sidebar and translucent bottom dock with a bounded physical spring integrator, mouse/keyboard preview and reduced-motion instant positioning. Frames stop once the lens settles.
 - A personal "one small thing" list saved only in current browser localStorage, with safe text rendering, completion, deletion and no fake cross-device sync.
-- Deep links to existing campus model, INNER WORLD, STILLROOM, community and Flow. Flow's authorization and server prerequisites remain unchanged.
+- Deep links to existing campus model, INNER WORLD, STILLROOM, community and Flow. The campus/INNER WORLD/STILLROOM links use a **brief, cancelable, skippable cinematic page transition**; the destination is still an independent page load, not seamless streaming of a shared 3D renderer. Flow's authorization and server prerequisites remain unchanged.
 - Reduced-motion CSS, visible focus, skip link, button semantics and no remote runtime dependencies.
 
 **Not yet:** this is not an authenticated school dashboard, official announcement feed, new learning management backend or a verified released mobile app. The imagery is existing project media; check upstream/photo use rights before public production rollout. Scenes are conceptual in-game/world representations, not survey-faithful reproductions.
@@ -36,8 +36,8 @@ Other "OpenUI" repositories are unrelated implementations: [wandb/openui](https:
 
 ## Smoke checks
 
-From repo root, run `node --test world/atlas/tests/smoke.test.cjs`. Browser/device checks still required (320, 390, 768, 1280 and 1440 widths, Safari on iOS, Chromium/WebView, keyboard and reduced-motion), and actual graphical signoff must be done with screenshots. No browser or device check is implied by static smoke tests.
+From repo root, run `node --test world/atlas/tests/smoke.test.cjs`. The GitHub Actions job also installs Chromium/Playwright, checks 320/390/768/1440 viewports, search, focus, scene-portal cancel/skip, reduced-motion, theme persistence and local task safety, and uploads screenshots as a CI artifact. These checks only count after the latest workflow succeeds. **Safari/iOS, physical Android/WebView performance and visual art-direction signoff remain unverified.**
 
 ## Avoid integration conflicts
 
-This version deliberately **does not** edit `world/app.js`, `world/style.css`, the Lucent native dock, service workers, build manifests or Android/iOS binaries. This makes the preview reviewable while pending Draft PRs for Flow, the real campus WebGL engine, and the native shell remain unresolved.
+This preview adds a single footer link in `world/app.js` but deliberately **does not** replace `world/style.css`, the Lucent native dock, service workers, build manifests or Android/iOS binaries. This makes the preview reviewable while pending Draft PRs for Flow, the real campus WebGL engine, and the native shell remain unresolved.
