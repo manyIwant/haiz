@@ -421,6 +421,9 @@
       const yes=button.dataset.weather===name;button.classList.toggle('active',yes);button.setAttribute('aria-pressed',String(yes));
     }
     $('atmosphereNote').textContent=presets[name].desc;
+    // Shader switches should react instantly to user weather controls even if
+    // a slow software GPU has not delivered its next animation frame.
+    roomLife?.update(name,presets[name].rain,performance.now(),quality);
   }
   function applyWeather(dt,elapsed){
     const p=presets[climate],alpha=reduced?1:1-Math.exp(-dt*1.2);
@@ -482,6 +485,9 @@
     leaves.count=Math.min(leafCount,specs[quality].foliage);
     leaves.castShadow=quality==='high';
     if(heroAsset?.detailMeshes)for(const detail of heroAsset.detailMeshes)detail.visible=quality!=='low';
+    // Apply the quality gate synchronously: low-tier rain overdraw remains off;
+    // a user-requested upgrade restores glazing without waiting for rAF.
+    roomLife?.update(climate,Math.max(weatherCurrent.rain,presets[climate].rain),performance.now(),quality);
     updateQualityText();qualityChangedAt=performance.now();
     resize();
   }
