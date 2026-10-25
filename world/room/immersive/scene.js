@@ -42,9 +42,9 @@
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   scene.fog=new THREE.FogExp2(presets.sunbreak.fog,presets.sunbreak.fogDensity);
-  const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.08,180);
+  const camera=new THREE.PerspectiveCamera(touch?59:65,innerWidth/innerHeight,.08,180);
   camera.position.set(4.55,1.67,3.95);
-  let yaw=.68,pitch=-.035;
+  let yaw=.68,pitch=touch?-.20:-.035;
   camera.rotation.order='YXZ';
   camera.rotation.set(pitch,yaw,0,'YXZ');
   const sun=new THREE.DirectionalLight(presets.sunbreak.sun,presets.sunbreak.sunPower);
@@ -439,6 +439,9 @@
     getDiagnostics:()=>({climate,quality,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fps:qualityStats.fps,rendered:qualityStats.rendered,webgl:true,entered,focused,units:'meters',thirdPartyAssets:false}),
     setClimate:selectClimate,enter:begin
   };
+  // Carry only the user-selected artistic weather across campus and room routes.
+  const requested=new URLSearchParams(location.search).get('climate');
+  if(presets[requested])selectClimate(requested);
   $('loading').hidden=true;
   if(touch)$('touchControls').hidden=true;
   requestAnimationFrame(animate);
