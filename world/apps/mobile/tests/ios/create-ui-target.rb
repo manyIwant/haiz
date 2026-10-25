@@ -13,6 +13,8 @@ ref = group.files.find { |file| file.path == '../../tests/ios/StartupTests.swift
 target.source_build_phase.add_file_reference(ref, true)
 target.build_configurations.each do |config|
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'space.haiz.study.qa'
+  config.build_settings['PRODUCT_NAME'] = 'HAIZUITests'
+  config.build_settings['PRODUCT_MODULE_NAME'] = 'HAIZUITests'
   config.build_settings['SWIFT_VERSION'] = '5.0'
   config.build_settings['TEST_TARGET_NAME'] = 'App'
   config.build_settings['GENERATE_INFOPLIST_FILE'] = 'YES'
