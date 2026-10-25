@@ -32,6 +32,26 @@ const server = http.createServer((request,response) => {
     await page.locator("#sceneVisual").waitFor();
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator(".scene-card").isVisible(), true);
+    assert.equal(await page.locator("#spatialStage").isVisible(), true);
+    const firstScene = await page.locator("#spatialStage").boundingBox();
+    assert.ok(firstScene.height >= 600 && firstScene.y < 130, "campus photo must own the initial viewport");
+    assert.equal(await page.locator(".spatial-pin").count(),4);
+    await page.locator('[data-spatial-place="library"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"图书馆");
+    assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../stillroom/");
+    await page.locator('[data-spatial-place="fengqi"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"凤栖堂");
+    await page.locator('[data-spatial-place="pond"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"砚池");
+    await page.locator("#spatialReset").click();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-place"),"overview");
+    pass("spatial campus takes first viewport; four landmark choices resolve to real routes");
+    await page.locator('[data-spatial-mood="dusk"]').click();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-mood"),"dusk");
+    await page.reload();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-mood"),"dusk");
+    await page.locator('[data-spatial-mood="day"]').click();
+    pass("editorial time palettes persist without claiming live weather");
     await page.screenshot({path:path.join(output,"atlas-1440.png"),fullPage:true});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1), true);
     pass("1440px rendering and no horizontal overflow");
@@ -46,6 +66,10 @@ const server = http.createServer((request,response) => {
     assert.equal(await page.locator("#taskList li span").first().innerText(),"<img src=x onerror=alert(1)>");
     assert.equal(await page.locator("#taskList img").count(),0);
     pass("safe local text persistence");
+    await page.locator(".dock-item[data-view=study]").click();
+    assert.equal(await page.locator("#spatialStage").isHidden(),true,"study experience must not remain behind the dashboard");
+    await page.locator(".dock-item[data-view=campus]").click();
+    assert.equal(await page.locator("#spatialStage").isVisible(),true,"campus returns to spatial experience");
     await page.locator(".dock-item[data-view=study]").click();
     assert.match(await page.locator("#editionTitle").innerText(),/把喧闹留在门外/);
     await page.waitForTimeout(700);
@@ -79,17 +103,26 @@ const server = http.createServer((request,response) => {
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1),true,"overflow width="+width);
       assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","mobile Ocean theme must not flash pale background");
+      assert.equal(await page.locator("#spatialStage").isVisible(),true);
+      await page.locator('[data-spatial-place="classroom"]').click();
+      assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../room/immersive/");
       const geometry = await page.evaluate(() => ({
         viewport:innerWidth,
         workspace:document.querySelector(".workspace").getBoundingClientRect().width,
         main:document.querySelector("#main").getBoundingClientRect().width,
         scene:document.querySelector(".scene-card").getBoundingClientRect().width,
         heading:document.querySelector("#editionTitle").getBoundingClientRect().height,
-        documentHeight:document.documentElement.scrollHeight
+        documentHeight:document.documentElement.scrollHeight,
+        spatialWidth:document.querySelector("#spatialStage").getBoundingClientRect().width,
+        visiblePins:[...document.querySelectorAll(".spatial-pin")].every(el=>{
+          const b=el.getBoundingClientRect(),scene=document.querySelector("#spatialStage").getBoundingClientRect();
+          return b.width >= 40 && b.left >= scene.left-1 && b.right <= scene.right+1;
+        })
       }));
       console.log("MOBILE_GEOMETRY "+JSON.stringify(geometry));
       assert.ok(geometry.main >= width*.85 && geometry.scene >= width*.68,"mobile main must use the viewport width");
-      assert.ok(geometry.heading < 240 && geometry.documentHeight < 4300,"mobile content cannot collapse into a tall narrow column");
+      assert.ok(geometry.heading < 240 && geometry.documentHeight < 4900,"mobile content cannot collapse into a tall narrow column");
+      assert.ok(geometry.spatialWidth >= width*.95 && geometry.visiblePins,"spatial controls stay visible and clickable at "+width+"px");
       if(width===390) await page.screenshot({path:path.join(output,"atlas-390.png"),fullPage:true});
       if(width===320) await page.screenshot({path:path.join(output,"atlas-320.png"),fullPage:true});
     }
