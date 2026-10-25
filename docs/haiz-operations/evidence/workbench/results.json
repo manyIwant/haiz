@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-25T07:53:03.710Z",
+  "at": "2026-10-25T07:59:05.521Z",
   "environment": "Linux Chromium with authenticated loopback TLS; browser/server clocks controlled; fictional data; not school device",
   "checks": [
     "Publishing tomorrow to another authorized class automatically reveals exactly that date/class",
@@ -9,7 +9,9 @@
     "Teacher going offline cannot retain a permanently fresh presentation receipt; it ages locally without a server reply",
     "Reconnect revalidates receipt freshness, clears the offline warning and preserves the unsaved form",
     "Teacher filtering and device state fit a 390px viewport",
-    "Submitting for review automatically selects pending items while leaving the approved display projection unchanged"
+    "Submitting for review automatically selects pending items while leaving the approved display projection unchanged",
+    "A confirmed write immediately invalidates cached presentation status when its subsequent receipt read fails",
+    "A delayed pre-publication receipt response cannot restore old freshness; the current snapshot is immediately revalidated"
   ],
   "errors": []
 }

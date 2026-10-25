@@ -220,6 +220,69 @@ try {
   checks.push(
     "Submitting for review automatically selects pending items while leaving the approved display projection unchanged",
   );
+  await teacher
+    .locator("[name=content]")
+    .fill("虚构：保存成功后读回失败也不能沿用旧呈现状态");
+  await teacher.route("**/api/classroom/deliveries", (r) => r.abort());
+  await teacher.getByRole("button", { name: "预览作业", exact: true }).click();
+  await teacher.locator("[data-publish]").click();
+  await teacher.locator("dialog").waitFor({ state: "detached" });
+  await teacher
+    .locator(".assignment")
+    .filter({ hasText: "保存成功后读回失败" })
+    .waitFor();
+  assert.equal(await teacher.locator('.device[data-fresh="true"]').count(), 0);
+  checks.push(
+    "A confirmed write immediately invalidates cached presentation status when its subsequent receipt read fails",
+  );
+  await teacher.unroute("**/api/classroom/deliveries");
+  await screen.locator("#refresh").click();
+  await teacher.waitForFunction(async () => {
+    const r = await fetch("/api/classroom/deliveries");
+    return (await r.json()).devices.some(
+      (d) => d.fresh && d.state === "rendered",
+    );
+  });
+  await teacher.locator("#refresh").click();
+  await teacher.waitForFunction(
+    () => !!document.querySelector('.device[data-fresh="true"]'),
+  );
+  let releaseOld = null;
+  await teacher.route(
+    "**/api/classroom/deliveries",
+    async (route) => {
+      const response = await route.fetch();
+      const body = await response.body();
+      await new Promise((resolve) => {
+        releaseOld = resolve;
+      });
+      await route.fulfill({ response, body });
+    },
+    { times: 1 },
+  );
+  await teacher.locator("#refresh").click();
+  const deadline = Date.now() + 5000;
+  while (!releaseOld && Date.now() < deadline)
+    await new Promise((r) => setTimeout(r, 20));
+  assert.ok(
+    releaseOld,
+    "Old receipt read is held after capturing its server response",
+  );
+  await teacher
+    .locator("[name=content]")
+    .fill("虚构：并发读取不能覆盖新发布状态");
+  await teacher.getByRole("button", { name: "预览作业", exact: true }).click();
+  await teacher.locator("[data-publish]").click();
+  await teacher.locator("dialog").waitFor({ state: "detached" });
+  releaseOld();
+  await teacher
+    .locator(".assignment")
+    .filter({ hasText: "并发读取不能覆盖新发布状态" })
+    .waitFor({ timeout: 3000 });
+  assert.equal(await teacher.locator('.device[data-fresh="true"]').count(), 0);
+  checks.push(
+    "A delayed pre-publication receipt response cannot restore old freshness; the current snapshot is immediately revalidated",
+  );
   assert.deepEqual(errors, []);
   writeFileSync(
     out + "/results.json",

@@ -24,7 +24,8 @@ let who = null,
   listSignature = "",
   devicesCheckedAt = -Infinity,
   devicesCheckedWall = 0,
-  syncFailureActive = false;
+  syncFailureActive = false,
+  writeEpoch = 0;
 const filters = { scope: "all", date: schoolDate(), status: "active" };
 const key = () => `haiz.pilot.assignment.draft.${who?.name}`;
 function toast(text) {
@@ -257,6 +258,7 @@ async function acknowledge() {
 async function sync() {
   if (polling || !who) return;
   polling = true;
+  const epoch = writeEpoch;
   try {
     const next = await api("assignments");
     if (!who) return;
@@ -266,12 +268,14 @@ async function sync() {
       );
       return;
     }
+    if (epoch !== writeEpoch) return;
     snapshot = next;
     lastSync = next.serverTime;
     if (isTeacher()) {
       const checkedAt = performance.now(),
         checkedWall = Date.now();
       const status = await api("deliveries");
+      if (epoch !== writeEpoch) return;
       devices = status.devices;
       devicesCheckedAt = checkedAt;
       devicesCheckedWall = checkedWall;
@@ -286,6 +290,7 @@ async function sync() {
     }
     await acknowledge();
   } catch (e) {
+    if (epoch !== writeEpoch) return;
     if (who) {
       $("#refresh").textContent = "连接中断 · 点击重试";
       if (snapshot && $("#assignment-list")) updateLists();
@@ -305,6 +310,7 @@ async function sync() {
     }
   } finally {
     polling = false;
+    if (who && epoch !== writeEpoch) queueMicrotask(sync);
   }
 }
 function preview() {
@@ -354,6 +360,8 @@ async function publish(input, dialog) {
   $("#assignment-form").inert = true;
   try {
     await api("assignments", input, pending.requestId);
+    writeEpoch++;
+    devicesCheckedAt = -Infinity;
     try {
       sessionStorage.removeItem(key());
     } catch {}
@@ -473,6 +481,9 @@ document.addEventListener("click", async (e) => {
           version: n.version,
           operation: b.dataset.operation,
         });
+        writeEpoch++;
+        devicesCheckedAt = -Infinity;
+        renderDevices();
         await sync();
       } finally {
         busy = false;
