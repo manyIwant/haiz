@@ -1,6 +1,6 @@
 # HAIZ Academic · 自建班级协作服务（授权演示）
 
-Node.js 24+、SQLite 内置模块、无第三方 Web 框架依赖。默认仅监听 `127.0.0.1:8780`，不读取学校官方账号、QQ群聊天历史或个人信息。
+Node.js 24.22+、SQLite 内置模块、无第三方运行时依赖。v1.4 版本化作业与增量同步契约见 [API-CONTRACT](../../docs/architecture/API-CONTRACT.md)、[OpenAPI](../../docs/architecture/openapi.json) 和 [SYNC-PROTOCOL](../../docs/architecture/SYNC-PROTOCOL.md)。升级前必须阅读 [迁移与回滚](../../docs/architecture/MIGRATION-ROLLBACK.md)。默认仅监听 `127.0.0.1:8780`，不读取学校官方账号、QQ群聊天历史或个人信息。
 
 ## 启动
 
@@ -71,7 +71,7 @@ export HAIZ_SCHOOL_ISSUER='校方约定的信任发行者标识'
 - 不要将此服务直接暴露在 HTTP 公网上。它默认使用 HttpOnly、SameSite=Strict Session Cookie，密码 PBKDF2 哈希，SQLite 文件权限 600。
 - 真实部署前必须增加监护人/校方告知与同意、审计与数据删除流程、漏洞扫描、恢复/备份、密钥轮换、MFA、隐私合规和运维监控。
 - 所有示例帐号和事件均为虚构数据。切勿把 QQ AppSecret、school roster secret、屏幕密钥、学生名单上传到 GitHub。
-- Node.js 自带测试：`node --test test.mjs`；运行该测试不会连接真实学校或 QQ。
+- 在本目录执行 `npm ci` 后运行 `npm test` 或 `npm run test:coverage`。51 项后端测试包含迁移、权限、并发、重启、离线恢复和真实 HTTP OpenAPI 响应校验，覆盖率门槛为行/分支/函数各 80%。测试均使用临时数据库与虚构身份，不连接真实学校或 QQ。
 
 ## 主要接口
 

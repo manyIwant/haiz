@@ -1,0 +1,426 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "HAIZ Academic authoritative assignments",
+    "version": "1.4.0",
+    "description": "Academic SQLite is the authority for official class assignments. Student planning, notes, focus and completion remain private client data. This contract describes synthetic HAIZ account operation, not an authorized school identity provider. Review is an explicit teacher checkpoint; it does not imply independent administrator approval."
+  },
+  "servers": [{ "url": "/api/v1", "description": "Same-origin Academic service; HTTPS required outside loopback" }],
+  "security": [{ "SessionCookie": [] }],
+  "tags": [
+    { "name": "Identity", "description": "Resolve account and server scope before opening caches." },
+    { "name": "Assignments", "description": "Owner/admin commands require current authorization, an idempotency key and guarded versions." },
+    { "name": "Acknowledgements", "description": "Exact-version self-reports of viewing; never completion, submission or physical display proof." },
+    { "name": "Sync", "description": "Persistent pull synchronization of public official data." },
+    { "name": "Membership", "description": "Class authorization management." },
+    { "name": "Classroom", "description": "Public-only display projection using a revocable class credential." }
+  ],
+  "paths": {
+    "/identity": {
+      "get": {
+        "operationId": "getIdentity", "tags": ["Identity"], "summary": "Resolve current account and cache scope",
+        "description": "Cache namespace must include normalized HTTPS origin, instanceId and userId. A new login generation must discard late responses from the prior account.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Identity" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/classes/{classId}/assignments": {
+      "parameters": [{ "$ref": "#/components/parameters/ClassId" }],
+      "get": {
+        "operationId": "listClassAssignments", "tags": ["Assignments"], "summary": "List authorized assignments",
+        "description": "Class owner/admin can read all lifecycle states. Active students can read public states only. Draft and review content never appears in student results. Retractions carry identity and version and are not active classroom content.",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/After" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssignmentList" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      },
+      "post": {
+        "operationId": "createAssignmentDraft", "tags": ["Assignments"], "summary": "Create an unpublished draft",
+        "description": "Class owner/admin only. The server assigns identity, creator, version and source. Initial state is draft. Idempotency receipts bind the current user, route, key and canonical request payload; authorization is rechecked before replay.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentCreate" } } } },
+        "responses": {
+          "201": { "$ref": "#/components/responses/AssignmentMutation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "413": { "$ref": "#/components/responses/TooLarge" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "get": {
+        "operationId": "getAssignment", "tags": ["Assignments"], "summary": "Read the current authorized assignment",
+        "description": "Current class authorization is required. Students cannot read draft or review versions.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Assignment" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      },
+      "patch": {
+        "operationId": "editAssignment", "tags": ["Assignments"], "summary": "Edit a draft or create a public revision",
+        "description": "Class owner/admin only. Omitted fields retain their values. Editing review returns it to draft; editing published/revised creates revised. Retracted is terminal. Stale expectedVersion returns Conflict with currentVersion and never silently merges. A resolved edit needs an explicit preview and a new key.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentPatch" } } } },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssignmentMutation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "413": { "$ref": "#/components/responses/TooLarge" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/review": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "post": {
+        "operationId": "submitAssignmentForReview", "tags": ["Assignments"], "summary": "Move Draft to Review",
+        "description": "Class owner/admin only. Remains invisible to students and classroom. Every successful transition creates a new revision.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "$ref": "#/components/requestBodies/VersionCommand" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssignmentMutation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/publish": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "post": {
+        "operationId": "publishAssignment", "tags": ["Assignments"], "summary": "Confirm Review as Published",
+        "description": "Class owner/admin explicitly confirms publication. Assignment, revision, public sync event and receipt commit atomically. A replay returns the original result after rechecking current permission.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "$ref": "#/components/requestBodies/VersionCommand" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssignmentMutation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/retract": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "post": {
+        "operationId": "retractAssignment", "tags": ["Assignments"], "summary": "Retract a published or revised assignment",
+        "description": "Class owner/admin only. Creates a terminal retracted revision and public tombstone event. Clients preserve private plans and notes and hide the official item from active classroom content.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "$ref": "#/components/requestBodies/VersionCommand" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssignmentMutation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/history": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "get": {
+        "operationId": "listAssignmentHistory", "tags": ["Assignments"], "summary": "Read immutable version history",
+        "description": "Class owner/admin sees all revisions. Active students see public revisions only. Previous snapshots retain the old due value and changedFields identify edits.",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/After" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/History" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/acknowledge": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "post": {
+        "operationId": "acknowledgeAssignmentVersion", "tags": ["Acknowledgements"], "summary": "Report viewing an exact public version",
+        "description": "Active student only. The supplied version must identify a public revision. This is a viewed self-report and has no completion, verified submission or physical-screen meaning.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AcknowledgementCommand" } } } },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Acknowledged" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/assignments/{id}/acknowledgements": {
+      "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+      "get": {
+        "operationId": "listAssignmentAcknowledgements", "tags": ["Acknowledgements"], "summary": "Query class version-view reports",
+        "description": "Class owner/admin only. Student identities in this response never enter classroom or sync projections. Each row names an exact version; absence is not proof of non-receipt.",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/After" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AcknowledgementList" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/sync": {
+      "get": {
+        "operationId": "pullSync", "tags": ["Sync"], "summary": "Fetch an authorized snapshot or incremental events",
+        "description": "Without cursor starts a high-water snapshot. Follow opaque cursors until hasMore=false, then poll with that cursor for deltas. Apply page and cursor atomically in the current account namespace. Upsert only newer versions. Cursor binds persistent instance, user and current permission epoch, survives restart and never grants access. Permission changes including revoke/restore require resnapshot. Retractions preserve private notes. Offline is client-observed, never a server success.",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Cursor" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Sync" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/ScopeChanged" }, "410": { "$ref": "#/components/responses/CursorExpired" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/classes/{classId}/members/{userId}/revoke": {
+      "parameters": [{ "$ref": "#/components/parameters/ClassId" }, { "$ref": "#/components/parameters/UserId" }],
+      "post": {
+        "operationId": "revokeClassMembership", "tags": ["Membership"], "summary": "Revoke current class access",
+        "description": "Class owner/admin only. Transactionally changes membership and permission epoch. Old cursors fail even if access is later restored. Recheck current teacher permission before a receipt replay.",
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false } } } },
+        "responses": {
+          "200": { "$ref": "#/components/responses/MembershipRevoked" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/classroom": {
+      "get": {
+        "operationId": "getClassroomSummary", "tags": ["Classroom"], "summary": "Read only currently effective published content",
+        "description": "Uses a revocable class screenKey in the Authorization header. Only published/revised assignments are returned. No actor, source intake, members, acknowledgements, private tasks or notes. Credential rotation invalidates previous keys. Display clients must mark cached data with last successful sync time; this response is not proof of physical rendering.",
+        "security": [{ "ClassroomBearer": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/After" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Classroom" },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthenticated" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }, "429": { "$ref": "#/components/responses/Throttled" }, "500": { "$ref": "#/components/responses/InternalError" }, "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": { "type": "apiKey", "in": "cookie", "name": "hsid", "description": "HttpOnly, SameSite=Strict session established by existing /api/auth/login. Secure on HTTPS. Sessions expire and are deleted on logout. Never use a classroom credential as a user session." },
+      "ClassroomBearer": { "type": "http", "scheme": "bearer", "bearerFormat": "96 lowercase hexadecimal characters", "description": "Class-scoped read-only screenKey. Rotate with existing teacher screen endpoint; redact from logs and do not store in student namespaces." }
+    },
+    "parameters": {
+      "ClassId": { "name": "classId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+      "AssignmentId": { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+      "UserId": { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+      "IdempotencyKey": { "name": "Idempotency-Key", "in": "header", "required": true, "description": "Unique per current user and route. Same payload returns original result; different canonical payload under the same key conflicts. Retry transient failures with the same key.", "schema": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,100}$", "minLength": 8, "maxLength": 100 } },
+      "Limit": { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 100 } },
+      "After": { "name": "after", "in": "query", "required": false, "description": "Nonnegative collection offset; continue with meta.nextAfter until null. Use /sync for concurrent-change-safe cache synchronization.", "schema": { "type": "integer", "minimum": 0, "default": 0 } },
+      "Cursor": { "name": "cursor", "in": "query", "required": false, "description": "Opaque server-issued HMAC cursor; treat as an indivisible string. Absence starts a fresh snapshot.", "schema": { "type": "string", "minLength": 1, "maxLength": 2000 } }
+    },
+    "requestBodies": {
+      "VersionCommand": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VersionCommand" } } } }
+    },
+    "responses": {
+      "Identity": { "description": "Current server/account scope", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IdentityResponse" } } } },
+      "Assignment": { "description": "Current authorized version", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentResponse" } } } },
+      "AssignmentList": { "description": "Authorized page; nextAfter=null ends pagination", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentListResponse" } } } },
+      "AssignmentMutation": { "description": "Committed or replayed original mutation result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentMutationResponse" } } } },
+      "History": { "description": "Authorized immutable revision page", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HistoryResponse" } } } },
+      "Acknowledged": { "description": "Exact version reported viewed; not a verified submission", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AcknowledgedResponse" } } } },
+      "AcknowledgementList": { "description": "Version-specific student reports for the teacher's class", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AcknowledgementListResponse" } } } },
+      "MembershipRevoked": { "description": "Membership revoked or original receipt replayed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MembershipRevokedResponse" } } } },
+      "Sync": { "description": "Snapshot or delta page; Pending means more pages, Synced means caught up to this server response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SyncResponse" } } } },
+      "Classroom": { "description": "Public-only active assignment summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassroomResponse" } } } },
+      "BadRequest": { "description": "Failed: invalid JSON, query, body, guarded version, or malformed/forged cursor", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } },
+      "Unauthenticated": { "description": "Revoked: missing, expired or logged-out session, or invalid screen credential. Stop sync and hide official account cache.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RevokedResponse" } } } },
+      "Forbidden": { "description": "Revoked: current role or class permission does not authorize this operation; no protected resource content", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RevokedResponse" } } } },
+      "NotFound": { "description": "Failed: resource unavailable in this access scope", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } },
+      "Conflict": { "description": "Conflict: stale expectedVersion, invalid lifecycle transition, or changed payload under a previously used key. Preserve draft; explicitly resolve against current version.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConflictResponse" } } } },
+      "ScopeChanged": { "description": "Revoked: cursor belongs to another account/instance or authorization epoch changed. Purge inaccessible official cache and start a fresh snapshot; preserve private notes.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScopeChangedResponse" } } } },
+      "CursorExpired": { "description": "Failed/CURSOR_EXPIRED: cursor precedes retained event floor. Stage a fresh snapshot and replace only the current official cache atomically.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CursorExpiredResponse" } } } },
+      "TooLarge": { "description": "Failed: request body exceeds the service limit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } },
+      "Throttled": { "description": "Failed: request rate exceeded. Respect Retry-After when present and retry mutations with the original key.", "headers": { "Retry-After": { "description": "Optional delay in seconds", "schema": { "type": "integer", "minimum": 1 } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } },
+      "InternalError": { "description": "Failed: internal error; response does not disclose database contents or credentials", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } },
+      "Unavailable": { "description": "Failed: temporary SQLite lock or service unavailability; original transaction did not partially commit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FailedResponse" } } } }
+    },
+    "schemas": {
+      "ProtocolState": { "type": "string", "enum": ["Synced", "Pending", "Offline", "Conflict", "Revoked", "Failed"], "description": "Offline is a client-observed state and is never emitted as a successful HTTP response." },
+      "AssignmentStatus": { "type": "string", "enum": ["draft", "review", "published", "revised", "retracted"] },
+      "PublicAssignmentStatus": { "type": "string", "enum": ["published", "revised", "retracted"] },
+      "DuePrecision": { "type": "string", "enum": ["none", "date", "minute"] },
+      "Due": {
+        "description": "Null for none, calendar date for date precision, or ISO date/time with an explicit offset for minute precision. Server validates real calendar values and the final due/precision pair.",
+        "oneOf": [
+          { "type": "null" },
+          { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d(?::00)?(?:Z|[+-](?:0\\d|1[0-4]):[0-5]\\d)$", "maxLength": 35 }
+        ]
+      },
+      "Subject": { "type": "string", "minLength": 1, "maxLength": 32 },
+      "Title": { "type": "string", "minLength": 1, "maxLength": 240 },
+      "Details": { "type": "string", "maxLength": 3000 },
+      "Version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+      "AssignmentCreate": {
+        "type": "object", "additionalProperties": false, "required": ["subject", "title"],
+        "properties": {
+          "subject": { "$ref": "#/components/schemas/Subject" }, "title": { "$ref": "#/components/schemas/Title" },
+          "details": { "$ref": "#/components/schemas/Details" }, "due": { "$ref": "#/components/schemas/Due" }, "duePrecision": { "$ref": "#/components/schemas/DuePrecision" }
+        },
+        "description": "Server supplies all identity, source, version and lifecycle fields. Omitted details becomes empty; due defaults to null and duePrecision to none. Supply explicit date/minute precision with a non-null due. Dates are not silently converted to UTC midnight.",
+        "allOf": [
+          { "$ref": "#/components/schemas/SuppliedDueConsistency" },
+          { "if": { "required": ["due"], "properties": { "due": { "type": "string" } } }, "then": { "required": ["duePrecision"], "properties": { "duePrecision": { "enum": ["date", "minute"] } } } },
+          { "if": { "required": ["duePrecision"], "properties": { "duePrecision": { "enum": ["date", "minute"] } } }, "then": { "required": ["due"], "properties": { "due": { "type": "string" } } } }
+        ]
+      },
+      "AssignmentPatch": {
+        "type": "object", "additionalProperties": false, "required": ["expectedVersion"], "minProperties": 2,
+        "properties": {
+          "expectedVersion": { "$ref": "#/components/schemas/Version" }, "subject": { "$ref": "#/components/schemas/Subject" }, "title": { "$ref": "#/components/schemas/Title" },
+          "details": { "$ref": "#/components/schemas/Details" }, "due": { "$ref": "#/components/schemas/Due" }, "duePrecision": { "$ref": "#/components/schemas/DuePrecision" }
+        },
+        "description": "At least one editable field plus expectedVersion is required. Omitted editable fields retain their current values. The server validates the resulting due/precision pair. An edit with only expectedVersion fails EMPTY_EDIT without creating a revision.",
+        "allOf": [{ "$ref": "#/components/schemas/SuppliedDueConsistency" }]
+      },
+      "SuppliedDueConsistency": {
+        "description": "When both fields are supplied they must agree. Partial PATCH may inherit an omitted counterpart, which is validated after merge by the service.",
+        "allOf": [
+          { "if": { "required": ["due", "duePrecision"], "properties": { "duePrecision": { "const": "none" } } }, "then": { "properties": { "due": { "type": "null" } } } },
+          { "if": { "required": ["due", "duePrecision"], "properties": { "duePrecision": { "const": "date" } } }, "then": { "properties": { "due": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" } } } },
+          { "if": { "required": ["due", "duePrecision"], "properties": { "duePrecision": { "const": "minute" } } }, "then": { "properties": { "due": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d(?::00)?(?:Z|[+-](?:0\\d|1[0-4]):[0-5]\\d)$" } } } }
+        ]
+      },
+      "VersionCommand": { "type": "object", "additionalProperties": false, "required": ["expectedVersion"], "properties": { "expectedVersion": { "$ref": "#/components/schemas/Version" } } },
+      "AcknowledgementCommand": { "type": "object", "additionalProperties": false, "required": ["version"], "properties": { "version": { "$ref": "#/components/schemas/Version" } } },
+      "Source": {
+        "type": "object", "additionalProperties": false, "required": ["kind"],
+        "properties": { "kind": { "type": "string", "enum": ["manual", "qq", "legacy"] }, "id": { "type": ["string", "null"], "description": "Optional server-owned intake identity, never an assignment identity" } }
+      },
+      "Assignment": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "classId", "subject", "title", "details", "due", "duePrecision", "createdBy", "createdAt", "updatedAt", "version", "status", "source"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" }, "classId": { "type": "string", "format": "uuid" },
+          "subject": { "$ref": "#/components/schemas/Subject" }, "title": { "$ref": "#/components/schemas/Title" }, "details": { "$ref": "#/components/schemas/Details" },
+          "due": { "$ref": "#/components/schemas/Due" }, "duePrecision": { "$ref": "#/components/schemas/DuePrecision" },
+          "createdBy": { "type": "string", "format": "uuid" }, "createdAt": { "type": "string", "format": "date-time" }, "updatedAt": { "type": "string", "format": "date-time" },
+          "version": { "$ref": "#/components/schemas/Version" }, "status": { "$ref": "#/components/schemas/AssignmentStatus" }, "source": { "$ref": "#/components/schemas/Source" }
+        },
+        "allOf": [{ "$ref": "#/components/schemas/SuppliedDueConsistency" }]
+      },
+      "PublicAssignment": { "allOf": [{ "$ref": "#/components/schemas/Assignment" }, { "properties": { "status": { "$ref": "#/components/schemas/PublicAssignmentStatus" } } }] },
+      "Revision": {
+        "type": "object", "additionalProperties": false, "required": ["version", "actorId", "operation", "occurredAt", "changedFields", "assignment"],
+        "properties": {
+          "version": { "$ref": "#/components/schemas/Version" }, "actorId": { "type": "string", "format": "uuid" },
+          "operation": { "type": "string", "minLength": 1, "description": "Server-owned operation label; clients display it without interpreting undocumented values" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "changedFields": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+          "assignment": { "$ref": "#/components/schemas/Assignment" }
+        }
+      },
+      "Acknowledgement": {
+        "type": "object", "additionalProperties": false, "required": ["userId", "version", "viewedAt"],
+        "properties": { "userId": { "type": "string", "format": "uuid" }, "version": { "$ref": "#/components/schemas/Version" }, "viewedAt": { "type": "string", "format": "date-time" } }
+      },
+      "SyncEvent": {
+        "type": "object", "additionalProperties": false, "required": ["sequence", "type", "resourceId", "version", "occurredAt", "scope", "assignment"],
+        "properties": {
+          "sequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }, "type": { "type": "string", "minLength": 1 },
+          "resourceId": { "type": "string", "format": "uuid" }, "version": { "$ref": "#/components/schemas/Version" }, "occurredAt": { "type": "string", "format": "date-time" },
+          "scope": { "type": "object", "additionalProperties": false, "required": ["classId"], "properties": { "classId": { "type": "string", "format": "uuid" } } },
+          "assignment": { "$ref": "#/components/schemas/PublicAssignment" }
+        },
+        "description": "Ordered immutable public snapshot. Persisted sequence survives service restart. Event resourceId/version match assignment.id/version. No client event write API exists."
+      },
+      "SnapshotPage": {
+        "type": "object", "additionalProperties": false, "required": ["mode", "instanceId", "userId", "authorizedClassIds", "assignments", "cursor", "hasMore"],
+        "properties": {
+          "mode": { "const": "snapshot" }, "instanceId": { "type": "string", "format": "uuid" }, "userId": { "type": "string", "format": "uuid" },
+          "authorizedClassIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+          "assignments": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/PublicAssignment" } },
+          "cursor": { "type": "string", "minLength": 1 }, "hasMore": { "type": "boolean" }
+        },
+        "description": "Fixed high-water snapshot page. New changes during pagination are delivered in subsequent delta pages. Stage all pages before replacing the current account's official cache."
+      },
+      "DeltaPage": {
+        "type": "object", "additionalProperties": false, "required": ["mode", "instanceId", "userId", "authorizedClassIds", "events", "cursor", "hasMore"],
+        "properties": {
+          "mode": { "const": "delta" }, "instanceId": { "type": "string", "format": "uuid" }, "userId": { "type": "string", "format": "uuid" },
+          "authorizedClassIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+          "events": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/SyncEvent" } },
+          "cursor": { "type": "string", "minLength": 1 }, "hasMore": { "type": "boolean" }
+        },
+        "description": "Sequence-ordered currently authorized events. Replayed events are harmless when clients upsert newer versions. An empty page may safely advance across unrelated events."
+      },
+      "SyncData": { "oneOf": [{ "$ref": "#/components/schemas/SnapshotPage" }, { "$ref": "#/components/schemas/DeltaPage" }], "discriminator": { "propertyName": "mode", "mapping": { "snapshot": "#/components/schemas/SnapshotPage", "delta": "#/components/schemas/DeltaPage" } } },
+      "ClassroomAssignment": {
+        "type": "object", "additionalProperties": false, "required": ["id", "version", "subject", "title", "details", "due", "duePrecision", "status", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" }, "version": { "$ref": "#/components/schemas/Version" },
+          "subject": { "$ref": "#/components/schemas/Subject" }, "title": { "$ref": "#/components/schemas/Title" }, "details": { "$ref": "#/components/schemas/Details" },
+          "due": { "$ref": "#/components/schemas/Due" }, "duePrecision": { "$ref": "#/components/schemas/DuePrecision" },
+          "status": { "type": "string", "enum": ["published", "revised"] }, "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "allOf": [{ "$ref": "#/components/schemas/SuppliedDueConsistency" }]
+      },
+      "Meta": {
+        "type": "object", "properties": { "nextAfter": { "type": ["integer", "null"], "minimum": 0 }, "serverTime": { "type": "string", "format": "date-time" } },
+        "additionalProperties": true, "description": "Additive metadata; paginated collections include nextAfter, null at end. Official cache synchronization uses opaque /sync cursors rather than these offsets."
+      },
+      "SuccessEnvelope": {
+        "type": "object", "additionalProperties": false, "required": ["state", "data", "error", "meta"],
+        "properties": { "state": { "type": "string", "enum": ["Synced", "Pending"] }, "data": {}, "error": { "type": "null" }, "meta": { "$ref": "#/components/schemas/Meta" } }
+      },
+      "IdentityResponse": {
+        "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": {
+          "type": "object", "additionalProperties": false, "required": ["userId", "instanceId", "role", "authorizedClassIds", "cacheScope"],
+          "properties": {
+            "userId": { "type": "string", "format": "uuid" }, "instanceId": { "type": "string", "format": "uuid" }, "role": { "type": "string", "enum": ["student", "teacher", "admin"] },
+            "authorizedClassIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+            "cacheScope": { "type": "string", "minLength": 1, "description": "Server/account scope hint; clients also prefix normalized HTTPS origin" }
+          }
+        } } }]
+      },
+      "AssignmentResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["assignment"], "properties": { "assignment": { "$ref": "#/components/schemas/Assignment" } } } } }] },
+      "AssignmentListResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["assignments"], "properties": { "assignments": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/Assignment" } } } }, "meta": { "required": ["nextAfter"] } } }] },
+      "AssignmentMutationResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["assignment", "replayed"], "properties": { "assignment": { "$ref": "#/components/schemas/Assignment" }, "replayed": { "type": "boolean" } } } } }] },
+      "HistoryResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["revisions"], "properties": { "revisions": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/Revision" } } } }, "meta": { "required": ["nextAfter"] } } }] },
+      "AcknowledgedResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["viewed", "version", "verifiedSubmission"], "properties": { "viewed": { "const": true }, "version": { "$ref": "#/components/schemas/Version" }, "verifiedSubmission": { "const": false }, "replayed": { "type": "boolean" } } } } }] },
+      "AcknowledgementListResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["acknowledgements"], "properties": { "acknowledgements": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/Acknowledgement" } } } }, "meta": { "required": ["nextAfter"] } } }] },
+      "MembershipRevokedResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "type": "object", "additionalProperties": false, "required": ["revoked"], "properties": { "revoked": { "const": true }, "replayed": { "type": "boolean" } } } } }] },
+      "SyncResponse": { "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": { "$ref": "#/components/schemas/SyncData" } } }] },
+      "ClassroomResponse": {
+        "allOf": [{ "$ref": "#/components/schemas/SuccessEnvelope" }, { "properties": { "data": {
+          "type": "object", "additionalProperties": false, "required": ["classId", "className", "assignments", "readOnly", "containsStudentIdentity"],
+          "properties": {
+            "classId": { "type": "string", "format": "uuid" }, "className": { "type": "string" },
+            "assignments": { "type": "array", "maxItems": 200, "items": { "$ref": "#/components/schemas/ClassroomAssignment" } },
+            "readOnly": { "const": true }, "containsStudentIdentity": { "const": false }
+          }
+        }, "meta": { "required": ["nextAfter"] } } }]
+      },
+      "Error": {
+        "type": "object", "required": ["code", "message"], "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string", "minLength": 1 }, "message": { "type": "string", "minLength": 1 },
+          "currentVersion": { "$ref": "#/components/schemas/Version" }, "resyncRequired": { "type": "boolean" },
+          "authorizedClassIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "format": "uuid" } }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object", "additionalProperties": false, "required": ["state", "data", "error", "meta"],
+        "properties": { "state": { "type": "string", "enum": ["Conflict", "Revoked", "Failed"] }, "data": { "type": "null" }, "error": { "$ref": "#/components/schemas/Error" }, "meta": { "$ref": "#/components/schemas/Meta" } }
+      },
+      "FailedResponse": { "allOf": [{ "$ref": "#/components/schemas/ErrorEnvelope" }, { "properties": { "state": { "const": "Failed" } } }] },
+      "RevokedResponse": { "allOf": [{ "$ref": "#/components/schemas/ErrorEnvelope" }, { "properties": { "state": { "const": "Revoked" } } }] },
+      "ConflictResponse": { "allOf": [{ "$ref": "#/components/schemas/ErrorEnvelope" }, { "properties": { "state": { "const": "Conflict" } } }] },
+      "ScopeChangedError": { "allOf": [{ "$ref": "#/components/schemas/Error" }, { "required": ["resyncRequired", "authorizedClassIds"], "properties": { "resyncRequired": { "const": true } } }] },
+      "ScopeChangedResponse": { "allOf": [{ "$ref": "#/components/schemas/ErrorEnvelope" }, { "properties": { "state": { "const": "Revoked" }, "error": { "$ref": "#/components/schemas/ScopeChangedError" } } }] },
+      "CursorExpiredError": { "allOf": [{ "$ref": "#/components/schemas/Error" }], "required": ["resyncRequired"], "properties": { "code": { "const": "CURSOR_EXPIRED" }, "resyncRequired": { "const": true } } },
+      "CursorExpiredResponse": { "allOf": [{ "$ref": "#/components/schemas/ErrorEnvelope" }, { "properties": { "state": { "const": "Failed" }, "error": { "$ref": "#/components/schemas/CursorExpiredError" } } }] }
+    }
+  },
+  "x-compatibility": {
+    "legacyBase": "/api",
+    "legacyPublish": "Explicit teacher-confirmed direct publish remains available. Without Idempotency-Key repeated legacy requests are not guaranteed idempotent; new clients use v1.",
+    "legacyScreens": "GET /api/screens/{screenKey} stays read-only and excludes draft/review/retracted, but key-in-path must be redacted from access logs.",
+    "privateStudyData": "No API accepts or returns StudentTask notes, completion, focus records or reminders. Group 03 owns account-isolated local stores and legacy migration.",
+    "qqIntake": "Existing signed /api/integrations/qq/event is intake only. No client may submit a sync event or treat QQ credentials as HAIZ identity.",
+    "deployment": "Independent Academic history and runtime; no force-merge into main or implicit GitHub Pages deployment."
+  }
+}
