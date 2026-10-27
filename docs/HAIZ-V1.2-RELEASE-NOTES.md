@@ -1,7 +1,18 @@
 # HAIZ App v1.2 Preview — Release Notes
 
-**状态：本地候选发行版，尚不等于 GitHub 已公开发布。**
+**状态：本地已完成签名 APK 与源码/Web 发行包；尚未公开发布 GitHub Release。**
 2026-10-27 · 非官方独立校园工具
+
+## 构建与验收（本地实测）
+
+- Android APK：Flutter Release 构建成功，约 104 MB（通用 APK，支持 arm64-v8a、armeabi-v7a、x86_64）。
+- 包名 `space.haiz.app.preview`；版本 `1.2.0-preview.1`（versionCode 3）；最低 Android API 24。
+- Android APK：Android Build Tools 的 `apksigner verify` 成功，v2 签名验证通过，签名证书指纹见随包报告。
+- Flutter analyze：零问题。Flutter unit/widget：20 项测试通过。
+- Flutter Web release build：成功。
+- 教师 Web 与课堂全屏页面：完成源码和本机 HTTP 检查，未依赖官方学校接口。
+- **没有连接 Android 真机，因此不能声称已安装/完成真机 OCR、文档选择与 PDF 的全路径体验测试。**
+- GitHub CLI 本机尚未授权，不能把本地预发行包声称为公开 GitHub Release。
 
 ## 本轮实装（与 HAIZ V1.1 对比）
 
