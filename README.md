@@ -4,6 +4,10 @@
 >
 > 项目隔离在 `~/Documents/HAIZ-UI-Research/HAIZ-v1/`。没有覆盖 `manyIwant/haiz` 的主分支、没有自动部署、没有 QQ 登录或学校账号接入。
 
+## v1.2 功能发行候选（2026-10-27）
+
+新增截图/文档导入、人工核对及原文来源、作业日历与 ICS 导出、Study Relay 学习笔记、HAIZ Command、Classroom Surface。详情以 [`docs/HAIZ-V1.2-RELEASE-NOTES.md`](docs/HAIZ-V1.2-RELEASE-NOTES.md) 为准。APK 只有在构建完成并验证签名后才算完成。
+
 ## 这版真正完成的功能
 
 | 来源思想 | HAIZ v1 自主实现 | 使用场景 |
