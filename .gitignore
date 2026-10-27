@@ -1,0 +1,9 @@
+**/.dart_tool/
+**/build/
+**/.idea/
+**/.gradle/
+**/Pods/
+**/*.iml
+*.zip
+*.log
+.DS_Store
