@@ -6,7 +6,13 @@ import 'kit.dart';
 class CampusPage extends StatelessWidget {
   final PocketStore store;
   final VoidCallback onOpenLab;
-  const CampusPage({super.key, required this.store, required this.onOpenLab});
+  final VoidCallback onOpenAcademic;
+  const CampusPage({
+    super.key,
+    required this.store,
+    required this.onOpenLab,
+    required this.onOpenAcademic,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +33,53 @@ class CampusPage extends StatelessWidget {
                 subtitle: '把真正需要的服务放在触手可及的位置。',
               ),
               const SizedBox(height: 25),
+              PocketCard(
+                onTap: onOpenAcademic,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: p.accent.withValues(alpha: .13),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.school_outlined,
+                        color: p.accent,
+                        size: 27,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'HAIZ Academic · 班级同步',
+                            style: TextStyle(
+                              color: p.foreground,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            '连接授权班级 · 核对后加入个人任务',
+                            style: TextStyle(color: p.secondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: p.accent,
+                      size: 17,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
               PocketCard(
                 onTap: onOpenLab,
                 child: Row(
@@ -97,7 +150,7 @@ class CampusPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 9),
                     Text(
-                      '这里展示 ZZUPocket 的功能结构，但没有接入任何学校账号、真实课表或校园卡接口。',
+                      '班级协作已支持连接自建 HAIZ Academic 服务；学校正式统一身份认证、校园卡和学校课表仍需取得授权才能接入。',
                       style: TextStyle(
                         color: p.secondary,
                         height: 1.65,

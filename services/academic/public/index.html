@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>HAIZ Academic · 班级协作</title>
+<link rel="stylesheet" href="/ui.css">
+<script src="/app.js" defer></script>
+</head><body>
+<header class="masthead"><div class="logo"><span class="brand">h.</span><span>HAIZ <small>Academic</small></span></div><div class="mast-actions"><span id="identity">独立校园协作</span><button class="quiet" id="logout" hidden>退出</button></div></header>
+<main>
+<section id="welcome" class="welcome">
+<div><p class="eyebrow">THE CLASSROOM, CONNECTED</p><h1>让任务在<br>班级间真正流动。</h1><p class="lede">教师发布、学生接收，来源与确认都能追溯。不要求学生在校使用手机。</p><p class="disclaimer">非学校官方系统。正式学籍认证、QQ 群事件订阅只有在获得授权并配置后才启用。</p></div>
+<div class="auth-card">
+<div class="seg" role="tablist"><button data-tab="login" class="selected">登录</button><button data-tab="register">学生加入</button></div>
+<form id="login-form" class="formstack"><label>账号<input name="login" required autocomplete="username" placeholder="账号"></label><label>密码<input name="password" type="password" required autocomplete="current-password"></label><button class="primary">进入 HAIZ</button></form>
+<form id="register-form" class="formstack" hidden><label>创建账号<input name="login" required autocomplete="username" placeholder="只用字母和数字"></label><label>称呼<input name="label" required maxlength="40" autocomplete="nickname" placeholder="不必填写真实姓名"></label><label>密码（至少12位）<input name="password" type="password" minlength="12" required autocomplete="new-password"></label><label>教师提供的邀请码<input name="joinCode" required></label><button class="primary">申请加入班级</button><p class="micro">不会立即加入，需班级教师核准。</p></form>
+</div></section>
+<section id="workspace" hidden>
+<div class="intro"><div><p class="eyebrow">ACADEMIC SPACE</p><h1>从今天的班级事务开始。</h1><p class="lede" id="hello">等待载入…</p></div><div class="right-badge">可独立运行 · 自托管</div></div>
+<div class="columns"><aside class="sidebar">
+<div class="panel"><div class="panel-title"><h2>我的班级</h2><button class="quiet" id="refresh">刷新</button></div><div id="class-list" class="class-list"></div>
+<div id="new-class-wrap"><form id="new-class-form" class="tight"><label>新建班级<input name="title" required placeholder="例如：高一实验班"></label><button class="secondary">建立</button></form></div>
+<div id="join-wrap" hidden><form id="join-form" class="tight"><label>加入其他班级<input name="joinCode" required placeholder="班级邀请码"></label><button class="secondary">申请加入</button></form></div>
+</div>
+<div class="panel" id="admin-tools" hidden><div class="panel-title"><h2>教师账号授权</h2></div><form id="teacher-form" class="tight"><label>教师登录名<input name="login" required></label><label>称呼<input name="label" required></label><label>初始密码（至少12位）<input name="password" type="password" minlength="12" required autocomplete="new-password"></label><button class="secondary">创建教师</button></form><p class="micro">必须由学校授权管理者审核身份后操作。</p></div>
+<div class="panel" id="school-tools" hidden>
+<div class="panel-title"><h2>授权学校名册映射</h2></div>
+<form id="school-link-form" class="tight">
+<label>HAIZ 学生账号<input name="login" required placeholder="student01"></label>
+<label>校方匿名标识<input name="externalSubject" required placeholder="仅限校方提供的匿名标识"></label>
+<button class="secondary">经核对后建立映射</button></form>
+<p class="micro">仅有学校许可并配置校方签名中继后才可使用。不得在此输入身份证号、学籍号或名单。</p>
+</div>
+</aside>
+<div class="bodypanel" id="class-content">
+<div class="empty">选择左侧班级，查看教务与协作内容。</div>
+</div></div>
+</section>
+<div id="notice" role="status" aria-live="polite"></div>
+</main>
+<footer>HAIZ Academic · Independent Prototype · 不采集身份证或学籍号 · 不自动向 QQ 发送消息</footer>
+</body></html>

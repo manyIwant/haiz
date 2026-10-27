@@ -1,3 +1,13 @@
+## HAIZ Academic v1.3 · 自建班级协作预览
+
+本地运行的独立教学平台：services/academic/ (Node 24 + SQLite、教师/学生/班级与权限、作业发布、教室只读凭据)；可授权 QQ 官方机器人 integrations/qq-bot/；ClassIsland 原生组件 integrations/classisland/；Flutter App 的「探索 → HAIZ Academic」入口。
+
+- 开启本地演示：运行 tools/start-academic-local.command，同一台 Mac 访问 http://127.0.0.1:8780/；本地管理员初始凭据存放在私有 ~/.config/haiz-academic/local.env，不得提交到仓库。
+- 官方学校身份/名册接口未经授权尚未接入。只有收到校方明确批准的接口和签名密钥后才可启用伪匿名名册同步。
+- QQ 自动接入仅限获腾讯许可的机器人、已授权的群 @事件，教师确认之后才发布；不自动读取全部群聊历史或他人账号。
+- ClassIsland cipx 已在 Mac 编译，未在 Windows ClassIsland 真机安装测试。
+- 详细状态及数据边界见 docs/academic/RELEASE-V1.3.md。
+
 # HAIZ v1 Preview · 跨端学习与教学原型
 
 > **状态：可运行的本地 v1 预览，不是正式发布。** 非海南中学或郑州大学官方服务。

@@ -10,6 +10,7 @@ import 'ui/focus_page.dart';
 import 'ui/campus_page.dart';
 import 'ui/inbox_page.dart';
 import 'ui/ticker_lab_page.dart';
+import 'ui/academic_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   late final PocketStore store = PocketStore();
   int tab = 0;
   bool showLab = false;
+  bool showAcademic = false;
 
   @override
   void initState() {
@@ -105,7 +107,15 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                       store: store,
                                     ),
                                     _ =>
-                                      showLab
+                                      showAcademic
+                                          ? AcademicPage(
+                                              key: const ValueKey('academic'),
+                                              store: store,
+                                              onBack: () => setState(
+                                                () => showAcademic = false,
+                                              ),
+                                            )
+                                          : showLab
                                           ? TickerLabPage(
                                               key: const ValueKey('lab'),
                                               store: store,
@@ -118,6 +128,9 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                               store: store,
                                               onOpenLab: () => setState(
                                                 () => showLab = true,
+                                              ),
+                                              onOpenAcademic: () => setState(
+                                                () => showAcademic = true,
                                               ),
                                             ),
                                   },

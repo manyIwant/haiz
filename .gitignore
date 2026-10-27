@@ -9,3 +9,15 @@
 .DS_Store
 
 ios-refinement-backups/
+
+**/node_modules/
+**/obj/
+**/bin/
+**/cipx/
+releases/
+**/*.sqlite
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/local.env
+**/.env
+**/secrets.*
