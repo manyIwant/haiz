@@ -1,21 +1,23 @@
-// ignore_for_file: prefer_interpolation_to_compose_strings
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
+import '../core/academic_session.dart';
 import '../core/pocket_store.dart';
 import 'kit.dart';
 
 /// Native App client for a self-hosted HAIZ Academic deployment.
-/// No school account keys or passwords are written to local storage.
-/// Tasks enter PocketStore only when the student confirms each import.
+/// Verified identity decides the account namespace; credentials stay in memory.
 class AcademicPage extends StatefulWidget {
   final PocketStore store;
+  final AcademicSession session;
   final VoidCallback onBack;
 
-  const AcademicPage({super.key, required this.store, required this.onBack});
+  const AcademicPage({
+    super.key,
+    required this.store,
+    required this.session,
+    required this.onBack,
+  });
 
   @override
   State<AcademicPage> createState() => _AcademicPageState();
@@ -25,140 +27,48 @@ class _AcademicPageState extends State<AcademicPage> {
   final _server = TextEditingController();
   final _login = TextEditingController();
   final _password = TextEditingController();
-  final _client = http.Client();
-  String? _session;
-  String? _apiBase;
-  String? _role;
   String? _message;
-  bool _busy = false;
-  List<Map<String, dynamic>> _assignments = [];
-  List<Map<String, dynamic>> _classes = [];
-  String? _selectedClass;
 
   @override
   void dispose() {
     _server.dispose();
     _login.dispose();
     _password.dispose();
-    _client.close();
     super.dispose();
   }
 
-  Future<Map<String, dynamic>> _call(
-    String path, {
-    Map<String, dynamic>? body,
-  }) async {
-    final base = _apiBase;
-    if (base == null) throw StateError('尚未连接');
-    final headers = <String, String>{'Accept': 'application/json'};
-    if (body != null) headers['Content-Type'] = 'application/json';
-    if (_session != null) headers['Cookie'] = _session!;
-    final response = body == null
-        ? await _client.get(Uri.parse(base + path), headers: headers)
-        : await _client.post(
-            Uri.parse(base + path),
-            headers: headers,
-            body: jsonEncode(body),
-          );
-    final cookie = response.headers['set-cookie'];
-    if (cookie != null && cookie.startsWith('hsid=')) {
-      _session = cookie.split(';').first;
-    }
-    final json = jsonDecode(utf8.decode(response.bodyBytes));
-    if (json is! Map) throw StateError('服务器响应无效');
-    final map = Map<String, dynamic>.from(json);
-    if (response.statusCode >= 400) {
-      throw StateError(map['error']?.toString() ?? '请求未成功');
-    }
-    return map;
-  }
+  AcademicSession get session => widget.session;
 
-  Future<void> _run(Future<void> Function() action) async {
-    if (_busy) return;
-    setState(() {
-      _busy = true;
-      _message = null;
-    });
-    try {
-      await action();
-    } catch (error) {
-      if (mounted) {
-        setState(
-          () => _message = error.toString().replaceFirst('Bad state: ', ''),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _connect() async {
+  Future<void> _signIn() async {
     if (kIsWeb) {
-      throw StateError('网页版请直接使用 HAIZ Academic 的浏览器登录界面。');
+      setState(() => _message = '网页版请直接使用 HAIZ Academic 的浏览器登录界面。');
+      return;
     }
-    final uri = Uri.tryParse(_server.text.trim());
-    if (uri == null ||
-        uri.host.isEmpty ||
-        !(uri.scheme == 'https' ||
-            (uri.scheme == 'http' &&
-                (uri.host == 'localhost' || uri.host == '127.0.0.1')))) {
-      throw StateError('远程教务服务必须提供 HTTPS 地址。本机开发可使用 localhost。');
-    }
-    if (uri.userInfo.isNotEmpty ||
-        uri.query.isNotEmpty ||
-        uri.fragment.isNotEmpty) {
-      throw StateError('请输入纯服务器地址，不要附带账号信息。');
-    }
-    _apiBase = uri.toString().replaceAll(RegExp(r'/$'), '') + '/api';
-    final result = await _call(
-      '/auth/login',
-      body: {'login': _login.text.trim(), 'password': _password.text},
-    );
+    setState(() => _message = null);
+    await session.login(_server.text, _login.text, _password.text);
+    if (!mounted) return;
     _password.clear();
-    _role = (result['user'] as Map)['role']?.toString();
-    await _refresh();
+    setState(() => _message = session.error);
   }
 
   Future<void> _refresh() async {
-    final data = await _call('/classes');
-    final classes = (data['classes'] as List)
-        .map((a) => Map<String, dynamic>.from(a as Map))
-        .toList();
-    String? selected = _selectedClass;
-    if (selected == null || !classes.any((c) => c['id'] == selected)) {
-      selected = classes.isNotEmpty ? classes.first['id']?.toString() : null;
-    }
-    List<Map<String, dynamic>> assignments = [];
-    if (_role == 'student') {
-      final received = await _call('/my/assignments');
-      assignments = (received['assignments'] as List)
-          .map((a) => Map<String, dynamic>.from(a as Map))
-          .where((a) => a['classId'] == selected)
-          .toList();
-    } else if (selected != null) {
-      final received = await _call('/classes/' + selected + '/assignments');
-      assignments = (received['assignments'] as List)
-          .map((a) => Map<String, dynamic>.from(a as Map))
-          .toList();
-    }
-    if (mounted) {
-      setState(() {
-        _classes = classes;
-        _selectedClass = selected;
-        _assignments = assignments;
-      });
-    }
+    await session.refresh();
+    if (mounted) setState(() => _message = session.error);
   }
 
-  Future<void> _import(Map<String, dynamic> item) async {
-    final identifier = item['id']?.toString() ?? '';
-    final title = item['title']?.toString() ?? '';
-    if (identifier.isEmpty || title.isEmpty) return;
-    final origin = 'HAIZ Academic · ' + identifier;
-    if (widget.store.tasks.any((t) => t.source == origin)) {
-      setState(() => _message = '这项作业已经导入过，不会重复添加。');
-      return;
-    }
+  Future<void> _refreshWith(String? value) async {
+    await session.refresh(classId: value);
+    if (mounted) setState(() => _message = session.error);
+  }
+
+  Future<void> _logout() async {
+    await session.logout();
+    if (!mounted) return;
+    _password.clear();
+    setState(() => _message = session.error);
+  }
+
+  Future<void> _importAssignment(Map<String, dynamic> item) async {
     final accepted = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -170,11 +80,11 @@ class _AcademicPageState extends State<AcademicPage> {
             children: [
               Text(item['subject']?.toString() ?? '其他'),
               const SizedBox(height: 9),
-              SelectableText(title),
+              SelectableText(item['title']?.toString() ?? ''),
               const SizedBox(height: 9),
-              Text('截止：' + (item['due']?.toString() ?? '未指定')),
+              Text('截止：${item['due']?.toString() ?? '未指定'}'),
               const SizedBox(height: 9),
-              const Text('这只是加入个人待办，不代表已提交作业。'),
+              const Text('这只是加入个人待办，不代表已提交作业。老师后续修改不会覆盖你的私人笔记。'),
             ],
           ),
         ),
@@ -191,28 +101,62 @@ class _AcademicPageState extends State<AcademicPage> {
       ),
     );
     if (accepted != true || !mounted) return;
-    DateTime? due;
-    final value = item['due']?.toString();
-    if (value != null) due = DateTime.tryParse(value);
-    widget.store.addTask(
-      title,
-      item['subject']?.toString() ?? '其他',
-      due: due,
-      source: origin,
-    );
-    setState(() => _message = '已添加到个人待办。');
+    await session.importAssignment(item);
+    if (!mounted) return;
+    setState(() => _message = session.error ?? '已添加到所属账号的个人待办。');
   }
 
-  Future<void> _markViewed(Map<String, dynamic> item) async {
-    final key = item['id']?.toString();
-    if (key == null) return;
-    await _call('/assignments/' + key + '/acknowledge', body: {});
-    await _refresh();
+  Future<void> _importLegacy() async {
+    // The confirmation belongs to the account that is open when the dialog
+    // appears. Capture it here and re-check afterwards: a dialog that is still
+    // on screen does not mean the session behind it is still the same.
+    final generation = widget.store.generation;
+    final namespace = widget.store.namespace;
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('升级前的本机记录'),
+        content: const Text(
+          '这些是升级前未按账号区分的任务、笔记和专注记录，目前只做只读备份。\n\n'
+          '确认后才会并入当前已登录账号；其他账号不能认领。原始记录与备份都会保留。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: const Text('暂不导入'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, true),
+            child: const Text('确认并入当前账号'),
+          ),
+        ],
+      ),
+    );
+    if (accepted != true || !mounted) return;
+    if (widget.store.generation != generation ||
+        widget.store.namespace != namespace) {
+      setState(
+        () => _message = '确认期间已切换账号，旧记录未导入任何账号；归档仍完整保留。',
+      );
+      return;
+    }
+    try {
+      await widget.store.importLegacyArchive(ownerConfirmed: true);
+      if (!mounted) return;
+      setState(() => _message = '旧记录已并入当前账号，原始记录与备份仍保留。');
+    } catch (_) {
+      if (!mounted) return;
+      setState(
+        () => _message = widget.store.storageError ?? '旧记录未导入；归档仍完整保留。',
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final p = PocketSkin.of(context).colors;
+    final loggedIn = session.identity != null;
+    final busy = session.busy;
     return SingleChildScrollView(
       key: const PageStorageKey('academic_scroll'),
       padding: const EdgeInsets.fromLTRB(23, 30, 23, 130),
@@ -235,7 +179,15 @@ class _AcademicPageState extends State<AcademicPage> {
                 subtitle: '教师发布，学生自愿确认后加入个人待办。学校正式账号接口需要授权。',
               ),
               const SizedBox(height: 20),
-              if (_role == null)
+              if (widget.store.storageError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    widget.store.storageError!,
+                    style: TextStyle(color: p.secondary, fontSize: 12),
+                  ),
+                ),
+              if (!loggedIn)
                 PocketCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,12 +195,9 @@ class _AcademicPageState extends State<AcademicPage> {
                       const SectionLabel('连接自建班级服务'),
                       const SizedBox(height: 8),
                       Text(
-                        '只连接你信任的 HAIZ 服务端。正式环境须使用 HTTPS。凭据不在本机持久化。',
-                        style: TextStyle(
-                          color: p.secondary,
-                          fontSize: 12,
-                          height: 1.6,
-                        ),
+                        '只连接你信任的 HAIZ 服务端。正式环境须使用 HTTPS。'
+                        '服务器须支持 v1.4 已验证身份契约；凭据不在本机持久化。',
+                        style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -272,14 +221,14 @@ class _AcademicPageState extends State<AcademicPage> {
                       ),
                       const SizedBox(height: 15),
                       FilledButton.icon(
-                        onPressed: _busy ? null : () => _run(_connect),
+                        onPressed: busy ? null : _signIn,
                         icon: const Icon(Icons.cloud_done_outlined),
                         label: const Text('登录并读取班级任务'),
                       ),
                     ],
                   ),
                 ),
-              if (_role != null) ...[
+              if (loggedIn)
                 PocketCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,30 +237,26 @@ class _AcademicPageState extends State<AcademicPage> {
                         children: [
                           const Expanded(child: SectionLabel('班级任务')),
                           TextButton(
-                            onPressed: _busy ? null : () => _run(_refresh),
+                            onPressed: busy ? null : _refresh,
                             child: const Text('刷新'),
                           ),
                           TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _session = null;
-                                _apiBase = null;
-                                _role = null;
-                                _classes = [];
-                                _assignments = [];
-                                _selectedClass = null;
-                              });
-                            },
+                            onPressed: busy ? null : _logout,
                             child: const Text('退出'),
                           ),
                         ],
                       ),
-                      if (_classes.isNotEmpty)
+                      Text(
+                        '当前账号：${session.userId ?? ''} · ${session.origin ?? ''}',
+                        style: TextStyle(color: p.secondary, fontSize: 11),
+                      ),
+                      const SizedBox(height: 8),
+                      if (session.classes.isNotEmpty)
                         DropdownButton<String>(
                           isExpanded: true,
-                          value: _selectedClass,
+                          value: session.selectedClass,
                           items: [
-                            for (final c in _classes)
+                            for (final c in session.classes)
                               DropdownMenuItem<String>(
                                 value: c['id']?.toString(),
                                 child: Text(
@@ -320,26 +265,21 @@ class _AcademicPageState extends State<AcademicPage> {
                                 ),
                               ),
                           ],
-                          onChanged: (value) => _run(() async {
-                            _selectedClass = value;
-                            await _refresh();
-                          }),
+                          onChanged: busy ? null : _refreshWith,
                         ),
-                      if (_classes.isEmpty)
+                      if (session.classes.isEmpty)
                         const Text('还没有班级，请先在 Web 管理台申请或创建班级。'),
-                      if (_classes.any(
-                        (c) =>
-                            c['id'] == _selectedClass &&
+                      if (session.classes.any(
+                        (c) => c['id'] == session.selectedClass &&
                             c['status'] == 'pending',
                       ))
                         const Text('班级加入申请待教师核准。'),
                       const SizedBox(height: 9),
-                      for (final item in _assignments) ...[
+                      for (final item in session.assignments) ...[
                         const Divider(height: 20),
                         Text(
-                          (item['subject']?.toString() ?? '课程') +
-                              ' · ' +
-                              (item['title']?.toString() ?? '任务'),
+                          '${item['subject']?.toString() ?? '课程'} · '
+                          '${item['title']?.toString() ?? '任务'}',
                           style: TextStyle(
                             color: p.foreground,
                             fontWeight: FontWeight.w600,
@@ -347,7 +287,7 @@ class _AcademicPageState extends State<AcademicPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '截止：' + (item['due']?.toString() ?? '未指定'),
+                          '截止：${item['due']?.toString() ?? '未指定'}',
                           style: TextStyle(color: p.secondary, fontSize: 12),
                         ),
                         const SizedBox(height: 8),
@@ -356,14 +296,19 @@ class _AcademicPageState extends State<AcademicPage> {
                           runSpacing: 5,
                           children: [
                             OutlinedButton(
-                              onPressed: () => _import(item),
+                              onPressed: busy ? null : () => _importAssignment(item),
                               child: const Text('核对后加入个人任务'),
                             ),
-                            if (_role == 'student' && item['viewed'] != true)
+                            if (item['viewed'] != true)
                               TextButton(
-                                onPressed: _busy
+                                onPressed: busy
                                     ? null
-                                    : () => _run(() => _markViewed(item)),
+                                    : () async {
+                                        await session.markViewed(item);
+                                        if (mounted) {
+                                          setState(() => _message = session.error);
+                                        }
+                                      },
                                 child: const Text('标记已查看'),
                               ),
                           ],
@@ -372,7 +317,31 @@ class _AcademicPageState extends State<AcademicPage> {
                     ],
                   ),
                 ),
-              ],
+              if (loggedIn &&
+                  widget.store.legacyArchiveAvailable &&
+                  !widget.store.legacyImported)
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: PocketCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel('升级前的本机记录'),
+                        const SizedBox(height: 8),
+                        Text(
+                          '检测到升级前未按账号区分的本机记录，已逐字节备份。'
+                          '历史上可能属于多人，不会自动显示或删除。',
+                          style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton(
+                          onPressed: busy ? null : _importLegacy,
+                          child: const Text('确认并入当前账号'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               if (_message != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 15),

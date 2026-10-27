@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import 'core/pocket_store.dart';
+import 'core/academic_session.dart';
 import 'ui/kit.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
@@ -26,6 +27,7 @@ class HaizPocketApp extends StatefulWidget {
 
 class _HaizPocketAppState extends State<HaizPocketApp> {
   late final PocketStore store = PocketStore();
+  late final AcademicSession session = AcademicSession(store);
   int tab = 0;
   bool showLab = false;
   bool showAcademic = false;
@@ -38,6 +40,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
 
   @override
   void dispose() {
+    session.dispose();
     store.dispose();
     super.dispose();
   }
@@ -45,7 +48,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: store,
+      animation: Listenable.merge([store, session]),
       builder: (context, _) {
         final p = PocketPalette.forName(store.appearance);
         return MaterialApp(
@@ -111,6 +114,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                           ? AcademicPage(
                                               key: const ValueKey('academic'),
                                               store: store,
+                                              session: session,
                                               onBack: () => setState(
                                                 () => showAcademic = false,
                                               ),
@@ -136,6 +140,23 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                   },
                                 ),
                         ),
+                        if (store.ready && store.storageError != null)
+                          Positioned(
+                            left: 16,
+                            right: 16,
+                            top: 8,
+                            child: Material(
+                              color: p.card,
+                              borderRadius: BorderRadius.circular(14),
+                              child: Padding(
+                                padding: const EdgeInsets.all(13),
+                                child: Text(
+                                  store.storageError!,
+                                  style: TextStyle(color: p.secondary, fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (store.ready)
                           Positioned(
                             left: 0,
