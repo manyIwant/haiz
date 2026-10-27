@@ -1,0 +1,70 @@
+/* HAIZ Teacher v1.1 — restrained iOS-inspired surfaces */
+:root {
+  --bg: #f5f7f5;
+  --ink: #1a2d26;
+  --muted: #73867d;
+  --border: #dfe8e1;
+  --soft: #edf3ef;
+  --accent: #287b64;
+  --radius: 23px;
+}
+body {
+  background:
+    radial-gradient(ellipse 75% 48% at 96% -18%, #e4f2eb 0%, transparent 78%),
+    linear-gradient(#f8faf8, #f2f5f2 80%);
+  -webkit-font-smoothing: antialiased;
+}
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  max-width: unset;
+  padding-inline: max(calc((100vw - 1106px)/2), 27px);
+  background: #f8fbf8df;
+  border-bottom: 1px solid #ffffffbf;
+  -webkit-backdrop-filter: saturate(145%) blur(23px);
+  backdrop-filter: saturate(145%) blur(23px);
+}
+.mark { border-radius: 13px; background: #1e6956; }
+.panel {
+  border: 1px solid #e6ece6;
+  box-shadow: 0 5px 24px #0b3d2210, inset 0 1px #ffffff;
+  border-radius: 24px;
+}
+h1 { letter-spacing: -1.7px; font-weight: 740; }
+.field {
+  background: #f2f5f2;
+  border: 1px solid #e5ebe5;
+  border-radius: 14px;
+  padding: 14px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field:focus {
+  border-color: #7cb89e;
+  box-shadow: 0 0 0 3px #7cb89e25;
+  outline: none;
+}
+.btn {
+  border-radius: 15px;
+  transition: transform .16s, background .16s;
+}
+.btn:active { transform: scale(.972); }
+.btn.secondary { background: #ecf3ee; }
+.hero {
+  border-radius: 22px;
+  background: linear-gradient(128deg, #195b4c 2%, #338d76 100%);
+  box-shadow: inset 0 1px #ffffff31, 0 10px 19px #23665216;
+}
+.rowitem { border-radius: 16px; box-shadow: 0 1px 3px #1d4d3311; }
+@media (max-width: 780px) {
+  .top { padding-inline: 20px; }
+  .panel { border-radius: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field, .btn { transition: none; }
+}
+@media print {
+  .top { display: none; }
+  body { background: white; }
+  .panel { box-shadow: none; border: none; }
+}

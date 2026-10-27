@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/pocket_store.dart';
 import 'ui/kit.dart';
+import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
 import 'ui/schedule_page.dart';
 import 'ui/focus_page.dart';
@@ -46,27 +47,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'HAIZ Pocket · 校园学习空间',
-          theme: ThemeData(
-            useMaterial3: true,
-            brightness: p.dark ? Brightness.dark : Brightness.light,
-            scaffoldBackgroundColor: p.background,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: p.accent,
-              brightness: p.dark ? Brightness.dark : Brightness.light,
-              surface: p.card,
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: p.card,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-          ),
+          theme: buildHaizTheme(p),
           home: Builder(
             builder: (context) {
               final reduce = MediaQuery.of(context).disableAnimations;
@@ -87,7 +68,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                 )
                               : AnimatedSwitcher(
                                   duration: Duration(
-                                    milliseconds: reduce ? 0 : 280,
+                                    milliseconds: reduce ? 0 : 230,
                                   ),
                                   switchInCurve: Curves.easeOutCubic,
                                   switchOutCurve: Curves.easeInCubic,
@@ -96,7 +77,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                         opacity: animation,
                                         child: SlideTransition(
                                           position: Tween<Offset>(
-                                            begin: const Offset(0, 0.025),
+                                            begin: const Offset(0, 0.012),
                                             end: Offset.zero,
                                           ).animate(animation),
                                           child: child,

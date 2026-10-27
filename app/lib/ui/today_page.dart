@@ -112,17 +112,17 @@ class TodayPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(27),
+                  borderRadius: BorderRadius.circular(29),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: p.dark
-                        ? [const Color(0xFF2C625C), const Color(0xFF173D3C)]
-                        : [const Color(0xFF1D6757), const Color(0xFF3A927A)],
+                        ? [const Color(0xFF225448), const Color(0xFF173B37)]
+                        : [const Color(0xFF205D50), const Color(0xFF348672)],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: p.accent.withValues(alpha: .14),
+                      color: p.accent.withValues(alpha: .09),
                       blurRadius: 28,
                       offset: const Offset(0, 15),
                     ),

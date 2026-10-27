@@ -306,8 +306,11 @@ class _TickerLabPageState extends State<TickerLabPage>
                       ),
                     ),
                     const SizedBox(height: 9),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 10,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.end,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
