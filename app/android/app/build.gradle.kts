@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -16,7 +18,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "space.haiz.haiz_pocket_flutter"
+        applicationId = "space.haiz.app.preview"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -29,13 +31,30 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("haizPreviewRelease") {
+            val propertiesFile = file(System.getProperty("user.home") + "/.config/haiz-android/signing.properties")
+            require(propertiesFile.exists()) { "Missing local HAIZ preview signing key settings." }
+            val props = Properties()
+            propertiesFile.inputStream().use { props.load(it) }
+            storeFile = file(props.getProperty("storeFile"))
+            storePassword = props.getProperty("storePassword")
+            keyAlias = props.getProperty("keyAlias")
+            keyPassword = props.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("haizPreviewRelease")
         }
     }
+}
+
+dependencies {
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
 }
 
 kotlin {

@@ -7,6 +7,43 @@ class FocusPage extends StatelessWidget {
   final PocketStore store;
   const FocusPage({super.key, required this.store});
 
+  Future<void> _editNote(BuildContext context) async {
+    final task = store.activeTask;
+    if (task == null) return;
+    final note = TextEditingController(text: store.noteFor(task.id));
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('学习接力 · 保存思路'),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: TextField(
+            controller: note,
+            autofocus: true,
+            maxLines: 8,
+            minLines: 5,
+            maxLength: 5000,
+            decoration: const InputDecoration(
+              hintText: '上次解到哪里？下一步准备做什么？\n把未完成的思路留下。',
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('保存到本机'),
+          ),
+        ],
+      ),
+    );
+    if (saved == true) store.setTaskNote(task.id, note.text);
+    note.dispose();
+  }
+
   String get timerText {
     final seconds = store.focusRemaining;
     final minutes = seconds ~/ 60;
@@ -55,6 +92,32 @@ class FocusPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
+                    if (store.activeTask != null) ...[
+                      TextButton.icon(
+                        onPressed: () => _editNote(context),
+                        icon: const Icon(Icons.edit_note_rounded, size: 18),
+                        label: Text(
+                          store.noteFor(store.activeTask!.id).trim().isEmpty
+                              ? '记录学习思路'
+                              : '继续编辑学习笔记',
+                        ),
+                      ),
+                      if (store.noteFor(store.activeTask!.id).trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 0, 10, 14),
+                          child: Text(
+                            store.noteFor(store.activeTask!.id),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: p.secondary,
+                              fontSize: 12,
+                              height: 1.55,
+                            ),
+                          ),
+                        ),
+                    ],
                     if (!store.focusRunning && store.activeTask != null)
                       TextButton.icon(
                         onPressed: () => store.chooseFocusTask(null),

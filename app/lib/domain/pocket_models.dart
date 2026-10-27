@@ -8,6 +8,7 @@ class TaskItem {
   final bool example;
   final String? dueIso;
   final String source;
+  final String originalNotice;
   const TaskItem({
     required this.id,
     required this.title,
@@ -16,6 +17,7 @@ class TaskItem {
     this.example = false,
     this.dueIso,
     this.source = '',
+    this.originalNotice = '',
   });
 
   TaskItem copyWith({bool? completed}) => TaskItem(
@@ -26,6 +28,7 @@ class TaskItem {
     example: example,
     dueIso: dueIso,
     source: source,
+    originalNotice: originalNotice,
   );
 
   Map<String, dynamic> toJson() => {
@@ -36,6 +39,7 @@ class TaskItem {
     'example': example,
     'dueIso': dueIso,
     'source': source,
+    'originalNotice': originalNotice,
   };
 
   factory TaskItem.fromJson(Map<String, dynamic> json) => TaskItem(
@@ -46,6 +50,7 @@ class TaskItem {
     example: json['example'] == true,
     dueIso: json['dueIso']?.toString(),
     source: json['source']?.toString() ?? '',
+    originalNotice: json['originalNotice']?.toString() ?? '',
   );
 }
 

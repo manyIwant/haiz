@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/pocket_store.dart';
 import '../domain/pocket_models.dart';
 import 'kit.dart';
+import 'command_palette.dart';
 
 class TodayPage extends StatelessWidget {
   final PocketStore store;
@@ -99,6 +100,12 @@ class TodayPage extends StatelessWidget {
                 children: [
                   const Eyebrow('HAIZ / V1'),
                   const Spacer(),
+                  IconButton(
+                    tooltip: 'HAIZ Command · 搜索',
+                    icon: const Icon(Icons.search_rounded),
+                    onPressed: () =>
+                        showHaizCommand(context, store, onNavigate),
+                  ),
                   TextButton.icon(
                     onPressed: () => onNavigate(2),
                     icon: const Icon(Icons.inbox_outlined, size: 18),
@@ -336,6 +343,47 @@ class TodayPage extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (task.originalNotice.isNotEmpty)
+                          IconButton(
+                            tooltip: '查看通知原文',
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(
+                              Icons.info_outline_rounded,
+                              color: p.secondary,
+                              size: 19,
+                            ),
+                            onPressed: () => showDialog<void>(
+                              context: context,
+                              builder: (dialog) => AlertDialog(
+                                title: const Text('任务的原始通知'),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        task.source,
+                                        style: TextStyle(
+                                          color: p.accent,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SelectableText(task.originalNotice),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialog),
+                                    child: const Text('关闭'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         IconButton(
                           tooltip: '继续这项学习任务',
                           onPressed: () {

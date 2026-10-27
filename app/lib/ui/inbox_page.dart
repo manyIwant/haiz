@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
 import '../domain/notice_parser.dart';
+import '../domain/notice_import_service.dart';
 import 'kit.dart';
 
 class _Draft {
@@ -37,6 +38,8 @@ class _InboxPageState extends State<InboxPage> {
   final _input = TextEditingController();
   final List<_Draft> _drafts = [];
   String? _notice;
+  String _currentSource = '手动粘贴';
+  bool _importing = false;
   @override
   void dispose() {
     _input.dispose();
@@ -53,6 +56,25 @@ class _InboxPageState extends State<InboxPage> {
           ? '没有发现明确的行动要求。请检查原文，也可以在「今天」手动添加。'
           : '仅根据文字规则生成候选；请核对原文、科目和日期，确认后才保存。';
     });
+  }
+
+  Future<void> _importDocument() async {
+    if (_importing) return;
+    setState(() => _importing = true);
+    try {
+      final result = await NoticeImportService.pickAndExtract();
+      if (result == null || !mounted) return;
+      _input.text = result.$2;
+      _currentSource = result.$1;
+      _extract();
+      if (mounted) {
+        setState(() => _notice = '${result.$1} 已在本机读取。请检查提取的原文和每项任务，日期可能需要修改。');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _notice = '导入未成功：$error。可复制文档文字后手动粘贴。');
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
   }
 
   Future<void> _edit(_Draft d) async {
@@ -156,7 +178,8 @@ class _InboxPageState extends State<InboxPage> {
         draft.title,
         draft.subject,
         due: draft.due,
-        source: '手动导入 · ${draft.source}',
+        source: '导入 · $_currentSource',
+        originalNotice: draft.original,
       );
       added++;
     }
@@ -181,7 +204,10 @@ class _InboxPageState extends State<InboxPage> {
             children: [
               const Eyebrow('HAIZ INBOX / NOTICE TO ACTION'),
               const SizedBox(height: 23),
-              const PageTitle(title: '消息可以变成行动。', subtitle: '粘贴通知，核对信息，再交给今天。'),
+              const PageTitle(
+                title: '消息可以变成行动。',
+                subtitle: '粘贴文本、导入截图或文档，核对后成为任务。',
+              ),
               const SizedBox(height: 22),
               PocketCard(
                 child: Column(
@@ -190,7 +216,7 @@ class _InboxPageState extends State<InboxPage> {
                     const SectionLabel('粘贴一段通知'),
                     const SizedBox(height: 8),
                     Text(
-                      '只在本机解析，不读取 QQ、微信或其他账号消息。',
+                      '文件在本机提取文字，不读取 QQ 或微信账号。支持 TXT、Word、PDF、截图；图片 OCR 仅移动 App。',
                       style: TextStyle(color: p.secondary, fontSize: 12),
                     ),
                     const SizedBox(height: 14),
@@ -215,7 +241,18 @@ class _InboxPageState extends State<InboxPage> {
                           onTap: _extract,
                         ),
                         OutlinedButton.icon(
+                          onPressed: _importing ? null : _importDocument,
+                          icon: Icon(
+                            _importing
+                                ? Icons.hourglass_top_rounded
+                                : Icons.file_open_outlined,
+                            size: 18,
+                          ),
+                          label: Text(_importing ? '正在读取' : '导入截图 / 文档'),
+                        ),
+                        OutlinedButton.icon(
                           onPressed: () {
+                            _currentSource = '演示通知';
                             _input.text = '数学明天交练习册第36-39页。\n物理后天提交实验报告。\n英语本周五背诵Unit 4单词。';
                             _extract();
                           },
@@ -337,7 +374,7 @@ class _InboxPageState extends State<InboxPage> {
                         context,
                         Icons.verified_user_outlined,
                         '始终由你确认',
-                        '候选不是正式的教师发布，原文保留在核对环节',
+                        '候选不是正式的教师发布，选定任务的原文会保存在本机，供随时核对',
                       ),
                     ],
                   ),

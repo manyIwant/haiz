@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import 'core/pocket_store.dart';
 import 'ui/kit.dart';
@@ -12,6 +13,7 @@ import 'ui/ticker_lab_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  pdfrxFlutterInitialize();
   runApp(const HaizPocketApp());
 }
 

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>HAIZ Classroom · 今日作业</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;background:#f6f8f5;color:#152b23}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:clamp(24px,5vw,70px);display:flex;flex-direction:column;gap:34px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{font-size:clamp(16px,2vw,23px);font-weight:750;letter-spacing:.2px}
+.brand i{background:#226b55;color:white;border-radius:13px;padding:9px 13px;margin-right:12px;font-family:Georgia,serif}
+.controls{display:flex;gap:10px;align-items:center}
+button{font:inherit;font-size:14px;font-weight:650;border:1px solid #d9e6dc;background:white;color:#1e5f4b;padding:12px 18px;border-radius:14px;cursor:pointer}
+button:focus-visible{outline:3px solid #72ab93;outline-offset:3px}
+main{flex:1;max-width:1500px;width:100%;margin:0 auto}
+.kicker{letter-spacing:4px;font-weight:750;color:#377966;font-size:clamp(11px,1.6vw,16px)}
+h1{font-size:clamp(42px,6vw,88px);line-height:1.18;margin:20px 0 17px;letter-spacing:-2px}
+.subtitle{font-size:clamp(15px,2vw,26px);color:#648478;margin-bottom:38px}
+.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(470px,100%),1fr));gap:17px}
+.item{display:flex;gap:20px;align-items:flex-start;padding:clamp(21px,2.8vw,36px);background:white;border-radius:24px;border:1px solid #e1e9e2;box-shadow:0 8px 26px #194d3010}
+.marker{width:7px;min-height:70px;border-radius:9px;background:#268269;flex-shrink:0}
+.copy{flex:1;min-width:0}
+.subject{font-size:clamp(15px,1.6vw,21px);font-weight:750;color:#33846b;margin-bottom:12px}
+.title{font-size:clamp(23px,2.8vw,43px);font-weight:750;line-height:1.35;overflow-wrap:anywhere}
+.due{font-size:clamp(14px,1.6vw,22px);margin-top:15px;color:#769186}
+.empty{padding:64px 34px;border:2px dashed #d6e4d8;border-radius:23px;text-align:center;color:#6c8679;font-size:22px}
+footer{font-size:13px;color:#899e94;max-width:1500px;width:100%;margin:0 auto}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{.controls{display:none}body{padding:17mm}.item{break-inside:avoid;box-shadow:none}h1{font-size:35px}.title{font-size:24px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><i>h.</i> HAIZ Classroom</div><div class="controls">
+<button id="refresh" type="button">刷新</button>
+<button id="fullscreen" type="button">全屏展示</button>
+</div></header>
+<main>
+<div class="kicker">TODAY · CLASSROOM</div>
+<h1>今天的学习任务</h1>
+<div class="subtitle">来自本机 HAIZ Teacher 草稿 · 请教师核对后展示</div>
+<section id="items" class="list" aria-live="polite"></section>
+</main>
+<footer>HAIZ Classroom · 非官方独立展示 · 不显示学生姓名或个人完成记录</footer>
+<script>
+(()=>{'use strict';
+const key='haiz.teacher.v1.drafts';
+const root=document.getElementById('items');
+function render(){
+  let entries=[];
+  try{const saved=JSON.parse(localStorage.getItem(key)||'[]');
+  if(Array.isArray(saved))entries=saved.filter(x=>x&&typeof x.title==='string'&&typeof x.subject==='string').slice(0,60);}
+  catch(_) {entries=[]}
+  root.replaceChildren();
+  if(!entries.length){const e=document.createElement('div');e.className='empty';e.textContent='还没有可展示的作业。请在 HAIZ Teacher 中添加并确认。';root.append(e);return;}
+  for(const item of entries){
+    const article=document.createElement('article');article.className='item';
+    const marker=document.createElement('div');marker.className='marker';
+    const copy=document.createElement('div');copy.className='copy';
+    const subject=document.createElement('div');subject.className='subject';subject.textContent=item.subject;
+    const title=document.createElement('div');title.className='title';title.textContent=item.title;
+    const due=document.createElement('div');due.className='due';due.textContent=item.due?'截止 · '+item.due:'截止时间待确认';
+    copy.append(subject,title,due);article.append(marker,copy);root.append(article);
+  }
+}
+window.addEventListener('storage',event=>{if(event.key===key)render()});
+document.getElementById('refresh').addEventListener('click',render);
+document.getElementById('fullscreen').addEventListener('click',()=>{
+  if(document.fullscreenElement){document.exitFullscreen?.();return;}
+  document.documentElement.requestFullscreen?.();
+});
+render();
+})();
+</script>
+</body></html>

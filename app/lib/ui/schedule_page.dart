@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/pocket_store.dart';
 import '../domain/pocket_models.dart';
 import 'kit.dart';
+import 'agenda_section.dart';
 
 class SchedulePage extends StatelessWidget {
   final PocketStore store;
@@ -330,6 +331,7 @@ class SchedulePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
               ],
+              AgendaSection(store: store),
               const SizedBox(height: 11),
               Text(
                 '当前为每周重复课表 · 演示数据不会自动连接学校系统',

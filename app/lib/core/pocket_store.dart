@@ -13,6 +13,7 @@ class PocketStore extends ChangeNotifier {
   List<TaskItem> tasks = [];
   List<CourseSlot> courses = [];
   List<FocusLog> focusLogs = [];
+  Map<String, String> taskNotes = {};
   String appearance = 'porcelain';
   String? activeTaskId;
   String? lastSavedTaskId;
@@ -28,6 +29,10 @@ class PocketStore extends ChangeNotifier {
       final tasksJson = await _prefs.getString('pocket.tasks.v1');
       final coursesJson = await _prefs.getString('pocket.courses.v1');
       final focusJson = await _prefs.getString('pocket.focus.v1');
+      final notesJson = await _prefs.getString('pocket.taskNotes.v1');
+      taskNotes = notesJson == null
+          ? {}
+          : Map<String, String>.from(jsonDecode(notesJson) as Map);
       appearance =
           (await _prefs.getString('pocket.appearance.v1')) ?? appearance;
       activeTaskId = await _prefs.getString('pocket.activeTask.v1');
@@ -100,6 +105,7 @@ class PocketStore extends ChangeNotifier {
     String subject, {
     DateTime? due,
     String source = '',
+    String originalNotice = '',
   }) {
     if (title.trim().isEmpty) return;
     tasks = [
@@ -111,6 +117,7 @@ class PocketStore extends ChangeNotifier {
             ? null
             : '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
         source: source,
+        originalNotice: originalNotice,
       ),
       ...tasks,
     ];
@@ -128,9 +135,27 @@ class PocketStore extends ChangeNotifier {
 
   void deleteTask(String id) {
     tasks.removeWhere((x) => x.id == id);
+    taskNotes.remove(id);
+    unawaited(_prefs.setString('pocket.taskNotes.v1', jsonEncode(taskNotes)));
     if (activeTaskId == id) chooseFocusTask(null);
     notifyListeners();
     unawaited(_saveTasks());
+  }
+
+  String noteFor(String id) => taskNotes[id] ?? '';
+
+  void setTaskNote(String id, String note) {
+    taskNotes[id] = note;
+    notifyListeners();
+    unawaited(_prefs.setString('pocket.taskNotes.v1', jsonEncode(taskNotes)));
+  }
+
+  List<TaskItem> get upcomingTasks {
+    final pending = tasks
+        .where((t) => !t.completed && t.dueIso != null)
+        .toList();
+    pending.sort((a, b) => a.dueIso!.compareTo(b.dueIso!));
+    return pending;
   }
 
   TaskItem? get activeTask {
