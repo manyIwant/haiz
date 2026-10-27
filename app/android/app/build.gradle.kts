@@ -46,9 +46,10 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Release signing uses a private local keystore.
+            // `flutter run --release` works.
             signingConfig = signingConfigs.getByName("haizPreviewRelease")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
