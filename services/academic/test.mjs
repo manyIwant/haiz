@@ -87,6 +87,15 @@ test('HAIZ Academic: role checks, enrollment approval, tasks and QQ manual confi
   assert.equal(x.result.inbox.length,1);
   x=await call('student','/classes/'+c.id+'/inbox');
   assert.equal(x.status,403);
+  // A second teacher must not redirect another class's authorized QQ group.
+  x=await call('admin','/admin/teachers','POST',{login:'teacher02',label:'虚构教师二',password:'TeacherDemoPassword2026'});
+  assert.equal(x.status,201);
+  x=await call('other','/auth/login','POST',{login:'teacher02',password:'TeacherDemoPassword2026'});
+  assert.equal(x.status,200);
+  const otherClass=(await call('other','/classes','POST',{title:'另一虚构班级'})).result;
+  x=await call('other','/classes/'+otherClass.id+'/qq/mapping','POST',{groupOpenid:'group-openid-1'});
+  assert.equal(x.status,409,'Existing group mapping cannot be hijacked');
+  x=await call('other','/classes/'+otherClass.id+'/inbox');assert.equal(x.result.inbox.length,0);
   const pending=(await call('teacher','/classes/'+c.id+'/inbox')).result.inbox[0];
   x=await call('student','/classes/'+c.id+'/inbox/'+pending.id+'/publish','POST',{
     subject:'恶意任务',title:'越权发布'});
