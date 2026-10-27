@@ -5,6 +5,9 @@ import { mkdirSync, existsSync, readFileSync, chmodSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { migrate } from './migrate.mjs';
+import { createApi, apiFailure } from './api.mjs';
+import { assignmentView } from './model.mjs';
 
 const root=dirname(fileURLToPath(import.meta.url));
 const host=process.env.HAIZ_HOST||'127.0.0.1';
@@ -32,6 +35,7 @@ const tables=[
 'CREATE TABLE IF NOT EXISTS school_events (event_id TEXT PRIMARY KEY, processed_at TEXT NOT NULL)'
 ];
 for(const sql of tables)db.exec(sql);
+migrate(db);
 const stamp=()=>new Date().toISOString();
 const uuid=()=>randomUUID();
 const token=()=>randomBytes(24).toString('hex');
@@ -49,13 +53,6 @@ function validateLogin(p){
  if(typeof p.password!=='string'||p.password.length<12||p.password.length>128)throw err(400,'密码长度应为12-128字符');
  return login;
 }
-const dueCheck=due=>{
- if(due==null||due==='')return null;
- if(typeof due!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(due))throw err(400,'截止日期格式错误');
- const n=new Date(due+'T12:00:00Z');
- if(Number.isNaN(n.valueOf())||n.toISOString().slice(0,10)!==due)throw err(400,'截止日期不存在');
- return due;
-};
 function equal(a,b){
  const x=Buffer.from(String(a??'')),y=Buffer.from(String(b??''));
  return x.length===y.length&&timingSafeEqual(x,y);
@@ -64,12 +61,13 @@ if(!db.prepare("SELECT id FROM users WHERE role='admin' LIMIT 1").get()){
  const login=process.env.HAIZ_ADMIN_LOGIN,password=process.env.HAIZ_ADMIN_PASSWORD;
  if(!login||!password||password.length<14)throw Error('首次启动需设置 HAIZ_ADMIN_LOGIN 和不少于14位的 HAIZ_ADMIN_PASSWORD');
  account(login.toLowerCase(),'HAIZ 管理员','admin',password);
- console.log('[HAIZ Academic] Initial administrator created.');
+ process.stdout.write('[HAIZ Academic] Initial administrator created.\n');
 }
 function reply(res,status,payload){
  res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});
  res.end(JSON.stringify(payload));
 }
+const authorizedRequests=new WeakMap();
 async function readBody(req){
  const chunks=[];let length=0;
  for await(const chunk of req){length+=chunk.length;if(length>80000)throw err(413,'请求体过大');chunks.push(chunk);}
@@ -77,6 +75,11 @@ async function readBody(req){
  let data={};
  try{if(raw)data=JSON.parse(raw);}catch{throw err(400,'JSON格式错误');}
  if(!data||typeof data!=='object'||Array.isArray(data))throw err(400,'请求体必须是JSON对象');
+ const prior=authorizedRequests.get(req);
+ if(prior){
+  const current=loggedIn(req);
+  if(!current||current.id!==prior.id||current.role!==prior.role)throw err(401,'会话已变化，请重新登录');
+ }
  return {data,raw};
 }
 function loggedIn(req){
@@ -89,6 +92,7 @@ function requireUser(req,roles){
  const u=loggedIn(req);
  if(!u)throw err(401,'请先登录');
  if(roles&&!roles.includes(u.role))throw err(403,'此账号无权进行操作');
+ authorizedRequests.set(req,{id:u.id,role:u.role});
  return u;
 }
 function saveSession(req,res,u){
@@ -112,18 +116,9 @@ function teacherAccess(classId,u){
  return c;
 }
 function audit(u,event,object){db.prepare('INSERT INTO audit VALUES (?,?,?,?,?)').run(uuid(),u,event,object,stamp());}
-function publicAssignment(a){
- return {id:a.id,classId:a.class_id,subject:a.subject,title:a.title,due:a.due,details:a.details,createdAt:a.created_at};
-}
-function publish(c,u,p,source=null){
- const title=text(p.title,240),subject=text(p.subject,32);
- const due=dueCheck(p.due);
- const details=typeof p.details==='string'?p.details.trim():'';
- if(details.length>3000)throw err(400,'详细说明过长');
- const key=uuid();
- db.prepare('INSERT INTO assignments VALUES (?,?,?,?,?,?,?,?,?)').run(key,c.id,subject,title,due,details,source,u.id,stamp());
- audit(u.id,'assignment.publish',key);
- return publicAssignment(db.prepare('SELECT * FROM assignments WHERE id=?').get(key));
+const publicAssignment=assignmentView;
+function publish(c,u,p,source=null,key){
+ return api.commands.legacyPublish(c.id,u,p,source,key);
 }
 const signRelay=(ts,raw,secret)=>createHmac('sha256',secret).update(String(ts)+'.'+raw).digest('hex');
 function checkRelay(req,raw){
@@ -133,13 +128,31 @@ function checkRelay(req,raw){
  if(!ts||!/^\d+$/.test(ts)||Math.abs(Date.now()-Number(ts))>300000)throw err(401,'事件时间戳无效');
  if(!equal(req.headers['x-haiz-signature'],signRelay(ts,raw,secret)))throw err(401,'消息签名无效');
 }
+const requestWindows=new Map();
+function protectRequest(req,path){
+ if(!path.startsWith('/api/'))return;
+ const now=Date.now(),windowMs=60000;
+ const category=path==='/api/auth/register'||path==='/api/classes/join'?'invite':'api';
+ const key=(req.socket.remoteAddress||'?')+':'+category;
+ const previous=requestWindows.get(key);
+ const next=previous&&previous.start>now-windowMs?{...previous,count:previous.count+1}:{start:now,count:1};
+ if(next.count>(category==='invite'?30:1200))throw err(429,'请求过于频繁，请稍后重试');
+ if(requestWindows.size>=2000&&!requestWindows.has(key)){
+  for(const [id,value] of requestWindows)if(value.start<=now-windowMs)requestWindows.delete(id);
+  if(requestWindows.size>=2000)throw err(429,'请求过于频繁，请稍后重试');
+ }
+ requestWindows.set(key,next);
+}
 const attempts=new Map();
-function protectLogin(ip){
+const LOGIN_WINDOW_MS=900000,LOGIN_FAILURE_LIMIT=10;
+function protectLogin(login,failed=false){
  const now=Date.now();
- const arr=(attempts.get(ip)||[]).filter(t=>t>now-900000);
- if(arr.length>=10)throw err(429,'登录尝试过多');
- arr.push(now);attempts.set(ip,arr);
- if(attempts.size>2000)attempts.clear();
+ for(const [key,value] of attempts)if(value.start<=now-LOGIN_WINDOW_MS)attempts.delete(key);
+ const previous=attempts.get(login);
+ if(previous?.count>=LOGIN_FAILURE_LIMIT)throw err(429,'登录失败次数过多');
+ if(!failed)return;
+ if(attempts.size>=2000&&!attempts.has(login))throw err(429,'登录请求过多');
+ attempts.set(login,{start:previous?.start||now,count:(previous?.count||0)+1});
 }
 function csrf(req){
  if(!['POST','PUT','PATCH','DELETE'].includes(req.method))return;
@@ -160,17 +173,22 @@ function staticFile(res,path){
  'X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; frame-ancestors 'none'"});
  res.end(readFileSync(target));
 }
+const api=createApi(db,{teacherAccess,classAccess,audit,requireUser,readBody,reply});
 const server=createServer(async(req,res)=>{
  try{
- const pathname=new URL(req.url,'http://localhost').pathname,method=req.method;
+ const url=new URL(req.url,'http://localhost'),pathname=url.pathname,method=req.method;
  csrf(req);
+ protectRequest(req,pathname);
+ if(pathname.startsWith('/api/v1/'))return await api.handle(req,res,url);
  if(method==='GET'&&pathname==='/api/health')return reply(res,200,{ok:true,mode:'local pilot',schoolOfficialConnected:false,qqRelayConfigured:!!process.env.HAIZ_QQ_RELAY_SECRET,schoolRosterConfigured:!!process.env.HAIZ_SCHOOL_ROSTER_SECRET});
  if(method==='POST'&&pathname==='/api/auth/login'){
-  protectLogin(req.socket.remoteAddress||'?');
   const {data:p}=await readBody(req),login=text(p.login,48).toLowerCase();
+  protectLogin(login);
+  if(typeof p.password!=='string'||p.password.length>128)throw err(400,'密码格式无效');
   const u=db.prepare('SELECT * FROM users WHERE login=?').get(login);
-  const digest=hashPass(typeof p.password==='string'?p.password:'',u?.salt||'fallbackfixedsalt01234567');
-  if(!u||!equal(digest,u.password_hash))throw err(401,'账号或密码错误');
+  const digest=hashPass(p.password,u?.salt||'fallbackfixedsalt01234567');
+  if(!u||!equal(digest,u.password_hash)){protectLogin(login,true);throw err(401,'账号或密码错误');}
+  attempts.delete(login);
   saveSession(req,res,u);
   return reply(res,200,{user:{id:u.id,login:u.login,label:u.label,role:u.role}});
  }
@@ -284,23 +302,21 @@ const server=createServer(async(req,res)=>{
  m=/^\/api\/classes\/([\da-f-]{36})\/assignments$/.exec(pathname);
  if(method==='POST'&&m){
   const u=requireUser(req,['admin','teacher']),c=teacherAccess(m[1],u),{data:p}=await readBody(req);
-  return reply(res,201,{assignment:publish(c,u,p)});
+  return reply(res,201,{assignment:publish(c,u,p,null,req.headers['idempotency-key'])});
  }
  if(method==='GET'&&m){
   const u=requireUser(req),c=classAccess(m[1],u);
-  return reply(res,200,{assignments:db.prepare('SELECT * FROM assignments WHERE class_id=? ORDER BY created_at DESC LIMIT 200').all(c.id).map(publicAssignment)});
+  return reply(res,200,{assignments:db.prepare("SELECT * FROM assignments WHERE class_id=? AND status IN ('published','revised') ORDER BY created_at DESC LIMIT 200").all(c.id).map(publicAssignment)});
  }
  if(method==='GET'&&pathname==='/api/my/assignments'){
   const u=requireUser(req,['student']);
-  const rows=db.prepare("SELECT a.*,c.title AS class_name,(SELECT viewed_at FROM acknowledgements WHERE assignment_id=a.id AND user_id=?) AS viewed FROM assignments a JOIN classes c ON c.id=a.class_id JOIN memberships m ON m.class_id=c.id WHERE m.user_id=? AND m.status='active' ORDER BY a.created_at DESC LIMIT 200").all(u.id,u.id);
+  const rows=db.prepare("SELECT a.*,c.title AS class_name,(SELECT viewed_at FROM version_acknowledgements WHERE assignment_id=a.id AND user_id=? AND version=a.version) AS viewed FROM assignments a JOIN classes c ON c.id=a.class_id JOIN memberships m ON m.class_id=c.id WHERE m.user_id=? AND m.status='active' AND a.status IN ('published','revised') ORDER BY a.created_at DESC LIMIT 200").all(u.id,u.id);
   return reply(res,200,{assignments:rows.map(a=>({...publicAssignment(a),className:a.class_name,viewed:!!a.viewed}))});
  }
  m=/^\/api\/assignments\/([\da-f-]{36})\/acknowledge$/.exec(pathname);
  if(method==='POST'&&m){
-  const u=requireUser(req,['student']),a=db.prepare('SELECT class_id FROM assignments WHERE id=?').get(m[1]);
-  if(!a)throw err(404,'任务不存在');
-  classAccess(a.class_id,u);
-  db.prepare('INSERT OR IGNORE INTO acknowledgements VALUES (?,?,?)').run(m[1],u.id,stamp());
+  const u=requireUser(req,['student']),a=api.commands.authorized(m[1],u);
+  api.commands.acknowledge(m[1],u,{version:a.version},req.headers['idempotency-key']||uuid());
   return reply(res,200,{viewed:true,verifiedSubmission:false});
  }
  m=/^\/api\/classes\/([\da-f-]{36})\/qq\/mapping$/.exec(pathname);
@@ -309,7 +325,10 @@ const server=createServer(async(req,res)=>{
   if(!process.env.HAIZ_QQ_RELAY_SECRET)throw err(503,'未配置授权的 QQ 官方机器人中继');
   const group=text(p.groupOpenid,128);
   if(!/^[\w-]+$/.test(group))throw err(400,'QQ 群组标识格式无效');
-  db.prepare('INSERT INTO qq_mappings VALUES (?,?) ON CONFLICT(group_openid) DO UPDATE SET class_id=excluded.class_id').run(group,c.id);
+  teacherAccess(c.id,u);
+  const mapping=db.prepare('SELECT class_id FROM qq_mappings WHERE group_openid=?').get(group);
+  if(mapping&&mapping.class_id!==c.id)throw err(409,'该群已绑定其他班级，需管理员独立审核转移');
+  db.prepare('INSERT OR IGNORE INTO qq_mappings VALUES (?,?)').run(group,c.id);
   audit(u.id,'qq.mapping',c.id);return reply(res,200,{ok:true});
  }
  if(method==='POST'&&pathname==='/api/integrations/qq/event'){
@@ -332,15 +351,15 @@ const server=createServer(async(req,res)=>{
  m=/^\/api\/classes\/([\da-f-]{36})\/inbox\/([\da-f-]{36})\/(publish|dismiss)$/.exec(pathname);
  if(method==='POST'&&m){
   const u=requireUser(req,['admin','teacher']),c=teacherAccess(m[1],u);
-  const item=db.prepare("SELECT id FROM intake WHERE id=? AND class_id=? AND status='pending'").get(m[2],c.id);
+  const item=db.prepare('SELECT id,status FROM intake WHERE id=? AND class_id=?').get(m[2],c.id);
   if(!item)throw err(404,'没有该待审消息');
   if(m[3]==='dismiss'){
+   if(item.status!=='pending')throw err(409,'消息已处理');
    db.prepare("UPDATE intake SET status='dismissed' WHERE id=?").run(item.id);
    audit(u.id,'qq.dismiss',item.id);return reply(res,200,{ok:true});
   }
   const {data:p}=await readBody(req);
-  const a=publish(c,u,p,item.id);
-  db.prepare("UPDATE intake SET status='published' WHERE id=?").run(item.id);
+  const a=publish(c,u,p,item.id,req.headers['idempotency-key']);
   return reply(res,201,{assignment:a,manuallyReviewed:true});
  }
  m=/^\/api\/classes\/([\da-f-]{36})\/screens\/rotate$/.exec(pathname);
@@ -353,16 +372,23 @@ const server=createServer(async(req,res)=>{
  if(method==='GET'&&m){
   const c=db.prepare('SELECT id,title FROM classes WHERE screen_key=?').get(m[1]);
   if(!c)throw err(404,'屏幕密钥失效');
-  const a=db.prepare('SELECT subject,title,due FROM assignments WHERE class_id=? ORDER BY created_at DESC LIMIT 12').all(c.id);
+  const a=db.prepare("SELECT id,version,subject,title,due FROM assignments WHERE class_id=? AND status IN ('published','revised') ORDER BY created_at DESC LIMIT 12").all(c.id);
   return reply(res,200,{className:c.title,assignments:a,readOnly:true,containsStudentIdentity:false});
  }
  if(method==='GET'&&!pathname.startsWith('/api/'))return staticFile(res,pathname);
  throw err(404,'没有该接口');
  }catch(e){
-  if(!e.status)console.error('[HAIZ Academic]',e);
+  if(!e.status)console.error('[HAIZ Academic]',{code:e.code||'INTERNAL_ERROR',status:e.status||500});
+  if(req.url.startsWith('/api/v1/')){
+   const failure=apiFailure(e);return reply(res,failure.status,failure.body);
+  }
   return reply(res,e.status||500,{error:e.status?e.message:'内部错误'});
  }
 });
-if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1])
- server.listen(port,host,()=>console.log('[HAIZ Academic] http://'+host+':'+port));
+if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
+ server.listen(port,host,()=>process.stdout.write('[HAIZ Academic] http://'+host+':'+port+'\n'));
+ const shutdown=()=>server.close(()=>{db.close();});
+ process.once('SIGTERM',shutdown);
+ process.once('SIGINT',shutdown);
+}
 export {server,db,signRelay};
