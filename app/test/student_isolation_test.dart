@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +55,39 @@ Future<PocketStore> _loadedStore() async {
   addTearDown(store.dispose);
   await store.load();
   return store;
+}
+
+/// Holds the legacy-archive read open until [release] is called, so a test can
+/// change accounts while a confirmed migration is still in flight.
+final class _BlockingArchiveReadPreferences
+    extends InMemorySharedPreferencesAsync {
+  _BlockingArchiveReadPreferences(super.data) : super.withData();
+
+  Completer<void>? _gate;
+  int blocked = 0;
+
+  void blockNextArchiveRead() => _gate = Completer<void>();
+
+  void release() {
+    final gate = _gate;
+    _gate = null;
+    gate?.complete();
+  }
+
+  @override
+  Future<String?> getString(
+    String key,
+    SharedPreferencesOptions options,
+  ) async {
+    final gate = _gate;
+    // Only the first read after arming is held: the account switch that runs
+    // during the pause must still be able to open its own namespace.
+    if (key == _archiveKey && gate != null && blocked == 0) {
+      blocked++;
+      await gate.future;
+    }
+    return super.getString(key, options);
+  }
 }
 
 Future<void> _open(
@@ -552,6 +586,118 @@ void main() {
     }
     expect(await prefs.getString(personalKey), corrupt);
   });
+
+  test(
+    'a confirmed migration cannot land in the next account when accounts switch mid-flight',
+    () async {
+      final legacy = _legacyData();
+      final platform = _BlockingArchiveReadPreferences(legacy);
+      SharedPreferencesAsyncPlatform.instance = platform;
+      final store = await _loadedStore();
+      final prefs = SharedPreferencesAsync();
+      await _open(store, 'student-a');
+      expect(store.legacyArchiveAvailable, isTrue);
+
+      // A confirms, but the archive read is still held open.
+      platform.blockNextArchiveRead();
+      final pending = store.importLegacyArchive(ownerConfirmed: true);
+      await pumpEventQueue();
+      expect(platform.blocked, 1);
+
+      // A logs out and B logs in before the confirmed migration proceeds.
+      await store.openGuest();
+      await _open(store, 'student-b');
+      final bNamespace = store.namespace;
+      platform.release();
+      await pending.then<void>((_) {}, onError: (Object _) {});
+
+      // Nothing of A's history may appear in B, and the archive stays unclaimed.
+      expect(store.tasks, isEmpty);
+      expect(store.taskNotes, isEmpty);
+      expect(store.courses, isEmpty);
+      expect(store.focusLogs, isEmpty);
+      expect(await prefs.getString('haiz/legacy/v1/owner'), isNull);
+      expect(await prefs.getString('$bNamespace/personal.v1'), isNull);
+      expect(jsonDecode((await prefs.getString(_archiveKey))!), legacy);
+      for (final entry in legacy.entries) {
+        expect(await prefs.getString(entry.key), entry.value);
+      }
+
+      // A can still confirm the migration later; nothing was consumed.
+      await _open(store, 'student-a');
+      await store.importLegacyArchive(ownerConfirmed: true);
+      expect(store.tasks.single.title, '历史数学作业');
+      expect(store.noteFor('legacy-task'), '只有原用户知道的思路');
+
+      // B still sees nothing of A after A imported.
+      await _open(store, 'student-b');
+      expect(store.tasks, isEmpty);
+      expect(store.taskNotes, isEmpty);
+    },
+  );
+
+  test(
+    'a migration that lands after logout is discarded instead of written',
+    () async {
+      final legacy = _legacyData();
+      final platform = _BlockingArchiveReadPreferences(legacy);
+      SharedPreferencesAsyncPlatform.instance = platform;
+      final store = await _loadedStore();
+      final prefs = SharedPreferencesAsync();
+      await _open(store, 'student-a');
+
+      platform.blockNextArchiveRead();
+      final pending = store.importLegacyArchive(ownerConfirmed: true);
+      await pumpEventQueue();
+
+      await store.openGuest();
+      final guestNamespace = store.namespace;
+      platform.release();
+      await pending.then<void>((_) {}, onError: (Object _) {});
+
+      expect(store.tasks, isEmpty);
+      expect(await prefs.getString('haiz/legacy/v1/owner'), isNull);
+      expect(await prefs.getString('$guestNamespace/personal.v1'), isNull);
+      expect(jsonDecode((await prefs.getString(_archiveKey))!), legacy);
+    },
+  );
+
+  test(
+    'a task added while the archive read is in flight survives the merge',
+    () async {
+      final legacy = _legacyData();
+      final platform = _BlockingArchiveReadPreferences(legacy);
+      SharedPreferencesAsyncPlatform.instance = platform;
+      final store = await _loadedStore();
+      await _open(store, 'student-a');
+
+      platform.blockNextArchiveRead();
+      final pending = store.importLegacyArchive(ownerConfirmed: true);
+      await pumpEventQueue();
+      expect(platform.blocked, 1);
+
+      // The student keeps working in the same account while the confirmed
+      // migration is still reading. The merge runs afterwards, so it must see
+      // this task instead of overwriting the account with a stale snapshot.
+      store.addTask('迁移期间新增的任务', '英语');
+      await pumpEventQueue();
+      platform.release();
+      await pending;
+
+      expect(
+        store.tasks.map((task) => task.title),
+        containsAll(['迁移期间新增的任务', '历史数学作业']),
+      );
+      expect(store.noteFor('legacy-task'), '只有原用户知道的思路');
+      final persisted = jsonDecode(
+        (await SharedPreferencesAsync().getString('${store.namespace}/personal.v1'))!,
+      );
+      expect(
+        (persisted['tasks'] as List).map((task) => (task as Map)['title']),
+        containsAll(['迁移期间新增的任务', '历史数学作业']),
+      );
+    },
+  );
 
   test(
     'archive write failure keeps accounts usable and retries safely on restart',

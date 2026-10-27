@@ -107,6 +107,11 @@ class _AcademicPageState extends State<AcademicPage> {
   }
 
   Future<void> _importLegacy() async {
+    // The confirmation belongs to the account that is open when the dialog
+    // appears. Capture it here and re-check afterwards: a dialog that is still
+    // on screen does not mean the session behind it is still the same.
+    final generation = widget.store.generation;
+    final namespace = widget.store.namespace;
     final accepted = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -128,6 +133,13 @@ class _AcademicPageState extends State<AcademicPage> {
       ),
     );
     if (accepted != true || !mounted) return;
+    if (widget.store.generation != generation ||
+        widget.store.namespace != namespace) {
+      setState(
+        () => _message = '确认期间已切换账号，旧记录未导入任何账号；归档仍完整保留。',
+      );
+      return;
+    }
     try {
       await widget.store.importLegacyArchive(ownerConfirmed: true);
       if (!mounted) return;

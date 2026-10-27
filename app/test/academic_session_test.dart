@@ -88,6 +88,10 @@ class ServerFixture {
               'classId': 'math',
               'title': '$user homework',
               'subject': '数学',
+              // v1.4 acknowledges an exact public version.
+              'version': 1,
+              'status': 'published',
+              'viewed': false,
             },
           ],
         });
@@ -382,10 +386,16 @@ void main() {
     expect(store.tasks.length, 1);
     expect(store.noteFor(task.id), 'original private note');
     await session.markViewed(item);
+    final acknowledge = server.requests.singleWhere(
+      (request) => request.url.path.endsWith('/homework/acknowledge'),
+    );
+    expect(acknowledge.url.path, '/api/v1/assignments/homework/acknowledge');
+    // v1.4 binds the acknowledgement to the viewed version and requires a key,
+    // otherwise the server rejects it with INVALID_VERSION.
+    expect(jsonDecode(acknowledge.body), {'version': 1});
     expect(
-      server.requests.any(
-        (request) =>
-            request.url.path == '/api/assignments/homework/acknowledge',
+      RegExp(r'^[A-Za-z0-9_-]{8,100}$').hasMatch(
+        acknowledge.headers['Idempotency-Key'] ?? '',
       ),
       isTrue,
     );

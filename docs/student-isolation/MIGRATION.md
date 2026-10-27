@@ -14,6 +14,9 @@
 | 归档归属 | `haiz/legacy/v1/owner` | 仅在用户明确确认导入时写入 |
 
 - `origin` 是规范化后的 HTTPS 源（含端口；`localhost`/`127.0.0.1`/`::1` 允许 HTTP）。
+- `origin`、`instanceId`、`userId` 三段在写入键名时各自百分号编码，因此 origin 里的 `/`、`:`
+  不会增加路径层级，也不会与后两段拼接后产生歧义。例如
+  `haiz/v1/http%3A%2F%2F127.0.0.1%3A8791/{instanceId}/{userId}`。
 - `instanceId`、`userId` 来自服务器身份，不接受客户端填写的账号名。
 - 每个空间只有一个 `personal.v1` 文档：`{version:1, tasks, courses, focusLogs, taskNotes, activeTaskId, appearance, legacyImported}`。
 - 教师原始作业只存在于内存中的 `AcademicSession.assignments`，不进入个人文档；导入是“确认后复制”，不写回服务器。

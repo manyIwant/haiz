@@ -90,6 +90,7 @@ class AcademicSession extends ChangeNotifier {
     String path, {
     Map<String, dynamic>? body,
     bool acceptCookie = false,
+    String? idempotencyKey,
   }) async {
     _check(generation);
     final client = _client;
@@ -104,6 +105,9 @@ class AcademicSession extends ChangeNotifier {
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode(body);
+    }
+    if (idempotencyKey != null) {
+      request.headers['Idempotency-Key'] = idempotencyKey;
     }
     final response = await (() async {
       final streamed = await client.send(request);
@@ -347,6 +351,18 @@ class AcademicSession extends ChangeNotifier {
     }
   }
 
+  /// Stable per (action, resource, version) so a network retry replays instead
+  /// of recording the same view twice. The server accepts 8-100 characters of
+  /// ASCII letters, digits, `_` and `-`, so the seed is reduced to that.
+  static String _idempotencyKey(String action, String id, int version) {
+    final seed = '$action-$id-$version'.replaceAll(
+      RegExp('[^A-Za-z0-9_-]'),
+      '-',
+    );
+    final key = 'haiz-$seed';
+    return key.length <= 90 ? key : key.substring(0, 90);
+  }
+
   Future<void> markViewed(Map<String, dynamic> item) async {
     if (_busy || _identity == null) return;
     final generation = _generation;
@@ -361,10 +377,18 @@ class AcademicSession extends ChangeNotifier {
       if (current == null || current['id'] is! String) {
         throw const _ApiFailure('作业已不可访问。');
       }
+      // v1.4 binds an acknowledgement to the exact public version the student
+      // saw, and expects an idempotency key so a retry cannot double-record it.
+      final version = current['version'];
+      if (version is! int || version < 1) {
+        throw const FormatException('作业版本无效，无法标记已查看。');
+      }
+      final id = current['id'] as String;
       await _request(
         generation,
-        '/assignments/${Uri.encodeComponent(current['id'] as String)}/acknowledge',
-        body: {},
+        '/v1/assignments/${Uri.encodeComponent(id)}/acknowledge',
+        body: {'version': version},
+        idempotencyKey: _idempotencyKey('ack', id, version),
       );
       await _refresh(generation);
     } catch (error) {

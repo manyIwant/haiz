@@ -178,6 +178,16 @@ class PocketStore extends ChangeNotifier {
       // by a merge based on stale in-memory state.
       var merged = const PersonalSnapshot();
       final write = _pending.then((_) async {
+        // Re-check inside the queue: the account may have been switched or
+        // logged out while this migration waited behind earlier writes. The
+        // confirmation belongs to the account that was open when it was given,
+        // so a stale migration must neither claim the archive nor write it.
+        if (ticket != generation ||
+            _disposed ||
+            namespace != scope ||
+            !_writable) {
+          throw StateError('账号已切换，旧数据迁移已取消；归档与原始记录仍保留');
+        }
         merged = _mergeLegacy(legacy);
         await archive.claim(scope);
         final raw = merged.encode();
