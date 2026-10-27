@@ -92,14 +92,20 @@ class PocketStore extends ChangeNotifier {
   Future<void> _open(int ticket, Future<String> Function() resolve) async {
     await _pending;
     try {
-      final archived = await LegacyArchive(_prefs).quarantine();
       final scope = await resolve();
       final raw = await _prefs.getString('$scope/personal.v1');
       final data = raw == null ? const PersonalSnapshot() : PersonalSnapshot.decode(raw);
       if (_disposed || ticket != generation) return;
       namespace = scope;
-      legacyArchiveAvailable = archived;
       _apply(data);
+      // Archive failures only hide the migration prompt and keep originals;
+      // they must never make a healthy namespace read-only.
+      try {
+        legacyArchiveAvailable = await LegacyArchive(_prefs).quarantine();
+      } catch (error, stack) {
+        debugPrint('Legacy archive deferred (${error.runtimeType})\n$stack');
+        legacyArchiveAvailable = false;
+      }
     } catch (error, stack) {
       if (_disposed || ticket != generation) return;
       storageError = '本地记录暂不可用，原始数据已保留。请重试或联系支持。';
@@ -167,11 +173,14 @@ class PocketStore extends ChangeNotifier {
     try {
       final legacy = await archive.read();
       if (ticket != generation || _disposed) return;
-      await archive.claim(scope);
-      if (ticket != generation || _disposed || _legacyImported) return;
-      final merged = _mergeLegacy(legacy);
-      final raw = merged.encode();
+      if (_legacyImported) return;
+      // Compute inside the write queue so a queued edit cannot be overwritten
+      // by a merge based on stale in-memory state.
+      var merged = const PersonalSnapshot();
       final write = _pending.then((_) async {
+        merged = _mergeLegacy(legacy);
+        await archive.claim(scope);
+        final raw = merged.encode();
         await _prefs.setString('$scope/personal.v1', raw);
         if (await _prefs.getString('$scope/personal.v1') != raw) {
           throw StateError('历史导入校验失败，归档仍保留');
@@ -184,7 +193,7 @@ class PocketStore extends ChangeNotifier {
         _notify();
       }
     } catch (error) {
-      if (ticket == generation && !_disposed) {
+      if (ticket == generation && !_disposed && error is! StateError) {
         storageError = '旧数据导入未完成，归档和原始记录仍保留。';
         _notify();
       }

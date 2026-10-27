@@ -44,8 +44,15 @@ class PersonalSnapshot {
           throw const FormatException('任务标记无效');
         }
       }
-      for (final key in ['source', 'originalNotice', 'dueIso']) {
+      for (final key in ['source', 'originalNotice']) {
         if (row[key] != null) _string(row, key);
+      }
+      final due = row['dueIso'];
+      if (due != null &&
+          (due is! String ||
+              !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(due) ||
+              DateTime.tryParse(due) == null)) {
+        throw const FormatException('任务日期无效，原始数据已保留');
       }
       return TaskItem.fromJson(row);
     });

@@ -16,11 +16,14 @@ class LegacyArchive {
     'pocket.taskNotes.v1', 'pocket.activeTask.v1', 'pocket.appearance.v1',
   ];
 
+  /// True when an archive exists. The archive write is retried on a later
+  /// launch; a failed marker write must not block personal storage because the
+  /// original keys are still present and archive reading validates its own copy.
   Future<bool> quarantine() async {
     final existing = await prefs.getString(archiveKey);
     if (existing != null) {
       _rawMap(existing);
-      await prefs.setString(markerKey, '1');
+      await _writeMarker();
       return true;
     }
     final values = await prefs.getAll(allowList: keys.toSet());
@@ -30,8 +33,17 @@ class LegacyArchive {
     if (await prefs.getString(archiveKey) != raw) {
       throw StateError('旧数据备份校验失败，原始记录仍保留');
     }
-    await prefs.setString(markerKey, '1');
+    await _writeMarker();
     return true;
+  }
+
+  Future<void> _writeMarker() async {
+    try {
+      await prefs.setString(markerKey, '1');
+    } catch (_) {
+      // The archive itself is intact and readable; a missing marker is retried
+      // on the next launch without making the account read-only.
+    }
   }
 
   Future<PersonalSnapshot> read() async {

@@ -479,7 +479,82 @@ void main() {
   });
 
   test(
-    'archive write failure preserves old records and retries safely on restart',
+    'conflicting legacy ids abort the import without claiming the archive',
+    () async {
+      final legacy = _legacyData();
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.withData(legacy);
+      final store = await _loadedStore();
+      await _open(store, 'student-a');
+      store.addTask('当前账号自己的任务', '数学');
+      await store.flush();
+      final prefs = SharedPreferencesAsync();
+      final personalKey = '${store.namespace}/personal.v1';
+
+      // Simulate a collision where the account already owns the legacy id.
+      final personal = jsonDecode((await prefs.getString(personalKey))!);
+      final rows = (personal['tasks'] as List).cast<Map<String, dynamic>>();
+      rows.first['id'] = 'legacy-task';
+      await prefs.setString(
+        personalKey,
+        jsonEncode({...personal, 'tasks': rows}),
+      );
+      await store.openGuest();
+      await _open(store, 'student-a');
+
+      await expectLater(
+        store.importLegacyArchive(ownerConfirmed: true),
+        throwsA(isA<StateError>()),
+      );
+
+      // A rejected merge must not consume the archive: another account can
+      // still claim it later, and nothing was written.
+      expect(
+        await prefs.getString('haiz/legacy/v1/owner'),
+        isNull,
+      );
+      expect(store.tasks, hasLength(1));
+      expect(store.tasks.single.title, '当前账号自己的任务');
+      expect(store.noteFor('legacy-task'), isEmpty);
+      expect(jsonDecode((await prefs.getString(_archiveKey))!), legacy);
+      expect(await prefs.getString('pocket.tasks.v1'), legacy['pocket.tasks.v1']);
+      expect(
+        jsonDecode((await prefs.getString(personalKey))!)['legacyImported'],
+        isFalse,
+      );
+    },
+  );
+
+  test('a malformed task date keeps the payload read-only instead of crashing', () async {
+    final store = await _loadedStore();
+    await _open(store, 'student-a');
+    store.addTask('日期正常的任务', '数学', due: DateTime(2026, 10, 27));
+    await store.flush();
+    final prefs = SharedPreferencesAsync();
+    final personalKey = '${store.namespace}/personal.v1';
+    final personal = jsonDecode((await prefs.getString(personalKey))!);
+    final rows = (personal['tasks'] as List).cast<Map<String, dynamic>>();
+    rows.first['dueIso'] = '2026/10/27';
+    final corrupt = jsonEncode({...personal, 'tasks': rows});
+    await prefs.setString(personalKey, corrupt);
+
+    await store.openGuest();
+    await _open(store, 'student-a');
+
+    expect(store.storageError, isNotEmpty);
+    expect(store.tasks, isEmpty);
+    expect(await prefs.getString(personalKey), corrupt);
+    try {
+      store.addTask('不得覆盖原始记录', '数学');
+      await store.flush();
+    } catch (_) {
+      // A read-only store may reject synchronously or through flush.
+    }
+    expect(await prefs.getString(personalKey), corrupt);
+  });
+
+  test(
+    'archive write failure keeps accounts usable and retries safely on restart',
     () async {
       final legacy = _legacyData();
       SharedPreferencesAsyncPlatform.instance = _FailingArchivePreferences(
@@ -488,17 +563,35 @@ void main() {
       final store = await _loadedStore();
       final prefs = SharedPreferencesAsync();
 
-      expect(store.storageError, isNotEmpty);
+      // A failed quarantine only defers the migration prompt. It must never
+      // turn personal storage read-only: the originals are still on disk and
+      // the current namespace is healthy.
+      expect(store.storageError, isNull);
+      expect(store.ready, isTrue);
+      expect(store.legacyArchiveAvailable, isFalse);
       expect(store.tasks, isEmpty);
+      expect(await prefs.getString(_archiveKey), isNull);
       expect(await prefs.getString(_migrationKey), isNull);
       for (final entry in legacy.entries) {
         expect(await prefs.getString(entry.key), entry.value);
       }
 
+      store.addTask('归档失败后仍可保存的访客任务', '数学');
+      await store.flush();
+      expect(store.storageError, isNull);
+      expect(
+        jsonDecode((await prefs.getString('${store.namespace}/personal.v1'))!),
+        containsPair('tasks', isA<List<dynamic>>()),
+      );
+
       final recovered = await _loadedStore();
       expect(recovered.storageError, isNull);
+      expect(recovered.legacyArchiveAvailable, isTrue);
       expect(jsonDecode((await prefs.getString(_archiveKey))!), legacy);
       expect(await prefs.getString(_migrationKey), '1');
+      for (final entry in legacy.entries) {
+        expect(await prefs.getString(entry.key), entry.value);
+      }
     },
   );
 }

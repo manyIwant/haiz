@@ -40,6 +40,7 @@ class _InboxPageState extends State<InboxPage> {
   String? _notice;
   String _currentSource = '手动粘贴';
   bool _importing = false;
+  int _composeGeneration = 0;
   @override
   void dispose() {
     _input.dispose();
@@ -49,6 +50,7 @@ class _InboxPageState extends State<InboxPage> {
   void _extract() {
     final found = NoticeParser.parse(_input.text);
     setState(() {
+      _composeGeneration = widget.store.generation;
       _drafts
         ..clear()
         ..addAll(found.map(_Draft.new));
@@ -170,6 +172,13 @@ class _InboxPageState extends State<InboxPage> {
   }
 
   void _commit() {
+    if (widget.store.generation != _composeGeneration) {
+      setState(() {
+        _drafts.clear();
+        _notice = '已切换账号，候选任务未写入任何账号。';
+      });
+      return;
+    }
     final selected = _drafts
         .where((d) => d.selected && d.title.trim().isNotEmpty)
         .toList();
