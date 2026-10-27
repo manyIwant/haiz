@@ -1,0 +1,51 @@
+# 旧数据迁移与账号隔离说明
+
+适用基线：`preview/haiz-academic-v1.3` (663b51d) → `feat/student-data-isolation-v1.4`。
+对应审计：TECHNICAL-AUDIT P0 / I-002；RELEASE-GAPS Gate 1。
+
+## 1. 存储布局
+
+| 空间 | 键前缀 | 何时打开 |
+|---|---|---|
+| 设备访客 | `haiz/guest/v1/{installationId}` | 冷启动、退出登录、会话被撤销 |
+| 学生账号 | `haiz/v1/{origin}/{instanceId}/{userId}` | `/api/auth/login` 成功且 `/api/v1/identity` 校验通过 |
+| 历史归档 | `haiz/legacy/v1/archive` | 首次打开任意空间时自动生成 |
+| 归档完成标记 | `haiz/legacy/v1/complete` | 归档写入并读回一致后 |
+| 归档归属 | `haiz/legacy/v1/owner` | 仅在用户明确确认导入时写入 |
+
+- `origin` 是规范化后的 HTTPS 源（含端口；`localhost`/`127.0.0.1`/`::1` 允许 HTTP）。
+- `instanceId`、`userId` 来自服务器身份，不接受客户端填写的账号名。
+- 每个空间只有一个 `personal.v1` 文档：`{version:1, tasks, courses, focusLogs, taskNotes, activeTaskId, appearance, legacyImported}`。
+- 教师原始作业只存在于内存中的 `AcademicSession.assignments`，不进入个人文档；导入是“确认后复制”，不写回服务器。
+
+## 2. 升级时会发生什么
+
+1. 首次启动打开访客空间；检测到任一旧键（`pocket.tasks.v1`、`pocket.courses.v1`、`pocket.focus.v1`、`pocket.taskNotes.v1`、`pocket.activeTask.v1`、`pocket.appearance.v1`）时，把这些键的**原始字符串**作为一个 JSON 映射写入 `haiz/legacy/v1/archive`，读回比对一致后写完成标记。
+2. 旧键与归档都不删除，也不在访客或任何账号中自动显示。
+3. 任何账号登录后，只有在该学生明确点击“确认并入当前账号”并再次确认对话框时，才：
+   - 先解析并校验整个归档（任务/课程标识唯一、时间范围合法、笔记为字符串映射），任何一项不合法即整体拒绝，不产生部分导入；
+   - 写入归属标记 `haiz/legacy/v1/owner = 当前命名空间`（写入前检查：已被别的命名空间认领则拒绝）；
+   - 与当前命名空间已有记录做标识冲突检查后合并，读回校验一致；
+   - 记录 `legacyImported = true`。
+4. 归档导入只能发生一次全局归属；重复点击幂等。其他账号即使在同一台设备也无法认领。
+5. 归档损坏、写入失败或读回不一致：保留旧键与归档原文，界面显示可恢复错误，待下次启动重试；不会用空数据或示例数据覆盖。
+
+## 3. 失败与边界
+
+| 情形 | 行为 |
+|---|---|
+| 旧服务器（无 `/api/v1/identity`） | 登录失败，不打开任何账号空间；访客数据保持 |
+| 身份字段缺失、`role != student`、`cacheScope` 不匹配 | 拒绝打开账号空间，保留访客视图 |
+| 个人文档损坏 | 该空间只读，`storageError` 可见；原字节不覆盖 |
+| 保存写入失败 | `storageError` 可见，后续写操作被拒绝，原数据保留 |
+| 退出 / 切换 / 权限撤销 / 会话过期 | 立即清空内存与官方列表、停止专注计时、关闭旧 HTTP 客户端，递增代次；迟到响应丢弃 |
+| 班级权限收窄 | 清除不可访问的官方内容；本机私人笔记保留在所属账号 |
+| 断网 | 保留账号与私人数据；官方列表清空并提示可重试 |
+| 设备被他人使用 | 未退出登录即冷启动仍是访客；必须重新验证身份才能看到账号数据 |
+
+## 4. 已知限制（本阶段不声称）
+
+- `shared_preferences` 不加密，也不保证立即落盘；本方案解决跨账号读取，不等于设备级加密或防越狱取证。
+- 迁移没有远端备份；原始键 + 归档是双份本机副本。设备丢失/清除数据不在本阶段范围。
+- 未实现 v1.4 增量同步、游标、撤回回流；本阶段只读取旧版 `/classes`、`/my/assignments` 供人工确认导入。
+- 未在真实 Android 设备验证系统级 Cookie、进程终止恢复和厂商 ROM 的 SharedPreferences 行为。

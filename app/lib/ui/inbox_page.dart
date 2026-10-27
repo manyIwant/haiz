@@ -61,9 +61,16 @@ class _InboxPageState extends State<InboxPage> {
   Future<void> _importDocument() async {
     if (_importing) return;
     setState(() => _importing = true);
+    final generation = widget.store.generation;
     try {
       final result = await NoticeImportService.pickAndExtract();
       if (result == null || !mounted) return;
+      if (widget.store.generation != generation) {
+        setState(
+          () => _notice = '读取期间已切换账号，本次导入已取消，没有写入任何账号。',
+        );
+        return;
+      }
       _input.text = result.$2;
       _currentSource = result.$1;
       _extract();

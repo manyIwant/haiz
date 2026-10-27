@@ -1,19 +1,30 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/pocket_models.dart';
+import 'legacy_archive.dart';
+import 'personal_snapshot.dart';
+import 'storage_scope.dart';
 
-/// All demo data lives on the device. This class does not contact any campus API.
+/// Device-local personal data. Account namespaces require verified identity.
 class PocketStore extends ChangeNotifier {
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
+  Future<void> _pending = Future.value();
+  bool _disposed = false;
   bool ready = false;
-  List<TaskItem> tasks = [];
-  List<CourseSlot> courses = [];
-  List<FocusLog> focusLogs = [];
-  Map<String, String> taskNotes = {};
+  int generation = 0;
+  String? namespace;
+  String? storageError;
+  bool legacyArchiveAvailable = false;
+  bool _legacyImported = false;
+  bool get legacyImported => _legacyImported;
+  List<TaskItem> tasks = const [];
+  List<CourseSlot> courses = const [];
+  List<FocusLog> focusLogs = const [];
+  Map<String, String> taskNotes = const {};
   String appearance = 'porcelain';
   String? activeTaskId;
   String? lastSavedTaskId;
@@ -24,267 +35,311 @@ class PocketStore extends ChangeNotifier {
   DateTime? _focusEndsAt;
   Timer? _ticker;
 
-  Future<void> load() async {
+  void _notify() { if (!_disposed) notifyListeners(); }
+
+  /// Close visibility synchronously, before any disk/network await.
+  void lock() {
+    generation++;
+    namespace = null;
+    ready = false;
+    _ticker?.cancel();
+    _focusEndsAt = null;
+    focusRunning = false;
+    focusTargetMinutes = 25;
+    focusRemaining = 25 * 60;
+    tasks = const [];
+    courses = const [];
+    focusLogs = const [];
+    taskNotes = const {};
+    activeTaskId = null;
+    lastSavedTaskId = null;
+    appearance = 'porcelain';
+    selectedWeekday = DateTime.now().weekday;
+    _legacyImported = false;
+    storageError = null;
+    _notify();
+  }
+
+  Future<void> load() => openGuest();
+
+  Future<void> openGuest() {
+    lock();
+    final ticket = generation;
+    return _open(ticket, () async {
+      var id = await _prefs.getString('haiz/installation/v1');
+      if (id == null) {
+        id = List.generate(24, (_) => Random.secure().nextInt(256)
+            .toRadixString(16).padLeft(2, '0')).join();
+        await _prefs.setString('haiz/installation/v1', id);
+        if (await _prefs.getString('haiz/installation/v1') != id) {
+          throw StateError('访客空间初始化校验失败');
+        }
+      }
+      if (!RegExp(r'^[a-zA-Z0-9_-]{16,128}$').hasMatch(id)) {
+        throw const FormatException('访客空间标识损坏');
+      }
+      return 'haiz/guest/v1/$id';
+    });
+  }
+
+  Future<void> openAccount({required String origin,
+      required Map<String, dynamic> identity}) {
+    lock();
+    final ticket = generation;
+    return _open(ticket, () async => accountNamespace(origin, identity));
+  }
+
+  Future<void> _open(int ticket, Future<String> Function() resolve) async {
+    await _pending;
     try {
-      final tasksJson = await _prefs.getString('pocket.tasks.v1');
-      final coursesJson = await _prefs.getString('pocket.courses.v1');
-      final focusJson = await _prefs.getString('pocket.focus.v1');
-      final notesJson = await _prefs.getString('pocket.taskNotes.v1');
-      taskNotes = notesJson == null
-          ? {}
-          : Map<String, String>.from(jsonDecode(notesJson) as Map);
-      appearance =
-          (await _prefs.getString('pocket.appearance.v1')) ?? appearance;
-      activeTaskId = await _prefs.getString('pocket.activeTask.v1');
-      lastSavedTaskId = activeTaskId;
-      tasks = tasksJson == null
-          ? starterTasks()
-          : (jsonDecode(tasksJson) as List)
-                .map(
-                  (e) => TaskItem.fromJson(Map<String, dynamic>.from(e as Map)),
-                )
-                .toList();
-      courses = coursesJson == null
-          ? starterCourses()
-          : (jsonDecode(coursesJson) as List)
-                .map(
-                  (e) =>
-                      CourseSlot.fromJson(Map<String, dynamic>.from(e as Map)),
-                )
-                .toList();
-      focusLogs = focusJson == null
-          ? []
-          : (jsonDecode(focusJson) as List)
-                .map(
-                  (e) => FocusLog.fromJson(Map<String, dynamic>.from(e as Map)),
-                )
-                .toList();
-    } catch (e) {
-      debugPrint('Local cache could not be read: $e');
-      tasks = starterTasks();
-      courses = starterCourses();
-      focusLogs = [];
-    } finally {
-      ready = true;
-      notifyListeners();
+      final archived = await LegacyArchive(_prefs).quarantine();
+      final scope = await resolve();
+      final raw = await _prefs.getString('$scope/personal.v1');
+      final data = raw == null ? const PersonalSnapshot() : PersonalSnapshot.decode(raw);
+      if (_disposed || ticket != generation) return;
+      namespace = scope;
+      legacyArchiveAvailable = archived;
+      _apply(data);
+    } catch (error, stack) {
+      if (_disposed || ticket != generation) return;
+      storageError = '本地记录暂不可用，原始数据已保留。请重试或联系支持。';
+      debugPrint('Personal storage open failed (${error.runtimeType})\n$stack');
     }
+    if (_disposed || ticket != generation) return;
+    ready = true;
+    _notify();
+  }
+
+  void _apply(PersonalSnapshot data) {
+    tasks = List.unmodifiable(data.tasks);
+    courses = List.unmodifiable(data.courses);
+    focusLogs = List.unmodifiable(data.focusLogs);
+    taskNotes = Map.unmodifiable(data.taskNotes);
+    appearance = data.appearance;
+    activeTaskId = data.activeTaskId;
+    lastSavedTaskId = activeTaskId;
+    _legacyImported = data.legacyImported;
+  }
+
+  PersonalSnapshot _snapshot() => PersonalSnapshot(
+    tasks: tasks, courses: courses, focusLogs: focusLogs, taskNotes: taskNotes,
+    activeTaskId: activeTaskId, appearance: appearance,
+    legacyImported: _legacyImported,
+  );
+
+  bool get _writable => ready && namespace != null && storageError == null;
+
+  void _persist() {
+    final scope = namespace;
+    if (!_writable || scope == null) return;
+    final ticket = generation;
+    final raw = _snapshot().encode();
+    _pending = _pending.then((_) async {
+      try {
+        await _prefs.setString('$scope/personal.v1', raw);
+        if (await _prefs.getString('$scope/personal.v1') != raw) {
+          throw StateError('个人存储写入校验失败');
+        }
+      } catch (error, stack) {
+        debugPrint('Personal storage write failed (${error.runtimeType})\n$stack');
+        if (ticket == generation && !_disposed) {
+          storageError = '保存未成功；请保持应用打开并重试，原始记录仍保留。';
+          _notify();
+        }
+      }
+    });
+  }
+
+  Future<void> flush() async {
+    await _pending;
+    if (storageError != null) throw StateError(storageError!);
+  }
+
+  Future<void> importLegacyArchive({required bool ownerConfirmed}) async {
+    final scope = namespace;
+    if (!ownerConfirmed || !_writable || scope == null ||
+        !scope.startsWith('haiz/v1/')) {
+      throw StateError('须登录数据所属账号并明确确认后导入');
+    }
+    final ticket = generation;
+    final archive = LegacyArchive(_prefs);
+    await flush();
+    try {
+      final legacy = await archive.read();
+      if (ticket != generation || _disposed) return;
+      await archive.claim(scope);
+      if (ticket != generation || _disposed || _legacyImported) return;
+      final merged = _mergeLegacy(legacy);
+      final raw = merged.encode();
+      final write = _pending.then((_) async {
+        await _prefs.setString('$scope/personal.v1', raw);
+        if (await _prefs.getString('$scope/personal.v1') != raw) {
+          throw StateError('历史导入校验失败，归档仍保留');
+        }
+      });
+      _pending = write.catchError((Object _) {});
+      await write;
+      if (ticket == generation && !_disposed) {
+        _apply(merged);
+        _notify();
+      }
+    } catch (error) {
+      if (ticket == generation && !_disposed) {
+        storageError = '旧数据导入未完成，归档和原始记录仍保留。';
+        _notify();
+      }
+      rethrow;
+    }
+  }
+
+  PersonalSnapshot _mergeLegacy(PersonalSnapshot legacy) {
+    final ids = tasks.map((t) => t.id).toSet();
+    final courseIds = courses.map((c) => c.id).toSet();
+    if (legacy.tasks.any((t) => ids.contains(t.id)) ||
+        legacy.courses.any((c) => courseIds.contains(c.id)) ||
+        legacy.taskNotes.keys.any(taskNotes.containsKey)) {
+      throw StateError('历史标识与当前记录冲突，请联系支持；双方记录均已保留');
+    }
+    return PersonalSnapshot(
+      tasks: [...tasks, ...legacy.tasks], courses: [...courses, ...legacy.courses],
+      focusLogs: [...focusLogs, ...legacy.focusLogs],
+      taskNotes: {...legacy.taskNotes, ...taskNotes},
+      activeTaskId: activeTaskId ?? legacy.activeTaskId,
+      appearance: appearance, legacyImported: true,
+    );
   }
 
   int get remainingCount => tasks.where((x) => !x.completed).length;
   int get doneCount => tasks.where((x) => x.completed).length;
 
-  Future<void> _saveTasks() async {
-    await _prefs.setString(
-      'pocket.tasks.v1',
-      jsonEncode(tasks.map((x) => x.toJson()).toList()),
-    );
-  }
-
-  Future<void> _saveCourses() async {
-    await _prefs.setString(
-      'pocket.courses.v1',
-      jsonEncode(courses.map((x) => x.toJson()).toList()),
-    );
-  }
-
-  Future<void> _saveFocus() async {
-    await _prefs.setString(
-      'pocket.focus.v1',
-      jsonEncode(focusLogs.map((x) => x.toJson()).toList()),
-    );
-  }
-
   void setAppearance(String value) {
+    if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) return;
     appearance = value;
-    notifyListeners();
-    unawaited(_prefs.setString('pocket.appearance.v1', value));
+    _persist(); _notify();
   }
 
-  void addTask(
-    String title,
-    String subject, {
-    DateTime? due,
-    String source = '',
-    String originalNotice = '',
-  }) {
-    if (title.trim().isEmpty) return;
-    tasks = [
-      TaskItem(
-        id: newId(),
-        title: title.trim(),
-        subject: subject,
-        dueIso: due == null
-            ? null
-            : '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
-        source: source,
-        originalNotice: originalNotice,
-      ),
-      ...tasks,
-    ];
-    notifyListeners();
-    unawaited(_saveTasks());
+  void addTask(String title, String subject, {DateTime? due,
+      String source = '', String originalNotice = ''}) {
+    if (!_writable || title.trim().isEmpty) return;
+    tasks = List.unmodifiable([
+      TaskItem(id: newId(), title: title.trim(), subject: subject,
+        dueIso: due == null ? null :
+          '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
+        source: source, originalNotice: originalNotice), ...tasks,
+    ]);
+    _persist(); _notify();
   }
 
   void toggleTask(String id) {
-    tasks = tasks
-        .map((x) => x.id == id ? x.copyWith(completed: !x.completed) : x)
-        .toList();
-    notifyListeners();
-    unawaited(_saveTasks());
+    if (!_writable) return;
+    tasks = List.unmodifiable(tasks.map((x) => x.id == id
+        ? x.copyWith(completed: !x.completed) : x));
+    _persist(); _notify();
   }
 
   void deleteTask(String id) {
-    tasks.removeWhere((x) => x.id == id);
-    taskNotes.remove(id);
-    unawaited(_prefs.setString('pocket.taskNotes.v1', jsonEncode(taskNotes)));
-    if (activeTaskId == id) chooseFocusTask(null);
-    notifyListeners();
-    unawaited(_saveTasks());
+    if (!_writable) return;
+    tasks = List.unmodifiable(tasks.where((x) => x.id != id));
+    taskNotes = Map.unmodifiable({for (final e in taskNotes.entries)
+      if (e.key != id) e.key: e.value});
+    if (activeTaskId == id) { activeTaskId = null; lastSavedTaskId = null; }
+    _persist(); _notify();
   }
 
   String noteFor(String id) => taskNotes[id] ?? '';
 
   void setTaskNote(String id, String note) {
-    taskNotes[id] = note;
-    notifyListeners();
-    unawaited(_prefs.setString('pocket.taskNotes.v1', jsonEncode(taskNotes)));
+    if (!_writable || !tasks.any((t) => t.id == id)) return;
+    taskNotes = Map.unmodifiable({...taskNotes, id: note});
+    _persist(); _notify();
   }
 
-  List<TaskItem> get upcomingTasks {
-    final pending = tasks
-        .where((t) => !t.completed && t.dueIso != null)
-        .toList();
-    pending.sort((a, b) => a.dueIso!.compareTo(b.dueIso!));
-    return pending;
-  }
+  List<TaskItem> get upcomingTasks => tasks
+      .where((t) => !t.completed && t.dueIso != null).toList()
+      ..sort((a, b) => a.dueIso!.compareTo(b.dueIso!));
 
   TaskItem? get activeTask {
-    final id = activeTaskId;
-    if (id == null) return null;
-    for (final t in tasks) {
-      if (t.id == id) return t;
-    }
+    for (final task in tasks) { if (task.id == activeTaskId) return task; }
     return null;
   }
 
   void chooseFocusTask(String? id) {
-    activeTaskId = id;
-    lastSavedTaskId = id;
-    notifyListeners();
-    if (id == null) {
-      unawaited(_prefs.remove('pocket.activeTask.v1'));
-    } else {
-      unawaited(_prefs.setString('pocket.activeTask.v1', id));
+    if (!_writable || (id != null && !tasks.any((t) => t.id == id))) return;
+    activeTaskId = id; lastSavedTaskId = id;
+    _persist(); _notify();
+  }
+
+  void setDay(int day) { selectedWeekday = day.clamp(1, 7); _notify(); }
+
+  void addCourse({required String name, required int weekday,
+      required int startMinute, required int endMinute, String location = ''}) {
+    if (!_writable || name.trim().isEmpty || endMinute <= startMinute ||
+        weekday < 1 || weekday > 7 || startMinute < 0 || endMinute > 1440) {
+      return;
     }
-  }
-
-  void setDay(int day) {
-    selectedWeekday = day.clamp(1, 7);
-    notifyListeners();
-  }
-
-  void addCourse({
-    required String name,
-    required int weekday,
-    required int startMinute,
-    required int endMinute,
-    String location = '',
-  }) {
-    if (name.trim().isEmpty || endMinute <= startMinute) return;
-    courses.add(
-      CourseSlot(
-        id: newId(),
-        name: name.trim(),
-        weekday: weekday,
-        startMinute: startMinute,
-        endMinute: endMinute,
-        location: location.trim(),
-      ),
-    );
-    notifyListeners();
-    unawaited(_saveCourses());
+    courses = List.unmodifiable([...courses,
+      CourseSlot(id: newId(), name: name.trim(), weekday: weekday,
+        startMinute: startMinute, endMinute: endMinute, location: location.trim())]);
+    _persist(); _notify();
   }
 
   void deleteCourse(String id) {
-    courses.removeWhere((x) => x.id == id);
-    notifyListeners();
-    unawaited(_saveCourses());
+    if (!_writable) return;
+    courses = List.unmodifiable(courses.where((x) => x.id != id));
+    _persist(); _notify();
   }
 
   void setFocusDuration(int minutes) {
-    if (focusRunning) return;
+    if (!_writable || focusRunning) return;
     focusTargetMinutes = minutes.clamp(1, 90);
     focusRemaining = focusTargetMinutes * 60;
-    notifyListeners();
+    _notify();
   }
 
   void startFocus() {
-    if (focusRunning) return;
+    if (!_writable || focusRunning) return;
     focusRunning = true;
     _focusEndsAt = DateTime.now().add(Duration(seconds: focusRemaining));
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-    notifyListeners();
+    _notify();
   }
 
   void _tick() {
     final endAt = _focusEndsAt;
     if (!focusRunning || endAt == null) return;
-    focusRemaining = endAt
-        .difference(DateTime.now())
-        .inSeconds
+    focusRemaining = endAt.difference(DateTime.now()).inSeconds
         .clamp(0, focusTargetMinutes * 60);
-    if (focusRemaining == 0) {
-      finishFocus(auto: true);
-    } else {
-      notifyListeners();
-    }
+    if (focusRemaining == 0) { finishFocus(auto: true); } else { _notify(); }
   }
 
   void pauseFocus() {
     if (!focusRunning) return;
-    _tick();
-    focusRunning = false;
-    _focusEndsAt = null;
-    _ticker?.cancel();
-    notifyListeners();
+    _tick(); focusRunning = false; _focusEndsAt = null;
+    _ticker?.cancel(); _notify();
   }
 
   void finishFocus({bool auto = false}) {
+    if (!_writable) return;
     if (focusRunning && !auto) {
       final endAt = _focusEndsAt;
       if (endAt != null) {
-        focusRemaining = endAt
-            .difference(DateTime.now())
-            .inSeconds
+        focusRemaining = endAt.difference(DateTime.now()).inSeconds
             .clamp(0, focusTargetMinutes * 60);
       }
     }
-    _ticker?.cancel();
-    _focusEndsAt = null;
-    focusRunning = false;
-    final elapsed = focusTargetMinutes * 60 - focusRemaining;
-    final minutes = (elapsed / 60).round();
+    _ticker?.cancel(); _focusEndsAt = null; focusRunning = false;
+    final minutes = ((focusTargetMinutes * 60 - focusRemaining) / 60).round();
     if (minutes > 0) {
-      focusLogs.insert(
-        0,
-        FocusLog(
-          at: DateTime.now(),
-          minutes: minutes,
-          label: activeTask?.title ?? '自主学习',
-        ),
-      );
-      unawaited(_saveFocus());
+      focusLogs = List.unmodifiable([FocusLog(at: DateTime.now(), minutes: minutes,
+        label: activeTask?.title ?? '自主学习'), ...focusLogs]);
+      _persist();
     }
-    focusRemaining = focusTargetMinutes * 60;
-    notifyListeners();
+    focusRemaining = focusTargetMinutes * 60; _notify();
   }
 
   int get todayFocusMinutes => focusMinutesToday(focusLogs, DateTime.now());
 
   @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
+  void dispose() { _disposed = true; generation++; _ticker?.cancel(); super.dispose(); }
 }

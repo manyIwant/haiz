@@ -9,6 +9,7 @@ class FocusPage extends StatelessWidget {
 
   Future<void> _editNote(BuildContext context) async {
     final task = store.activeTask;
+    final generation = store.generation;
     if (task == null) return;
     final note = TextEditingController(text: store.noteFor(task.id));
     final saved = await showDialog<bool>(
@@ -40,7 +41,13 @@ class FocusPage extends StatelessWidget {
         ],
       ),
     );
-    if (saved == true) store.setTaskNote(task.id, note.text);
+    if (saved == true && store.generation == generation) {
+      store.setTaskNote(task.id, note.text);
+    } else if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已切换账号，笔记未写入任何账号。')));
+    }
     note.dispose();
   }
 
