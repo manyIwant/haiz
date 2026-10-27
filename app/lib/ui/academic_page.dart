@@ -46,8 +46,9 @@ class _AcademicPageState extends State<AcademicPage> {
     }
     setState(() => _message = null);
     await session.login(_server.text, _login.text, _password.text);
+    if (!mounted) return;
     _password.clear();
-    if (mounted) setState(() => _message = session.error);
+    setState(() => _message = session.error);
   }
 
   Future<void> _refresh() async {
