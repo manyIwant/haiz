@@ -71,12 +71,16 @@ export function createDraftStore(options = {}) {
     } catch (cause) {
       throw new Error('草稿数据无法读取或已损坏，请保留本机数据并联系管理员。', { cause });
     }
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isDraft).slice(0, MAX_DRAFTS);
+    if (!Array.isArray(parsed) || parsed.length > MAX_DRAFTS || !parsed.every(isDraft)) {
+      throw new Error('草稿数据已损坏，请保留本机数据并联系管理员。');
+    }
+    return parsed;
   }
 
   function writeAll(drafts) {
-    const trimmed = drafts.slice(0, MAX_DRAFTS);
+    if (drafts.length > MAX_DRAFTS) throw new Error('草稿数量已达上限（100 项），请整理后重试。');
+    if (!drafts.every(isDraft)) throw new Error('草稿格式无效，未保存。');
+    const trimmed = drafts;
     try {
       storage.setItem(storageKey, JSON.stringify(trimmed));
     } catch (cause) {
@@ -167,30 +171,29 @@ export function createDraftStore(options = {}) {
         const raw = storage.getItem(LEGACY_STORAGE_KEY);
         if (!raw) return 0;
         const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return 0;
+        if (!Array.isArray(parsed)) throw new Error('旧版草稿格式已损坏。');
         const current = readAll();
-        let imported = 0;
-        for (const item of parsed) {
-          if (!item || typeof item !== 'object') continue;
+        const signature = item => JSON.stringify([item.subject, item.title, item.due]);
+        const candidates = parsed.flatMap(item => {
+          if (!item || typeof item !== 'object') throw new Error('旧版草稿格式已损坏。');
           const subject = typeof item.subject === 'string' ? item.subject.trim() : '';
           const title = typeof item.title === 'string' ? item.title.trim() : '';
-          if (!subject || !title) continue;
+          if (!subject || !title) throw new Error('旧版草稿缺少科目或标题。');
           const due = typeof item.due === 'string' && item.due ? item.due : null;
-          const exists = current.some(d => d.subject === subject && d.title === title);
-          if (!exists) {
-            store.create({
-              subject,
-              title,
-              due,
-              duePrecision: due ? 'date' : 'none',
-              state: DRAFT_STATE.LOCAL,
-            });
-            imported++;
-          }
-        }
-        return imported;
-      } catch {
-        return 0;
+          return [{ subject, title, due }];
+        });
+        const additions = candidates.filter((item, index) => !current.some(d => signature(d) === signature(item))
+          && candidates.findIndex(candidate => signature(candidate) === signature(item)) === index);
+        if (!additions.length) return 0;
+        const imported = additions.map(item => ({
+          ...item, id: idFactory(), classId: '', className: '', details: '',
+          duePrecision: item.due ? 'date' : 'none', state: DRAFT_STATE.LOCAL,
+          publishedId: null, publishedVersion: null, updatedAt: now().toISOString(),
+        }));
+        writeAll([...imported, ...current]);
+        return imported.length;
+      } catch (cause) {
+        throw new Error('旧版草稿导入失败或数据已损坏。原始数据已保留，请检查存储空间后重试。', { cause });
       }
     },
   };

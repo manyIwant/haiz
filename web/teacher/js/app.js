@@ -30,6 +30,7 @@ ui.byId('login-form').addEventListener('submit', async event => {
   try {
     await client.send('/api/auth/login', { method: 'POST', body: Object.fromEntries(new FormData(form)) });
     ui.byId('login-password').value = '';
+    workspace.authChanged();
     const { identity } = await workspace.boot(); showApp(identity);
   } catch (error) { loginError(error.message || '登录失败，请检查账号和密码。'); }
   finally { submit.disabled = false; }

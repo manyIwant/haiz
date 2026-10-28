@@ -1,62 +1,43 @@
-/* HAIZ Teacher · Editorial Precision × Quiet Technology
-   Ivory paper, deep sea ink, graphite rules, one restrained copper accent.
-   Tokens only — no component rules in this file. */
-
+/* Warm paper, sea ink and copper distinguish preparation from confirmed publication. */
 :root {
   color-scheme: light;
-
-  /* Surfaces: warm ivory paper, never pure white, with a cooler raised card. */
   --paper: oklch(97.6% 0.008 85);
   --paper-raised: oklch(99.2% 0.004 90);
   --paper-sunk: oklch(95.4% 0.011 84);
   --paper-tint: oklch(96.8% 0.014 232);
-
-  /* Ink: deep sea blue-black for text, graphite for secondary. */
   --ink: oklch(24% 0.031 246);
   --ink-soft: oklch(38% 0.028 246);
-  --ink-muted: oklch(52% 0.019 244);
-  --ink-faint: oklch(66% 0.012 240);
-
-  /* Rules and edges. */
-  --rule: oklch(89% 0.009 90);
-  --rule-strong: oklch(80% 0.013 88);
-
-  /* Deep sea blue: the working accent. */
+  --ink-muted: oklch(45% 0.019 244);
+  --ink-faint: oklch(47% 0.012 240);
+  --rule: oklch(86% 0.009 90);
+  --rule-strong: oklch(72% 0.013 88);
   --sea: oklch(37% 0.062 243);
   --sea-deep: oklch(28% 0.055 245);
   --sea-soft: oklch(93.5% 0.018 240);
   --sea-ink: oklch(31% 0.058 244);
-
-  /* Copper gold: reserved for confirmed publication and one emphasis per view. */
-  --copper: oklch(62% 0.098 68);
-  --copper-deep: oklch(50% 0.094 62);
+  --copper: oklch(55% 0.098 68);
+  --copper-deep: oklch(44% 0.094 62);
   --copper-soft: oklch(94.5% 0.026 76);
-
-  /* Semantic states, each with a text-safe pair. */
-  --ok: oklch(48% 0.078 158);
+  --ok: oklch(42% 0.078 158);
   --ok-soft: oklch(94.5% 0.022 158);
-  --warn: oklch(56% 0.108 66);
+  --warn: oklch(43% 0.108 66);
   --warn-soft: oklch(95.5% 0.030 82);
-  --stop: oklch(50% 0.135 27);
+  --stop: oklch(44% 0.135 27);
   --stop-soft: oklch(95.5% 0.026 26);
 
-  /* Type */
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Noto Serif CJK SC", Georgia, serif;
-  --font-text: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-
+  /* Manrope is used when installed; native CJK faces preserve legibility without remote fonts. */
+  --font-text: Manrope, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+  --font-display: var(--font-text);
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
   --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-base: 0.9375rem;
-  --text-lg: 1.0625rem;
-  --text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --text-2xl: clamp(1.6rem, 1.25rem + 1.5vw, 2.25rem);
-  --text-3xl: clamp(2.1rem, 1.4rem + 3vw, 3.4rem);
-
-  --tracking-wide: 0.14em;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --tracking-wide: 0.12em;
   --tracking-tight: -0.015em;
-
-  /* Space */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -64,29 +45,21 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
-  --space-8: 4.5rem;
-
-  /* Radii: small and deliberate; no pill soup. */
+  --space-8: 4rem;
   --radius-sm: 4px;
-  --radius-md: 7px;
+  --radius-md: 8px;
   --radius-lg: 12px;
-
-  /* Elevation: one soft shadow plus an inset hairline, like lifted paper. */
   --shadow-1: 0 1px 2px oklch(30% 0.02 240 / 0.06), 0 6px 20px oklch(30% 0.02 240 / 0.05);
   --shadow-2: 0 2px 6px oklch(30% 0.02 240 / 0.08), 0 18px 48px oklch(30% 0.02 240 / 0.10);
   --hairline: inset 0 1px 0 oklch(100% 0 0 / 0.9);
-
-  /* Motion: short, eased, never decorative. */
-  --duration-fast: 120ms;
-  --duration-normal: 200ms;
-  --duration-slow: 320ms;
-  --ease-out: cubic-bezier(0.22, 0.9, 0.28, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Layout */
+  --duration-fast: 300ms;
+  --duration-normal: 500ms;
+  --duration-slow: 500ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: var(--ease-out);
   --measure: 66ch;
-  --rail: 15.5rem;
-  --page-max: 78rem;
-  --leading-body: 1.72;
-  --leading-tight: 1.28;
+  --rail: 12rem;
+  --page-max: 96rem;
+  --leading-body: 1.5;
+  --leading-tight: 1.3333;
 }

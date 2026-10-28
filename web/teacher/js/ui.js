@@ -109,7 +109,7 @@ export function askConfirm({ title, body, confirmLabel = '确认', tone = 'sea' 
   return new Promise(resolve => {
     confirmResolve = resolve;
     if (!dialog.open) dialog.showModal();
-    byId('confirm-yes').focus();
+    byId(tone === 'danger' ? 'confirm-no' : 'confirm-yes').focus();
   });
 }
 
@@ -145,7 +145,7 @@ export function reviewChecklist(draft) {
     { label: '班级', ok: Boolean(draft.classId), value: draft.className || '未选择班级' },
     { label: '科目与标题', ok: Boolean(draft.subject?.trim() && draft.title?.trim()), value: `${draft.subject || '—'} · ${draft.title || '（无标题）'}` },
     { label: '截止时间', ok: true, value: describeDue(draft) },
-    { label: '可以发布', ok, value: ok ? '内容完整，可以提交教师审核' : problems.join(' ') },
+    { label: '发布前检查', ok, value: ok ? '内容完整，进入 Review 后由你确认发布' : problems.join(' ') },
   ];
   return el('ul', { class: 'checklist' },
     items.map(item => el('li', { dataset: { ok: String(item.ok) } },
@@ -158,12 +158,9 @@ export function reviewChecklist(draft) {
 /* ─── Lists ───────────────────────────────────────────────────────────── */
 
 function assignmentRow(a, { onOpen, onHistory, current }) {
-  return el('button', {
-    type: 'button', class: 'list-item',
-    'aria-current': current ? 'true' : null,
-    on: { click: () => onOpen(a) },
-  },
-    el('div', {},
+  return el('article', { class: 'list-item', 'aria-current': current === a.id ? 'true' : null },
+    button('', () => onOpen(a), 'item-open', { 'aria-label': `查看${a.subject}作业：${a.title}` }),
+    el('div', { class: 'item-content' },
       el('div', { class: 'item-subject' }, a.subject),
       el('div', { class: 'item-title' }, a.title),
       el('div', { class: 'item-meta' },
@@ -171,7 +168,7 @@ function assignmentRow(a, { onOpen, onHistory, current }) {
         el('span', {}, `v${a.version}`))),
     el('div', { class: 'item-side' },
       serverChip(a),
-      onHistory ? button('记录', e => { e.stopPropagation(); onHistory(a); }, 'btn quiet') : null));
+      onHistory ? button('记录', () => onHistory(a), 'btn quiet') : null));
 }
 
 export function publishedList(assignments, handlers) {
@@ -185,11 +182,11 @@ export function publishedList(assignments, handlers) {
 }
 
 export function historyList(assignments, handlers) {
-  const history = assignments.filter(a => [STATUS.RETRACTED, STATUS.DRAFT, STATUS.REVIEW].includes(a.status));
+  const history = [...assignments];
   if (!history.length) {
     return el('div', { class: 'empty' },
       el('div', { class: 'title' }, '暂无历史记录'),
-      el('p', {}, '撤回的作业和服务器上的草稿会保留在这里，附带完整的版本历史。'));
+      el('p', {}, '服务器上的作业会保留在这里，供你查看版本变化与撤回记录。'));
   }
   return el('div', { class: 'list' }, history.map(a => assignmentRow(a, handlers)));
 }
@@ -198,12 +195,12 @@ export function draftList(drafts, handlers) {
   const editable = drafts.filter(d => d.state !== DRAFT_STATE.PUBLISHED);
   if (!editable.length) return null;
   return el('div', { class: 'list' },
-    editable.map(draft => el('button', {
-      type: 'button', class: 'list-item',
+    editable.map(draft => el('article', {
+      class: 'list-item',
       'aria-current': handlers.current === draft.id ? 'true' : null,
-      on: { click: () => handlers.onOpen(draft) },
     },
-      el('div', {},
+      button('', () => handlers.onOpen(draft), 'item-open', { 'aria-label': `编辑草稿：${draft.title || '未命名草稿'}` }),
+      el('div', { class: 'item-content' },
         el('div', { class: 'item-subject' }, draft.subject || '未命名科目'),
         el('div', { class: 'item-title' }, draft.title || '（未命名草稿）'),
         el('div', { class: 'item-meta' },
@@ -211,8 +208,8 @@ export function draftList(drafts, handlers) {
           el('span', {}, describeDue(draft)))),
       el('div', { class: 'item-side' },
         draftChip(draft),
-        draft.state === DRAFT_STATE.UNKNOWN && draft.publishedId
-          ? button('核对结果', e => { e.stopPropagation(); handlers.onResolve(draft); }, 'btn quiet')
+        draft.state === DRAFT_STATE.UNKNOWN
+          ? button('核对结果', () => handlers.onResolve(draft), 'btn quiet')
           : null))));
 }
 
@@ -221,7 +218,7 @@ export function draftList(drafts, handlers) {
 const OP_LABEL = {
   create: '创建草稿',
   'legacy.publish': '直接发布',
-  review: '提交审核',
+  review: '进入教师检查',
   publish: '正式发布',
   edit: '修改内容',
   retract: '撤回作业',

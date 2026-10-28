@@ -31,7 +31,7 @@
 ```
 
 ### 1.1 安全响应头 (Security Headers)
-代理服务对所有前端页面注入最高标准安全标头：
+代理服务对所有前端页面注入以下安全标头：
 - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none';`
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
@@ -76,7 +76,7 @@
 }
 ```
 
-- **401 Unauthorized (`state: Revoked`)**：会话已过期，前端切至登录界面，保留当前草稿。
+- **401 Unauthorized**：会话已过期或身份已变化，前端切至登录界面，清空正式视图，保留原账号草稿与未知请求；恢复原身份后精确重放。
 - **403 Forbidden (`state: Revoked`)**：当前账号缺少教师权限（例如学生账号试图访问教师端），明确提示。
 - **404 NotFound (`state: Failed`)**：作业不存在或已被删除。
 - **409 Conflict (`state: Conflict`)**：
@@ -90,11 +90,25 @@
 
 当前整体工程协同状态明确如下：
 
-1. **已达成一致（04 组与 02 组完全闭环）**：
+1. **当前 Teacher 与真实 Academic 的 HTTP 联调范围**：
    - 教师发布 → Academic SQLite 事务提交 → 实时生成 SyncEvent 与 Revision。
    - 教师修改/撤回 → 递增版本号并记录快照。
    - 教室大屏通过 Bearer ScreenKey 获取公开只读作业，无学生个人信息。
 2. **跨端实现程度说明（必须明确区分的三种阶段）**：
-   - **阶段 A：后端事件已持久化** —— **100% 完成**（通过 `sync_events` 严格递增序列）。
-   - **阶段 B：学生端通过手动刷新/拉取取得最新内容** —— **100% 完成**（学生调用 `/api/v1/classes/{id}/assignments` 或 `/api/v1/sync` 均可完整取得）。
-   - **阶段 C：学生端自动增量同步与冲突合并** —— **依赖 03 组**（PR #22 奠定了账号隔离与本地存储基础，但 Flutter 端后台长轮询自动触发仍在 03 组演进路线上）。
+   - **阶段 A：后端事件已持久化** —— Academic v1.4 事务模型负责，后端已有 sync_events 与回执。
+   - **阶段 B：学生手动拉取** —— 本组用真实 `/api/my/assignments` 验证发布、修订、撤回后的可见性和版本。未运行 Flutter UI。
+   - **阶段 C：学生自动增量同步** —— 本组没有实现或验证，依赖 03 组；不能用阶段 A/B 代替完成证明。
+
+## 5. 会话绑定、入口和跨组交接
+
+客户端请求前后核对 identity，并在标签页重新激活时复核。每次受保护请求声明 X-HAIZ-Expected-Actor（编码后的 [instanceId,userId]，不是凭据）。Teacher 代理用收到的 Cookie 查询 Academic identity，匹配才使用同一份捕获 Cookie 转发请求，避免另一标签页切换登录造成错账号写入。不改 Academic 对象或后端实现。异步结果按登录代次隔离，原账号请求只写原账号存储。
+
+Teacher `/academic/` 保留班级与账号管理。旧版直接发布、修改/删除作业及 QQ 收件发布路径已由代理拒绝。原始管理页仍有旧发布控件，尚未协调修改 02 组所有的 services/academic/public；直接访问 Academic 端口也绕开代理入口限制，部署应置于私网。
+
+- 01：复核会话绑定、CSP、未知请求恢复和课堂字段白名单；证据见 QA-REPORT.md 和 evidence/browser-report.json。
+- 10：虚构环境复跑 npm test 与 npm run test:e2e，重点验收 Review、双页冲突、断线重放、撤回和账号切换。
+- 02：依赖 [后端 PR](https://github.com/manyiwant/haiz/pull/21)，基准 b308312a8f5d8387c66e319c642223b399440a3f。旧管理页控件归属需协调；未来若增加只读回执查询，可减少创建未知时必须重放的限制。
+- 03：依赖 [学生隔离 PR](https://github.com/manyiwant/haiz/pull/22)，核查 b65c783ddd216193b39e44daec3a5841a6bb3813。真实 Flutter 私人笔记保留、撤回展示和自动同步需 03 验收。本组只验证独立虚构浏览器笔记标记。
+- 06：复用 /api/v1/classroom、Bearer screenKey 与公开投影。当前网页课堂手动刷新，原生 ClassIsland 集成与凭据轮换由 06 复核。
+
+当前是 Draft 交付，没有创建 Release，没有修改生产数据库、QQ、Flutter 或原生插件。

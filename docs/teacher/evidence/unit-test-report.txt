@@ -1,0 +1,150 @@
+✔ validates canonical assignments and refuses malformed mutation success (20.243625ms)
+✔ refuses malformed v1 envelopes and preserves legacy error messages (1.108584ms)
+✔ sends request headers and times out while reading response body (12.288958ms)
+✔ pagination follows all list and history pages without silently truncating (0.65275ms)
+✔ selected due precision requires an actual valid calendar date (0.12925ms)
+✔ generated keys match the server alphabet and length (0.588375ms)
+✔ key validation rejects bad input (0.063209ms)
+✔ contentBody trims subject/title and pairs due with precision (0.287709ms)
+✔ no due always means precision none (0.041791ms)
+✔ rejects missing subject, title and class (0.0435ms)
+✔ rejects an impossible calendar date (0.045417ms)
+✔ accepts a valid minute-precision due (0.087875ms)
+✔ enforces field length limits (0.05875ms)
+✔ describeDue renders none, date and minute (10.683542ms)
+✔ diffContent lists only the fields that differ (0.1285ms)
+✔ diffContent reports an identical draft as no changes (0.031667ms)
+✔ a rejected command raises ApiError with the server code (0.276625ms)
+✔ a network failure raises UnknownOutcomeError, never success (0.098625ms)
+✔ an unparseable body raises UnknownOutcomeError (0.360958ms)
+✔ every mutating command sends the Idempotency-Key header (0.327083ms)
+✔ edit sends expectedVersion and never sends server-owned fields (0.114792ms)
+✔ the registry returns the same key for a retried intent and a new key for a new intent (0.075916ms)
+✔ hydrate ignores keys the server would reject (0.040334ms)
+✔ loads every page using a bearer header, with no credential in URLs (2.60475ms)
+✔ accepts a verified empty classroom (0.27575ms)
+✔ requires exact privacy flags {"readOnly":false} (0.46825ms)
+✔ requires exact privacy flags {} (0.075208ms)
+✔ requires exact privacy flags {"readOnly":"true"} (0.071666ms)
+✔ requires exact privacy flags {"containsStudentIdentity":true} (0.055ms)
+✔ requires exact privacy flags {} (0.06125ms)
+✔ requires exact privacy flags {"containsStudentIdentity":0} (0.048208ms)
+✔ rejects unexpected fields in data (0.086041ms)
+✔ rejects unexpected fields in assignment (0.064417ms)
+✔ rejects unexpected fields in nested assignment (0.05525ms)
+✔ rejects unexpected fields in envelope (0.050334ms)
+✔ rejects unexpected fields in metadata (0.048666ms)
+✔ rejects nonpublic assignment status draft (0.091166ms)
+✔ rejects nonpublic assignment status review (0.066959ms)
+✔ rejects nonpublic assignment status retracted (0.066167ms)
+✔ rejects nonpublic assignment status Published (0.053166ms)
+✔ rejects nonpublic assignment status null (0.0935ms)
+✔ rejects malformed public feed: null (0.083208ms)
+✔ rejects malformed public feed: array (0.062333ms)
+✔ rejects malformed public feed: missing assignments (0.218708ms)
+✔ rejects malformed public feed: error envelope (0.09575ms)
+✔ rejects malformed public feed: pending state (0.088209ms)
+✔ rejects malformed public feed: empty class name (0.125541ms)
+✔ rejects malformed public feed: missing class id (0.074583ms)
+✔ rejects malformed public feed: invalid version (0.06775ms)
+✔ rejects malformed public feed: missing title (0.0855ms)
+✔ rejects malformed public feed: oversized subject (0.067042ms)
+✔ rejects malformed public feed: invalid updatedAt (0.062958ms)
+✔ rejects malformed public feed: impossible date (0.082416ms)
+✔ rejects malformed public feed: precision mismatch (0.049375ms)
+✔ rejects malformed public feed: invalid minute date (0.056958ms)
+✔ rejects malformed public feed: minute without zone (0.141834ms)
+✔ accepts none and minute precision values from the Academic model (0.276209ms)
+✔ rejects unsafe or missing pagination cursor undefined (0.124625ms)
+✔ rejects unsafe or missing pagination cursor -1 (0.065542ms)
+✔ rejects unsafe or missing pagination cursor 0 (0.060959ms)
+✔ rejects unsafe or missing pagination cursor 2 (0.057541ms)
+✔ rejects unsafe or missing pagination cursor 1.5 (0.064958ms)
+✔ rejects unsafe or missing pagination cursor 9007199254740992 (0.06ms)
+✔ rejects unsafe or missing pagination cursor https://evil.test (0.056417ms)
+✔ rejects duplicate assignments across pages rather than showing a partial snapshot (0.204ms)
+✔ rejects a class change while paging (0.182041ms)
+✔ rejects oversized pages, skipped offsets, and empty continuation pages (0.354792ms)
+✔ bounds pagination and does not return a partial result at the limit (0.132417ms)
+✔ propagates later authorization errors without returning previous pages (0.130875ms)
+✔ passes cancellation to the client and checks already aborted signals (0.139334ms)
+✔ validates credentials before making requests (0 chars) (0.083375ms)
+✔ validates credentials before making requests (95 chars) (0.16125ms)
+✔ validates credentials before making requests (96 chars) (0.035875ms)
+✔ validates credentials before making requests (103 chars) (0.03825ms)
+✔ validates credentials before making requests (4 chars) (0.033208ms)
+✔ rejects invalid loader bounds {"pageSize":0} (0.039959ms)
+✔ rejects invalid loader bounds {"pageSize":201} (0.029125ms)
+✔ rejects invalid loader bounds {"pageSize":1.5} (0.022042ms)
+✔ rejects invalid loader bounds {"maxPages":0} (0.026583ms)
+✔ rejects invalid loader bounds {"maxPages":null} (1.006083ms)
+✔ consumes and removes the handoff before using its raw credential (0.197917ms)
+✔ accepts a screenKey object handoff and removes malformed handoffs too (0.333083ms)
+✔ reports inaccessible handoff storage without exposing the credential (0.16075ms)
+✔ manual entry authorizes the actual client, clears the input, and revocation removes old cards (24.260583ms)
+✔ privacy failure clears previous cards and forgets the credential (1.784584ms)
+✔ network failure clears cards but allows a memory-only retry (1.41725ms)
+✔ teacher handoff is removed once and never copied into the input or persistent storage (2.001708ms)
+✔ changing credentials clears the previous class before loading another (1.393541ms)
+✔ unsupported or rejected fullscreen is handled with inline feedback (1.349791ms)
+✔ creates a local draft that is not published (1.927208ms)
+✔ a local draft is never mistaken for published (0.163667ms)
+✔ only a server-confirmed assignment moves a draft to published (0.314625ms)
+✔ mid-flight drafts reconcile to unknown, never to published (0.270041ms)
+✔ corrupt storage is reported without erasing original bytes (0.57225ms)
+✔ save replaces by id and stamps updatedAt immutably (0.148917ms)
+✔ remove deletes only the named draft (0.478167ms)
+✔ draft storage isolates accounts and does not adopt old global drafts (0.068958ms)
+✔ explicit legacy import preserves source and is idempotent (0.194666ms)
+✔ quota errors are explicit and capacity never silently removes a draft (15.059458ms)
+✔ invalid records and failed legacy import preserve data and report errors (0.239667ms)
+✔ import distinguishes same titles with different due dates (0.111667ms)
+✔ legacy import is atomic at capacity and deduplicates exact content (9.400125ms)
+✔ keystore survives reload within a session (0.083417ms)
+✔ lost response replays exact request after reload without creating twice (6.355125ms)
+✔ changed content cannot reuse an unresolved intention (0.6495ms)
+✔ journal isolates instance and account (0.244292ms)
+✔ storage failure prevents mutation and corruption is explicit (0.267125ms)
+✔ success then failed persistence retains original pending key on disk (0.418625ms)
+✔ expired authentication retains the original key until the original account returns (0.181292ms)
+✔ definite rejection is terminal but service failure remains pending (0.216959ms)
+✔ only browser assets are served and documents have strict CSP (32.277625ms)
+✔ cross-site writes are refused before upstream and v1 headers survive (8.585875ms)
+✔ legacy publishing is blocked while management and v1 remain reachable (6.145625ms)
+✔ management console assets are mapped and absolute asset references are rewritten (2.236625ms)
+✔ upstream deadline covers a stalled response body (43.324167ms)
+✔ expected actor is checked with the exact incoming cookie before a mutation (4.685542ms)
+✔ only fixed HTTP origins are accepted as upstream configuration (0.28675ms)
+✔ identity changes block commands before sending and invalidate the workspace (0.836625ms)
+✔ a stale result after account change is never adopted (0.137917ms)
+✔ revocation clears the official view and a suspended client stays suspended (0.143584ms)
+ℹ tests 120
+ℹ suites 0
+ℹ pass 120
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181.979042
+ℹ start of coverage report
+ℹ -------------------------------------------------------------------------------------------------------------------------------------------------------
+ℹ file                            | line % | branch % | funcs % | uncovered lines
+ℹ -------------------------------------------------------------------------------------------------------------------------------------------------------
+ℹ haiz-world-delivery             |        |          |         | 
+ℹ  .claude                        |        |          |         | 
+ℹ   worktrees                     |        |          |         | 
+ℹ    teacher-one-publish-v1.4     |        |          |         | 
+ℹ     web                         |        |          |         | 
+ℹ      teacher                    |        |          |         | 
+ℹ       js                        |        |          |         | 
+ℹ        api.js                   |  98.59 |    87.50 |   90.20 | 166-167 352-354
+ℹ        classroom-feed.js        | 100.00 |   100.00 |  100.00 | 
+ℹ        classroom.js             |  32.75 |    82.35 |   27.78 | 10-15 17-20 22-26 28-36 38-57 59-64 66-71 73-79 81-114 116-126 151-153 157-158 167-168
+ℹ        drafts.js                |  95.58 |    78.48 |   96.55 | 42-45 165-166 215-216 222-223
+ℹ        journal.js               |  93.33 |    85.37 |   92.86 | 22-23 70-72
+ℹ        session-client.js        | 100.00 |    85.71 |  100.00 | 
+ℹ       server.mjs                |  95.19 |    81.52 |   87.50 | 135-136 197-199 204-208
+ℹ -------------------------------------------------------------------------------------------------------------------------------------------------------
+ℹ all files                       |  83.33 |    82.93 |   80.08 | 
+ℹ -------------------------------------------------------------------------------------------------------------------------------------------------------
+ℹ end of coverage report

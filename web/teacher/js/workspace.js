@@ -1,25 +1,39 @@
 import { ApiError, STATUS, DUE_PRECISION, ROUTES, contentBody, createAssignmentCommands, validateDraft, validateAssignment } from './api.js';
 import { createDraftStore, DRAFT_STATE } from './drafts.js';
 import { createJournal } from './journal.js';
+import { createSessionClient } from './session-client.js';
+import { createSessionEvents } from './session-events.js';
 import * as ui from './ui.js';
 
 const active = assignment => [STATUS.PUBLISHED, STATUS.REVISED].includes(assignment.status);
 
 /** @param {{root:HTMLElement, academicClient:ReturnType<import('./api.js').createClient>}} options */
 export function createWorkspace({ root, academicClient }) {
-  const commands = createAssignmentCommands(academicClient);
+  let commands = createAssignmentCommands(academicClient);
+  let sessionClient;
+  let sessionInvalid = false;
+  let generation = 0;
   let drafts;
   let journal;
   let wired = false;
   let busy = false;
+  const editOwnerKey = 'haiz.teacher.edit-owner';
+  let editOwner;
+  try {
+    editOwner = sessionStorage.getItem(editOwnerKey) ?? crypto.randomUUID();
+    sessionStorage.setItem(editOwnerKey, editOwner);
+  } catch { editOwner = crypto.randomUUID(); }
   let state = { user: null, classes: [], selectedClassId: '', assignments: [], view: 'workspace', composer: null, detail: null, detailHistory: null, offline: false };
   const update = changes => { state = { ...state, ...changes }; };
+  const sessionEvents = createSessionEvents({ onChange: () => {
+    if (state.user && !state.offline && !sessionInvalid) invalidateSession();
+  } });
   const selectedClass = () => state.classes.find(item => item.id === state.selectedClassId);
   const announce = (kind, title, message, actions = []) => {
     ui.byId('notices').replaceChildren(ui.notice(kind, title, message, actions));
   };
   const guarded = fn => async (...args) => {
-    if (busy) return;
+    if (busy || sessionInvalid) return;
     busy = true;
     root.setAttribute('aria-busy', 'true');
     try { await fn(...args); }
@@ -28,7 +42,7 @@ export function createWorkspace({ root, academicClient }) {
   };
 
   function render() {
-    if (!drafts) return;
+    if (!drafts || sessionInvalid) return;
     for (const view of ['workspace', 'published', 'history']) {
       ui.byId(`${view}-view`).hidden = state.view !== view;
       const link = document.querySelector(`[data-view="${view}"]`);
@@ -38,7 +52,7 @@ export function createWorkspace({ root, academicClient }) {
     for (const [view, count] of Object.entries({ workspace: local.length, published: state.assignments.filter(active).length, history: state.assignments.length })) {
       document.querySelector(`[data-view-count="${view}"]`).textContent = count;
     }
-    ui.byId('draft-list').replaceChildren(ui.draftList(local, { current: state.composer?.id, onOpen: openDraft, onResolve: guarded(resolveDraft) })
+    ui.byId('draft-list').replaceChildren(ui.draftList(local, { current: state.composer?.id, onOpen: guarded(draft => { persistComposer(); openDraft(draft); }), onResolve: guarded(resolveDraft) })
       ?? ui.el('div', { class: 'empty' }, ui.el('p', {}, '新建一项草稿，先整理，再检查。')));
     ui.byId('published-list').replaceChildren(ui.publishedList(state.assignments, { current: state.detail?.id, onOpen: openDetail }));
     ui.byId('history-list').replaceChildren(ui.historyList(state.assignments, { current: state.detail?.id, onOpen: openDetail }));
@@ -71,7 +85,7 @@ export function createWorkspace({ root, academicClient }) {
     ui.byId('f-due-minute-row').hidden = precision !== 'minute';
     ui.byId('f-due-date').value = precision === 'date' ? draft.due ?? '' : '';
     ui.byId('f-due-minute').value = precision === 'minute' ? minuteLocalValue(draft.due) : '';
-    const unresolved = draft.pendingIntent && journal?.get(draft.pendingIntent)?.status === 'pending';
+    const unresolved = Boolean(draft.pendingIntent);
     for (const input of ui.byId('composer-form').querySelectorAll('input,textarea,select')) {
       if (unresolved) input.disabled = true;
       else if (input.id !== 'f-class') input.disabled = false;
@@ -102,12 +116,14 @@ export function createWorkspace({ root, academicClient }) {
   }
   function persistComposer() {
     if (!state.composer) return;
+    if (state.composer.pendingIntent) return;
     const draft = readComposer();
-    drafts.save(draft);
     update({ composer: draft });
+    drafts.save(draft);
   }
   function openDraft(draft) { update({ composer: { ...draft }, view: 'workspace' }); render(); }
   function newDraft() {
+    persistComposer();
     const cls = selectedClass();
     openDraft(drafts.create({ classId: cls?.id ?? '', className: cls?.title ?? '' }));
     ui.byId('f-subject').focus();
@@ -117,7 +133,7 @@ export function createWorkspace({ root, academicClient }) {
     const a = state.detail;
     if (!a) { host.replaceChildren(ui.el('div', { class: 'empty' }, ui.el('p', {}, '选择一项作业查看内容和版本历史。'))); return; }
     const actions = [ui.button('版本历史', guarded(() => openHistoryFor(a)), 'btn quiet')];
-    if (a.status !== STATUS.RETRACTED) actions.unshift(ui.button('修改内容', () => startEdit(a), 'btn secondary'));
+    if (a.status !== STATUS.RETRACTED) actions.unshift(ui.button('修改内容', guarded(() => startEdit(a)), 'btn secondary'));
     if (a.status === STATUS.DRAFT) actions.push(ui.button('进入 Review', guarded(() => reviewServer(a)), 'btn'));
     if (a.status === STATUS.REVIEW) actions.push(ui.button('确认发布', guarded(() => confirmTransition(a, 'publish')), 'btn confirm'));
     if (active(a)) actions.push(ui.button('撤回', guarded(() => confirmTransition(a, 'retract')), 'btn danger'));
@@ -130,21 +146,33 @@ export function createWorkspace({ root, academicClient }) {
   }
   function openDetail(a) { update({ detail: a, detailHistory: null }); render(); }
   async function openHistoryFor(a) {
+    const currentGeneration = generation;
     const { data } = await commands.history(a.id);
-    update({ detail: a, detailHistory: data.revisions });
+    if (currentGeneration === generation) update({ detail: a, detailHistory: data.revisions });
   }
   function localFor(a) {
-    return drafts.all().find(draft => draft.publishedId === a.id) ?? drafts.create({
+    return drafts.create({
       ...contentBody(a), classId: a.classId, className: state.classes.find(c => c.id === a.classId)?.title ?? '',
       publishedId: a.id, publishedVersion: a.version, serverStatus: a.status,
     });
   }
-  function startEdit(a) {
-    const saved = localFor(a);
-    if (saved.pendingIntent && journal.get(saved.pendingIntent)?.status === 'pending') { openDraft(saved); return; }
-    const draft = { ...saved, ...contentBody(a), publishedVersion: a.version, serverStatus: a.status, state: DRAFT_STATE.LOCAL, editing: true };
-    drafts.save(draft); openDraft(draft);
-    announce('info', '修改保留在本机', `基于服务器版本 v${a.version}。保存后才会生成新版本。`);
+  async function startEdit(a) {
+    persistComposer();
+    const related = drafts.all().filter(item => item.publishedId === a.id);
+    const pending = related.find(item => item.pendingIntent);
+    if (pending) { openDraft(pending); return; }
+    const edits = related.filter(item => item.editing === true && item.state === DRAFT_STATE.LOCAL);
+    const saved = edits.find(item => item.editOwner === editOwner) ?? edits[0];
+    const draft = saved ? saved.editOwner === editOwner ? saved : drafts.create({ ...saved,
+      id: crypto.randomUUID(), editOwner, pendingIntent: null }) : drafts.create({ ...contentBody(a), classId: a.classId,
+      className: state.classes.find(c => c.id === a.classId)?.title ?? '', publishedId: a.id,
+      publishedVersion: a.version, serverStatus: a.status, editing: true, editOwner });
+    openDraft(draft);
+    if (saved && saved.publishedVersion !== a.version) {
+      await showConflict(draft);
+      return;
+    }
+    announce('info', saved ? '继续本机未提交的修改' : '修改保留在本机', `基于服务器版本 v${draft.publishedVersion}。保存后才会生成新版本。`);
   }
 
   function requestFor(draft, operation) {
@@ -153,7 +181,7 @@ export function createWorkspace({ root, academicClient }) {
       body: operation === 'edit' ? { ...contentBody(draft), expectedVersion: draft.publishedVersion } : { expectedVersion: draft.publishedVersion } };
   }
   function adopt(draft, assignment) {
-    const next = { ...draft, publishedId: assignment.id, publishedVersion: assignment.version, serverStatus: assignment.status,
+    const next = { ...draft, ...contentBody(assignment), publishedId: assignment.id, publishedVersion: assignment.version, serverStatus: assignment.status,
       pendingIntent: null, editing: false, state: active(assignment) || assignment.status === STATUS.RETRACTED ? DRAFT_STATE.PUBLISHED
         : assignment.status === STATUS.REVIEW ? DRAFT_STATE.IN_REVIEW : DRAFT_STATE.LOCAL };
     drafts.save(next);
@@ -163,15 +191,24 @@ export function createWorkspace({ root, academicClient }) {
   }
   async function mutate(draft, operation) {
     if (!journal || state.offline) throw new Error('离线草稿不能发布，请先登录并连接教务服务。');
+    const operationGeneration = generation;
+    const operationJournal = journal;
+    const operationDrafts = drafts;
     const intent = `${draft.id}:${operation}:${draft.publishedVersion ?? 0}`;
     const staged = { ...draft, pendingIntent: intent, state: DRAFT_STATE.SUBMITTING };
     drafts.save(staged); update({ composer: staged });
     try {
-      const response = await journal.execute(intent, requestFor(draft, operation));
+      const response = await operationJournal.execute(intent, requestFor(draft, operation));
+      if (operationGeneration !== generation) return null;
       const assignment = validateAssignment(response.data.assignment);
       return { assignment, draft: adopt(staged, assignment) };
     } catch (error) {
-      const entry = journal.get(intent);
+      if (operationGeneration !== generation) {
+        operationDrafts.save({ ...staged, state: DRAFT_STATE.UNKNOWN });
+        return null;
+      }
+      if (sessionInvalid) return null;
+      const entry = operationJournal.get(intent);
       const next = { ...staged, state: entry?.status === 'rejected' ? DRAFT_STATE.LOCAL : DRAFT_STATE.UNKNOWN };
       drafts.save(next); update({ composer: next, view: 'workspace' });
       if (entry?.status === 'rejected') {
@@ -179,7 +216,7 @@ export function createWorkspace({ root, academicClient }) {
         drafts.save({ ...next, pendingIntent: null });
         update({ composer: { ...next, pendingIntent: null } });
       }
-      if (error.code === 'VERSION_CONFLICT') await showConflict(next);
+      if (error.code === 'VERSION_CONFLICT') await showConflict({ ...next, pendingIntent: null });
       else announce(entry?.status === 'rejected' ? 'stop' : 'warn', entry?.status === 'rejected' ? '服务器拒绝了操作' : '结果尚未确认',
         `${error.message} 原始内容已保留；结果未知时请恢复原请求，不要新建相同作业。`);
       return null;
@@ -197,8 +234,11 @@ export function createWorkspace({ root, academicClient }) {
     drafts.save(draft);
     let result;
     if (!draft.publishedId) result = await mutate(draft, 'create');
-    else if (draft.serverStatus === STATUS.REVIEW) { openDetail((await commands.read(draft.publishedId)).data.assignment); update({ view: 'history' }); return; }
-    else result = await mutate(draft, 'edit');
+    else if (draft.serverStatus === STATUS.REVIEW) {
+      const server = (await commands.read(draft.publishedId)).data.assignment;
+      if (JSON.stringify(contentBody(draft)) === JSON.stringify(contentBody(server))) { openDetail(server); update({ view: 'history' }); return; }
+      result = await mutate(draft, 'edit');
+    } else result = await mutate(draft, 'edit');
     if (!result) return;
     result = await mutate(result.draft, 'review');
     if (!result) return;
@@ -222,11 +262,12 @@ export function createWorkspace({ root, academicClient }) {
   }
   async function confirmTransition(a, operation) {
     const retract = operation === 'retract';
+    const currentGeneration = generation;
     const yes = await ui.askConfirm({ title: retract ? '撤回这项作业？' : '正式发布这项作业？',
       body: ui.el('div', {}, ui.el('p', {}, `班级：${state.classes.find(c => c.id === a.classId)?.title ?? a.classId} · 版本 v${a.version}`),
         ui.studentPreview(a), ui.el('p', {}, retract ? '撤回会保留历史；学生的私人笔记不会删除。' : '这是教师自己的检查。服务器确认后才显示已发布；学生刷新后可获取正式内容。')),
       confirmLabel: retract ? '确认撤回' : '正式发布', tone: retract ? 'danger' : 'confirm' });
-    if (!yes) return;
+    if (!yes || currentGeneration !== generation || sessionInvalid) return;
     const draft = { ...localFor(a), ...contentBody(a), publishedVersion: a.version };
     const result = await mutate(draft, operation);
     if (!result) return;
@@ -235,7 +276,9 @@ export function createWorkspace({ root, academicClient }) {
   }
 
   async function showConflict(draft) {
+    const currentGeneration = generation;
     const server = (await commands.read(draft.publishedId)).data.assignment;
+    if (currentGeneration !== generation) return;
     ui.byId('conflict-body').replaceChildren(ui.el('p', {}, `服务器当前为 v${server.version}（${server.status}）。未提交的修改已保存在本机。`), ui.conflictDiff(draft, server));
     ui.byId('conflict-retry').disabled = server.status === STATUS.RETRACTED;
     ui.byId('conflict-retry').onclick = () => {
@@ -251,23 +294,37 @@ export function createWorkspace({ root, academicClient }) {
     ui.byId('conflict-dialog').showModal();
   }
   async function resolveDraft(draft) {
+    const currentGeneration = generation;
+    const operationJournal = journal;
+    const operationCommands = commands;
     if (!draft.pendingIntent) {
-      if (draft.publishedId) { const { data } = await commands.read(draft.publishedId); adopt(draft, data.assignment); }
+      if (draft.publishedId) { const { data } = await operationCommands.read(draft.publishedId); if (currentGeneration === generation) adopt(draft, data.assignment); }
       else announce('info', '本机草稿', '没有已保存的服务器请求。请检查后进入 Review。');
       return;
     }
     try {
-      const response = await journal.replay(draft.pendingIntent);
+      const response = await operationJournal.replay(draft.pendingIntent);
+      if (currentGeneration !== generation) return;
       const a = validateAssignment(response.data.assignment);
       adopt(draft, a);
       // Receipt confirms the original command; a fresh read shows any later revisions.
-      const latest = (await commands.read(a.id)).data.assignment;
+      const latest = (await operationCommands.read(a.id)).data.assignment;
+      if (currentGeneration !== generation) return;
       adopt(draft, latest);
       announce('ok', '已核对服务器结果', `当前状态 ${latest.status} · v${latest.version}。原请求使用相同标识恢复。`);
       await refreshAfterCommand();
     } catch (error) {
-      if (error.code === 'VERSION_CONFLICT') await showConflict(draft);
-      else announce('warn', '恢复尚未完成', `${error.message} 原始请求仍保留，请稍后再试。`);
+      if (currentGeneration !== generation || sessionInvalid) return;
+      const entry = operationJournal.get(draft.pendingIntent);
+      const retained = entry?.status === 'rejected' ? { ...draft, pendingIntent: null, state: DRAFT_STATE.LOCAL } : draft;
+      if (entry?.status === 'rejected') {
+        journal.clear(draft.pendingIntent); drafts.save(retained);
+        update({ composer: retained, view: 'workspace' });
+      }
+      if (error.code === 'VERSION_CONFLICT') await showConflict(retained);
+      else announce('warn', '恢复尚未完成', entry?.status === 'rejected'
+        ? `${error.message} 服务器已拒绝原请求，本机内容仍保留，可重新检查。`
+        : `${error.message} 原始请求仍保留，请稍后再试。`);
     }
   }
   function renderRecovery() {
@@ -281,10 +338,11 @@ export function createWorkspace({ root, academicClient }) {
   }
 
   async function refreshAssignments() {
-    if (!state.selectedClassId || state.offline) return;
+    if (!state.selectedClassId || state.offline || sessionInvalid) return;
+    const currentGeneration = generation;
     const classId = state.selectedClassId;
     const { data } = await commands.list(classId);
-    if (classId === state.selectedClassId) update({ assignments: data.assignments });
+    if (currentGeneration === generation && classId === state.selectedClassId) update({ assignments: data.assignments });
   }
   function renderClassSelector() {
     const select = ui.el('select', { id: 'active-class', 'aria-label': '当前班级' },
@@ -305,7 +363,19 @@ export function createWorkspace({ root, academicClient }) {
   function wire() {
     if (wired) return;
     wired = true; ui.wireConfirmDialog();
+    const revalidate = () => {
+      if (!document.hidden && !state.offline && !sessionInvalid) sessionClient?.validate().catch(error => {
+        if (!sessionInvalid) announce('warn', '暂时无法核对登录身份', error.message);
+      });
+    };
+    document.addEventListener('visibilitychange', revalidate);
+    window.addEventListener('focus', revalidate);
+    window.addEventListener('pageshow', event => {
+      if (event.persisted && state.user && !state.offline) invalidateSession();
+      else revalidate();
+    });
     for (const link of document.querySelectorAll('button[data-view]')) link.addEventListener('click', () => {
+      if (busy) return;
       try { persistComposer(); update({ view: link.dataset.view }); history.replaceState(null, '', `#${state.view}`); render(); }
       catch (error) { announce('stop', '草稿未保存', error.message); }
     });
@@ -328,7 +398,10 @@ export function createWorkspace({ root, academicClient }) {
       try { persistComposer(); renderComposer(); }
       catch (error) { announce('stop', '本机保存失败', error.message); }
     };
-    ui.byId('logout').onclick = guarded(async () => { await academicClient.send('/api/auth/logout', { method: 'POST', body: {} }); location.reload(); });
+    ui.byId('logout').onclick = guarded(async () => {
+      await academicClient.send('/api/auth/logout', { method: 'POST', body: {} });
+      sessionEvents.publish(); invalidateSession(); location.reload();
+    });
     ui.byId('import-legacy').onclick = guarded(async () => {
       if (await ui.askConfirm({ title: '导入旧版本机草稿？', body: '请确认这些草稿属于你。导入后仍是本机草稿，旧数据会原样保留。', confirmLabel: '确认归属并导入' })) {
         ui.toast(`已导入 ${drafts.importLegacy()} 项本机草稿`);
@@ -336,33 +409,53 @@ export function createWorkspace({ root, academicClient }) {
     });
     ui.byId('subject-suggestions').replaceChildren(...ui.SUBJECT_SUGGESTIONS.map(value => ui.el('option', { value })));
   }
+  function invalidateSession() {
+    sessionInvalid = true; generation++;
+    update({ user: null, classes: [], selectedClassId: '', assignments: [], composer: null, detail: null, detailHistory: null });
+    for (const id of ['published-list', 'history-list', 'published-detail', 'history-detail', 'class-toolbar', 'draft-list']) ui.byId(id).replaceChildren();
+    for (const id of ['review-panel', 'preview-panel', 'recovery', 'notices', 'conflict-body', 'confirm-body']) ui.byId(id).replaceChildren();
+    for (const input of ui.byId('composer-form').querySelectorAll('input,textarea')) input.value = '';
+    for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+    ui.byId('app').hidden = true; ui.byId('entry').hidden = false; ui.byId('who').hidden = true;
+    ui.byId('login-error').hidden = false;
+    ui.byId('login-error').textContent = '登录身份或权限已变化。原账号草稿和原请求已保留，请重新登录。';
+  }
   async function boot() {
-    const identity = (await commands.identity()).data;
+    const identity = (await academicClient.send(ROUTES.identity())).data;
+    sessionInvalid = false; generation++;
+    const currentGeneration = generation;
     if (!identity?.userId || !identity.instanceId) throw new Error('服务器身份格式无效。');
     if (!['teacher', 'admin'].includes(identity.role)) throw new ApiError({ status: 403, code: 'TEACHER_ONLY', message: '该账号没有教师工作台权限。请退出后使用教师账号。' });
+    if (!Array.isArray(identity.authorizedClassIds)) throw new Error('服务器授权班级格式无效。');
+    sessionClient = createSessionClient({ client: academicClient, identity, onInvalid: () => { if (currentGeneration === generation) invalidateSession(); } });
+    commands = createAssignmentCommands(sessionClient);
     const scope = `${location.origin}/${identity.instanceId}/${identity.userId}`;
     drafts = createDraftStore({ scope });
+    const boundClient = sessionClient;
     journal = createJournal({ storage: localStorage, scope, send: async (path, options) => {
-      const response = await academicClient.send(path, options);
+      const response = await boundClient.send(path, options);
       validateAssignment(response.data?.assignment);
       return response;
     } });
     drafts.reconcileOnLoad();
-    const { classes } = await academicClient.send('/api/classes');
+    const { classes } = await sessionClient.send('/api/classes');
+    if (currentGeneration !== generation) throw new Error('登录身份已变化，请重新登录。');
     if (!Array.isArray(classes)) throw new Error('服务器班级列表格式无效。');
     const allowed = classes.filter(c => identity.authorizedClassIds.includes(c.id));
     update({ user: identity, classes: allowed, selectedClassId: allowed[0]?.id ?? '', offline: false,
+      composer: null, detail: null, detailHistory: null, assignments: [],
       view: ['workspace', 'published', 'history'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'workspace' });
     wire(); renderClassSelector(); await refreshAssignments(); render();
     return { needsLogin: false, identity };
   }
   function offline() {
+    sessionInvalid = false; generation++; sessionClient = null;
     drafts = createDraftStore({ scope: 'guest-local' }); journal = null;
     update({ offline: true, classes: [], assignments: [], selectedClassId: '', composer: null, view: 'workspace' });
     wire(); renderClassSelector(); render();
     announce('info', '离线整理模式', '这里的草稿仅保存在本机离线空间。登录后不会自动归入任何账号，也不会自动发布。');
   }
-  return { boot, offline, render };
+  return { boot, offline, render, authChanged: () => { sessionEvents.publish(); if (state.user) invalidateSession(); } };
 }
 
 function minuteLocalValue(iso) {

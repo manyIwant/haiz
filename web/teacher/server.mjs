@@ -127,6 +127,22 @@ export function createTeacherServer({
     let upstream;
     let content;
     try {
+      const expectedActor = req.headers['x-haiz-expected-actor'];
+      if (expectedActor !== undefined) {
+        let expected;
+        try { expected = JSON.parse(decodeURIComponent(expectedActor)); } catch { return sendJson(res, 400, 'INVALID_ACTOR', '身份检查格式无效。'); }
+        if (!Array.isArray(expected) || expected.length !== 2 || !expected.every(value => typeof value === 'string' && value.length > 0 && value.length <= 200)) {
+          return sendJson(res, 400, 'INVALID_ACTOR', '身份检查格式无效。');
+        }
+        const check = await fetch(academic + '/api/v1/identity', {
+          headers: { accept: 'application/json', ...(headers.cookie ? { cookie: headers.cookie } : {}) },
+          redirect: 'manual', signal: AbortSignal.timeout(upstreamTimeoutMs),
+        });
+        const identity = JSON.parse((await readLimited(check.body, MAX_UPSTREAM_BODY)).toString('utf8'));
+        if (!check.ok || identity.data?.instanceId !== expected[0] || identity.data?.userId !== expected[1]) {
+          return sendJson(res, 401, 'IDENTITY_CHANGED', '登录身份已变化，操作未转发。请重新登录原账号后恢复原请求。');
+        }
+      }
       upstream = await fetch(academic + path, {
         method: req.method,
         headers: { accept: document ? 'text/html' : 'application/json', ...headers },

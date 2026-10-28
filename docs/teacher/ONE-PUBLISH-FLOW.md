@@ -15,7 +15,7 @@ stateDiagram-v2
     [*] --> LocalDraft: 教师新建草稿 (纯本地)
     LocalDraft --> ServerDraft: 进入 Review 第一步 (POST /assignments)
     ServerDraft --> Review: 进入 Review 第二步 (POST /assignments/{id}/review)
-    Review --> LocalDraft: 修改内容 (PATCH /assignments/{id})
+    Review --> ServerDraft: 修改内容 (PATCH /assignments/{id})
     Review --> Published: 教师确认发布 (POST /assignments/{id}/publish)
     Published --> Revised: 修改已发布内容 (PATCH /assignments/{id})
     Revised --> Revised: 再次修改内容 (PATCH /assignments/{id})
@@ -29,7 +29,7 @@ stateDiagram-v2
 | **Local Draft** | 仅当前设备浏览器 | 本机草稿，学生不可见，服务器无记录 |
 | **Server Draft** | 仅教师/管理员 | 已在服务器持久化创建，学生端不可见，教室屏不可见 |
 | **Review** | 仅教师/管理员 | 教师本人审核确认阶段，非独立教务审批，学生不可见 |
-| **Published** | 全体获准成员 + 教室屏 | 正式发布（v1），学生可通过拉取或刷新获取，教室屏展示 |
+| **Published** | 全体获准成员 + 教室屏 | 正式发布（首次通常为 v3），学生可通过拉取或刷新获取，教室屏展示 |
 | **Revised** | 全体获准成员 + 教室屏 | 已发布作业被修改（v2, v3...），学生同步最新版，历史可溯 |
 | **Retracted** | 教师可见 / 学生标记不可用 | 已撤回终态，正式列表隐去，保留学生私人笔记，保留历史 |
 
@@ -74,7 +74,7 @@ stateDiagram-v2
   - 工作台捕获 409 后，弹出**版本冲突对比窗口 (Conflict Diff Table)**：
     - 清晰并排呈现“你修改的内容” vs “服务器上的最新内容”。
     - 本地未提交草稿完好保留。
-    - 教师核对差异后，点击“使用最新版本继续检查”，自动以 `expectedVersion: 4` 重新对齐并提交，绝不发生静默覆盖。
+    - 教师核对差异后，点击“使用最新版本继续检查”，仅以 `expectedVersion: 4` 更新检查基准，不自动提交。教师必须再次点击“保存修改”。
 
 ### 第五步：安全撤回 (Safe Retract)
 - 发现发布错误时，在已发布作业卡片点击“撤回”。
@@ -83,7 +83,7 @@ stateDiagram-v2
 - 撤回后：
   - 从普通“已发布”（Published）列表移出。
   - 归入“历史”（History）归档视图，保留全部历史修订记录。
-  - 学生端在获取事件后将作业标记为不可用，但学生之前记录的个人笔记、日程计划完好保留。
+  - 教师端只调用正式作业撤回接口，不删除学生私人数据。实际 Flutter 笔记保留与撤回呈现由 03 组验收；本组浏览器只验证了独立的虚构笔记标记。
 
 ---
 

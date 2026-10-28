@@ -94,6 +94,22 @@ test('upstream deadline covers a stalled response body', async t => {
   assert.equal((await response.json()).error.code, 'ACADEMIC_UNAVAILABLE');
 });
 
+test('expected actor is checked with the exact incoming cookie before a mutation', async t => {
+  const seen = [];
+  const { origin } = await fixture(t, (req, res) => {
+    seen.push({ path: req.url, cookie: req.headers.cookie });
+    if (req.url === '/api/v1/identity') return json(res, { data: { instanceId: 'school', userId: req.headers.cookie === 'hsid=A' ? 'A' : 'B' } });
+    json(res, { data: { accepted: true } });
+  });
+  const headers = { Cookie: 'hsid=B', 'X-HAIZ-Expected-Actor': encodeURIComponent(JSON.stringify(['school', 'A'])) };
+  const blocked = await fetch(origin + '/api/v1/assignments/a1/publish', { method: 'POST', headers, body: '{}' });
+  assert.equal(blocked.status, 401);
+  assert.equal(seen.filter(item => item.path.endsWith('/publish')).length, 0);
+  const accepted = await fetch(origin + '/api/v1/assignments/a1/publish', { method: 'POST', headers: { ...headers, Cookie: 'hsid=A' }, body: '{}' });
+  assert.equal(accepted.status, 200);
+  assert.deepEqual(seen.slice(-2).map(item => item.cookie), ['hsid=A', 'hsid=A']);
+});
+
 test('only fixed HTTP origins are accepted as upstream configuration', () => {
   for (const academicOrigin of ['file:///etc/passwd', 'http://user:password@localhost', 'https://example.com/api', 'http://localhost?x=1', 'http://localhost/#x']) {
     assert.throws(() => createTeacherServer({ academicOrigin }), /origin/);

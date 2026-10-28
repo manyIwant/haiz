@@ -1,588 +1,614 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { createServer } from 'node:net';
-import { tmpdir } from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { fixture, client, PASSWORD } from '../../../../services/academic/tests/helpers.mjs';
 import { createTeacherServer } from '../../server.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const teacherRoot = resolve(__dirname, '../..');
-const academicRoot = resolve(teacherRoot, '../../services/academic');
+const teacherRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const evidenceDirectory = resolve(teacherRoot, '../../docs/teacher/evidence');
+const port = Number(process.env.HAIZ_TEACHER_QA_PORT ?? 8788);
+const origin = `http://127.0.0.1:${port}`;
+const cleanups = [];
+const report = {
+  generatedAt: new Date().toISOString(), origin, syntheticDataOnly: true,
+  scenarios: [], consoleErrors: [], pageErrors: [], responsive: [], screenshots: [],
+  limitations: [
+    'Chromium only; Firefox and Safari are not exercised by this harness.',
+    'Student checks use the real manual-refresh HTTP endpoint; no Flutter automatic delta synchronization is claimed.',
+    'Private-note preservation checks a synthetic browser-owned note marker; Flutter private storage is outside this harness.',
+    'Navigation timing is observational and is not a Lighthouse performance audit.',
+  ],
+};
+let browser;
+let server;
+let shuttingDown = false;
 
-const PASSWORD = 'SyntheticTestPassword2026!';
-const CHROMIUM_EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-  (existsSync('/Users/a11/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell')
-    ? '/Users/a11/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell'
-    : undefined);
-
-async function unusedPort() {
-  const s = createServer();
-  s.listen(0, '127.0.0.1');
-  await once(s, 'listening');
-  const port = s.address().port;
-  await new Promise(r => s.close(r));
-  return port;
+async function cleanup() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  await browser?.close().catch(() => {});
+  if (server?.listening) await new Promise(done => server.close(done));
+  for (const dispose of [...cleanups].reverse()) await dispose();
 }
+process.once('SIGTERM', () => { void cleanup().finally(() => process.exit(0)); });
+process.once('SIGINT', () => { void cleanup().finally(() => process.exit(0)); });
 
-async function startAcademic(dbPath, port) {
-  const child = spawn(process.execPath, [join(academicRoot, 'server.mjs')], {
-    cwd: academicRoot,
-    env: {
-      ...process.env,
-      HAIZ_DB_PATH: dbPath,
-      HAIZ_HOST: '127.0.0.1',
-      HAIZ_PORT: String(port),
-      HAIZ_ADMIN_LOGIN: 'synthetic_admin',
-      HAIZ_ADMIN_PASSWORD: PASSWORD,
-      HAIZ_QQ_RELAY_SECRET: '',
-      HAIZ_SCHOOL_ROSTER_SECRET: '',
-      HAIZ_SCHOOL_ISSUER: '',
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-
-  let output = '';
-  await new Promise((resolveReady, reject) => {
-    const timer = setTimeout(() => {
-      child.kill();
-      reject(new Error(`Academic startup timed out: ${output}`));
-    }, 12000);
-    const collect = chunk => {
-      output += chunk.toString();
-      if (output.includes(`http://127.0.0.1:${port}`)) {
-        clearTimeout(timer);
-        resolveReady();
-      }
-    };
-    child.stdout.on('data', collect);
-    child.stderr.on('data', collect);
-    child.once('error', err => { clearTimeout(timer); reject(err); });
-    child.once('exit', code => { clearTimeout(timer); reject(new Error(`Academic exited: ${code}`)); });
-  });
-
-  return {
-    port,
-    origin: `http://127.0.0.1:${port}`,
-    async stop() {
-      if (child.exitCode !== null || child.signalCode !== null) return;
-      const exited = once(child, 'exit');
-      child.kill('SIGTERM');
-      await exited;
-    },
-  };
-}
-
-async function startTeacher(academicOrigin, port) {
-  const server = createTeacherServer({ academicOrigin });
-  server.listen(port, '127.0.0.1');
-  await once(server, 'listening');
-  return {
-    port,
-    origin: `http://127.0.0.1:${port}`,
-    async stop() {
-      await new Promise(r => server.close(r));
-    },
-  };
-}
-
-function makeClient(origin) {
-  let cookie = '';
-  return {
-    async call(path, method = 'GET', data, headers = {}) {
-      const response = await fetch(origin + path, {
-        method,
-        headers: {
-          ...(cookie ? { Cookie: cookie } : {}),
-          ...(data === undefined ? {} : { 'Content-Type': 'application/json' }),
-          ...headers,
-        },
-        body: data === undefined ? undefined : JSON.stringify(data),
-      });
-      const session = response.headers.get('set-cookie');
-      if (session?.startsWith('hsid=')) cookie = session.split(';')[0];
-      const body = await response.json();
-      return { status: response.status, body, headers: response.headers };
-    },
-  };
-}
-
-async function runTests() {
-  console.log('[E2E] Starting test environment...');
-  const tmpDir = mkdtempSync(join(tmpdir(), 'haiz-teacher-e2e-'));
-  const dbPath = join(tmpDir, 'academic.sqlite');
-  const academicPort = await unusedPort();
-  const teacherPort = await unusedPort();
-
-  const academic = await startAcademic(dbPath, academicPort);
-  console.log(`[E2E] Academic running at ${academic.origin}`);
-  const teacher = await startTeacher(academic.origin, teacherPort);
-  console.log(`[E2E] Teacher Web proxy running at ${teacher.origin}`);
-
-  // Seed Admin, Teacher, Classes, Students
-  const adminClient = makeClient(academic.origin);
-  const loginRes = await adminClient.call('/api/auth/login', 'POST', { login: 'synthetic_admin', password: PASSWORD });
-  assert.equal(loginRes.status, 200, 'Admin login failed');
-
-  // Create Teacher
-  const createTeacherRes = await adminClient.call('/api/admin/teachers', 'POST', {
-    login: 'synthetic_teacher',
-    label: '虚构张老师',
-    password: PASSWORD,
-  });
-  assert.equal(createTeacherRes.status, 201, 'Create teacher failed');
-
-  // Teacher logs in to create classes
-  const teacherClient = makeClient(academic.origin);
-  await teacherClient.call('/api/auth/login', 'POST', { login: 'synthetic_teacher', password: PASSWORD });
-  const classARes = await teacherClient.call('/api/classes', 'POST', { title: '高一物理实验班' });
-  assert.equal(classARes.status, 201);
-  const classA = classARes.body;
-
-  const classBRes = await teacherClient.call('/api/classes', 'POST', { title: '高一化学平行班' });
-  assert.equal(classBRes.status, 201);
-  const classB = classBRes.body;
-
-  // Enroll Student A in Class A
-  const studentA = makeClient(academic.origin);
-  await studentA.call('/api/auth/register', 'POST', {
-    login: 'student_alpha', label: '学生甲', password: PASSWORD, joinCode: classA.joinCode,
-  });
-  const meA = await studentA.call('/api/me');
-  await teacherClient.call(`/api/classes/${classA.id}/members/${meA.body.user.id}/approve`, 'POST', {});
-
-  // Enroll Student B in Class B
-  const studentB = makeClient(academic.origin);
-  await studentB.call('/api/auth/register', 'POST', {
-    login: 'student_beta', label: '学生乙', password: PASSWORD, joinCode: classB.joinCode,
-  });
-  const meB = await studentB.call('/api/me');
-  await teacherClient.call(`/api/classes/${classB.id}/members/${meB.body.user.id}/approve`, 'POST', {});
-
-  // Launch Playwright Browser
-  const browser = await chromium.launch({
-    executablePath: CHROMIUM_EXECUTABLE,
-    headless: true,
-  });
-  console.log('[E2E] Headless Chromium launched successfully.');
-
-  let passed = 0;
-  let failed = 0;
-
-  async function scenario(name, fn) {
-    process.stdout.write(`  ▶ Scenario: ${name}... `);
-    try {
-      await fn();
-      console.log('✔ PASS');
-      passed++;
-    } catch (err) {
-      console.log('✖ FAIL');
-      console.error(err);
-      failed++;
-    }
-  }
-
+async function scenario(name, run) {
+  const started = Date.now();
   try {
-    // SCENARIO 1: 正常创建草稿
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await page.goto(teacher.origin);
-
-    await scenario('1. 正常创建草稿 (Create draft normally)', async () => {
-      // Login
-      await page.fill('#login-account', 'synthetic_teacher');
-      await page.fill('#login-password', PASSWORD);
-      await page.click('button[type="submit"]');
-
-      // Wait for app shell
-      await page.waitForSelector('#app:not([hidden])');
-      assert.equal(await page.textContent('#who-name'), '教师');
-
-      // Select Class A in toolbar
-      await page.selectOption('#active-class', classA.id);
-
-      // Create new draft
-      await page.click('#new-draft');
-      await page.waitForSelector('#composer-form:not([hidden])');
-
-      await page.fill('#f-subject', '物理');
-      await page.fill('#f-title', '必修一练习题 1-5');
-      await page.fill('#f-details', '请独立完成第 36 页练习题并在下周一提交');
-      await page.selectOption('#f-due-precision', 'date');
-      await page.fill('#f-due-date', '2026-11-02');
-
-      await page.click('#save-draft');
-
-      // Verify draft in list
-      const draftTitle = await page.textContent('#draft-list .item-title');
-      assert.ok(draftTitle.includes('必修一练习题 1-5'));
-      const chipText = await page.textContent('#draft-list .status');
-      assert.ok(chipText.includes('本机草稿'));
-
-      // Verify preview
-      const previewText = await page.textContent('#preview-panel');
-      assert.ok(previewText.includes('物理'));
-      assert.ok(previewText.includes('必修一练习题 1-5'));
-      assert.ok(previewText.includes('2026 年 11 月 2 日'));
-
-      // Verify published list has 0 items
-      assert.equal(await page.textContent('[data-view-count="published"]'), '0');
-    });
-
-    // SCENARIO 2: 草稿进入 Review
-    await scenario('2. 草稿进入 Review (Draft enters review)', async () => {
-      await page.click('#publish-draft'); // Button says "进入 Review"
-
-      // Notice announces review state
-      await page.waitForSelector('#notices .notice');
-      const noticeTitle = await page.textContent('#notices h3');
-      assert.ok(noticeTitle.includes('Review') || noticeTitle.includes('等待教师确认'));
-
-      // Detail in history shows status "待发布 · 服务器"
-      const statusChip = await page.textContent('#history-detail .status');
-      assert.ok(statusChip.includes('待发布') || statusChip.includes('服务器'));
-    });
-
-    // SCENARIO 3: 正式发布成功
-    await scenario('3. 正式发布成功 (Publish successfully)', async () => {
-      // In detail view, click "确认发布"
-      await page.click('#history-detail button.confirm');
-
-      // Dialog opens
-      await page.waitForSelector('#confirm-dialog[open]');
-      assert.ok((await page.textContent('#confirm-title')).includes('正式发布'));
-
-      // Confirm
-      await page.click('#confirm-yes');
-      await page.waitForFunction(() => !document.getElementById('confirm-dialog')?.open);
-
-      // Published notice appears
-      await page.waitForSelector('#notices .notice[data-tone="ok"]');
-      const noticeText = await page.textContent('#notices h3');
-      assert.ok(noticeText.includes('已确认发布'));
-
-      // Shows up in published view
-      await page.click('[data-view="published"]');
-      const publishedItem = await page.textContent('#published-list .item-title');
-      assert.ok(publishedItem.includes('必修一练习题 1-5'));
-
-      // Verify Student A can query published assignment
-      const studentRes = await studentA.call(`/api/v1/classes/${classA.id}/assignments`);
-      assert.equal(studentRes.status, 200);
-      assert.equal(studentRes.body.data.assignments.length, 1);
-      assert.equal(studentRes.body.data.assignments[0].title, '必修一练习题 1-5');
-      assert.equal(studentRes.body.data.assignments[0].status, 'published');
-    });
-
-    // SCENARIO 4: 发布请求超时后的安全重试
-    await scenario('4. 发布请求超时后的安全重试 (Idempotent retry after timeout)', async () => {
-      // Direct verification via Academic API contract:
-      // Sending same command with same idempotency key returns replayed: true and creates NO second assignment
-      const key = 'synthetic_test_key_replay_001';
-      const body = { subject: '物理', title: '探究加速度实验', details: '', due: null, duePrecision: 'none' };
-      const res1 = await teacherClient.call(`/api/v1/classes/${classA.id}/assignments`, 'POST', body, { 'Idempotency-Key': key });
-      assert.equal(res1.status, 201);
-      assert.equal(res1.body.data.replayed, false);
-      const id1 = res1.body.data.assignment.id;
-
-      // Replay same key and body
-      const res2 = await teacherClient.call(`/api/v1/classes/${classA.id}/assignments`, 'POST', body, { 'Idempotency-Key': key });
-      assert.equal(res2.status, 201);
-      assert.equal(res2.body.data.replayed, true);
-      assert.equal(res2.body.data.assignment.id, id1);
-
-      // Verify list on server still has only expected assignments
-      const list = await teacherClient.call(`/api/v1/classes/${classA.id}/assignments`);
-      const matches = list.body.data.assignments.filter(a => a.id === id1);
-      assert.equal(matches.length, 1, 'Idempotent key must not duplicate assignment');
-    });
-
-    // SCENARIO 5: 编辑已发布作业
-    await scenario('5. 编辑已发布作业 (Edit published assignment)', async () => {
-      // In published view, click the assignment
-      await page.click('#published-list .list-item');
-      await page.waitForSelector('#published-detail article');
-
-      // Click "修改内容"
-      await page.click('#published-detail button.secondary');
-
-      // In editor, update details and title
-      await page.fill('#f-title', '必修一练习题 1-5（已更新补充题）');
-      await page.click('#save-edit');
-
-      // Wait for success notice
-      await page.waitForSelector('#notices .notice[data-tone="ok"]');
-      const noticeMsg = await page.textContent('#notices p');
-      assert.ok(noticeMsg.includes('v4'), 'Version should increment to v4');
-
-      // Verify Student A sees revised title and v4
-      const studentRes = await studentA.call(`/api/v1/classes/${classA.id}/assignments`);
-      const updated = studentRes.body.data.assignments.find(a => a.title.includes('已更新补充题'));
-      assert.ok(updated, 'Student must see revised assignment');
-      assert.equal(updated.version, 4);
-      assert.equal(updated.status, 'revised');
-    });
-
-    // SCENARIO 6: 两个页面同时修改时产生版本冲突
-    await scenario('6. 两个页面同时修改时产生版本冲突 (Version conflict detection)', async () => {
-      // Context 2 (second browser tab/window)
-      const context2 = await browser.newContext();
-      const page2 = await context2.newPage();
-      await page2.goto(teacher.origin);
-      await page2.fill('#login-account', 'synthetic_teacher');
-      await page2.fill('#login-password', PASSWORD);
-      await page2.click('button[type="submit"]');
-      await page2.waitForSelector('#app:not([hidden])');
-
-      // Both pages open the published assignment (v4)
-      await page.click('[data-view="published"]');
-      await page.click('#published-list .list-item');
-      await page.click('#published-detail button.secondary'); // Page 1 starts editing v4
-
-      await page2.click('[data-view="published"]');
-      await page2.click('#published-list .list-item');
-      await page2.click('#published-detail button.secondary'); // Page 2 starts editing v4
-
-      // Page 1 saves change to "标题 A" -> advances to v5
-      await page.fill('#f-title', '必修一练习题（教师 A 修改）');
-      await page.click('#save-edit');
-      await page.waitForSelector('#notices .notice[data-tone="ok"]');
-
-      // Page 2 tries to save "标题 B" based on stale v4
-      await page2.fill('#f-title', '必修一练习题（教师 B 修改）');
-      await page2.click('#save-edit');
-
-      // Page 2 should trigger the conflict dialog!
-      await page2.waitForSelector('#conflict-dialog[open]');
-      const conflictTitle = await page2.textContent('#conflict-title');
-      assert.ok(conflictTitle.includes('冲突'));
-
-      // Check conflict diff table
-      const diffContent = await page2.textContent('#conflict-body');
-      assert.ok(diffContent.includes('教师 A 修改'));
-      assert.ok(diffContent.includes('教师 B 修改'));
-
-      // Teacher B clicks "使用最新版本继续检查"
-      await page2.click('#conflict-retry');
-      await page2.waitForFunction(() => !document.getElementById('conflict-dialog')?.open);
-
-      // Re-submit on top of v5 -> becomes v6!
-      await page2.click('#save-edit');
-      await page2.waitForSelector('#notices .notice[data-tone="ok"]');
-      const noticeMsg = await page2.textContent('#notices p');
-      assert.ok(noticeMsg.includes('v6'), 'Resolved version should advance to v6');
-
-      await context2.close();
-    });
-
-    // SCENARIO 7: 作业撤回
-    await scenario('7. 作业撤回 (Assignment retract)', async () => {
-      // In published view, refresh list to get latest server version after Scenario 6
-      await page.click('button:has-text("刷新列表")');
-      await page.click('[data-view="published"]');
-      await page.click('#published-list .list-item');
-
-      // Click "撤回"
-      await page.click('#published-detail button.danger');
-      await page.waitForSelector('#confirm-dialog[open]');
-      assert.ok((await page.textContent('#confirm-title')).includes('撤回'));
-
-      // Confirm retract
-      await page.click('#confirm-yes');
-      await page.waitForFunction(() => !document.getElementById('confirm-dialog')?.open);
-
-      // Verify notice
-      await page.waitForFunction(() => document.querySelector('#notices h3')?.textContent.includes('撤回'));
-      const msg = await page.textContent('#notices h3');
-      assert.ok(msg.includes('确认撤回'));
-
-      // Live list in published view should not have active tasks
-      assert.equal(await page.textContent('[data-view-count="published"]'), '0');
-
-      // Retracted assignment appears in history view
-      await page.click('[data-view="history"]');
-      const historyItem = await page.textContent('#history-list');
-      assert.ok(historyItem.includes('已撤回'));
-
-      // Timeline shows full history
-      await page.click('#history-list .list-item:has-text("已撤回")');
-      await page.click('#history-detail button.quiet:has-text("版本历史")');
-      await page.waitForSelector('#history-detail .timeline li');
-      const timelineText = await page.textContent('#history-detail .timeline');
-      assert.ok(timelineText.includes('撤回作业'));
-      assert.ok(timelineText.includes('修改内容'));
-      assert.ok(timelineText.includes('正式发布'));
-    });
-
-    // SCENARIO 8: 无权限用户无法发布
-    await scenario('8. 无权限用户无法发布 (Unauthorized user cannot publish)', async () => {
-      const studentContext = await browser.newContext();
-      const studentPage = await studentContext.newPage();
-      await studentPage.goto(teacher.origin);
-
-      // Student attempts to log in to teacher workspace
-      await studentPage.fill('#login-account', 'student_alpha');
-      await studentPage.fill('#login-password', PASSWORD);
-      await studentPage.click('button[type="submit"]');
-
-      // Error message shown
-      await studentPage.waitForSelector('#login-error:not([hidden])');
-      const errorMsg = await studentPage.textContent('#login-error');
-      assert.ok(errorMsg.includes('教师') || errorMsg.includes('权限'));
-
-      // Direct API attempt from student
-      const direct = await studentA.call(`/api/v1/classes/${classA.id}/assignments`, 'POST', {
-        subject: '黑客', title: '未经授权的作业', details: '', due: null, duePrecision: 'none'
-      }, { 'Idempotency-Key': 'unauthorized_attempt_key_01' });
-      assert.equal(direct.status, 403, 'Student cannot create assignment via API');
-
-      await studentContext.close();
-    });
-
-    // SCENARIO 9: 不同班级的数据隔离
-    await scenario('9. 不同班级的数据隔离 (Class data isolation)', async () => {
-      // Create and publish an assignment for Class B
-      const draftB = await teacherClient.call(`/api/v1/classes/${classB.id}/assignments`, 'POST', {
-        subject: '化学', title: '有机化合物结构式绘制', details: '仅限化学班', due: null, duePrecision: 'none'
-      }, { 'Idempotency-Key': 'class_b_assignment_key_001' });
-      const bId = draftB.body.data.assignment.id;
-      const bVer = draftB.body.data.assignment.version;
-      const revB = await teacherClient.call(`/api/v1/assignments/${bId}/review`, 'POST', { expectedVersion: bVer }, { 'Idempotency-Key': 'class_b_review_key_001' });
-      await teacherClient.call(`/api/v1/assignments/${bId}/publish`, 'POST', { expectedVersion: revB.body.data.assignment.version }, { 'Idempotency-Key': 'class_b_publish_key_001' });
-
-      // Student A (enrolled in Class A) queries Class A -> does NOT see Class B assignment
-      const resA = await studentA.call(`/api/v1/classes/${classA.id}/assignments`);
-      assert.ok(!resA.body.data.assignments.some(a => a.title.includes('有机化合物')));
-
-      // Student A tries to query Class B -> rejected 403
-      const crossRes = await studentA.call(`/api/v1/classes/${classB.id}/assignments`);
-      assert.equal(crossRes.status, 403, 'Cross-class access must be forbidden');
-
-      // Student B (enrolled in Class B) queries Class B -> sees Class B assignment
-      const resB = await studentB.call(`/api/v1/classes/${classB.id}/assignments`);
-      assert.ok(resB.body.data.assignments.some(a => a.title.includes('有机化合物')));
-    });
-
-    // SCENARIO 10: 页面刷新后正式作业仍然存在
-    await scenario('10. 页面刷新后正式作业仍然存在 (Persistence across refresh)', async () => {
-      await page.reload();
-      await page.waitForSelector('#app:not([hidden])');
-      assert.equal(await page.textContent('#who-name'), '教师');
-
-      // Switch to Class B
-      await page.selectOption('#active-class', classB.id);
-      await page.click('[data-view="published"]');
-      const item = await page.textContent('#published-list .item-title');
-      assert.ok(item.includes('有机化合物结构式绘制'), 'Published assignment must survive reload');
-    });
-
-    // SCENARIO 11: 离线草稿不会被误认为已发布
-    await scenario('11. 离线草稿不会被误认为已发布 (Offline draft is never confused with published)', async () => {
-      const offlineContext = await browser.newContext();
-      const offlinePage = await offlineContext.newPage();
-      await offlinePage.goto(teacher.origin);
-
-      // Click "离线整理本机草稿"
-      await offlinePage.click('#offline-mode');
-      await offlinePage.waitForSelector('#app:not([hidden])');
-      assert.equal(await offlinePage.textContent('#who-name'), '离线整理');
-
-      // Notice reminds offline mode
-      const offlineNotice = await offlinePage.textContent('#notices');
-      assert.ok(offlineNotice.includes('离线整理模式'));
-
-      // Create offline draft
-      await offlinePage.click('#new-draft');
-      await offlinePage.fill('#f-subject', '生物');
-      await offlinePage.fill('#f-title', '显微镜观察细胞有丝分裂草稿');
-      await offlinePage.click('#save-draft');
-
-      // Draft has chip "本机草稿"
-      const chip = await offlinePage.textContent('#draft-list .status');
-      assert.ok(chip.includes('本机草稿'));
-
-      // Publish button is disabled in offline mode
-      const publishDisabled = await offlinePage.isDisabled('#publish-draft');
-      assert.equal(publishDisabled, true, 'Publish must be disabled in offline mode');
-
-      // Published count remains 0
-      assert.equal(await offlinePage.textContent('[data-view-count="published"]'), '0');
-
-      // Server has not received this draft
-      const serverList = await teacherClient.call(`/api/v1/classes/${classA.id}/assignments`);
-      assert.ok(!serverList.body.data.assignments.some(a => a.title.includes('显微镜观察')));
-
-      await offlineContext.close();
-    });
-
-    // SCENARIO 12: Classroom 不泄露学生私人数据
-    await scenario('12. Classroom 不泄露学生私人数据 (Classroom leaks no private data)', async () => {
-      const roomContext = await browser.newContext();
-      const roomPage = await roomContext.newPage();
-
-      // Get screen key for Class B (which has the active chemistry assignment)
-      const screenKey = classB.screenKey;
-      assert.ok(screenKey && screenKey.length === 96);
-
-      // Open classroom page directly
-      await roomPage.goto(`${teacher.origin}/classroom.html`);
-      await roomPage.waitForSelector('#connection:not([hidden])');
-
-      // Enter screen key
-      await roomPage.fill('#key-input', screenKey);
-      await roomPage.click('#load');
-
-      // Cards render
-      await roomPage.waitForSelector('#items article.card');
-      const title = await roomPage.textContent('#classroom-name');
-      assert.equal(title, '高一化学平行班');
-
-      const cardText = await roomPage.textContent('#items');
-      assert.ok(cardText.includes('有机化合物结构式绘制'));
-
-      // Inspect HTML to verify NO student identities, completion checks or personal notes
-      assert.ok(!cardText.includes('学生甲'));
-      assert.ok(!cardText.includes('学生乙'));
-      assert.ok(!cardText.includes('student_alpha'));
-      assert.ok(!cardText.includes('student_beta'));
-      assert.ok(!cardText.includes('完成'));
-      assert.ok(!cardText.includes('提交'));
-
-      // Verify direct API projection guarantees
-      const directFeed = await fetch(`${academic.origin}/api/v1/classroom`, {
-        headers: { Authorization: `Bearer ${screenKey}` }
-      });
-      const feedJson = await directFeed.json();
-      assert.equal(feedJson.data.readOnly, true);
-      assert.equal(feedJson.data.containsStudentIdentity, false);
-      for (const a of feedJson.data.assignments) {
-        assert.equal(a.classId, undefined);
-        assert.equal(a.createdBy, undefined);
-        assert.equal(a.source, undefined);
-      }
-
-      await roomContext.close();
-    });
-
-    await context.close();
-  } finally {
-    await browser.close();
-    await teacher.stop();
-    await academic.stop();
-    rmSync(tmpDir, { recursive: true, force: true });
+    const detail = await run();
+    report.scenarios.push({ name, status: 'passed', durationMs: Date.now() - started, ...(detail ? { detail } : {}) });
+  } catch (error) {
+    report.scenarios.push({ name, status: 'failed', durationMs: Date.now() - started, error: error.stack ?? String(error) });
+    process.stderr.write(`[Teacher QA] FAIL ${name}: ${error.message}\n`);
   }
-
-  console.log(`\n========================================`);
-  console.log(`E2E Summary: ${passed} passed, ${failed} failed`);
-  console.log(`========================================\n`);
-
-  if (failed > 0) process.exit(1);
 }
 
-runTests().catch(err => {
-  console.error('[E2E Fatal Error]', err);
-  process.exit(1);
+function observe(page) {
+  page.on('pageerror', error => report.pageErrors.push(error.message));
+  page.on('console', message => {
+    // Failed authentication probes and deliberately aborted responses are recorded separately.
+    if (message.type() === 'error') report.consoleErrors.push(message.text());
+  });
+  page.setDefaultTimeout(10_000);
+}
+async function settled(page) {
+  await page.waitForFunction(() => document.body.getAttribute('aria-busy') !== 'true');
+}
+async function login(page, loginName = 'synthetic_teacher') {
+  await page.goto(origin);
+  await page.locator('#login-account').fill(loginName);
+  await page.locator('#login-password').fill(PASSWORD);
+  await page.locator('#login-form button[type=submit]').click();
+  await page.locator('#active-class').waitFor({ state: 'visible' });
+  await settled(page);
+}
+async function view(page, name) {
+  await page.locator(`button[data-view="${name}"]`).click();
+  await page.locator(`#${name}-view`).waitFor({ state: 'visible' });
+  await settled(page);
+}
+async function newDraft(page, title) {
+  await view(page, 'workspace');
+  await page.locator('#new-draft').click();
+  await page.locator('#f-subject').fill('数学');
+  await page.locator('#f-title').fill(title);
+  await page.locator('#f-details').fill('虚构验收作业：完成练习册第 36 至 39 页，并写出解题过程。');
+  await page.locator('#f-due-precision').selectOption('date');
+  await page.locator('#f-due-date').fill('2026-11-03');
+  await page.locator('#save-draft').click();
+  await settled(page);
+}
+async function openOfficial(page, title, name = 'published') {
+  await view(page, name);
+  const row = page.locator(`#${name}-list .list-item`).filter({ hasText: title }).first();
+  await row.getByRole('button').first().click();
+  await page.locator(`#${name}-detail h2`).filter({ hasText: title }).waitFor();
+}
+async function confirmPublication(page) {
+  await page.locator('#history-detail').getByRole('button', { name: '确认发布', exact: true }).click();
+  await page.locator('#confirm-dialog[open]').waitFor();
+  await page.locator('#confirm-yes').click();
+  await settled(page);
+}
+async function screenshot(page, name) {
+  await page.screenshot({ path: join(evidenceDirectory, name), fullPage: true });
+  report.screenshots.push(name);
+}
+
+async function runBrowser(f) {
+  const executablePath = process.env.HAIZ_QA_BROWSER ?? join(homedir(), 'Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell');
+  if (!existsSync(executablePath)) throw new Error(`Chromium executable unavailable: ${executablePath}`);
+  browser = await chromium.launch({ executablePath, headless: true });
+  report.browser = browser.version();
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1080 }, locale: 'zh-CN', timezoneId: 'Asia/Shanghai' });
+  const page = await context.newPage(); observe(page);
+  const assignments = async () => (await f.teacher.call(`/api/v1/classes/${f.classroom.id}/assignments?limit=200`)).body.data.assignments;
+  const studentAssignments = async () => (await f.b.call('/api/my/assignments')).body.assignments;
+  const classroom = async () => {
+    const response = await fetch(`${origin}/api/v1/classroom?limit=200`, { headers: { Authorization: `Bearer ${f.classroom.screenKey}` } });
+    assert.equal(response.status, 200);
+    return (await response.json()).data;
+  };
+  const find = async title => (await assignments()).find(item => item.title === title);
+  const title = '虚构验收 · 一元二次方程';
+  let official;
+  await scenario('local draft creation and reload never implies publication', async () => {
+    await login(page);
+    await newDraft(page, title);
+    assert.equal(await find(title), undefined);
+    assert.equal((await studentAssignments()).some(item => item.title === title), false);
+    await page.reload();
+    await page.locator('#active-class').waitFor();
+    const row = page.locator('#draft-list .list-item').filter({ hasText: title });
+    await row.getByRole('button').first().click();
+    assert.equal(await page.locator('#f-title').inputValue(), title);
+    assert.match(await page.locator('#composer-status').innerText(), /本机草稿/);
+  });
+  await scenario('Review persists a server draft but remains invisible to students and classroom', async () => {
+    await page.locator('#publish-draft').click(); await settled(page);
+    await page.locator('#history-view').waitFor({ state: 'visible' });
+    official = await find(title);
+    assert.equal(official.status, 'review'); assert.equal(official.version, 2);
+    assert.equal((await studentAssignments()).some(item => item.id === official.id), false);
+    assert.equal((await classroom()).assignments.some(item => item.id === official.id), false);
+    await screenshot(page, 'review-checkpoint-1440.png');
+  });
+  await scenario('explicit publication is confirmed by Academic and identical public assignment identity', async () => {
+    assert.ok(official, 'Review scenario must succeed first');
+    await confirmPublication(page);
+    official = await find(title);
+    assert.equal(official.status, 'published'); assert.equal(official.version, 3);
+    const student = (await studentAssignments()).find(item => item.id === official.id);
+    const screen = (await classroom()).assignments.find(item => item.id === official.id);
+    assert.equal(student.version, official.version); assert.equal(screen.version, official.version);
+    assert.equal(student.title, official.title); assert.equal(screen.title, official.title);
+    await page.reload(); await page.locator('#active-class').waitFor();
+    await openOfficial(page, title);
+    return { id: official.id, version: official.version, studentManualRefresh: true };
+  });
+  await scenario('lost create response after commit replays the original request after reload without duplicates', async () => {
+    const lostTitle = '虚构验收 · 创建响应丢失';
+    await newDraft(page, lostTitle);
+    let original;
+    const routePattern = '**/api/v1/classes/*/assignments';
+    const intercept = async route => {
+      if (route.request().method() !== 'POST') return route.continue();
+      original = { key: route.request().headers()['idempotency-key'], body: route.request().postData() };
+      const response = await route.fetch(); assert.equal(response.status(), 201);
+      await route.abort('connectionreset');
+    };
+    await page.route(routePattern, intercept);
+    await page.locator('#publish-draft').click(); await settled(page);
+    await page.unroute(routePattern, intercept);
+    assert.equal((await assignments()).filter(item => item.title === lostTitle).length, 1);
+    assert.equal((await find(lostTitle)).status, 'draft');
+    await page.reload(); await page.locator('#active-class').waitFor();
+    let replay;
+    const capture = request => {
+      if (request.method() === 'POST' && request.url().includes(`/classes/${f.classroom.id}/assignments`)) replay = { key: request.headers()['idempotency-key'], body: request.postData() };
+    };
+    page.on('request', capture);
+    await page.locator('#recovery').getByRole('button', { name: '恢复原请求' }).first().click(); await settled(page);
+    page.off('request', capture);
+    assert.deepEqual(replay, original);
+    assert.equal((await assignments()).filter(item => item.title === lostTitle).length, 1);
+    assert.equal(await page.locator('#recovery button').count(), 0);
+    return { assignmentId: (await find(lostTitle)).id, duplicateCount: 0, sameKeyAndBody: true };
+  });
+  await scenario('lost publish response after commit recovers as published using the same key', async () => {
+    const lostTitle = '虚构验收 · 发布响应丢失';
+    await newDraft(page, lostTitle);
+    await page.locator('#publish-draft').click(); await settled(page);
+    const reviewed = await find(lostTitle);
+    let key;
+    const pattern = `**/api/v1/assignments/${reviewed.id}/publish`;
+    const intercept = async route => {
+      key = route.request().headers()['idempotency-key'];
+      const response = await route.fetch(); assert.equal(response.status(), 200);
+      await route.abort('connectionreset');
+    };
+    await page.route(pattern, intercept);
+    await confirmPublication(page); await page.unroute(pattern, intercept);
+    assert.equal((await find(lostTitle)).status, 'published');
+    assert.match(await page.locator('#notices').innerText(), /结果尚未确认/);
+    await page.reload(); await page.locator('#active-class').waitFor();
+    let replayKey;
+    const capture = request => { if (request.url().endsWith(`/assignments/${reviewed.id}/publish`)) replayKey = request.headers()['idempotency-key']; };
+    page.on('request', capture);
+    await page.locator('#recovery').getByRole('button', { name: '恢复原请求' }).first().click(); await settled(page);
+    page.off('request', capture);
+    assert.equal(replayKey, key);
+    assert.equal((await find(lostTitle)).version, 3);
+    assert.equal((await assignments()).filter(item => item.title === lostTitle).length, 1);
+  });
+  await scenario('published edit and concurrent-page conflict retain unsent words and require renewed confirmation', async () => {
+    assert.ok(official);
+    await openOfficial(page, title);
+    await page.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+    const second = await context.newPage(); observe(second);
+    await second.goto(origin); await second.locator('#active-class').waitFor();
+    await openOfficial(second, title);
+    await second.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+    await second.locator('#f-details').fill('另一页保留的未提交要求');
+    await page.locator('#f-details').fill('第一页面先保存的正式要求');
+    await page.locator('#save-edit').click(); await settled(page);
+    assert.equal((await find(title)).version, 4);
+    await second.locator('#save-edit').click();
+    await second.locator('#conflict-dialog[open]').waitFor();
+    assert.match(await second.locator('#conflict-body').innerText(), /另一页保留的未提交要求/);
+    assert.match(await second.locator('#conflict-body').innerText(), /第一页面先保存的正式要求/);
+    assert.equal((await find(title)).details, '第一页面先保存的正式要求');
+    await screenshot(second, 'version-conflict-1440.png');
+    await second.locator('#conflict-retry').click();
+    assert.equal(await second.locator('#f-details').inputValue(), '另一页保留的未提交要求');
+    assert.equal((await find(title)).version, 4, 'continuing checks must not silently submit');
+    await second.locator('#save-edit').click(); await settled(second);
+    official = await find(title);
+    assert.equal(official.version, 5); assert.equal(official.status, 'revised');
+    assert.equal(official.details, '另一页保留的未提交要求');
+    assert.equal((await studentAssignments()).find(item => item.id === official.id).version, 5);
+    assert.equal((await classroom()).assignments.find(item => item.id === official.id).version, 5);
+    await second.close();
+  });
+  await scenario('responsive populated workspace, keyboard focus, reduced motion, and optional accessibility scan', async () => {
+    await page.reload(); await page.locator('#active-class').waitFor();
+    await openOfficial(page, title);
+    await page.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+    for (const width of [320, 375, 768, 1024, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 1080 });
+      const dimensions = await page.evaluate(() => ({ viewport: innerWidth, scroll: document.documentElement.scrollWidth }));
+      report.responsive.push({ width, ...dimensions, overflow: dimensions.scroll > dimensions.viewport });
+      assert.ok(dimensions.scroll <= dimensions.viewport, `horizontal overflow at ${width}: ${dimensions.scroll}`);
+      if ([320, 768, 1024, 1440].includes(width)) await screenshot(page, `workspace-${width}.png`);
+    }
+    await page.keyboard.press('Tab');
+    const focused = await page.evaluate(() => ({ tag: document.activeElement.tagName, outline: getComputedStyle(document.activeElement).outlineStyle }));
+    assert.notEqual(focused.tag, 'BODY');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), true);
+    report.keyboard = focused;
+    const semantics = await page.evaluate(() => ({ nestedButtons: document.querySelectorAll('button button').length,
+      unlabeledFields: [...document.querySelectorAll('input:not([type=hidden]),textarea,select')].filter(input => !input.labels?.length && !input.getAttribute('aria-label')).map(input => input.id),
+      skipLink: Boolean(document.querySelector('.skip-link')) }));
+    assert.equal(semantics.nestedButtons, 0); assert.deepEqual(semantics.unlabeledFields, []); assert.equal(semantics.skipLink, true);
+    report.accessibility = { basicSemantics: semantics, axe: 'not installed' };
+    try {
+      const { default: AxeBuilder } = await import('@axe-core/playwright');
+      const results = await new AxeBuilder({ page }).analyze();
+      report.accessibility.axe = results.violations.map(item => ({ id: item.id, impact: item.impact, nodes: item.nodes.length }));
+      assert.equal(results.violations.filter(item => ['serious', 'critical'].includes(item.impact)).length, 0);
+    } catch (error) { if (error.code !== 'ERR_MODULE_NOT_FOUND') throw error; }
+    await page.setViewportSize({ width: 1440, height: 1080 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+  });
+  await scenario('classroom uses public projection only and removes one-time credentials', async () => {
+    const feed = await classroom();
+    assert.equal(feed.readOnly, true); assert.equal(feed.containsStudentIdentity, false);
+    const allowed = ['id', 'version', 'subject', 'title', 'details', 'due', 'duePrecision', 'status', 'updatedAt'];
+    for (const assignment of feed.assignments) assert.ok(Object.keys(assignment).every(key => allowed.includes(key)));
+    await page.getByRole('button', { name: '教室屏预览', exact: true }).click();
+    await page.locator('#items .card').first().waitFor();
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('haiz.classroom.handoff')), null);
+    assert.equal(await page.locator('#key-input').inputValue(), '');
+    assert.equal(new URL(page.url()).search, '');
+    assert.equal(await page.locator('#items .card').count(), feed.assignments.length);
+    assert.equal((await page.locator('#items').innerText()).includes('synthetic_student'), false);
+    await screenshot(page, 'classroom-1440.png');
+  });
+  await scenario('withdrawal preserves history and browser-owned private note marker', async () => {
+    assert.ok(official);
+    const studentContext = await browser.newContext();
+    const studentPage = await studentContext.newPage();
+    await studentPage.goto(origin);
+    await studentPage.evaluate(() => localStorage.setItem('qa.synthetic.private-note', '学生自己的笔记，保留原文'));
+    await page.goto(origin); await page.locator('#active-class').waitFor();
+    await openOfficial(page, title);
+    await page.locator('#published-detail').getByRole('button', { name: '撤回', exact: true }).click();
+    await page.locator('#confirm-dialog[open]').waitFor();
+    assert.match(await page.locator('#confirm-body').innerText(), /私人笔记不会删除/);
+    await page.locator('#confirm-yes').click(); await settled(page);
+    const retracted = await find(title); assert.equal(retracted.status, 'retracted'); assert.equal(retracted.version, 6);
+    assert.equal((await studentAssignments()).some(item => item.id === official.id), false);
+    assert.equal((await classroom()).assignments.some(item => item.id === official.id), false);
+    const history = await f.teacher.call(`/api/v1/assignments/${official.id}/history?limit=200`);
+    assert.equal(history.body.data.revisions.at(-1).operation, 'retract');
+    assert.equal(history.body.data.revisions.length, 6);
+    assert.equal(await studentPage.evaluate(() => localStorage.getItem('qa.synthetic.private-note')), '学生自己的笔记，保留原文');
+    await page.locator('#history-detail').getByRole('button', { name: '版本历史', exact: true }).click(); await settled(page);
+    assert.match(await page.locator('#history-detail .timeline').innerText(), /撤回作业/);
+    await screenshot(page, 'withdrawal-history-1440.png');
+    await studentContext.close();
+    return { preservedNote: 'synthetic browser-owned marker only', actualFlutterStorage: 'not exercised' };
+  });
+  await scenario('unauthorized publication is denied by Academic', async () => {
+    const response = await f.command(f.b, `/classes/${f.classroom.id}/assignments`, { subject: '越权', title: '不得发布', details: '', due: null, duePrecision: 'none' });
+    assert.equal(response.status, 403);
+  });
+  await scenario('a different teacher cannot read or publish into this class', async () => {
+    const teacher = await f.admin.call('/api/admin/teachers', 'POST', { login: 'synthetic_foreign_teacher', label: '虚构教师 B', password: PASSWORD });
+    assert.equal(teacher.status, 201);
+    const response = await fetch(`${origin}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: 'synthetic_foreign_teacher', password: PASSWORD }) });
+    const cookie = response.headers.get('set-cookie').split(';')[0];
+    for (const method of ['GET', 'POST']) {
+      const denied = await fetch(`${origin}/api/v1/classes/${f.classroom.id}/assignments`, { method,
+        headers: { Cookie: cookie, 'Content-Type': 'application/json', 'Idempotency-Key': `foreign_teacher_${method}` },
+        body: method === 'POST' ? JSON.stringify({ subject: '越权', title: '不得进入别班', details: '', due: null, duePrecision: 'none' }) : undefined });
+      assert.equal(denied.status, 403);
+    }
+  });
+  await scenario('changed Review content returns through draft and Review before publication', async () => {
+    const original = '虚构验收 · Review 修订';
+    await newDraft(page, original);
+    await page.locator('#publish-draft').click(); await settled(page);
+    await view(page, 'workspace');
+    await page.locator('#draft-list .list-item').filter({ hasText: original }).getByRole('button').first().click();
+    await page.locator('#f-details').fill('Review 后教师修改的最终内容');
+    await page.locator('#publish-draft').click(); await settled(page);
+    assert.equal((await find(original)).details, 'Review 后教师修改的最终内容');
+    assert.equal((await find(original)).status, 'review');
+    assert.equal((await find(original)).version, 4);
+    await confirmPublication(page);
+    assert.equal((await find(original)).version, 5);
+    assert.equal((await studentAssignments()).find(item => item.title === original).details, 'Review 后教师修改的最终内容');
+    await openOfficial(page, original);
+    await page.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+    await page.locator('#f-details').fill('撤回后也必须保留的本机修改');
+    await openOfficial(page, original);
+    await page.locator('#published-detail').getByRole('button', { name: '撤回', exact: true }).click();
+    await page.locator('#confirm-yes').click(); await settled(page);
+    await view(page, 'workspace');
+    await page.locator('#draft-list .list-item').filter({ hasText: original }).getByRole('button').first().click();
+    assert.equal(await page.locator('#f-details').inputValue(), '撤回后也必须保留的本机修改');
+  });
+  await scenario('another-tab account switch suspends old workspace without submitting old drafts', async () => {
+    await newDraft(page, '虚构验收 · 账号切换前草稿');
+    const count = (await assignments()).length;
+    await context.request.post(`${origin}/api/auth/login`, { data: { login: 'synthetic_admin', password: PASSWORD } });
+    await page.locator('#publish-draft').click(); await settled(page);
+    await page.locator('#entry').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#app').isVisible(), false);
+    assert.equal((await assignments()).length, count);
+    assert.ok(await page.evaluate(() => Object.values(localStorage).some(value => value.includes('账号切换前草稿'))));
+    await page.locator('#login-account').fill('synthetic_teacher');
+    await page.locator('#login-password').fill(PASSWORD);
+    await page.locator('#login-form button[type=submit]').click();
+    await page.locator('#active-class').waitFor(); await settled(page);
+    assert.ok(await page.locator('#draft-list').getByText('虚构验收 · 账号切换前草稿', { exact: true }).count());
+  });
+  await scenario('late original-account response cannot write into a newly logged-in account', async () => {
+    await newDraft(page, '虚构验收 · 延迟原账号响应');
+    let release; let reached;
+    const waiting = new Promise(resolve => { reached = resolve; });
+    const held = new Promise(resolve => { release = resolve; });
+    const pattern = '**/api/v1/classes/*/assignments';
+    const intercept = async route => {
+      if (route.request().method() !== 'POST') return route.continue();
+      const response = await route.fetch(); reached();
+      await held; await route.fulfill({ response });
+    };
+    await page.route(pattern, intercept);
+    try {
+      await page.locator('#publish-draft').click(); await waiting;
+      await context.request.post(`${origin}/api/auth/login`, { data: { login: 'synthetic_admin', password: PASSWORD } });
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+      await page.locator('#entry').waitFor({ state: 'visible' });
+      await page.locator('#login-account').fill('synthetic_admin');
+      await page.locator('#login-password').fill(PASSWORD);
+      await page.locator('#login-form button[type=submit]').click();
+      await page.locator('#app').waitFor({ state: 'visible' });
+      release(); await settled(page);
+      const scope = await page.evaluate(async () => {
+        const { data } = await (await fetch('/api/v1/identity')).json();
+        return `${location.origin}/${data.instanceId}/${data.userId}`;
+      });
+      const adminDrafts = await page.evaluate(key => localStorage.getItem(key), `haiz.teacher.v3.drafts/${scope}`);
+      assert.equal(adminDrafts?.includes('延迟原账号响应') ?? false, false);
+      assert.equal((await assignments()).filter(item => item.title === '虚构验收 · 延迟原账号响应').length, 1);
+    } finally { release?.(); await page.unroute(pattern, intercept); }
+  });
+  await scenario('offline preparation remains local and cannot publish', async () => {
+    const offlineContext = await browser.newContext();
+    const offlinePage = await offlineContext.newPage(); observe(offlinePage);
+    await offlinePage.goto(origin);
+    await offlinePage.locator('#offline-mode').click();
+    await newDraft(offlinePage, '虚构离线草稿');
+    assert.equal(await offlinePage.locator('#publish-draft').isDisabled(), true);
+    await offlineContext.setOffline(true);
+    await offlinePage.locator('#f-details').fill('网络断开时保存的本机内容');
+    await offlinePage.locator('#save-draft').click(); await settled(offlinePage);
+    assert.equal((await assignments()).some(item => item.title === '虚构离线草稿'), false);
+    assert.match(await offlinePage.locator('#composer-status').innerText(), /本机草稿/);
+    await screenshot(offlinePage, 'offline-local-draft.png');
+    await offlineContext.close();
+  });
+  await scenario('audit P1-01 shared-cookie tabs invalidate on logout and disjoint-account login without reviving delayed data', async () => {
+    const betaLogin = 'audit_beta_teacher';
+    assert.equal((await f.admin.call('/api/admin/teachers', 'POST', { login: betaLogin, label: '虚构审计教师 beta', password: PASSWORD })).status, 201);
+    const beta = client(f.service);
+    assert.equal((await beta.call('/api/auth/login', 'POST', { login: betaLogin, password: PASSWORD })).status, 200);
+    const betaClass = await beta.call('/api/classes', 'POST', { title: 'CLASS_BETA_ONLY' });
+    assert.equal(betaClass.status, 201);
+    const exclusive = await f.publish({ title: 'ALPHA_EXCLUSIVE_ASSIGNMENT', details: 'ALPHA_PROTECTED_DETAILS' });
+    const shared = await browser.newContext({ viewport: { width: 1440, height: 1080 } });
+    const alphaPage = await shared.newPage(); observe(alphaPage);
+    const betaPage = await shared.newPage(); observe(betaPage);
+    let release;
+    try {
+      await login(alphaPage);
+      await newDraft(alphaPage, 'ALPHA_SAVED_LOCAL_DRAFT');
+      await alphaPage.locator('#f-details').fill('ALPHA_LOCAL_TEXT_MUST_SURVIVE');
+      await newDraft(alphaPage, 'ALPHA_PENDING_COMMAND');
+      const createPattern = '**/api/v1/classes/*/assignments';
+      const loseCreate = async route => {
+        if (route.request().method() !== 'POST') return route.continue();
+        assert.equal((await route.fetch()).status(), 201);
+        await route.abort('connectionreset');
+      };
+      await alphaPage.route(createPattern, loseCreate);
+      await alphaPage.locator('#publish-draft').click(); await settled(alphaPage);
+      await alphaPage.unroute(createPattern, loseCreate);
+      assert.equal(await alphaPage.locator('#recovery button').count(), 1);
+      await openOfficial(alphaPage, exclusive.title);
+      assert.match(await alphaPage.locator('#published-detail').innerText(), /ALPHA_PROTECTED_DETAILS/);
+      await betaPage.goto(origin); await betaPage.locator('#active-class').waitFor(); await settled(betaPage);
+      let reached;
+      const waiting = new Promise(resolve => { reached = resolve; });
+      const held = new Promise(resolve => { release = resolve; });
+      const listPattern = `**/api/v1/classes/${f.classroom.id}/assignments?*`;
+      const holdRead = async route => {
+        const response = await route.fetch(); reached();
+        await held; await route.fulfill({ response });
+      };
+      await alphaPage.route(listPattern, holdRead);
+      await alphaPage.getByRole('button', { name: '刷新列表', exact: true }).click();
+      await waiting;
+      await betaPage.locator('#logout').click();
+      await betaPage.locator('#entry').waitFor({ state: 'visible' });
+      await alphaPage.locator('#entry').waitFor({ state: 'visible' });
+      assert.equal(await alphaPage.locator('#app').isVisible(), false);
+      assert.equal(await alphaPage.locator('#published-detail').textContent(), '');
+      await betaPage.locator('#login-account').fill(betaLogin);
+      await betaPage.locator('#login-password').fill(PASSWORD);
+      await betaPage.locator('#login-form button[type=submit]').click();
+      await betaPage.locator('#active-class').waitFor(); await settled(betaPage);
+      assert.equal(await betaPage.locator('#active-class option:checked').innerText(), 'CLASS_BETA_ONLY');
+      assert.equal(await betaPage.locator('#draft-list').getByText('ALPHA_SAVED_LOCAL_DRAFT', { exact: true }).count(), 0);
+      assert.equal(await betaPage.locator('#recovery button').count(), 0);
+      assert.equal((await shared.request.get(`${origin}/api/v1/classes/${f.classroom.id}/assignments`)).status(), 403);
+      const betaScope = await betaPage.evaluate(async () => {
+        const { data } = await (await fetch('/api/v1/identity')).json();
+        return `${location.origin}/${data.instanceId}/${data.userId}`;
+      });
+      const betaJournal = await betaPage.evaluate(scope => localStorage.getItem(`haiz.teacher.v3.commands/${encodeURIComponent(scope)}`), betaScope);
+      assert.equal(betaJournal?.includes('ALPHA_PENDING_COMMAND') ?? false, false);
+      release(); await settled(alphaPage);
+      await alphaPage.unroute(listPattern, holdRead);
+      assert.equal(await alphaPage.locator('#app').isVisible(), false);
+      assert.equal(await alphaPage.locator('#published-list').textContent(), '');
+      assert.equal(await alphaPage.locator('#published-detail').textContent(), '');
+      await alphaPage.locator('#login-account').fill('synthetic_teacher');
+      await alphaPage.locator('#login-password').fill(PASSWORD);
+      await alphaPage.locator('#login-form button[type=submit]').click();
+      await alphaPage.locator('#active-class').waitFor(); await settled(alphaPage);
+      await view(alphaPage, 'workspace');
+      await alphaPage.locator('#draft-list .list-item').filter({ hasText: 'ALPHA_SAVED_LOCAL_DRAFT' }).getByRole('button').first().click();
+      assert.equal(await alphaPage.locator('#f-title').inputValue(), 'ALPHA_SAVED_LOCAL_DRAFT');
+      assert.equal(await alphaPage.locator('#f-details').inputValue(), 'ALPHA_LOCAL_TEXT_MUST_SURVIVE');
+      assert.equal(await alphaPage.locator('#recovery button').count(), 1);
+      return { sharedCookieTabs: 2, disjointClassIds: [f.classroom.id, betaClass.body.id], delayedReadDiscarded: true, alphaDraftTextRestored: true, betaDeniedAlphaClass: true };
+    } finally { release?.(); await shared.close(); }
+  });
+  await scenario('audit P1-02 exact unsent title and details survive view changes, reload, and reopening unchanged official version', async () => {
+    const assignment = await f.publish({ title: 'AUDIT_LOCAL_EDIT_ORIGINAL', details: 'SERVER_ORIGINAL_DETAILS' });
+    const editContext = await browser.newContext();
+    const editPage = await editContext.newPage(); observe(editPage);
+    try {
+      await login(editPage);
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      await editPage.locator('#f-title').fill('ALPHA_UNSAVED_EDIT');
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_UNSAVED_EDIT');
+      await editPage.locator('#f-details').fill('ALPHA_UNSAVED_DETAILS_AFTER_RELOAD');
+      await editPage.reload(); await editPage.locator('#active-class').waitFor(); await settled(editPage);
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_UNSAVED_EDIT');
+      assert.equal(await editPage.locator('#f-details').inputValue(), 'ALPHA_UNSAVED_DETAILS_AFTER_RELOAD');
+      assert.equal(await editPage.locator('#conflict-dialog[open]').count(), 0);
+      const serverCopy = (await f.teacher.call(`/api/v1/assignments/${assignment.id}`)).body.data.assignment;
+      assert.equal(serverCopy.title, 'AUDIT_LOCAL_EDIT_ORIGINAL'); assert.equal(serverCopy.version, assignment.version);
+    } finally { await editContext.close(); }
+  });
+  await scenario('audit P1-02 reopening after a server revision compares versions without replacing local text', async () => {
+    const assignment = await f.publish({ title: 'AUDIT_CHANGED_VERSION_ORIGINAL', details: 'SERVER_BEFORE_REVISION' });
+    const editContext = await browser.newContext();
+    const editPage = await editContext.newPage(); observe(editPage);
+    try {
+      await login(editPage); await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      await editPage.locator('#f-title').fill('ALPHA_VERSIONED_UNSENT_TITLE');
+      await editPage.locator('#f-details').fill('ALPHA_VERSIONED_UNSENT_DETAILS');
+      const revision = await f.command(f.teacher, `/assignments/${assignment.id}`, { expectedVersion: assignment.version, details: 'REMOTE_NEW_VERSION_DETAILS' }, 'PATCH');
+      assert.equal(revision.status, 200);
+      await editPage.reload(); await editPage.locator('#active-class').waitFor(); await settled(editPage);
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      await editPage.locator('#conflict-dialog[open]').waitFor();
+      const comparison = await editPage.locator('#conflict-body').innerText();
+      assert.match(comparison, /ALPHA_VERSIONED_UNSENT_TITLE/);
+      assert.match(comparison, /ALPHA_VERSIONED_UNSENT_DETAILS/);
+      assert.match(comparison, /REMOTE_NEW_VERSION_DETAILS/);
+      await editPage.locator('#conflict-discard').click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_VERSIONED_UNSENT_TITLE');
+      assert.equal(await editPage.locator('#f-details').inputValue(), 'ALPHA_VERSIONED_UNSENT_DETAILS');
+      assert.equal((await f.teacher.call(`/api/v1/assignments/${assignment.id}`)).body.data.assignment.version, revision.body.data.assignment.version);
+    } finally { await editContext.close(); }
+  });
+  await scenario('audit P1-02 discarding an unsent edit requires confirmation and only then restores server content', async () => {
+    const assignment = await f.publish({ title: 'AUDIT_DISCARD_ORIGINAL', details: 'SERVER_DISCARD_DETAILS' });
+    const editContext = await browser.newContext();
+    const editPage = await editContext.newPage(); observe(editPage);
+    try {
+      await login(editPage); await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      await editPage.locator('#f-title').fill('ALPHA_EXPLICIT_DISCARD_TEXT');
+      await editPage.locator('#discard-draft').click(); await editPage.locator('#confirm-dialog[open]').waitFor();
+      await editPage.locator('#confirm-no').click(); await settled(editPage);
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_EXPLICIT_DISCARD_TEXT');
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_EXPLICIT_DISCARD_TEXT');
+      await editPage.locator('#discard-draft').click(); await editPage.locator('#confirm-dialog[open]').waitFor();
+      await editPage.locator('#confirm-yes').click(); await settled(editPage);
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'AUDIT_DISCARD_ORIGINAL');
+      assert.equal(await editPage.locator('#f-details').inputValue(), 'SERVER_DISCARD_DETAILS');
+    } finally { await editContext.close(); }
+  });
+  await scenario('audit P1-02 failed local persistence reports the error and retains typed text without submitting', async () => {
+    const assignment = await f.publish({ title: 'AUDIT_STORAGE_FAILURE_ORIGINAL' });
+    const editContext = await browser.newContext();
+    const editPage = await editContext.newPage(); observe(editPage);
+    try {
+      await login(editPage); await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      await editPage.evaluate(() => {
+        const originalSetItem = Storage.prototype.setItem;
+        globalThis.restoreAuditStorage = () => { Storage.prototype.setItem = originalSetItem; };
+        Storage.prototype.setItem = function (key, value) {
+          if (key.startsWith('haiz.teacher.v3.drafts/')) throw new DOMException('Synthetic quota failure', 'QuotaExceededError');
+          return originalSetItem.call(this, key, value);
+        };
+      });
+      await editPage.locator('#f-title').fill('ALPHA_TYPED_DURING_STORAGE_FAILURE');
+      await editPage.locator('#f-details').fill('ALPHA_DETAILS_DURING_STORAGE_FAILURE');
+      assert.match(await editPage.locator('#notices').innerText(), /本机保存失败/);
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_TYPED_DURING_STORAGE_FAILURE');
+      assert.equal(await editPage.locator('#f-details').inputValue(), 'ALPHA_DETAILS_DURING_STORAGE_FAILURE');
+      assert.equal((await f.teacher.call(`/api/v1/assignments/${assignment.id}`)).body.data.assignment.title, assignment.title);
+      await editPage.evaluate(() => globalThis.restoreAuditStorage());
+      await editPage.locator('#save-draft').click(); await settled(editPage);
+      await openOfficial(editPage, assignment.title);
+      await editPage.locator('#published-detail').getByRole('button', { name: '修改内容' }).click();
+      assert.equal(await editPage.locator('#f-title').inputValue(), 'ALPHA_TYPED_DURING_STORAGE_FAILURE');
+      assert.equal(await editPage.locator('#f-details').inputValue(), 'ALPHA_DETAILS_DURING_STORAGE_FAILURE');
+    } finally { await editContext.close(); }
+  });
+  report.performance = await page.evaluate(() => ({ paint: performance.getEntriesByType('paint').map(entry => ({ name: entry.name, startTime: entry.startTime })),
+    navigation: performance.getEntriesByType('navigation').map(entry => ({ duration: entry.duration, domContentLoaded: entry.domContentLoadedEventEnd })) }));
+  await context.close();
+  await browser.close(); browser = null;
+}
+
+async function start() {
+  await mkdir(evidenceDirectory, { recursive: true });
+  const f = await fixture({ after: dispose => cleanups.push(dispose) });
+  server = createTeacherServer({ academicOrigin: f.service.root });
+  server.listen(port, '127.0.0.1'); await once(server, 'listening');
+  process.stdout.write(`[HAIZ Teacher QA] ${origin} · temporary synthetic Academic database\n`);
+  try { await runBrowser(f); }
+  catch (error) { report.fatal = error.stack ?? String(error); process.stderr.write(`[Teacher QA] ${report.fatal}\n`); }
+  report.status = report.fatal || report.scenarios.some(item => item.status === 'failed') ? 'failed' : 'passed';
+  report.finishedAt = new Date().toISOString();
+  await writeFile(join(evidenceDirectory, 'browser-report.json'), JSON.stringify(report, null, 2) + '\n');
+  process.stdout.write(`[HAIZ Teacher QA result] ${JSON.stringify(report)}\n`);
+  if (process.argv.includes('--serve')) {
+    process.stdout.write(`[HAIZ Teacher QA] server remains available at ${origin}; SIGTERM removes its temporary database.\n`);
+  } else {
+    await cleanup();
+    process.exitCode = report.status === 'passed' ? 0 : 1;
+  }
+}
+start().catch(async error => {
+  process.stderr.write(`${error.stack ?? error}\n`);
+  await cleanup(); process.exitCode = 1;
 });

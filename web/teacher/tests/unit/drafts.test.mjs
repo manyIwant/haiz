@@ -110,6 +110,41 @@ test('quota errors are explicit and capacity never silently removes a draft', ()
   assert.equal(store.all().length, 100);
 });
 
+test('invalid records and failed legacy import preserve data and report errors', () => {
+  const invalid = memoryStorage({ 'haiz.teacher.v3.drafts/local': '[{"id":"broken"}]' });
+  assert.throws(() => createDraftStore({ storage: invalid }).all(), /损坏/);
+  const legacy = memoryStorage({ 'haiz.teacher.v1.drafts': '{broken' });
+  assert.throws(() => createDraftStore({ storage: legacy }).importLegacy(), /损坏/);
+  assert.equal(legacy.getItem('haiz.teacher.v1.drafts'), '{broken');
+});
+
+test('import distinguishes same titles with different due dates', () => {
+  const disk = memoryStorage({ 'haiz.teacher.v1.drafts': JSON.stringify([
+    { subject: '数学', title: '练习', due: '2026-10-29' },
+    { subject: '数学', title: '练习', due: '2026-10-30' },
+  ]) });
+  const store = createDraftStore({ storage: disk, idFactory });
+  assert.equal(store.importLegacy(), 2);
+  assert.equal(store.importLegacy(), 0);
+});
+
+test('legacy import is atomic at capacity and deduplicates exact content', () => {
+  const disk = memoryStorage({ 'haiz.teacher.v1.drafts': JSON.stringify([
+    { subject: '数学', title: '新一', due: '2026-10-29' },
+    { subject: '数学', title: '新二', due: '2026-10-30' },
+  ]) });
+  const store = createDraftStore({ storage: disk, idFactory });
+  for (let index = 0; index < 99; index++) store.create({ subject: '数学', title: String(index) });
+  const before = disk.getItem('haiz.teacher.v3.drafts/local');
+  assert.throws(() => store.importLegacy(), /导入失败/);
+  assert.equal(disk.getItem('haiz.teacher.v3.drafts/local'), before);
+  const identical = { subject: '数学', title: '同一', due: null };
+  const duplicates = memoryStorage({ 'haiz.teacher.v1.drafts': JSON.stringify([identical, identical]) });
+  assert.equal(createDraftStore({ storage: duplicates, idFactory }).importLegacy(), 1);
+  const wrongShape = memoryStorage({ 'haiz.teacher.v1.drafts': '{}' });
+  assert.throws(() => createDraftStore({ storage: wrongShape }).importLegacy(), /损坏/);
+});
+
 test('keystore survives reload within a session', () => {
   const session = memoryStorage();
   const ks = createKeyStore(session);

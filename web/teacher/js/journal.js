@@ -41,7 +41,7 @@ export function createJournal({ storage, scope, send, keyFactory = newIdempotenc
       try {
         response = await send(entry.path, { method: entry.method, body: clone(entry.body), idempotencyKey: entry.idempotencyKey });
       } catch (error) {
-        if (error.status >= 400 && error.status < 500 && error.status !== 429) {
+        if (error.status >= 400 && error.status < 500 && ![401, 403, 429].includes(error.status)) {
           write({ ...read(), [intent]: { ...entry, status: 'rejected', error: { message: error.message, status: error.status, code: error.code ?? 'REJECTED' } } });
         }
         throw error;
