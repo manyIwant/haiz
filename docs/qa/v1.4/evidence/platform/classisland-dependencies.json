@@ -1,0 +1,503 @@
+{
+  "version": 1,
+  "parameters": "--include-transitive",
+  "projects": [
+    {
+      "path": "/Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj",
+      "frameworks": [
+        {
+          "framework": "net8.0",
+          "topLevelPackages": [
+            {
+              "id": "ClassIsland.PluginSdk",
+              "requestedVersion": "2.0.0.*",
+              "resolvedVersion": "2.0.0.2"
+            }
+          ],
+          "transitivePackages": [
+            {
+              "id": "AsyncImageLoader.Avalonia",
+              "resolvedVersion": "3.3.0"
+            },
+            {
+              "id": "Avalonia",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Angle.Windows.Natives",
+              "resolvedVersion": "2.1.25547.20250602"
+            },
+            {
+              "id": "Avalonia.AvaloniaEdit",
+              "resolvedVersion": "11.0.0"
+            },
+            {
+              "id": "Avalonia.BuildServices",
+              "resolvedVersion": "0.0.31"
+            },
+            {
+              "id": "Avalonia.Controls.ColorPicker",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Controls.DataGrid",
+              "resolvedVersion": "11.2.5"
+            },
+            {
+              "id": "Avalonia.Desktop",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.FreeDesktop",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Labs.CommandManager",
+              "resolvedVersion": "11.3.0"
+            },
+            {
+              "id": "Avalonia.Native",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Remote.Protocol",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Skia",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.Svg",
+              "resolvedVersion": "11.0.0"
+            },
+            {
+              "id": "Avalonia.Win32",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "Avalonia.X11",
+              "resolvedVersion": "11.3.6"
+            },
+            {
+              "id": "ClassIsland.ColorDocument.Avalonia",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.ColorTextBlock.Avalonia",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Core",
+              "resolvedVersion": "2.0.0.2"
+            },
+            {
+              "id": "ClassIsland.Markdown.Avalonia",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Markdown.Avalonia.Html",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Markdown.Avalonia.Svg",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Markdown.Avalonia.SyntaxHigh",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Markdown.Avalonia.Tight",
+              "resolvedVersion": "11.0.3.4"
+            },
+            {
+              "id": "ClassIsland.Platforms.Abstractions",
+              "resolvedVersion": "2.0.0.2"
+            },
+            {
+              "id": "ClassIsland.Shared",
+              "resolvedVersion": "2.0.0.2"
+            },
+            {
+              "id": "ClassIsland.Shared.IPC",
+              "resolvedVersion": "2.0.0.2"
+            },
+            {
+              "id": "CommunityToolkit.Mvvm",
+              "resolvedVersion": "8.2.1"
+            },
+            {
+              "id": "CsesSharp",
+              "resolvedVersion": "1.0.0"
+            },
+            {
+              "id": "dotnetCampus.Ipc",
+              "resolvedVersion": "2.0.0-alpha410"
+            },
+            {
+              "id": "DynamicData",
+              "resolvedVersion": "9.1.2"
+            },
+            {
+              "id": "ExCSS",
+              "resolvedVersion": "4.1.4"
+            },
+            {
+              "id": "Fizzler",
+              "resolvedVersion": "1.2.1"
+            },
+            {
+              "id": "FluentAvaloniaUI",
+              "resolvedVersion": "2.4.1"
+            },
+            {
+              "id": "Google.Protobuf",
+              "resolvedVersion": "3.27.0-rc1"
+            },
+            {
+              "id": "Grpc.Core.Api",
+              "resolvedVersion": "2.71.0"
+            },
+            {
+              "id": "Grpc.Net.Client",
+              "resolvedVersion": "2.71.0"
+            },
+            {
+              "id": "Grpc.Net.Common",
+              "resolvedVersion": "2.71.0"
+            },
+            {
+              "id": "HarfBuzzSharp",
+              "resolvedVersion": "8.3.1.1"
+            },
+            {
+              "id": "HarfBuzzSharp.NativeAssets.Linux",
+              "resolvedVersion": "8.3.1.1"
+            },
+            {
+              "id": "HarfBuzzSharp.NativeAssets.macOS",
+              "resolvedVersion": "8.3.1.1"
+            },
+            {
+              "id": "HarfBuzzSharp.NativeAssets.WebAssembly",
+              "resolvedVersion": "8.3.1.1"
+            },
+            {
+              "id": "HarfBuzzSharp.NativeAssets.Win32",
+              "resolvedVersion": "8.3.1.1"
+            },
+            {
+              "id": "HtmlAgilityPack",
+              "resolvedVersion": "1.11.42"
+            },
+            {
+              "id": "Lib.Harmony.Thin",
+              "resolvedVersion": "2.4.2"
+            },
+            {
+              "id": "MicroCom.Runtime",
+              "resolvedVersion": "0.11.0"
+            },
+            {
+              "id": "Microsoft.CSharp",
+              "resolvedVersion": "4.7.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Binder",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.CommandLine",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.EnvironmentVariables",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.FileExtensions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Json",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.UserSecrets",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Diagnostics",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Diagnostics.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Physical",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.FileSystemGlobbing",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Hosting",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Hosting.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.Abstractions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.Configuration",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.Console",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.Debug",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.EventLog",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Logging.EventSource",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Options",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Options.ConfigurationExtensions",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Primitives",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "Microsoft.NETCore.Platforms",
+              "resolvedVersion": "1.1.0"
+            },
+            {
+              "id": "Microsoft.NETCore.Targets",
+              "resolvedVersion": "1.1.0"
+            },
+            {
+              "id": "Mono.Cecil",
+              "resolvedVersion": "0.11.6"
+            },
+            {
+              "id": "MonoMod.Backports",
+              "resolvedVersion": "1.1.2"
+            },
+            {
+              "id": "MonoMod.Core",
+              "resolvedVersion": "1.3.3"
+            },
+            {
+              "id": "MonoMod.ILHelpers",
+              "resolvedVersion": "1.1.0"
+            },
+            {
+              "id": "MonoMod.Utils",
+              "resolvedVersion": "25.0.11"
+            },
+            {
+              "id": "Newtonsoft.Json",
+              "resolvedVersion": "13.0.2"
+            },
+            {
+              "id": "Octokit",
+              "resolvedVersion": "9.1.0"
+            },
+            {
+              "id": "ReactiveUI",
+              "resolvedVersion": "20.2.45"
+            },
+            {
+              "id": "ShimSkiaSharp",
+              "resolvedVersion": "1.0.0"
+            },
+            {
+              "id": "SkiaSharp",
+              "resolvedVersion": "2.88.9"
+            },
+            {
+              "id": "SkiaSharp.NativeAssets.Linux",
+              "resolvedVersion": "2.88.9"
+            },
+            {
+              "id": "SkiaSharp.NativeAssets.macOS",
+              "resolvedVersion": "2.88.9"
+            },
+            {
+              "id": "SkiaSharp.NativeAssets.WebAssembly",
+              "resolvedVersion": "2.88.9"
+            },
+            {
+              "id": "SkiaSharp.NativeAssets.Win32",
+              "resolvedVersion": "2.88.9"
+            },
+            {
+              "id": "SoundFlow",
+              "resolvedVersion": "1.2.1"
+            },
+            {
+              "id": "Splat",
+              "resolvedVersion": "15.3.1"
+            },
+            {
+              "id": "Svg.Custom",
+              "resolvedVersion": "1.0.0"
+            },
+            {
+              "id": "Svg.Model",
+              "resolvedVersion": "1.0.0"
+            },
+            {
+              "id": "System.Collections",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Collections.Immutable",
+              "resolvedVersion": "1.6.0"
+            },
+            {
+              "id": "System.ComponentModel.Annotations",
+              "resolvedVersion": "5.0.0"
+            },
+            {
+              "id": "System.Diagnostics.Debug",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Diagnostics.DiagnosticSource",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "System.Diagnostics.EventLog",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "System.Globalization",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.IO",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.IO.Pipelines",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "System.Memory",
+              "resolvedVersion": "4.5.4"
+            },
+            {
+              "id": "System.ObjectModel",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Reactive",
+              "resolvedVersion": "6.0.1"
+            },
+            {
+              "id": "System.Reflection",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Reflection.Primitives",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Resources.ResourceManager",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Runtime",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Text.Encoding",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Text.Encoding.CodePages",
+              "resolvedVersion": "8.0.0"
+            },
+            {
+              "id": "System.Text.Encodings.Web",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "System.Text.Json",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "System.Threading",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.Threading.Tasks",
+              "resolvedVersion": "4.3.0"
+            },
+            {
+              "id": "System.ValueTuple",
+              "resolvedVersion": "4.5.0"
+            },
+            {
+              "id": "Tmds.DBus.Protocol",
+              "resolvedVersion": "0.21.2"
+            },
+            {
+              "id": "Xaml.Behaviors",
+              "resolvedVersion": "11.2.0.14"
+            },
+            {
+              "id": "YamlDotNet",
+              "resolvedVersion": "16.3.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Running Gradle task 'assembleRelease'...                        
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/var/folders/xd/b_4vkkxd6rg2sbbnvspkzmch0000gn/T/haiz-android-qa-signing-vj5n5wi7
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 2432 bytes (99.1% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 7704 bytes (99.5% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Running Gradle task 'assembleRelease'...                           88.2s
+✓ Built build/app/outputs/flutter-apk/app-release.apk (105.9MB)
+
+QA_BUILD_EXIT=0

@@ -1,0 +1,16 @@
+[HAIZ Academic] Initial administrator created.
+PASS legacy screen excludes v1 draft/review/retracted, includes published id/version and nullable due
+PASS real relay HMAC, pending-only, duplicate, manual publication, public screen shape, key rotation, bad signature, unmapped and ignored events
+LIMIT actual C# rendering/Windows host not executed; screen JSON shape validated only
+PASS installed SDK event normalization and (ctx, msg) callback; bot.start never called
+✔ actual adapter -> integrated backend review -> public legacy screen -> rotation (45.783ms)
+✔ installed Tencent SDK event dispatcher and message callback match adapter assumptions without network (12.198292ms)
+✔ relay transport errors are propagated and valid events use a timeout signal (0.245666ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 129.973167

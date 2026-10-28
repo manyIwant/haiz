@@ -1,0 +1,27 @@
+error: The SSL connection could not be established, see inner exception.
+error:   Received an unexpected EOF or 0 bytes from the transport stream.
+
+
+Usage: NuGet.CommandLine.XPlat.dll package list [arguments] [options]
+
+Arguments:
+  <PROJECT | SOLUTION>  A path to a project, solution file or directory.
+
+Options:
+  -h|--help               Show help information
+  --force-english-output  Forces the application to run using an invariant, English-based culture.
+  --framework             Specifies the target framework for which the packages will be listed.
+  --deprecated            Displays only the packages marked deprecated by the authors.
+  --outdated              Displays only the packages that need updates with the latest version from the sources.
+  --vulnerable            Displays only the packages flagged as vulnerable.
+  --include-transitive    Includes transitive packages too in the result.
+  --include-prerelease    Considers prerelease versions when looking for latest. Works only with `--outdated`.
+  --highest-patch         Considers only the versions with matching minor and major. Works only with `--outdated`.
+  --highest-minor         Considers only the versions with matching major. Works only with `--outdated`.
+  --source                Sources to lookup for latest versions. Works only with `--outdated`.
+  --config                A path to a config file to specify sources. Works only with `--outdated`.
+  --format                Set the report output format.
+  --output-version        The version of report output.
+  --interactive           Allow the command to block and require manual action for operations like authentication.
+  -v|--verbosity          Set the verbosity level of the command. Allowed values are q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic].
+

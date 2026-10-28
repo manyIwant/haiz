@@ -1,0 +1,37 @@
+PACKAGE /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/cipx/HAIZ.ClassroomPlugin.cipx
+BYTES 31472
+SHA256 6ca33ec846c2a2e005a4fedfa5c5202db8d379aeddc1da92842d3bf712d71cb0
+MD5 AFA2A4E1FC286AE00240B54C63CAD4EA
+CRC None
+ENTRY HAIZ.ClassroomPlugin.runtimeconfig.json 362
+ENTRY HAIZ.ClassroomPlugin.pdb 18440
+ENTRY HAIZ.ClassroomPlugin.dll 11264
+ENTRY HAIZ.ClassroomPlugin.deps.json 62856
+ENTRY manifest.yml 283
+MANIFEST
+id: space.haiz.classroom
+name: HAIZ 班级任务
+description: 展示由教师审核发布的 HAIZ 作业，不展示学生姓名
+entranceAssembly: "HAIZ.ClassroomPlugin.dll"
+url: https://github.com/manyIwant/haiz
+apiVersion: 2.0.0.0
+version: 0.1.0.0
+author: HAIZ Independent Project
+
+RUNTIMECONFIG
+{
+  "runtimeOptions": {
+    "tfm": "net8.0",
+    "rollForward": "LatestMinor",
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "8.0.0"
+    },
+    "configProperties": {
+      "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+      "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false
+    }
+  }
+}
+SDK ['ClassIsland.PluginSdk/2.0.0.2']
+PASS CRC integrity, MD5 record, manifest match, expected assembly, no haiz-screen config/env/DB

@@ -1,0 +1,23 @@
+integration business source diff exit=0 (0 means unchanged)
+16201285eaf812d0c697d359e9345e1bfc2a38d56a25e8ed961ba7e603daa462  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/HomeworkComponent.cs
+02ce94e1f4465c078706268fbd741d6bb24be7457693ebc9eead14dee3b61ed0  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/Plugin.cs
+025d5f72987e759f8e758c9d0ae562c95fb05f374fc745fde722c7af7da6c9ce  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj
+255db3aa8750501d0706785ca636f4f9a171cbb5cd9521aeeb186a3868e1abc4  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/manifest.yml
+1b3ac41bb66385bb7433117afccf0d3e4fe0e1f957645a02d4684b34ea8b400f  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/qq-bot/bot.mjs
+b06bd0310b9e41c69897abc9f59bd9f58adba785633e9eb0eee8f585811260de  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/qq-bot/test.mjs
+0237373e3816a33f89b1ce84223b1d0ba09728196c3e28ff0527144054ea5318  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/qq-bot/package.json
+a184efbc30cca7c16e82fe98dddd832b6fa6c51611cf407070d0bac32a7cf4f7  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/qq-bot/package-lock.json
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/integration-probe.mjs
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/source-scope.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/qq-install.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/integration-probe.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/qq-audit.json
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/host-tools.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/classisland-build.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/inspect-package.py
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/qq-missing-credentials.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/classisland-package.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/classisland-audit.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/classisland-dependencies.json
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/qq-tests.log
+/Users/a11/manyiwant/haiz-qa-v1.4/docs/qa/v1.4/evidence/platform/qq-edge-cases.log

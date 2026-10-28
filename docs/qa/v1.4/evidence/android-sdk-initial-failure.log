@@ -1,0 +1,147 @@
+Earlier shell command had exit0 but the SDK package installer logged a real failure.
+WARNING: The SDK Manager CLI tool (sdkmanager) is deprecated. Use Android CLI instead.
+The 'android' binary can also be found in the cmdline-tools directory, and 'android sdk' is the replacement for 'sdkmanager'.
+To learn more about the Android CLI and how to use it, see the documentation (https://d.android.com/tools/agents/android-cli)
+
+Loading package information...                                                  
+Loading local repository...                                                     
+[                                       ] 3% Loading local repository...        
+[                                       ] 3% Fetch remote repository...         
+[=                                      ] 3% Fetch remote repository...         
+[=                                      ] 4% Fetch remote repository...         
+[=                                      ] 5% Fetch remote repository...         
+[==                                     ] 5% Fetch remote repository...         
+[==                                     ] 6% Fetch remote repository...         
+[==                                     ] 7% Fetch remote repository...         
+[==                                     ] 7% Computing updates...               
+[===                                    ] 8% Computing updates...               
+[===                                    ] 10% Computing updates...              
+[===                                    ] 10% Installing Android Emulator       
+[===                                    ] 10% Downloading emulator-darwin_aarch6
+[====                                   ] 10% Downloading emulator-darwin_aarch6
+[====                                   ] 11% Downloading emulator-darwin_aarch6
+[====                                   ] 12% Downloading emulator-darwin_aarch6
+[=====                                  ] 13% Downloading emulator-darwin_aarch6
+[=====                                  ] 14% Downloading emulator-darwin_aarch6
+[=====                                  ] 15% Downloading emulator-darwin_aarch6
+[======                                 ] 15% Downloading emulator-darwin_aarch6
+[======                                 ] 16% Downloading emulator-darwin_aarch6
+[======                                 ] 17% Downloading emulator-darwin_aarch6
+[=======                                ] 18% Downloading emulator-darwin_aarch6
+[=======                                ] 19% Downloading emulator-darwin_aarch6
+[=======                                ] 20% Downloading emulator-darwin_aarch6
+[========                               ] 20% Downloading emulator-darwin_aarch6
+[========                               ] 21% Downloading emulator-darwin_aarch6
+[========                               ] 21% Unzipping...                      
+[========                               ] 21% Unzipping... emulator/            
+[========                               ] 21% Unzipping... emulator/qsn         
+[========                               ] 21% Unzipping... emulator/qemu-img    
+[========                               ] 21% Unzipping... emulator/crashreport 
+[========                               ] 21% Unzipping... emulator/lib64/      
+[========                               ] 21% Unzipping... emulator/lib64/gles_a
+[========                               ] 22% Unzipping... emulator/lib64/gles_a
+[========                               ] 22% Unzipping... emulator/lib64/libemu
+[========                               ] 22% Unzipping... emulator/lib64/liband
+[========                               ] 22% Unzipping... emulator/lib64/libgfx
+[========                               ] 22% Unzipping... emulator/lib64/libpro
+[========                               ] 22% Unzipping... emulator/lib64/liband
+[========                               ] 22% Unzipping... emulator/lib64/libima
+[========                               ] 22% Unzipping... emulator/lib64/libgli
+[========                               ] 22% Unzipping... emulator/lib64/liband
+[========                               ] 22% Unzipping... emulator/lib64/qt/   
+[========                               ] 22% Unzipping... emulator/lib64/qt/plu
+[========                               ] 22% Unzipping... emulator/lib64/qt/lib
+[=========                              ] 23% Unzipping... emulator/lib64/qt/lib
+[=========                              ] 23% Unzipping... emulator/lib64/qt/res
+[=========                              ] 23% Unzipping... emulator/lib64/qt/lib
+[=========                              ] 24% Unzipping... emulator/lib64/qt/lib
+[=========                              ] 25% Unzipping... emulator/lib64/qt/lib
+[==========                             ] 25% Unzipping... emulator/lib64/qt/lib
+[==========                             ] 26% Unzipping... emulator/lib64/qt/lib
+[==========                             ] 26% Unzipping... emulator/lib64/qt/tra
+[==========                             ] 26% Unzipping... emulator/lib64/libabs
+[==========                             ] 26% Unzipping... emulator/lib64/liband
+[==========                             ] 26% Unzipping... emulator/lib64/libpro
+[==========                             ] 26% Unzipping... emulator/lib64/vulkan
+[==========                             ] 27% Unzipping... emulator/lib64/vulkan
+[===========                            ] 28% Unzipping... emulator/lib64/vulkan
+[===========                            ] 29% Unzipping... emulator/lib64/vulkan
+[===========                            ] 29% Unzipping... emulator/lib64/libsha
+[===========                            ] 29% Unzipping... emulator/lib64/liband
+[===========                            ] 29% Unzipping... emulator/include/    
+[===========                            ] 29% Unzipping... emulator/include/flat
+[===========                            ] 29% Unzipping... emulator/resources/  
+[===========                            ] 29% Unzipping... emulator/resources/de
+[===========                            ] 29% Unzipping... emulator/resources/sk
+[===========                            ] 29% Unzipping... emulator/resources/po
+[===========                            ] 29% Unzipping... emulator/resources/To
+[===========                            ] 29% Unzipping... emulator/resources/ma
+[===========                            ] 30% Unzipping... emulator/resources/ma
+[===========                            ] 30% Unzipping... emulator/resources/To
+[===========                            ] 30% Unzipping... emulator/resources/ma
+[===========                            ] 30% Unzipping... emulator/resources/To
+[===========                            ] 30% Unzipping... emulator/resources/de
+[===========                            ] 30% Unzipping... emulator/resources/To
+[===========                            ] 30% Unzipping... emulator/resources/de
+[===========                            ] 30% Unzipping... emulator/crashpad_han
+[===========                            ] 30% Unzipping... emulator/bin64/      
+[===========                            ] 30% Unzipping... emulator/bin64/fsck.e
+[===========                            ] 30% Unzipping... emulator/bin64/mkfs.e
+[===========                            ] 30% Unzipping... emulator/bin64/tune2f
+[===========                            ] 30% Unzipping... emulator/bin64/resize
+[===========                            ] 30% Unzipping... emulator/bin64/e2fsck
+[===========                            ] 30% Unzipping... emulator/_CodeSignatu
+[===========                            ] 30% Unzipping... emulator/NOTICE.csv  
+[===========                            ] 30% Unzipping... emulator/._NOTICE.csv
+[===========                            ] 30% Unzipping... emulator/LICENSE     
+[===========                            ] 30% Unzipping... emulator/._LICENSE   
+[===========                            ] 30% Unzipping... emulator/source.prope
+[===========                            ] 30% Unzipping... emulator/._source.pro
+[===========                            ] 30% Unzipping... emulator/emulator-che
+[===========                            ] 30% Unzipping... emulator/netsimd     
+[============                           ] 30% Unzipping... emulator/netsimd     
+[============                           ] 30% Unzipping... emulator/qemu/       
+[============                           ] 30% Unzipping... emulator/qemu/darwin-
+[============                           ] 31% Unzipping... emulator/qemu/darwin-
+[============                           ] 32% Unzipping... emulator/qemu/darwin-
+[============                           ] 32% Unzipping... emulator/mksdcard    
+[============                           ] 32% Unzipping... emulator/lib/        
+[============                           ] 32% Unzipping... emulator/lib/waterfal
+[============                           ] 32% Unzipping... emulator/lib/emulator
+[============                           ] 32% Unzipping... emulator/lib/pkgconfi
+[============                           ] 32% Unzipping... emulator/lib/cmake/  
+[============                           ] 32% Unzipping... emulator/lib/cmake/fl
+[============                           ] 32% Unzipping... emulator/lib/emulator
+[============                           ] 32% Unzipping... emulator/lib/control_
+[============                           ] 32% Unzipping... emulator/lib/hardware
+[============                           ] 32% Unzipping... emulator/lib/libflatb
+[============                           ] 32% Unzipping... emulator/lib/adb_serv
+[============                           ] 32% Unzipping... emulator/lib/hostapd.
+[============                           ] 32% Unzipping... emulator/lib/pc-bios/
+[============                           ] 32% Unzipping... emulator/lib/snapshot
+[============                           ] 32% Unzipping... emulator/lib/emu-orig
+[============                           ] 32% Unzipping... emulator/lib/advanced
+[============                           ] 32% Unzipping... emulator/lib/emulated
+[============                           ] 32% Unzipping... emulator/lib/snapshot
+[============                           ] 32% Unzipping... emulator/lib/emulated
+[============                           ] 32% Unzipping... emulator/lib/emulator
+[============                           ] 32% Unzipping... emulator/lib/ca-bundl
+[============                           ] 32% Unzipping... emulator/lib/ui_contr
+[============                           ] 32% Unzipping... emulator/lib/grpc_end
+[============                           ] 32% Unzipping... emulator/nimble_bridg
+[============                           ] 32% Unzipping... emulator/emulator    
+[============                           ] 32% Unzipping... emulator/NOTICE.txt  
+[============                           ] 32% Unzipping... emulator/._NOTICE.txt
+[=============                          ] 33% Unzipping... emulator/._NOTICE.txt
+[=====================                  ] 55% Unzipping... emulator/._NOTICE.txt
+[=====================                  ] 55% Installing Google APIs ARM 64 v8a 
+[=====================                  ] 55% Downloading arm64-v8a-36_r07.zip..
+[======================                 ] 55% Downloading arm64-v8a-36_r07.zip..
+[======================                 ] 56% Downloading arm64-v8a-36_r07.zip..
+[======================                 ] 57% Downloading arm64-v8a-36_r07.zip..
+[=======================                ] 58% Downloading arm64-v8a-36_r07.zip..
+[==========================             ] 66% Downloading arm64-v8a-36_r07.zip..
+[==========================             ] 66% Unzipping... emulator/._NOTICE.txt
+                                                                                
+Warning: An error occurred while preparing SDK package Google APIs ARM 64 v8a System Image: Error reading Zip content from a SeekableByteChannel.
+[==========================             ] 66% Unzipping... emulator/._NOTICE.txt

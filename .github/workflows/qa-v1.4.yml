@@ -1,0 +1,110 @@
+name: HAIZ v1.4 independent QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [preview/haiz-academic-v1.3]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - run: npm ci --ignore-scripts
+        working-directory: services/academic
+      - run: npm run test:coverage
+        working-directory: services/academic
+      - run: npm audit --audit-level=high
+        working-directory: services/academic
+  flutter-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.8
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter analyze
+        working-directory: app
+      # Keep desired invariants failing until the owning team fixes product code.
+      - run: flutter test --coverage --reporter expanded
+        working-directory: app
+      - name: Require 80 percent line coverage
+        if: always()
+        working-directory: app
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          rows = Path('coverage/lcov.info').read_text().splitlines()
+          found = sum(int(row[3:]) for row in rows if row.startswith('LF:'))
+          hit = sum(int(row[3:]) for row in rows if row.startswith('LH:'))
+          assert found and hit / found >= 0.8, f'Line coverage: {hit}/{found}'
+          PY
+  real-http:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.8
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: node scripts/qa/run-live.mjs
+  qq-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - run: npm ci --ignore-scripts
+        working-directory: integrations/qq-bot
+      - run: npm test
+        working-directory: integrations/qq-bot
+      - run: npm audit --audit-level=high
+        working-directory: integrations/qq-bot
+      - run: node --test docs/qa/v1.4/evidence/platform/integration-probe.mjs
+  classisland-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      # Compilation/package only; no host installation certification.
+      - run: dotnet build integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj -c Release
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.8
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      # Disposable public QA certificate; no deployment signing credentials.
+      - name: Build with disposable QA signing
+        shell: bash
+        run: |
+          qa_home=$(mktemp -d)
+          trap 'rm -rf "$qa_home"' EXIT
+          mkdir -p "$qa_home/.config/haiz-android"
+          keytool -genkeypair -keystore "$qa_home/qa.jks" -alias qa -keyalg RSA -keysize 2048 -validity 7 -storepass syntheticqa -keypass syntheticqa -dname 'CN=Synthetic HAIZ QA'
+          printf 'storeFile=%s\nstorePassword=syntheticqa\nkeyAlias=qa\nkeyPassword=syntheticqa\n' "$qa_home/qa.jks" > "$qa_home/.config/haiz-android/signing.properties"
+          JAVA_TOOL_OPTIONS="-Duser.home=$qa_home" flutter build apk --release --no-pub
+        working-directory: app
