@@ -1,0 +1,34 @@
+2026-10-27T08:07:03.863864-07:00
+macOS-26.6-arm64-arm-64bit
+
+COMMAND=git -C /Users/a11/manyiwant/haiz-qa-v1.4 rev-parse HEAD
+a03da324386b17d305e6a3698adc21f2b4bcf905
+EXIT=0
+
+COMMAND=/Users/a11/development/flutter/bin/flutter --version
+Flutter 3.47.8 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 737ba8f885 (4 days ago) • 2026-10-22 21:37:31 -0700
+Engine • hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (3 days ago) • 2026-10-23 02:13:38.000Z
+Tools • Dart 3.13.7 • DevTools 2.60.0
+EXIT=0
+
+COMMAND=java -version
+openjdk version "21.0.13" 2026-10-20 LTS
+OpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)
+EXIT=0
+
+COMMAND=/Users/a11/Library/Android/sdk/platform-tools/adb devices -l
+List of devices attached
+
+EXIT=0
+
+COMMAND=/opt/homebrew/share/android-commandlinetools/emulator/emulator -accel-check
+accel:
+0
+Hypervisor.Framework OS X Version 26.6
+accel
+EXIT=0
+
+Manifest reachability review: merged release APK contains INTERNET. Remote origins require HTTPS; loopback HTTP allowed by Dart validator. No runtime cleartext traffic result without device.
+Native OCR model assets are present in APK but no recognition accuracy/runtime PASS follows.

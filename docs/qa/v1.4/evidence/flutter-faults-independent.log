@@ -1,0 +1,61 @@
+00:00 +0: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart
+00:00 +0: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk
+QA-STORAGE-01 after migration memory=[迁移前私人任务, 旧任务]
+QA-STORAGE-01 after migration disk=[归属写入等待期间新增的私人任务, 迁移前私人任务]
+QA-STORAGE-01 after appearance save disk=[迁移前私人任务, 旧任务]
+00:00 +0 -1: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk [E]
+  Expected: contains all of ['迁移前私人任务', '旧任务', '归属写入等待期间新增的私人任务']
+    Actual: MappedListIterable<TaskItem, String>:['迁移前私人任务', '旧任务']
+     Which: has too few elements (2 < 3)
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/qa_storage_fault_test.dart 137:5               main.<fn>
+  
+00:00 +0 -1: QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes
+00:00 +0 -2: QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+  
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/qa_storage_fault_test.dart 154:11             main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/qa_storage_fault_test.dart 153:19             main.<fn>
+  
+00:00 +0 -2: QA-STORAGE-03 queued snapshots continue after first failure while store reports read-only
+Personal storage write failed (StateError)
+#0      _WriteFailure.setString (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart:76:9)
+<asynchronous suspension>
+#1      PocketStore._persist.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:145:9)
+<asynchronous suspension>
+#2      PocketStore._persist.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:143:30)
+<asynchronous suspension>
+#3      PocketStore.flush (package:haiz_pocket_flutter/core/pocket_store.dart:160:5)
+<asynchronous suspension>
+#4      Throws._matchFuture (package:matcher/src/expect/throws_matcher.dart:103:19)
+<asynchronous suspension>
+#5      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+#7      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#8      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart:180:5)
+<asynchronous suspension>
+#9      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#10     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#11     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:00 +1 -2: QA-STORAGE-05 destination write interrupted after claim is retryable by original owner
+00:00 +2 -2: QA-STORAGE-04 switched account waits for in-flight migration without receiving its archive
+00:00 +3 -2: Some tests failed.
+
+Failing tests:
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes

@@ -1,0 +1,3 @@
+Node URL IPv6 hostname: [::1]
+CONFIRMED IPv6 local HTTP is rejected by adapter before sending
+Reproduce: node --input-type=module -e "console.log(new URL('http://[::1]:8780').hostname)"; hostname is [::1], but bot.mjs allowlist contains ::1

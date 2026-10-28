@@ -1,0 +1,19 @@
+MSBuild version 17.8.60+293f66545 for .NET
+  Determining projects to restore...
+  Restored /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj (in 3.67 sec).
+  HAIZ.ClassroomPlugin -> /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/bin/Release/net8.0/HAIZ.ClassroomPlugin.dll
+  正在创建插件包 /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/cipx/HAIZ.ClassroomPlugin.cipx
+  Zipping directory "/Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/bin/Release/net8.0/" to "/Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/cipx/HAIZ.ClassroomPlugin.cipx".
+  /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/cipx
+  rm: /Users/a11/manyiwant/haiz-qa-v1.4/integrations/classisland/HAIZ.ClassroomPlugin/cipx/*.md5sum: No such file or directory
+  
+  [32;1mName                          [0m[32;1m Value[0m
+  [32;1m----                          [0m [32;1m-----[0m
+  HAIZ.ClassroomPlugin.cipx      AFA2A4E1FC286AE00240B54C63CAD4EA
+  
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.79

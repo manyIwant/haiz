@@ -40,6 +40,7 @@ class _InboxPageState extends State<InboxPage> {
   String? _notice;
   String _currentSource = '手动粘贴';
   bool _importing = false;
+  int _composeGeneration = 0;
   @override
   void dispose() {
     _input.dispose();
@@ -49,6 +50,7 @@ class _InboxPageState extends State<InboxPage> {
   void _extract() {
     final found = NoticeParser.parse(_input.text);
     setState(() {
+      _composeGeneration = widget.store.generation;
       _drafts
         ..clear()
         ..addAll(found.map(_Draft.new));
@@ -61,9 +63,16 @@ class _InboxPageState extends State<InboxPage> {
   Future<void> _importDocument() async {
     if (_importing) return;
     setState(() => _importing = true);
+    final generation = widget.store.generation;
     try {
       final result = await NoticeImportService.pickAndExtract();
       if (result == null || !mounted) return;
+      if (widget.store.generation != generation) {
+        setState(
+          () => _notice = '读取期间已切换账号，本次导入已取消，没有写入任何账号。',
+        );
+        return;
+      }
       _input.text = result.$2;
       _currentSource = result.$1;
       _extract();
@@ -163,6 +172,13 @@ class _InboxPageState extends State<InboxPage> {
   }
 
   void _commit() {
+    if (widget.store.generation != _composeGeneration) {
+      setState(() {
+        _drafts.clear();
+        _notice = '已切换账号，候选任务未写入任何账号。';
+      });
+      return;
+    }
     final selected = _drafts
         .where((d) => d.selected && d.title.trim().isNotEmpty)
         .toList();

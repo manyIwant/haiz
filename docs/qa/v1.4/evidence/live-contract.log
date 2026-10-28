@@ -1,0 +1,8 @@
+00:00 +0: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart
+00:00 +0: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: two students on one device never share a namespace or records
+00:00 +1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: an assignment is imported only on request and keeps private notes
+00:00 +2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: identity is revalidated and a widened scope never reopens old data
+00:00 +3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: the backend exposes the v1.4 identity route
+00:00 +4: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_lifecycle_live_test.dart
+00:00 +4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_lifecycle_live_test.dart: QA-LIVE-01 teacher revision retraction and revocation reach Flutter refresh
+00:00 +5: All tests passed!

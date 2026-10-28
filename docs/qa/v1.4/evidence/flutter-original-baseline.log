@@ -1,0 +1,159 @@
+00:00 +0: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart
+00:00 +0: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: normalizes HTTPS origins and rejects ambiguous credential destinations
+00:00 +1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: opens an account only after verified identity and isolates two students
+00:00 +2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: failed login clears the preceding account and credentials
+00:00 +3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: logout cancels delayed login and ignores its cookie and identity
+00:00 +4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: delayed old refresh cannot repopulate account B
+00:00 +5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: offline refresh keeps owner private work and exposes a recoverable error
+00:00 +6: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: class revocation purges official content and preserves private notes
+00:00 +7: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: HTTP 401 locks account cache and clears server session
+00:00 +8: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: HTTP 403 locks account cache and clears server session
+00:00 +9: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: rejects missing mismatched or malformed identity without opening account
+00:00 +10: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: successful logout revokes remote session and clears local identity
+00:00 +11: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: import is idempotent and later teacher text cannot overwrite private notes
+00:00 +12: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: invalid server fails before credentials are transmitted
+00:00 +13: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: repeated refresh after transient outage restores official content
+00:00 +14: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: server replacement requires new login and never reuses the old store
+00:02 +15: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:02 +16: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:02 +17: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: A tasks notes courses and focus records cannot be read by B
+00:02 +18: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: A tasks notes courses and focus records cannot be read by B
+00:02 +19: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: A tasks notes courses and focus records cannot be read by B
+00:02 +20: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: notes cannot be attached to another account task id
+00:02 +21: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: logout hides account records and restores only device guest work
+00:02 +22: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: focus timer stops and resets when the account changes
+00:02 +23: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: restart opens guest until the same account is verified again
+00:02 +24: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: a zero-length focus session invents no learning record
+00:02 +25: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: same user on another origin or replacement instance has a separate store
+00:02 +26: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: guest work is separate from account work after both are flushed
+00:02 +27: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: HTTPS host casing default port and trailing slash normalize identically
+00:02 +28: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: switch immediately clears notes active task and running focus timer
+00:02 +29: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: queued writes keep their original namespace during account switch
+00:02 +30: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: legacy bytes are archived unchanged and never assigned to first login
+00:02 +31: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: migration is idempotent and retains the first archived bytes on restart
+00:02 +32: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: unconfirmed legacy import rejects without altering either namespace or source
+00:02 +33: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: confirmed import merges private work once and preserves source and archive
+00:02 +34: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: guest cannot claim a legacy archive before an owner is authenticated
+00:02 +35: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: invalid identity cacheScope cannot open a previously authenticated account
+Personal storage open failed (FormatException)
+#0      validateAcademicIdentity (package:haiz_pocket_flutter/core/storage_scope.dart:45:5)
+#1      accountNamespace (package:haiz_pocket_flutter/core/storage_scope.dart:61:16)
+#2      PocketStore.openAccount.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:89:38)
+#3      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:95:34)
+<asynchronous suspension>
+#4      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:438:7)
+<asynchronous suspension>
+#5      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#7      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:02 +36: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: malformed legacy JSON is backed up exactly and cannot partially import
+00:02 +37: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: corrupt account payload stays inaccessible and cannot be overwritten with empty data
+Personal storage open failed (FormatException)
+#0      _ChunkedJsonParser.fail (dart:convert-patch/convert_patch.dart:1466:5)
+#1      _ChunkedJsonParser.parse (dart:convert-patch/convert_patch.dart:932:48)
+#2      _parseJson (dart:convert-patch/convert_patch.dart:35:10)
+#3      JsonDecoder.convert (dart:convert/json.dart:640:36)
+#4      JsonCodec.decode (dart:convert/json.dart:219:41)
+#5      jsonDecode (dart:convert/json.dart:160:12)
+#6      new PersonalSnapshot.decode (package:haiz_pocket_flutter/core/personal_snapshot.dart:31:19)
+#7      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:97:78)
+<asynchronous suspension>
+#8      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:499:5)
+<asynchronous suspension>
+#9      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#10     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#11     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:02 +38: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: conflicting legacy ids abort the import without claiming the archive
+00:02 +39: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: a malformed task date keeps the payload read-only instead of crashing
+Personal storage open failed (FormatException)
+#0      new PersonalSnapshot.fromFields.<anonymous closure> (package:haiz_pocket_flutter/core/personal_snapshot.dart:55:9)
+#1      MappedListIterable.elementAt (dart:_internal/iterable.dart:443:31)
+#2      ListIterator.moveNext (dart:_internal/iterable.dart:372:26)
+#3      new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:194:27)
+#4      new _GrowableList.of (dart:core-patch/growable_array.dart:154:28)
+#5      new List.of (dart:core-patch/array_patch.dart:39:18)
+#6      ListIterable.toList (dart:_internal/iterable.dart:224:7)
+#7      PersonalSnapshot._records (package:haiz_pocket_flutter/core/personal_snapshot.dart:119:29)
+#8      new PersonalSnapshot.fromFields (package:haiz_pocket_flutter/core/personal_snapshot.dart:39:19)
+#9      new PersonalSnapshot.decode (package:haiz_pocket_flutter/core/personal_snapshot.dart:35:29)
+#10     PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:97:78)
+<asynchronous suspension>
+#11     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:576:5)
+<asynchronous suspension>
+#12     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#14     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:02 +40: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: a confirmed migration cannot land in the next account when accounts switch mid-flight
+00:02 +41: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: a migration that lands after logout is discarded instead of written
+00:02 +42: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: a task added while the archive read is in flight survives the merge
+00:02 +43: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: archive write failure keeps accounts usable and retries safely on restart
+Legacy archive deferred (StateError)
+#0      _FailingArchivePreferences.setString (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:758:7)
+#1      SharedPreferencesAsync.setString (package:shared_preferences/src/shared_preferences_async.dart:114:22)
+#2      LegacyArchive.quarantine (package:haiz_pocket_flutter/core/legacy_archive.dart:32:17)
+<asynchronous suspension>
+#3      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:104:34)
+<asynchronous suspension>
+#4      _loadedStore (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:56:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:709:21)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:03 +44: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +45: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +46: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +47: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +48: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +49: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +50: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +51: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +52: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +53: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +54: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +55: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: DOCX extracts paragraphs in reading order
+00:03 +56: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: calendar export includes pending dates, never invents exact hours
+00:03 +57: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/import_calendar_test.dart: source original notice remains after local JSON serialization
+00:03 +58: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: time formatting, days and course sorting are deterministic
+00:03 +59: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: today focus duration is calendar-day scoped
+00:03 +60: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: tasks roundtrip without losing completion or example status
+00:03 +61: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:03 +61: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  live was used in the suite itself
+
+00:03 +61: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: two students on one device never share a namespace or records
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:03 +61 ~1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:03 +61 ~1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: an assignment is imported only on request and keeps private notes
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:03 +61 ~2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:03 +61 ~2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: identity is revalidated and a widened scope never reopens old data
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:03 +61 ~3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:03 +61 ~3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: the backend exposes the v1.4 identity route
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:03 +61 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:03 +62 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:03 +63 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:03 +64 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: inbox candidates extracted before a switch are never committed
+00:04 +65 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: inbox candidates extracted before a switch are never committed
+00:04 +66 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: a legacy import confirmed across an account switch is refused
+00:04 +67 ~4: All tests passed!

@@ -1,0 +1,6 @@
+{
+  "staged_files": 59,
+  "prohibited_artifacts": [],
+  "secret_pattern_matches": [],
+  "note": "Targeted text/pattern check, not comprehensive DLP. Credentials in QA fixtures are explicitly synthetic."
+}

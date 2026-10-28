@@ -1,0 +1,14 @@
+
+> qq-bot@1.0.0 test
+> node --test test.mjs
+
+✔ Official QQ mention normalization ignores unmentioned groups and DMs (0.288083ms)
+✔ QQ official adapter only forwards signed, minimal user content to review queue (0.77125ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.024875

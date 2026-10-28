@@ -1,0 +1,90 @@
+
+> haiz-academic@1.4.0-preview.0 test:coverage
+> node --experimental-test-coverage --test-coverage-include=*.mjs --test-coverage-exclude=test.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80 --test test.mjs tests/*.test.mjs
+
+[HAIZ Academic] Initial administrator created.
+✔ HAIZ Academic: role checks, enrollment approval, tasks and QQ manual confirmation (466.885542ms)
+✔ OpenAPI 3.1 document passes standard parser validation (339.201792ms)
+✔ OpenAPI covers every v1 operation with explicit permission and error responses (0.409834ms)
+✔ mutations require idempotency keys and existing assignment edits require a version (0.636417ms)
+✔ classroom uses a bearer credential and a closed projection with no identity or private fields (0.236083ms)
+✔ sync contract defines restart-safe opaque cursors and explicit resynchronization failures (0.206167ms)
+✔ all local references resolve and every parameterized path declares its parameters (0.617459ms)
+✔ request schemas reject reserved fields and inconsistent deadline precision (28.221041ms)
+✔ real synthetic HTTP responses match the published lifecycle, sync and privacy schemas (372.77175ms)
+✔ QA-ISO-01 unauthenticated selected routes reject access and classmates cannot list acknowledgements (565.376833ms)
+✔ QA-ISO-02 a second class stays invisible to students of the first class (257.619958ms)
+✔ QA-ISO-03 an expired session is refused on read, write and sync (394.098166ms)
+✔ QA-SYNC-01 a cursor is bound to one user even across identical memberships (273.415625ms)
+✔ QA-SYNC-02 draft and review are absent from public sync and classroom projections (285.816458ms)
+✔ QA-SYNC-03 a retraction keeps identity, hides the task and preserves acknowledgement history (273.485583ms)
+✔ QA-SYNC-04 replaying one create idempotency key returns the same draft and changed payload conflicts (299.779375ms)
+✔ QA-SYNC-05 sequential writes from two teacher sessions reject the stale assignment version (262.071125ms)
+✔ QA-SYNC-06 revision keeps the pre-edit snapshot and student history contains only public states (206.253584ms)
+✔ QA-ISO-04 revoking a member invalidates the cursor and hides later work even after restore (201.169875ms)
+✔ QA-ISO-05 identical student logins on independent servers have distinct identities and reject real foreign sessions (416.833166ms)
+✔ QA-ISO-06 identity fields are stable across restarts and never echo the login (353.053916ms)
+✔ logout while a mutation body is incomplete prevents the delayed request from committing (617.045916ms)
+✔ non-ASCII cursor signatures fail as validation errors rather than internal errors (228.4785ms)
+✔ successful logins do not consume the failed-login throttle budget (700.148833ms)
+✔ expired session cannot read or mutate assignments while another account remains authorized (273.658292ms)
+✔ cross-site mutation is denied before a draft or command receipt is created (276.584791ms)
+✔ invalid JSON, non-object and oversized bodies fail without persisting assignments (308.208958ms)
+✔ repeated invalid invitations are throttled without creating users or memberships (255.845709ms)
+✔ classroom bearer is read-only and cannot substitute for a user session cookie (193.962375ms)
+✔ screen key rotation revokes the old bearer and preserves public identity for the new bearer (196.57025ms)
+✔ idempotent teacher replay rechecks current ownership before returning an earlier result (194.064625ms)
+✔ acknowledgement replay rechecks membership after revocation (194.96825ms)
+✔ confirmed QQ intake cannot produce duplicate assignments under different request keys (286.735417ms)
+✔ legacy viewed status applies to one public version and resets after a revision (187.401292ms)
+✔ legacy class, student and screen lists exclude drafts, review and retracted work (183.991792ms)
+✔ empty edits, private-data injection and invalid pagination cannot change an assignment (183.675708ms)
+✔ populated v1.3 migration preserves every old row and backfills identity, revisions, events and viewed version (10.0815ms)
+✔ migration rerun preserves instance, signing secret, rows and ledger without duplicate events (2.974167ms)
+✔ changed applied migration checksum fails closed and leaves schema and data unchanged (2.503792ms)
+✔ migration SQL failure rolls back additive schema and retains original user data for retry (4.98ms)
+✔ legacy foreign-key corruption stops migration without rewriting the broken source record (3.610625ms)
+✔ recorded assignment revisions and public events reject update and deletion (2.562416ms)
+✔ SQLite write contention returns explicit 503 with no partial command and same-key retry publishes once (2154.144125ms)
+✔ cursor below retained event floor requires safe resnapshot without returning assignment content (279.827167ms)
+✔ event insertion failure rolls back publication, revision, audit and receipt before same-key retry (227.087666ms)
+✔ draft and review stay private; publication has one identity for two students and classroom (610.697875ms)
+✔ date revision reaches online and offline students with traceable old due (251.547041ms)
+✔ retraction reaches cached clients and keeps owner-private notes in client reconciliation (404.788625ms)
+✔ student cannot edit teacher assignments or read another class (254.312375ms)
+✔ identity namespaces are distinct and student acknowledgement data never crosses accounts (279.116208ms)
+✔ same idempotency key and canonical payload create exactly one assignment (277.717667ms)
+✔ two concurrent edits based on one version yield one winner and one explicit conflict (299.026875ms)
+✔ database restart preserves class, assignment history, idempotency and sync cursor (324.9595ms)
+✔ revocation invalidates existing cursor, blocks fresh class reads and leaks no later event (195.236416ms)
+✔ revoke then restore cannot revive an old authorization cursor (199.813125ms)
+✔ a cursor belongs to its account even when class membership is identical (196.25ms)
+✔ forged and malformed sync cursors fail explicitly (186.655708ms)
+✔ snapshot pagination stays at its high water and a later delta delivers intervening edits (281.171042ms)
+✔ acknowledgement records the viewed public revision and never implies submission (188.797ms)
+✔ strict input validation rejects read-only fields, invalid dates, missing keys and stale preconditions (184.734208ms)
+✔ minute deadline retains explicit precision and review edit requires a fresh review (177.601541ms)
+✔ retracted assignments cannot be edited or silently republished (169.572208ms)
+✔ logout and unapproved enrollment cannot access official content (199.864ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4769.506959
+ℹ start of coverage report
+ℹ -----------------------------------------------------------------------
+ℹ file         | line % | branch % | funcs % | uncovered lines
+ℹ -----------------------------------------------------------------------
+ℹ api.mjs      |  98.97 |    93.24 |  100.00 | 81
+ℹ commands.mjs | 100.00 |    90.12 |  100.00 | 
+ℹ migrate.mjs  | 100.00 |    87.50 |  100.00 | 
+ℹ model.mjs    | 100.00 |    91.11 |  100.00 | 
+ℹ server.mjs   |  95.69 |    84.45 |   96.67 | 16-17 141-143 165-175 379
+ℹ sync.mjs     | 100.00 |    93.22 |  100.00 | 
+ℹ -----------------------------------------------------------------------
+ℹ all files    |  97.78 |    88.30 |   98.95 | 
+ℹ -----------------------------------------------------------------------
+ℹ end of coverage report

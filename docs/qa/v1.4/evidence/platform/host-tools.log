@@ -1,0 +1,163 @@
+2026-10-27T15:04:47Z
+Darwin 1deMacBook-Air.local 25.6.0 Darwin Kernel Version 25.6.0: Sat Jul 11 15:26:12 PDT 2026; root:xnu-12377.161.13~4/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.6
+BuildVersion:		25G72
+v24.22.1
+11.19.1
+.NET SDK:
+ Version:           8.0.133
+ Commit:            62e6bab6ed
+ Workload version:  8.0.100-manifests.a1f9a504
+
+运行时环境:
+ OS Name:     Mac OS X
+ OS Version:  26.6
+ OS Platform: Darwin
+ RID:         osx-arm64
+ Base Path:   /opt/homebrew/Cellar/dotnet@8/8.0.133/libexec/sdk/8.0.133/
+
+已安装 .NET 工作负载:
+ Workload version: 8.0.100-manifests.a1f9a504
+没有要显示的已安装工作负载。
+
+Host:
+  Version:      8.0.33
+  Architecture: arm64
+  Commit:       da7a9beabf
+
+.NET SDKs installed:
+  8.0.133 [/opt/homebrew/Cellar/dotnet@8/8.0.133/libexec/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 8.0.33 [/opt/homebrew/Cellar/dotnet@8/8.0.133/libexec/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 8.0.33 [/opt/homebrew/Cellar/dotnet@8/8.0.133/libexec/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_ROOT       [/opt/homebrew/Cellar/dotnet@8/8.0.133/libexec]
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+wine: not on PATH
+wine64: not on PATH
+pwsh: not on PATH
+powershell: not on PATH
+VBoxManage: not on PATH
+prlctl: not on PATH
+qemu-system-x86_64: not on PATH
+qemu-system-aarch64: not on PATH
+xfreerdp: not on PATH
+mstsc: not on PATH
+{
+  "PSEdition": "Core",
+  "SerializationVersion": {
+    "Major": 1,
+    "Minor": 1,
+    "Build": 0,
+    "Revision": 1,
+    "MajorRevision": 0,
+    "MinorRevision": 1
+  },
+  "PSRemotingProtocolVersion": {
+    "Major": 2,
+    "Minor": 3,
+    "Build": -1,
+    "Revision": -1,
+    "MajorRevision": -1,
+    "MinorRevision": -1
+  },
+  "GitCommitId": "7.4.14",
+  "WSManStackVersion": {
+    "Major": 3,
+    "Minor": 0,
+    "Build": -1,
+    "Revision": -1,
+    "MajorRevision": -1,
+    "MinorRevision": -1
+  },
+  "Platform": "Unix",
+  "OS": "Darwin 25.6.0 Darwin Kernel Version 25.6.0: Sat Jul 11 15:26:12 PDT 2026; root:xnu-12377.161.13~4/RELEASE_ARM64_T8142",
+  "PSVersion": {
+    "Major": 7,
+    "Minor": 4,
+    "Patch": 14,
+    "PreReleaseLabel": null,
+    "BuildLabel": null
+  },
+  "PSCompatibleVersions": [
+    {
+      "Major": 1,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 2,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 3,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 4,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 5,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 5,
+      "Minor": 1,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 6,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    },
+    {
+      "Major": 7,
+      "Minor": 0,
+      "Build": -1,
+      "Revision": -1,
+      "MajorRevision": -1,
+      "MinorRevision": -1
+    }
+  ]
+}
+a03da324386b17d305e6a3698adc21f2b4bcf905

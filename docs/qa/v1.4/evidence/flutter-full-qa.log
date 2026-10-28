@@ -1,0 +1,896 @@
+00:00 +0: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart
+00:00 +0: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:00 +0: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  live was used in the suite itself
+
+00:00 +0: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: two students on one device never share a namespace or records
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:00 +0 ~1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:00 +0 ~1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: an assignment is imported only on request and keeps private notes
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:00 +0 ~2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:00 +0 ~2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: identity is revalidated and a widened scope never reopens old data
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:00 +0 ~3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:00 +0 ~3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_contract_live_test.dart: the backend exposes the v1.4 identity route
+  Skip: set HAIZ_LIVE_BASE to a running PR #21 backend
+00:00 +0 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: personal edits persist within the owner namespace across reload
+00:00 +1 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: writes are rejected before any namespace is open
+00:00 +2 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: deleting a task removes only its own private note
+00:00 +3 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: notes cannot be attached to another account task id
+00:00 +4 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: focus timer stops and resets when the account changes
+00:00 +5 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: a zero-length focus session invents no learning record
+00:00 +6 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/personal_store_operations_test.dart: guest work is separate from account work after both are flushed
+00:00 +7 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: normalizes HTTPS origins and rejects ambiguous credential destinations
+00:00 +8 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/academic_session_test.dart: opens an account only after verified identity and isolates two students
+00:00 +9 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +10 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +11 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +12 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +13 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +14 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +15 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +16 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +17 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +18 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +19 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +20 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +21 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +22 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +22 ~4: loading /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_lifecycle_live_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  live was used in the suite itself
+
+00:00 +22 ~4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_lifecycle_live_test.dart: QA-LIVE-01 teacher revision retraction and revocation reach Flutter refresh
+  Skip: Run scripts/qa/live-contract.mjs against the synthetic QA service
+00:00 +22 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +23 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +24 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +25 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +26 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +27 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +28 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +29 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +30 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +31 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +32 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:00 +33 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/ui_smoke_test.dart: mobile Inbox accepts pasted teacher-format text for review
+00:01 +34 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions
+00:01 +35 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions
+00:01 +36 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions
+00:01 +37 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions
+00:01 +38 ~5: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown building RawGestureDetector(state:
+RawGestureDetectorState#30338(gestures: [tap, long press, tap and horizontal drag],
+excludeFromSemantics: true, behavior: translucent)):
+A TextEditingController was used after being disposed.
+Once you have called dispose() on a TextEditingController, it can no longer be used.
+
+The relevant error-causing widget was:
+  TextField TextField:file:///Users/a11/manyiwant/haiz-qa-v1.4/app/lib/ui/focus_page.dart:21:18
+
+When the exception was thrown, this was the stack:
+#0      ChangeNotifier.debugAssertNotDisposed.<anonymous closure> (package:flutter/src/foundation/change_notifier.dart:184:9)
+#1      ChangeNotifier.debugAssertNotDisposed (package:flutter/src/foundation/change_notifier.dart:191:6)
+#2      ChangeNotifier.addListener (package:flutter/src/foundation/change_notifier.dart:273:27)
+#3      _MergingListenable.addListener (package:flutter/src/foundation/change_notifier.dart:503:14)
+#4      _AnimatedState.didUpdateWidget (package:flutter/src/widgets/transitions.dart:119:25)
+#5      StatefulElement.update (package:flutter/src/widgets/framework.dart:6004:55)
+#6      Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#7      SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#8      Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#9      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#10     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#11     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#12     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#13     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#14     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#15     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#16     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#17     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#18     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#19     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#20     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#21     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#22     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#23     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#24     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#25     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#26     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#27     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#28     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#29     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#30     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#31     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#32     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#33     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#34     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#35     BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#36     BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#37     BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#38     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#39     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#40     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#41     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#42     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#45     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#46     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#47     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+#50     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#51     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:712:27)
+#52     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart:37:20)
+<asynchronous suspension>
+#53     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#54     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during a scheduler callback:
+'package:flutter/src/rendering/object.dart': Failed assertion: line 3687 pos 12: 'attached': is not
+true.
+
+Either the assertion indicates an error in the framework itself, or we should provide substantially
+more information in this error message to help you determine and fix the underlying cause.
+In either case, please report this assertion by filing a bug on GitHub:
+  https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+
+When the exception was thrown, this was the stack:
+#2      RenderObject.getTransformTo (package:flutter/src/rendering/object.dart:3687:12)
+#3      RenderBox.localToGlobal (package:flutter/src/rendering/box.dart:3114:39)
+#4      RenderEditable._snapToPhysicalPixel (package:flutter/src/rendering/editable.dart:2342:33)
+#5      RenderEditable.getLocalRectForCaret (package:flutter/src/rendering/editable.dart:1862:28)
+#6      EditableTextState._scheduleShowCaretOnScreen.<anonymous closure> (package:flutter/src/widgets/editable_text.dart:4599:45)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#14     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:712:27)
+#19     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart:37:20)
+<asynchronous suspension>
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 7 frames from class _AssertionError, dart:async, and package:stack_trace)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown building Overlay-[LabeledGlobalKey<OverlayState>#5c31b](state:
+OverlayState#b8e86(entries: [OverlayEntry#c645e(opaque: true; maintainState: false),
+OverlayEntry#7476d(opaque: false; maintainState: true)])):
+'package:flutter/src/widgets/framework.dart': Failed assertion: line 6281 pos 12:
+'_dependents.isEmpty': is not true.
+
+Either the assertion indicates an error in the framework itself, or we should provide substantially
+more information in this error message to help you determine and fix the underlying cause.
+In either case, please report this assertion by filing a bug on GitHub:
+  https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+
+The relevant error-causing widget was:
+  MaterialApp
+  MaterialApp:file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart:25:9
+
+When the exception was thrown, this was the stack:
+#2      InheritedElement.debugDeactivated (package:flutter/src/widgets/framework.dart:6281:12)
+#3      _InactiveElements._deactivateRecursively.<anonymous closure> (package:flutter/src/widgets/framework.dart:2145:15)
+#4      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2147:6)
+#5      SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#6      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#7      ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#8      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#9      MultiChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7236:16)
+#10     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#11     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#12     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#13     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#14     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#15     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#16     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#17     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#18     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#19     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#20     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#21     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#22     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#23     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#24     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#25     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#26     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#27     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#28     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#29     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#30     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#31     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#32     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#33     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#34     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#35     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#36     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#37     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#38     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#39     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#40     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#41     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#42     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#43     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#44     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#45     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#46     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#47     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#48     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#49     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#50     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#51     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#52     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#53     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#54     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#55     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#56     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#57     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#58     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#59     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#60     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#61     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#62     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#63     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#64     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#65     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#66     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#67     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#68     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#69     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#70     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#71     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#72     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#73     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#74     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#75     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#76     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#77     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#78     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#79     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#80     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#81     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#82     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#83     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#84     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#85     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#86     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#87     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#88     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#89     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#90     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#91     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#92     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#93     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#94     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#95     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#96     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#97     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#98     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#99     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#100    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#101    SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#102    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#103    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#104    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#105    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#106    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#107    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#108    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#109    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#110    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#111    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#112    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#113    SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#114    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#115    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#116    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#117    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#118    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#119    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#120    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#121    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#122    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#123    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#124    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#125    _InactiveElements.add (package:flutter/src/widgets/framework.dart:2157:9)
+#126    Element.deactivateChild (package:flutter/src/widgets/framework.dart:4649:30)
+#127    Element.updateChildren (package:flutter/src/widgets/framework.dart:4315:11)
+#128    MultiChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7308:17)
+#129    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#130    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#131    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#132    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#133    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#134    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#135    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#136    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#137    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#138    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#139    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#140    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#143    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#144    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#145    WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+<asynchronous suspension>
+#146    TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#147    main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart:37:7)
+<asynchronous suspension>
+#148    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#149    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from class _AssertionError, dart:async, and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: 'Multiple exceptions (3) were detected during the running of the current test, and at
+least one was unexpected.'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart:39:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart line 39
+The test description was:
+  QA-UI-02 ordinary Study Relay save has no framework exceptions
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +38 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +38 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions [E]
+  Test failed. See exception logs above.
+  The test description was: QA-UI-02 ordinary Study Relay save has no framework exceptions
+  
+00:01 +39 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +40 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +41 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +42 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +43 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +44 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +45 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +46 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +47 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +48 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +49 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +50 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +51 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +51 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: invalid identity cacheScope cannot open a previously authenticated account
+Personal storage open failed (FormatException)
+#0      validateAcademicIdentity (package:haiz_pocket_flutter/core/storage_scope.dart:45:5)
+#1      accountNamespace (package:haiz_pocket_flutter/core/storage_scope.dart:61:16)
+#2      PocketStore.openAccount.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:89:38)
+#3      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:95:34)
+<asynchronous suspension>
+#4      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:438:7)
+<asynchronous suspension>
+#5      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#7      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +52 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +53 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +53 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: corrupt account payload stays inaccessible and cannot be overwritten with empty data
+Personal storage open failed (FormatException)
+#0      _ChunkedJsonParser.fail (dart:convert-patch/convert_patch.dart:1466:5)
+#1      _ChunkedJsonParser.parse (dart:convert-patch/convert_patch.dart:932:48)
+#2      _parseJson (dart:convert-patch/convert_patch.dart:35:10)
+#3      JsonDecoder.convert (dart:convert/json.dart:640:36)
+#4      JsonCodec.decode (dart:convert/json.dart:219:41)
+#5      jsonDecode (dart:convert/json.dart:160:12)
+#6      new PersonalSnapshot.decode (package:haiz_pocket_flutter/core/personal_snapshot.dart:31:19)
+#7      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:97:78)
+<asynchronous suspension>
+#8      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:499:5)
+<asynchronous suspension>
+#9      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#10     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#11     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +54 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +55 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +55 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: a malformed task date keeps the payload read-only instead of crashing
+Personal storage open failed (FormatException)
+#0      new PersonalSnapshot.fromFields.<anonymous closure> (package:haiz_pocket_flutter/core/personal_snapshot.dart:55:9)
+#1      MappedListIterable.elementAt (dart:_internal/iterable.dart:443:31)
+#2      ListIterator.moveNext (dart:_internal/iterable.dart:372:26)
+#3      new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:194:27)
+#4      new _GrowableList.of (dart:core-patch/growable_array.dart:154:28)
+#5      new List.of (dart:core-patch/array_patch.dart:39:18)
+#6      ListIterable.toList (dart:_internal/iterable.dart:224:7)
+#7      PersonalSnapshot._records (package:haiz_pocket_flutter/core/personal_snapshot.dart:119:29)
+#8      new PersonalSnapshot.fromFields (package:haiz_pocket_flutter/core/personal_snapshot.dart:39:19)
+#9      new PersonalSnapshot.decode (package:haiz_pocket_flutter/core/personal_snapshot.dart:35:29)
+#10     PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:97:78)
+<asynchronous suspension>
+#11     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:576:5)
+<asynchronous suspension>
+#12     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#14     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +56 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +57 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +58 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +59 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +59 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart: archive write failure keeps accounts usable and retries safely on restart
+Legacy archive deferred (StateError)
+#0      _FailingArchivePreferences.setString (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:758:7)
+#1      SharedPreferencesAsync.setString (package:shared_preferences/src/shared_preferences_async.dart:114:22)
+#2      LegacyArchive.quarantine (package:haiz_pocket_flutter/core/legacy_archive.dart:32:17)
+<asynchronous suspension>
+#3      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:104:34)
+<asynchronous suspension>
+#4      _loadedStore (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:56:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/student_isolation_test.dart:709:21)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +60 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/widget_test.dart: three themes render and glass dock exposes five tabs
+00:01 +61 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +61 ~5 -1: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk
+QA-STORAGE-01 after migration memory=[迁移前私人任务, 旧任务]
+QA-STORAGE-01 after migration disk=[归属写入等待期间新增的私人任务, 迁移前私人任务]
+QA-STORAGE-01 after appearance save disk=[迁移前私人任务, 旧任务]
+00:01 +61 ~5 -2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +61 ~5 -2: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk [E]
+  Expected: contains all of ['迁移前私人任务', '旧任务', '归属写入等待期间新增的私人任务']
+    Actual: MappedListIterable<TaskItem, String>:['迁移前私人任务', '旧任务']
+     Which: has too few elements (2 < 3)
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/qa_storage_fault_test.dart 137:5               main.<fn>
+  
+00:01 +61 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +61 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+  
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/qa_storage_fault_test.dart 154:11             main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/qa_storage_fault_test.dart 153:19             main.<fn>
+  
+00:01 +61 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-03 queued snapshots continue after first failure while store reports read-only
+Personal storage write failed (StateError)
+#0      _WriteFailure.setString (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart:76:9)
+<asynchronous suspension>
+#1      PocketStore._persist.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:145:9)
+<asynchronous suspension>
+#2      PocketStore._persist.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:143:30)
+<asynchronous suspension>
+#3      PocketStore.flush (package:haiz_pocket_flutter/core/pocket_store.dart:160:5)
+<asynchronous suspension>
+#4      Throws._matchFuture (package:matcher/src/expect/throws_matcher.dart:103:19)
+<asynchronous suspension>
+#5      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+#7      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#8      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart:180:5)
+<asynchronous suspension>
+#9      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#10     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#11     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +62 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +63 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +64 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +65 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +66 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +66 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-RECOVER-01 an interrupted account write keeps the last committed records
+Personal storage write failed (StateError)
+#0      _FailingPreferences.setString (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:49:7)
+#1      SharedPreferencesAsync.setString (package:shared_preferences/src/shared_preferences_async.dart:114:22)
+#2      PocketStore._persist.<anonymous closure> (package:haiz_pocket_flutter/core/pocket_store.dart:145:22)
+#3      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#4      StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#5      StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#6      _rootRunUnary (dart:async/zone_root.dart:48:47)
+#7      _CustomZone.runUnary (dart:async/zone.dart:816:35)
+<asynchronous suspension>
+#8      PocketStore.flush (package:haiz_pocket_flutter/core/pocket_store.dart:160:5)
+<asynchronous suspension>
+#9      Throws._matchFuture (package:matcher/src/expect/throws_matcher.dart:103:19)
+<asynchronous suspension>
+#10     _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+#11     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+#12     expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#13     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:119:5)
+<asynchronous suspension>
+#14     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#15     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#16     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +67 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +67 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-RECOVER-02 an unreadable payload surfaces and is never overwritten
+Personal storage open failed (FormatException)
+#0      _ChunkedJsonParser.fail (dart:convert-patch/convert_patch.dart:1466:5)
+#1      _ChunkedJsonParser.parseNull (dart:convert-patch/convert_patch.dart:993:7)
+#2      _ChunkedJsonParser.parse (dart:convert-patch/convert_patch.dart:876:22)
+#3      _parseJson (dart:convert-patch/convert_patch.dart:35:10)
+#4      JsonDecoder.convert (dart:convert/json.dart:640:36)
+#5      JsonCodec.decode (dart:convert/json.dart:219:41)
+#6      jsonDecode (dart:convert/json.dart:160:12)
+#7      new PersonalSnapshot.decode (package:haiz_pocket_flutter/core/personal_snapshot.dart:31:19)
+#8      PocketStore._open (package:haiz_pocket_flutter/core/pocket_store.dart:97:78)
+<asynchronous suspension>
+#9      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:139:7)
+<asynchronous suspension>
+#10     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#11     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#12     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +68 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +69 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +70 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +71 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +72 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +73 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:01 +74 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: task composed before an account switch is not written to either account
+00:02 +75 ~5 -3: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-UI-01 Study Relay refuses to write a note after an account switch
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown building RawGestureDetector(state:
+RawGestureDetectorState#61a19(gestures: [tap, long press, tap and horizontal drag],
+excludeFromSemantics: true, behavior: translucent)):
+A TextEditingController was used after being disposed.
+Once you have called dispose() on a TextEditingController, it can no longer be used.
+
+The relevant error-causing widget was:
+  TextField TextField:file:///Users/a11/manyiwant/haiz-qa-v1.4/app/lib/ui/focus_page.dart:21:18
+
+When the exception was thrown, this was the stack:
+#0      ChangeNotifier.debugAssertNotDisposed.<anonymous closure> (package:flutter/src/foundation/change_notifier.dart:184:9)
+#1      ChangeNotifier.debugAssertNotDisposed (package:flutter/src/foundation/change_notifier.dart:191:6)
+#2      ChangeNotifier.addListener (package:flutter/src/foundation/change_notifier.dart:273:27)
+#3      _MergingListenable.addListener (package:flutter/src/foundation/change_notifier.dart:503:14)
+#4      _AnimatedState.didUpdateWidget (package:flutter/src/widgets/transitions.dart:119:25)
+#5      StatefulElement.update (package:flutter/src/widgets/framework.dart:6004:55)
+#6      Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#7      SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#8      Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#9      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#10     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#11     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#12     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#13     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#14     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#15     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#16     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#17     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#18     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#19     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#20     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#21     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#22     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#23     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#24     StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#25     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#26     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#27     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#28     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#29     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#30     SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
+#31     Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#32     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#33     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#34     Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#35     BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#36     BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#37     BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#38     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#39     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#40     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#41     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#42     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#45     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#46     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#47     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+#50     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#51     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:712:27)
+#52     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:259:20)
+<asynchronous suspension>
+#53     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#54     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during a scheduler callback:
+'package:flutter/src/rendering/object.dart': Failed assertion: line 3687 pos 12: 'attached': is not
+true.
+
+Either the assertion indicates an error in the framework itself, or we should provide substantially
+more information in this error message to help you determine and fix the underlying cause.
+In either case, please report this assertion by filing a bug on GitHub:
+  https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+
+When the exception was thrown, this was the stack:
+#2      RenderObject.getTransformTo (package:flutter/src/rendering/object.dart:3687:12)
+#3      RenderBox.localToGlobal (package:flutter/src/rendering/box.dart:3114:39)
+#4      RenderEditable._snapToPhysicalPixel (package:flutter/src/rendering/editable.dart:2342:33)
+#5      RenderEditable.getLocalRectForCaret (package:flutter/src/rendering/editable.dart:1862:28)
+#6      EditableTextState._scheduleShowCaretOnScreen.<anonymous closure> (package:flutter/src/widgets/editable_text.dart:4599:45)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#14     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:712:27)
+#19     main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:259:20)
+<asynchronous suspension>
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 7 frames from class _AssertionError, dart:async, and package:stack_trace)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown building Overlay-[LabeledGlobalKey<OverlayState>#7ac7a](state:
+OverlayState#7e4d2(entries: [OverlayEntry#12f8d(opaque: true; maintainState: false),
+OverlayEntry#30ce2(opaque: false; maintainState: true)])):
+'package:flutter/src/widgets/framework.dart': Failed assertion: line 6281 pos 12:
+'_dependents.isEmpty': is not true.
+
+Either the assertion indicates an error in the framework itself, or we should provide substantially
+more information in this error message to help you determine and fix the underlying cause.
+In either case, please report this assertion by filing a bug on GitHub:
+  https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+
+The relevant error-causing widget was:
+  MaterialApp MaterialApp:file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:239:9
+
+When the exception was thrown, this was the stack:
+#2      InheritedElement.debugDeactivated (package:flutter/src/widgets/framework.dart:6281:12)
+#3      _InactiveElements._deactivateRecursively.<anonymous closure> (package:flutter/src/widgets/framework.dart:2145:15)
+#4      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2147:6)
+#5      SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#6      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#7      ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#8      _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#9      MultiChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7236:16)
+#10     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#11     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#12     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#13     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#14     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#15     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#16     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#17     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#18     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#19     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#20     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#21     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#22     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#23     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#24     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#25     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#26     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#27     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#28     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#29     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#30     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#31     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#32     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#33     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#34     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#35     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#36     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#37     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#38     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#39     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#40     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#41     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#42     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#43     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#44     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#45     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#46     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#47     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#48     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#49     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#50     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#51     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#52     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#53     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#54     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#55     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#56     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#57     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#58     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#59     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#60     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#61     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#62     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#63     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#64     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#65     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#66     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#67     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#68     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#69     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#70     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#71     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#72     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#73     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#74     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#75     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#76     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#77     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#78     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#79     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#80     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#81     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#82     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#83     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#84     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#85     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#86     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#87     SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#88     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#89     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#90     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#91     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#92     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#93     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#94     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#95     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#96     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#97     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#98     _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#99     ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#100    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#101    SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#102    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#103    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#104    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#105    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#106    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#107    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#108    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#109    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#110    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#111    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#112    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#113    SingleChildRenderObjectElement.visitChildren (package:flutter/src/widgets/framework.dart:7114:14)
+#114    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#115    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#116    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#117    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#118    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#119    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#120    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#121    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#122    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#123    ComponentElement.visitChildren (package:flutter/src/widgets/framework.dart:5884:14)
+#124    _InactiveElements._deactivateRecursively (package:flutter/src/widgets/framework.dart:2143:13)
+#125    _InactiveElements.add (package:flutter/src/widgets/framework.dart:2157:9)
+#126    Element.deactivateChild (package:flutter/src/widgets/framework.dart:4649:30)
+#127    Element.updateChildren (package:flutter/src/widgets/framework.dart:4315:11)
+#128    MultiChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7308:17)
+#129    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#130    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#131    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#132    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#133    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#134    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#135    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#136    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#137    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#138    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#139    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#140    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#143    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#144    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#145    WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)
+<asynchronous suspension>
+#146    TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#147    main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:259:7)
+<asynchronous suspension>
+#148    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#149    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from class _AssertionError, dart:async, and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "已切换账号，笔记未写入任何账号。": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart:266:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart line 266
+The test description was:
+  QA-UI-01 Study Relay refuses to write a note after an account switch
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (4) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +75 ~5 -4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: inbox candidates extracted before a switch are never committed
+00:02 +75 ~5 -4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-UI-01 Study Relay refuses to write a note after an account switch [E]
+  Test failed. See exception logs above.
+  The test description was: QA-UI-01 Study Relay refuses to write a note after an account switch
+  
+00:02 +76 ~5 -4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-RECOVER-05 a legacy archive with duplicate ids cannot be imported
+00:02 +77 ~5 -4: /Users/a11/manyiwant/haiz-qa-v1.4/app/test/account_switch_ui_test.dart: a legacy import confirmed across an account switch is refused
+00:02 +78 ~5 -4: Some tests failed.
+
+Failing tests:
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_probe_test.dart: QA-UI-01 Study Relay refuses to write a note after an account switch
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-01 edits made while migration claim waits survive in memory and disk
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_storage_fault_test.dart: QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes
+  /Users/a11/manyiwant/haiz-qa-v1.4/app/test/qa_study_relay_test.dart: QA-UI-02 ordinary Study Relay save has no framework exceptions

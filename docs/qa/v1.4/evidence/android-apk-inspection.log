@@ -1,0 +1,141 @@
+APK_SHA256=e6bf937bcb9a19d4de0710c3e72719391e374da233c7b2a5dec98222ac511666
+APK_BYTES=105878504
+
+COMMAND=apksigner verify --verbose <QA APK>
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+EXIT=0
+
+COMMAND=aapt dump badging <QA APK>
+package: name='space.haiz.app.preview' versionCode='4' versionName='1.3.0-preview.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+sdkVersion:'24'
+targetSdkVersion:'36'
+uses-permission: name='space.haiz.app.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.INTERNET'
+application-label:'HAIZ Preview'
+application-label-af:'HAIZ Preview'
+application-label-am:'HAIZ Preview'
+application-label-ar:'HAIZ Preview'
+application-label-as:'HAIZ Preview'
+application-label-az:'HAIZ Preview'
+application-label-be:'HAIZ Preview'
+application-label-bg:'HAIZ Preview'
+application-label-bn:'HAIZ Preview'
+application-label-bs:'HAIZ Preview'
+application-label-ca:'HAIZ Preview'
+application-label-cs:'HAIZ Preview'
+application-label-da:'HAIZ Preview'
+application-label-de:'HAIZ Preview'
+application-label-el:'HAIZ Preview'
+application-label-en-AU:'HAIZ Preview'
+application-label-en-CA:'HAIZ Preview'
+application-label-en-GB:'HAIZ Preview'
+application-label-en-IN:'HAIZ Preview'
+application-label-en-XC:'HAIZ Preview'
+application-label-es:'HAIZ Preview'
+application-label-es-US:'HAIZ Preview'
+application-label-et:'HAIZ Preview'
+application-label-eu:'HAIZ Preview'
+application-label-fa:'HAIZ Preview'
+application-label-fi:'HAIZ Preview'
+application-label-fr:'HAIZ Preview'
+application-label-fr-CA:'HAIZ Preview'
+application-label-gl:'HAIZ Preview'
+application-label-gu:'HAIZ Preview'
+application-label-hi:'HAIZ Preview'
+application-label-hr:'HAIZ Preview'
+application-label-hu:'HAIZ Preview'
+application-label-hy:'HAIZ Preview'
+application-label-in:'HAIZ Preview'
+application-label-is:'HAIZ Preview'
+application-label-it:'HAIZ Preview'
+application-label-iw:'HAIZ Preview'
+application-label-ja:'HAIZ Preview'
+application-label-ka:'HAIZ Preview'
+application-label-kk:'HAIZ Preview'
+application-label-km:'HAIZ Preview'
+application-label-kn:'HAIZ Preview'
+application-label-ko:'HAIZ Preview'
+application-label-ky:'HAIZ Preview'
+application-label-lo:'HAIZ Preview'
+application-label-lt:'HAIZ Preview'
+application-label-lv:'HAIZ Preview'
+application-label-mk:'HAIZ Preview'
+application-label-ml:'HAIZ Preview'
+application-label-mn:'HAIZ Preview'
+application-label-mr:'HAIZ Preview'
+application-label-ms:'HAIZ Preview'
+application-label-my:'HAIZ Preview'
+application-label-nb:'HAIZ Preview'
+application-label-ne:'HAIZ Preview'
+application-label-nl:'HAIZ Preview'
+application-label-or:'HAIZ Preview'
+application-label-pa:'HAIZ Preview'
+application-label-pl:'HAIZ Preview'
+application-label-pt:'HAIZ Preview'
+application-label-pt-BR:'HAIZ Preview'
+application-label-pt-PT:'HAIZ Preview'
+application-label-ro:'HAIZ Preview'
+application-label-ru:'HAIZ Preview'
+application-label-si:'HAIZ Preview'
+application-label-sk:'HAIZ Preview'
+application-label-sl:'HAIZ Preview'
+application-label-sq:'HAIZ Preview'
+application-label-sr:'HAIZ Preview'
+application-label-sr-Latn:'HAIZ Preview'
+application-label-sv:'HAIZ Preview'
+application-label-sw:'HAIZ Preview'
+application-label-ta:'HAIZ Preview'
+application-label-te:'HAIZ Preview'
+application-label-th:'HAIZ Preview'
+application-label-tl:'HAIZ Preview'
+application-label-tr:'HAIZ Preview'
+application-label-uk:'HAIZ Preview'
+application-label-ur:'HAIZ Preview'
+application-label-uz:'HAIZ Preview'
+application-label-vi:'HAIZ Preview'
+application-label-zh-CN:'HAIZ Preview'
+application-label-zh-HK:'HAIZ Preview'
+application-label-zh-TW:'HAIZ Preview'
+application-label-zu:'HAIZ Preview'
+application-icon-160:'res/9w.png'
+application-icon-240:'res/yn.png'
+application-icon-320:'res/FS.png'
+application-icon-480:'res/RJ.png'
+application-icon-640:'res/o-.png'
+application: label='HAIZ Preview' icon='res/9w.png'
+launchable-activity: name='space.haiz.haiz_pocket_flutter.MainActivity'  label='' icon=''
+uses-library-not-required:'androidx.window.extensions'
+uses-library-not-required:'androidx.window.sidecar'
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+main
+other-activities
+other-receivers
+other-services
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--' 'af' 'am' 'ar' 'as' 'az' 'be' 'bg' 'bn' 'bs' 'ca' 'cs' 'da' 'de' 'el' 'en-AU' 'en-CA' 'en-GB' 'en-IN' 'en-XC' 'es' 'es-US' 'et' 'eu' 'fa' 'fi' 'fr' 'fr-CA' 'gl' 'gu' 'hi' 'hr' 'hu' 'hy' 'in' 'is' 'it' 'iw' 'ja' 'ka' 'kk' 'km' 'kn' 'ko' 'ky' 'lo' 'lt' 'lv' 'mk' 'ml' 'mn' 'mr' 'ms' 'my' 'nb' 'ne' 'nl' 'or' 'pa' 'pl' 'pt' 'pt-BR' 'pt-PT' 'ro' 'ru' 'si' 'sk' 'sl' 'sq' 'sr' 'sr-Latn' 'sv' 'sw' 'ta' 'te' 'th' 'tl' 'tr' 'uk' 'ur' 'uz' 'vi' 'zh-CN' 'zh-HK' 'zh-TW' 'zu'
+densities: '160' '240' '320' '480' '640'
+native-code: 'arm64-v8a' 'armeabi-v7a' 'x86_64'
+EXIT=0
+
+COMMAND=aapt dump permissions <QA APK>
+package: space.haiz.app.preview
+permission: space.haiz.app.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='space.haiz.app.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.INTERNET'
+EXIT=0
+
+Native ABIs: arm64-v8a, armeabi-v7a, x86_64
+APK central directory entries=368
+APK CRC test bad member=None

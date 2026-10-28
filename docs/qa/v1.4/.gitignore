@@ -1,0 +1,3 @@
+# Preserve reviewed synthetic QA logs despite repository-wide *.log rule.
+!evidence/**/*.log
+!evidence/*.log
