@@ -1,0 +1,234 @@
+{
+  "generatedAt": "2026-10-28T03:24:05.294Z",
+  "origin": "http://127.0.0.1:8788",
+  "syntheticDataOnly": true,
+  "scenarios": [
+    {
+      "name": "local draft creation and reload never implies publication",
+      "status": "passed",
+      "durationMs": 440
+    },
+    {
+      "name": "Review persists a server draft but remains invisible to students and classroom",
+      "status": "passed",
+      "durationMs": 99
+    },
+    {
+      "name": "explicit publication is confirmed by Academic and identical public assignment identity",
+      "status": "passed",
+      "durationMs": 194,
+      "detail": {
+        "id": "dfdf2e37-ebc1-4d8e-8773-05d18fbb95e2",
+        "version": 3,
+        "studentManualRefresh": true
+      }
+    },
+    {
+      "name": "lost create response after commit replays the original request after reload without duplicates",
+      "status": "passed",
+      "durationMs": 296,
+      "detail": {
+        "assignmentId": "4fd5b378-c0af-4ab9-aab8-2dae422ea2c7",
+        "duplicateCount": 0,
+        "sameKeyAndBody": true
+      }
+    },
+    {
+      "name": "lost publish response after commit recovers as published using the same key",
+      "status": "passed",
+      "durationMs": 374
+    },
+    {
+      "name": "published edit and concurrent-page conflict retain unsent words and require renewed confirmation",
+      "status": "passed",
+      "durationMs": 780
+    },
+    {
+      "name": "responsive populated workspace, keyboard focus, reduced motion, and optional accessibility scan",
+      "status": "passed",
+      "durationMs": 809
+    },
+    {
+      "name": "classroom uses public projection only and removes one-time credentials",
+      "status": "passed",
+      "durationMs": 125
+    },
+    {
+      "name": "withdrawal preserves history and browser-owned private note marker",
+      "status": "passed",
+      "durationMs": 412,
+      "detail": {
+        "preservedNote": "synthetic browser-owned marker only",
+        "actualFlutterStorage": "not exercised"
+      }
+    },
+    {
+      "name": "unauthorized publication is denied by Academic",
+      "status": "passed",
+      "durationMs": 2
+    },
+    {
+      "name": "a different teacher cannot read or publish into this class",
+      "status": "passed",
+      "durationMs": 34
+    },
+    {
+      "name": "changed Review content returns through draft and Review before publication",
+      "status": "passed",
+      "durationMs": 752
+    },
+    {
+      "name": "another-tab account switch suspends old workspace without submitting old drafts",
+      "status": "passed",
+      "durationMs": 341
+    },
+    {
+      "name": "late original-account response cannot write into a newly logged-in account",
+      "status": "passed",
+      "durationMs": 307
+    },
+    {
+      "name": "offline preparation remains local and cannot publish",
+      "status": "passed",
+      "durationMs": 338
+    },
+    {
+      "name": "audit P1-01 shared-cookie tabs invalidate on logout and disjoint-account login without reviving delayed data",
+      "status": "passed",
+      "durationMs": 1226,
+      "detail": {
+        "sharedCookieTabs": 2,
+        "disjointClassIds": [
+          "67ee3f29-9feb-4924-abea-072970778beb",
+          "4278debf-ee9a-4d2b-9f59-00d5e44556e7"
+        ],
+        "delayedReadDiscarded": true,
+        "alphaDraftTextRestored": true,
+        "betaDeniedAlphaClass": true
+      }
+    },
+    {
+      "name": "audit P1-02 exact unsent title and details survive view changes, reload, and reopening unchanged official version",
+      "status": "passed",
+      "durationMs": 589
+    },
+    {
+      "name": "audit P1-02 reopening after a server revision compares versions without replacing local text",
+      "status": "passed",
+      "durationMs": 536
+    },
+    {
+      "name": "audit P1-02 discarding an unsent edit requires confirmation and only then restores server content",
+      "status": "passed",
+      "durationMs": 691
+    },
+    {
+      "name": "audit P1-02 failed local persistence reports the error and retains typed text without submitting",
+      "status": "passed",
+      "durationMs": 477
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: net::ERR_CONNECTION_RESET",
+    "Failed to load resource: net::ERR_CONNECTION_RESET",
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: net::ERR_CONNECTION_RESET",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "pageErrors": [],
+  "responsive": [
+    {
+      "width": 320,
+      "viewport": 320,
+      "scroll": 320,
+      "overflow": false
+    },
+    {
+      "width": 375,
+      "viewport": 375,
+      "scroll": 375,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "viewport": 768,
+      "scroll": 768,
+      "overflow": false
+    },
+    {
+      "width": 1024,
+      "viewport": 1024,
+      "scroll": 1024,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "viewport": 1440,
+      "scroll": 1440,
+      "overflow": false
+    },
+    {
+      "width": 1920,
+      "viewport": 1920,
+      "scroll": 1920,
+      "overflow": false
+    }
+  ],
+  "screenshots": [
+    "review-checkpoint-1440.png",
+    "version-conflict-1440.png",
+    "workspace-320.png",
+    "workspace-768.png",
+    "workspace-1024.png",
+    "workspace-1440.png",
+    "classroom-1440.png",
+    "withdrawal-history-1440.png",
+    "offline-local-draft.png"
+  ],
+  "limitations": [
+    "Chromium only; Firefox and Safari are not exercised by this harness.",
+    "Student checks use the real manual-refresh HTTP endpoint; no Flutter automatic delta synchronization is claimed.",
+    "Private-note preservation checks a synthetic browser-owned note marker; Flutter private storage is outside this harness.",
+    "Navigation timing is observational and is not a Lighthouse performance audit."
+  ],
+  "browser": "153.0.8010.12",
+  "keyboard": {
+    "tag": "A",
+    "outline": "solid"
+  },
+  "accessibility": {
+    "basicSemantics": {
+      "nestedButtons": 0,
+      "unlabeledFields": [],
+      "skipLink": true
+    },
+    "axe": []
+  },
+  "performance": {
+    "paint": [
+      {
+        "name": "first-paint",
+        "startTime": 12
+      },
+      {
+        "name": "first-contentful-paint",
+        "startTime": 12
+      }
+    ],
+    "navigation": [
+      {
+        "duration": 12.599999994039536,
+        "domContentLoaded": 12.400000005960464
+      }
+    ]
+  },
+  "status": "passed",
+  "finishedAt": "2026-10-28T03:24:14.935Z"
+}

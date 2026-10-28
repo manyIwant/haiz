@@ -3,204 +3,213 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f5f3ef">
-<title>HAIZ Teacher · 作业整理工作台</title>
-<style>
-:root{--bg:#f5f3ef;--ink:#243831;--muted:#75867e;--border:#e3e8e3;--accent:#2a8068;--surface:white;--soft:#edf3ef;--deep:#1d6655;--radius:22px}
-*{box-sizing:border-box}
-html{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Noto Sans CJK SC",sans-serif;background:var(--bg);color:var(--ink)}
-body{margin:0;min-height:100vh}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #7ec7ab;outline-offset:2px}
-.top{max-width:1160px;margin:0 auto;padding:30px 27px 12px;display:flex;align-items:center;justify-content:space-between;gap:15px}
-.logo{display:flex;gap:13px;align-items:center;font-size:18px;font-weight:800;letter-spacing:.4px}
-.mark{width:39px;height:39px;border-radius:14px;background:var(--deep);color:#fff;display:grid;place-items:center;font-family:Georgia,serif;font-style:italic}
-.sub{font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:700}
-.tag{font-size:12px;color:var(--muted);border:1px solid var(--border);background:#ffffffbb;border-radius:30px;padding:9px 13px}
-main{max-width:1160px;margin:0 auto;padding:23px 27px 60px}
-.head{padding:20px 0 33px}
-.eyebrow{font-size:11px;letter-spacing:2.4px;color:var(--accent);font-weight:800}
-h1{font-size:clamp(32px,5vw,48px);letter-spacing:-1.8px;line-height:1.2;margin:18px 0 12px;font-weight:750}
-.head p{font-size:14px;color:var(--muted);line-height:1.7;margin:0;max-width:700px}
-.layout{display:grid;grid-template-columns:minmax(310px,.91fr) minmax(320px,1.09fr);align-items:start;gap:20px}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 9px 26px #1e574108;padding:25px}
-.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:19px}
-h2{font-size:19px;margin:0;letter-spacing:-.3px}
-.small{font-size:12px;color:var(--muted);line-height:1.5}
-label{display:block;font-size:12px;font-weight:700;margin:15px 0 8px}
-.field{border:1px solid #dce5de;border-radius:13px;padding:12px 14px;background:#fdfefd;color:var(--ink);min-width:0;width:100%}
-.field::placeholder{color:#9caea3}
-.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.note{margin-top:19px;padding:16px;background:var(--soft);border-radius:14px;color:#55766a;font-size:12px;line-height:1.7}
-.btn{background:var(--accent);border:0;border-radius:99px;padding:12px 20px;color:white;font-weight:700;font-size:13px;transition:transform .18s,background .18s}
-.btn:hover{background:#20654f;transform:translateY(-1px)}
-.btn:active{transform:none}
-.btn.secondary{background:var(--soft);color:var(--accent)}
-.btn.secondary:hover{background:#e1ede6}
-.btn.ghost{background:transparent;color:var(--muted);padding:6px 9px}
-.btn.ghost:hover{background:#f0f4f0;color:var(--ink)}
-.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:23px}
-.hero{background:linear-gradient(115deg,#1b6756,#368e78);border-radius:22px;padding:20px 23px;color:white;margin-bottom:17px}
-.hero strong{font-size:24px;display:block;margin:6px 0 4px}
-.hero p{color:#e2eee7;font-size:12px;margin:0;line-height:1.5}
-.hero small{color:#d1e5da;font-size:10px;letter-spacing:2px}
-.rowitem{display:flex;gap:13px;border:1px solid var(--border);border-radius:16px;padding:16px;margin:0 0 9px;background:#fff}
-.stem{width:3px;border-radius:3px;background:#52a78c;flex-shrink:0}
-.rowcontent{min-width:0;flex:1}
-.subject{font-size:10px;color:var(--accent);letter-spacing:.5px;font-weight:800;margin-bottom:7px}
-.title{font-size:14px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
-.meta{font-size:11px;color:var(--muted);margin-top:6px}
-.empty{border:1px dashed #ccdcd0;border-radius:16px;text-align:center;padding:34px 17px;color:var(--muted);font-size:13px;line-height:1.8}
-.footer{padding:18px 0;color:var(--muted);font-size:11px;line-height:1.7}
-hr{border:none;border-top:1px solid var(--border);margin:22px 0}
-.preview{border-radius:16px;background:#f7f9f7;padding:15px;font-size:11px;line-height:1.75;color:#52675d;white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;border:1px solid #eaf0ea}
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:99px;padding:12px 22px;font-size:12px;box-shadow:0 8px 24px #0002;opacity:0;pointer-events:none;transition:opacity .2s;z-index:2}
-#toast.show{opacity:1}
-@media (max-width:780px){.layout{grid-template-columns:1fr}.top{padding:20px}.head{padding:5px 0 25px}main{padding:20px}.panel{padding:19px}.tag{display:none}h1{letter-spacing:-1px}.hero strong{font-size:22px}}
-@media (max-width:380px){.twocol{grid-template-columns:1fr}.controls .btn{flex:1}}
-@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-@media print{body{background:#fff}header,.formPanel,.controls,#toast,.footer,.head p,.note,.btn,.printHide{display:none!important}
-main{padding:8px;max-width:none}.layout{display:block}.panel{border:none;box-shadow:none;padding:0}
-.hero{background:#fff;color:#000;border-bottom:1px solid #444;border-radius:0;padding:15px 0}
-.hero p,.hero small{color:#333}.rowitem{break-inside:avoid}.subject{color:#000}
-h1{font-size:22px}h2{font-size:17px}.rowitem{margin-bottom:6px}.preview{display:none}}
-</style>
-<link rel="stylesheet" href="ios_skin.css">
+<meta name="theme-color" content="#f6f3ec">
+<title>HAIZ Teacher · 教师工作台</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div class="logo"><div class="mark">h.</div><span>HAIZ <span style="font-weight:400">Teacher</span></span></div>
-  <a class="tag" href="http://127.0.0.1:8766/" target="_blank" rel="noopener noreferrer" style="text-decoration:none">打开学生端 ↗</a>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="masthead">
+  <div class="wordmark"><span class="glyph">h.</span><span>HAIZ</span><span class="sub">Teacher</span></div>
+  <div class="spacer"></div>
+  <div class="who" id="who">
+    <span id="who-name"></span>
+    <button class="btn quiet" id="logout" type="button">退出</button>
+  </div>
 </header>
-<main>
-  <section class="head">
-    <div class="eyebrow">ONE PUBLISH · 01</div>
-    <h1>一次整理，清楚交代。</h1>
-    <p>沿用你原本的作业通知习惯。整理一次内容，就能生成群消息、打印清单，以及可被 HAIZ App 识别的任务文本。</p>
-  </section>
-  <div class="layout">
-    <section class="panel formPanel" aria-label="作业编辑器">
-      <div class="topline"><h2>新建一项任务</h2><span class="small">本机草稿</span></div>
-      <form id="taskForm">
-        <div class="twocol">
-          <div><label for="subject">科目</label>
-            <select class="field" id="subject">
-              <option>数学</option><option>语文</option><option>英语</option><option>物理</option>
-              <option>化学</option><option>生物</option><option>历史</option><option>地理</option><option>其他</option>
-            </select>
-          </div>
-          <div><label for="due">截止日期（可选）</label><input class="field" id="due" type="date"></div>
+
+<!-- Entry: login -->
+<main id="entry" class="entry" hidden>
+  <section class="entry-card panel" aria-labelledby="entry-title">
+    <div class="panel-body">
+      <p class="eyebrow card-eyebrow">HAIZ · TEACHER</p>
+      <h1 class="lead" id="entry-title">一处整理，一处发布。</h1>
+      <p class="sub">教师工作台。整理、检查并正式发布作业，学生端与教室屏以同一份正式数据为准。</p>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="login-account">账号</label>
+          <input id="login-account" name="login" type="text" required autocomplete="username" placeholder="教师账号">
         </div>
-        <label for="detail">任务描述</label>
-        <textarea class="field" id="detail" rows="4" maxlength="240" placeholder="例如：完成必修第一册练习册第 36–39 页" required></textarea>
-        <div class="controls">
-          <button class="btn" type="submit">加入通知清单 ＋</button>
-          <button class="btn secondary" type="button" id="fillDemo">填入示例</button>
+        <div class="field">
+          <label for="login-password">密码</label>
+          <input id="login-password" name="password" type="password" required autocomplete="current-password" placeholder="密码">
+        </div>
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <div class="actions login-actions">
+          <button class="btn" type="submit">进入工作台</button>
         </div>
       </form>
-      <div class="note">仅在当前浏览器保存草稿；这里没有学生名单、学校账号或云端服务器。生成的文字不代表已经实际发送或得到教师身份认证。</div>
-    </section>
-    <section class="panel" aria-label="通知清单">
-      <div class="topline"><h2>本次作业通知</h2><span id="counter" class="small">0 项任务</span></div>
-      <div class="hero"><small>HAIZ / TEACH</small><strong>作业，已经整理好了。</strong><p>复制后发送到原有通讯渠道，或打印给学生。</p></div>
-      <div id="items"></div>
-      <div class="controls printHide">
-        <button class="btn" id="copy" type="button">复制给 HAIZ App</button>
-        <button class="btn secondary" id="print" type="button">打印任务单</button>
-        <a class="btn secondary" href="classroom.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">教室大屏</a>
-        <button class="btn ghost" id="clear" type="button">清空全部</button>
-      </div>
-      <hr>
-      <div class="printHide">
-        <div class="topline"><h2 style="font-size:15px">可复制的任务文本</h2><span class="small">纯文本协议 v1</span></div>
-        <div id="output" class="preview" aria-live="polite">添加任务后生成。</div>
-      </div>
-      <div class="footer">HAIZ Teacher · v1 Concept · 非官方校园服务<br>学生在 App「收件」中粘贴文本，核对后加入自己的任务。</div>
-    </section>
-  </div>
+      <button class="btn secondary spaced" id="offline-mode" type="button">离线整理本机草稿</button>
+      <p class="disclaimer">非学校官方系统。凭据只发送给本校部署的 HAIZ 教务服务，本应用不读取、不保存教师密码。</p>
+    </div>
+  </section>
 </main>
-<div id="toast" role="status" aria-live="polite"></div>
-<script>
-(() => {
-  'use strict';
-  const storageKey='haiz.teacher.v1.drafts';
-  const byId=id=>document.getElementById(id);
-  let items=[];
-  try { const old=JSON.parse(localStorage.getItem(storageKey)||'[]');
-    if(Array.isArray(old)) items=old.filter(x=>x&&typeof x.subject==='string'&&
-      typeof x.title==='string'&&typeof x.due==='string').slice(0,100);
-  } catch(_){ items=[]; }
-  const toast=message=>{
-    const el=byId('toast');el.textContent=message;el.classList.add('show');
-    clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2600);
-  };
-  const save=()=>{ try{localStorage.setItem(storageKey,JSON.stringify(items));}
-    catch(_){toast('浏览器存储不可用，本次草稿不会保留。');}};
-  const encode=item=>'【HAIZ任务】'+item.subject+'｜'+item.title+'｜'+(item.due||'待定')+'｜HAIZ Teacher 演示（身份未验证）';
-  const payload=()=>items.map(encode).join('\n');
-  function render(){
-    const host=byId('items');host.replaceChildren();
-    byId('counter').textContent=items.length+' 项任务';
-    if(!items.length){
-      const empty=document.createElement('div');empty.className='empty';
-      empty.textContent='还没有任务。\n左侧填写一项作业，或添加示例进行体验。';
-      empty.style.whiteSpace='pre-line';host.append(empty);
-    }
-    items.forEach((item,index)=>{
-      const article=document.createElement('article');article.className='rowitem';
-      const bar=document.createElement('div');bar.className='stem';article.append(bar);
-      const content=document.createElement('div');content.className='rowcontent';
-      const s=document.createElement('div');s.className='subject';s.textContent=item.subject.toUpperCase();content.append(s);
-      const title=document.createElement('div');title.className='title';title.textContent=item.title;content.append(title);
-      const meta=document.createElement('div');meta.className='meta';meta.textContent=item.due?'截止日期 · '+item.due:'截止日期 · 待确认';content.append(meta);
-      article.append(content);
-      const remove=document.createElement('button');remove.type='button';remove.className='btn ghost printHide';
-      remove.textContent='移除';remove.setAttribute('aria-label','移除 '+item.subject+' 任务');
-      remove.addEventListener('click',()=>{items.splice(index,1);save();render();});
-      article.append(remove);host.append(article);
-    });
-    byId('output').textContent=payload()||'添加任务后生成。';
-    byId('copy').disabled=!items.length;byId('print').disabled=!items.length;
-  }
-  byId('taskForm').addEventListener('submit',event=>{
-    event.preventDefault();
-    const title=byId('detail').value.trim();
-    if(!title){toast('请填写任务内容');return;}
-    const item={subject:byId('subject').value,title,due:byId('due').value};
-    if(items.some(x=>x.subject===item.subject&&x.title===item.title&&x.due===item.due)){
-      toast('这项任务已在清单中');return;
-    }
-    items.push(item);save();render();byId('detail').value='';byId('detail').focus();toast('已添加到通知清单');
-  });
-  byId('fillDemo').addEventListener('click',()=>{
-    if(items.length&&!confirm('将示例加入现有清单？')) return;
-    const demo=[
-      {subject:'数学',title:'完成练习册第36—39页',due:''},
-      {subject:'物理',title:'整理打点计时器实验报告',due:''},
-      {subject:'英语',title:'复习Unit 4单词',due:''},
-    ];
-    for(const d of demo){if(!items.some(x=>x.subject===d.subject&&x.title===d.title))items.push(d);}
-    save();render();toast('已加入演示任务，日期请自行核实');
-  });
-  byId('copy').addEventListener('click',async()=>{
-    if(!items.length)return;
-    const text=payload();let success=false;
-    try{await navigator.clipboard.writeText(text);success=true;}catch(_){
-      const t=document.createElement('textarea');t.value=text;t.style.position='fixed';
-      t.style.left='-9999px';document.body.append(t);t.select();
-      try{success=document.execCommand('copy');}catch(_){}
-      t.remove();
-    }
-    if(success)toast('已复制；请粘贴到 HAIZ App 收件箱');
-    else toast('复制失败：请从下方文本框手动选取复制');
-  });
-  byId('clear').addEventListener('click',()=>{
-    if(!items.length||!confirm('清空当前全部任务？此操作不可撤销。'))return;
-    items=[];save();render();toast('任务清单已清空');
-  });
-  byId('print').addEventListener('click',()=>{if(items.length)window.print();});
-  render();
-})();
-</script>
-</body></html>
+
+<!-- App shell -->
+<div id="app" hidden>
+  <main id="main" class="shell">
+    <nav class="rail" aria-label="工作台栏目">
+      <div class="rail-group">
+        <div class="rail-label">One Publish</div>
+        <button class="rail-link" data-view="workspace" type="button"><span>工作台</span><span class="count" data-view-count="workspace">0</span></button>
+        <button class="rail-link" data-view="published" type="button"><span>已发布</span><span class="count" data-view-count="published">0</span></button>
+        <button class="rail-link" data-view="history" type="button"><span>历史</span><span class="count" data-view-count="history">0</span></button>
+      </div>
+      <div class="rail-group">
+        <div class="rail-label">预览</div>
+        <a class="rail-link" href="classroom.html"><span>教室屏</span><span aria-hidden="true">↗</span></a>
+        <a class="rail-link" href="/academic/">班级与账号管理</a>
+        <button class="btn quiet" id="import-legacy" type="button" hidden>导入旧版本机草稿</button>
+      </div>
+      <div class="rail-foot">
+        <span class="hint rail-foot-hint">已发布内容以服务器为准</span>
+      </div>
+    </nav>
+
+    <div class="workspace-content">
+    <div id="class-toolbar" class="class-toolbar"></div>
+    <div id="notices"></div>
+    <div id="recovery"></div>
+
+    <!-- Workspace -->
+    <section id="workspace-view" class="view" aria-labelledby="workspace-heading">
+      <header class="view-head">
+        <p class="eyebrow">WORKSPACE · 工作台</p>
+        <h1 id="workspace-heading">整理一项作业</h1>
+        <p>本机草稿只保存在这台电脑。正式发布之后，它才会进入班级的正式记录，并出现在学生端和教室屏。</p>
+      </header>
+      <div class="split">
+        <div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2>草稿</h2>
+              <button class="btn secondary" id="new-draft" type="button">新建草稿</button>
+            </div>
+            <div id="draft-list"></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel" id="composer-panel">
+            <div class="panel-head"><h2>编辑</h2><span class="hint" id="composer-status">本机草稿</span></div>
+            <div class="panel-body">
+              <div id="composer-empty" class="empty">
+                <div class="title">选择或新建一项草稿</div>
+                <p>左侧选择一项草稿开始编辑，或点击「新建草稿」。</p>
+              </div>
+              <form id="composer-form" hidden novalidate>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="f-subject">科目</label>
+                    <input id="f-subject" type="text" list="subject-suggestions" maxlength="32" placeholder="例如：物理" required>
+                    <datalist id="subject-suggestions"></datalist>
+                  </div>
+                  <div class="field">
+                    <label for="f-class" id="f-class-label">班级</label>
+                    <div id="f-class-host" role="group" aria-labelledby="f-class-label"></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="f-title">作业标题</label>
+                  <input id="f-title" type="text" maxlength="240" placeholder="例如：完成必修一第 36–39 页" required>
+                </div>
+                <div class="field">
+                  <label for="f-details">详细要求</label>
+                  <textarea id="f-details" maxlength="3000" placeholder="需要学生注意的事项、提交方式、范围等（可选）"></textarea>
+                  <span class="counter" id="f-details-counter">0 / 3000</span>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="f-due-precision">截止时间</label>
+                    <select id="f-due-precision">
+                      <option value="none">不设截止时间</option>
+                      <option value="date">截止日期</option>
+                      <option value="minute">精确到时刻</option>
+                    </select>
+                  </div>
+                  <div class="field" id="f-due-date-row" hidden>
+                    <label for="f-due-date">日期</label>
+                    <input id="f-due-date" type="date">
+                  </div>
+                  <div class="field" id="f-due-minute-row" hidden>
+                    <label for="f-due-minute">时刻</label>
+                    <input id="f-due-minute" type="datetime-local">
+                  </div>
+                </div>
+                <div class="actions composer-actions">
+                  <button class="btn quiet" id="discard-draft" type="button">放弃</button>
+                  <span class="spacer"></span>
+                  <button class="btn secondary" id="save-draft" type="button">保存草稿</button>
+                  <button class="btn secondary" id="save-edit" type="button">保存修改</button>
+                  <button class="btn" id="publish-draft" type="button">进入 Review</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel subpanel">
+            <div class="panel-head"><h2>发布前检查</h2></div>
+            <div class="panel-body" id="review-panel"></div>
+          </div>
+
+          <div class="panel subpanel">
+            <div class="panel-head"><h2>学生端预览</h2></div>
+            <div class="panel-body" id="preview-panel"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Published -->
+    <section id="published-view" class="view" aria-labelledby="published-heading" hidden>
+      <header class="view-head">
+        <p class="eyebrow">PUBLISHED · 已发布</p>
+        <h1 id="published-heading">正式发布的作业</h1>
+        <p>这些作业已经由服务器确认，出现在学生端和教室屏。修改会生成新版本，撤回会立即从各处撤下。</p>
+      </header>
+      <div class="split">
+        <div class="panel"><div class="panel-head"><h2>进行中</h2></div><div id="published-list"></div></div>
+        <div id="published-detail"></div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="history-view" class="view" aria-labelledby="history-heading" hidden>
+      <header class="view-head">
+        <p class="eyebrow">HISTORY · 历史</p>
+        <h1 id="history-heading">版本变化与撤回记录</h1>
+        <p>撤回的作业和服务器上的草稿保留在这里，附带完整、不可篡改的版本历史。</p>
+      </header>
+      <div class="split">
+        <div class="panel"><div class="panel-head"><h2>记录</h2></div><div id="history-list"></div></div>
+        <div id="history-detail"></div>
+      </div>
+    </section>
+    </div>
+  </main>
+</div>
+
+<dialog id="confirm-dialog" aria-labelledby="confirm-title">
+  <div class="dialog-head"><h2 id="confirm-title"></h2></div>
+  <div class="dialog-body" id="confirm-body"></div>
+  <div class="dialog-actions">
+    <button class="btn quiet" id="confirm-no" type="button">取消</button>
+    <button class="btn" id="confirm-yes" type="button">确认</button>
+  </div>
+</dialog>
+
+<dialog id="conflict-dialog" aria-labelledby="conflict-title">
+  <div class="dialog-head"><h2 id="conflict-title">检测到版本冲突</h2></div>
+  <div class="dialog-body" id="conflict-body"></div>
+  <div class="dialog-actions">
+    <button class="btn quiet" id="conflict-discard" type="button">保留草稿并关闭</button>
+    <button class="btn" id="conflict-retry" type="button">使用最新版本继续检查</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

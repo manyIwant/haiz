@@ -1,0 +1,65 @@
+/* Warm paper, sea ink and copper distinguish preparation from confirmed publication. */
+:root {
+  color-scheme: light;
+  --paper: oklch(97.6% 0.008 85);
+  --paper-raised: oklch(99.2% 0.004 90);
+  --paper-sunk: oklch(95.4% 0.011 84);
+  --paper-tint: oklch(96.8% 0.014 232);
+  --ink: oklch(24% 0.031 246);
+  --ink-soft: oklch(38% 0.028 246);
+  --ink-muted: oklch(45% 0.019 244);
+  --ink-faint: oklch(47% 0.012 240);
+  --rule: oklch(86% 0.009 90);
+  --rule-strong: oklch(72% 0.013 88);
+  --sea: oklch(37% 0.062 243);
+  --sea-deep: oklch(28% 0.055 245);
+  --sea-soft: oklch(93.5% 0.018 240);
+  --sea-ink: oklch(31% 0.058 244);
+  --copper: oklch(55% 0.098 68);
+  --copper-deep: oklch(44% 0.094 62);
+  --copper-soft: oklch(94.5% 0.026 76);
+  --ok: oklch(42% 0.078 158);
+  --ok-soft: oklch(94.5% 0.022 158);
+  --warn: oklch(43% 0.108 66);
+  --warn-soft: oklch(95.5% 0.030 82);
+  --stop: oklch(44% 0.135 27);
+  --stop-soft: oklch(95.5% 0.026 26);
+
+  /* Manrope is used when installed; native CJK faces preserve legibility without remote fonts. */
+  --font-text: Manrope, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+  --font-display: var(--font-text);
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --tracking-wide: 0.12em;
+  --tracking-tight: -0.015em;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-1: 0 1px 2px oklch(30% 0.02 240 / 0.06), 0 6px 20px oklch(30% 0.02 240 / 0.05);
+  --shadow-2: 0 2px 6px oklch(30% 0.02 240 / 0.08), 0 18px 48px oklch(30% 0.02 240 / 0.10);
+  --hairline: inset 0 1px 0 oklch(100% 0 0 / 0.9);
+  --duration-fast: 300ms;
+  --duration-normal: 500ms;
+  --duration-slow: 500ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: var(--ease-out);
+  --measure: 66ch;
+  --rail: 12rem;
+  --page-max: 96rem;
+  --leading-body: 1.5;
+  --leading-tight: 1.3333;
+}
