@@ -12,6 +12,7 @@ class SchedulePage extends StatelessWidget {
   Future<void> _addCourse(BuildContext context) async {
     final name = TextEditingController();
     final place = TextEditingController();
+    final generation = store.generation;
     int day = store.selectedWeekday;
     TimeOfDay begin = const TimeOfDay(hour: 8, minute: 0);
     TimeOfDay end = const TimeOfDay(hour: 8, minute: 45);
@@ -106,6 +107,13 @@ class SchedulePage extends StatelessWidget {
                     if (name.text.trim().isEmpty || stop <= start) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('请填写课程名，并确保结束时间晚于开始时间')),
+                      );
+                      return;
+                    }
+                    if (store.generation != generation) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('已切换账号，课程未写入任何账号。')),
                       );
                       return;
                     }

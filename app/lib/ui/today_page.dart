@@ -11,73 +11,19 @@ class TodayPage extends StatelessWidget {
   const TodayPage({super.key, required this.store, required this.onNavigate});
 
   Future<void> _addTask(BuildContext context) async {
-    final title = TextEditingController();
-    String subject = '数学';
-    await showModalBottomSheet<void>(
+    final generation = store.generation;
+    final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       backgroundColor: PocketSkin.of(context).colors.card,
-      builder: (sheet) => StatefulBuilder(
-        builder: (context, setLocal) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            22,
-            6,
-            22,
-            MediaQuery.of(context).viewInsets.bottom + 30,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SectionLabel('添加一件要做的事'),
-              const SizedBox(height: 15),
-              TextField(
-                controller: title,
-                autofocus: true,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: '例如：复习数列第 2 节',
-                  border: OutlineInputBorder(),
-                ),
-                onSubmitted: (_) {
-                  if (title.text.trim().isNotEmpty) {
-                    store.addTask(title.text, subject);
-                    Navigator.of(context).pop();
-                  }
-                },
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 7,
-                children: [
-                  for (final option in ['数学', '语文', '英语', '物理', '化学', '其他'])
-                    ChoiceChip(
-                      label: Text(option),
-                      selected: subject == option,
-                      onSelected: (_) => setLocal(() => subject = option),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    if (title.text.trim().isNotEmpty) {
-                      store.addTask(title.text, subject);
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('添加到今天'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (sheet) => _AddTaskSheet(store: store, generation: generation),
     );
-    title.dispose();
+    if (saved == false && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已切换账号，任务未写入任何账号。')),
+      );
+    }
   }
 
   @override
@@ -418,6 +364,85 @@ class TodayPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AddTaskSheet extends StatefulWidget {
+  const _AddTaskSheet({required this.store, required this.generation});
+  final PocketStore store;
+  final int generation;
+  @override
+  State<_AddTaskSheet> createState() => _AddTaskSheetState();
+}
+
+class _AddTaskSheetState extends State<_AddTaskSheet> {
+  final _title = TextEditingController();
+  String _subject = '数学';
+
+  @override
+  void dispose() {
+    _title.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_title.text.trim().isEmpty) return;
+    if (widget.store.generation != widget.generation) {
+      Navigator.pop(context, false);
+      return;
+    }
+    widget.store.addTask(_title.text, _subject);
+    Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        22,
+        6,
+        22,
+        MediaQuery.of(context).viewInsets.bottom + 30,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionLabel('添加一件要做的事'),
+          const SizedBox(height: 15),
+          TextField(
+            controller: _title,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              hintText: '例如：复习数列第 2 节',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 7,
+            children: [
+              for (final option in ['数学', '语文', '英语', '物理', '化学', '其他'])
+                ChoiceChip(
+                  label: Text(option),
+                  selected: _subject == option,
+                  onSelected: (_) => setState(() => _subject = option),
+                ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('添加到今天'),
+            ),
+          ),
+        ],
       ),
     );
   }
