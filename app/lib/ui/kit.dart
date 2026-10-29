@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'optical_backdrop.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,41 +24,41 @@ class PocketPalette {
     this.dark,
   );
 
-  Color get grouped => dark ? const Color(0xFF20252B) : const Color(0xFFF1F4F1);
+  Color get grouped => dark ? const Color(0xFF202A29) : const Color(0xFFEEEEE4);
   Color get tertiary =>
-      dark ? const Color(0xFF353B42) : const Color(0xFFE9EFEB);
-  Color get glass => dark ? const Color(0xEC222931) : const Color(0xF5FCFFFD);
-  Color get shadow => dark ? const Color(0x55000000) : const Color(0x160B3F2B);
+      dark ? const Color(0xFF34423D) : const Color(0xFFE6E6DB);
+  Color get glass => dark ? const Color(0x9C192824) : const Color(0x9AF7F3EB);
+  Color get shadow => dark ? const Color(0x30000000) : const Color(0x12293F36);
   static PocketPalette forName(String name) {
     switch (name) {
       case 'obsidian':
         return const PocketPalette(
-          Color(0xFF11161B),
-          Color(0xFF20262D),
-          Color(0xFFF4F3EE),
-          Color(0xFFABB6C6),
-          Color(0xFF8CC8B6),
-          Color(0xFF384450),
+          Color(0xFF141F20),
+          Color(0xFF21302F),
+          Color(0xFFF3EFE6),
+          Color(0xFFB3BFB7),
+          Color(0xFFD7AC88),
+          Color(0xFF3E504B),
           true,
         );
       case 'ocean':
         return const PocketPalette(
-          Color(0xFF0A2028),
-          Color(0xFF14323A),
-          Color(0xFFF0F6F2),
-          Color(0xFFACC8C9),
-          Color(0xFF8DD9C9),
-          Color(0xFF356268),
+          Color(0xFF0C2228),
+          Color(0xFF18343B),
+          Color(0xFFE9F1E9),
+          Color(0xFFB9C9C7),
+          Color(0xFF9AC8B8),
+          Color(0xFF355B60),
           true,
         );
       default:
         return const PocketPalette(
-          Color(0xFFF6F8F6),
-          Color(0xFFFFFFFF),
-          Color(0xFF1A2C27),
-          Color(0xFF778881),
-          Color(0xFF267A64),
-          Color(0xFFDDE8E1),
+          Color(0xFFF7F3EB),
+          Color(0xFFFFFDF7),
+          Color(0xFF293F36),
+          Color(0xFF6A756C),
+          Color(0xFF966548),
+          Color(0xFFDEDCCF),
           false,
         );
     }
@@ -106,9 +106,9 @@ class _PocketCardState extends State<PocketCard> {
   @override
   Widget build(BuildContext context) {
     final skin = PocketSkin.of(context), p = skin.colors;
-    final r = BorderRadius.circular(21);
+    final r = BorderRadius.circular(14);
     return AnimatedScale(
-      scale: widget.onTap != null && down && !skin.reducedMotion ? .982 : 1,
+      scale: widget.onTap != null && down && !skin.reducedMotion ? .989 : 1,
       duration: Duration(milliseconds: skin.reducedMotion ? 0 : 145),
       curve: Curves.easeOutCubic,
       child: Semantics(
@@ -130,8 +130,8 @@ class _PocketCardState extends State<PocketCard> {
               boxShadow: [
                 BoxShadow(
                   color: p.shadow.withValues(alpha: p.dark ? 0.24 : 0.48),
-                  blurRadius: 17,
-                  offset: const Offset(0, 6),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -178,7 +178,8 @@ class PageTitle extends StatelessWidget {
           title,
           style: TextStyle(
             color: p.foreground,
-            fontWeight: FontWeight.w700,
+            fontFamily: 'serif',
+            fontWeight: FontWeight.w500,
             fontSize: 34,
             letterSpacing: -1.35,
             height: 1.22,
@@ -269,16 +270,16 @@ class GlassDock extends StatefulWidget {
     CupertinoIcons.calendar,
     CupertinoIcons.tray,
     CupertinoIcons.timer,
-    CupertinoIcons.square_grid_2x2,
+    CupertinoIcons.map,
   ];
   static const selectedIcons = [
     CupertinoIcons.house_fill,
     CupertinoIcons.calendar,
     CupertinoIcons.tray_fill,
     CupertinoIcons.timer_fill,
-    CupertinoIcons.square_grid_2x2_fill,
+    CupertinoIcons.map_fill,
   ];
-  static const names = ['今天', '课表', '收件', '专注', '探索'];
+  static const names = ['今天', '课表', '收件', '专注', '校园'];
   @override
   State<GlassDock> createState() => _GlassDockState();
 }
@@ -339,7 +340,7 @@ class _GlassDockState extends State<GlassDock>
                 boxShadow: [
                   BoxShadow(
                     color: p.shadow,
-                    blurRadius: 28,
+                    blurRadius: 18,
                     spreadRadius: -4,
                     offset: const Offset(0, 13),
                   ),
@@ -351,14 +352,13 @@ class _GlassDockState extends State<GlassDock>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(29),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 19, sigmaY: 19),
+                child: OpticalBackdrop(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [p.glass, p.glass.withValues(alpha: .78)],
+                        colors: [p.glass, p.glass.withValues(alpha: .90)],
                       ),
                       borderRadius: BorderRadius.circular(29),
                       border: Border.all(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/pocket_store.dart';
 import '../domain/pocket_models.dart';
 import 'kit.dart';
+import 'editorial.dart';
 import 'command_palette.dart';
 
 class TodayPage extends StatelessWidget {
@@ -20,9 +21,8 @@ class TodayPage extends StatelessWidget {
       builder: (sheet) => _AddTaskSheet(store: store, generation: generation),
     );
     if (saved == false && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已切换账号，任务未写入任何账号。')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('已切换账号，任务未写入任何账号。')));
     }
   }
 
@@ -42,102 +42,59 @@ class TodayPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              EditorialMasthead(
+                chapter: '01 / DAILY NOTES',
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: '搜索课程与任务',
+                      icon: const Icon(Icons.search_rounded, size: 22),
+                      onPressed: () =>
+                          showHaizCommand(context, store, onNavigate),
+                    ),
+                    IconButton(
+                      tooltip: '导入通知',
+                      icon: const Icon(Icons.move_to_inbox_outlined, size: 21),
+                      onPressed: () => onNavigate(2),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              EditorialHeading(
+                title: '今天。',
+                subtitle:
+                    '${now.month}月${now.day}日 · ${const ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][now.weekday - 1]}  /  校园日常',
+              ),
+              const SizedBox(height: 22),
+              CampusPhotoPanel(
+                asset: 'assets/campus/campus_fengqitang.jpg',
+                eyebrow: 'A SCHOOL THAT REMEMBERS',
+                title: store.remainingCount == 0
+                    ? '今日任务已完成'
+                    : '还有 ${store.remainingCount} 项待办',
+                caption: current == null
+                    ? '暂时没有后续课程 · 已专注 ${store.todayFocusMinutes} 分钟'
+                    : '下一节 ${current.name} · ${minutesText(current.startMinute)}',
+                actionLabel: '进入专注',
+                onTap: () => onNavigate(3),
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  const Eyebrow('HAIZ / V1'),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: 'HAIZ Command · 搜索',
-                    icon: const Icon(Icons.search_rounded),
-                    onPressed: () =>
-                        showHaizCommand(context, store, onNavigate),
+                  OutlinedButton.icon(
+                    onPressed: () => _addTask(context),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('新建任务'),
                   ),
+                  const SizedBox(width: 10),
                   TextButton.icon(
                     onPressed: () => onNavigate(2),
-                    icon: const Icon(Icons.inbox_outlined, size: 18),
+                    icon: const Icon(Icons.file_download_outlined, size: 17),
                     label: const Text('导入通知'),
                   ),
                 ],
-              ),
-              const SizedBox(height: 23),
-              const PageTitle(title: '把今天过好。', subtitle: '让每一段学习，都有清晰的下一步。'),
-              const SizedBox(height: 25),
-              Container(
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(29),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: p.dark
-                        ? [const Color(0xFF225448), const Color(0xFF173B37)]
-                        : [const Color(0xFF205D50), const Color(0xFF348672)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: p.accent.withValues(alpha: .09),
-                      blurRadius: 28,
-                      offset: const Offset(0, 15),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'STUDY RELAY',
-                      style: TextStyle(
-                        color: Color(0xFFBCE4D7),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.3,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      store.remainingCount == 0
-                          ? '今天已经整理妥当。'
-                          : '还有 ${store.remainingCount} 件事，\n可以从一件开始。',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 27,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                        letterSpacing: -.6,
-                      ),
-                    ),
-                    const SizedBox(height: 19),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.bookmark_outline,
-                          color: Color(0xFFD7EDE5),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '继续学习 · 今天已专注 ${store.todayFocusMinutes} 分钟',
-                            style: const TextStyle(
-                              color: Color(0xFFE1EFE8),
-                              fontSize: 12.5,
-                            ),
-                          ),
-                        ),
-                        IconButton.filledTonal(
-                          onPressed: () => onNavigate(3),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white,
-                          ),
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Color(0xFF236953),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 26),
               const SectionLabel('时间与课程', trailing: '只展示当前有用的信息'),
@@ -437,10 +394,7 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
           const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
-              onPressed: _submit,
-              child: const Text('添加到今天'),
-            ),
+            child: FilledButton(onPressed: _submit, child: const Text('添加到今天')),
           ),
         ],
       ),
