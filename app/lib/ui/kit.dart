@@ -27,7 +27,7 @@ class PocketPalette {
   Color get grouped => dark ? const Color(0xFF202A29) : const Color(0xFFEEEEE4);
   Color get tertiary =>
       dark ? const Color(0xFF34423D) : const Color(0xFFE6E6DB);
-  Color get glass => dark ? const Color(0x9C192824) : const Color(0x9AF7F3EB);
+  Color get glass => dark ? const Color(0x58192824) : const Color(0x48F7F3EB);
   Color get shadow => dark ? const Color(0x30000000) : const Color(0x12293F36);
   static PocketPalette forName(String name) {
     switch (name) {
@@ -339,33 +339,39 @@ class _GlassDockState extends State<GlassDock>
                 borderRadius: BorderRadius.circular(29),
                 boxShadow: [
                   BoxShadow(
-                    color: p.shadow,
-                    blurRadius: 18,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 13),
+                    color: Colors.black.withValues(alpha: p.dark ? .34 : .17),
+                    blurRadius: 26,
+                    spreadRadius: -5,
+                    offset: const Offset(0, 16),
                   ),
                   BoxShadow(
-                    color: p.accent.withValues(alpha: p.dark ? 0.07 : 0.04),
-                    blurRadius: 24,
+                    color: p.accent.withValues(alpha: p.dark ? 0.13 : 0.09),
+                    blurRadius: 29,
+                    spreadRadius: -2,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(29),
                 child: OpticalBackdrop(
+                  dark: p.dark,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [p.glass, p.glass.withValues(alpha: .90)],
+                        colors: [
+                          p.glass.withValues(alpha: p.dark ? .48 : .29),
+                          p.glass.withValues(alpha: p.dark ? .30 : .16),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(29),
                       border: Border.all(
-                        width: 1.15,
+                        width: 1.0,
                         color: p.dark
-                            ? Colors.white.withValues(alpha: .17)
-                            : Colors.white.withValues(alpha: .93),
+                            ? Colors.white.withValues(alpha: .14)
+                            : Colors.white.withValues(alpha: .61),
                       ),
                     ),
                     child: LayoutBuilder(
@@ -375,6 +381,9 @@ class _GlassDockState extends State<GlassDock>
                           height: 66,
                           child: Stack(
                             children: [
+                              Positioned.fill(
+                                child: OpticalGlassSheen(dark: p.dark),
+                              ),
                               AnimatedBuilder(
                                 animation: indicator,
                                 builder: (context, _) {
@@ -385,16 +394,43 @@ class _GlassDockState extends State<GlassDock>
                                     left: 5 + indicator.value * cell,
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
-                                        color: p.accent.withValues(
-                                          alpha: p.dark ? 0.23 : 0.11,
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Colors.white.withValues(
+                                              alpha: p.dark ? .21 : .55,
+                                            ),
+                                            p.accent.withValues(
+                                              alpha: p.dark ? .22 : .14,
+                                            ),
+                                            Colors.white.withValues(
+                                              alpha: p.dark ? .09 : .29,
+                                            ),
+                                          ],
                                         ),
                                         borderRadius: BorderRadius.circular(23),
                                         border: Border.all(
-                                          color: p.accent.withValues(
-                                            alpha: p.dark ? 0.16 : 0.07,
+                                          color: Colors.white.withValues(
+                                            alpha: p.dark ? .20 : .49,
                                           ),
-                                          width: .7,
+                                          width: 0.9,
                                         ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: p.dark ? .17 : .07,
+                                            ),
+                                            blurRadius: 9,
+                                            spreadRadius: -4,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: OpticalGlassSheen(
+                                        dark: p.dark,
+                                        selected: true,
+                                        radius: 23,
                                       ),
                                     ),
                                   );
