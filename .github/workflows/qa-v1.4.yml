@@ -2,7 +2,7 @@ name: HAIZ v1.4 independent QA
 on:
   workflow_dispatch:
   pull_request:
-    branches: [preview/haiz-academic-v1.3]
+    branches: [preview/haiz-academic-v1.3, qa/haiz-v1.4-verification]
 permissions:
   contents: read
 jobs:
@@ -31,7 +31,7 @@ jobs:
         working-directory: app
       - run: flutter analyze
         working-directory: app
-      # Keep desired invariants failing until the owning team fixes product code.
+      # Keep independent regression tests intact; require them to pass after remediation.
       - run: flutter test --coverage --reporter expanded
         working-directory: app
       - name: Require 80 percent line coverage
