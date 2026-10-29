@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'domain/message_intake_bridge.dart';
+
 import 'package:pdfrx/pdfrx.dart';
 
 import 'core/pocket_store.dart';
@@ -35,11 +38,36 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   @override
   void initState() {
     super.initState();
-    store.load();
+    MessageIntakeBridge.channel.setMethodCallHandler((call) async {
+      if (call.method == 'sharedNotice') {
+        MessageIntakeBridge.markChanged();
+        if (mounted) _switchTab(2);
+      }
+    });
+    store
+        .load()
+        .then((_) async {
+          // A cold share launch inserts the item before Flutter is initialized.
+          // Open Inbox only when an explicit share just arrived, not for any
+          // unrelated historical or silently monitored notification.
+          final items = await MessageIntakeBridge.entries();
+          final now = DateTime.now();
+          if (!mounted) return;
+          if (items.any(
+            (item) =>
+                item.source.startsWith('系统分享') &&
+                now.difference(item.receivedAt).inSeconds >= 0 &&
+                now.difference(item.receivedAt).inSeconds < 20,
+          )) {
+            _switchTab(2);
+          }
+        })
+        .catchError((Object _) {});
   }
 
   @override
   void dispose() {
+    MessageIntakeBridge.channel.setMethodCallHandler(null);
     session.dispose();
     store.dispose();
     super.dispose();
