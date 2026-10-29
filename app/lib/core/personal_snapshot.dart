@@ -48,10 +48,7 @@ class PersonalSnapshot {
         if (row[key] != null) _string(row, key);
       }
       final due = row['dueIso'];
-      if (due != null &&
-          (due is! String ||
-              !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(due) ||
-              DateTime.tryParse(due) == null)) {
+      if (due != null && (due is! String || !_validCalendarDate(due))) {
         throw const FormatException('任务日期无效，原始数据已保留');
       }
       return TaskItem.fromJson(row);
@@ -102,6 +99,17 @@ class PersonalSnapshot {
       activeTaskId: tasks.any((t) => t.id == active) ? active as String? : null,
       appearance: appearance, legacyImported: value['legacyImported'] == true,
     );
+  }
+
+  /// DateTime.tryParse normalizes impossible days (e.g. February 31);
+  /// personal data must reject, not silently change, the original date.
+  static bool _validCalendarDate(String value) {
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return false;
+    final parsed = DateTime.tryParse(value);
+    return parsed != null &&
+        parsed.year == int.parse(value.substring(0, 4)) &&
+        parsed.month == int.parse(value.substring(5, 7)) &&
+        parsed.day == int.parse(value.substring(8, 10));
   }
 
   static List<T> _records<T>(dynamic value, String label,
