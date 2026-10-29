@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/pocket_store.dart';
+import 'editorial.dart';
 import 'kit.dart';
 
 class CampusPage extends StatelessWidget {
   final PocketStore store;
   final VoidCallback onOpenLab;
   final VoidCallback onOpenAcademic;
+
   const CampusPage({
     super.key,
     required this.store,
@@ -14,270 +17,140 @@ class CampusPage extends StatelessWidget {
     required this.onOpenAcademic,
   });
 
+  Future<void> _openSite(BuildContext context, String path) async {
+    final uri = Uri.https('haiz.space', '/$path');
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // A missing browser should not crash the native student workspace.
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('无法打开网页，请检查浏览器与网络连接。')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = PocketSkin.of(context).colors;
     return SingleChildScrollView(
       key: const PageStorageKey('campus_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(23, 26, 23, 126),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Eyebrow('CAMPUS / A QUIETER WAY'),
-              const SizedBox(height: 23),
-              const PageTitle(
-                title: '让校园信息，变简单。',
-                subtitle: '把真正需要的服务放在触手可及的位置。',
+              const EditorialMasthead(chapter: '05 / THE CAMPUS'),
+              const SizedBox(height: 31),
+              const EditorialHeading(
+                title: '一所正在发生的学校。',
+                subtitle: '从这里进入校园，也处理日常的事。',
               ),
-              const SizedBox(height: 25),
-              PocketCard(
+              const SizedBox(height: 24),
+              CampusPhotoPanel(
+                asset: 'assets/campus/campus_erhao.jpg',
+                eyebrow: 'HAIZ / THE PLACE',
+                title: '走进海中',
+                caption: '从真实校园的建筑、道路和树影开始。',
+                actionLabel: '进入三维校园 · 将打开网页',
+                height: 249,
+                onTap: () => _openSite(context, 'campus-3d.html'),
+              ),
+              const SizedBox(height: 30),
+              const SectionLabel('校园与阅读'),
+              const SizedBox(height: 6),
+              EditorialLinkRow(
+                number: '01',
+                title: '校园杂志',
+                subtitle: '校园照片、地点与故事',
+                external: true,
+                onTap: () => _openSite(context, 'journal.html'),
+              ),
+              EditorialLinkRow(
+                number: '02',
+                title: '树荫下的三次停留',
+                subtitle: '北门、榄仁树与砚池的路线档案',
+                external: true,
+                onTap: () => _openSite(context, 'memory-walk.html'),
+              ),
+              const SizedBox(height: 31),
+              const SectionLabel('学习工具'),
+              const SizedBox(height: 6),
+              EditorialLinkRow(
+                number: '03',
+                title: '班级同步',
+                subtitle: '连接自己有权使用的班级服务',
                 onTap: onOpenAcademic,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: p.accent.withValues(alpha: .13),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.school_outlined,
-                        color: p.accent,
-                        size: 27,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'HAIZ Academic · 班级同步',
-                            style: TextStyle(
-                              color: p.foreground,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '连接授权班级 · 核对后加入个人任务',
-                            style: TextStyle(color: p.secondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: p.accent,
-                      size: 17,
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 14),
-              PocketCard(
+              EditorialLinkRow(
+                number: '04',
+                title: '物理纸带实验',
+                subtitle: '采点、测量与速度图表',
                 onTap: onOpenLab,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: p.accent.withValues(alpha: .13),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.science_outlined,
-                        color: p.accent,
-                        size: 27,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'HAIZ Teach · 物理实验',
-                            style: TextStyle(
-                              color: p.foreground,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '打点计时器 · 纸带测量 · v–t 图像',
-                            style: TextStyle(color: p.secondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: p.accent,
-                      size: 17,
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 14),
-              PocketCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          color: p.accent,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          '当前为本地预览',
-                          style: TextStyle(
-                            color: p.foreground,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 9),
-                    Text(
-                      '班级协作已支持连接自建 HAIZ Academic 服务；学校正式统一身份认证、校园卡和学校课表仍需取得授权才能接入。',
-                      style: TextStyle(
-                        color: p.secondary,
-                        height: 1.65,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 27),
-              const SectionLabel('校园服务'),
-              const SizedBox(height: 13),
-              _service(
-                context,
-                Icons.meeting_room_outlined,
-                '空教室',
-                '按日期与节次查询空闲空间',
-              ),
-              _service(context, Icons.local_library_outlined, '图书馆', '预约与馆内信息'),
-              _service(context, Icons.credit_card_outlined, '校园卡', '余额与消费记录'),
-              _service(context, Icons.bolt_outlined, '宿舍电量', '照明与空调用量'),
-              const SizedBox(height: 28),
-              const SectionLabel('外观与体验'),
-              const SizedBox(height: 13),
-              PocketCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '界面主题',
-                      style: TextStyle(
-                        color: p.foreground,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 11),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final entry in const [
-                          ('porcelain', 'Porcelain · 瓷白'),
-                          ('obsidian', 'Obsidian · 黑曜'),
-                          ('ocean', 'Ocean · 深海'),
-                        ])
-                          ChoiceChip(
-                            selected: store.appearance == entry.$1,
-                            label: Text(entry.$2),
-                            onSelected: (_) => store.setAppearance(entry.$1),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '高频操作优先于装饰性动画；遵从系统减少动态效果设置。',
-                      style: TextStyle(color: p.secondary, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 25),
-              Eyebrow('BASED ON 3BEUML / ZZUPOCKET · MIT'),
-              const SizedBox(height: 7),
+              const SizedBox(height: 31),
+              const SectionLabel('待接入服务'),
+              const SizedBox(height: 8),
               Text(
-                '学生端工作流研究版本 · 并非郑州大学官方应用，也不是海南中学官方服务。',
-                style: TextStyle(color: p.secondary, fontSize: 11, height: 1.6),
+                '以下需要学校正式授权。当前版本不提供虚构的余额、空闲教室或预约数据。',
+                style: TextStyle(color: p.secondary, fontSize: 12, height: 1.7),
+              ),
+              const EditorialLinkRow(
+                number: '—',
+                title: '空教室与图书馆',
+                subtitle: '需连接学校空间与预约系统',
+                status: '未接入',
+              ),
+              const EditorialLinkRow(
+                number: '—',
+                title: '校园卡与宿舍电量',
+                subtitle: '需学校数据接口与用户授权',
+                status: '未接入',
+              ),
+              const SizedBox(height: 31),
+              const SectionLabel('外观'),
+              const SizedBox(height: 13),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final theme in const [
+                    ('porcelain', '纸张'),
+                    ('obsidian', '夜色'),
+                    ('ocean', '深海'),
+                  ])
+                    ChoiceChip(
+                      label: Text(theme.$2),
+                      selected: store.appearance == theme.$1,
+                      onSelected: (_) => store.setAppearance(theme.$1),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 26),
+              Divider(color: p.border),
+              const SizedBox(height: 12),
+              Text(
+                'HAIZ.SPACE / INDEPENDENT CAMPUS PROJECT',
+                style: TextStyle(
+                  color: p.secondary,
+                  fontSize: 9,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '非海南中学官方应用。个人学习记录优先保存在本机；班级功能需自行授权连接。',
+                style: TextStyle(
+                  color: p.secondary,
+                  fontSize: 11,
+                  height: 1.65,
+                ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _service(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String detail,
-  ) {
-    final p = PocketSkin.of(context).colors;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: PocketCard(
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$title：尚未接入真实学校服务'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: p.accent.withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(icon, color: p.accent, size: 23),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: p.foreground,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    detail,
-                    style: TextStyle(color: p.secondary, fontSize: 11.5),
-                  ),
-                ],
-              ),
-            ),
-            Text('待接入', style: TextStyle(color: p.secondary, fontSize: 10)),
-            const SizedBox(width: 6),
-            Icon(Icons.chevron_right_rounded, size: 18, color: p.secondary),
-          ],
         ),
       ),
     );

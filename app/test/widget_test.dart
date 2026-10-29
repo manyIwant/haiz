@@ -83,7 +83,7 @@ void main() {
       expect(find.text('今天'), findsOneWidget);
       expect(find.text('课表'), findsOneWidget);
       expect(find.text('专注'), findsOneWidget);
-      expect(find.text('探索'), findsOneWidget);
+      expect(find.text('校园'), findsOneWidget);
       expect(find.text('收件'), findsOneWidget);
     }
   });
