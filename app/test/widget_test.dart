@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
+import 'package:haiz_pocket_flutter/ui/optical_backdrop.dart';
 
 void main() {
   test('time formatting, days and course sorting are deterministic', () {
@@ -85,6 +86,9 @@ void main() {
       expect(find.text('专注'), findsOneWidget);
       expect(find.text('校园'), findsOneWidget);
       expect(find.text('收件'), findsOneWidget);
+      // The physical highlights remain available when Impeller shader filters
+      // are not supported (for example in widget tests or Web fallback).
+      expect(find.byType(OpticalGlassSheen), findsNWidgets(2));
     }
   });
 }
