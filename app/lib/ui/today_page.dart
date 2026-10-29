@@ -5,25 +5,85 @@ import '../domain/pocket_models.dart';
 import 'kit.dart';
 import 'editorial.dart';
 import 'command_palette.dart';
+import 'task_workflow.dart';
 
-class TodayPage extends StatelessWidget {
+class TodayPage extends StatefulWidget {
   final PocketStore store;
   final ValueChanged<int> onNavigate;
   const TodayPage({super.key, required this.store, required this.onNavigate});
 
-  Future<void> _addTask(BuildContext context) async {
+  @override
+  State<TodayPage> createState() => _TodayPageState();
+}
+
+class _TodayPageState extends State<TodayPage> {
+  PocketStore get store => widget.store;
+  ValueChanged<int> get onNavigate => widget.onNavigate;
+  TaskView view = TaskView.pending;
+
+  Future<void> _editTask(BuildContext context, [TaskItem? task]) async {
     final generation = store.generation;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       backgroundColor: PocketSkin.of(context).colors.card,
-      builder: (sheet) => _AddTaskSheet(store: store, generation: generation),
+      builder: (_) =>
+          TaskEditorSheet(store: store, generation: generation, task: task),
     );
     if (saved == false && context.mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('已切换账号，任务未写入任何账号。')));
+          .showSnackBar(const SnackBar(content: Text('已切换账号，本次修改没有保存。')));
     }
+  }
+
+  void _deleteTask(BuildContext context, TaskItem task) {
+    final generation = store.generation;
+    final savedNote = store.noteFor(task.id);
+    final wasActive = store.activeTaskId == task.id;
+    store.deleteTask(task.id);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text('已移除任务'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: '撤销',
+          onPressed: () {
+            if (store.generation != generation) return;
+            store.restoreTask(task, note: savedNote, reactivate: wasActive);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showSource(BuildContext context, TaskItem task) {
+    showDialog<void>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('任务的原始通知'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(task.source),
+              const SizedBox(height: 12),
+              SelectableText(task.originalNotice),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -31,7 +91,7 @@ class TodayPage extends StatelessWidget {
     final p = PocketSkin.of(context).colors;
     final now = DateTime.now();
     final current = nextCourse(store.courses, now);
-    final tasks = store.tasks;
+    final tasks = tasksForView(store.tasks, view, now);
     return SingleChildScrollView(
       key: const PageStorageKey('today_scroll'),
       physics: const BouncingScrollPhysics(),
@@ -72,7 +132,7 @@ class TodayPage extends StatelessWidget {
                 asset: 'assets/campus/campus_fengqitang.jpg',
                 eyebrow: 'A SCHOOL THAT REMEMBERS',
                 title: store.remainingCount == 0
-                    ? '今日任务已完成'
+                    ? '当前没有待办'
                     : '还有 ${store.remainingCount} 项待办',
                 caption: current == null
                     ? '暂时没有后续课程 · 已专注 ${store.todayFocusMinutes} 分钟'
@@ -84,7 +144,7 @@ class TodayPage extends StatelessWidget {
               Row(
                 children: [
                   OutlinedButton.icon(
-                    onPressed: () => _addTask(context),
+                    onPressed: () => _editTask(context),
                     icon: const Icon(Icons.add_rounded, size: 18),
                     label: const Text('新建任务'),
                   ),
@@ -97,7 +157,7 @@ class TodayPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 26),
-              const SectionLabel('时间与课程', trailing: '只展示当前有用的信息'),
+              const SectionLabel('时间与课程', trailing: '按本机课表显示'),
               const SizedBox(height: 12),
               PocketCard(
                 child: Row(
@@ -159,160 +219,159 @@ class TodayPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: SectionLabel(
-                      '今天的任务',
-                      trailing: '${store.doneCount}/${tasks.length} 已完成',
+                      '我的任务',
+                      trailing: '${store.doneCount}/${store.tasks.length} 已完成',
                     ),
                   ),
                   IconButton.filledTonal(
                     tooltip: '添加任务',
-                    onPressed: () => _addTask(context),
+                    onPressed: () => _editTask(context),
                     icon: const Icon(Icons.add_rounded),
                   ),
                 ],
               ),
-              const SizedBox(height: 11),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 7,
+                runSpacing: 0,
+                children: [
+                  for (final item in [
+                    (TaskView.pending, '待办'),
+                    (TaskView.upcoming, '日期提醒'),
+                    (TaskView.completed, '已完成'),
+                    (TaskView.all, '全部'),
+                  ])
+                    ChoiceChip(
+                      label: Text(item.$2),
+                      selected: view == item.$1,
+                      onSelected: (_) => setState(() => view = item.$1),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
               if (tasks.isEmpty)
                 PocketCard(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.check_circle_outline,
-                          color: p.accent,
-                          size: 32,
-                        ),
-                        const SizedBox(height: 11),
-                        Text(
-                          '还没有任务，添加第一件吧。',
-                          style: TextStyle(color: p.secondary),
-                        ),
+                        Icon(Icons.inbox_outlined, color: p.accent, size: 28),
+                        const SizedBox(height: 8),
+                        Text(switch (view) {
+                          TaskView.pending => '当前没有未完成的任务',
+                          TaskView.upcoming => '未来七天及逾期任务为空',
+                          TaskView.completed => '还没有已完成的任务',
+                          TaskView.all => '还没有任务，创建第一项吧',
+                        }, style: TextStyle(color: p.secondary)),
                       ],
                     ),
                   ),
                 ),
-              for (final task in tasks) ...[
+              for (final task in tasks)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 9),
                   child: PocketCard(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
+                      horizontal: 11,
+                      vertical: 10,
                     ),
                     child: Row(
                       children: [
                         IconButton(
+                          tooltip: task.completed ? '标记为未完成' : '标记完成',
                           onPressed: () => store.toggleTask(task.id),
-                          icon: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 160),
-                            child: Icon(
-                              task.completed
-                                  ? Icons.check_circle_rounded
-                                  : Icons.circle_outlined,
-                              key: ValueKey(task.completed),
-                              color: p.accent,
-                              size: 24,
-                            ),
+                          icon: Icon(
+                            task.completed
+                                ? Icons.check_circle_rounded
+                                : Icons.circle_outlined,
+                            color: p.accent,
+                            size: 23,
                           ),
                         ),
-                        const SizedBox(width: 5),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                task.title,
-                                style: TextStyle(
-                                  color: task.completed
-                                      ? p.secondary
-                                      : p.foreground,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: task.completed
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                task.example
-                                    ? '${task.subject}  ·  示例任务'
-                                    : '${task.subject}${task.dueIso == null ? '' : ' · 截止 ${task.dueIso}'}',
-                                style: TextStyle(
-                                  color: p.secondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (task.originalNotice.isNotEmpty)
-                          IconButton(
-                            tooltip: '查看通知原文',
-                            visualDensity: VisualDensity.compact,
-                            icon: Icon(
-                              Icons.info_outline_rounded,
-                              color: p.secondary,
-                              size: 19,
-                            ),
-                            onPressed: () => showDialog<void>(
-                              context: context,
-                              builder: (dialog) => AlertDialog(
-                                title: const Text('任务的原始通知'),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        task.source,
-                                        style: TextStyle(
-                                          color: p.accent,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      SelectableText(task.originalNotice),
-                                    ],
+                          child: InkWell(
+                            onTap: () => _editTask(context, task),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    task.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: task.completed
+                                          ? p.secondary
+                                          : p.foreground,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      decoration: task.completed
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
                                   ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(dialog),
-                                    child: const Text('关闭'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${task.subject} · ${taskDueText(task, now)}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: p.secondary,
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
+                        ),
                         IconButton(
-                          tooltip: '继续这项学习任务',
+                          tooltip: '接着学习',
                           onPressed: () {
                             store.chooseFocusTask(task.id);
                             onNavigate(3);
                           },
                           icon: Icon(
                             Icons.play_arrow_rounded,
-                            size: 21,
+                            size: 20,
                             color: p.accent,
                           ),
                         ),
-                        IconButton(
-                          tooltip: '删除',
-                          onPressed: () => store.deleteTask(task.id),
+                        PopupMenuButton<String>(
+                          tooltip: '任务操作',
+                          padding: EdgeInsets.zero,
                           icon: Icon(
-                            Icons.close_rounded,
-                            size: 17,
+                            Icons.more_horiz_rounded,
                             color: p.secondary,
+                            size: 20,
                           ),
+                          onSelected: (choice) {
+                            if (choice == 'edit') _editTask(context, task);
+                            if (choice == 'source') _showSource(context, task);
+                            if (choice == 'delete') _deleteTask(context, task);
+                          },
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Text('编辑任务与日期'),
+                            ),
+                            if (task.originalNotice.isNotEmpty)
+                              const PopupMenuItem(
+                                value: 'source',
+                                child: Text('查看通知原文'),
+                              ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text('删除任务'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
               const SizedBox(height: 16),
               Text(
                 '本地学习数据 · 未连接学校教务系统',
@@ -321,82 +380,6 @@ class TodayPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AddTaskSheet extends StatefulWidget {
-  const _AddTaskSheet({required this.store, required this.generation});
-  final PocketStore store;
-  final int generation;
-  @override
-  State<_AddTaskSheet> createState() => _AddTaskSheetState();
-}
-
-class _AddTaskSheetState extends State<_AddTaskSheet> {
-  final _title = TextEditingController();
-  String _subject = '数学';
-
-  @override
-  void dispose() {
-    _title.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (_title.text.trim().isEmpty) return;
-    if (widget.store.generation != widget.generation) {
-      Navigator.pop(context, false);
-      return;
-    }
-    widget.store.addTask(_title.text, _subject);
-    Navigator.pop(context, true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        22,
-        6,
-        22,
-        MediaQuery.of(context).viewInsets.bottom + 30,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionLabel('添加一件要做的事'),
-          const SizedBox(height: 15),
-          TextField(
-            controller: _title,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              hintText: '例如：复习数列第 2 节',
-              border: OutlineInputBorder(),
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 7,
-            children: [
-              for (final option in ['数学', '语文', '英语', '物理', '化学', '其他'])
-                ChoiceChip(
-                  label: Text(option),
-                  selected: _subject == option,
-                  onSelected: (_) => setState(() => _subject = option),
-                ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(onPressed: _submit, child: const Text('添加到今天')),
-          ),
-        ],
       ),
     );
   }

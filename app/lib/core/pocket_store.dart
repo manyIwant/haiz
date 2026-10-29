@@ -249,6 +249,53 @@ class PocketStore extends ChangeNotifier {
     _persist(); _notify();
   }
 
+  /// Correct a task without changing its identifier, completion, or source trail.
+  bool updateTask(
+    String id, {
+    required String title,
+    required String subject,
+    DateTime? due,
+  }) {
+    if (!_writable || title.trim().isEmpty || subject.trim().isEmpty) {
+      return false;
+    }
+    final index = tasks.indexWhere((x) => x.id == id);
+    if (index < 0) return false;
+    final old = tasks[index];
+    final updated = TaskItem(
+      id: old.id,
+      title: title.trim(),
+      subject: subject.trim(),
+      completed: old.completed,
+      example: false,
+      dueIso: due == null
+          ? null
+          : '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
+      source: old.source,
+      originalNotice: old.originalNotice,
+    );
+    tasks = List.unmodifiable([...tasks]..[index] = updated);
+    _persist();
+    _notify();
+    return true;
+  }
+
+  /// Restore a just-deleted task, including its private note. No cross-account undo.
+  bool restoreTask(TaskItem task, {String note = '', bool reactivate = false}) {
+    if (!_writable || tasks.any((t) => t.id == task.id)) return false;
+    tasks = List.unmodifiable([...tasks, task]);
+    if (note.isNotEmpty) {
+      taskNotes = Map.unmodifiable({...taskNotes, task.id: note});
+    }
+    if (reactivate) {
+      activeTaskId = task.id;
+      lastSavedTaskId = task.id;
+    }
+    _persist();
+    _notify();
+    return true;
+  }
+
   void toggleTask(String id) {
     if (!_writable) return;
     tasks = List.unmodifiable(tasks.map((x) => x.id == id
