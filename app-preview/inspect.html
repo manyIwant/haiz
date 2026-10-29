@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="light">
+  <title>HAIZ Pocket · Web Preview</title>
+  <style>
+    :root { color-scheme: light; --paper:#f6f3eb; --ink:#23372d; --muted:#68776f; --stroke:#d9dfd7; --accent:#85563d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100svh; background:var(--paper); color:var(--ink); font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+    .layout { display:grid; grid-template-columns:minmax(260px,390px) minmax(380px,1fr); gap:min(8vw,96px); width:min(1100px,100% - 56px); margin:0 auto; padding:52px 0 55px; align-items:start; }
+    .details { padding-top:40px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:15px; border-bottom:1px solid var(--stroke); padding-bottom:24px; }
+    .brand b { font-size:21px; letter-spacing:-.065em; }
+    .brand b span { color:var(--accent); }
+    .brand small { color:var(--muted); font-size:10px; letter-spacing:.12em; }
+    .eyebrow { color:var(--accent); letter-spacing:.17em; font-size:11px; margin:65px 0 16px; font-weight:600; }
+    h1 { font:normal clamp(39px,4.1vw,57px)/1.22 Georgia,"Songti SC",serif; margin:0; letter-spacing:-.055em; }
+    .lead { max-width:36ch; font-size:15px; line-height:1.9; color:#63756c; margin:27px 0 32px; }
+    .controls { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 28px; }
+    button,.link { border:1px solid #d4ddd3; background:#fffdf9; color:var(--ink); border-radius:999px; padding:11px 17px; cursor:pointer; font:500 13px system-ui,"PingFang SC",sans-serif; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-height:43px; }
+    button[aria-pressed="true"] { background:var(--ink); color:white; border-color:var(--ink); }
+    .link { background:transparent; border-color:var(--ink); }
+    button:focus-visible,.link:focus-visible { outline:3px solid #9dbbad; outline-offset:3px; }
+    .note { border-top:1px solid var(--stroke); padding-top:19px; max-width:43ch; font-size:12px; line-height:1.9; color:var(--muted); }
+    .note strong { color:var(--ink); }
+    .device-container { display:flex; align-items:flex-start; justify-content:center; min-width:0; }
+    .device { width:390px; flex:none; border:7px solid #1d2925; border-radius:40px; background:#1d2925; overflow:hidden; box-shadow:0 32px 74px #26362d25,0 4px 14px #26362d14; transition:width .26s ease; position:relative; }
+    .device-header { height:17px; display:flex; justify-content:center; align-items:center; background:#1d2925; }
+    .device-header::after { content:""; width:58px; height:4px; border-radius:99px; background:#45594f; }
+    iframe { display:block; width:100%; height:min(78vh,820px); min-height:560px; border:0; background:#f7f3eb; }
+    .device-footer { text-align:center; color:#a8b8ad; font-size:10px; letter-spacing:.09em; height:28px; line-height:25px; }
+    .foot { margin-top:18px; color:var(--muted); font-size:11px; text-align:center; }
+    @media(max-width:900px) {
+      .layout { grid-template-columns:1fr; gap:22px; padding-top:24px; width:min(580px,100% - 32px); }
+      .details { padding-top:0; }
+      .eyebrow { margin-top:28px; }
+      .lead { margin:16px 0 20px; }
+      .device-container { padding-bottom:10px; }
+      .device { max-width:100%; }
+      iframe { height:80vh; }
+      .note { max-width:none; }
+    }
+    @media(prefers-reduced-motion:reduce) { .device { transition:none; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <main class="details">
+      <div class="brand"><b>haiz<span>.space</span></b><small>APP / DESIGN REVIEW</small></div>
+      <p class="eyebrow">FLUTTER WEB · SAME APP SOURCE</p>
+      <h1>在电脑上，<br>检查手机里的 HAIZ。</h1>
+      <p class="lead">这不是效果图。画面来自 Android 预览版的同一套 Flutter 页面和状态逻辑，可以直接点击导航、查看课表、创建任务、切换主题与打开校园内容。</p>
+      <div aria-label="模拟设备宽度" class="controls">
+        <button type="button" data-width="360" aria-pressed="false">小屏 · 360</button>
+        <button type="button" data-width="390" aria-pressed="true">标准 · 390</button>
+        <button type="button" data-width="430" aria-pressed="false">大屏 · 430</button>
+        <a class="link" href="./" target="_blank" rel="noopener">全屏打开应用 ↗</a>
+      </div>
+      <div class="note">
+        <strong>预览说明</strong>：数据保存在当前浏览器，不与你的 Android 安装包同步。网页与 Android 共用 Flutter 业务 UI，但 GPU 光学玻璃、字体和原生权限可能有平台差异；未授权的校园服务不提供模拟数据。
+        <p><a href="https://github.com/manyIwant/haiz/pull/27" target="_blank" rel="noopener">查看此次 App 重构源代码 ↗</a></p>
+      </div>
+    </main>
+    <div class="device-container">
+      <div>
+        <section class="device" id="device" aria-label="HAIZ App 可交互模拟屏幕">
+          <div class="device-header" aria-hidden="true"></div>
+          <iframe src="./" title="HAIZ Pocket 完整 Flutter Web 应用" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
+          <div class="device-footer" aria-hidden="true">HAIZ POCKET · WEB PREVIEW</div>
+        </section>
+        <p class="foot">此页面可交互 · 保留全部五个导航入口</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const device = document.getElementById('device');
+    for (const button of document.querySelectorAll('button[data-width]')) {
+      button.addEventListener('click', () => {
+        const size = Number(button.dataset.width);
+        device.style.width = size + 'px';
+        document.querySelectorAll('button[data-width]').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      });
+    }
+  </script>
+</body>
+</html>
