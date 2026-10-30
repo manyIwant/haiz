@@ -16,6 +16,10 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+
+		A11D00010000000000000007 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D00010000000000000002 /* ShareViewController.swift */; };
+		A11D00010000000000000008 /* HaizShareIntakePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D00010000000000000005 /* HaizShareIntakePlugin.swift */; };
+		A11D00010000000000000009 /* HaizShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A11D00010000000000000001 /* HaizShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +29,14 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+
+		A11D00010000000000000011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A11D0001000000000000000B;
+			remoteInfo = HaizShareExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -37,6 +49,18 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		A11D0001000000000000000F /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A11D00010000000000000009 /* HaizShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -59,6 +83,14 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+
+		A11D00010000000000000001 /* HaizShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HaizShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A11D00010000000000000002 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		A11D00010000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A11D00010000000000000004 /* HaizShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = HaizShareExtension.entitlements; sourceTree = "<group>"; };
+		A11D00010000000000000005 /* HaizShareIntakePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HaizShareIntakePlugin.swift; sourceTree = "<group>"; };
+		A11D00010000000000000006 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Runner.entitlements; sourceTree = "<group>"; };
+		A11D00010000000000000016 /* Share.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Share.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +100,13 @@
 			files = (
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		A11D0001000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -98,6 +137,7 @@
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
+				A11D0001000000000000000A /* HaizShareExtension */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 			);
@@ -107,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
+				A11D00010000000000000001 /* HaizShareExtension.appex */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 			);
 			name = Products;
@@ -123,9 +164,23 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
+				A11D00010000000000000005 /* HaizShareIntakePlugin.swift */,
+				A11D00010000000000000006 /* Runner.entitlements */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+
+		A11D0001000000000000000A /* HaizShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				A11D00010000000000000002 /* ShareViewController.swift */,
+				A11D00010000000000000003 /* Info.plist */,
+				A11D00010000000000000004 /* HaizShareExtension.entitlements */,
+				A11D00010000000000000016 /* Share.xcconfig */,
+			);
+			path = HaizShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -157,11 +212,13 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				A11D0001000000000000000F /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A11D00010000000000000010 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -170,6 +227,22 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+
+		A11D0001000000000000000B /* HaizShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A11D00010000000000000012 /* Build config for HaizShareExtension */;
+			buildPhases = (
+				A11D0001000000000000000C /* Sources */,
+				A11D0001000000000000000E /* Frameworks */,
+				A11D0001000000000000000D /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = HaizShareExtension;
+			productName = HaizShareExtension;
+			productReference = A11D00010000000000000001 /* HaizShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -185,7 +258,10 @@
 						CreatedOnToolsVersion = 14.0;
 						TestTargetID = 97C146ED1CF9000F007C117D;
 					};
-					97C146ED1CF9000F007C117D = {
+					A11D0001000000000000000B = {
+						CreatedOnToolsVersion = 15.0;
+				};
+				97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
 					};
@@ -209,6 +285,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				A11D0001000000000000000B /* HaizShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -230,6 +307,13 @@
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		A11D0001000000000000000D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
@@ -284,7 +368,15 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				A11D00010000000000000008 /* HaizShareIntakePlugin.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		A11D0001000000000000000C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A11D00010000000000000007 /* ShareViewController.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -294,6 +386,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+
+		A11D00010000000000000010 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A11D0001000000000000000B /* HaizShareExtension */;
+			targetProxy = A11D00010000000000000011 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -378,6 +476,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -559,6 +658,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -581,6 +681,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -593,6 +694,81 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
+		};
+
+		A11D00010000000000000013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HaizShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = space.haiz.haizPocketFlutter.HaizShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+
+		A11D00010000000000000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HaizShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = space.haiz.haizPocketFlutter.HaizShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+
+		A11D00010000000000000015 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HaizShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = space.haiz.haizPocketFlutter.HaizShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
 		};
 /* End XCBuildConfiguration section */
 
@@ -623,6 +799,17 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+
+		A11D00010000000000000012 /* Build config for HaizShareExtension */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A11D00010000000000000013 /* Debug */,
+				A11D00010000000000000014 /* Release */,
+				A11D00010000000000000015 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
