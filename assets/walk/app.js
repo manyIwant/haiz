@@ -150,6 +150,8 @@
     setArrivalProgress(1);if(!arrivalPoint)return;arrivalTaken=true;
     const c=world.buildings.find(b=>b.data.id==='beimen').center;
     state.pos={...arrivalPoint};state.yaw=Math.atan2(-(c.x-state.pos.x),-(c.z-state.pos.z));state.pitch=Math.atan2(3.65,Math.hypot(c.x-state.pos.x,c.z-state.pos.z));
+    // Restore live moving shadows when the visitor takes control.
+    if(renderer?.shadowMap){renderer.shadowMap.autoUpdate=true;renderer.shadowMap.needsUpdate=true;}
     observation=true;$('observationToggle').checked=true;document.body.classList.add('observation');
     $('hud').hidden=false;$('touchControls').hidden=!touch;updateCamera(0);resume(false);
   }
@@ -437,7 +439,7 @@
     window.CampusWorkshop?.attach(window.haizWalk);
     Object.assign(window.haizWalk,{startJourney,restoreView});
     window.CampusDecor?.attach(window.haizWalk);window.CampusReview?.attach(window.haizWalk);
-    if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);renderer.render(scene,camera);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
+    if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);renderer.render(scene,camera);if(renderer.shadowMap)renderer.shadowMap.autoUpdate=false;window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
     if(new URLSearchParams(location.search).get('enter')==='gate'){
       state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;goTo('beimen',false);resume(false);toast(touch?'抵达北门。左摇杆行走，右侧滑动环顾。':'抵达北门。WASD 行走，按住场景拖动环顾。');
     }
