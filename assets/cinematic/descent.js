@@ -35,7 +35,13 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const elapsed=M
  const ci=C.chapters.indexOf(f.chapter);if(ci!==chapter){chapter=ci;$('chapterLabel').textContent=f.chapter.label;$('chapterTitle').textContent=f.chapter.title;$('chapterText').textContent=f.chapter.text;document.querySelectorAll('[data-progress]').forEach((b,i)=>b.classList.toggle('active',i===ci));}
  $('caption').hidden=!started||progress>.965;$('arrival').hidden=progress<.985;
  $('progress').value=String(progress);
- if(!material&&I){const layer=I.layers[Math.min(I.layers.length-1,Math.floor(progress*6))];if($('fallback').getAttribute('src')!==layer.path)$('fallback').src=layer.path;}
+ if(!material&&I){
+  const mix=C.smooth((progress-.21)/.16);
+  $('planetFallback').style.opacity=String(1-mix);
+  $('fallback').style.opacity=String(mix);
+  const layer=I.layers[Math.min(I.layers.length-1,Math.floor(progress*6))];
+  if($('fallback').getAttribute('src')!==layer.path)$('fallback').src=layer.path;
+ }
 }
 function resize(){if(!renderer)return;const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);const maxPixels=mobile?3000000:5600000;const ratio=Math.max(1,Math.min(devicePixelRatio||1,mobile?1.75:2,Math.sqrt(maxPixels/(w*h))));renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);material.uniforms.aspect.value=w/h;material.uniforms.shiftX.value=C.composition(progress,w/h).shiftX;}
 async function imageTexture(path,deadline=15000){return new Promise(resolve=>{let done=false;const timeout=setTimeout(()=>finish(null),deadline);function finish(value){if(done){value?.dispose();return;}done=true;clearTimeout(timeout);resolve(value);}try{new THREE.TextureLoader().load(path,finish,undefined,()=>finish(null));}catch{finish(null);}});}
@@ -123,7 +129,7 @@ async function boot(){
   renderer.render(scene,camera);
   $('loadStatus').textContent='影像已就绪，正在确认校园衔接…';
   if(!(await arrivalTask)&&!ready){frame.setAttribute('src','about:blank');$('arrivalStatus').textContent='校园预载超时，抵达时可通过独立入口进入。';}
- }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('fallback').hidden=false;}
+ }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('planetFallback').hidden=false;$('fallback').hidden=false;}
  // The geographic opening is usable immediately after its own imagery loads.
  // The campus starts only on user action; it never gates the play button.
  $('play').disabled=false;$('playText').textContent=reduced?'选择章节，静静观看':'开始下降 · 32 秒';$('loadStatus').textContent=reduced?'已遵循减少动态效果设置。':imageryReport.remoteCompleted?'已载入 '+imageryReport.loadedLayers.filter(n=>n.includes('px')).length+' 张增强影像 · 可暂停或回看。':'可以暂停、回看，或拖动下方进度。';
