@@ -70,6 +70,20 @@ function ensureJourneyFallback(){
   image.alt='海南及周边卫星影像（备用显示）';
   host.insertBefore(image,$('campusFrame')||null);
  }
+ // Inline styling is intentional: even a cached older stylesheet must
+ // render the fallback clearly rather than leaving a black background.
+ Object.assign(planet.style,{position:'absolute',inset:'0',display:'block',
+  background:'radial-gradient(ellipse at 70% 45%,#102b43 0%,#07121d 45%,#020912 100%)',
+  overflow:'hidden',pointerEvents:'none',zIndex:'1'});
+ let orb=planet.querySelector('.fallback-orb');
+ if(!orb){orb=document.createElement('div');orb.className='fallback-orb';planet.appendChild(orb);}
+ Object.assign(orb.style,{position:'absolute',left:'70%',top:'50%',
+  transform:'translate(-50%,-50%)',width:'min(52vw,38vh)',aspectRatio:'1',
+  borderRadius:'50%',backgroundImage:"radial-gradient(circle at 25% 20%,#ffffff18,transparent 45%),url('assets/cinematic/earth_2048.jpg')",
+  backgroundSize:'100% 100%,200% 100%',backgroundPosition:'center,65% 49%',
+  boxShadow:'inset -20px -20px 40px #000a,inset 7px 0 16px #ffffff24,0 0 26px #4c86ab66'});
+ Object.assign(image.style,{position:'absolute',inset:'0',width:'100%',height:'100%',
+  objectFit:'cover',opacity:'0',pointerEvents:'none',zIndex:'1'});
  return {planet,image};
 }
 function recoverJourney(originalError){
