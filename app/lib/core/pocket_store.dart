@@ -252,7 +252,7 @@ class PocketStore extends ChangeNotifier {
   int get doneCount => tasks.where((x) => x.completed).length;
 
   void setAppearance(String value) {
-    if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) return;
+    if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) { return; }
     appearance = value;
     _persist(); _notify();
   }
