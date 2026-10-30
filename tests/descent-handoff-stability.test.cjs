@@ -26,4 +26,8 @@ const cinematic=read('assets/cinematic/descent.js');
 assert.match(cinematic,/get\('preview'\)==='arrival'/);
 assert.match(read('descent.html'),/descent-core\.js\?v=10/);
 assert.match(read('campus-3d.html'),/world\.js\?v=26/);
+assert.match(read('campus-3d.html'),/app\.js\?v=28/);
+const app=read('assets/walk/app.js');
+assert.match(app,/renderer\.shadowMap\.autoUpdate=false/);
+assert.match(app,/renderer\.shadowMap\.autoUpdate=true/);
 console.log('OK: stable crossfade before camera motion and ordered coplanar roads');
