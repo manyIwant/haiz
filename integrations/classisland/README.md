@@ -1,34 +1,58 @@
-# HAIZ Classroom Plugin · ClassIsland 原生组件
+# HAIZ ClassIsland Unified Plugin v0.2 (preview)
 
-来源：以 ClassIsland 官方 `ClassIsland.PluginSdk` 2.0.0.2、官方 Sample 项目和 `ComponentBase` API 为基础自行实现。与 ClassIsland 本体保持隔离，没有修改第三方源仓库。
+## Packaging correction (2026-10-30)
 
-## 构建
+The previously shared binary `artifacts/HAIZ-ClassIsland-Unified-v0.2.0-preview.cipx` is incomplete: it lacks the README.md file that the ClassIsland plugin manager opens by default, and it also lacks an icon. **Do not re-install the old package.** The source now includes `HAIZ.ClassroomPlugin/README.md` and `icon.png`, and the manifest references them explicitly in version 0.2.1.0. The new package needs to be rebuilt from source or locally patched and tested; no Windows host-load test has yet been performed.
 
-```bash
-export DOTNET_ROOT=/opt/homebrew/opt/dotnet@8/libexec
-export PATH="$HOME/.dotnet/tools:$PATH"
-cd HAIZ.ClassroomPlugin
-"$DOTNET_ROOT/dotnet" build -c Release
-```
 
-ClassIsland 2.0 插件包输出在 `HAIZ.ClassroomPlugin/cipx/HAIZ.ClassroomPlugin.cipx`，校验记录为 `checksums.md`。该代码是 Avalonia/NET8 ClassIsland 原生组件，不是 WebView。
+This one ClassIsland 2.0 / .NET8 native plugin contains:
+- The existing HAIZ homework component (poll every 45s).
+- A separate, OPT-IN evening auto board using actual ClassIsland ILessonsService / IProfileService timetable information. It selects the LAST TWO enabled lessons named 自习 or 晚修, or matching explicitly configured subject GUIDs, with no hardcoded clock schedule.
+- Every 2s it checks the current class slot. Only inside either of the last two valid slots does it fetch the HAIZ Academic readonly homework feed; it refreshes every 45s while active, hides at the end/between slots, and suppresses re-opening the same slot after the teacher manually closes it.
+- Fail closed: no overlay on missing timetable, invalid key, missing HTTPS, API errors, or any response lacking readOnly=true and containsStudentIdentity=false.
+- No student identity data, no mutations to ClassIsland timetables/notifications, no topmost/focus-stealing overlay. The ordinary manually-added component remains available.
 
-## 在教室 Windows 电脑上使用
+## Manual configuration, only on authorized Windows test equipment
 
-- 建议先在获得授权的 Windows 电脑、与你目标版本一致的 ClassIsland 2.0 环境中进行安装和兼容性测试。
-- 从 ClassIsland 插件管理界面导入构建的 `.cipx` 后，进入插件的配置目录，将以下内容保存为 `haiz-screen.json`。
-- 具体目录由 ClassIsland 的 `PluginConfigFolder` 指定。不要把私有配置随包打包、公开上传。
-- 将组件「HAIZ 班级任务」添加到 ClassIsland 显示区域，它会每45秒读取一次任务列表。网络断开不会令 ClassIsland 主程序崩溃。
+Save a private haiz-screen.json file under the ClassIsland plugin configuration folder (PluginConfigFolder). This file is NOT included in the package:
 
-```json
-{
-  "serverUrl": "https://academic.example.com",
-  "screenKey": "教师端生成的96位只读屏幕密钥"
-}
-```
+    {
+      "enabled": false,
+      "eveningAutoShow": false,
+      "serverUrl": "https://academic.example.com",
+      "screenKey": "REPLACE_WITH_REAL_96_CHAR_READ_ONLY_KEY",
+      "selfStudySubjectIds": []
+    }
 
-`serverUrl` 必须是 HTTPS，或仅用于同一电脑测试的本地 HTTP loopback。教室屏幕密钥不是教师账户 Session，也不含学生的个人信息；教师可以轮换它以吊销旧链接。
+Leave enabled and eveningAutoShow false by default. Only after a teacher authorizes testing, enter a working serverUrl and key, then set both flags to true. The plugin still supports the existing HAIZ Academic Node.js read-only endpoint GET /api/screens/{screenKey}. It does NOT yet support the GD/Supabase RPC or a GitHub Pages static URL. Never commit screen keys, student data, auth cookies, service-role keys or real teacher passwords.
 
-## 验证情况
+The current v1.3 server feed has no studyDate or withdrawal version support. The overlay therefore labels displayed tasks as 最近已发布任务, NOT guaranteed "today only". A later backend contract update and real hardware validation are necessary before production daily/withdrawal guarantees.
 
-Mac M5 上的 .NET 8 Release 编译通过，官方 SDK 的 .cipx 打包及 MD5 校验生成成功（0 警告、0 错误）。**未在 Windows 上安装运行过真实 ClassIsland**，因此不宣称已完成教室设备兼容性验收。升级 ClassIsland 2.2 需迁移插件 API/SDK 后另行测试。
+## Build and local tests
+
+Mac / .NET8:
+- dotnet build integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj -c Release /p:CreateCipx=false
+- dotnet run --project integrations/classisland/HAIZ.ClassroomPlugin.Tests/HAIZ.ClassroomPlugin.Tests.csproj -c Release
+
+If the ClassIsland PluginSdk's official cipx packaging requires unavailable PowerShell (pwsh), manually zip together manifest.yml and the .NET8 Release output and use the .cipx extension. Verify the manifest/dll exist and the ZIP is valid.
+
+## Hardware acceptance checklist (all NOT YET VERIFIED on Seewo Windows)
+
+W01 ClassIsland 2.0 exact version / plugin SDK support; reject 1.x, assess 2.1/2.2 separately.
+W02 Import .cipx and restart ClassIsland; host starts without exceptions; lesson timer unchanged.
+W03 Default disabled/missing config -> no automatic window or network request.
+W04 Today temporary timetable: last two study lessons -> auto opens within next poll.
+W05 First study end, between-period break, second study start -> hide, hide, reopen.
+W06 Missing or conflicting lessons, disabled lessons, unmatched study names -> fail closed.
+W07 Teacher closes window -> does not reopen in same period; next period allowed.
+W08 HTTPS read-only token; wrong/revoked key; class isolation and no personal data.
+W09 Network disconnect/API 401/404/500 -> no stale overlay and host remains healthy.
+W10 Time change, wake from sleep, after midnight, substitute schedule.
+W11 Classroom display resolution, teacher software fullscreen, no focus theft.
+W12 CPU/RAM after 2h, plugin uninstallation / cleanup.
+W13 Date-scoped visibility and instant withdrawal: PENDING BACKEND CONTRACT.
+W14 GD/Supabase cross-device sync: PENDING DATABASE DEPLOYMENT AND ADAPTER.
+
+Tests use fictional homework and a teacher-approved timetable. Document exact Windows/ClassIsland versions, screenshots, start/end timestamps, network failures and test results; do not call build-only verification "real classroom verified".
+
+Source reference: existing experimental timetable prototype in world/plugins/classisland/Haiz.ClassIsland, combined with the already-packaged native ClassIsland component integration.
