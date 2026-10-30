@@ -37,6 +37,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
   bool showLab = false;
   bool showAcademic = false;
   Timer? _classRefreshTimer;
+  bool _appIsForeground = true;
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
     // Foreground-only pull on both Android and iOS. No claim of background
     // WeChat access, OS push delivery, or persistent login after a restart.
     _classRefreshTimer = Timer.periodic(const Duration(minutes: 3), (_) {
-      if (session.identity != null) session.refresh();
+      if (_appIsForeground && session.identity != null) session.refresh();
     });
     MessageIntakeBridge.channel.setMethodCallHandler((call) async {
       if (call.method == 'sharedNotice') {
@@ -76,7 +77,8 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && session.identity != null) {
+    _appIsForeground = state == AppLifecycleState.resumed;
+    if (_appIsForeground && session.identity != null) {
       session.refresh();
     }
   }
