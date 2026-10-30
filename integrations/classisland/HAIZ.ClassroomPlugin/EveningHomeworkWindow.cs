@@ -36,11 +36,11 @@ public sealed class EveningHomeworkWindow : Window
         _content.Children.Add(new TextBlock { Text = "HAIZ ACADEMIC  /  CLASSROOM", FontSize = 13 });
         _content.Children.Add(new TextBlock
         {
-            Text = "今晚的作业", FontSize = 44, FontWeight = FontWeight.SemiBold
+            Text = "晚修作业看板", FontSize = 44, FontWeight = FontWeight.SemiBold
         });
         _content.Children.Add(new TextBlock
         {
-            Text = $"{className}  ·  {slot}  ·  教师已发布",
+            Text = $"{className}  ·  {slot}  ·  最近已发布任务",
             FontSize = 18, Foreground = Brush.Parse("#617C83")
         });
         var close = new Button { Content = "隐藏本节晚修作业", FontSize = 16, Padding = new Thickness(16, 11) };
