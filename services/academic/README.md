@@ -65,7 +65,11 @@ export HAIZ_SCHOOL_ISSUER='校方约定的信任发行者标识'
 
 智能语义解析默认关闭。管理员可用 `HAIZ_AI_ENABLE=1`、`HAIZ_AI_BASE_URL`（可信 HTTPS OpenAI 兼容端点）、`HAIZ_AI_MODEL`、`HAIZ_AI_API_KEY` 配置自己的模型服务，用户需在手机客户端单独知情启用，才能使用 `POST /api/ai/extract`；请求在内存处理，基础联系方式脱敏后发送给配置的模型提供商。禁止把模型密钥写入客户端或代码库。未配置或失败时保留本机规则候选，不会自动向全班发布。
 
-详见 [第一阶段部署、隐私和剩余限制](../../docs/mobile-class-relay-ai-20261029.md)。当前没有 APNs/FCM 后台推送或 iOS 微信后台监听，不能把前台轮询描述成手机关闭时持续接收。
+详见 [第一阶段部署、隐私和剩余限制](../../docs/mobile-class-relay-ai-20261029.md)。
+
+### 免费开源模型接入
+
+已支持服务端 `HAIZ_AI_PROVIDER=cloudflare` 配合 Cloudflare Workers AI 免费额度使用 Apache-2.0 Qwen3 模型，或 `HAIZ_AI_PROVIDER=ollama` 使用独立常驻主机的 Ollama Qwen3.5（不需要按调用付费）。默认关闭，只有手机端授权后才解析。详细变量、模型、账号权限、隐私和限额见 [免费开源 AI 接入指南](../../docs/free-open-model-ai-20261030.md)。**HAIZ 服务本身仍需公网 HTTPS 托管；免费模型不等于免服务器。**当前没有 APNs/FCM 后台推送或 iOS 微信后台监听，不能把前台轮询描述成手机关闭时持续接收。
 
 ## ClassIsland
 
