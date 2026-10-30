@@ -37,7 +37,7 @@ export function checkExtraction(modelResponse, sanitizedText) {
         !sanitizedText.includes(evidence)) continue;
     // An AI-supplied deadline without any date language in its evidence
     // is a hallucination candidate, even if it is a valid calendar date.
-    const dateEvidence = /(?:20\d{2}[-/.年]\d{1,2}[-/.月]\d{1,2}|\d{1,2}月\d{1,2}[日号]?|[今明后]天|大后天|本周|下周|星期[一二三四五六日天]|周[一二三四五六日天]|月底|月初|截止|交前|之前|下午|上午|晚上|\d{1,2}号)/.test(evidence);
+    const dateEvidence = /(?:20\d{2}[-/.年]\d{1,2}[-/.月]\d{1,2}|\d{1,2}月\d{1,2}[日号]?|大后天|[今明后]天|(?:本周|下周|星期|周)[一二三四五六日天]|\d{1,2}号)/.test(evidence);
     const due = dateEvidence ? dateOrNull(item.due) : null;
     // Unknown, invalid and model-guessed dates must be flagged for review.
     const confidence = typeof item.confidence === 'number' &&
