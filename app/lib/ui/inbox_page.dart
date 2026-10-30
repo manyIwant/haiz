@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
@@ -53,6 +55,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   bool _wechatOptIn = false;
   bool _monitorBusy = false;
   bool _submittingClass = false;
+  bool _aiPreprocessing = false;
+  final Map<String, List<NoticeCandidate>> _aiResults = {};
+  final Set<String> _aiSeen = {};
   String? _currentIncomingId;
 
   @override
@@ -83,8 +88,88 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           _groupsLoaded = true;
         }
       });
+      unawaited(_preprocessIncoming(items));
     } catch (_) {
       if (mounted) setState(() => _notice = '无法读取本地消息队列，请重试。');
+    }
+  }
+
+  Future<void> _setAiConsent(bool value) async {
+    if (value) {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('开启 AI 语义识别？'),
+          content: const Text('打开 HAIZ 收件箱后，指定群的待审消息将发送到'
+              'HAIZ 服务端配置的 AI 提供商进行分析。发送前会对电话号码、'
+              '邮箱、链接做基础脱敏，但仍可能包含个人信息。'
+              '请确保班级管理者与群成员知情同意。默认关闭，不会自动发布。'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('保持关闭')),
+            FilledButton(onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('同意开启')),
+          ],
+        ),
+      );
+      if (accepted != true || !mounted) return;
+    }
+    try {
+      await widget.store.setSemanticExtractionConsent(value);
+      if (!mounted) return;
+      setState(() => _notice = value
+          ? '已开启 AI 预解析；服务端需要配置模型，原始通知仍保存在本机。'
+          : '已关闭 AI 预解析。');
+      if (value) unawaited(_preprocessIncoming(_incoming));
+    } catch (_) {
+      if (mounted) setState(() => _notice = 'AI 选项保存失败；请检查班级登录状态。');
+    }
+  }
+
+  Future<void> _preprocessIncoming(List<IncomingNotice> items) async {
+    final session = widget.session;
+    if (_aiPreprocessing || !widget.store.semanticExtractionConsent ||
+        session == null || session.identity == null ||
+        session.role != 'student' || session.busy) return;
+    final scope = widget.store.namespace;
+    final generation = widget.store.generation;
+    final loginGeneration = session.generation;
+    if (scope == null || !scope.startsWith('haiz/v1/')) return;
+    final now = DateTime.now();
+    final pending = items.where((entry) =>
+      !_aiSeen.contains(entry.id) &&
+      !entry.receivedAt.isAfter(now) &&
+      now.difference(entry.receivedAt).inDays < 7).take(4).toList();
+    if (pending.isEmpty) return;
+    _aiPreprocessing = true;
+    try {
+      for (final entry in pending) {
+        if (!mounted || widget.store.generation != generation ||
+            session.generation != loginGeneration ||
+            widget.store.namespace != scope ||
+            !widget.store.semanticExtractionConsent) return;
+        _aiSeen.add(entry.id);
+        final semantic = await session.extractSemanticNotice(
+          text: entry.text, capturedAt: entry.receivedAt,
+        );
+        if (!mounted || widget.store.generation != generation ||
+            session.generation != loginGeneration ||
+            widget.store.namespace != scope) return;
+        if (semantic == null) continue;
+        setState(() {
+          _aiResults[entry.id] = semantic;
+          if (_currentIncomingId == entry.id) {
+            if (semantic.isNotEmpty) {
+              _drafts..clear()..addAll(semantic.map(_Draft.new));
+              _notice = 'AI 已生成多项候选；请核对内容和截止日期。';
+            } else {
+              _notice = 'AI 没有识别到明确作业，保留规则候选供核对。';
+            }
+          }
+        });
+      }
+    } finally {
+      _aiPreprocessing = false;
     }
   }
 
@@ -122,6 +207,19 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     // export lines still match the parser's anchored structured format.
     _input.text = entry.text;
     _extract(today: entry.receivedAt);
+    final cached = _aiResults[entry.id];
+    if (cached != null) {
+      setState(() {
+        if (cached.isNotEmpty) {
+          _drafts..clear()..addAll(cached.map(_Draft.new));
+        }
+        _notice = cached.isEmpty
+            ? 'AI 未识别到明确任务，已保留本机规则候选。'
+            : 'AI 语义结果已生成，请逐项核对。';
+      });
+    } else if (widget.store.semanticExtractionConsent) {
+      unawaited(_preprocessIncoming([entry]));
+    }
   }
 
   Future<void> _dismissIncoming(IncomingNotice entry) async {
@@ -411,6 +509,22 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 subtitle: '从聊天分享，或接收指定群通知；核对后成为任务。',
               ),
               const SizedBox(height: 14),
+              if (widget.session?.identity != null &&
+                  widget.session?.role == 'student' &&
+                  widget.session?.selectedClass != null) ...[
+                PocketCard(
+                  child: SwitchListTile.adaptive(
+                    key: const Key('ai-semantic-opt-in'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('自动 AI 语义理解作业'),
+                    subtitle: const Text('默认关闭。开启后进入收件箱时自动解析指定群候选；'
+                        '单条通知经基础脱敏后发送给 HAIZ 配置的模型。未配置时保留规则解析。'),
+                    value: widget.store.semanticExtractionConsent,
+                    onChanged: _setAiConsent,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               _nativeInboxSection(context),
               const SizedBox(height: 22),
               PocketCard(
