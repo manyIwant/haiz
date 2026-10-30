@@ -314,7 +314,7 @@ const server=createServer(async(req,res)=>{
 
  // Mobile contribution: only a class member explicitly submits reviewed task
  // fields. We never accept or store chat text, sender, conversation or history.
- const candidateRoute=/^\\/api\\/classes\\/([\\da-f-]{36})\\/mobile-suggestions$/.exec(pathname);
+ const candidateRoute=/^\/api\/classes\/([\da-f-]{36})\/mobile-suggestions$/.exec(pathname);
  if(candidateRoute && method==='POST'){
   const u=requireUser(req,['student']),c=classAccess(candidateRoute[1],u);
   const {data:p}=await readBody(req);
@@ -342,7 +342,7 @@ const server=createServer(async(req,res)=>{
   const rows=db.prepare("SELECT id,subject,title,due,created_at AS createdAt FROM mobile_suggestions WHERE class_id=? AND status='pending' ORDER BY created_at DESC LIMIT 100").all(c.id);
   return reply(res,200,{suggestions:rows});
  }
- const suggestionAction=/^\\/api\\/classes\\/([\\da-f-]{36})\\/mobile-suggestions\\/([\\da-f-]{36})\\/(publish|dismiss)$/.exec(pathname);
+ const suggestionAction=/^\/api\/classes\/([\da-f-]{36})\/mobile-suggestions\/([\da-f-]{36})\/(publish|dismiss)$/.exec(pathname);
  if(suggestionAction && method==='POST'){
   const u=requireUser(req,['admin','teacher']),c=teacherAccess(suggestionAction[1],u);
   const item=db.prepare('SELECT * FROM mobile_suggestions WHERE class_id=? AND id=?').get(c.id,suggestionAction[2]);
