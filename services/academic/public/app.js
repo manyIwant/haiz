@@ -175,6 +175,30 @@ async function showTeacher(c,host){
  }
  if(!enrolled.members.length)roster.append(element('p','暂无学生申请。','muted'));
  host.append(roster);
+ const mobile=section('来自学生手机的作业候选 · 等待确认');
+ mobile.append(element('p','仅包含投稿同学核对过的科目、作业标题、截止日期；不含微信群原文、发送人或聊天记录。教师确认后才对全班发布。','muted'));
+ const contributed=await api('/classes/'+c.id+'/mobile-suggestions');
+ for(const item of contributed.suggestions){
+  const r=row(item.subject+' · '+item.title,'截止：'+(item.due||'待确认')+' · '+item.createdAt);
+  r.wrapper.append(button('核对并发布',()=>attempt(async()=>{
+   const subject=prompt('确认科目',item.subject);
+   if(subject===null)return;
+   const title=prompt('确认作业内容（不得包含聊天个人信息）',item.title);
+   if(title===null)return;
+   const due=prompt('截止日期 YYYY-MM-DD（可留空）',item.due||'');
+   if(due===null||!confirm('只发布上述任务信息到本班，确定？'))return;
+   await api('/classes/'+c.id+'/mobile-suggestions/'+item.id+'/publish','POST',{subject,title,due});
+   alertUser('作业已审核发布，班级手机端刷新后可查看');
+   await displayClass();
+  })));
+  r.wrapper.append(button('忽略',()=>attempt(async()=>{
+   await api('/classes/'+c.id+'/mobile-suggestions/'+item.id+'/dismiss','POST',{});
+   await displayClass();
+  }),'quiet'));
+  mobile.append(r.wrapper);
+ }
+ if(!contributed.suggestions.length)mobile.append(element('p','暂时没有来自手机的待审核作业。','muted'));
+ host.append(mobile);
  const source=section('QQ 机器人接入 · 等待教师确认');
  source.append(element('p','只有经过授权的 QQ 官方机器人 @消息、经过可信中继签名、绑定此班之后，才会出现在这里。','muted'));
  source.append(createForm([
