@@ -26,7 +26,7 @@ public sealed class HomeworkComponent : ComponentBase
     private readonly TextBlock title = new() { FontSize = 15, FontWeight = FontWeight.Bold };
     private readonly TextBlock lines = new() { FontSize = 12, TextWrapping = TextWrapping.Wrap };
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(45) };
-    private static readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(7) };
+    private static readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(7) };
     private bool running;
 
     public HomeworkComponent()
@@ -61,6 +61,12 @@ public sealed class HomeworkComponent : ComponentBase
             }
             using var configDoc = JsonDocument.Parse(await File.ReadAllTextAsync(ConfigFile));
             var config = configDoc.RootElement;
+            if (config.TryGetProperty("enabled", out var enabled) &&
+                enabled.ValueKind == JsonValueKind.False)
+            {
+                lines.Text = "HAIZ 班级任务已关闭";
+                return;
+            }
             var baseUrl = config.GetProperty("serverUrl").GetString();
             var screenKey = config.GetProperty("screenKey").GetString();
             if (string.IsNullOrWhiteSpace(baseUrl) ||
@@ -77,6 +83,9 @@ public sealed class HomeworkComponent : ComponentBase
             var payload = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(payload);
             var root = doc.RootElement;
+            if (!root.GetProperty("readOnly").GetBoolean() ||
+                root.GetProperty("containsStudentIdentity").GetBoolean())
+                throw new InvalidDataException("非匿名只读屏幕数据被拒绝");
             title.Text = root.GetProperty("className").GetString() ?? "HAIZ 班级";
             var output = new StringBuilder();
             var count = 0;
