@@ -130,7 +130,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     final session = widget.session;
     if (_aiPreprocessing || !widget.store.semanticExtractionConsent ||
         session == null || session.identity == null ||
-        session.role != 'student' || session.busy) return;
+        session.role != 'student' || session.busy) { return; }
     final scope = widget.store.namespace;
     final generation = widget.store.generation;
     final loginGeneration = session.generation;
@@ -147,14 +147,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         if (!mounted || widget.store.generation != generation ||
             session.generation != loginGeneration ||
             widget.store.namespace != scope ||
-            !widget.store.semanticExtractionConsent) return;
+            !widget.store.semanticExtractionConsent) { return; }
         _aiSeen.add(entry.id);
         final semantic = await session.extractSemanticNotice(
           text: entry.text, capturedAt: entry.receivedAt,
         );
         if (!mounted || widget.store.generation != generation ||
             session.generation != loginGeneration ||
-            widget.store.namespace != scope) return;
+            widget.store.namespace != scope) { return; }
         if (semantic == null) continue;
         setState(() {
           _aiResults[entry.id] = semantic;
