@@ -49,9 +49,42 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const elapsed=M
 }
 function resize(){if(!renderer)return;const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);const maxPixels=mobile?3000000:5600000;const ratio=Math.max(1,Math.min(devicePixelRatio||1,mobile?1.75:2,Math.sqrt(maxPixels/(w*h))));renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);material.uniforms.aspect.value=w/h;material.uniforms.shiftX.value=C.composition(progress,w/h).shiftX;}
 async function imageTexture(path,deadline=15000){return new Promise(resolve=>{let done=false;const timeout=setTimeout(()=>finish(null),deadline);function finish(value){if(done){value?.dispose();return;}done=true;clearTimeout(timeout);resolve(value);}try{new THREE.TextureLoader().load(path,finish,undefined,()=>finish(null));}catch{finish(null);}});}
+// Some visitors have an older cached HTML document with a newer cinematic
+// script. Never let the recovery path throw a SECOND TypeError because a newly
+// introduced fallback element is absent in that older DOM.
+function ensureJourneyFallback(){
+ const host=$('stage')||document.body;
+ let planet=$('planetFallback');
+ if(!planet){
+  planet=document.createElement('div');
+  planet.id='planetFallback';
+  planet.setAttribute('aria-label','太空中的地球（备用显示）');
+  const orb=document.createElement('div');orb.className='fallback-orb';orb.setAttribute('aria-hidden','true');
+  planet.appendChild(orb);
+  host.insertBefore(planet,$('fallback')||host.firstChild);
+ }
+ let image=$('fallback');
+ if(!image){
+  image=document.createElement('img');image.id='fallback';
+  image.src='assets/cinematic/aligned/region.jpg';
+  image.alt='海南及周边卫星影像（备用显示）';
+  host.insertBefore(image,$('campusFrame')||null);
+ }
+ return {planet,image};
+}
+function recoverJourney(originalError){
+ console.warn('Journey WebGL initialization failed; switching to Earth-first fallback',originalError);
+ window.HAIZDescentBootError={message:String(originalError?.message||originalError),time:Date.now()};
+ try{renderer?.dispose()}catch(disposeError){console.warn('Renderer disposal failed',disposeError);}
+ renderer=null;material=null;layerState=null;
+ const canvas=$('journey');if(canvas)canvas.hidden=true;
+ const {planet,image}=ensureJourneyFallback();
+ planet.hidden=false;image.hidden=false;
+ const status=$('loadStatus');if(status)status.textContent='3D 地球暂不可用，已切换备用视图；仍可观看下降';
+}
 async function boot(){
- if(!I?.layers?.length)throw Error('地理影像未能读取，请使用校园的直接入口。');
  try{
+ if(!I?.layers?.length)throw Error('地理影像未能读取，请使用校园的直接入口。');
   renderer=new THREE.WebGLRenderer({canvas:$('journey'),antialias:false,powerPreference:'high-performance'});
   scene=new THREE.Scene();camera=new THREE.Camera();
   const lat=I.target.lat*Math.PI/180,lon=I.target.lon*Math.PI/180,n=new THREE.Vector3(Math.cos(lat)*Math.cos(lon),Math.sin(lat),Math.cos(lat)*Math.sin(lon)),east=new THREE.Vector3().crossVectors(n,new THREE.Vector3(0,1,0)).normalize(),up=new THREE.Vector3().crossVectors(n.clone().negate(),east).normalize();
@@ -133,7 +166,7 @@ async function boot(){
   renderer.render(scene,camera);
   $('loadStatus').textContent='影像已就绪，正在确认校园衔接…';
   if(!(await arrivalTask)&&!ready){frame.setAttribute('src','about:blank');$('arrivalStatus').textContent='校园预载超时，抵达时可通过独立入口进入。';}
- }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('planetFallback').hidden=false;$('fallback').hidden=false;}
+ }catch(err){recoverJourney(err);}
  // The geographic opening is usable immediately after its own imagery loads.
  // The campus starts only on user action; it never gates the play button.
  $('play').disabled=false;$('playText').textContent=reduced?'选择章节，静静观看':'开始下降 · 32 秒';$('loadStatus').textContent=reduced?'已遵循减少动态效果设置。':imageryReport.remoteCompleted?'已载入 '+imageryReport.loadedLayers.filter(n=>n.includes('px')).length+' 张增强影像 · 可暂停或回看。':'可以暂停、回看，或拖动下方进度。';
@@ -156,5 +189,10 @@ async function boot(){
  window.HMZCinematic={state:()=>entered?'DONE':progress>.98?'GATE':'DESCENDING',progress:()=>progress,setProgress:seek,skip:()=>location.href='campus-3d.html?enter=gate',imageQuality:()=>({...imageryReport,canvasSize:renderer?{width:renderer.domElement.width,height:renderer.domElement.height}:null})};
  requestAnimationFrame(tick);
 }
-boot().catch(err=>{$('loadStatus').textContent=err.message;$('play').hidden=true;});
+boot().catch(err=>{
+ // Preserve the original diagnostic; do not conceal it behind a null DOM error.
+ try{recoverJourney(err);}catch(recoveryError){console.error('Cinematic recovery failed',recoveryError);}
+ const status=$('loadStatus');if(status)status.textContent='初始化失败：'+String(err?.message||err);
+ const play=$('play');if(play){play.disabled=true;play.textContent='请刷新页面重试';}
+});
 })();
