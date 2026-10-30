@@ -1,5 +1,6 @@
 (function(){'use strict';
-const $=id=>document.getElementById(id),C=window.DescentCore,I=window.DescentImagery;
+const $=id=>document.getElementById(id),C=window.DescentCore,I=window.DescentImagery,P=window.DescentImageryPlan;
+let imageryReport={samplerBudget:0,availableLayers:[],loadedLayers:[],failedLayers:[],remoteCompleted:0};
 const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,origin=location.origin;
 let renderer,scene,camera,material,progress=0,target=0,playing=false,started=false,entered=false,ready=false,last=performance.now(),chapter=-1,visible=!document.hidden,speed=1,clock=0,lastArrival=null,resolveArrivalBoot=null,lastLabelFrame=-1;
 const mobile=matchMedia('(pointer:coarse)').matches;
@@ -32,8 +33,13 @@ async function boot(){
   scene=new THREE.Scene();camera=new THREE.Camera();
   const lat=I.target.lat*Math.PI/180,lon=I.target.lon*Math.PI/180,n=new THREE.Vector3(Math.cos(lat)*Math.cos(lon),Math.sin(lat),Math.cos(lat)*Math.sin(lon)),east=new THREE.Vector3().crossVectors(n,new THREE.Vector3(0,1,0)).normalize(),up=new THREE.Vector3().crossVectors(n.clone().negate(),east).normalize();
   const empty=new THREE.DataTexture(new Uint8Array([58,86,80,255]),1,1);empty.needsUpdate=true;
+  const net=navigator.connection;
+  const remoteAllowed=!net?.saveData&&!['slow-2g','2g'].includes(net?.effectiveType);
+  const plan=P.create(I,renderer.capabilities.maxTextures,{enableRemote:remoteAllowed});
+  const layers=plan.layers;
+  imageryReport={samplerBudget:plan.samplerBudget,availableLayers:layers.map(l=>({name:l.name,spanMeters:l.widthMeters,source:l.extra?'ArcGIS dynamic':'bundled JPG'})),loadedLayers:[],failedLayers:[],remoteCompleted:0};
   const uniforms={aspect:{value:innerWidth/innerHeight},clock:{value:0},altitude:{value:16000000/6371000},focus:{value:n},east:{value:east},north:{value:up},earth:{value:empty}};
-  let declarations='',sampling='';I.layers.forEach((layer,i)=>{uniforms['tile'+i]={value:empty};uniforms['bounds'+i]={value:new THREE.Vector4(...layer.bounds)};uniforms['loaded'+i]={value:0};declarations+=`uniform sampler2D tile${i};uniform vec4 bounds${i};uniform float loaded${i};\n`;sampling+=`{vec2 uv=(merc-bounds${i}.xy)/(bounds${i}.zw-bounds${i}.xy);float edge=min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y));float span=(bounds${i}.z-bounds${i}.x)/6378137.;float detail=1.-smoothstep(span*.45,span*1.2,altitude);float a=smoothstep(0.,.075,edge)*loaded${i}*detail;if(a>0.) color=mix(color,texture2D(tile${i},clamp(uv,0.,1.)).rgb,a);}\n`;});
+  let declarations='',sampling='';layers.forEach((layer,i)=>{uniforms['tile'+i]={value:empty};uniforms['bounds'+i]={value:new THREE.Vector4(...layer.bounds)};uniforms['loaded'+i]={value:0};declarations+=`uniform sampler2D tile${i};uniform vec4 bounds${i};uniform float loaded${i};\n`;sampling+=`{vec2 uv=(merc-bounds${i}.xy)/(bounds${i}.zw-bounds${i}.xy);float edge=min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y));float span=(bounds${i}.z-bounds${i}.x)/6378137.;float detail=1.-smoothstep(span*.57,span*1.35,altitude);float a=smoothstep(0.,.055,edge)*loaded${i}*detail;if(a>.001) color=mix(color,texture2D(tile${i},clamp(uv,0.,1.)).rgb,a);}\n`;});
   material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms,vertexShader:'varying vec2 screen;void main(){screen=uv*2.-1.;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`precision highp float;varying vec2 screen;uniform float aspect,altitude;uniform vec3 focus,east,north;uniform sampler2D earth;${declarations}
    uniform float clock;
    float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -53,33 +59,54 @@ async function boot(){
   const arrivalTimeout=new Promise(resolve=>setTimeout(()=>resolve(false),14000));
   const arrivalTask=Promise.race([arrivalBoot,arrivalTimeout]);
   function setTexture(tex,index){tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.needsUpdate=true;if(index===0)uniforms.earth.value=tex;else{uniforms['tile'+(index-1)].value=tex;uniforms['loaded'+(index-1)].value=1;}}
-  let count=0;const paths=['assets/cinematic/earth_2048.jpg',...I.layers.map(l=>l.path)];
-  // Sequential decode and GPU upload prevent a burst of seven texture
-  // allocations precisely when playback would otherwise begin.
+  let count=0;
+  const paths=['assets/cinematic/earth_2048.jpg',...I.layers.map(l=>l.path)];
+  // All six bundled imagery layers remain as offline/failed-network fallback.
   for(let i=0;i<paths.length;i++){
     const tex=await imageTexture(paths[i]);
-    if(tex){setTexture(tex,i);renderer.initTexture?.(tex);}
-    count++;$('loadStatus').textContent='影像准备 '+count+' / '+paths.length;
+    if(tex){
+      const index=i===0?0:layers.findIndex(l=>l.path===paths[i])+1;
+      if(index>0||i===0){
+        setTexture(tex,index);renderer.initTexture?.(tex);
+        imageryReport.loadedLayers.push(i===0?'earth':I.layers[i-1].name);
+      }else tex.dispose();
+    }else imageryReport.failedLayers.push(paths[i]);
+    count++;$('loadStatus').textContent='基础影像 '+count+' / '+paths.length;
   }
-  renderer.render(scene,camera); // Shader compilation happens before movement.
-  // Upgrade only the close-range satellite layers. ArcGIS may reject, rate-limit
-  // or block cross-origin requests; bundled 1024px images remain the fallback.
-  const net=navigator.connection;
-  const allowHD=!mobile&&!net?.saveData&&!['slow-2g','2g'].includes(net?.effectiveType);
-  if(allowHD){
-    const near=I.layers.map((layer,i)=>({layer,i})).slice(-4);
-    await Promise.all(near.map(async({layer,i})=>{
-      if(!/^https:\/\/server\.arcgisonline\.com\//i.test(layer.source||''))return;
-      try{
-        const url=new URL(layer.source);url.searchParams.set('size','2048,2048');url.searchParams.set('compressionQuality','88');
-        const tex=await imageTexture(url.href,6500);
-        if(!tex||tex.image?.width<2048){tex?.dispose();return;}
-        const key='tile'+i,old=uniforms[key].value;
-        setTexture(tex,i+1);renderer.initTexture?.(tex);
-        if(old!==empty)old.dispose();
-      }catch(err){console.info('HD imagery unavailable, using local fallback:',layer.name);}
-    }));
-  }
+  renderer.render(scene,camera); // compile/prime GPU before starting
+  // Add NEW independent image extents between the originals. The original
+  // images are never merely resized to masquerade as higher resolution.
+  // Also upgrade the four close-range bundled extents to 2K where possible.
+  const priority=['district-campus-mid','city-district-mid','island-city-mid','campus-courtyard-mid','courtyard-close','region-mid'];
+  const remoteExtras=layers.filter(l=>l.extra).sort((a,b)=>priority.indexOf(a.name)-priority.indexOf(b.name));
+  const remoteOriginals=remoteAllowed?I.layers.slice(-4).map(l=>layers.find(v=>v.path===l.path)):[];
+  const remoteJobs=[...remoteExtras,...remoteOriginals].filter(Boolean);
+  let cursor=0,done=0;
+  const applyRemote=async(layer)=>{
+    const index=layers.indexOf(layer),size=layer.extra?layer.pixels:2048;
+    try{
+      const url=new URL(layer.source);
+      if(!/^https:\/\/server\.arcgisonline\.com\//i.test(url.href))throw Error('Unrecognized imagery provider');
+      url.searchParams.set('size',size+','+size);
+      url.searchParams.set('compressionQuality','88');
+      const tex=await imageTexture(url.href,5500);
+      if(!tex||tex.image?.width<size*.9||tex.image?.height<size*.9){
+        tex?.dispose();imageryReport.failedLayers.push(layer.name+' (HD unavailable)');return;
+      }
+      const previous=uniforms['tile'+index].value;
+      setTexture(tex,index+1);
+      renderer.initTexture?.(tex);
+      if(previous!==empty&&previous!==tex)previous.dispose();
+      imageryReport.loadedLayers.push(layer.name+' '+tex.image.width+'px');
+    }catch(err){imageryReport.failedLayers.push(layer.name+': '+(err?.message||String(err)));}
+    finally{done++;imageryReport.remoteCompleted=done;
+      $('loadStatus').textContent='补充逐级影像 '+done+' / '+remoteJobs.length;}
+  };
+  const workers=Array.from({length:Math.min(4,remoteJobs.length)},async()=>{
+    while(cursor<remoteJobs.length)await applyRemote(remoteJobs[cursor++]);
+  });
+  await Promise.all(workers);
+  renderer.render(scene,camera);
   renderer.render(scene,camera);
   $('loadStatus').textContent='影像已就绪，正在确认校园衔接…';
   if(!(await arrivalTask)&&!ready){frame.setAttribute('src','about:blank');$('arrivalStatus').textContent='校园预载超时，抵达时可通过独立入口进入。';}
@@ -97,7 +124,7 @@ async function boot(){
  for(const event of ['pointerup','pointercancel'])$('stage').addEventListener(event,()=>{touch=null;});
  window.addEventListener('keydown',e=>{if(entered||document.querySelector('dialog[open]')||e.target.closest('input,select,textarea,button,a,[contenteditable="true"]'))return;if(e.code==='Space'){e.preventDefault();$('toggle').click();}if(e.key==='ArrowRight'){e.preventDefault();seek(target+.035);}if(e.key==='ArrowLeft'){e.preventDefault();seek(target-.035);}});
  window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{visible=!document.hidden;last=performance.now();});
- window.HMZCinematic={state:()=>entered?'DONE':progress>.98?'GATE':'DESCENDING',progress:()=>progress,setProgress:seek,skip:()=>location.href='campus-3d.html?enter=gate'};
+ window.HMZCinematic={state:()=>entered?'DONE':progress>.98?'GATE':'DESCENDING',progress:()=>progress,setProgress:seek,skip:()=>location.href='campus-3d.html?enter=gate',imageQuality:()=>({...imageryReport,canvasSize:renderer?{width:renderer.domElement.width,height:renderer.domElement.height}:null})};
  requestAnimationFrame(tick);
 }
 boot().catch(err=>{$('loadStatus').textContent=err.message;$('play').hidden=true;});
