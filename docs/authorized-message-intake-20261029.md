@@ -41,3 +41,7 @@ This branch implements the previously discussed QQ/DingTalk/Xuexitong-to-task wo
 - Aggregated/group-summary notifications are discarded to reduce exposure to unrelated chats. Hidden notification previews, disabled WeChat notifications or OEM background restrictions can prevent collection; no promise of complete capture.
 - WeChat's Windows encrypted local database reader from the reference project was not ported. This implementation does not scan memory, scrape account data or automate logins.
 - Native unit tests cover selected WeChat group, non-selected chat, body-only mention, irrelevant content, wrong app and empty allowlist. Physical-device notification behavior is **not yet verified**.
+
+### Explicit WeChat opt-in
+
+To avoid silently expanding access for previously installed versions, the WeChat package is ignored by default. In the Android Inbox the user must enable **同时收集指定微信群的作业通知**, provide distinctive group names, save monitoring settings, and separately grant Android Notification Access. Turning off WeChat disables new WeChat candidates but preserves previous pending items for review/deletion.
