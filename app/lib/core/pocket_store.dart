@@ -15,6 +15,7 @@ class PocketStore extends ChangeNotifier {
   Future<void> _pending = Future.value();
   bool _disposed = false;
   bool ready = false;
+  bool semanticExtractionConsent = false;
   int generation = 0;
   String? namespace;
   String? storageError;
@@ -42,6 +43,7 @@ class PocketStore extends ChangeNotifier {
     generation++;
     namespace = null;
     ready = false;
+    semanticExtractionConsent = false;
     _ticker?.cancel();
     _focusEndsAt = null;
     focusRunning = false;
@@ -98,6 +100,10 @@ class PocketStore extends ChangeNotifier {
       if (_disposed || ticket != generation) return;
       namespace = scope;
       _apply(data);
+      // Private, account-scoped, default-off setting; no cross-user reuse.
+      semanticExtractionConsent = scope.startsWith('haiz/v1/') &&
+          await _prefs.getBool('$scope/semantic-extraction-consent.v1') == true;
+      if (_disposed || ticket != generation) return;
       // Archive failures only hide the migration prompt and keep originals;
       // they must never make a healthy namespace read-only.
       try {
@@ -154,6 +160,20 @@ class PocketStore extends ChangeNotifier {
         }
       }
     });
+  }
+
+  /// A user-controlled setting requiring an active verified account.
+  /// Does not enable any native background capture or third-party upload by itself.
+  Future<void> setSemanticExtractionConsent(bool value) async {
+    final scope = namespace;
+    if (!_writable || scope == null || !scope.startsWith('haiz/v1/')) {
+      throw StateError('请先登录已核准的班级账号。');
+    }
+    final ticket = generation;
+    await _prefs.setBool('$scope/semantic-extraction-consent.v1', value);
+    if (_disposed || ticket != generation || namespace != scope) return;
+    semanticExtractionConsent = value;
+    _notify();
   }
 
   Future<void> flush() async {
