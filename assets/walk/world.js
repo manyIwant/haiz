@@ -1350,12 +1350,19 @@ var pbrBank={},scene,data,groundMat,waterMat,roadMats=[],lampLamps=[],treeMeshes
       road: ['#9c9991', 0.95]
     };
     var plazaMat = M(roadMatBase.plaza[0], roadMatBase.plaza[1]);
-    (data.roads || []).forEach(function (R) {
+    (data.roads || []).forEach(function (R, roadIndex) {
       var bp = roadMatBase[R.kind] || roadMatBase.road;
       var yRoad = LAY.deck;
       var o = rectWorld(R.rect);
       var mat=R.kind==='plaza'?plazaMat.clone():M(bp[0],bp[1]);
       scannedSurface(mat,'paving');mat.color.set('#d4cdbc');
+      // KML footpaths intersect each other at EXACTLY the same Y coordinate.
+      // That is real coplanar geometry, not merely a low-resolution shadow.
+      // Give each road a deterministic depth order without raising paths,
+      // shifting collision heights, or changing the authentic layout.
+      mat.polygonOffset=true;
+      mat.polygonOffsetFactor=-(roadIndex+1)*1.5;
+      mat.polygonOffsetUnits=-(roadIndex+1)*2;
       // 多边形校道（来自 KML 实测形状）：铺设真实道路面，保留路网走向
       if (R.poly && R.poly.length >= 3) {
         var shape = new THREE.Shape();
