@@ -16,7 +16,7 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const elapsed=M
  progress+= (target-progress)*(reduced?1:1-Math.exp(-dt*8));if(Math.abs(progress-target)<.00001)progress=target;
  const f=C.frame(progress);
  if(material&&(!ready||f.model<.985)){
-  clock+=reduced?0:dt;material.uniforms.clock.value=clock;material.uniforms.altitude.value=f.altitude/6371000;
+  clock+=reduced?0:dt;material.uniforms.clock.value=clock;material.uniforms.altitude.value=f.altitude/6371000;material.uniforms.shiftX.value=C.composition(progress,innerWidth/Math.max(1,innerHeight)).shiftX;
   // Only sample the adjacent geographic scales. With 12 source photographs,
   // evaluating every image at every pixel would increase fragment workload.
   if(layerState){
@@ -35,9 +35,15 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const elapsed=M
  const ci=C.chapters.indexOf(f.chapter);if(ci!==chapter){chapter=ci;$('chapterLabel').textContent=f.chapter.label;$('chapterTitle').textContent=f.chapter.title;$('chapterText').textContent=f.chapter.text;document.querySelectorAll('[data-progress]').forEach((b,i)=>b.classList.toggle('active',i===ci));}
  $('caption').hidden=!started||progress>.965;$('arrival').hidden=progress<.985;
  $('progress').value=String(progress);
- if(!material&&I){const layer=I.layers[Math.min(I.layers.length-1,Math.floor(progress*6))];if($('fallback').getAttribute('src')!==layer.path)$('fallback').src=layer.path;}
+ if(!material&&I){
+  const mix=C.smooth((progress-.21)/.16);
+  $('planetFallback').style.opacity=String(1-mix);
+  $('fallback').style.opacity=String(mix);
+  const layer=I.layers[Math.min(I.layers.length-1,Math.floor(progress*6))];
+  if($('fallback').getAttribute('src')!==layer.path)$('fallback').src=layer.path;
+ }
 }
-function resize(){if(!renderer)return;const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);const maxPixels=mobile?3000000:5600000;const ratio=Math.max(1,Math.min(devicePixelRatio||1,mobile?1.75:2,Math.sqrt(maxPixels/(w*h))));renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);material.uniforms.aspect.value=w/h;}
+function resize(){if(!renderer)return;const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);const maxPixels=mobile?3000000:5600000;const ratio=Math.max(1,Math.min(devicePixelRatio||1,mobile?1.75:2,Math.sqrt(maxPixels/(w*h))));renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);material.uniforms.aspect.value=w/h;material.uniforms.shiftX.value=C.composition(progress,w/h).shiftX;}
 async function imageTexture(path,deadline=15000){return new Promise(resolve=>{let done=false;const timeout=setTimeout(()=>finish(null),deadline);function finish(value){if(done){value?.dispose();return;}done=true;clearTimeout(timeout);resolve(value);}try{new THREE.TextureLoader().load(path,finish,undefined,()=>finish(null));}catch{finish(null);}});}
 async function boot(){
  if(!I?.layers?.length)throw Error('地理影像未能读取，请使用校园的直接入口。');
@@ -51,13 +57,13 @@ async function boot(){
   const plan=P.create(I,renderer.capabilities.maxTextures,{enableRemote:remoteAllowed});
   const layers=plan.layers;
   imageryReport={samplerBudget:plan.samplerBudget,availableLayers:layers.map(l=>({name:l.name,spanMeters:l.widthMeters,source:l.extra?'ArcGIS dynamic':'bundled JPG'})),loadedLayers:[],failedLayers:[],remoteCompleted:0};
-  const uniforms={aspect:{value:innerWidth/innerHeight},clock:{value:0},altitude:{value:16000000/6371000},focus:{value:n},east:{value:east},north:{value:up},earth:{value:empty}};
+  const uniforms={aspect:{value:innerWidth/innerHeight},clock:{value:0},altitude:{value:C.frame(0).altitude/6371000},shiftX:{value:C.composition(0,innerWidth/Math.max(1,innerHeight)).shiftX},focus:{value:n},east:{value:east},north:{value:up},earth:{value:empty}};
   layerState={layers,uniforms,present:new Set()};
   let declarations='',sampling='';layers.forEach((layer,i)=>{uniforms['tile'+i]={value:empty};uniforms['bounds'+i]={value:new THREE.Vector4(...layer.bounds)};uniforms['loaded'+i]={value:0};declarations+=`uniform sampler2D tile${i};uniform vec4 bounds${i};uniform float loaded${i};\n`;sampling+=`{vec2 uv=(merc-bounds${i}.xy)/(bounds${i}.zw-bounds${i}.xy);float edge=min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y));float span=(bounds${i}.z-bounds${i}.x)/6378137.;float detail=1.-smoothstep(span*.57,span*1.35,altitude);float a=smoothstep(0.,.055,edge)*loaded${i}*detail;if(a>.001) color=mix(color,texture2D(tile${i},clamp(uv,0.,1.)).rgb,a);}\n`;});
-  material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms,vertexShader:'varying vec2 screen;void main(){screen=uv*2.-1.;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`precision highp float;varying vec2 screen;uniform float aspect,altitude;uniform vec3 focus,east,north;uniform sampler2D earth;${declarations}
+  material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms,vertexShader:'varying vec2 screen;void main(){screen=uv*2.-1.;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`precision highp float;varying vec2 screen;uniform float aspect,altitude,shiftX;uniform vec3 focus,east,north;uniform sampler2D earth;${declarations}
    uniform float clock;
    float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-   void main(){vec3 ro=focus*(1.+altitude);vec3 rd=normalize(-focus+east*screen.x*aspect*.364+north*screen.y*.364);float b=dot(ro,rd),c=dot(ro,ro)-1.,h=b*b-c;vec3 color=vec3(.018,.033,.05);float air=1.-smoothstep(.005,.08,altitude);color=mix(color,vec3(.53,.66,.70),air);
+   void main(){vec3 ro=focus*(1.+altitude);vec3 rd=normalize(-focus+east*(screen.x-shiftX)*aspect*.364+north*screen.y*.364);float b=dot(ro,rd),c=dot(ro,ro)-1.,h=b*b-c;vec3 color=vec3(.018,.033,.05);float air=1.-smoothstep(.005,.08,altitude);color=mix(color,vec3(.53,.66,.70),air);
     vec2 st=screen*vec2(aspect,1.)*95.;vec2 cell=floor(st);float seed=hash21(cell);float star=step(.992,seed)*(1.-smoothstep(.015,.09,length(fract(st)-vec2(hash21(cell+1.),hash21(cell+3.)))));color+=vec3(.6,.68,.74)*star*(.65+.35*sin(clock*.45+seed*60.))*(1.-air);
     if(h>0.){float t=-b-sqrt(h);if(t>0.){vec3 p=normalize(ro+rd*t);float lat=asin(clamp(p.y,-1.,1.)),lon=atan(p.z,p.x);color=texture2D(earth,vec2(lon/6.2831853+.5,lat/3.14159265+.5)).rgb;vec2 merc=vec2(lon,log(tan(.785398163+clamp(lat,-1.4844222,1.4844222)*.5)))*6378137.;${sampling}
      vec3 light=normalize(focus*.85+north*.35-east*.55);float diffuse=.56+.44*max(0.,dot(p,light));color*=diffuse;float limb=pow(1.-max(0.,dot(p,-rd)),3.);color=mix(color,vec3(.35,.58,.78),limb*.65*(1.-air));color=pow(color,vec3(.96));
@@ -121,10 +127,9 @@ async function boot(){
   });
   await Promise.all(workers);
   renderer.render(scene,camera);
-  renderer.render(scene,camera);
   $('loadStatus').textContent='影像已就绪，正在确认校园衔接…';
   if(!(await arrivalTask)&&!ready){frame.setAttribute('src','about:blank');$('arrivalStatus').textContent='校园预载超时，抵达时可通过独立入口进入。';}
- }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('fallback').hidden=false;}
+ }catch(err){console.warn('Journey WebGL fallback',err);renderer?.dispose();material=null;$('journey').hidden=true;$('planetFallback').hidden=false;$('fallback').hidden=false;}
  // The geographic opening is usable immediately after its own imagery loads.
  // The campus starts only on user action; it never gates the play button.
  $('play').disabled=false;$('playText').textContent=reduced?'选择章节，静静观看':'开始下降 · 32 秒';$('loadStatus').textContent=reduced?'已遵循减少动态效果设置。':imageryReport.remoteCompleted?'已载入 '+imageryReport.loadedLayers.filter(n=>n.includes('px')).length+' 张增强影像 · 可暂停或回看。':'可以暂停、回看，或拖动下方进度。';
