@@ -2,7 +2,7 @@
 const $=id=>document.getElementById(id),C=window.DescentCore,I=window.DescentImagery,P=window.DescentImageryPlan;
 let imageryReport={samplerBudget:0,availableLayers:[],loadedLayers:[],failedLayers:[],remoteCompleted:0},layerState=null;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,origin=location.origin;
-let renderer,scene,camera,material,progress=0,target=0,playing=false,started=false,entered=false,ready=false,last=performance.now(),chapter=-1,visible=!document.hidden,speed=1,clock=0,lastArrival=null,resolveArrivalBoot=null,lastLabelFrame=-1;
+let renderer,scene,camera,material,progress=0,target=0,playing=false,started=false,entered=false,ready=false,last=performance.now(),chapter=-1,visible=!document.hidden,speed=1,clock=0,lastArrival=null,resolveArrivalBoot=null,lastLabelFrame=-1,lastGlobeBucket=-1;
 const mobile=matchMedia('(pointer:coarse)').matches;
 const duration=C.duration,frame=$('campusFrame');
 function send(type,values={}){frame.contentWindow?.postMessage({type,...values},origin);}
@@ -27,7 +27,11 @@ function tick(now){if(entered)return;requestAnimationFrame(tick);const elapsed=M
     const low=Math.max(0,base-1),high=Math.min(layers.length-1,base+2);
     for(let i=0;i<layers.length;i++)uniforms['loaded'+i].value=present.has(i)&&i>=low&&i<=high?1:0;
   }
-  renderer.render(scene,camera);
+  // During the overlap, keep the 3D model at full refresh. The geographic
+  // image needs only 30fps once the model starts appearing. This frees GPU
+  // time without dropping or skipping the moving campus surface frames.
+  const globeBucket=Math.floor(now/33.333);
+  if(progress<.80||globeBucket!==lastGlobeBucket){lastGlobeBucket=globeBucket;renderer.render(scene,camera);}
 }
  if(ready){frame.style.opacity=String(f.model);if(lastArrival!==f.arrival){lastArrival=f.arrival;send('haiz:arrival:progress',{progress:f.arrival});}}else frame.style.opacity='0';
  $('locator').style.opacity=String(C.smooth((progress-.23)/.1)*(1-C.smooth((progress-.77)/.05)));
