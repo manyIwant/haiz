@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
 import '../core/academic_session.dart';
-import '../domain/pocket_models.dart';
 import '../domain/notice_parser.dart';
 import '../domain/message_intake_bridge.dart';
 import '../domain/notice_import_service.dart';
@@ -18,9 +17,10 @@ class _Draft {
   final String original;
   final bool ambiguous;
   bool selected = true;
-  final String clientKey = 'mobile_${newId()}';
+  final String clientKey;
   _Draft(NoticeCandidate c)
-    : title = c.title,
+    : clientKey = noticeProposalKey(c),
+      title = c.title,
       subject = c.subject,
       due = c.due,
       source = c.source,
