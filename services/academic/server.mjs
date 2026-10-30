@@ -32,7 +32,8 @@ const tables=[
 'CREATE TABLE IF NOT EXISTS intake (id TEXT PRIMARY KEY, class_id TEXT REFERENCES classes(id), external_id TEXT UNIQUE NOT NULL, content TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL)',
 'CREATE TABLE IF NOT EXISTS audit (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, event TEXT NOT NULL, object_id TEXT, happened_at TEXT NOT NULL)',
 'CREATE TABLE IF NOT EXISTS school_links (external_subject TEXT UNIQUE NOT NULL, user_id TEXT UNIQUE NOT NULL REFERENCES users(id))',
-'CREATE TABLE IF NOT EXISTS school_events (event_id TEXT PRIMARY KEY, processed_at TEXT NOT NULL)'
+'CREATE TABLE IF NOT EXISTS school_events (event_id TEXT PRIMARY KEY, processed_at TEXT NOT NULL)',
+'CREATE TABLE IF NOT EXISTS mobile_suggestions (id TEXT PRIMARY KEY, class_id TEXT NOT NULL REFERENCES classes(id), contributor_id TEXT NOT NULL REFERENCES users(id), client_key TEXT NOT NULL, subject TEXT NOT NULL, title TEXT NOT NULL, due TEXT, status TEXT NOT NULL, assignment_id TEXT REFERENCES assignments(id), created_at TEXT NOT NULL, UNIQUE(class_id,contributor_id,client_key))'
 ];
 for(const sql of tables)db.exec(sql);
 migrate(db);
@@ -67,6 +68,17 @@ function reply(res,status,payload){
  res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});
  res.end(JSON.stringify(payload));
 }
+
+function validSuggestionDue(value){
+ if(value==null||value==='')return null;
+ if(typeof value!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value))
+  throw err(400,'截止日期必须为 YYYY-MM-DD');
+ const parsed=new Date(value+'T12:00:00Z');
+ if(!Number.isFinite(parsed.valueOf())||parsed.toISOString().slice(0,10)!==value)
+  throw err(400,'截止日期不是有效日历日期');
+ return value;
+}
+
 const authorizedRequests=new WeakMap();
 async function readBody(req){
  const chunks=[];let length=0;
@@ -299,6 +311,61 @@ const server=createServer(async(req,res)=>{
   if(!changed.changes)throw err(404,'没有待核准的成员');
   audit(u.id,'membership.'+m[3],m[2]);return reply(res,200,{ok:true});
  }
+
+ // Mobile contribution: only a class member explicitly submits reviewed task
+ // fields. We never accept or store chat text, sender, conversation or history.
+ const candidateRoute=/^\\/api\\/classes\\/([\\da-f-]{36})\\/mobile-suggestions$/.exec(pathname);
+ if(candidateRoute && method==='POST'){
+  const u=requireUser(req,['student']),c=classAccess(candidateRoute[1],u);
+  const {data:p}=await readBody(req);
+  if(Object.keys(p).some(k=>!['clientKey','title','subject','due'].includes(k)))
+   throw err(400,'仅可提交已核对的科目、作业、日期与去重标识，不接收聊天原文');
+  const clientKey=text(p.clientKey,100);
+  if(!/^[A-Za-z0-9_-]{8,100}$/.test(clientKey))throw err(400,'去重标识格式无效');
+  const title=text(p.title,140),subject=text(p.subject,32);
+  const due=validSuggestionDue(p.due);
+  const previous=db.prepare('SELECT * FROM mobile_suggestions WHERE class_id=? AND contributor_id=? AND client_key=?').get(c.id,u.id,clientKey);
+  if(previous){
+   if(previous.title!==title||previous.subject!==subject||previous.due!==due)throw err(409,'同一提交标识的内容不一致');
+   return reply(res,200,{id:previous.id,status:previous.status,duplicate:true});
+  }
+  const pending=db.prepare("SELECT count(*) AS n FROM mobile_suggestions WHERE class_id=? AND contributor_id=? AND status='pending'").get(c.id,u.id).n;
+  if(pending>=20)throw err(429,'待审核候选已达20条，请等待班级审核');
+  const id=uuid();
+  db.prepare("INSERT INTO mobile_suggestions (id,class_id,contributor_id,client_key,subject,title,due,status,created_at) VALUES (?,?,?,?,?,?,?,'pending',?)")
+   .run(id,c.id,u.id,clientKey,subject,title,due,stamp());
+  audit(u.id,'mobile.suggestion.submit',id);
+  return reply(res,202,{id,status:'pending',reviewRequired:true,sharedChatContent:false});
+ }
+ if(candidateRoute && method==='GET'){
+  const u=requireUser(req,['admin','teacher']),c=teacherAccess(candidateRoute[1],u);
+  const rows=db.prepare("SELECT id,subject,title,due,created_at AS createdAt FROM mobile_suggestions WHERE class_id=? AND status='pending' ORDER BY created_at DESC LIMIT 100").all(c.id);
+  return reply(res,200,{suggestions:rows});
+ }
+ const suggestionAction=/^\\/api\\/classes\\/([\\da-f-]{36})\\/mobile-suggestions\\/([\\da-f-]{36})\\/(publish|dismiss)$/.exec(pathname);
+ if(suggestionAction && method==='POST'){
+  const u=requireUser(req,['admin','teacher']),c=teacherAccess(suggestionAction[1],u);
+  const item=db.prepare('SELECT * FROM mobile_suggestions WHERE class_id=? AND id=?').get(c.id,suggestionAction[2]);
+  if(!item)throw err(404,'没有该班级候选');
+  if(item.status!=='pending')throw err(409,'候选已处理，请刷新');
+  if(suggestionAction[3]==='dismiss'){
+   db.prepare("UPDATE mobile_suggestions SET status='dismissed' WHERE id=? AND status='pending'").run(item.id);
+   audit(u.id,'mobile.suggestion.dismiss',item.id);
+   return reply(res,200,{ok:true});
+  }
+  const membership=db.prepare("SELECT status FROM memberships WHERE class_id=? AND user_id=?").get(c.id,item.contributor_id);
+  if(membership?.status!=='active')throw err(409,'投稿成员已失去班级权限，请忽略该候选');
+  const {data:p}=await readBody(req);
+  if(Object.keys(p).some(k=>!['title','subject','due'].includes(k)))throw err(400,'审核仅接受任务结构化字段');
+  const title=text(p.title??item.title,140),subject=text(p.subject??item.subject,32);
+  const due=validSuggestionDue(p.due===undefined?item.due:p.due);
+  // Constant per-suggestion key prevents retry duplication by the same teacher.
+  const assignment=publish(c,u,{title,subject,due},null,'mobile_'+item.id.replaceAll('-',''));
+  db.prepare("UPDATE mobile_suggestions SET status='published',assignment_id=? WHERE id=? AND status='pending'").run(assignment.id,item.id);
+  audit(u.id,'mobile.suggestion.publish',item.id);
+  return reply(res,201,{assignment,manuallyReviewed:true});
+ }
+
  m=/^\/api\/classes\/([\da-f-]{36})\/assignments$/.exec(pathname);
  if(method==='POST'&&m){
   const u=requireUser(req,['admin','teacher']),c=teacherAccess(m[1],u),{data:p}=await readBody(req);
