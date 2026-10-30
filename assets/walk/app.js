@@ -132,8 +132,18 @@
     arrivalPoint=arrivalPoint||M.safePoint(c.x,c.z-13,world.colliders,world.bounds);
     if(!arrivalPoint)return;
     camera.position.set(arrivalPoint.x,1.85+(1-t)*300,arrivalPoint.z-(1-t)*65);
+    // The regular first-person near plane (8 cm) is too close for an aerial
+    // view 300 m above nearly coplanar roof, paving and ground meshes:
+    // 850/.08 wastes depth-buffer precision and causes visible Z-fighting.
+    // Smoothly restore the original near plane as the camera reaches eye level.
+    camera.near=.08+2.5*(1-t);
     camera.fov=48;camera.lookAt(c.x,1.85+t*3.65,c.z);camera.updateProjectionMatrix();
-    shadowCenter={x:arrivalPoint.x,z:arrivalPoint.z};sun.target.position.set(shadowCenter.x,0,shadowCenter.z);sun.target.updateMatrixWorld();
+    // Fix the shadow camera's world-space center for the entire aerial shot.
+    // The light must follow its target rather than pivoting from the origin.
+    shadowCenter={x:arrivalPoint.x,z:arrivalPoint.z};
+    sun.target.position.set(shadowCenter.x,0,shadowCenter.z);
+    sun.position.set(shadowCenter.x-85,110,shadowCenter.z-65);
+    sun.target.updateMatrixWorld();sun.updateMatrixWorld();
   }
   function takeArrivalControl(){
     if(!arrivalMode||arrivalTaken||!world)return;
@@ -327,7 +337,7 @@
       // Tile visibility is distance based, mirroring open-world chunk culling.
       for(const tile of world.vegetationTiles)tile.group.visible=Math.hypot(tile.x-state.pos.x,tile.z-state.pos.z)<260;
     }
-    if((!arrivalMode||arrivalTaken||arrivalProgress>0)&&(arrivalMode&&!arrivalTaken?state.frames%2===0:(state.frames%3===0||!state.paused)))renderer.render(scene,camera);
+    if((!arrivalMode||arrivalTaken||arrivalProgress>0)&&(arrivalMode&&!arrivalTaken?true:(state.frames%3===0||!state.paused)))renderer.render(scene,camera);
     state.frames++;adaptTime+=dt;adaptFrames++;
     if(adaptTime>4){
       state.fps=adaptFrames/adaptTime;
@@ -427,7 +437,7 @@
     window.CampusWorkshop?.attach(window.haizWalk);
     Object.assign(window.haizWalk,{startJourney,restoreView});
     window.CampusDecor?.attach(window.haizWalk);window.CampusReview?.attach(window.haizWalk);
-    if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
+    if(arrivalMode){state.started=true;state.paused=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=true;setArrivalProgress(0);renderer.render(scene,camera);window.parent?.postMessage({type:'haiz:arrival:ready'},location.origin);}
     if(new URLSearchParams(location.search).get('enter')==='gate'){
       state.started=true;document.body.classList.add('started');$('intro').classList.add('leaving');$('hud').hidden=false;$('touchControls').hidden=!touch;goTo('beimen',false);resume(false);toast(touch?'抵达北门。左摇杆行走，右侧滑动环顾。':'抵达北门。WASD 行走，按住场景拖动环顾。');
     }
