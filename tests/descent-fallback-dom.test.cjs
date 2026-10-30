@@ -6,8 +6,8 @@ const src=fs.readFileSync(path.join(__dirname,'../assets/cinematic/descent.js'),
 const start=src.indexOf('function ensureJourneyFallback(){');
 const end=src.indexOf('async function boot(){',start);
 assert.ok(start>=0&&end>start,'Fallback helpers must exist');
-assert.match(src,/P\\?\\.create\\?P\\.create/,'Missing optional image planner must preserve globe');
-assert.match(src,/samplerBudget:renderer\\.capabilities\\.maxTextures\\|\\|8/);
+assert.ok(src.includes('const plan=P?.create?P.create('),'Missing optional image planner must preserve globe');
+assert.ok(src.includes('samplerBudget:renderer.capabilities.maxTextures||8'));
 
 class Element {
  constructor(id=''){this.id=id;this.children=[];this.style={};this.hidden=false;this.attrs={};}
