@@ -327,7 +327,7 @@
       // Tile visibility is distance based, mirroring open-world chunk culling.
       for(const tile of world.vegetationTiles)tile.group.visible=Math.hypot(tile.x-state.pos.x,tile.z-state.pos.z)<260;
     }
-    if((!arrivalMode||arrivalTaken||arrivalProgress>0)&&(state.frames%3===0||!state.paused||arrivalMode&&!arrivalTaken))renderer.render(scene,camera);
+    if((!arrivalMode||arrivalTaken||arrivalProgress>0)&&(arrivalMode&&!arrivalTaken?state.frames%2===0:(state.frames%3===0||!state.paused)))renderer.render(scene,camera);
     state.frames++;adaptTime+=dt;adaptFrames++;
     if(adaptTime>4){
       state.fps=adaptFrames/adaptTime;
