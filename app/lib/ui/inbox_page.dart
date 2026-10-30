@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
+import '../core/academic_session.dart';
+import '../domain/pocket_models.dart';
 import '../domain/notice_parser.dart';
 import '../domain/message_intake_bridge.dart';
 import '../domain/notice_import_service.dart';
@@ -14,6 +16,7 @@ class _Draft {
   final String original;
   final bool ambiguous;
   bool selected = true;
+  final String clientKey = 'mobile_${newId()}';
   _Draft(NoticeCandidate c)
     : title = c.title,
       subject = c.subject,
@@ -30,7 +33,8 @@ String _humanDue(DateTime? date) => date == null
 class InboxPage extends StatefulWidget {
   final PocketStore store;
   final VoidCallback onSaved;
-  const InboxPage({super.key, required this.store, required this.onSaved});
+  final AcademicSession? session;
+  const InboxPage({super.key, required this.store, required this.onSaved, this.session});
   @override
   State<InboxPage> createState() => _InboxPageState();
 }
@@ -48,6 +52,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   bool _groupsLoaded = false;
   bool _wechatOptIn = false;
   bool _monitorBusy = false;
+  bool _submittingClass = false;
   String? _currentIncomingId;
 
   @override
@@ -258,6 +263,75 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     }
     title.dispose();
     subject.dispose();
+  }
+
+  Future<void> _submitToClass() async {
+    final session = widget.session;
+    if (_submittingClass || session == null || session.role != 'student' ||
+        session.identity == null || session.selectedClass == null) return;
+    if (widget.store.generation != _composeGeneration) {
+      setState(() => _notice = '账号已切换，请重新提取消息后再提交。');
+      return;
+    }
+    final candidates = _drafts.where((d) => d.selected && d.title.trim().isNotEmpty).toList();
+    if (candidates.isEmpty) return;
+    if (candidates.length > 10) {
+      setState(() => _notice = '一次最多提交10条作业，请分批检查。');
+      return;
+    }
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('提交班级审核？'),
+        content: Text(
+          '将向当前已加入班级提交 ${candidates.length} 条作业候选（科目、标题、截止日期）。'
+          '不会上传微信原文、发送者、群聊记录。班级审核者确认后才会发布给同学。'
+          '请先确保班级成员同意以这种方式共享作业信息。',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('确认提交任务字段')),
+        ],
+      ),
+    );
+    if (accepted != true || !mounted ||
+        widget.store.generation != _composeGeneration) return;
+    final loginGeneration = session.generation;
+    final scope = widget.store.namespace;
+    setState(() => _submittingClass = true);
+    int submitted = 0;
+    try {
+      for (final draft in candidates) {
+        if (session.generation != loginGeneration ||
+            widget.store.namespace != scope ||
+            widget.store.generation != _composeGeneration) {
+          if (mounted) setState(() => _notice = '账号已切换，停止上传；请重新检查剩余候选。');
+          return;
+        }
+        final ok = await session.submitClassSuggestion(
+          title: draft.title,
+          subject: draft.subject,
+          due: draft.due == null ? null : _humanDue(draft.due),
+          clientKey: draft.clientKey,
+        );
+        if (!ok) {
+          if (mounted) setState(() => _notice =
+              '已提交 $submitted 条，剩余候选未上传：${session.error ?? '请检查连接或权限'}');
+          return;
+        }
+        submitted++;
+        if (mounted) setState(() => draft.selected = false);
+      }
+      if (!mounted || session.generation != loginGeneration ||
+          widget.store.generation != _composeGeneration) return;
+      // Retain the native notification until user chooses local save/ignore;
+      // posting a structured suggestion is not permission to erase its source.
+      setState(() => _notice = '已提交 $submitted 条结构化任务至班级待审核队列；尚未对全班发布。');
+    } finally {
+      if (mounted) setState(() => _submittingClass = false);
+    }
   }
 
   Future<void> _commit() async {
@@ -482,6 +556,24 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     label: const Text('确认并加入我的任务'),
                   ),
                 ),
+                if (widget.session?.role == 'student' &&
+                    widget.session?.selectedClass != null) ...[
+                  const SizedBox(height: 9),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const Key('submit-mobile-suggestion'),
+                      onPressed: _submittingClass || !_drafts.any((d) => d.selected)
+                          ? null : _submitToClass,
+                      icon: const Icon(Icons.cloud_upload_outlined),
+                      label: Text(_submittingClass
+                          ? '正在提交审核…' : '提交选中任务给班级审核'),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text('默认不上传。仅提交你确认的任务字段，不包含聊天原文。审核通过才会被其他同学看到。',
+                    style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5)),
+                ],
               ] else ...[
                 const SectionLabel('处理规则'),
                 const SizedBox(height: 13),
