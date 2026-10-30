@@ -105,7 +105,12 @@ async function boot(){
   const empty=new THREE.DataTexture(new Uint8Array([58,86,80,255]),1,1);empty.needsUpdate=true;
   const net=navigator.connection;
   const remoteAllowed=!net?.saveData&&!['slow-2g','2g'].includes(net?.effectiveType);
-  const plan=P.create(I,renderer.capabilities.maxTextures,{enableRemote:remoteAllowed});
+  // If a cached HTML page does not yet load the optional image-planning
+  // helper, still start with the intact globe and six bundled geographic
+  // levels. A missing enhancement must never blank the whole opening.
+  const plan=P?.create?P.create(I,renderer.capabilities.maxTextures,{enableRemote:remoteAllowed})
+   :{layers:I.layers.map(layer=>({...layer,bundled:true})),
+     samplerBudget:renderer.capabilities.maxTextures||8,extraCount:0};
   const layers=plan.layers;
   imageryReport={samplerBudget:plan.samplerBudget,availableLayers:layers.map(l=>({name:l.name,spanMeters:l.widthMeters,source:l.extra?'ArcGIS dynamic':'bundled JPG'})),loadedLayers:[],failedLayers:[],remoteCompleted:0};
   const uniforms={aspect:{value:innerWidth/innerHeight},clock:{value:0},altitude:{value:C.frame(0).altitude/6371000},shiftX:{value:C.composition(0,innerWidth/Math.max(1,innerHeight)).shiftX},focus:{value:n},east:{value:east},north:{value:up},earth:{value:empty}};
