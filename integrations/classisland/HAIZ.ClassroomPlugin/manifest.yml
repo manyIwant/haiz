@@ -1,8 +1,8 @@
 id: space.haiz.classroom
-name: HAIZ 班级任务
-description: 展示由教师审核发布的 HAIZ 作业，不展示学生姓名
+name: HAIZ 班级任务 · 晚修自动看板
+description: 读取 ClassIsland 当日最后两节自习，教师授权后自动显示 HAIZ 公开作业
 entranceAssembly: "HAIZ.ClassroomPlugin.dll"
 url: https://github.com/manyIwant/haiz
 apiVersion: 2.0.0.0
-version: 0.1.0.0
+version: 0.2.0.0
 author: HAIZ Independent Project
