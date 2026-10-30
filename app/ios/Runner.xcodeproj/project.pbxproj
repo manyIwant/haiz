@@ -90,6 +90,7 @@
 		A11D00010000000000000004 /* HaizShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = HaizShareExtension.entitlements; sourceTree = "<group>"; };
 		A11D00010000000000000005 /* HaizShareIntakePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HaizShareIntakePlugin.swift; sourceTree = "<group>"; };
 		A11D00010000000000000006 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Runner.entitlements; sourceTree = "<group>"; };
+		A11D00010000000000000016 /* Share.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Share.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,6 +178,7 @@
 				A11D00010000000000000002 /* ShareViewController.swift */,
 				A11D00010000000000000003 /* Info.plist */,
 				A11D00010000000000000004 /* HaizShareExtension.entitlements */,
+				A11D00010000000000000016 /* Share.xcconfig */,
 			);
 			path = HaizShareExtension;
 			sourceTree = "<group>";
@@ -696,6 +698,7 @@
 
 		A11D00010000000000000013 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
@@ -720,6 +723,7 @@
 
 		A11D00010000000000000014 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
@@ -744,6 +748,7 @@
 
 		A11D00010000000000000015 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A11D00010000000000000016 /* Share.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = HaizShareExtension/HaizShareExtension.entitlements;
