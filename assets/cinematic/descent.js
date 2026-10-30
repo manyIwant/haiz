@@ -147,6 +147,12 @@ async function boot(){
  for(const event of ['pointerup','pointercancel'])$('stage').addEventListener(event,()=>{touch=null;});
  window.addEventListener('keydown',e=>{if(entered||document.querySelector('dialog[open]')||e.target.closest('input,select,textarea,button,a,[contenteditable="true"]'))return;if(e.code==='Space'){e.preventDefault();$('toggle').click();}if(e.key==='ArrowRight'){e.preventDefault();seek(target+.035);}if(e.key==='ArrowLeft'){e.preventDefault();seek(target-.035);}});
  window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{visible=!document.hidden;last=performance.now();});
+ // A direct, opt-in arrival preview makes it possible to verify this
+ // transition in a browser without replaying the earlier 25 seconds.
+ // Normal visitors still start at the full Earth shot.
+ if(new URLSearchParams(location.search).get('preview')==='arrival'){
+   start();progress=target=.76;playing=!reduced;syncToggle();
+ }
  window.HMZCinematic={state:()=>entered?'DONE':progress>.98?'GATE':'DESCENDING',progress:()=>progress,setProgress:seek,skip:()=>location.href='campus-3d.html?enter=gate',imageQuality:()=>({...imageryReport,canvasSize:renderer?{width:renderer.domElement.width,height:renderer.domElement.height}:null})};
  requestAnimationFrame(tick);
 }
