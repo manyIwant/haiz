@@ -42,6 +42,7 @@ void main() {
                   'enabled': false,
                   'granted': false,
                   'groups': '',
+                  'wechat': false,
                 };
               case 'setConfiguration':
                 saved.addAll((call.arguments as Map).cast<String, Object?>());
@@ -49,6 +50,7 @@ void main() {
                   'enabled': saved['enabled'],
                   'granted': false,
                   'groups': saved['groups'],
+                  'wechat': saved['wechat'],
                 };
               case 'removeEntry':
                 entries.removeWhere(
@@ -67,8 +69,14 @@ void main() {
       expect((await MessageIntakeBridge.entries()).single.id, 'message-1');
       final config = await MessageIntakeBridge.configuration();
       expect(config?.enabled, isFalse);
-      await MessageIntakeBridge.configure(enabled: true, groups: '高一13班');
+      expect(config?.wechat, isFalse);
+      await MessageIntakeBridge.configure(
+        enabled: true,
+        groups: '高一13班',
+        includeWeChat: true,
+      );
       expect(saved['groups'], '高一13班');
+      expect(saved['wechat'], true);
       expect(calls, contains('setConfiguration'));
       await MessageIntakeBridge.remove('message-1');
       expect(await MessageIntakeBridge.entries(), isEmpty);
