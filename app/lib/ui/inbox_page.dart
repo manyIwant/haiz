@@ -268,7 +268,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   Future<void> _submitToClass() async {
     final session = widget.session;
     if (_submittingClass || session == null || session.role != 'student' ||
-        session.identity == null || session.selectedClass == null) return;
+        session.identity == null || session.selectedClass == null) { return; }
     if (widget.store.generation != _composeGeneration) {
       setState(() => _notice = '账号已切换，请重新提取消息后再提交。');
       return;
@@ -297,7 +297,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       ),
     );
     if (accepted != true || !mounted ||
-        widget.store.generation != _composeGeneration) return;
+        widget.store.generation != _composeGeneration) { return; }
     final loginGeneration = session.generation;
     final scope = widget.store.namespace;
     setState(() => _submittingClass = true);
@@ -317,15 +317,17 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           clientKey: draft.clientKey,
         );
         if (!ok) {
-          if (mounted) setState(() => _notice =
-              '已提交 $submitted 条，剩余候选未上传：${session.error ?? '请检查连接或权限'}');
+          if (mounted) {
+            setState(() => _notice =
+                '已提交 $submitted 条，剩余候选未上传：${session.error ?? '请检查连接或权限'}');
+          }
           return;
         }
         submitted++;
         if (mounted) setState(() => draft.selected = false);
       }
       if (!mounted || session.generation != loginGeneration ||
-          widget.store.generation != _composeGeneration) return;
+          widget.store.generation != _composeGeneration) { return; }
       // Retain the native notification until user chooses local save/ignore;
       // posting a structured suggestion is not permission to erase its source.
       setState(() => _notice = '已提交 $submitted 条结构化任务至班级待审核队列；尚未对全班发布。');
