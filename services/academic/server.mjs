@@ -7,6 +7,7 @@ import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { migrate } from './migrate.mjs';
 import { createApi, apiFailure } from './api.mjs';
+import { semanticExtract } from './intelligence.mjs';
 import { assignmentView } from './model.mjs';
 
 const root=dirname(fileURLToPath(import.meta.url));
@@ -80,6 +81,7 @@ function validSuggestionDue(value){
 }
 
 const authorizedRequests=new WeakMap();
+const aiRequestWindows=new Map();
 async function readBody(req){
  const chunks=[];let length=0;
  for await(const chunk of req){length+=chunk.length;if(length>80000)throw err(413,'请求体过大');chunks.push(chunk);}
@@ -275,6 +277,28 @@ const server=createServer(async(req,res)=>{
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');throw error;}
   return reply(res,200,{accepted:true,activated,revoked,skipped,identityProviderVerified:false});
+ }
+ // Optional AI-assisted parsing is opt-in per user action on mobile.
+ // Nothing from this endpoint is persisted or published to a class.
+ if(method==='POST'&&pathname==='/api/ai/extract'){
+  const u=requireUser(req,['student']);
+  const active=db.prepare("SELECT 1 FROM memberships WHERE user_id=? AND status='active' LIMIT 1").get(u.id);
+  if(!active)throw err(403,'只有获准加入班级的学生可以使用智能解析');
+  const {data:p}=await readBody(req);
+  if(Object.keys(p).some(k=>!['message','capturedAt','consent'].includes(k))||p.consent!==true)
+   throw err(400,'必须明确同意仅发送本条通知供智能解析');
+  const identity=u.id,now=Date.now(),windowMs=3600000;
+  for(const [id,value] of aiRequestWindows){
+   if(value.start<=now-windowMs)aiRequestWindows.delete(id);
+  }
+  const prev=aiRequestWindows.get(identity);
+  const next=prev&&prev.start>now-windowMs
+   ? {start:prev.start,count:prev.count+1}:{start:now,count:1};
+  if(next.count>25)throw err(429,'本小时智能解析次数已达上限，请使用本机规则解析');
+  if(aiRequestWindows.size>=1000&&!aiRequestWindows.has(identity))throw err(503,'智能解析服务繁忙');
+  aiRequestWindows.set(identity,next);
+  const items=await semanticExtract({message:p.message,capturedAt:p.capturedAt});
+  return reply(res,200,{items,reviewRequired:true,published:false,persisted:false});
  }
  if(method==='POST'&&pathname==='/api/classes'){
   const u=requireUser(req,['admin','teacher']),{data:p}=await readBody(req);
