@@ -315,7 +315,7 @@ class AcademicSession extends ChangeNotifier {
     required DateTime capturedAt,
   }) async {
     if (_busy || _identity == null || role != 'student' ||
-        !_store.semanticExtractionConsent) return null;
+        !_store.semanticExtractionConsent) { return null; }
     final generation = _generation;
     _busy = true;
     _error = null;
@@ -342,7 +342,7 @@ class AcademicSession extends ChangeNotifier {
         final evidence = entry['evidence'];
         if (title is! String || title.trim().isEmpty || title.length > 140 ||
             subject is! String || subject.trim().isEmpty ||
-            evidence is! String || evidence.trim().isEmpty) continue;
+            evidence is! String || evidence.trim().isEmpty) { continue; }
         final dueValue = entry['due'];
         final due = dueValue is String ? DateTime.tryParse(dueValue) : null;
         items.add(NoticeCandidate(
