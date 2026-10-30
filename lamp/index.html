@@ -1,35 +1,45 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f7f5f0"><title>台灯 · 登录</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f4ef">
+<title>台灯 · 登录</title>
 <style>
-:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft Yahei",sans-serif;color:#292d32;background:#f7f5f0;font-synthesis:none}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{min-height:100svh;display:grid;place-items:center;background:#f7f5f0;overflow-x:hidden}
-.scene{width:min(1120px,100%);min-height:min(100svh,750px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);align-items:center;gap:clamp(20px,3vw,52px);padding:40px clamp(28px,5vw,70px)}
-.stage{height:min(68vh,480px);min-height:355px;width:100%;position:relative}canvas{width:100%;height:100%;display:block}
-.panel{width:100%;max-width:328px;justify-self:center;position:relative;min-height:300px;display:grid;align-items:center}
-.view{grid-area:1/1;opacity:1;transform:translateY(0);transition:opacity .36s ease,transform .46s cubic-bezier(.2,.8,.3,1);width:100%}.view.hidden{pointer-events:none;opacity:0;transform:translateY(12px);visibility:hidden;transition:opacity .28s ease,transform .28s ease,visibility 0s .28s}
-h1{font-size:31px;letter-spacing:-.045em;font-weight:600;line-height:1.2;margin:0 0 31px}
-.field{position:relative;margin-bottom:20px;padding-top:9px}.field label{display:block;color:#8c8e90;font-size:13px;margin-bottom:8px;transition:color .2s}.field:focus-within label{color:#292d32}
-.field input{border:0;border-bottom:1px solid #cfcdc8;width:100%;outline:0;background:transparent;border-radius:0;padding:3px 30px 12px 0;color:#292d32;font:400 15px/1.5 inherit;font-size:15px;transition:border-color .18s}.field input:focus{border-color:#292d32;border-bottom-width:1.5px}.field input:disabled{opacity:.5}
-input::placeholder{color:#b2b1ad}.eye{position:absolute;right:0;bottom:8px;border:0;background:transparent;color:#8c8e90;padding:5px;cursor:pointer;display:grid;place-items:center}.eye svg{width:18px;height:18px}
-#error{min-height:29px;padding-top:2px;padding-bottom:6px;font-size:12px;color:#ae6154;line-height:1.45}.action{width:100%;height:52px;border:0;border-radius:9px;color:#fff;background:#292d32;font:500 14px inherit;font-size:14px;cursor:pointer;transition:background .2s,transform .2s}.action:hover{background:#41464b}.action:active{transform:scale(.985)}.action:disabled{cursor:wait;opacity:.75}.action:focus-visible,.eye:focus-visible,.secondary:focus-visible{outline:2px solid #ab8652;outline-offset:4px}.secondary{width:100%;height:52px;border:1px solid #cfcdc8;border-radius:9px;color:#292d32;background:transparent;font:500 14px inherit;font-size:14px;cursor:pointer;transition:background .2s}.secondary:hover{background:#eeece6}
-.username{font-size:14px;color:#8c8e90;margin:-15px 0 35px;overflow-wrap:anywhere}.success h1{margin-bottom:30px}
-@media(max-width:780px){body{display:block}.scene{min-height:100svh;grid-template-columns:1fr;gap:0;align-content:start;padding:24px 28px 56px}.stage{height:clamp(285px,47svh,375px);min-height:0;margin-bottom:5px}.panel{min-height:320px;max-width:365px;align-self:start}.view h1{margin-bottom:23px}.field{margin-bottom:14px}}
-@media(max-width:370px){.scene{padding-inline:22px}.stage{height:285px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
-.demo-note{font-size:11px;color:#999a98;text-align:center;margin:16px 0 0;line-height:1.4}
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:#303331;background:#f6f4ef;font-synthesis:none}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{min-height:100svh;background:radial-gradient(ellipse at 32% 44%,#fbfaf6 0%,#f6f4ef 68%,#f2efe9 100%);overflow-x:hidden}
+.scene{--warm:0;--gaze:0;min-height:100svh;max-width:1220px;margin:auto;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:clamp(15px,2.6vw,48px);align-items:center;padding:44px clamp(25px,5vw,74px)}
+.stage{width:100%;height:min(70vh,530px);min-height:380px;position:relative;isolation:isolate}
+.stage:after{content:"";position:absolute;z-index:-1;pointer-events:none;inset:17% -9% 4% 9%;opacity:calc(var(--warm) * .35);background:radial-gradient(ellipse at 65% 64%,rgba(255,202,115,.32),rgba(255,209,139,.12) 35%,transparent 70%);filter:blur(23px);transition:opacity .65s ease}
+canvas{width:100%;height:100%;display:block}
+.panel{min-height:330px;width:100%;max-width:327px;justify-self:center;display:grid;align-items:center;position:relative;z-index:1}
+.view{grid-area:1/1;opacity:1;visibility:visible;transform:translateY(0);transition:opacity .36s ease,transform .5s cubic-bezier(.16,.82,.2,1),visibility 0s}
+.view.hidden{pointer-events:none;visibility:hidden;opacity:0;transform:translateY(13px);transition:opacity .27s ease,transform .36s ease,visibility 0s .36s}
+h1{font-size:30px;line-height:1.2;font-weight:580;letter-spacing:-.045em;margin:0 0 31px}
+.field{position:relative;margin-bottom:21px;padding-top:8px}.field label{display:block;font-size:13px;line-height:1.5;margin-bottom:8px;color:#878b87;transition:color .2s}.field:focus-within label{color:#333634}
+.field input{display:block;width:100%;height:38px;outline:none;border:0;border-bottom:1px solid #d0d0cb;border-radius:0;background:transparent;padding:0 33px 10px 0;font:400 15px/1.4 inherit;font-size:15px;color:#292d2a;transition:border-color .23s}.field input:focus{border-bottom-color:#666a64}.field input:disabled{opacity:.6}
+.eye{position:absolute;bottom:8px;right:0;border:0;background:transparent;padding:5px;cursor:pointer;color:#90928e;display:grid;place-items:center}.eye svg{width:18px;height:18px}
+#error{min-height:27px;padding-top:1px;font-size:12px;color:#a45647}
+.action,.secondary{width:100%;height:51px;border-radius:8px;font:500 14px inherit;font-size:14px;cursor:pointer;transition:background .22s,transform .22s}
+.action{border:1px solid #343737;color:#f7f6f1;background:#343737}.action:hover{background:#484b49}.action:active,.secondary:active{transform:scale(.987)}.action:disabled{opacity:.65;cursor:wait}
+.secondary{border:1px solid #cbc9c2;color:#303331;background:transparent}.secondary:hover{background:#eeeae3}
+.action:focus-visible,.secondary:focus-visible,.eye:focus-visible{outline:2px solid #987852;outline-offset:3px}
+.username{font-size:14px;color:#8c8c86;margin:-15px 0 32px;overflow-wrap:anywhere}.success h1{margin-bottom:30px}
+.demo-note{font-size:11px;color:#a1a09a;text-align:center;margin:15px 0 0;line-height:1.5}
+@media(max-width:800px){.scene{min-height:100svh;grid-template-columns:1fr;align-content:start;gap:0;padding:20px 28px 40px}.stage{height:clamp(290px,47svh,410px);min-height:0;margin-bottom:3px}.panel{min-height:318px;max-width:368px;justify-self:center}.view h1{margin-bottom:24px}.field{margin-bottom:14px}}
+@media(max-width:370px){.scene{padding-inline:21px}.stage{height:290px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:0.01ms!important;animation-duration:0.01ms!important}}
 </style>
 </head>
 <body>
-<main class="scene">
-<section class="stage" role="img" aria-label="一盏会转头、登录成功后亮起的银白色台灯"><canvas id="lamp"></canvas></section>
+<main class="scene" id="scene">
+<section class="stage" role="img" aria-label="有铰链与弹簧的银白色台灯，输入时转向表单，演示登录成功后点亮"><canvas id="lamp"></canvas></section>
 <section class="panel" aria-live="polite">
 <form id="login" class="view" novalidate autocomplete="off">
 <h1>登录</h1>
-<div class="field"><label for="user">用户名</label><input id="user" name="username" autocomplete="username" required spellcheck="false"></div>
-<div class="field"><label for="password">密码</label><input id="password" name="password" type="password" autocomplete="new-password" required><button class="eye" id="eye" type="button" aria-label="显示密码"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+<div class="field"><label for="user">用户名</label><input id="user" name="demo-username" type="text" autocomplete="off" spellcheck="false" required></div>
+<div class="field"><label for="password">密码</label><input id="password" name="demo-password" type="password" autocomplete="new-password" required><button class="eye" id="eye" type="button" aria-label="显示密码"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
 <div id="error" role="alert"></div><button class="action" id="submit" type="submit">登录</button>
 <p class="demo-note">交互演示，请勿填写真实账号密码</p>
 </form>
@@ -39,47 +49,139 @@ input::placeholder{color:#b2b1ad}.eye{position:absolute;right:0;bottom:8px;borde
 <script>
 (()=>{
 'use strict';
-const canvas=document.getElementById('lamp'),stage=canvas.parentElement,ctx=canvas.getContext('2d');
-const user=document.getElementById('user'),password=document.getElementById('password'),login=document.getElementById('login'),success=document.getElementById('success'),error=document.getElementById('error'),submit=document.getElementById('submit');
-const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
-let phase=0,targetAttention=0,attention=0,reject=0,animate=null,logged=false,busy=false,logicalW=480,logicalH=430,last=performance.now();
-function clamp(v){return Math.max(0,Math.min(1,v))}function ease(t){t=clamp(t);return t*t*(3-2*t)}function cubicOut(t){return 1-Math.pow(1-clamp(t),3)}
-function ph(b,e){return clamp((phase-b)/(e-b))}
-function lerp(a,b,t){return a+(b-a)*t}
-function point(x,y){return{x,y}}function add(a,b,k=1){return point(a.x+b.x*k,a.y+b.y*k)}
-function grad(x1,y1,x2,y2,stops){let g=ctx.createLinearGradient(x1,y1,x2,y2);for(let s of stops)g.addColorStop(s[0],s[1]);return g}
-function rad(x,y,r,stops){let g=ctx.createRadialGradient(x,y,0,x,y,r);for(let s of stops)g.addColorStop(s[0],s[1]);return g}
-function ellipse(x,y,rx,ry,fill,stroke=null,lw=1){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
-function seg(a,b,w){ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='#64696b';ctx.lineWidth=w+3;ctx.stroke();ctx.strokeStyle=grad(a.x-12,a.y,b.x+10,b.y,[ [0,'#f8faf8'],[.5,'#c6cbca'],[1,'#969fa0']]);ctx.lineWidth=w;ctx.stroke();let dx=b.x-a.x,dy=b.y-a.y,mag=Math.hypot(dx,dy)||1;ctx.beginPath();ctx.moveTo(a.x+dy/mag*2,a.y-dx/mag*2);ctx.lineTo(b.x+dy/mag*2,b.y-dx/mag*2);ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.58)';ctx.stroke()}
-function joint(a,r){ellipse(a.x,a.y,r+1.4,r+1.4,'#55585b');ellipse(a.x,a.y,r,r,rad(a.x-4,a.y-4,r*2.1,[[0,'#fff'],[.45,'#d2d6d4'],[1,'#909899']]));ellipse(a.x,a.y,r*.36,r*.36,'#8f9798');ellipse(a.x-1.1,a.y-1.2,r*.2,r*.2,'#f2f4f2')}
-function drawBeam(origin,axis,side,light){if(light<=.001)return;ctx.save();
-for(let i=3;i>=0;i--){let sh=33+i*7,eh=94+i*19,end=add(origin,axis,220);let pts=[add(origin,side,-sh),add(origin,side,sh),add(end,side,eh),add(end,side,-eh)];ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let j=1;j<4;j++)ctx.lineTo(pts[j].x,pts[j].y);ctx.closePath();ctx.fillStyle=grad(origin.x,origin.y,end.x,end.y,[[0,`rgba(255,196,115,${light*(i===0?.29:.036)})`],[.6,`rgba(255,206,147,${light*(i===0?.10:.015)})`],[1,'rgba(255,210,143,0)']]);ctx.fill()}
-let end=add(origin,axis,220);ctx.save();ctx.translate(end.x,end.y);ctx.scale(1,.38);ellipse(0,0,132,132,rad(0,0,132,[[0,`rgba(255,207,138,${.3*light})`],[.5,`rgba(255,230,186,${.075*light})`],[1,'rgba(255,230,186,0)']]));ctx.restore();ctx.restore()}
-function drawShade(head,angle,light){ctx.save();ctx.translate(head.x,head.y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-16,-6);ctx.bezierCurveTo(-28,-5,-39,22,-47,47);ctx.quadraticCurveTo(0,67,47,47);ctx.bezierCurveTo(39,22,28,-5,16,-6);ctx.quadraticCurveTo(0,-13,-16,-6);ctx.closePath();ctx.shadowColor='rgba(40,44,45,.17)';ctx.shadowBlur=12;ctx.shadowOffsetY=5;ctx.fillStyle=grad(-48,6,49,45,[[0,'#fff'],[.4,'#e9edeb'],[.72,'#bec5c4'],[1,'#8f989a']]);ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetY=0;ctx.strokeStyle='rgba(65,70,72,.4)';ctx.lineWidth=1.3;ctx.stroke();ctx.beginPath();ctx.moveTo(-21,-1);ctx.quadraticCurveTo(-34,17,-39,40);ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=3;ctx.stroke();
-ellipse(0,48,47,11.5,grad(0,35,0,60,[[0,light>.1?`rgb(${Math.floor(lerp(127,255,light))},${Math.floor(lerp(135,226,light))},${Math.floor(lerp(137,179,light))})`:'#7f8789'],[1,light>.1?'#fff2d5':'#bcc2c1']]),'#777f81',3.1);
-ellipse(0,49,11.5,5,`rgb(${Math.floor(lerp(137,255,light))},${Math.floor(lerp(145,248,light))},${Math.floor(lerp(147,226,light))})`);
-if(light>.01){ellipse(0,49,36,26,rad(0,49,38,[[0,`rgba(255,247,217,${light*.5})`],[1,'rgba(255,247,217,0)']]))}
-ctx.restore()}
-function paint(){ctx.clearRect(0,0,logicalW,logicalH);const look=ease(ph(0,.25)),dip=ease(ph(.28,.46)),lift=cubicOut(ph(.43,.76))*(1+.065*Math.sin(Math.PI*ph(.43,.76))),light=cubicOut(ph(.64,.99)),settle=ease(ph(.78,1));const idle=attention*(1-ph(.04,.24));const incorrect=Math.sin(reject*Math.PI)*reject;
-const hip=point(181,348);const elbow=point(165+idle*7+look*8-dip*12+lift*10,240+idle*4+look*3+dip*8-lift*13+incorrect*7);const head=point(264+idle*13+look*14-dip*12+lift*21-settle*3,143+idle*8+look*7+dip*17-lift*31+settle*3+incorrect*10);
-const angle=-.12+idle*.18+look*.21+dip*.28-lift*.31+settle*.07;const axis=point(Math.sin(angle),Math.cos(angle)),side=point(Math.cos(angle),-Math.sin(angle));const opening=add(head,axis,49);
-if(light>.001){drawBeam(opening,axis,side,light)}
-ctx.beginPath();ctx.moveTo(42,374);ctx.lineTo(438,374);ctx.strokeStyle=light>.15?`rgb(${Math.floor(lerp(220,223,light))},${Math.floor(lerp(218,204,light))},${Math.floor(lerp(213,172,light))})`:'#dcdad5';ctx.lineWidth=1;ctx.stroke();
-ctx.save();ctx.translate(187,371);ctx.scale(1,.11);ellipse(0,0,90,56,rad(0,0,95,[[0,'rgba(45,45,45,.21)'],[1,'rgba(45,45,45,0)']]));ctx.restore();
-ellipse(182,365,61,12.5,'#6f7170');ellipse(182,361,61,12.5,grad(130,350,234,377,[[0,'#f7f8f7'],[.58,'#bbc0c0'],[1,'#8d9394']]),'rgba(82,86,88,.4)',1.3);ellipse(181,354,20.5,5,light>.15?'#f7e8d9':'#e1e4e2');
-seg(hip,elbow,12);seg(elbow,head,12);joint(hip,11);joint(elbow,13);joint(head,10);drawShade(head,angle,light)}
-function resize(){let r=stage.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);ctx.setTransform(1,0,0,1,0,0);const sc=Math.min(r.width/480,r.height/430);ctx.setTransform(dpr*sc,0,0,dpr*sc,(r.width-480*sc)*dpr/2,(r.height-430*sc)*dpr/2);paint()}
-function moveTo(v,duration,done){animate={from:phase,to:v,start:performance.now(),duration,done};if(reduce.matches){phase=v;animate=null;paint();done?.()}}
-function frame(now){let dt=Math.min(.05,(now-last)/1000);last=now;attention+=(targetAttention-attention)*(1-Math.exp(-dt*8));if(animate){let t=clamp((now-animate.start)/animate.duration);phase=lerp(animate.from,animate.to,t);if(t>=1){let cb=animate.done;animate=null;cb?.()}}reject*=Math.exp(-dt*7);paint();requestAnimationFrame(frame)}
-function setError(msg){error.textContent=msg}
-function changeAttention(){targetAttention=logged||busy?0:(document.activeElement===password?1:document.activeElement===user?.65:0)}
-for(let input of [user,password]){input.addEventListener('focus',changeAttention);input.addEventListener('blur',()=>setTimeout(changeAttention,0));input.addEventListener('input',()=>setError(''))}
-document.getElementById('eye').addEventListener('click',()=>{const next=password.type==='password';password.type=next?'text':'password';document.getElementById('eye').setAttribute('aria-label',next?'隐藏密码':'显示密码');password.focus()});
-login.addEventListener('submit',ev=>{ev.preventDefault();if(busy||logged)return;setError('');if(!user.value.trim()){setError('请输入用户名');reject=1;user.focus();return}if(!password.value){setError('请输入密码');reject=1;password.focus();return}
-// Frontend preview only: nonempty credentials trigger the demo animation.
-busy=true;submit.disabled=true;submit.textContent='登录中…';document.activeElement.blur();changeAttention();moveTo(1,2400,()=>{busy=false;logged=true;document.getElementById('who').textContent=user.value.trim();success.classList.remove('hidden');success.setAttribute('aria-hidden','false');login.classList.add('hidden');login.setAttribute('aria-hidden','true');document.getElementById('logout').focus({preventScroll:true})})});
-document.getElementById('logout').addEventListener('click',()=>{if(busy)return;busy=true;moveTo(0,900,()=>{logged=false;busy=false;password.value='';submit.disabled=false;submit.textContent='登录';login.classList.remove('hidden');login.setAttribute('aria-hidden','false');success.classList.add('hidden');success.setAttribute('aria-hidden','true');user.focus({preventScroll:true})})});
-const observer=new ResizeObserver(resize);observer.observe(stage);resize();requestAnimationFrame(frame);
+const C=document.getElementById('lamp'),ctx=C.getContext('2d',{alpha:true}),stage=C.parentElement,scene=document.getElementById('scene');
+const login=document.getElementById('login'),success=document.getElementById('success'),user=document.getElementById('user'),password=document.getElementById('password'),submit=document.getElementById('submit'),error=document.getElementById('error'),eye=document.getElementById('eye');
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,smooth=t=>{t=clamp(t);return t*t*(3-2*t)},easeOut=t=>1-Math.pow(1-clamp(t),3),P=(x,y)=>({x,y}),add=(a,b,n=1)=>P(a.x+b.x*n,a.y+b.y*n);
+const rgba=(r,g,b,a)=>`rgba(${r},${g},${b},${a})`;
+let size={w:560,h:460},phase=0,progress=null,focus=0,goalFocus=0,jolt=0,on=false,busy=false,then=performance.now(),lit=0;
+function linear(x1,y1,x2,y2,arr){const g=ctx.createLinearGradient(x1,y1,x2,y2);for(const [p,c] of arr)g.addColorStop(p,c);return g}
+function radial(x,y,r,arr){const g=ctx.createRadialGradient(x,y,0,x,y,r);for(const [p,c] of arr)g.addColorStop(p,c);return g}
+function ellipse(x,y,rx,ry,fill,stroke,lw=1,angle=0){ctx.beginPath();ctx.ellipse(x,y,Math.abs(rx),Math.abs(ry),angle,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function path(points,fill,stroke,lw=1){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(...points[i]);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function line(points,color,w=1){ctx.beginPath();ctx.moveTo(...points[0]);for(let i=1;i<points.length;i++)ctx.lineTo(...points[i]);ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+function tangent(a,b){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1;return {u:P(dx/L,dy/L),n:P(-dy/L,dx/L),len:L}}
+function bar(a,b,thick,brightness=0){const {n,u}=tangent(a,b);const p=(o,l=0)=>P(o.x+n.x*l,o.y+n.y*l);
+ const poly=[p(a,-thick/2),p(b,-thick/2),p(b,thick/2),p(a,thick/2)];
+ ctx.save();ctx.shadowColor='rgba(40,40,38,.12)';ctx.shadowBlur=4;ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;
+ path(poly.map(v=>[v.x,v.y]),linear(a.x+n.x*-9,a.y+n.y*-9,a.x+n.x*9,a.y+n.y*9,[[0,'#777d7b'],[.13,'#c3c8c6'],[.32,'#f5f5f1'],[.45,'#e1e4df'],[.72,'#acb3b1'],[1,'#59615f']]),'rgba(57,62,62,.4)',.8);
+ ctx.restore();
+ line([[p(a,-thick*.3).x,p(a,-thick*.3).y],[p(b,-thick*.3).x,p(b,-thick*.3).y]],rgba(255,255,255,.57+brightness*.1),1.2);
+ line([[p(a,thick*.35).x,p(a,thick*.35).y],[p(b,thick*.35).x,p(b,thick*.35).y]],'rgba(54,65,64,.18)',1.2)
+}
+function bolt(x,y,r){ctx.save();ctx.shadowColor='rgba(50,55,55,.22)';ctx.shadowBlur=3;ctx.shadowOffsetY=2;
+ ellipse(x,y,r+1.5,r+1.5,linear(x-r,y-r,x+r,y+r,[[0,'#f7f8f5'],[.4,'#858c89'],[1,'#515c5b']]),'rgba(52,57,55,.45)',.8);ctx.restore();
+ ellipse(x,y,r*.81,r*.81,radial(x-r*.28,y-r*.42,r*1.55,[[0,'#fff'],[.33,'#dbe0da'],[.74,'#9ca5a2'],[1,'#6c7573']]));
+ ellipse(x+.3,y+.3,r*.34,r*.34,radial(x-1,y-1,r*.9,[[0,'#5d6763'],[.6,'#9da5a1'],[1,'#eaede7']]));
+ line([[x-r*.22,y+r*.09],[x+r*.23,y-r*.12]],'rgba(53,60,58,.62)',1)
+}
+function spring(a,b,coils=12,amplitude=3){const {n,u,len}=tangent(a,b);const first=add(a,u,5),last=add(b,u,-5);const length=Math.hypot(last.x-first.x,last.y-first.y),count=coils*2;
+ ctx.save();ctx.lineWidth=1.6;ctx.strokeStyle='#727b79';ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(first.x,first.y);
+ for(let i=0;i<=count;i++){const t=i/count,side=(i%2?1:-1)*amplitude,pp=add(add(first,u,t*length),n,side);ctx.lineTo(pp.x,pp.y)}ctx.lineTo(last.x,last.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
+ line([[a.x,a.y],[first.x,first.y]],'rgba(255,255,255,.55)',.5)
+}
+function curvedCord(points){ctx.save();ctx.beginPath();ctx.moveTo(...points[0]);ctx.bezierCurveTo(...points[1],...points[2],...points[3]);ctx.bezierCurveTo(...points[4],...points[5],...points[6]);ctx.strokeStyle='rgba(39,44,44,.35)';ctx.lineWidth=4.2;ctx.lineCap='round';ctx.stroke();ctx.strokeStyle='rgba(84,88,84,.75)';ctx.lineWidth=2.6;ctx.stroke();ctx.restore()}
+function ground(light){
+ // A surface, not a floating baseline.
+ // Matte surface suggested by contact shadow and an almost invisible horizon; no hard rectangle.
+ line([[22,392],[538,392]],'rgba(157,154,144,.19)',.7);
+ ellipse(179,394,116,13,radial(177,392,121,[[0,'rgba(42,47,45,.24)'],[.35,'rgba(45,48,46,.13)'],[1,'rgba(44,48,43,0)']]));
+ if(light>.001){ctx.save();ctx.translate(420,396);ctx.scale(1,.26);ellipse(0,0,185,185,radial(-35,-10,188,[[0,rgba(255,183,94,light*.56)],[.33,rgba(255,207,133,light*.32)],[.63,rgba(255,208,147,light*.1)],[1,'rgba(255,225,170,0)']]));ctx.restore()}
+}
+function lightCone(x,y,angle,light){if(light<.001)return;
+ const axis=P(Math.sin(angle),Math.cos(angle)),side=P(Math.cos(angle),-Math.sin(angle));const at=P(x,y);const end=add(at,axis,208);
+ ctx.save();for(let i=5;i>=0;i--){const r=16+i*5,endR=80+i*18;const lt=add(at,side,-r),rt=add(at,side,r),bl=add(end,side,-endR),br=add(end,side,endR);
+ ctx.beginPath();ctx.moveTo(lt.x,lt.y);ctx.lineTo(rt.x,rt.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);ctx.closePath();ctx.fillStyle=linear(at.x,at.y,end.x,end.y,[[0,rgba(255,228,166,light*(i===0?.23:.024))],[.46,rgba(255,219,159,light*(i===0?.09:.01))],[1,'rgba(255,218,156,0)']]);ctx.fill()}
+ ctx.restore()}
+function base(x,y,on){ctx.save();
+ // Weighted base: dark undercut, concentric cover and realistic bevel.
+ ellipse(x+1,y+2,76,15,'#666b68');
+ ellipse(x,y-1,74,14,linear(x-73,y-10,x+75,y+16,[[0,'#c6c8c1'],[.13,'#f8f8f1'],[.34,'#cbd0ca'],[.64,'#9fa8a3'],[.91,'#646c69'],[1,'#485350']]),'rgba(66,71,69,.44)',1);
+ ellipse(x,y-6,69,11,linear(x-60,y-15,x+69,y+9,[[0,'#f6f8f1'],[.32,'#eceee8'],[.62,on>0.2?'#e9dbc0':'#c5ccc6'],[1,'#79817e']]),'rgba(114,119,112,.38)',1);
+ ellipse(x-24,y-8,28,3,radial(x-24,y-8,33,[[0,'rgba(255,255,253,.65)'],[1,'rgba(255,255,255,0)']]));
+ ellipse(x,y-10,23,6,'#929b96');ellipse(x,y-13,22,6,linear(x-25,y-13,x+24,y-8,[[0,'#e6eae3'],[.51,'#f7f8f2'],[1,'#858f89']]));
+ path([[x-12,y-13],[x-10,y-47],[x+10,y-47],[x+12,y-13]],linear(x-12,y-24,x+12,y-24,[[0,'#828d88'],[.27,'#e0e4de'],[.55,'#fff'],[.78,'#b0b9b1'],[1,'#737d79']]),'rgba(84,89,84,.55)',.8);
+ line([[x-10,y-19],[x+10,y-19]],'rgba(67,75,70,.24)',.8);
+ ctx.restore()}
+function cap(x,y,angle,light){ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+ // Connector, rotational joint and barrel neck.
+ path([[-12,-8],[-11,-28],[-6,-36],[6,-36],[11,-27],[12,-8]],linear(-15,-18,15,-18,[[0,'#778481'],[.18,'#d9dfd8'],[.39,'#fff'],[.68,'#c4ccc4'],[1,'#737d79']]),'rgba(68,75,72,.5)',1);
+ ellipse(0,-35,6.6,3,'#737b76');ellipse(0,-36,5.8,2.7,'#e4e6df');
+ ellipse(0,-9,15,5,linear(-15,-12,15,-5,[[0,'#6e7874'],[.38,'#eeeae0'],[1,'#737c76']]));
+ ctx.restore()}
+function shade(x,y,angle,light){ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+ // Housing is an asymmetric profile with curved shoulders and a rolled rim.
+ ctx.save();ctx.shadowColor='rgba(40,44,41,.18)';ctx.shadowBlur=14;ctx.shadowOffsetX=4;ctx.shadowOffsetY=5;
+ ctx.beginPath();ctx.moveTo(-14,-7);ctx.bezierCurveTo(-25,-10,-27,2,-34,16);ctx.bezierCurveTo(-41,27,-48,43,-54,61);ctx.bezierCurveTo(-27,73,28,73,54,61);ctx.bezierCurveTo(48,43,41,27,34,16);ctx.bezierCurveTo(26,2,25,-10,14,-7);ctx.quadraticCurveTo(0,-13,-14,-7);ctx.closePath();
+ ctx.fillStyle=linear(-53,20,54,36,[[0,'#68716e'],[.09,'#b7beb8'],[.2,'#eff0e8'],[.33,'#fcfcf6'],[.48,light>.2?'#fff0d6':'#e5e8df'],[.65,'#bdc5bf'],[.85,'#8b9591'],[.98,'#636e6b'],[1,'#57605e']]);ctx.fill();ctx.restore();
+ ctx.strokeStyle='rgba(56,64,61,.5)';ctx.lineWidth=1;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-23,-3);ctx.bezierCurveTo(-33,9,-40,29,-47,52);ctx.strokeStyle='rgba(255,255,255,.82)';ctx.lineWidth=2.3;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(17,-6);ctx.bezierCurveTo(35,16,40,40,47,55);ctx.strokeStyle='rgba(70,82,76,.18)';ctx.lineWidth=3;ctx.stroke();
+ // Thick rolled bezel with elliptical interior and a physical bulb.
+ ellipse(0,61,54,14,linear(0,47,0,75,[[0,'#505d59'],[.28,'#a0aba3'],[.62,'#e1e3d8'],[1,'#78837e']]),'#65706c',1.6);
+ ellipse(0,62,48.2,10.6,linear(-12,54,20,75,[[0,light>.05?'#d1a87b':'#768079'],[.42,light>.05?'#ffe3ac':'#adb6ac'],[1,light>.05?'#f0c78b':'#c0c6bc']]),'rgba(57,62,58,.46)',1);
+ ellipse(0,60.5,40,7.5,linear(0,52,0,73,[[0,light>.05?rgba(255,219,169,.7):'rgba(80,91,84,.34)'],[1,light>.05?'rgba(255,237,196,.86)':'rgba(182,188,179,.47)']]));
+ ellipse(0,61.8,9,5.2,radial(-2,60,15,[[0,light>.01?'#fffce6':'#e1e4da'],[.5,light>.01?'#ffe8bb':'#b7c2b7'],[1,'#77827a']]));
+ // Bulb bloom only, never a flat yellow triangle.
+ if(light>.001){ctx.globalCompositeOperation='screen';ellipse(0,63,49,30,radial(0,60,52,[[0,rgba(255,242,200,light*.52)],[.35,rgba(255,226,165,light*.2)],[1,'rgba(255,229,175,0)']]));ctx.globalCompositeOperation='source-over'}
+ // Distinct rolled metal lip visible in the foreground.
+ ctx.beginPath();ctx.ellipse(0,62,54,14,0,0,Math.PI);ctx.strokeStyle=linear(-54,62,54,69,[[0,'#525f5b'],[.24,'#eff2e9'],[.6,'#adb5ad'],[1,'#616d68']]);ctx.lineWidth=3;ctx.stroke();
+ cap(0,-8,0,light);
+ ctx.restore()}
+function lamp(poses,light){let {hip,elbow,top,angle}=poses;const normal=tangent(hip,elbow).n;
+ // Rear cloth cable follows lamp articulation; two curved sections keep slack.
+ curvedCord([[top.x+7,top.y-18],[top.x+16,top.y-49],[elbow.x+44,elbow.y-47],[elbow.x+4,elbow.y-22],[elbow.x-8,elbow.y+5],[hip.x+19,328],[hip.x-1,382]]);
+ // Base and the rear spring-balanced strut.
+ base(hip.x,391,light);
+ bar(P(hip.x,345),elbow,12,light);
+ // A secondary side member makes the arm a mechanism rather than a line.
+ const a2=add(P(hip.x,345),normal,-10),b2=add(elbow,normal,-10);
+ bar(a2,b2,4.3,light);
+ spring(add(P(hip.x,338),P(1,0),-10),add(elbow,P(-8,9)),13,2.9);
+ bar(elbow,top,11,light);
+ const n2=tangent(elbow,top).n;
+ const a3=add(elbow,n2,10),b3=add(top,n2,10);
+ bar(a3,b3,3.6,light);
+ line([[elbow.x+5,elbow.y-3],[top.x+4,top.y-3]],'rgba(241,242,238,.47)',.9);
+ bolt(hip.x,345,10);bolt(elbow.x,elbow.y,12);bolt(top.x,top.y,9);
+ // Joint clamp, collar, and shade (shade last so it properly occludes the struts).
+ ctx.save();ctx.translate(top.x,top.y);ctx.rotate(angle);path([[-9,-2],[-12,8],[12,8],[9,-2]],'#979f9b','#656e69',.8);ctx.restore();
+ shade(top.x+11,top.y+9,angle,light);
+}
+function pose(){
+ const focusMix=focus*(1-smooth((phase-.03)/.19));
+ const anticipate=smooth((phase-.12)/.28)*(1-smooth((phase-.43)/.21));
+ const rise=smooth((phase-.4)/.38),settle=smooth((phase-.77)/.23);
+ const hip=P(171,0);
+ const elbow=P(238+focusMix*6-anticipate*17+rise*11-settle*5+jolt*3,232+focusMix*5+anticipate*11-rise*26+settle*4+jolt*4);
+ const top=P(353+focusMix*11-anticipate*14+rise*24-settle*6+jolt*7,170+focusMix*10+anticipate*21-rise*24+settle*5+jolt*8);
+ const angle=-.13+focusMix*.12+anticipate*.32-rise*.13+settle*.13;
+ return {hip,elbow,top,angle};
+}
+function render(){ctx.clearRect(0,0,size.w,size.h);const light=smooth((phase-.62)/.34);lit=light;scene.style.setProperty('--warm',light.toFixed(3));const p=pose();
+ // Shade glow is projected from the mouth's own coordinate frame.
+ const sh=P(p.top.x+11,p.top.y+9),axis=P(Math.sin(p.angle),Math.cos(p.angle));const opening=add(sh,axis,64);
+ ground(light);lightCone(opening.x,opening.y,p.angle,light);
+ lamp(p,light)
+}
+function resize(){let r=stage.getBoundingClientRect();const dpr=Math.min(window.devicePixelRatio||1,2);C.width=Math.round(r.width*dpr);C.height=Math.round(r.height*dpr);
+ const scale=Math.min(r.width/size.w,r.height/size.h);ctx.setTransform(dpr*scale,0,0,dpr*scale,(r.width-size.w*scale)*dpr/2,(r.height-size.h*scale)*dpr/2);render()}
+function animateTo(target,duration,done){progress={from:phase,to:target,start:performance.now(),duration,done};if(reduced.matches){phase=target;progress=null;render();done?.()}}
+function frame(t){const dt=Math.min(.06,(t-then)/1000);then=t;focus+=(goalFocus-focus)*(1-Math.exp(-dt*6));jolt*=Math.exp(-dt*9);
+ if(progress){const f=clamp((t-progress.start)/progress.duration);phase=mix(progress.from,progress.to,f);if(f>=1){const finish=progress.done;progress=null;finish?.()}}
+ render();requestAnimationFrame(frame)}
+function updateFocus(){goalFocus=(busy||on)?0:document.activeElement===password?1:document.activeElement===user?.57:0}
+function showError(msg){error.textContent=msg}
+for(const el of [user,password]){el.addEventListener('focus',updateFocus);el.addEventListener('blur',()=>{goalFocus=0});el.addEventListener('input',()=>showError(''))}
+eye.addEventListener('click',()=>{const visible=password.type==='password';password.type=visible?'text':'password';eye.setAttribute('aria-label',visible?'隐藏密码':'显示密码');password.focus()});
+login.addEventListener('submit',ev=>{ev.preventDefault();if(busy||on)return;showError('');if(!user.value.trim()){showError('请输入用户名');jolt=1;user.focus();return}if(!password.value){showError('请输入密码');jolt=1;password.focus();return}
+ // This is an interactive animation preview, not an authentication system.
+ busy=true;submit.disabled=true;submit.textContent='登录中…';document.activeElement.blur();goalFocus=0;
+ animateTo(1,2400,()=>{busy=false;on=true;document.getElementById('who').textContent=user.value.trim();success.classList.remove('hidden');success.setAttribute('aria-hidden','false');login.classList.add('hidden');login.setAttribute('aria-hidden','true');document.getElementById('logout').focus({preventScroll:true})})
+});
+document.getElementById('logout').addEventListener('click',()=>{if(busy)return;busy=true;animateTo(0,850,()=>{busy=false;on=false;password.value='';submit.disabled=false;submit.textContent='登录';login.classList.remove('hidden');login.setAttribute('aria-hidden','false');success.classList.add('hidden');success.setAttribute('aria-hidden','true');user.focus({preventScroll:true})})});
+new ResizeObserver(resize).observe(stage);resize();requestAnimationFrame(frame);
 })();
 </script>
-</body></html>
+</body>
+</html>
