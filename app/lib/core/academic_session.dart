@@ -307,6 +307,200 @@ class AcademicSession extends ChangeNotifier {
     _notify();
   }
 
+  /// Submit only user-reviewed task fields. Never upload notification bodies,
+  /// chat metadata, sender identifiers or originalNotice to the class service.
+  /// Publication remains exclusively under the teacher's authority.
+  Future<bool> submitClassSuggestion({
+    required String title,
+    required String subject,
+    required String clientKey,
+    String? due,
+  }) async {
+    if (_busy || _identity == null || role != 'student') return false;
+    final classId = _selectedClass;
+    if (classId == null ||
+        !_classes.any((c) => c['id'] == classId && c['status'] == 'active')) {
+      _error = '请先登录 HAIZ Academic 并加入已核准的班级。';
+      _notify();
+      return false;
+    }
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      if (title.trim().isEmpty ||
+          title.length > 140 ||
+          subject.trim().isEmpty ||
+          subject.length > 32 ||
+          !RegExp(r'^[A-Za-z0-9_-]{8,100}
+    if (_busy || _identity == null) return;
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      await _revalidate(generation);
+      final current = _assignments
+          .where((record) => record['id'] == item['id'])
+          .firstOrNull;
+      if (current == null) throw const _ApiFailure('作业已不可访问，请刷新班级任务。');
+      final id = current['id'];
+      final title = current['title'];
+      if (id is! String ||
+          id.isEmpty ||
+          title is! String ||
+          title.trim().isEmpty) {
+        throw const FormatException('作业内容无效。');
+      }
+      final source =
+          'HAIZ Academic · ${accountNamespace(_origin!, _identity!)}/assignments/${Uri.encodeComponent(id)}';
+      if (_store.tasks.any((task) => task.source == source)) return;
+      _store.addTask(
+        title,
+        current['subject'] is String ? current['subject'] as String : '其他',
+        due: DateTime.tryParse(current['due']?.toString() ?? ''),
+        source: source,
+      );
+      await _store.flush();
+      _check(generation);
+      if (_store.storageError != null) {
+        throw const _ApiFailure('个人任务未能保存，请保留原文并重试。');
+      }
+    } catch (error) {
+      if (_current(generation)) await _fail(error);
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
+  }
+
+  /// Stable per (action, resource, version) so a network retry replays instead
+  /// of recording the same view twice. The server accepts 8-100 characters of
+  /// ASCII letters, digits, `_` and `-`, so the seed is reduced to that.
+  static String _idempotencyKey(String action, String id, int version) {
+    final seed = '$action-$id-$version'.replaceAll(
+      RegExp('[^A-Za-z0-9_-]'),
+      '-',
+    );
+    final key = 'haiz-$seed';
+    return key.length <= 90 ? key : key.substring(0, 90);
+  }
+
+  Future<void> markViewed(Map<String, dynamic> item) async {
+    if (_busy || _identity == null) return;
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      await _revalidate(generation);
+      final current = _assignments
+          .where((record) => record['id'] == item['id'])
+          .firstOrNull;
+      if (current == null || current['id'] is! String) {
+        throw const _ApiFailure('作业已不可访问。');
+      }
+      // v1.4 binds an acknowledgement to the exact public version the student
+      // saw, and expects an idempotency key so a retry cannot double-record it.
+      final version = current['version'];
+      if (version is! int || version < 1) {
+        throw const FormatException('作业版本无效，无法标记已查看。');
+      }
+      final id = current['id'] as String;
+      await _request(
+        generation,
+        '/v1/assignments/${Uri.encodeComponent(id)}/acknowledge',
+        body: {'version': version},
+        idempotencyKey: _idempotencyKey('ack', id, version),
+      );
+      await _refresh(generation);
+    } catch (error) {
+      if (_current(generation)) await _fail(error);
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
+  }
+
+  Future<void> logout() async {
+    final oldOrigin = _origin;
+    final oldCookie = _cookie;
+    final generation = _close();
+    _error = null;
+    _notify();
+    try {
+      await _guest(generation);
+      if (oldOrigin != null && oldCookie != null) {
+        final client = _clientFactory();
+        try {
+          final request =
+              http.Request('POST', Uri.parse('$oldOrigin/api/auth/logout'))
+                ..followRedirects = false
+                ..headers['Cookie'] = oldCookie;
+          final response = await client
+              .send(request)
+              .timeout(const Duration(seconds: 3));
+          await response.stream.drain<void>().timeout(
+            const Duration(seconds: 3),
+          );
+          if (response.statusCode >= 400) {
+            throw const _ApiFailure('服务器会话注销未确认，本机凭据已移除。');
+          }
+        } finally {
+          client.close();
+        }
+      }
+    } catch (error) {
+      if (_current(generation)) _error = '本机已退出；服务器注销或本地访客恢复未确认，请重试。';
+    }
+    if (_current(generation)) _notify();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _close();
+    super.dispose();
+  }
+}
+).hasMatch(clientKey)) {
+        throw const FormatException('候选任务格式不正确，请核对标题、科目。');
+      }
+      await _revalidate(generation);
+      _check(generation);
+      final authorized = (_identity!['authorizedClassIds'] as List).contains(classId);
+      if (!authorized ||
+          !_classes.any((c) => c['id'] == classId && c['status'] == 'active')) {
+        throw const _ApiFailure('班级权限已变化，不会上传候选。', revoked: true);
+      }
+      final result = await _request(generation, '/classes/$classId/mobile-suggestions',
+          body: {
+            'title': title.trim(),
+            'subject': subject.trim(),
+            'due': due,
+            'clientKey': clientKey,
+          });
+      _check(generation);
+      if (result['status'] != 'pending') {
+        throw const FormatException('服务器没有确认待审核状态。');
+      }
+      return true;
+    } catch (error) {
+      if (_current(generation)) await _fail(error);
+      return false;
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
+  }
+
   Future<void> importAssignment(Map<String, dynamic> item) async {
     if (_busy || _identity == null) return;
     final generation = _generation;
