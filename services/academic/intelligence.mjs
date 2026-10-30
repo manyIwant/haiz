@@ -67,10 +67,28 @@ function failure(code, message) {
 }
 
 function modelConfig(env) {
-  if (env.HAIZ_AI_ENABLE !== '1') {
+  // Setting this dedicated, server-only key intentionally opts into the
+  // free OpenRouter router; no other AI config is necessary.
+  const quickFree = typeof env.HAIZ_OPENROUTER_FREE_KEY === 'string' &&
+    env.HAIZ_OPENROUTER_FREE_KEY.length > 0 &&
+    (!env.HAIZ_AI_PROVIDER || env.HAIZ_AI_PROVIDER === 'openrouter');
+  if (env.HAIZ_AI_ENABLE !== '1' && !quickFree) {
     throw failure('AI_NOT_CONFIGURED', '管理员尚未开启智能解析服务');
   }
-  const provider = env.HAIZ_AI_PROVIDER || 'openai';
+  const provider = env.HAIZ_AI_PROVIDER || (quickFree ? 'openrouter' : 'openai');
+
+  if (provider === 'openrouter') {
+    const key = env.HAIZ_OPENROUTER_FREE_KEY;
+    if (typeof key !== 'string' || key.length < 20 ||
+        key.length > 240 || /[\\s\\r\\n]/.test(key)) {
+      throw failure('AI_NOT_CONFIGURED', '请在服务端配置 OpenRouter 免费模型密钥');
+    }
+    return {
+      provider, model: 'openrouter/free', key,
+      // This is the only allowed endpoint. No user- or model-derived URLs.
+      url: new URL('https://openrouter.ai/api/v1/chat/completions'),
+    };
+  }
 
   if (provider === 'cloudflare') {
     const account = env.HAIZ_CF_ACCOUNT_ID;
