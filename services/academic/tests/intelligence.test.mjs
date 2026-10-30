@@ -186,3 +186,69 @@ test('free quota exhaustion does not publish, persist or return upstream account
   }),error=>error.code==='AI_FREE_QUOTA_EXCEEDED' &&
     !error.message.includes('SECRET_USER_INFORMATION'));
 });
+
+
+const openrouterQuickStart = {
+  HAIZ_OPENROUTER_FREE_KEY: 'sk-or-v1-synthetic-quick-start-private-key',
+};
+
+test('only one HAIZ OpenRouter key auto-enables free model with pinned official URL', async () => {
+  let call;
+  const items = await semanticExtract({
+    env: {...openrouterQuickStart,
+      HAIZ_AI_BASE_URL:'https://attacker.example/v1',
+      HAIZ_AI_MODEL:'anthropic/paid-model',
+    },
+    message:'数学明天交练习册第12页。英语下周背诵 Unit 4 单词。',
+    capturedAt:capturedAt(),
+    fetchImpl:async (url,request) => {
+      call = {url:url.toString(),request};
+      return {ok:true,json:async()=>({choices:[{message:{content:JSON.stringify({items:[
+        {title:'完成练习册第12页',subject:'数学',due:null,
+          evidence:'数学明天交练习册第12页',confidence:0.9,ambiguous:true},
+        {title:'背诵 Unit 4 单词',subject:'英语',due:null,
+          evidence:'英语下周背诵 Unit 4 单词',confidence:0.82,ambiguous:true},
+      ]})}}]})};
+    }
+  });
+  assert.equal(items.length,2);
+  assert.equal(call.url,'https://openrouter.ai/api/v1/chat/completions');
+  assert.equal(call.request.headers.Authorization,
+    'Bearer sk-or-v1-synthetic-quick-start-private-key');
+  const body = JSON.parse(call.request.body);
+  assert.equal(body.model,'openrouter/free');
+  assert.equal(body.response_format.type,'json_object');
+  assert.equal(body.messages.length,2);
+  assert.equal(call.request.redirect,'error');
+  assert.ok(!call.request.body.includes('sk-or-v1-synthetic'));
+  assert.ok(!call.request.body.includes('anthropic/paid-model'));
+  assert.ok(!call.request.body.includes('attacker.example'));
+});
+
+test('OpenRouter free route is disabled without a key and rejects unsafe API tokens', async () => {
+  const bad=[
+    {},
+    {HAIZ_AI_ENABLE:'1',HAIZ_AI_PROVIDER:'openrouter'},
+    {HAIZ_OPENROUTER_FREE_KEY:'too-short'},
+    {HAIZ_OPENROUTER_FREE_KEY:'sk-or-v1-bad key with spaces'},
+    {HAIZ_OPENROUTER_FREE_KEY:'sk-or-v1-newline\nstill-unsafe'},
+  ];
+  for(const env of bad) {
+    await assert.rejects(semanticExtract({
+      env,message:'数学明天交练习册',capturedAt:capturedAt(),
+      fetchImpl:async()=>{throw Error('must never call the model');},
+    }),{status:503});
+  }
+});
+
+test('OpenRouter quota exhausted returns local fallback signal without changing model', async () => {
+  await assert.rejects(semanticExtract({
+    env:openrouterQuickStart,
+    message:'语文明天交作文',
+    capturedAt:capturedAt(),
+    fetchImpl:async()=>({
+      ok:false,status:429,text:async()=>'{private tokens and account data}',
+    }),
+  }),e => e.code==='AI_FREE_QUOTA_EXCEEDED' &&
+    !e.message.includes('private tokens'));
+});
