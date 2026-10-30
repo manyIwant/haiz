@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'domain/message_intake_bridge.dart';
@@ -28,16 +30,23 @@ class HaizPocketApp extends StatefulWidget {
   State<HaizPocketApp> createState() => _HaizPocketAppState();
 }
 
-class _HaizPocketAppState extends State<HaizPocketApp> {
+class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserver {
   late final PocketStore store = PocketStore();
   late final AcademicSession session = AcademicSession(store);
   int tab = 0;
   bool showLab = false;
   bool showAcademic = false;
+  Timer? _classRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Foreground-only pull on both Android and iOS. No claim of background
+    // WeChat access, OS push delivery, or persistent login after a restart.
+    _classRefreshTimer = Timer.periodic(const Duration(minutes: 3), (_) {
+      if (session.identity != null) session.refresh();
+    });
     MessageIntakeBridge.channel.setMethodCallHandler((call) async {
       if (call.method == 'sharedNotice') {
         MessageIntakeBridge.markChanged();
@@ -66,7 +75,16 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && session.identity != null) {
+      session.refresh();
+    }
+  }
+
+  @override
   void dispose() {
+    _classRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     MessageIntakeBridge.channel.setMethodCallHandler(null);
     session.dispose();
     store.dispose();
@@ -126,6 +144,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                   0 => TodayPage(
                                     key: const ValueKey('today'),
                                     store: store,
+                                    session: session,
                                     onNavigate: _switchTab,
                                   ),
                                   1 => SchedulePage(
@@ -135,6 +154,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                   2 => InboxPage(
                                     key: const ValueKey('inbox'),
                                     store: store,
+                                    session: session,
                                     onSaved: () => _switchTab(0),
                                   ),
                                   3 => FocusPage(
