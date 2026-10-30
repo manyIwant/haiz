@@ -35,10 +35,12 @@ class MonitorConfiguration {
   final bool enabled;
   final bool granted;
   final String groups;
+  final bool wechat;
   const MonitorConfiguration({
     required this.enabled,
     required this.granted,
     required this.groups,
+    required this.wechat,
   });
 
   factory MonitorConfiguration.fromNative(Map<Object?, Object?> value) =>
@@ -46,6 +48,7 @@ class MonitorConfiguration {
         enabled: value['enabled'] == true,
         granted: value['granted'] == true,
         groups: value['groups']?.toString() ?? '',
+        wechat: value['wechat'] == true,
       );
 }
 
@@ -82,11 +85,12 @@ class MessageIntakeBridge {
   static Future<MonitorConfiguration?> configure({
     required bool enabled,
     required String groups,
+    bool includeWeChat = false,
   }) async {
     if (!available) return null;
     final value = await channel.invokeMethod<Map<dynamic, dynamic>>(
       'setConfiguration',
-      {'enabled': enabled, 'groups': groups},
+      {'enabled': enabled, 'groups': groups, 'wechat': includeWeChat},
     );
     return value == null
         ? null
