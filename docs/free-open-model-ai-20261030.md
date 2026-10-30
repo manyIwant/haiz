@@ -1,6 +1,30 @@
 # HAIZ 智能消息转待办 · 免费开源模型接入（2026-10-30）
 
-本分支在原有 `semanticExtract()` 上新增 **Cloudflare Workers AI** 和 **Ollama** 两种提供方。默认仍然禁用 AI：没有用户知情同意和服务端正确配置时，不会上传消息。无需在手机端保存密钥。
+## 最简单：OpenRouter 免费大模型路由，只配置一个密钥
+
+这是面向 HAIZ 手机端优先推荐的 **最少配置方案**。已存在的 HAIZ Academic 服务继续负责已登录学生的任务解析；Android 和 iPhone 不需要下载模型、不需要让 Mac 开机，也不需要每位同学分别注册模型账户。
+
+1. 在 [OpenRouter Keys](https://openrouter.ai/keys) 获取一个专用 API Key。可以使用已有 OpenRouter 账户；免费模型不要求预先充值。请勿把 API Key 发进聊天、网页、APK 或 GitHub。
+2. **仅在 HAIZ Academic 服务器上**设置一个私密环境变量（在实际部署平台的 Secrets / Environment Variables 里添加）：
+
+```bash
+HAIZ_OPENROUTER_FREE_KEY=你的私有OpenRouterKey
+```
+
+3. 重启 HAIZ Academic 服务。无需设置 `HAIZ_AI_ENABLE`、`HAIZ_AI_PROVIDER`、模型 ID 或 Base URL。后端会自动启用固定的 `openrouter/free`，调用官方 `https://openrouter.ai/api/v1/chat/completions`；不会自动切换到付费模型。
+4. 使用已加入班级的 HAIZ 学生账号，在手机收件箱中明确开启「自动 AI 语义理解作业」。授权后进入收件箱会尝试预解析本机已捕获的指定群通知，保留逐项审核；**不会自动向全班发布**。
+
+**额度和风险**：OpenRouter 免费模型有速度、可用性和请求额度限制；无付费积分的常见上限为 **50 次/日、20 次/分钟**，并非永久无限调用。整个 HAIZ 服务共享同一个 Key，班级人数越多越容易触顶。模型由免费路由自动选择，质量可能波动；不同下游模型提供商的数据保存规则可能不同。使用真实学生群通知前，仍需班级管理者与涉及成员知情同意。HTTP 429 / 402 发生时保留手机本地规则解析，不应自行重试耗尽额度。
+
+官方资料：[免费模型列表与限额](https://openrouter.ai/collections/free-models) · [Free Models Router](https://openrouter.ai/openrouter/free) · [获取 API Key](https://openrouter.ai/keys)。
+
+**本 PR 已测试真实的请求结构，但尚未用你的 OpenRouter Key 成功发出真实推理请求。** 仅设置密钥不等于 HAIZ Academic 已部署；服务端仍需要正常运行和可用的 HTTPS 访问地址。
+
+---
+
+
+
+本分支在原有 `semanticExtract()` 上新增 **OpenRouter 免费模型路由、Cloudflare Workers AI** 和 **Ollama** 三种提供方。默认仍然禁用 AI：没有用户知情同意和服务端正确配置时，不会上传消息。无需在手机端保存密钥。
 
 ## 最推荐：Cloudflare Workers AI + Qwen3-30B-A3B
 
