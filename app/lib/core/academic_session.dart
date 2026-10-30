@@ -308,6 +308,16 @@ class AcademicSession extends ChangeNotifier {
     _notify();
   }
 
+  static String _capturedAtWithOffset(DateTime timestamp) {
+    final local = timestamp.toLocal();
+    final offset = local.timeZoneOffset;
+    final totalMinutes = offset.inMinutes.abs();
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = (totalMinutes ~/ 60).toString().padLeft(2, '0');
+    final minutes = (totalMinutes % 60).toString().padLeft(2, '0');
+    return '${local.toIso8601String()}$sign$hours:$minutes';
+  }
+
   /// AI parsing is opt-in and transient; it never writes tasks or posts them
   /// to a class. Server administrator must separately configure a trusted model.
   Future<List<NoticeCandidate>?> extractSemanticNotice({
@@ -327,7 +337,7 @@ class AcademicSession extends ChangeNotifier {
       await _revalidate(generation);
       final json = await _request(generation, '/ai/extract', body: {
         'message': text,
-        'capturedAt': capturedAt.toUtc().toIso8601String(),
+        'capturedAt': _capturedAtWithOffset(capturedAt),
         'consent': true,
       });
       _check(generation);
