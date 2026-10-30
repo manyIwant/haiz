@@ -700,15 +700,15 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                       _line(
                         context,
                         Icons.filter_alt_outlined,
-                        '寻找行动词',
-                        '交、完成、带好、复习等',
+                        '本机规则初筛',
+                        '优先筛选可能与作业有关的通知，AI 可进一步理解多个行动项',
                       ),
                       const SizedBox(height: 17),
                       _line(
                         context,
                         Icons.event_outlined,
-                        '辅助识别日期',
-                        '今天、明天、周几或明确日期；以导入日为相对日期基准',
+                        '语义理解与日期校验',
+                        '选用 AI 时要求模型提供原文证据；不明确的期限保持待确认',
                       ),
                       const SizedBox(height: 17),
                       _line(
@@ -797,6 +797,15 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     fontSize: 13,
                   ),
                 ),
+                if (_aiResults.containsKey(message.id)) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    _aiResults[message.id]!.isEmpty
+                        ? 'AI 预解析：未识别到明确作业，请人工核对'
+                        : 'AI 预解析：发现 ${_aiResults[message.id]!.length} 项候选作业，等待核对',
+                    style: TextStyle(color: p.accent, fontSize: 11),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
