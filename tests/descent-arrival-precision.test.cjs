@@ -12,7 +12,7 @@ const pos=(name)=>({set:(...v)=>{recorded[name]=v;},updateMatrixWorld:()=>{}});
 const camera={near:.08,fov:68,position:pos('camera'),lookAt:(...v)=>{recorded.lookAt=v;},updateProjectionMatrix:()=>{}};
 const sun={position:pos('sun'),target:{position:pos('sunTarget'),updateMatrixWorld:()=>{}},updateMatrixWorld:()=>{}};
 const world={buildings:[{data:{id:'beimen'},center:{x:10,z:-50}}],colliders:[],bounds:{}};
-const init=new Function('camera','sun','world',\
+const init=new Function('camera','sun','world',
   'let arrivalMode=true,arrivalTaken=false,arrivalProgress=0,arrivalPoint=null,shadowCenter={},state={paused:false};'+
   'const M={safePoint:()=>({x:10,z:-63})};'+src+
   'return {setArrivalProgress,getProgress:()=>arrivalProgress}');
