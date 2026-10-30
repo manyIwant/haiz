@@ -4,5 +4,7 @@ description: 读取 ClassIsland 当日最后两节自习，教师授权后自动
 entranceAssembly: "HAIZ.ClassroomPlugin.dll"
 url: https://github.com/manyIwant/haiz
 apiVersion: 2.0.0.0
-version: 0.2.0.0
+version: 0.2.1.0
 author: HAIZ Independent Project
+readme: README.md
+icon: icon.png
