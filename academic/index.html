@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="light"/>
+<title>HAIZ Academic — 班级事务</title>
+<meta name="description" content="HAIZ 独立班级任务协作。与 HAIZ Pocket 和 ClassIsland 共享受控的数据。"/>
+<style>
+:root{--paper:#f6f5f0;--ink:#16343c;--muted:#688085;--ocean:#123e50;--copper:#a67453;--line:#d9e1df;--shade:#eaf0ee;font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);line-height:1.6}
+body:before{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;background:radial-gradient(ellipse 62% 55% at 86% 0%,#dce9e7,transparent),linear-gradient(135deg,#f8f6ef,#eff3f0)}
+header{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:auto;padding:27px 28px;border-bottom:1px solid var(--line)}
+.brand{font-size:19px;font-weight:700;letter-spacing:.075em;text-decoration:none;color:var(--ocean)}.brand em{font-style:normal;font-size:13px;font-weight:400;color:var(--copper);margin-left:8px}
+nav a{color:var(--muted);font-size:13px;text-decoration:none}main{max-width:1120px;margin:auto;padding:74px 28px 130px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.24em;font-weight:600;color:var(--copper)}
+h1{font-family:"Iowan Old Style","Songti SC",serif;letter-spacing:-.045em;line-height:1.2;font-size:clamp(40px,5vw,74px);font-weight:500;margin:20px 0}
+h2{font-size:18px;font-weight:620;margin:0 0 14px}.sub{font-size:16px;max-width:570px;color:var(--muted)}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:56px;align-items:start}
+.panel{border:1px solid #d5deda;background:rgba(255,255,255,.78);border-radius:16px;padding:30px;box-shadow:0 14px 50px #102e3510;backdrop-filter:blur(14px)}
+label{display:block;font-size:13px;font-weight:600;margin:17px 0 7px}
+input,select{width:100%;height:43px;border:1px solid #ccd8d5;border-radius:8px;background:#fff;color:var(--ink);padding:0 12px;font:inherit;font-size:14px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+button{border:0;border-radius:8px;background:var(--ocean);color:white;cursor:pointer;font:inherit;font-size:14px;font-weight:550;padding:12px 16px}
+button:disabled{opacity:.5;cursor:default}.wide{width:100%;margin-top:20px}
+button.subtle{background:#e5eeeb;color:var(--ink);border:1px solid #d4dfdc}
+button.small{padding:8px 12px;font-size:12px}.muted{color:var(--muted);font-size:13px}.status{margin-top:16px;color:var(--copper);font-size:13px;white-space:pre-wrap;min-height:22px}
+.notice{padding:16px 18px;border:1px solid #dfcdbd;background:#fff9ef;color:#68553b;border-radius:10px;font-size:13px;margin-top:22px}
+[hidden]{display:none!important}.dashboard{display:grid;grid-template-columns:280px 1fr;gap:24px;margin-top:38px}.stack{display:grid;gap:18px}
+.class-choice{width:100%;text-align:left;padding:12px;background:var(--shade);color:var(--ink);margin:5px 0}
+.class-choice.selected{background:var(--ocean);color:#fff}.assignment{padding:14px 0;border-bottom:1px solid var(--line)}.assignment strong{display:block;font-size:15px}.assignment span{font-size:12px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.row button{flex-shrink:0}
+footer{border-top:1px solid var(--line);padding:28px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:800px){.hero,.dashboard{grid-template-columns:1fr;gap:25px}main{padding-top:36px}.panel{padding:23px}h1{font-size:46px}}
+</style>
+<script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+<script src="./app.js" defer></script>
+</head>
+<body>
+<header><a class="brand" href="/">HAIZ <em>ACADEMIC</em></a><nav><a href="/">返回 HAIZ.SPACE</a></nav></header>
+<main>
+<section class="hero">
+<div>
+<p class="eyebrow">THE CLASSROOM, CONNECTED</p>
+<h1>让每一件事，<br/>抵达该抵达的人。</h1>
+<p class="sub">同一个班级、一份经过确认的作业，同时抵达教师工作台、学生端和教室屏幕。私有记录只属于获授权的成员。</p>
+<p class="muted">HAIZ 独立项目 · 非海南中学官方系统 · 不接入正式学籍数据库。</p>
+</div>
+<div class="panel">
+<div id="auth-view">
+<p class="eyebrow">YOUR SPACE</p><h2>登录班级空间</h2>
+<form id="login-form">
+<label for="username">HAIZ 账号</label><input id="username" name="username" required autocomplete="username" maxlength="120" placeholder="账号或邮箱"/>
+<label for="password">密码</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="请输入密码"/>
+<button id="login-button" class="wide" type="submit">登录 HAIZ Academic</button>
+</form>
+<div class="status" id="auth-status" role="status" aria-live="polite"></div>
+<p class="muted">用户认证由 Supabase 提供。本站不会在 GitHub Pages 上保存密码。</p>
+</div>
+<div id="user-view" hidden>
+<div class="row"><div><p class="eyebrow">SIGNED IN</p><h2 id="user-name">已登录</h2></div><button class="subtle small" id="logout-button">退出登录</button></div>
+<p class="muted" id="user-role">正在读取权限…</p>
+<div class="status" id="user-status" role="status" aria-live="polite"></div>
+</div>
+</div>
+</section>
+<div id="setup-notice" class="notice" hidden>当前登录入口还未完成云端配置。需先在 Supabase 项目运行 HAIZ 数据库迁移并设置公开的 URL / publishable key；不能在此处放入管理员密钥。</div>
+<section id="workspace" class="dashboard" hidden>
+<aside class="stack">
+<div class="panel">
+<h2>我的班级</h2><div id="class-list" aria-live="polite"></div>
+</div>
+<div class="panel" id="join-panel" hidden>
+<h2>申请加入班级</h2>
+<form id="join-form"><label for="join-code">班级邀请码</label><input id="join-code" required maxlength="16" pattern="[0-9a-f]{16}" autocomplete="off"/><button class="wide">申请加入</button></form>
+</div>
+<div class="panel" id="create-class-panel" hidden>
+<h2>创建班级</h2>
+<form id="create-class-form"><label for="class-name">班级名称</label><input id="class-name" required maxlength="80"/><button class="wide">创建</button></form>
+</div>
+</aside>
+<div class="stack">
+<div class="panel">
+<div class="row"><h2 id="class-heading">选择班级</h2><button id="refresh-button" class="subtle small">刷新</button></div>
+<p class="muted" id="class-info">你只能看到已获得授权的班级和作业。</p>
+<div id="assignment-list" aria-live="polite"></div>
+</div>
+<div class="panel" id="teacher-panel" hidden>
+<h2>教师发布任务</h2>
+<form id="assignment-form">
+<label for="task-subject">科目</label><input id="task-subject" required maxlength="50" placeholder="例如：物理"/>
+<label for="task-title">任务标题</label><input id="task-title" required maxlength="240" placeholder="例如：完成实验报告"/>
+<label for="task-due">截止日期（可选）</label><input id="task-due" type="date"/>
+<button class="wide">发布到班级</button>
+</form>
+<div id="pending-members" class="muted"></div>
+<button id="rotate-button" class="subtle wide" type="button">重新生成教室屏幕密钥</button>
+<div class="status" id="screen-status" role="status"></div>
+</div>
+</div>
+</section>
+</main>
+<footer>HAIZ Academic · 自建协作原型 · 教师确认后发布 · 最小权限原则</footer>
+</body></html>
