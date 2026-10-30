@@ -3,3 +3,10 @@
 .timeline select{border:1px solid #f3efe433;background:#102329;color:#e8e5cd;font:10px system-ui;padding:5px;border-radius:3px}.journey-hint{margin:12px 0 0 48px;color:#d9dece7d;font-size:8px;letter-spacing:1px}#stage{touch-action:none}.opening{animation:entry-rise 1.2s ease-out both}@keyframes entry-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@media(max-width:650px){.timeline span{display:none}.journey-hint{margin-left:25px;font-size:7px}.timeline select{font-size:9px;padding:4px}.entry-links .skip{font-size:9px}}@media(prefers-reduced-motion:reduce){.opening{animation:none}}
 .is-playing .opening{animation:none}
 .opening-portals{display:flex;flex-wrap:wrap;gap:0 24px;max-width:440px}.opening-portals .quiet-link{font-size:10px}
+
+/* In the event of a WebGL/shader failure, the descent still begins with
+   an unmistakable full planet, not a sudden close-up of the campus. */
+#planetFallback{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at 70% 45%,#102b43 0%,#07121d 45%,#020912 100%);opacity:1;z-index:1}
+#planetFallback .fallback-orb{position:absolute;left:72%;top:50%;transform:translate(-50%,-50%);width:min(65vw,39vh);aspect-ratio:1;border-radius:50%;background-image:radial-gradient(circle at 25% 20%,#ffffff12,transparent 42%),url('../cinematic/earth_2048.jpg');background-size:100% 100%,200% 100%;background-position:center,65% 49%;box-shadow:inset -30px -22px 40px #000a,inset 7px 0 16px #ffffff24,0 0 26px 4px #4c86ab4d;overflow:hidden}
+#fallback{z-index:1;opacity:0;pointer-events:none}
+@media(max-width:650px){#planetFallback .fallback-orb{left:50%;top:47%;width:min(68vw,39vh)}}
