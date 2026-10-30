@@ -18,6 +18,27 @@ class NoticeCandidate {
   });
 }
 
+/// Stable across restarts: the same reviewed class task won't be proposed
+/// repeatedly after reopening the app or receiving the same notice twice.
+/// Two independently seeded 32-bit hashes mitigate accidental collisions.
+String noticeProposalKey(NoticeCandidate item) {
+  final signature = [
+    item.subject.trim(),
+    item.title.trim(),
+    item.due == null
+        ? ''
+        : '${item.due!.year}-${item.due!.month}-${item.due!.day}',
+  ].join('|');
+  int first = 0x811c9dc5;
+  int second = 0x5ad1b2e3;
+  for (final unit in signature.codeUnits) {
+    first = ((first ^ unit) * 0x01000193) & 0xffffffff;
+    second = ((second ^ unit) * 0x01000193) & 0xffffffff;
+  }
+  return 'mobile_${first.toRadixString(16).padLeft(8, '0')}_'
+      '${second.toRadixString(16).padLeft(8, '0')}';
+}
+
 /// Keep strict formats supported by HAIZ Teacher export and simple Chinese text.
 /// No external services, scraping, personal chat reading or side effects.
 class NoticeParser {

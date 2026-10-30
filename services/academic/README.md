@@ -59,6 +59,14 @@ export HAIZ_SCHOOL_ISSUER='校方约定的信任发行者标识'
 
 只有配置 `HAIZ_QQ_RELAY_SECRET`（至少32字符）后可绑定官方机器人 group_openid。事件结构详见 `integrations/qq-bot/`。签名中继仅转发 `GROUP_AT_MESSAGE_CREATE`，并由老师确认每项任务。它不会读取不属于该机器人的群历史消息。
 
+## 手机班级作业候选与可选 AI 理解
+
+第一阶段新增：获准加入班级的学生可把手机本机筛出的**结构化作业候选**提交至 `POST /api/classes/:id/mobile-suggestions`（须登录；只接受 clientKey/subject/title/due）。教师网页审核编辑后才发布，iPhone/Android 学生端在 HAIZ App 前台获取已发布作业；不会上传 QQ/微信原始聊天正文到班级候选库。
+
+智能语义解析默认关闭。管理员可用 `HAIZ_AI_ENABLE=1`、`HAIZ_AI_BASE_URL`（可信 HTTPS OpenAI 兼容端点）、`HAIZ_AI_MODEL`、`HAIZ_AI_API_KEY` 配置自己的模型服务，用户需在手机客户端单独知情启用，才能使用 `POST /api/ai/extract`；请求在内存处理，基础联系方式脱敏后发送给配置的模型提供商。禁止把模型密钥写入客户端或代码库。未配置或失败时保留本机规则候选，不会自动向全班发布。
+
+详见 [第一阶段部署、隐私和剩余限制](../../docs/mobile-class-relay-ai-20261029.md)。当前没有 APNs/FCM 后台推送或 iOS 微信后台监听，不能把前台轮询描述成手机关闭时持续接收。
+
 ## ClassIsland
 
 只读 GET `/api/screens/{screenKey}`，仅包含班级名和已发布的科目、标题、截止日期。屏幕密钥可由教师轮换。插件源文件见 `integrations/classisland/`。

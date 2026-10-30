@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'pocket_store.dart';
+import '../domain/notice_parser.dart';
 import 'storage_scope.dart';
 
 class _StaleSession implements Exception {}
@@ -305,6 +306,143 @@ class AcademicSession extends ChangeNotifier {
     _error ??= message;
     _busy = false;
     _notify();
+  }
+
+  static String _capturedAtWithOffset(DateTime timestamp) {
+    final local = timestamp.toLocal();
+    final offset = local.timeZoneOffset;
+    final totalMinutes = offset.inMinutes.abs();
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = (totalMinutes ~/ 60).toString().padLeft(2, '0');
+    final minutes = (totalMinutes % 60).toString().padLeft(2, '0');
+    return '${local.toIso8601String()}$sign$hours:$minutes';
+  }
+
+  /// AI parsing is opt-in and transient; it never writes tasks or posts them
+  /// to a class. Server administrator must separately configure a trusted model.
+  Future<List<NoticeCandidate>?> extractSemanticNotice({
+    required String text,
+    required DateTime capturedAt,
+  }) async {
+    if (_busy || _identity == null || role != 'student' ||
+        !_store.semanticExtractionConsent) { return null; }
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      if (text.trim().length < 5 || text.length > 2800) {
+        throw const FormatException('通知长度不适合智能解析。');
+      }
+      await _revalidate(generation);
+      final json = await _request(generation, '/ai/extract', body: {
+        'message': text,
+        'capturedAt': _capturedAtWithOffset(capturedAt),
+        'consent': true,
+      });
+      _check(generation);
+      if (json['reviewRequired'] != true || json['items'] is! List) {
+        throw const FormatException('智能解析结果尚未通过结构校验。');
+      }
+      final items = <NoticeCandidate>[];
+      for (final entry in json['items'] as List) {
+        if (entry is! Map) continue;
+        final title = entry['title'];
+        final subject = entry['subject'];
+        final evidence = entry['evidence'];
+        if (title is! String || title.trim().isEmpty || title.length > 140 ||
+            subject is! String || subject.trim().isEmpty ||
+            evidence is! String || evidence.trim().isEmpty) { continue; }
+        final dueValue = entry['due'];
+        final due = dueValue is String ? DateTime.tryParse(dueValue) : null;
+        items.add(NoticeCandidate(
+          title: title.trim(),
+          subject: subject.trim(),
+          due: due,
+          source: 'AI 语义解析 · 尚未核实',
+          original: evidence,
+          ambiguous: entry['ambiguous'] == true || due == null,
+        ));
+      }
+      return items.take(8).toList(growable: false);
+    } catch (error) {
+      if (_current(generation)) {
+        if (error is _ApiFailure && error.revoked) {
+          await _fail(error);
+        } else {
+          _error = error is FormatException
+              ? error.message : '智能解析暂不可用；已保留本机规则候选。请检查 AI 服务配置或网络。';
+          _notify();
+        }
+      }
+      return null;
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
+  }
+
+  /// Submit only user-reviewed task fields. No raw notification or sender data.
+  /// Teacher permission is required separately to publish class assignments.
+  Future<bool> submitClassSuggestion({
+    required String title,
+    required String subject,
+    required String clientKey,
+    String? due,
+  }) async {
+    if (_busy || _identity == null || role != 'student') return false;
+    final classId = _selectedClass;
+    if (classId == null ||
+        !_classes.any((c) => c['id'] == classId && c['status'] == 'active')) {
+      _error = '请先登录 HAIZ Academic 并加入已核准的班级。';
+      _notify();
+      return false;
+    }
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      if (title.trim().isEmpty ||
+          title.length > 140 ||
+          subject.trim().isEmpty ||
+          subject.length > 32 ||
+          !RegExp(r'^[A-Za-z0-9_-]{8,100}$').hasMatch(clientKey)) {
+        throw const FormatException('候选任务格式不正确，请核对标题、科目。');
+      }
+      await _revalidate(generation);
+      _check(generation);
+      final authorized = (_identity!['authorizedClassIds'] as List).contains(classId);
+      if (!authorized ||
+          !_classes.any((c) => c['id'] == classId && c['status'] == 'active')) {
+        throw const _ApiFailure('班级权限已变化，不会上传候选。', revoked: true);
+      }
+      final result = await _request(
+        generation,
+        '/classes/$classId/mobile-suggestions',
+        body: {
+          'title': title.trim(),
+          'subject': subject.trim(),
+          'due': due,
+          'clientKey': clientKey,
+        },
+      );
+      _check(generation);
+      if (result['status'] != 'pending') {
+        throw const FormatException('服务器没有确认待审核状态。');
+      }
+      return true;
+    } catch (error) {
+      if (_current(generation)) await _fail(error);
+      return false;
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
   }
 
   Future<void> importAssignment(Map<String, dynamic> item) async {
