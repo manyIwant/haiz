@@ -80,7 +80,7 @@ function modelConfig(env) {
   if (provider === 'openrouter') {
     const key = env.HAIZ_OPENROUTER_FREE_KEY;
     if (typeof key !== 'string' || key.length < 20 ||
-        key.length > 240 || /[\\s\\r\\n]/.test(key)) {
+        key.length > 240 || /[\s\r\n]/.test(key)) {
       throw failure('AI_NOT_CONFIGURED', '请在服务端配置 OpenRouter 免费模型密钥');
     }
     return {
