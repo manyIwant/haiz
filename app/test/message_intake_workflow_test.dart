@@ -84,6 +84,58 @@ void main() {
     },
   );
 
+  test('iOS accepts user-shared notices but cannot monitor notifications', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    expect(MessageIntakeBridge.available, isTrue);
+    expect(MessageIntakeBridge.supportsNotificationMonitoring, isFalse);
+
+    final calls = <String>[];
+    final entries = <Map<String, Object?>>[
+      {
+        'id': 'ios-share:demo',
+        'source': 'iOS 分享 · 用户主动',
+        'title': '分享的文字',
+        'text': '语文作业：完成读书摘录。',
+        'receivedAt': DateTime(2026, 10, 29).millisecondsSinceEpoch,
+      },
+    ];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(MessageIntakeBridge.channel, (call) async {
+      calls.add(call.method);
+      if (call.method == 'getEntries') return entries;
+      if (call.method == 'removeEntry') {
+        entries.removeWhere((e) => e['id'] == (call.arguments as Map)['id']);
+        return true;
+      }
+      if (call.method == 'getConfiguration') {
+        return {
+          'enabled': false,
+          'granted': false,
+          'groups': '',
+          'wechat': false,
+        };
+      }
+      return true;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(
+          MessageIntakeBridge.channel,
+          null,
+        ));
+    expect((await MessageIntakeBridge.entries()).single.source, contains('iOS 分享'));
+    expect((await MessageIntakeBridge.configuration())?.enabled, false);
+    expect(
+      await MessageIntakeBridge.configure(enabled: true, groups: '某班作业群'),
+      isNull,
+    );
+    await MessageIntakeBridge.notificationSettings();
+    expect(calls, isNot(contains('setConfiguration')));
+    expect(calls, isNot(contains('requestNotificationSettings')));
+    await MessageIntakeBridge.remove('ios-share:demo');
+    expect(await MessageIntakeBridge.entries(), isEmpty);
+  });
+
   testWidgets(
     'captured school-group notice requires explicit review and save',
     (tester) async {
