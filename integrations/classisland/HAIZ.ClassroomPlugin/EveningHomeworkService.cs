@@ -112,7 +112,7 @@ public sealed class EveningHomeworkService(
         if (plan is not { IsEnabled: true }) return null;
         var subjectIds = config.SelfStudySubjectIds ?? Array.Empty<Guid>();
         var rows = plan.Classes
-            .Where(x => x.IsEnabled && !x.IsEmpty)
+            .Where(x => x.IsEnabled)
             .Select(x => new EveningPolicy.Lesson(
                 x.SubjectId,
                 profiles.Profile.Subjects.TryGetValue(x.SubjectId, out var subject) ? subject.Name : "",
