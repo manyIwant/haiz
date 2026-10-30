@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f7f5">
+<meta name="description" content="LAMP 台灯登录界面 · 极简台灯角色动作分镜：观察、预备、抬头、点亮">
+<title>LAMP · Motion Study</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",Arial,sans-serif;color:#636d6a;background:#f7f7f5}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{min-height:100svh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px max(25px,calc((100vw - 1530px)/2));font-size:12px;letter-spacing:.14em}
+header span{color:#737c79;font-weight:500}
+a{color:#5d6764;text-decoration:none;letter-spacing:.04em;border-bottom:1px solid #b6beba;padding-bottom:5px}
+a:hover{color:#202b27;border-bottom-color:#202b27}
+a:focus-visible{outline:2px solid #927349;outline-offset:5px}
+main{flex:1;display:flex;align-items:center;min-width:0;width:100%}
+.artwork{overflow-x:auto;overscroll-behavior-x:contain;width:100%;padding:0 0 14px;scrollbar-color:#d6dbd7 transparent;scrollbar-width:thin}
+.board{width:100%;min-width:980px;margin:auto;max-width:1600px}
+.board svg{display:block;width:100%;height:auto}
+footer{display:flex;justify-content:space-between;gap:10px;padding:20px max(25px,calc((100vw - 1530px)/2));font-size:11px;color:#9ca5a0}
+.mobile-hint{display:none}
+@media(max-width:700px){header{padding:20px 22px}.board{min-width:1060px}footer{padding:16px 22px}.mobile-hint{display:inline}.desktop-note{display:none}}
+@media(prefers-reduced-motion:reduce){html:focus-within{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><span>LAMP / MOTION STUDY</span><a href="../" aria-label="返回台灯交互登录">返回登录</a></header>
+<main>
+<div class="artwork" tabindex="0" role="region" aria-label="可左右滚动的台灯四姿态分镜">
+<div class="board">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 628" width="1600" height="628" role="img" aria-labelledby="title desc">
+<title id="title">台灯动作分镜</title><desc id="desc">四幅保持原台灯简洁外形的关键姿态：观察、预备、抬头、点亮。逐个展示关节与灯头的动作。</desc>
+<defs>
+ <linearGradient id="shell" x1="0" y1="0" x2="1" y2=".16" objectBoundingBox="true"><stop offset="0" stop-color="#a7adac"/><stop offset=".13" stop-color="#e3e6e4"/><stop offset=".4" stop-color="#ffffff"/><stop offset=".63" stop-color="#e9ece8"/><stop offset=".86" stop-color="#b0b8b6"/><stop offset="1" stop-color="#8e9896"/></linearGradient>
+ <linearGradient id="shadeSurface" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#adb4b1"/><stop offset=".13" stop-color="#e5e9e5"/><stop offset=".38" stop-color="#fbfcf8"/><stop offset=".54" stop-color="#ecf0eb"/><stop offset=".8" stop-color="#c6cdca"/><stop offset="1" stop-color="#939c9a"/></linearGradient>
+ <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a3acaa"/><stop offset=".3" stop-color="#edf0ec"/><stop offset=".64" stop-color="#fff"/><stop offset="1" stop-color="#acb6b3"/></linearGradient>
+ <linearGradient id="base" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#eef0eb"/><stop offset=".24" stop-color="#fff"/><stop offset=".6" stop-color="#e0e4df"/><stop offset="1" stop-color="#a2aaa6"/></linearGradient>
+ <radialGradient id="jointGrad" cx=".32" cy=".22" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".43" stop-color="#e4e9e5"/><stop offset=".8" stop-color="#aeb9b4"/><stop offset="1" stop-color="#7f8d89"/></radialGradient>
+ <radialGradient id="shadow"><stop offset="0" stop-color="#545f5d" stop-opacity=".23"/><stop offset=".42" stop-color="#545f5d" stop-opacity=".10"/><stop offset="1" stop-color="#545f5d" stop-opacity="0"/></radialGradient>
+ <radialGradient id="halo"><stop offset="0" stop-color="#f9d592" stop-opacity=".36"/><stop offset=".48" stop-color="#f6d594" stop-opacity=".14"/><stop offset="1" stop-color="#ffdb94" stop-opacity="0"/></radialGradient>
+ <linearGradient id="beam" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#f9dc9e" stop-opacity=".4"/><stop offset=".62" stop-color="#f5d9aa" stop-opacity=".09"/><stop offset="1" stop-color="#f3dba8" stop-opacity="0"/></linearGradient>
+ <linearGradient id="inside" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbeb"/><stop offset=".55" stop-color="#feeac3"/><stop offset="1" stop-color="#ceae7d"/></linearGradient>
+ <filter id="softshadow" x="-50%" y="-60%" width="200%" height="220%"><feGaussianBlur stdDeviation="3.8"/></filter>
+ <filter id="lightblur" x="-80%" y="-50%" width="260%" height="200%"><feGaussianBlur stdDeviation="17"/></filter>
+</defs>
+<rect width="1600" height="628" fill="#f7f7f4"/>
+<text x="64" y="57" font-size="13" letter-spacing="3" fill="#858a89" font-family="Helvetica,Arial,sans-serif">MOTION STUDY</text>
+<text x="1538" y="57" text-anchor="end" font-size="12" fill="#a2a7a4" font-family="Helvetica,Arial,sans-serif">01 / 04</text>
+<path d="M64 81 H1536" stroke="#e9ebe7" stroke-width="1"/>
+
+<g transform="translate(22 58)">
+<path d="M35 425 H344" stroke="#e2e4df" stroke-width="1"/>
+  <ellipse cx="155" cy="420" rx="95" ry="11.8" fill="url(#shadow)" opacity=".73"/>
+  
+<ellipse cx="155" cy="415.5" rx="52.5" ry="10.5" fill="#8e9793" opacity=".7"/>
+   <ellipse cx="155" cy="412" rx="52.5" ry="10.5" fill="url(#base)" stroke="#9fa9a5" stroke-width="1.15"/>
+   <path d="M107 411 C129 400 171 399 201 408" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+   <ellipse cx="155" cy="407" rx="18" ry="5" fill="#b4bdb7"/>
+   <ellipse cx="155" cy="404.5" rx="18" ry="4.3" fill="url(#base)"/>
+   <path d="M148 405 L147 386 L163 386 L162 405Z" fill="url(#stem)" stroke="#8f9b96" stroke-width=".9"/>
+  
+<path d="M155.0 386.0 L137.0 273.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M155.0 386.0 L137.0 273.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M154.0 385.0 L136.0 272.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<path d="M137.0 273.0 L245.0 184.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M137.0 273.0 L245.0 184.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M136.0 272.0 L244.0 183.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<circle cx="155" cy="386" r="9.6" fill="#7f8986"/>
+  <circle cx="155" cy="386" r="8.2" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="155" cy="386" r="2.75" fill="#99a6a2"/>
+  <circle cx="153.7" cy="384.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="137" cy="273" r="11.5" fill="#7f8986"/>
+  <circle cx="137" cy="273" r="10.1" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="137" cy="273" r="3.36" fill="#99a6a2"/>
+  <circle cx="135.7" cy="271.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="245" cy="184" r="9.1" fill="#7f8986"/>
+  <circle cx="245" cy="184" r="7.699999999999999" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="245" cy="184" r="2.59" fill="#99a6a2"/>
+  <circle cx="243.7" cy="182.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<g transform="translate(245 184) rotate(-13)">
+      <path d="M-15 -5 C-25 -8 -33 11 -42 39 C-47 51 -47 51 -42 53 Q0 66 42 53 C47 51 47 51 42 39 C33 11 25 -8 15 -5 Q0 -11 -15 -5Z" fill="url(#shadeSurface)" stroke="#8f9a96" stroke-width="1.15"/>
+      <path d="M-22 -2 C-31 11 -36 29 -40 44" fill="none" stroke="#fff" stroke-opacity=".77" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="52" rx="44" ry="10.5" fill="#b4bcb6" stroke="#86918c" stroke-width="1.4"/>
+      <ellipse cx="0" cy="50.7" rx="38" ry="6.9" fill="#e6eae4" opacity=".84"/>
+      <ellipse cx="0" cy="51" rx="8" ry="4.8" fill="#bdc7c1"/>
+      <path d="M-44 53 Q0 65 44 53" stroke="#7b8782" stroke-width="2" fill="none"/>
+   </g>
+<path d="M26 478 H348" stroke="#e8eae6" stroke-width="1"/>
+  <text x="32" y="508" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#a2a8a5" letter-spacing="2">01</text>
+  <text x="66" y="509" font-family="'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-size="20" fill="#353c3b" font-weight="500">观察</text>
+  <text x="348" y="508" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="10.2" fill="#a4a9a7" letter-spacing=".8">ATTENTION</text>
+  </g>
+<g transform="translate(422 58)">
+<path d="M-22 62 L-22 504" stroke="#eceeeb" stroke-width="1"/>
+<path d="M35 425 H344" stroke="#e2e4df" stroke-width="1"/>
+  <ellipse cx="155" cy="420" rx="95" ry="11.8" fill="url(#shadow)" opacity=".73"/>
+  
+<ellipse cx="155" cy="415.5" rx="52.5" ry="10.5" fill="#8e9793" opacity=".7"/>
+   <ellipse cx="155" cy="412" rx="52.5" ry="10.5" fill="url(#base)" stroke="#9fa9a5" stroke-width="1.15"/>
+   <path d="M107 411 C129 400 171 399 201 408" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+   <ellipse cx="155" cy="407" rx="18" ry="5" fill="#b4bdb7"/>
+   <ellipse cx="155" cy="404.5" rx="18" ry="4.3" fill="url(#base)"/>
+   <path d="M148 405 L147 386 L163 386 L162 405Z" fill="url(#stem)" stroke="#8f9b96" stroke-width=".9"/>
+  
+<path d="M155.0 386.0 L126.0 275.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M155.0 386.0 L126.0 275.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M154.0 385.0 L125.0 274.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<path d="M126.0 275.0 L256.0 224.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M126.0 275.0 L256.0 224.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M125.0 274.0 L255.0 223.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<circle cx="155" cy="386" r="9.6" fill="#7f8986"/>
+  <circle cx="155" cy="386" r="8.2" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="155" cy="386" r="2.75" fill="#99a6a2"/>
+  <circle cx="153.7" cy="384.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="126" cy="275" r="11.5" fill="#7f8986"/>
+  <circle cx="126" cy="275" r="10.1" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="126" cy="275" r="3.36" fill="#99a6a2"/>
+  <circle cx="124.7" cy="273.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="256" cy="224" r="9.1" fill="#7f8986"/>
+  <circle cx="256" cy="224" r="7.699999999999999" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="256" cy="224" r="2.59" fill="#99a6a2"/>
+  <circle cx="254.7" cy="222.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<g transform="translate(256 224) rotate(23)">
+      <path d="M-15 -5 C-25 -8 -33 11 -42 39 C-47 51 -47 51 -42 53 Q0 66 42 53 C47 51 47 51 42 39 C33 11 25 -8 15 -5 Q0 -11 -15 -5Z" fill="url(#shadeSurface)" stroke="#8f9a96" stroke-width="1.15"/>
+      <path d="M-22 -2 C-31 11 -36 29 -40 44" fill="none" stroke="#fff" stroke-opacity=".77" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="52" rx="44" ry="10.5" fill="#b4bcb6" stroke="#86918c" stroke-width="1.4"/>
+      <ellipse cx="0" cy="50.7" rx="38" ry="6.9" fill="#e6eae4" opacity=".84"/>
+      <ellipse cx="0" cy="51" rx="8" ry="4.8" fill="#bdc7c1"/>
+      <path d="M-44 53 Q0 65 44 53" stroke="#7b8782" stroke-width="2" fill="none"/>
+   </g>
+<path d="M26 478 H348" stroke="#e8eae6" stroke-width="1"/>
+  <text x="32" y="508" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#a2a8a5" letter-spacing="2">02</text>
+  <text x="66" y="509" font-family="'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-size="20" fill="#353c3b" font-weight="500">预备</text>
+  <text x="348" y="508" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="10.2" fill="#a4a9a7" letter-spacing=".8">ANTICIPATION</text>
+  </g>
+<g transform="translate(822 58)">
+<path d="M-22 62 L-22 504" stroke="#eceeeb" stroke-width="1"/>
+<path d="M35 425 H344" stroke="#e2e4df" stroke-width="1"/>
+  <ellipse cx="155" cy="420" rx="95" ry="11.8" fill="url(#shadow)" opacity=".73"/>
+  
+<ellipse cx="155" cy="415.5" rx="52.5" ry="10.5" fill="#8e9793" opacity=".7"/>
+   <ellipse cx="155" cy="412" rx="52.5" ry="10.5" fill="url(#base)" stroke="#9fa9a5" stroke-width="1.15"/>
+   <path d="M107 411 C129 400 171 399 201 408" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+   <ellipse cx="155" cy="407" rx="18" ry="5" fill="#b4bdb7"/>
+   <ellipse cx="155" cy="404.5" rx="18" ry="4.3" fill="url(#base)"/>
+   <path d="M148 405 L147 386 L163 386 L162 405Z" fill="url(#stem)" stroke="#8f9b96" stroke-width=".9"/>
+  
+<path d="M155.0 386.0 L159.0 272.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M155.0 386.0 L159.0 272.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M154.0 385.0 L158.0 271.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<path d="M159.0 272.0 L251.0 169.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M159.0 272.0 L251.0 169.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M158.0 271.0 L250.0 168.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<circle cx="155" cy="386" r="9.6" fill="#7f8986"/>
+  <circle cx="155" cy="386" r="8.2" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="155" cy="386" r="2.75" fill="#99a6a2"/>
+  <circle cx="153.7" cy="384.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="159" cy="272" r="11.5" fill="#7f8986"/>
+  <circle cx="159" cy="272" r="10.1" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="159" cy="272" r="3.36" fill="#99a6a2"/>
+  <circle cx="157.7" cy="270.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="251" cy="169" r="9.1" fill="#7f8986"/>
+  <circle cx="251" cy="169" r="7.699999999999999" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="251" cy="169" r="2.59" fill="#99a6a2"/>
+  <circle cx="249.7" cy="167.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<g transform="translate(251 169) rotate(-18)">
+      <path d="M-15 -5 C-25 -8 -33 11 -42 39 C-47 51 -47 51 -42 53 Q0 66 42 53 C47 51 47 51 42 39 C33 11 25 -8 15 -5 Q0 -11 -15 -5Z" fill="url(#shadeSurface)" stroke="#8f9a96" stroke-width="1.15"/>
+      <path d="M-22 -2 C-31 11 -36 29 -40 44" fill="none" stroke="#fff" stroke-opacity=".77" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="52" rx="44" ry="10.5" fill="#b4bcb6" stroke="#86918c" stroke-width="1.4"/>
+      <ellipse cx="0" cy="50.7" rx="38" ry="6.9" fill="#e6eae4" opacity=".84"/>
+      <ellipse cx="0" cy="51" rx="8" ry="4.8" fill="#bdc7c1"/>
+      <path d="M-44 53 Q0 65 44 53" stroke="#7b8782" stroke-width="2" fill="none"/>
+   </g>
+<path d="M26 478 H348" stroke="#e8eae6" stroke-width="1"/>
+  <text x="32" y="508" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#a2a8a5" letter-spacing="2">03</text>
+  <text x="66" y="509" font-family="'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-size="20" fill="#353c3b" font-weight="500">抬头</text>
+  <text x="348" y="508" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="10.2" fill="#a4a9a7" letter-spacing=".8">RISE</text>
+  </g>
+<g transform="translate(1222 58)">
+<path d="M-22 62 L-22 504" stroke="#eceeeb" stroke-width="1"/>
+<path d="M35 425 H344" stroke="#e2e4df" stroke-width="1"/>
+  <ellipse cx="155" cy="420" rx="95" ry="11.8" fill="url(#shadow)" opacity=".73"/>
+  
+<g transform="translate(271 184) rotate(-10)">
+       <path d="M-25 50 C-66 129 -91 237 -119 275 Q 0 295 114 275 C82 236 66 134 25 50Z" fill="url(#beam)" opacity=".83" filter="url(#lightblur)"/>
+       <path d="M-24 48 L-98 270 Q0 287 98 270 L24 48Z" fill="url(#beam)" opacity=".52"/>
+       </g>
+       <ellipse cx="291" cy="427" rx="116" ry="24" fill="url(#halo)"/>
+       <ellipse cx="291" cy="426" rx="85" ry="10.5" fill="url(#halo)" opacity=".8"/>
+    
+<ellipse cx="155" cy="415.5" rx="52.5" ry="10.5" fill="#8e9793" opacity=".7"/>
+   <ellipse cx="155" cy="412" rx="52.5" ry="10.5" fill="url(#base)" stroke="#9fa9a5" stroke-width="1.15"/>
+   <path d="M107 411 C129 400 171 399 201 408" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+   <ellipse cx="155" cy="407" rx="18" ry="5" fill="#b4bdb7"/>
+   <ellipse cx="155" cy="404.5" rx="18" ry="4.3" fill="url(#base)"/>
+   <path d="M148 405 L147 386 L163 386 L162 405Z" fill="url(#stem)" stroke="#8f9b96" stroke-width=".9"/>
+  
+<path d="M155.0 386.0 L166.0 274.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M155.0 386.0 L166.0 274.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M154.0 385.0 L165.0 273.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<path d="M166.0 274.0 L271.0 184.0" stroke="#747e7b" stroke-width="15" stroke-linecap="round"/>
+   <path d="M166.0 274.0 L271.0 184.0" stroke="url(#stem)" stroke-width="12.5" stroke-linecap="round"/>
+   <path d="M165.0 273.0 L270.0 183.0" stroke="#fff" stroke-opacity=".65" stroke-width="1" stroke-linecap="round"/>
+<circle cx="155" cy="386" r="9.6" fill="#7f8986"/>
+  <circle cx="155" cy="386" r="8.2" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="155" cy="386" r="2.75" fill="#99a6a2"/>
+  <circle cx="153.7" cy="384.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="166" cy="274" r="11.5" fill="#7f8986"/>
+  <circle cx="166" cy="274" r="10.1" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="166" cy="274" r="3.36" fill="#99a6a2"/>
+  <circle cx="164.7" cy="272.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<circle cx="271" cy="184" r="9.1" fill="#7f8986"/>
+  <circle cx="271" cy="184" r="7.699999999999999" fill="url(#jointGrad)" stroke="#dbe0dc" stroke-width=".65"/>
+  <circle cx="271" cy="184" r="2.59" fill="#99a6a2"/>
+  <circle cx="269.7" cy="182.3" r="1.1" fill="#fafbf9" opacity=".82"/>
+<g transform="translate(271 184) rotate(-10)">
+      <path d="M-15 -5 C-25 -8 -33 11 -42 39 C-47 51 -47 51 -42 53 Q0 66 42 53 C47 51 47 51 42 39 C33 11 25 -8 15 -5 Q0 -11 -15 -5Z" fill="url(#shadeSurface)" stroke="#8f9a96" stroke-width="1.15"/>
+      <path d="M-22 -2 C-31 11 -36 29 -40 44" fill="none" stroke="#fff" stroke-opacity=".77" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="52" rx="44" ry="10.5" fill="url(#inside)" stroke="#86918c" stroke-width="1.4"/>
+      <ellipse cx="0" cy="50.7" rx="38" ry="6.9" fill="#ffefc9" opacity=".84"/>
+      <ellipse cx="0" cy="51" rx="8" ry="4.8" fill="#fffef1"/>
+      <path d="M-44 53 Q0 65 44 53" stroke="#7b8782" stroke-width="2" fill="none"/>
+   </g>
+<path d="M26 478 H348" stroke="#e8eae6" stroke-width="1"/>
+  <text x="32" y="508" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#a2a8a5" letter-spacing="2">04</text>
+  <text x="66" y="509" font-family="'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-size="20" fill="#353c3b" font-weight="500">点亮</text>
+  <text x="348" y="508" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="10.2" fill="#a4a9a7" letter-spacing=".8">ILLUMINATION</text>
+  </g>
+<path d="M64 605 H1536" stroke="#e9ebe8" stroke-width="1"/>
+<text x="64" y="598" font-family="'Noto Sans CJK SC',sans-serif" fill="#9ba09d" font-size="11">相同造型 · 固定关节长度 · 以动作传达意图</text>
+</svg>
+</div>
+</div>
+</main>
+<footer><span class="desktop-note">静态动作分镜 · 交互登录保留在原页面</span><span class="mobile-hint">左右滑动查看四个姿态</span><span>01—04</span></footer>
+</body>
+</html>
