@@ -1,5 +1,10 @@
 # HAIZ ClassIsland Unified Plugin v0.2 (preview)
 
+## Packaging correction (2026-10-30)
+
+The previously shared binary `artifacts/HAIZ-ClassIsland-Unified-v0.2.0-preview.cipx` is incomplete: it lacks the README.md file that the ClassIsland plugin manager opens by default, and it also lacks an icon. **Do not re-install the old package.** The source now includes `HAIZ.ClassroomPlugin/README.md` and `icon.png`, and the manifest references them explicitly in version 0.2.1.0. The new package needs to be rebuilt from source or locally patched and tested; no Windows host-load test has yet been performed.
+
+
 This one ClassIsland 2.0 / .NET8 native plugin contains:
 - The existing HAIZ homework component (poll every 45s).
 - A separate, OPT-IN evening auto board using actual ClassIsland ILessonsService / IProfileService timetable information. It selects the LAST TWO enabled lessons named 自习 or 晚修, or matching explicitly configured subject GUIDs, with no hardcoded clock schedule.
