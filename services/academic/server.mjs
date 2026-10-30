@@ -377,9 +377,13 @@ const server=createServer(async(req,res)=>{
    audit(u.id,'mobile.suggestion.dismiss',item.id);
    return reply(res,200,{ok:true});
   }
+  const {data:p}=await readBody(req);
+  // Recheck after async body read: simultaneous teacher approvals must not
+  // both publish the same suggestion. The following DB work is synchronous.
+  const newest=db.prepare('SELECT status FROM mobile_suggestions WHERE id=? AND class_id=?').get(item.id,c.id);
+  if(newest?.status!=='pending')throw err(409,'候选已由另一位审核者处理');
   const membership=db.prepare("SELECT status FROM memberships WHERE class_id=? AND user_id=?").get(c.id,item.contributor_id);
   if(membership?.status!=='active')throw err(409,'投稿成员已失去班级权限，请忽略该候选');
-  const {data:p}=await readBody(req);
   if(Object.keys(p).some(k=>!['title','subject','due'].includes(k)))throw err(400,'审核仅接受任务结构化字段');
   const title=text(p.title??item.title,140),subject=text(p.subject??item.subject,32);
   const due=validSuggestionDue(p.due===undefined?item.due:p.due);
