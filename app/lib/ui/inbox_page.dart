@@ -46,6 +46,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   List<IncomingNotice> _incoming = const [];
   MonitorConfiguration? _monitor;
   bool _groupsLoaded = false;
+  bool _wechatOptIn = false;
   bool _monitorBusy = false;
   String? _currentIncomingId;
 
@@ -73,6 +74,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         _monitor = setting;
         if (!_groupsLoaded) {
           _groupsController.text = setting?.groups ?? '';
+          _wechatOptIn = setting?.wechat ?? false;
           _groupsLoaded = true;
         }
       });
@@ -88,6 +90,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       final setting = await MessageIntakeBridge.configure(
         enabled: enabled,
         groups: _groupsController.text,
+        includeWeChat: _wechatOptIn,
       );
       if (!mounted) return;
       setState(() {
@@ -624,11 +627,22 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           ),
           children: [
             Text(
-              '支持微信 / QQ / TIM / 钉钉 / 学习通。只有通知标题、会话标题或副标题包含你指定的群名称，'
+              '支持 QQ / TIM / 钉钉 / 学习通，微信须单独勾选。只有通知标题、会话标题或副标题包含你指定的群名称，'
               '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'
               '请使用足够独特的群名；无法读取已隐藏的通知内容或历史消息，也不会上传消息。'
               ' 保存为待办前仍需人工确认。',
               style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              key: const Key('enable-wechat'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text('同时收集指定微信群的作业通知'),
+              subtitle: const Text('默认关闭。开启后仍只按你填写的群名称过滤，并需要 Android 系统通知授权。'),
+              value: _wechatOptIn,
+              onChanged: _monitorBusy
+                  ? null
+                  : (value) => setState(() => _wechatOptIn = value),
             ),
             const SizedBox(height: 12),
             TextField(
