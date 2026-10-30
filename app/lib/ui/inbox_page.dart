@@ -341,7 +341,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     const SectionLabel('粘贴一段通知'),
                     const SizedBox(height: 8),
                     Text(
-                      '从 QQ、钉钉、学习通等应用点「分享 → HAIZ」，可直接加入待审阅消息；也能手动粘贴、导入文档。',
+                      '从微信、QQ、钉钉、学习通等应用点「分享 → HAIZ」，可直接加入待审阅消息；也能手动粘贴、导入文档。',
                       style: TextStyle(color: p.secondary, fontSize: 12),
                     ),
                     const SizedBox(height: 14),
@@ -556,7 +556,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '无需登录消息平台。把群里的一段作业通知分享给 HAIZ，就会进入这里。',
+                '微信、QQ 等指定群的新通知可在授权后自动进入；也可以主动从聊天中分享一段通知。',
                 style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
               ),
               if (_incoming.isEmpty) ...[
@@ -624,8 +624,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           ),
           children: [
             Text(
-              '只处理 QQ / TIM / 钉钉 / 学习通中，通知标题含下列群名称、正文含学习行动词的消息。'
-              ' 不读私聊、不读历史消息、不上传内容；只是候选，须你确认才能加入待办。',
+              '支持微信 / QQ / TIM / 钉钉 / 学习通。只有通知标题、会话标题或副标题包含你指定的群名称，'
+              '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'
+              '请使用足够独特的群名；无法读取已隐藏的通知内容或历史消息，也不会上传消息。'
+              ' 保存为待办前仍需人工确认。',
               style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
             ),
             const SizedBox(height: 12),
@@ -635,7 +637,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               maxLength: 250,
               decoration: const InputDecoration(
                 labelText: '指定群名称关键词（每行一个）',
-                hintText: '例如：某班作业通知群',
+                hintText: '例如：高一13班作业通知群',
                 border: OutlineInputBorder(),
               ),
             ),
