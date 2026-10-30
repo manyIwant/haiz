@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'pocket_store.dart';
+import '../domain/notice_parser.dart';
 import 'storage_scope.dart';
 
 class _StaleSession implements Exception {}
@@ -305,6 +306,72 @@ class AcademicSession extends ChangeNotifier {
     _error ??= message;
     _busy = false;
     _notify();
+  }
+
+  /// AI parsing is opt-in and transient; it never writes tasks or posts them
+  /// to a class. Server administrator must separately configure a trusted model.
+  Future<List<NoticeCandidate>?> extractSemanticNotice({
+    required String text,
+    required DateTime capturedAt,
+  }) async {
+    if (_busy || _identity == null || role != 'student' ||
+        !_store.semanticExtractionConsent) return null;
+    final generation = _generation;
+    _busy = true;
+    _error = null;
+    _notify();
+    try {
+      if (text.trim().length < 5 || text.length > 2800) {
+        throw const FormatException('通知长度不适合智能解析。');
+      }
+      await _revalidate(generation);
+      final json = await _request(generation, '/ai/extract', body: {
+        'message': text,
+        'capturedAt': capturedAt.toUtc().toIso8601String(),
+        'consent': true,
+      });
+      _check(generation);
+      if (json['reviewRequired'] != true || json['items'] is! List) {
+        throw const FormatException('智能解析结果尚未通过结构校验。');
+      }
+      final items = <NoticeCandidate>[];
+      for (final entry in json['items'] as List) {
+        if (entry is! Map) continue;
+        final title = entry['title'];
+        final subject = entry['subject'];
+        final evidence = entry['evidence'];
+        if (title is! String || title.trim().isEmpty || title.length > 140 ||
+            subject is! String || subject.trim().isEmpty ||
+            evidence is! String || evidence.trim().isEmpty) continue;
+        final dueValue = entry['due'];
+        final due = dueValue is String ? DateTime.tryParse(dueValue) : null;
+        items.add(NoticeCandidate(
+          title: title.trim(),
+          subject: subject.trim(),
+          due: due,
+          source: 'AI 语义解析 · 尚未核实',
+          original: evidence,
+          ambiguous: entry['ambiguous'] == true || due == null,
+        ));
+      }
+      return items.take(8).toList(growable: false);
+    } catch (error) {
+      if (_current(generation)) {
+        if (error is _ApiFailure && error.revoked) {
+          await _fail(error);
+        } else {
+          _error = error is FormatException
+              ? error.message : '智能解析暂不可用；已保留本机规则候选。请检查 AI 服务配置或网络。';
+          _notify();
+        }
+      }
+      return null;
+    } finally {
+      if (_current(generation)) {
+        _busy = false;
+        _notify();
+      }
+    }
   }
 
   /// Submit only user-reviewed task fields. No raw notification or sender data.
