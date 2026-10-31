@@ -1,0 +1,45 @@
+name: HAIZ Pocket Lamp Publish Staging
+
+on:
+  push:
+    branches:
+      - feat/pocket-lamp-entry-20261030
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    name: Build and stage Lamp Flutter Web files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Dependencies
+        run: flutter pub get
+        working-directory: app
+      - name: Verify Lamp entry
+        run: flutter test test/lamp_entry_test.dart --reporter expanded
+        working-directory: app
+      - name: Build Flutter Web for isolated Pages path
+        run: flutter build web --release --base-href /lamp-preview/ --no-web-resources-cdn --no-wasm-dry-run
+        working-directory: app
+      - name: Stage complete release in separate branch (not main)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/index.html
+          mkdir -p lamp-preview
+          cp -R app/build/web/. lamp-preview/
+          touch lamp-preview/.nojekyll
+          git switch -c preview/pocket-lamp-staged-20261030
+          git add -f lamp-preview/
+          git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
+          git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
+          echo "Staged release tree under lamp-preview/ on preview/pocket-lamp-staged-20261030"
