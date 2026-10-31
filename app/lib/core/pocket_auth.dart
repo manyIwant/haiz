@@ -51,7 +51,7 @@ Future<SupabaseClient?> initializePocketAuth() async {
   if (!PocketAuthConfig.configured) return null;
   await Supabase.initialize(
     url: PocketAuthConfig.url,
-    anonKey: PocketAuthConfig.publishableKey,
+    publishableKey: PocketAuthConfig.publishableKey,
     authOptions: FlutterAuthClientOptions(
       localStorage:
           kIsWeb ? const EmptyLocalStorage() : _PrivateAuthStorage(),
@@ -160,8 +160,7 @@ class PocketAuthController extends ChangeNotifier {
       await store.openGuest();
       if (client == null || ticket != _epoch) return;
       _subscription = client!.auth.onAuthStateChange.listen((event) {
-        if (event.event == AuthChangeEvent.signedOut ||
-            event.event == AuthChangeEvent.userDeleted) {
+        if (event.event == AuthChangeEvent.signedOut) {
           _lockToGuest('会话已结束，请重新登录。');
         } else if (event.event == AuthChangeEvent.tokenRefreshed &&
             userId != null &&
