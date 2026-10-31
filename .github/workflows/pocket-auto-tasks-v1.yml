@@ -21,6 +21,17 @@ jobs:
         working-directory: services/academic
       - run: npm test
         working-directory: services/academic
+  live-http:
+    name: Synthetic authenticated HTTP contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+        working-directory: services/academic
+      - run: node scripts/qa/run-live.mjs
   flutter:
     name: Flutter all tests
     runs-on: ubuntu-latest
