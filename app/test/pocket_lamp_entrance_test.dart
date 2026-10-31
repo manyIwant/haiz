@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/ui/lamp_entry.dart';
 import 'package:haiz_pocket_flutter/ui/pocket_lamp_entrance.dart';
@@ -6,6 +7,8 @@ import 'package:haiz_pocket_flutter/ui/pocket_lamp_entrance.dart';
 void main() {
   testWidgets('Local fallback entrance stays available on non-mobile platforms',
       (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
     var entered = false;
     await tester.pumpWidget(
       MaterialApp(
