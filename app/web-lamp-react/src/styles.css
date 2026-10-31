@@ -59,7 +59,7 @@ body { -webkit-font-smoothing: antialiased; }
   transform: translate(-50%,-42%);
   background: radial-gradient(ellipse at center, rgba(255,205,117,.25), rgba(255,181,90,.05) 45%, transparent 72%);
   filter: blur(26px); mix-blend-mode: screen;
-  animation: light-ignite 2100ms ease-out both;
+  animation: halo-ignite 2100ms ease-out both;
 }
 
 .login-card {
@@ -128,6 +128,11 @@ body { -webkit-font-smoothing: antialiased; }
   48% { opacity: .83; }
   57% { opacity: .58; }
   100% { opacity: 1; transform: scale(1); }
+}
+@keyframes halo-ignite {
+  0%, 18% { opacity: 0; transform: translate(-50%, -42%) scale(.5); }
+  35% { opacity: .25; }
+  100% { opacity: 1; transform: translate(-50%, -42%) scale(1); }
 }
 @keyframes ray-bloom {
   0%, 22% { opacity: 0; transform: translateX(-50%) scaleX(.38) scaleY(.56); }
