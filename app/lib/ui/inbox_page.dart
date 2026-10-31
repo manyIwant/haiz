@@ -506,7 +506,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               const SizedBox(height: 23),
               const PageTitle(
                 title: '消息可以变成行动。',
-                subtitle: '从聊天分享，或接收指定群通知；核对后成为任务。',
+                subtitle: 'Android 授权后自动收取班群通知；全班作业通过 HAIZ Academic 同步。手动输入仅供应急。',
               ),
               const SizedBox(height: 14),
               if (widget.session?.identity != null &&
@@ -531,10 +531,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('粘贴一段通知'),
+                    const SectionLabel('应急手动导入'),
                     const SizedBox(height: 8),
                     Text(
-                      '从微信、QQ、钉钉、学习通等应用点「分享 → HAIZ」，可直接加入待审阅消息；也能手动粘贴、导入文档。',
+                      '优先使用上方自动收件与班级同步。仅当原应用未产生可见通知、分享入口不可用或需要补录时，才在这里粘贴文字或导入文档。',
                       style: TextStyle(color: p.secondary, fontSize: 12),
                     ),
                     const SizedBox(height: 14),
@@ -723,7 +723,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               ],
               const SizedBox(height: 18),
               Text(
-                '自动候选只读取 Android 系统中获授权的指定群通知；不登录消息平台、不读取历史聊天、不向第三方 AI 上传。',
+                'Android 只处理已授权、可见的通知，不登录微信、不读取聊天历史。AI 识别默认关闭；开启后会将经过基础脱敏的通知内容发送给配置的模型服务，仍可能含有个人信息。',
                 style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5),
               ),
             ],
