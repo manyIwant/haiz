@@ -1,43 +1,88 @@
 @import "tailwindcss";
-:root { color-scheme: dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
-* { box-sizing: border-box; }
-html, body, #root { margin: 0; width: 100%; min-height: 100%; background: #04132f; }
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; min-height: 100%; background: #06142c; }
 body { -webkit-font-smoothing: antialiased; }
-.wall-scene { position: relative; min-height: 100svh; isolation: isolate; overflow: hidden; background: #031431; }
-.wall-photo { position: absolute; inset: 0; z-index: -3; background: url("/lamp-preview/brick-wall.webp") center center / cover no-repeat; }
-.light-bloom {
-  position: absolute; z-index: -2; pointer-events: none; inset: 0;
-  background: radial-gradient(ellipse 25% 26% at 50% 28%, rgba(255, 211, 130, .11), transparent 90%);
+
+.wall-scene {
+  position: relative; min-height: 100svh; isolation: isolate; overflow: hidden;
+  background: #05132c;
+}
+.lighting-stage { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.wall-photo {
+  position: absolute; inset: 0;
+  background: url("/lamp-preview/brick-wall-hd.svg") center center / cover no-repeat;
+  will-change: filter;
+  animation: wall-wake 2100ms cubic-bezier(.19,.8,.25,1) both;
+}
+/* First the filament flickers on, then the warm pool spreads over sharp
+   vector brick relief. This is light projected OVER the wall, not baked into
+   a compressed backdrop image. */
+.wall-illumination {
+  position: absolute; inset: -12% -10%;
+  background:
+    radial-gradient(ellipse 23% 36% at 50% 28%, rgba(255,226,161,.63) 0%, rgba(245,184,97,.28) 33%, rgba(245,161,67,.07) 65%, transparent 100%),
+    radial-gradient(ellipse 36% 44% at 50% 27%, rgba(255,197,92,.17), transparent 74%);
   mix-blend-mode: screen;
-  animation: illuminate 2s cubic-bezier(.2,.7,.2,1) both;
+  animation: light-ignite 2300ms cubic-bezier(.16,1,.3,1) both;
+  transform-origin: 50% 15%;
+}
+.wall-ray {
+  position: absolute; width: min(1040px, 88vw); height: min(780px, 84svh);
+  top: 13.7svh; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(to bottom, rgba(255,207,123,.38), rgba(245,180,84,.12) 46%, transparent 86%);
+  clip-path: polygon(46% 0, 54% 0, 100% 85%, 0 85%);
+  filter: blur(38px); mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 12%, #000 2%, rgba(0,0,0,.5) 52%, transparent 86%);
+  mask-image: radial-gradient(ellipse at 50% 12%, #000 2%, rgba(0,0,0,.5) 52%, transparent 86%);
+  animation: ray-bloom 1950ms cubic-bezier(.16,1,.3,1) 230ms both;
+}
+.light-bloom {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 23% 23% at 50% 16%, rgba(255,236,181,.42), rgba(255,204,116,.12) 55%, transparent 100%);
+  mix-blend-mode: screen;
+  animation: light-ignite 1850ms ease-out both;
 }
 .lamp-highlight {
-  position: absolute; z-index: -2; pointer-events: none;
-  width: min(180px, 13vw); height: 13px; left: 50%; top: 15.1%;
+  position: absolute; left: 50%; top: 12.8svh; width: min(186px, 29vw); height: 24px;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(255,240,196,.25), transparent 70%);
-  filter: blur(12px); animation: glow-in 2s ease-out both;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255,255,228,.98), rgba(255,222,143,.75) 30%, transparent 78%);
+  filter: blur(8px); mix-blend-mode: screen;
+  animation: bulb-ignite 2100ms ease-out both;
 }
+.lamp-halo {
+  position: absolute; left: 50%; top: 12.9svh; width: min(440px, 55vw); height: 130px;
+  transform: translate(-50%,-42%);
+  background: radial-gradient(ellipse at center, rgba(255,205,117,.25), rgba(255,181,90,.05) 45%, transparent 72%);
+  filter: blur(26px); mix-blend-mode: screen;
+  animation: light-ignite 2100ms ease-out both;
+}
+
 .login-card {
-  width: 326px; min-height: 313px; position: absolute;
-  left: 50%; top: 34.8svh; translate: -50% 0;
-  padding: 22px 24px 23px; border: 1px solid rgba(205,202,213,.34); border-radius: 15px;
-  background: linear-gradient(180deg, rgba(122,112,117,.965) 0%, rgba(78,76,97,.965) 48%, rgba(39,56,98,.975) 100%);
-  box-shadow: 0 10px 22px rgba(0,0,0,.09), inset 0 1px 0 rgba(255,255,255,.055);
-  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  color: #fff; 
+  position: absolute; z-index: 2;
+  width: 326px; min-height: 313px; left: 50%; top: 34.8svh;
+  translate: -50% 0; padding: 22px 24px 23px;
+  border: 1px solid rgba(223,220,226,.39); border-radius: 15px;
+  background: linear-gradient(180deg, rgba(128,117,119,.73) 0%, rgba(67,68,93,.79) 54%, rgba(29,44,83,.86) 100%);
+  box-shadow: 0 19px 45px rgba(0,5,17,.21), inset 0 1px 0 rgba(255,255,255,.16);
+  backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  color: #fff;
 }
 .login-card h1 {
   text-align: center; font-size: 22px; line-height: 30px; font-weight: 760;
-  letter-spacing: -.7px; margin: 0 0 20px; color: #fff; 
+  letter-spacing: -.7px; margin: 0 0 20px; color: #fff;
 }
 .account-outlines { display: flex; flex-direction: column; gap: 22px; }
 .input-outline {
   height: 39px; width: 100%; display: flex; align-items: center; justify-content: space-between;
-  border: 1.3px solid rgba(227,232,247,.33); border-radius: 999px;
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.05);
+  border: 1.3px solid rgba(227,232,247,.37); border-radius: 999px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.07);
   color: #fff; font-size: 12px; font-weight: 500; padding: 0 16px;
-  background: rgba(38,43,78,.08);
+  background: rgba(38,43,78,.13);
 }
 .input-outline svg { opacity: .95; }
 .login-options { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0 13px; font-size: 10px; font-weight: 550; }
@@ -53,22 +98,62 @@ body { -webkit-font-smoothing: antialiased; }
 .register { text-align: center; font-size: 10px; font-weight: 450; margin: 17px 0 0; }
 .register strong { font-weight: 750; }
 .access-note {
-  position: absolute; left: 50%; top: calc(34.8svh + 333px);
+  position: absolute; z-index: 2; left: 50%; top: calc(34.8svh + 333px);
   transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px);
-  text-align: center; font-size: 10px; font-weight: 550; color: rgba(225,234,250,.68);
+  text-align: center; font-size: 10px; font-weight: 550; color: rgba(225,234,250,.72);
   letter-spacing: .8px; text-shadow: 0 1px 6px #00122c;
 }
-@keyframes illuminate { from { opacity: 0; } to { opacity: 1; } }
-@keyframes glow-in { from { opacity: 0; filter: blur(28px); } to { opacity: 1; filter: blur(12px); } }
+.replay-light {
+  position: fixed; z-index: 5; right: 18px; bottom: 18px;
+  color: rgba(238,233,218,.68); border: 1px solid rgba(238,233,218,.20); border-radius: 999px;
+  padding: 8px 13px; background: rgba(2,12,30,.39);
+  backdrop-filter: blur(8px); font-size: 11px; cursor: pointer;
+  transition: color .2s, background .2s;
+}
+.replay-light:hover { color: #fff6d9; background: rgba(19,24,36,.77); }
+.replay-light:focus-visible { outline: 2px solid #fff2c8; outline-offset: 3px; }
+
+@keyframes wall-wake {
+  0%, 12% { filter: brightness(.36) saturate(.78); }
+  30% { filter: brightness(.57) saturate(.92); }
+  39% { filter: brightness(.43) saturate(.84); }
+  47% { filter: brightness(.86); }
+  56% { filter: brightness(.73); }
+  100% { filter: brightness(1) saturate(1); }
+}
+@keyframes light-ignite {
+  0%, 19% { opacity: 0; transform: scale(.87); }
+  27% { opacity: .42; }
+  35% { opacity: .13; }
+  48% { opacity: .83; }
+  57% { opacity: .58; }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes ray-bloom {
+  0%, 22% { opacity: 0; transform: translateX(-50%) scaleX(.38) scaleY(.56); }
+  45% { opacity: .55; }
+  100% { opacity: .8; transform: translateX(-50%) scale(1); }
+}
+@keyframes bulb-ignite {
+  0%, 16% { opacity: 0; }
+  23% { opacity: 1; }
+  28% { opacity: .13; }
+  33% { opacity: .85; }
+  39% { opacity: .25; }
+  52%, 100% { opacity: 1; }
+}
 @media (max-width: 600px) {
   .login-card { width: min(326px,calc(100vw - 36px)); top: 35svh; }
   .access-note { top: calc(35svh + 335px); font-size: 9px; line-height: 1.6; }
   .wall-photo { background-position: center center; }
+  .lamp-highlight { top: 12.4svh; width: 140px; }
+  .wall-ray { top: 13.2svh; width: 95vw; }
+  .replay-light { right: 12px; bottom: 12px; }
 }
 @media (max-height: 660px) {
   .login-card { top: max(168px, 30svh); }
   .access-note { top: calc(max(168px, 30svh) + 335px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
