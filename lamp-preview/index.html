@@ -1,15 +1,280 @@
 <!doctype html>
-<html lang="zh-CN" class="dark">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#020617" />
-  <meta name="description" content="HAIZ Pocket — 进入本机校园空间。" />
-  <title>HAIZ Pocket · Lamp</title>
-  <script type="module" crossorigin src="/lamp-preview/assets/index-CBRgT2GJ.js"></script>
-  <link rel="stylesheet" crossorigin href="/lamp-preview/assets/index-G505-1aw.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#07162b"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
+<title>HAIZ Pocket · 登录</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;font-synthesis:none}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#051329}body{color:#fff;-webkit-font-smoothing:antialiased}
+.scene{position:relative;min-height:100svh;isolation:isolate;overflow:hidden;display:grid;place-items:center;padding:48px 20px}
+.wall{position:absolute;inset:0;z-index:-4;background:#071a34 url("/lamp-preview/wall-photo.webp") center / cover no-repeat;filter:brightness(.69) saturate(.9);animation:wall-awake 2200ms cubic-bezier(.2,.8,.18,1) both}
+.illumination{position:absolute;inset:-15%;z-index:-3;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse 25% 33% at 50% 26%,rgba(255,211,139,.31) 0%,rgba(238,158,67,.14) 44%,transparent 80%);animation:ignite 2450ms cubic-bezier(.2,.8,.25,1) both}
+.lens{position:absolute;top:14%;left:50%;width:min(250px,26vw);height:24px;transform:translateX(-50%);z-index:-2;pointer-events:none;filter:blur(19px);background:radial-gradient(ellipse,rgba(255,245,196,.5),transparent 77%);animation:bulb 1800ms ease-out both}
+.haze{position:absolute;left:50%;top:15%;width:min(780px,70vw);height:55vh;transform:translateX(-50%);z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(255,204,108,.2),rgba(248,183,90,.07) 40%,transparent 78%);filter:blur(25px);animation:ignite 2400ms ease-out both}
+.panel{position:relative;width:min(430px,calc(100vw - 38px));max-width:100%;border:1px solid rgba(246,236,216,.36);border-radius:17px; padding:31px 31px 25px; margin-top:7%;background:linear-gradient(165deg,rgba(111,94,94,.84),rgba(57,54,66,.93) 55%,rgba(31,41,71,.92));backdrop-filter:blur(30px) saturate(1.1);-webkit-backdrop-filter:blur(30px) saturate(1.1);box-shadow:0 26px 80px rgba(0,9,27,.34), inset 0 1px rgba(255,255,255,.16);animation:panel-in 900ms cubic-bezier(.16,1,.3,1) 850ms both;overflow:hidden}
+.panel::before{content:"";position:absolute;inset:-50% -80%;background:linear-gradient(95deg,transparent 45%,rgba(255,231,181,.2),transparent 59%);transform:translateX(-100%) rotate(14deg);pointer-events:none;animation:surface-sheen 1300ms cubic-bezier(.25,.7,.25,1) 1400ms both}
+.brand{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;font-size:10px;font-weight:650;letter-spacing:.22em;color:#e5cda7;opacity:.95}
+.brand i{display:block;width:12px;height:12px;border:1px solid #e6c88b;transform:rotate(45deg);border-radius:3px;opacity:.85}
+h1{text-align:center;margin:0 0 28px;font-size:30px;line-height:1.2;font-weight:670;letter-spacing:-.5px}
+label.field-label{display:block;font-size:11px;color:#f6e7d2;letter-spacing:.02em;margin:0 0 8px;font-weight:550}
+.field{height:49px;display:flex;align-items:center;border:1px solid rgba(237,231,225,.37);border-radius:14px;background:rgba(32,33,51,.24);transition:background .2s,border .2s,box-shadow .2s;overflow:hidden;margin-bottom:19px}
+.field:focus-within{border-color:rgba(255,219,152,.93);background:rgba(26,28,47,.38);box-shadow:0 0 0 3px rgba(255,203,126,.12), 0 0 32px rgba(242,179,84,.12)}
+.field input{appearance:none;flex:1;width:100%;height:100%;outline:0;background:transparent;border:0;color:#fff;font-size:14px;padding:0 14px;min-width:0}
+.field input::placeholder{color:rgba(255,255,255,.54)}
+.field .right{display:grid;place-items:center;background:transparent;color:#f4e8dd;border:0;min-width:45px;height:100%;padding:0;cursor:pointer;opacity:.85}.field .right:focus-visible{outline:2px solid #ffdfa0;outline-offset:-3px}.field svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:1px 0 23px;font-size:11px;color:#fff}.remember{display:flex;align-items:center;gap:7px;cursor:pointer}.remember input{width:14px;height:14px;accent-color:#f6d498;margin:0}.reset{border:0;background:transparent;color:rgba(255,255,255,.89);font-size:11px;cursor:pointer;padding:4px 0}.reset:hover{text-decoration:underline}.reset:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.action{position:relative;display:flex;justify-content:center;align-items:center;width:100%;height:48px;border:0;background:linear-gradient(180deg,#fffdfa,#f2f1f0);color:#252126;font-size:14px;font-weight:730;border-radius:99px;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s;overflow:hidden}
+.action:hover{transform:translateY(-1px);box-shadow:0 9px 22px rgba(255,219,150,.18)}.action:focus-visible{outline:3px solid #ffdaa0;outline-offset:4px}.action:disabled{cursor:progress;opacity:.82;transform:none}.action .busy{width:18px;height:18px;border:2px solid rgba(24,24,24,.2);border-top-color:#29252a;border-radius:50%;animation:spin .75s linear infinite}
+.status{min-height:0;margin:0;font-size:12px;line-height:1.55;color:#fff2d0;text-align:center;opacity:0;max-height:0;transition:opacity .3s,max-height .3s,margin .3s;overflow:hidden}.status.visible{opacity:1;max-height:110px;margin:14px 0 0}.status.error{color:#ffe2ce}
+.bottom{text-align:center;font-size:11px;color:#e8d9cf;margin:22px 0 0}.bottom a{color:#fff;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.48);font-weight:680}
+.foot{position:fixed;left:16px;bottom:14px;color:rgba(230,231,246,.71);font-size:10px;letter-spacing:.09em;text-shadow:0 1px 6px #051124}.replay{position:fixed;right:13px;bottom:13px;z-index:4;border:1px solid rgba(255,235,202,.3);border-radius:100px;padding:8px 12px;background:rgba(10,20,38,.4);backdrop-filter:blur(10px);color:#fbecd7;font-size:11px;cursor:pointer}
+.panel.shake{animation:shake .45s ease}.scene.success .illumination{transition:opacity .65s;opacity:1}.scene.success .panel{animation:success-out .9s cubic-bezier(.4,0,.2,1) both}
+@keyframes wall-awake{0%,12%{filter:brightness(.30) saturate(.9)}30%{filter:brightness(.48)}38%{filter:brightness(.33)}55%{filter:brightness(.66)}100%{filter:brightness(.82) saturate(1)}}
+@keyframes ignite{0%,15%{opacity:0}23%{opacity:.8}29%{opacity:.18}42%{opacity:.96}50%{opacity:.68}100%{opacity:1}}
+@keyframes bulb{0%,15%{opacity:0}23%{opacity:1}29%{opacity:.1}44%{opacity:1}100%{opacity:1}}
+@keyframes panel-in{0%{opacity:0;transform:translateY(25px) scale(.97);filter:blur(10px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes surface-sheen{0%{transform:translateX(-100%) rotate(14deg)}100%{transform:translateX(110%) rotate(14deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}45%{transform:translateX(5px)}68%{transform:translateX(-3px)}85%{transform:translateX(2px)}}
+@keyframes success-out{to{opacity:0;transform:translateY(-13px) scale(1.02);filter:blur(9px)}}
+@media(max-width:620px){.scene{align-items:center;padding:70px 5px 65px}.wall{background-position:center}.panel{margin-top:10%;width:min(430px,calc(100vw - 12px));padding:26px 23px 24px}.brand{margin-bottom:12px}h1{font-size:27px;margin-bottom:25px}.foot{display:none}.replay{bottom:8px;right:8px}.illumination{background:radial-gradient(ellipse 75% 29% at 50% 22%,rgba(255,211,139,.38),transparent 75%)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ── Lamp states: tied to actual input activity and authentication lifecycle ── */
+.scene { --warmth:.05; --bulb:.18; --surface:.35; --edge:rgba(255,207,139,.30); }
+.wall {
+  animation:none!important;
+  filter:brightness(.30) saturate(.80) contrast(1.04);
+  transition:filter 1100ms cubic-bezier(.18,.7,.26,1),transform 1700ms ease;
+}
+.illumination,.lens,.haze {animation:none!important;transition:opacity 950ms cubic-bezier(.18,.7,.2,1),filter 1100ms ease,transform 1100ms ease;}
+.illumination{opacity:var(--warmth)!important;}
+.lens{opacity:var(--bulb)!important;}
+.haze{opacity:var(--warmth)!important;}
+.scene::after {
+  content:"";position:absolute;pointer-events:none;z-index:-2;inset:0;
+  background:radial-gradient(ellipse 36% 35% at 50% 18%,rgba(255,244,201,.27),rgba(246,177,70,.17) 48%,transparent 78%);
+  mix-blend-mode:screen;opacity:var(--warmth);
+  transition:opacity 1200ms cubic-bezier(.16,1,.3,1);
+}
+/* A subtle localized reflection of the lamp on the frosted glass. */
+.panel { animation:panel-in 950ms cubic-bezier(.16,1,.3,1) 80ms both;transition:border-color 350ms,background 700ms,box-shadow 700ms;}
+.panel::before{animation:none;opacity:0;transition:opacity 350ms,transform 1400ms ease;}
+.field { position:relative; }
+.field::after{content:"";position:absolute;bottom:0;left:18px;right:18px;height:1px;
+  transform:scaleX(0);transform-origin:center;
+  background:linear-gradient(90deg,transparent,#ffe0a0,transparent);opacity:.85;
+  transition:transform 360ms cubic-bezier(.16,1,.3,1);pointer-events:none;}
+.field:focus-within::after{transform:scaleX(1);}
+.field:focus-within .right{color:#ffdc9d;opacity:1;}
+.field:has(input:not(:placeholder-shown)){border-color:rgba(251,230,194,.55);}
+.scene[data-phase="username"] {--warmth:.30;--bulb:.40;}
+.scene[data-phase="password"] {--warmth:.48;--bulb:.53;}
+.scene[data-phase="ready"] {--warmth:.56;--bulb:.60;}
+.scene[data-phase="checking"] {--warmth:.60;--bulb:.78;}
+.scene[data-phase="error"] {--warmth:.19;--bulb:.27;}
+.scene[data-phase="success"] {--warmth:1;--bulb:1;}
+.scene[data-phase="username"] .wall{filter:brightness(.44) saturate(.89) contrast(1.04);}
+.scene[data-phase="password"] .wall{filter:brightness(.51) saturate(.95) contrast(1.04);}
+.scene[data-phase="ready"] .wall{filter:brightness(.58) saturate(1.01) contrast(1.03);}
+.scene[data-phase="checking"] .wall{filter:brightness(.61) saturate(1.04) contrast(1.03);}
+.scene[data-phase="error"] .wall{filter:brightness(.34) saturate(.80);}
+.scene[data-phase="success"] .wall {filter:brightness(1) saturate(1.06) contrast(1.02);transform:scale(1.018);transition:filter 1500ms cubic-bezier(.16,1,.3,1),transform 1800ms ease;}
+.scene[data-phase="success"] .lens{filter:blur(26px) brightness(1.5);}
+.scene[data-phase="success"] .panel{border-color:rgba(255,231,188,.70);box-shadow:0 28px 85px rgba(0,7,20,.35),0 0 95px rgba(255,200,123,.16),inset 0 1px 0 rgba(255,244,218,.22);background:linear-gradient(160deg,rgba(144,113,94,.77),rgba(58,53,63,.89) 53%,rgba(29,41,69,.90));}
+.scene[data-phase="checking"] .lens {animation:verify-lamp 1950ms ease-in-out infinite!important;}
+.scene[data-phase="checking"] .action {box-shadow:0 0 0 1px rgba(255,226,171,.35),0 0 33px rgba(255,207,142,.13);}
+.scene[data-phase="error"] .field:focus-within {border-color:rgba(255,185,149,.68);box-shadow:0 0 0 2px rgba(255,145,110,.11);}
+.scene[data-phase="success"] .panel::before{opacity:1;transform:translateX(110%) rotate(14deg);}
+/* Preserve the card during the light reveal: it should remain a usable interface. */
+.scene.success .panel{animation:panel-in 950ms cubic-bezier(.16,1,.3,1) 80ms both!important;}
+.auth-progress{height:2px;max-width:100%;overflow:hidden;opacity:0;transform:translateY(2px);transition:opacity .3s;margin-top:4px;border-radius:3px;background:rgba(255,230,184,.08)}
+.auth-progress span{display:block;height:100%;width:39%;border-radius:3px;background:linear-gradient(90deg,transparent,#ffe7ba,#f5c778);transform:translateX(-110%)}
+.scene[data-phase="checking"] .auth-progress {opacity:1}
+.scene[data-phase="checking"] .auth-progress span{animation:verify-track 1700ms cubic-bezier(.56,.3,.36,.9) infinite}
+.scene[data-phase="success"] .auth-progress{opacity:1;background:rgba(255,226,173,.20)}
+.scene[data-phase="success"] .auth-progress span{animation:none;transform:translateX(0);width:100%;background:#ffe3a6;transition:width 500ms ease}
+.preview-tools{position:fixed;z-index:5;bottom:14px;right:14px;display:flex;gap:8px;align-items:center}
+.preview-tools button{position:static;cursor:pointer;border:1px solid rgba(255,233,201,.29);border-radius:100px;backdrop-filter:blur(12px);color:#f9ead5;background:rgba(12,20,34,.57);padding:9px 12px;font-size:11px;transition:background .25s,border-color .25s}
+.preview-tools button:hover{background:rgba(36,39,48,.84);border-color:rgba(255,233,201,.64)}
+.preview-tools button:focus-visible{outline:2px solid #ffe9b4;outline-offset:3px}
+.scene[data-phase="success"] .preview-tools button:first-child{opacity:.67}
+@keyframes verify-lamp{0%,100%{opacity:.53;filter:blur(19px) brightness(.92)}50%{opacity:.97;filter:blur(23px) brightness(1.22)}}
+@keyframes verify-track{0%{transform:translateX(-120%)}100%{transform:translateX(270%)}}
+@media(max-width:620px){.preview-tools{right:9px;bottom:9px;gap:5px}.preview-tools button{font-size:10px;padding:8px 9px}}
+@media(prefers-reduced-motion:reduce){.wall,.illumination,.lens,.haze,.panel,.scene::after{transition:none!important}.scene[data-phase="checking"] .lens,.scene[data-phase="checking"] .auth-progress span{animation:none!important}.scene[data-phase="checking"] .auth-progress span{transform:translateX(0);width:100%}}
+
+
+/* Deliberately distinct from the real-account experience. No credential is
+   trusted, persisted or sent to a server in this demo path. */
+.demo-account-caption {
+  position: fixed; z-index: 5; left: 18px; bottom: 14px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 7px 13px;
+  max-width: min(620px, calc(100vw - 260px));
+  border: 1px solid rgba(246,215,159,.23); border-radius: 14px;
+  background: rgba(5,15,31,.70); backdrop-filter: blur(14px);
+  padding: 11px 13px; font-size: 11px; color: #eedac0;
+  box-shadow: 0 8px 28px rgba(0,8,22,.18);
+}
+.demo-pill { font-size: 9px; letter-spacing: .13em; color: #f5d193; font-weight: 750; }
+.demo-account-caption code { font: 600 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff4de; }
+.demo-account-caption small { color: #c5ad8e; font-size: 10px; width: 100%; }
+@media(max-width:850px) {
+  .demo-account-caption { left: 10px; bottom: 48px; max-width: calc(100vw - 20px); right: 10px; font-size: 10px; gap: 5px 9px; padding: 8px 11px; }
+  .demo-account-caption small { font-size: 9px; }
+}
+@media(max-width:450px) {
+  .demo-account-caption { bottom: 48px; }
+  .demo-account-caption code { font-size: 10px; }
+}
+
+
+.service-notice{font-size:10px;line-height:1.6;text-align:center;color:#e2cfae;margin:12px 0 0;opacity:.93}.service-notice a{color:#ffe9be;text-underline-offset:3px}
+</style>
 </head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
+<body><main class="scene" id="scene" data-phase="idle"><div class="wall" aria-hidden="true"></div><div class="illumination" aria-hidden="true"></div><div class="lens" aria-hidden="true"></div><div class="haze" aria-hidden="true"></div>
+<section class="panel" id="panel" aria-labelledby="login-title">
+<div class="brand"><i aria-hidden="true"></i> HAIZ · POCKET</div><h1 id="login-title">登录</h1>
+<form id="login-form" novalidate>
+<label class="field-label" for="username">账号</label><div class="field"><input type="text" name="username" id="username" placeholder="用户名或邮箱" autocomplete="username" maxlength="254" required aria-required="true" /><span class="right" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M4.5 20c.5-4.1 3.4-6.1 7.5-6.1s7 2 7.5 6.1"/></svg></span></div>
+<label class="field-label" for="password">密码</label><div class="field"><input type="password" name="password" id="password" placeholder="输入你的密码" autocomplete="current-password" required aria-required="true" minlength="1" /><button class="right" id="toggle-password" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.8-6 9.5-6 9.5 6 9.5 6-3.8 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>
+<div class="meta"><label class="remember"><input type="checkbox" id="remember" /> 记住我</label><button type="button" class="reset" id="forgot">忘记密码？</button></div>
+<button class="action" type="submit" id="submit"><span id="submit-text">登 录</span></button>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+<div class="auth-progress" id="auth-progress" aria-hidden="true"><span></span></div>
+<p class="bottom">还没有可用账号？ <a id="guest-link" href="/lamp-preview/app/?fromLamp=1">进入本机访客空间</a></p><p class="service-notice">正式账号服务尚未上线，密码登录暂不可用。测试灯光请访问 <a href="/lamp-preview/demo/">演示页面</a>。</p>
+</form>
+</section><div class="foot">HAIZ · POCKET · SECURE SIGN-IN</div>
+</div></main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const scene = $('scene'), panel = $('panel'), form = $('login-form');
+  const username = $('username'), password = $('password');
+  const login = $('submit'), loginText = $('submit-text'), status = $('status');
+  const motionOff = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let submitting = false, authenticated = false, preview = false, errorLatched = false;
+  let redirection = null;
+  const guestURL = $('guest-link').href;
+
+  function phase(value) { scene.dataset.phase = value; }
+  function message(content, type='info') {
+    status.textContent = content;
+    status.className = 'status visible ' + type;
+  }
+  function clearMessage() { status.textContent = ''; status.className = 'status'; }
+  function updateFocusState() {
+    if (authenticated || preview || submitting || errorLatched) return;
+    const focus = document.activeElement;
+    if (focus === password) phase('password');
+    else if (focus === username) phase('username');
+    else if (username.value.trim() && password.value) phase('ready');
+    else if (username.value.trim()) phase('username');
+    else phase('idle');
+  }
+  function deny(content) {
+    errorLatched = true; phase('error'); message(content, 'error');
+    if (!motionOff) {
+      panel.classList.remove('shake');
+      void panel.offsetWidth;
+      panel.classList.add('shake');
+    }
+  }
+  username.addEventListener('focus', updateFocusState);
+  password.addEventListener('focus', updateFocusState);
+  username.addEventListener('input', () => { errorLatched = false; clearMessage(); updateFocusState(); });
+  password.addEventListener('input', () => { errorLatched = false; clearMessage(); updateFocusState(); });
+  username.addEventListener('blur', () => requestAnimationFrame(updateFocusState));
+  password.addEventListener('blur', () => requestAnimationFrame(updateFocusState));
+
+  $('toggle-password').addEventListener('click', () => {
+    const show = password.type === 'password';
+    password.type = show ? 'text' : 'password';
+    $('toggle-password').setAttribute('aria-pressed', String(show));
+    $('toggle-password').setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+    password.focus({ preventScroll: true });
+  });
+  $('forgot').addEventListener('click', () => message('找回密码需接入 HAIZ 的正式身份服务，目前尚未开放。'));
+
+  function resetLight() {
+    if (redirection) clearTimeout(redirection);
+    authenticated = false; preview = false; errorLatched = false;
+    submitting = false; login.disabled = false; loginText.textContent = '登 录';
+    scene.classList.remove('success'); panel.classList.remove('shake');
+    clearMessage(); phase('idle');
+    document.activeElement?.blur?.();
+    // Deliberately do not clear typed input, but never persist the password.
+    if (username.value.trim() || password.value) updateFocusState();
+  }
+  $('replay').addEventListener('click', resetLight);
+
+  function illuminate({ demo = false, guest = false } = {}) {
+    if (!demo && !guest && !authenticated) return;
+    preview = demo; phase('success');
+    scene.classList.add('success');
+    login.disabled = demo || guest;
+    loginText.textContent = demo ? '动效预览完成' : guest ? '正在进入本机空间' : '验证成功';
+    message(demo ? '成功点灯动画预览 · 未建立登录会话。' : guest ? '已选择本机访客模式，正在进入…' : '身份已验证，正在进入 HAIZ Pocket。');
+    if (!demo) redirection = setTimeout(() => window.location.assign(guestURL), motionOff ? 150 : 1450);
+  }
+  $('guest-link').addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    if (submitting) return;
+    illuminate({ guest: true });
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (submitting) return;
+    const account = username.value.trim(), secret = password.value;
+    if (!account) { deny('请输入账号。'); username.focus(); return; }
+    if (!secret) { deny('请输入密码。'); password.focus(); return; }
+    // This deliberately *untrusted* identity is exclusively for UI acceptance
+    // testing. It cannot authenticate users or unlock real personal data.
+    // For any non-demo identity, only the first-party domain may attempt real
+    // server authentication. Downloaded previews NEVER send real passwords.
+    if (location.origin !== 'https://haiz.space') {
+      deny('这是独立预览：只支持上方的演示账户，请不要输入真实密码。');
+      return;
+    }
+    preview = false; errorLatched = false; submitting = true; phase('checking');
+    login.disabled = true;
+    loginText.innerHTML = '<span class="busy" aria-label="正在验证"></span>';
+    message('正在安全验证身份…');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      // Login and session must both be verified by a real server; never compare secrets in JavaScript.
+      const resp = await fetch('/api/auth/login', {
+        method:'POST', credentials:'include', cache:'no-store',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ username:account, password:secret, remember:$('remember').checked }),
+        signal:controller.signal
+      });
+      if (!resp.ok) {
+        deny(resp.status === 404 ? '账号认证服务尚未上线，无法使用密码登录。'
+          : resp.status === 401 ? '账号或密码不正确，请检查后重试。'
+          : resp.status === 429 ? '尝试过于频繁，请稍后重试。'
+          : '认证暂未完成，请稍后重试。');
+        return;
+      }
+      const body = await resp.json().catch(() => null);
+      if (body?.authenticated !== true) { deny('未获得有效的身份认证结果。'); return; }
+      const sessionResp = await fetch('/api/auth/session', {
+        credentials:'include', cache:'no-store', signal:controller.signal
+      });
+      const session = sessionResp.ok ? await sessionResp.json().catch(() => null) : null;
+      if (session?.authenticated !== true) { deny('会话验证未通过，请重新登录。'); return; }
+      authenticated = true;
+      illuminate();
+    } catch (err) {
+      deny(err?.name === 'AbortError' ? '验证超时，请检查网络后重试。' : '无法连接账号认证服务，仍可进入本机访客空间。');
+    } finally {
+      clearTimeout(timer);
+      submitting = false;
+      if (!authenticated) { login.disabled = false; loginText.textContent = '登 录'; }
+    }
+  });
+})();
+</script></body></html>
