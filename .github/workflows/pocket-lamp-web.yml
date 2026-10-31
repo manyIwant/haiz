@@ -1,0 +1,49 @@
+name: HAIZ Pocket Lamp Web Preview
+
+on:
+  push:
+    branches:
+      - feat/pocket-lamp-entry-20261030
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/pocket-lamp-web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Flutter Web release & entrance test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Fetch Flutter dependencies
+        run: flutter pub get
+        working-directory: app
+      - name: Run native Lamp widget tests
+        run: flutter test test/lamp_entry_test.dart --reporter expanded
+        working-directory: app
+      - name: Compile production Flutter Web (same target directory as existing preview)
+        run: flutter build web --release --base-href /app-preview/ --no-web-resources-cdn --no-wasm-dry-run
+        working-directory: app
+      - name: Validate web output
+        run: |
+          test -s app/build/web/index.html
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/flutter_bootstrap.js
+          echo "Built Flutter Web from PR commit: $GITHUB_SHA"
+          sha256sum app/build/web/main.dart.js
+      - name: Upload real Flutter Web release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-lamp-flutter-web
+          path: app/build/web/
+          if-no-files-found: error
+          retention-days: 30
