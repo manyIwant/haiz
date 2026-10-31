@@ -1,0 +1,95 @@
+name: HAIZ Pocket Lamp Publish Staging
+
+on:
+  push:
+    branches:
+      - feat/pocket-lamp-entry-20261030
+  workflow_dispatch:
+
+concurrency:
+  group: pocket-lamp-stage-preview
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    name: Build production HAIZ Login with original photo and Flutter workspace
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Dependencies
+        run: flutter pub get
+        working-directory: app
+      - name: Analyze native Lamp WebView bridge
+        run: flutter analyze lib/ui/pocket_lamp_entrance.dart
+        working-directory: app
+      - name: Verify Lamp entry and local fallback
+        run: flutter test test/lamp_entry_test.dart test/pocket_lamp_entrance_test.dart --reporter expanded
+        working-directory: app
+      - name: Build Flutter Web for isolated Pages path
+        run: flutter build web --release --base-href /lamp-preview/app/ --no-web-resources-cdn --no-wasm-dry-run
+        working-directory: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate separated production/demo login scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('app/web-lamp-react')
+          prod = (root / 'login-production.html').read_text()
+          demo = (root / 'login-demo.html').read_text()
+          assert (root / 'public/wall-photo.webp').stat().st_size > 100_000
+          assert 'DEMO_PASSWORD' not in prod and 'Lamp2026!' not in prod
+          assert '/api/auth/session' in prod and '/api/auth/login' in prod
+          assert 'DEMO_ACCOUNT' in demo and '/api/auth/login' not in demo
+          for label, content in [('prod',prod), ('demo',demo)]:
+            m = re.search(r'<script>(.*?)</script>',content,re.S)
+            assert m, label + ' script missing'
+            Path('/tmp/' + label + '-login.js').write_text(m.group(1))
+          PY
+          node --check /tmp/prod-login.js
+          node --check /tmp/demo-login.js
+      - name: Stage complete release in separate branch (not main)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/index.html
+          mkdir -p "$RUNNER_TEMP/lamp-login" "$RUNNER_TEMP/lamp-flutter-dist"
+          cp app/web-lamp-react/login-production.html "$RUNNER_TEMP/lamp-login/index.html"
+          cp app/web-lamp-react/login-demo.html "$RUNNER_TEMP/lamp-login/demo.html"
+          cp app/web-lamp-react/public/wall-photo.webp "$RUNNER_TEMP/lamp-login/wall-photo.webp"
+          cp -R app/build/web/. "$RUNNER_TEMP/lamp-flutter-dist/"
+          test -s "$RUNNER_TEMP/lamp-login/index.html"
+          test -s "$RUNNER_TEMP/lamp-login/wall-photo.webp"
+          test -s "$RUNNER_TEMP/lamp-flutter-dist/main.dart.js"
+          git fetch origin preview/pocket-lamp-staged-20261030
+          git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
+          rm -rf lamp-preview
+          mkdir -p lamp-preview/app lamp-preview/demo login
+          cp -R "$RUNNER_TEMP/lamp-flutter-dist/." lamp-preview/app/
+          cp "$RUNNER_TEMP/lamp-login/index.html" lamp-preview/index.html
+          cp "$RUNNER_TEMP/lamp-login/demo.html" lamp-preview/demo/index.html
+          cp "$RUNNER_TEMP/lamp-login/wall-photo.webp" lamp-preview/wall-photo.webp
+          cp "$RUNNER_TEMP/lamp-login/index.html" login/index.html
+          touch lamp-preview/.nojekyll
+          test -s lamp-preview/app/main.dart.js
+          test -s lamp-preview/index.html
+          test -s lamp-preview/demo/index.html
+          test -s lamp-preview/wall-photo.webp
+          test -s login/index.html
+          git add -f lamp-preview/ login/
+          git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
+          git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
+          echo "Staged release tree under lamp-preview/ on preview/pocket-lamp-staged-20261030"
