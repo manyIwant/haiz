@@ -181,7 +181,9 @@ class PocketStore extends ChangeNotifier {
       // Preserve queued legacy/guest writes in their original captured scope.
       // Only cloud writes need invalidation when the verified user changes.
       if (remoteWrite != null &&
-          (_disposed || ticket != generation || namespace != scope)) return;
+          (_disposed || ticket != generation || namespace != scope)) {
+        return;
+      }
       try {
         if (remoteWrite case final save?) {
           await save(raw);
