@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "fetch:lamp": "node scripts/fetch-lamp.mjs",
-    "build": "npm run fetch:lamp && vite build",
+    "build": "vite build",
     "dev": "npm run fetch:lamp && vite --host 0.0.0.0"
   },
   "dependencies": {
