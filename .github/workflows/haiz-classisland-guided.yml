@@ -1,9 +1,10 @@
-name: HAIZ ClassIsland guided setup QA
+name: HAIZ ClassIsland automation-only QA
 
 on:
   push:
     branches:
       - feat/classisland-guided-setup-20261030
+      - feat/classisland-automation-only-20261030
   pull_request:
     paths:
       - "integrations/classisland/**"
@@ -26,6 +27,17 @@ jobs:
         run: dotnet build integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj --configuration Release -p:CreateCipx=false --nologo
       - name: Run pure timetable and connection tests
         run: dotnet run --project integrations/classisland/HAIZ.ClassroomPlugin.Tests/HAIZ.ClassroomPlugin.Tests.csproj --configuration Release
+      - name: Verify zero top-bar widget registration
+        shell: pwsh
+        run: |
+          $plugin = Get-Content "integrations/classisland/HAIZ.ClassroomPlugin/Plugin.cs" -Raw
+          $project = Get-Content "integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj" -Raw
+          if ($plugin -match 'AddComponent<') { throw "Unexpected top-bar component registration" }
+          if ($project -notmatch 'Compile Remove="HomeworkComponent.cs"') { throw "Old component must be excluded from the automation-only assembly" }
+          $binary = "integrations/classisland/HAIZ.ClassroomPlugin/bin/Release/net8.0/HAIZ.ClassroomPlugin.dll"
+          $content = [System.IO.File]::ReadAllBytes($binary)
+          $utf8 = [System.Text.Encoding]::UTF8.GetString($content)
+          if ($utf8.Contains("HomeworkComponent")) { throw "Legacy widget type still compiled" }
       - name: Package Windows preview, verify required metadata
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -36,19 +48,19 @@ jobs:
             if (!(Test-Path (Join-Path $output $file))) { throw "Missing plugin package file: $file" }
           }
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          Compress-Archive -Path ($required | ForEach-Object { Join-Path $output $_ }) -DestinationPath "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.zip" -Force
-          Rename-Item "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.zip" "HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx"
-          $entryNames = (tar -tf "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx")
+          Compress-Archive -Path ($required | ForEach-Object { Join-Path $output $_ }) -DestinationPath "artifacts/HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.zip" -Force
+          Rename-Item "artifacts/HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.zip" "HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.cipx"
+          $entryNames = (tar -tf "artifacts/HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.cipx")
           foreach ($file in $required) {
             if ($entryNames -notcontains $file) { throw "Package entry missing: $file" }
           }
-          (Get-FileHash "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx" -Algorithm SHA256).Hash | Out-File "artifacts/SHA256.txt"
+          (Get-FileHash "artifacts/HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.cipx" -Algorithm SHA256).Hash | Out-File "artifacts/SHA256.txt"
       - name: Upload tested Windows CIPX
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: haiz-classisland-guided-preview-windows
+          name: haiz-classisland-autoevening-preview-windows
           path: |
-            artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx
+            artifacts/HAIZ-ClassIsland-AutoEvening-v0.4.0-preview.cipx
             artifacts/SHA256.txt
           if-no-files-found: error
