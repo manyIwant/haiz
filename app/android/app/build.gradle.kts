@@ -6,6 +6,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Debug builds (including CI smoke tests) must not need the private release key.
+// Release builds still require the user-owned signing settings.
+val releaseSigningPropertiesFile = file(System.getProperty("user.home") + "/.config/haiz-android/signing.properties")
+
 android {
     namespace = "space.haiz.haiz_pocket_flutter"
     compileSdk = flutter.compileSdkVersion
@@ -32,23 +36,28 @@ android {
     }
 
     signingConfigs {
-        create("haizPreviewRelease") {
-            val propertiesFile = file(System.getProperty("user.home") + "/.config/haiz-android/signing.properties")
-            require(propertiesFile.exists()) { "Missing local HAIZ preview signing key settings." }
-            val props = Properties()
-            propertiesFile.inputStream().use { props.load(it) }
-            storeFile = file(props.getProperty("storeFile"))
-            storePassword = props.getProperty("storePassword")
-            keyAlias = props.getProperty("keyAlias")
-            keyPassword = props.getProperty("keyPassword")
+        if (releaseSigningPropertiesFile.exists()) {
+            create("haizPreviewRelease") {
+                val props = Properties()
+                releaseSigningPropertiesFile.inputStream().use { props.load(it) }
+                storeFile = file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
         }
     }
 
     buildTypes {
         release {
-            // Release signing uses a private local keystore.
-            // `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("haizPreviewRelease")
+            // Never silently fall back to a debug key for production builds.
+            if (releaseSigningPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("haizPreviewRelease")
+            } else if (gradle.startParameter.taskNames.any {
+                it.contains("release", ignoreCase = true)
+            }) {
+                throw GradleException("Missing local HAIZ preview signing key settings.")
+            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
