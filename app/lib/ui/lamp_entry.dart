@@ -41,7 +41,7 @@ class _LampEntryState extends State<LampEntry>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF030E18),
+      backgroundColor: const Color(0xFF0A0908),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -68,9 +68,9 @@ class _LampEntryState extends State<LampEntry>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFF051725),
-                            Color(0xFF06131F),
-                            Color(0xFF030E18),
+                            Color(0xFF120F0B),
+                            Color(0xFF100D09),
+                            Color(0xFF0A0908),
                           ],
                         ),
                       ),
@@ -122,7 +122,7 @@ class _LampEntryState extends State<LampEntry>
                                                 'HAIZ',
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: Color(0xFFF0FDFF),
+                                                  color: Color(0xFFFFFAF1),
                                                   fontSize: 48,
                                                   fontWeight: FontWeight.w300,
                                                   letterSpacing: 12,
@@ -134,7 +134,7 @@ class _LampEntryState extends State<LampEntry>
                                                 'P O C K E T   /   C A M P U S',
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: Color(0xFF9EBCC6),
+                                                  color: Color(0xFFC5B494),
                                                   fontSize: 10,
                                                   letterSpacing: 1,
                                                 ),
@@ -162,12 +162,12 @@ class _LampEntryState extends State<LampEntry>
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          Color(0xE01B3443),
-                                          Color(0xE00C1E2C),
+                                          Color(0xE0272119),
+                                          Color(0xE015130F),
                                         ],
                                       ),
                                       border: Border.all(
-                                        color: const Color(0x446DA9B7),
+                                        color: const Color(0x447D6545),
                                         width: 1,
                                       ),
                                       borderRadius: BorderRadius.circular(26),
@@ -181,7 +181,7 @@ class _LampEntryState extends State<LampEntry>
                                           child: Text(
                                             'HAIZ  /  本机空间',
                                             style: TextStyle(
-                                              color: Color(0xFF90CED6),
+                                              color: Color(0xFFDDBA7B),
                                               fontSize: 10,
                                               letterSpacing: 2,
                                             ),
@@ -191,7 +191,7 @@ class _LampEntryState extends State<LampEntry>
                                         const Text(
                                           '欢迎回来',
                                           style: TextStyle(
-                                            color: Color(0xFFF0FAFC),
+                                            color: Color(0xFFFFF7E8),
                                             fontSize: 26,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -200,7 +200,7 @@ class _LampEntryState extends State<LampEntry>
                                         const Text(
                                           '你的课表、待办与校园空间，\n从这里开始。',
                                           style: TextStyle(
-                                            color: Color(0xFFB4CAD2),
+                                            color: Color(0xFFD0C1AA),
                                             fontSize: 14,
                                             height: 1.65,
                                           ),
@@ -211,9 +211,9 @@ class _LampEntryState extends State<LampEntry>
                                           onPressed: widget.onEnter,
                                           style: FilledButton.styleFrom(
                                             backgroundColor:
-                                                const Color(0xFFC4F0ED),
+                                                const Color(0xFFF4D28F),
                                             foregroundColor:
-                                                const Color(0xFF082630),
+                                                const Color(0xFF342619),
                                             minimumSize:
                                                 const Size.fromHeight(54),
                                             shape: RoundedRectangleBorder(
@@ -234,7 +234,7 @@ class _LampEntryState extends State<LampEntry>
                                           '仅打开此设备的访客数据 · 无账号验证或云端同步',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            color: Color(0xFF95B5BE),
+                                            color: Color(0xFFB4A28A),
                                             fontSize: 11,
                                             height: 1.5,
                                           ),
@@ -251,7 +251,7 @@ class _LampEntryState extends State<LampEntry>
                                   'A QUIETER WAY TO STAY CONNECTED',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: Color(0xFF6F98A6),
+                                    color: Color(0xFF9C8164),
                                     fontSize: 9,
                                     letterSpacing: 1.5,
                                   ),
@@ -273,7 +273,7 @@ class _LampEntryState extends State<LampEntry>
   }
 }
 
-/// Soft, masked conic-gradient beams based on the geometry of Aceternity
+/// Warm amber offline fallback: soft, masked conic-gradient beams based on Aceternity
 /// Lamp. Unlike triangular spotlight polygons, the angular and vertical edges
 /// fade continuously to transparent, so the light has no visible cut lines.
 /// The painter runs only during the finite entrance animation.
@@ -302,9 +302,9 @@ class _LampPainter extends CustomPainter {
           Offset(cx, sourceY - h * .025),
           math.max(w * .56, h * .60),
           [
-            const Color(0xAA268FA5).withValues(alpha: .25 * p),
-            const Color(0x5547ADC5).withValues(alpha: .09 * p),
-            const Color(0x002D7E9B),
+            const Color(0xAAC8974A).withValues(alpha: .25 * p),
+            const Color(0x558E6535).withValues(alpha: .09 * p),
+            const Color(0x00805B33),
           ],
           const [0.0, .35, 1.0],
         ),
@@ -319,8 +319,8 @@ class _LampPainter extends CustomPainter {
       final a0 = left ? -math.pi : -math.pi / 2;
       final a1 = left ? -math.pi / 2 : 0.0;
       final tint = left
-          ? const Color(0xFF34BBDD)
-          : const Color(0xFF4FD5D5);
+          ? const Color(0xFFE2B36B)
+          : const Color(0xFFF2CA81);
 
       canvas.saveLayer(beamArea, Paint());
       canvas.drawRect(
@@ -390,7 +390,7 @@ class _LampPainter extends CustomPainter {
             [
               tint.withValues(alpha: 0),
               tint.withValues(alpha: .08 * p),
-              const Color(0xFFB4FFFF).withValues(alpha: .28 * p),
+              const Color(0xFFFFF3C8).withValues(alpha: .28 * p),
               tint.withValues(alpha: .09 * p),
               tint.withValues(alpha: 0),
             ],
@@ -448,9 +448,9 @@ class _LampPainter extends CustomPainter {
             halo.center,
             width * .50,
             [
-              const Color(0xFF80FFFF).withValues(alpha: alpha * p),
-              const Color(0xFF44BCD1).withValues(alpha: alpha * .42 * p),
-              const Color(0x0044BCD1),
+              const Color(0xFFFFDA94).withValues(alpha: alpha * p),
+              const Color(0xFFE1B16D).withValues(alpha: alpha * .42 * p),
+              const Color(0x00E1B16D),
             ],
             const [0, .50, 1],
           ),
@@ -465,9 +465,9 @@ class _LampPainter extends CustomPainter {
       leftEnd,
       rightEnd,
       [
-        const Color(0x003CE6EE),
-        const Color(0xFFB8FFFF).withValues(alpha: .85 * p),
-        const Color(0x003CE6EE),
+        const Color(0x00F4D08C),
+        const Color(0xFFFFE2A2).withValues(alpha: .85 * p),
+        const Color(0x00F4D08C),
       ],
       const [0, .5, 1],
     );
