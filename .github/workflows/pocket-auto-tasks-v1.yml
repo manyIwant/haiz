@@ -75,6 +75,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Isolate the QA install from the existing signed HAIZ preview; never require uninstalling it.
+          sed -i 's/applicationId = "space.haiz.app.preview"/applicationId = "space.haiz.app.qa"/' android/app/build.gradle.kts
+          grep -q 'applicationId = "space.haiz.app.qa"' android/app/build.gradle.kts
           qa_home=$(mktemp -d)
           trap 'rm -rf "$qa_home"' EXIT
           mkdir -p "$qa_home/.config/haiz-android"
