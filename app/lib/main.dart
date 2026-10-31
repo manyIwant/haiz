@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'domain/message_intake_bridge.dart';
 
 import 'package:pdfrx/pdfrx.dart';
 
 import 'core/pocket_store.dart';
+import 'core/pocket_auth.dart';
 import 'core/academic_session.dart';
 import 'ui/kit.dart';
 import 'ui/pocket_lamp_entrance.dart';
+import 'ui/pocket_account_sheet.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
 import 'ui/schedule_page.dart';
@@ -18,14 +21,22 @@ import 'ui/inbox_page.dart';
 import 'ui/ticker_lab_page.dart';
 import 'ui/academic_page.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   pdfrxFlutterInitialize();
-  runApp(const HaizPocketApp());
+  SupabaseClient? cloud;
+  try {
+    cloud = await initializePocketAuth();
+  } catch (error) {
+    // A configuration/network failure must not destroy offline guest mode.
+    debugPrint('Pocket identity initialization unavailable: ${error.runtimeType}');
+  }
+  runApp(HaizPocketApp(cloudClient: cloud));
 }
 
 class HaizPocketApp extends StatefulWidget {
-  const HaizPocketApp({super.key});
+  const HaizPocketApp({super.key, this.cloudClient});
+  final SupabaseClient? cloudClient;
   @override
   State<HaizPocketApp> createState() => _HaizPocketAppState();
 }
@@ -33,6 +44,8 @@ class HaizPocketApp extends StatefulWidget {
 class _HaizPocketAppState extends State<HaizPocketApp> {
   late final PocketStore store = PocketStore();
   late final AcademicSession session = AcademicSession(store);
+  late final PocketAuthController pocketAuth =
+      PocketAuthController(store, widget.cloudClient);
   int tab = 0;
   // Web Lamp gateway already displayed the entrance. Open the actual
   // device-local Flutter workspace directly after explicit CTA navigation.
@@ -52,8 +65,8 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
         }
       }
     });
-    store
-        .load()
+    pocketAuth
+        .start()
         .then((_) async {
           // A cold share launch inserts the item before Flutter is initialized.
           // Open Inbox only when an explicit share just arrived, not for any
@@ -77,6 +90,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   @override
   void dispose() {
     MessageIntakeBridge.channel.setMethodCallHandler(null);
+    pocketAuth.dispose();
     session.dispose();
     store.dispose();
     super.dispose();
@@ -85,7 +99,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([store, session]),
+      animation: Listenable.merge([store, session, pocketAuth]),
       builder: (context, _) {
         final p = PocketPalette.forName(store.appearance);
         return MaterialApp(
@@ -102,9 +116,30 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
           home: Builder(
             builder: (context) {
               final reduce = MediaQuery.of(context).disableAnimations;
-              if (!_entered) {
-                return PocketLampEntrance(
-                  onEnter: () => setState(() => _entered = true),
+              if (pocketAuth.loading) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (!_entered && !pocketAuth.authenticated) {
+                return Stack(
+                  children: [
+                    PocketLampEntrance(
+                      onEnter: () => setState(() => _entered = true),
+                    ),
+                    Positioned(
+                      right: 20,
+                      top: 40,
+                      child: SafeArea(
+                        child: FilledButton.tonalIcon(
+                          key: const Key('pocket-account-entry'),
+                          onPressed: () => _openAccountLogin(context),
+                          icon: const Icon(Icons.person_outline),
+                          label: const Text('账号登录'),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               }
               return Scaffold(
@@ -138,27 +173,27 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                     ),
                                 child: switch (tab) {
                                   0 => TodayPage(
-                                    key: const ValueKey('today'),
+                                    key: ValueKey('today-${store.namespace}'),
                                     store: store,
                                     onNavigate: _switchTab,
                                   ),
                                   1 => SchedulePage(
-                                    key: const ValueKey('schedule'),
+                                    key: ValueKey('schedule-${store.namespace}'),
                                     store: store,
                                   ),
                                   2 => InboxPage(
-                                    key: const ValueKey('inbox'),
+                                    key: ValueKey('inbox-${store.namespace}'),
                                     store: store,
                                     onSaved: () => _switchTab(0),
                                   ),
                                   3 => FocusPage(
-                                    key: const ValueKey('focus'),
+                                    key: ValueKey('focus-${store.namespace}'),
                                     store: store,
                                   ),
                                   _ =>
                                     showAcademic
                                         ? AcademicPage(
-                                            key: const ValueKey('academic'),
+                                            key: ValueKey('academic-${store.namespace}'),
                                             store: store,
                                             session: session,
                                             onBack: () => setState(
@@ -167,23 +202,57 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                           )
                                         : showLab
                                         ? TickerLabPage(
-                                            key: const ValueKey('lab'),
+                                            key: ValueKey('lab-${store.namespace}'),
                                             store: store,
                                             onBack: () =>
                                                 setState(() => showLab = false),
                                           )
                                         : CampusPage(
-                                            key: const ValueKey('campus'),
+                                            key: ValueKey('campus-${store.namespace}'),
                                             store: store,
                                             onOpenLab: () =>
                                                 setState(() => showLab = true),
-                                            onOpenAcademic: () => setState(
-                                              () => showAcademic = true,
-                                            ),
+                                            onOpenAcademic: () {
+                                              if (pocketAuth.authenticated) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('独立的教务账号暂不与 Pocket 云端账号混用，请先退出 Pocket 账号。'),
+                                                  ),
+                                                );
+                                              } else {
+                                                setState(() => showAcademic = true);
+                                              }
+                                            },
                                           ),
                                 },
                               ),
                       ),
+                      if (store.ready)
+                        Positioned(
+                          right: 12,
+                          top: 8,
+                          child: SafeArea(
+                            child: Material(
+                              color: p.card,
+                              borderRadius: BorderRadius.circular(24),
+                              child: IconButton(
+                                key: const Key('account-switch'),
+                                tooltip: pocketAuth.authenticated
+                                    ? '账号与退出登录'
+                                    : '账号登录',
+                                icon: Icon(
+                                  pocketAuth.authenticated
+                                      ? Icons.verified_user_outlined
+                                      : Icons.person_outline_rounded,
+                                  color: p.accent,
+                                ),
+                                onPressed: () => pocketAuth.authenticated
+                                    ? _confirmLogout(context)
+                                    : _openAccountLogin(context),
+                              ),
+                            ),
+                          ),
+                        ),
                       if (store.ready && store.storageError != null)
                         Positioned(
                           left: 16,
@@ -220,6 +289,54 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
         );
       },
     );
+  }
+
+  Future<void> _openAccountLogin(BuildContext context) async {
+    // The existing AcademicSession and Pocket identity are different products.
+    // Never let a legacy academic namespace overwrite the new RLS namespace.
+    if (session.userId != null) {
+      await session.logout();
+    }
+    if (!mounted || !context.mounted) return;
+    await showPocketAccountSheet(
+      context,
+      pocketAuth,
+      () {
+        if (mounted) {
+          setState(() {
+            _entered = true;
+            tab = 0;
+            showAcademic = false;
+            showLab = false;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('退出 Pocket 账号？'),
+        content: const Text('账号数据将立即锁定。本机访客空间会保持独立。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('退出登录')),
+        ],
+      ),
+    );
+    if (yes == true) {
+      await pocketAuth.signOut();
+      if (mounted) setState(() {
+        _entered = false;
+        tab = 0;
+        showLab = false;
+        showAcademic = false;
+      });
+    }
   }
 
   void _switchTab(int index) {
