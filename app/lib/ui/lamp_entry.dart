@@ -40,7 +40,6 @@ class _LampEntryState extends State<LampEntry>
 
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.of(context).disableAnimations;
     return Scaffold(
       backgroundColor: const Color(0xFF030E18),
       body: SafeArea(
@@ -265,9 +264,10 @@ class _LampEntryState extends State<LampEntry>
   }
 }
 
-/// Two tapered, animated cones converge into a bright cyan light bar.
-/// All layers are drawn with simple gradients: no image downloads, backdrop
-/// filters, third-party shaders or continuous frame timers.
+/// Soft, masked conic-gradient beams based on the geometry of Aceternity
+/// Lamp. Unlike triangular spotlight polygons, the angular and vertical edges
+/// fade continuously to transparent, so the light has no visible cut lines.
+/// The painter runs only during the finite entrance animation.
 class _LampPainter extends CustomPainter {
   const _LampPainter({required this.progress});
 
@@ -275,136 +275,184 @@ class _LampPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress <= 0 || size.isEmpty) return;
+    if (size.isEmpty || progress <= 0) return;
 
     final w = size.width;
     final h = size.height;
     final cx = w / 2;
     final sourceY = h * .46;
-    final topY = h * .035;
-    final p = progress;
-    final extent = w * (.11 + .39 * p);
-    final beamOpacity = p;
+    final p = progress.clamp(0.0, 1.0);
+    final origin = Offset(cx, sourceY);
 
-    // Atmosphere: a cool, soft oval underneath the point of convergence.
+    // The soft pool of color behind the emitter, rather than a flat tint.
     final atmosphere = Rect.fromCenter(
-      center: Offset(cx, sourceY + h * .025),
-      width: w * 1.22,
-      height: h * .62,
+      center: Offset(cx, sourceY - h * .025),
+      width: w * 1.30,
+      height: h * .74,
     );
-    canvas.drawRect(
+    canvas.drawOval(
       atmosphere,
       Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(0, -.08),
-          radius: .72,
-          colors: [
-            Color(0x995AD8E6),
-            Color(0x5547AFCC),
-            Color(0x124B9CAA),
-            Color(0x004B9CAA),
+        ..shader = ui.Gradient.radial(
+          Offset(cx, sourceY - h * .025),
+          math.max(w * .65, h * .36),
+          [
+            const Color(0xAA268FA5).withValues(alpha: .36 * p),
+            const Color(0x5547ADC5).withValues(alpha: .18 * p),
+            const Color(0x002D7E9B),
           ],
-          stops: [0, .19, .52, 1],
-        ).createShader(atmosphere)
-        ..colorFilter = ColorFilter.mode(
-          Colors.white.withValues(alpha: beamOpacity),
-          BlendMode.modulate,
+          const [0.0, .42, 1.0],
         ),
     );
 
+    final beamArea = Rect.fromLTRB(0, 0, w, sourceY + 2);
+
+    // Aceternity uses mirrored conic gradients around a central emitter.
+    // Sweep shaders reproduce those infinitely smooth angular falloffs.
+    // A second vertical alpha mask prevents a straight, polygonal top edge.
     for (final left in [true, false]) {
-      final sign = left ? -1.0 : 1.0;
-      final tipX = cx + sign * w * .035;
-      final farX = cx + sign * extent;
-      final nearX = cx + sign * (extent * .39);
-      final softPath = Path()
-        ..moveTo(tipX, sourceY + 4)
-        ..lineTo(farX, topY)
-        ..lineTo(nearX, topY)
-        ..lineTo(cx, sourceY - 2)
-        ..close();
-      final color = left
-          ? const Color(0xAA4FC9E7)
-          : const Color(0xA65DD7D6);
-      canvas.drawPath(
-        softPath,
-        Paint()
-          ..shader = ui.Gradient.linear(
-            Offset(cx, sourceY),
-            Offset(farX, topY),
-            [
-              color.withValues(alpha: .69 * p),
-              color.withValues(alpha: .43 * p),
-              color.withValues(alpha: 0),
-            ],
-            const [0, .42, 1],
-          ),
-      );
+      final a0 = left ? -math.pi : -math.pi / 2;
+      final a1 = left ? -math.pi / 2 : 0.0;
+      final tint = left
+          ? const Color(0xFF34BBDD)
+          : const Color(0xFF4FD5D5);
 
-      // More concentrated inner cones form the recognizable lamp geometry.
-      final innerPath = Path()
-        ..moveTo(cx, sourceY + 1.5)
-        ..lineTo(cx + sign * extent * .78, topY + h * .05)
-        ..lineTo(cx + sign * extent * .52, topY + h * .05)
-        ..lineTo(cx + sign * w * .016, sourceY - 1)
-        ..close();
-      canvas.drawPath(
-        innerPath,
+      canvas.saveLayer(beamArea, Paint());
+      canvas.drawRect(
+        beamArea,
         Paint()
-          ..shader = ui.Gradient.linear(
-            Offset(cx, sourceY),
-            Offset(cx + sign * extent * .78, topY),
+          ..shader = ui.Gradient.sweep(
+            origin,
             [
-              const Color(0xB7B7FFFF).withValues(alpha: .66 * p),
-              const Color(0x8856E9E9).withValues(alpha: .42 * p),
-              const Color(0x0065DFEC),
+              tint.withValues(alpha: 0),
+              tint.withValues(alpha: .10 * p),
+              tint.withValues(alpha: .40 * p),
+              tint.withValues(alpha: .28 * p),
+              tint.withValues(alpha: 0),
             ],
-            const [0, .48, 1],
+            const [0, .17, .46, .70, 1],
+            TileMode.clamp,
+            a0,
+            a1,
           ),
       );
+      // The vertical fade deliberately removes the screenshot's harsh upper
+      // beam edges. It also keeps the cyan from filling the whole hero.
+      canvas.drawRect(
+        beamArea,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = ui.Gradient.linear(
+            Offset(cx, 0),
+            Offset(cx, sourceY),
+            const [
+              Color(0x00FFFFFF),
+              Color(0x19FFFFFF),
+              Color(0x8AFFFFFF),
+              Color(0xFFFFFFFF),
+            ],
+            const [0, .24, .67, 1],
+          ),
+      );
+      canvas.restore();
+
+      // Close-in glow is slightly brighter but still feathered on both sides.
+      // No Path.lineTo triangles or opaque geometric strips are used.
+      canvas.saveLayer(beamArea, Paint());
+      canvas.drawRect(
+        beamArea,
+        Paint()
+          ..shader = ui.Gradient.sweep(
+            origin,
+            [
+              tint.withValues(alpha: 0),
+              tint.withValues(alpha: .08 * p),
+              const Color(0xFFB4FFFF).withValues(alpha: .28 * p),
+              tint.withValues(alpha: .09 * p),
+              tint.withValues(alpha: 0),
+            ],
+            const [0, .26, .52, .76, 1],
+            TileMode.clamp,
+            left ? -math.pi * .87 : -math.pi * .41,
+            left ? -math.pi * .60 : -math.pi * .13,
+          ),
+      );
+      canvas.drawRect(
+        beamArea,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = ui.Gradient.linear(
+            Offset(cx, 0),
+            Offset(cx, sourceY),
+            const [Color(0x00FFFFFF), Color(0x55FFFFFF), Color(0xFFFFFFFF)],
+            const [0, .55, 1],
+          ),
+      );
+      canvas.restore();
     }
 
-    // Concentrated horizontal emitter: wide halo + sharp 2px light bar.
-    for (final (thickness, opacity) in [
-      (29.0, .08),
-      (15.0, .18),
-      (6.0, .42),
-      (2.0, .94),
+    // Three restrained, blurred ellipses form the lamp's luminous bloom.
+    for (final (width, height, alpha) in [
+      (w * .84, h * .23, .15),
+      (w * .48, h * .13, .25),
+      (w * .23, h * .08, .32),
     ]) {
-      final halfLength = w * (.075 + .36 * p);
-      canvas.drawLine(
-        Offset(cx - halfLength, sourceY),
-        Offset(cx + halfLength, sourceY),
+      final halo = Rect.fromCenter(
+        center: Offset(cx, sourceY + h * .007),
+        width: width,
+        height: height,
+      );
+      canvas.drawOval(
+        halo,
         Paint()
-          ..strokeWidth = thickness
-          ..shader = ui.Gradient.linear(
-            Offset(cx - halfLength, sourceY),
-            Offset(cx + halfLength, sourceY),
+          ..shader = ui.Gradient.radial(
+            halo.center,
+            width * .50,
             [
-              const Color(0x0091EFF4),
-              const Color(0xFFB8FFFF).withValues(alpha: opacity * p),
-              const Color(0x0091EFF4),
+              const Color(0xFF80FFFF).withValues(alpha: alpha * p),
+              const Color(0xFF44BCD1).withValues(alpha: alpha * .42 * p),
+              const Color(0x0044BCD1),
             ],
-            const [0.0, 0.5, 1.0],
+            const [0, .50, 1],
           ),
       );
     }
-    final core = Rect.fromCenter(
-      center: Offset(cx, sourceY),
-      width: math.min(w * .42, 210),
-      height: h * .20,
+
+    // A horizontally spreading emitter anchors the whole effect.
+    final halfWidth = w * (.075 + .36 * p);
+    final leftEnd = Offset(cx - halfWidth, sourceY);
+    final rightEnd = Offset(cx + halfWidth, sourceY);
+    final lightShader = ui.Gradient.linear(
+      leftEnd,
+      rightEnd,
+      [
+        const Color(0x003CE6EE),
+        const Color(0xFFB8FFFF).withValues(alpha: .85 * p),
+        const Color(0x003CE6EE),
+      ],
+      const [0, .5, 1],
     );
-    canvas.drawOval(
-      core,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            const Color(0xCCCEFFFF).withValues(alpha: .4 * p),
-            const Color(0x4452DAE7).withValues(alpha: .20 * p),
-            const Color(0x0052DAE7),
-          ],
-        ).createShader(core),
-    );
+    for (final (thickness, blur, alpha) in [
+      (18.0, 17.0, .25),
+      (7.0, 6.0, .55),
+      (1.7, 0.0, .90),
+    ]) {
+      canvas.drawLine(
+        leftEnd,
+        rightEnd,
+        Paint()
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = thickness
+          ..shader = lightShader
+          ..colorFilter = ColorFilter.mode(
+            Colors.white.withValues(alpha: alpha),
+            BlendMode.modulate,
+          )
+          ..maskFilter = blur > 0
+              ? ui.MaskFilter.blur(ui.BlurStyle.normal, blur)
+              : null,
+      );
+    }
   }
 
   @override
