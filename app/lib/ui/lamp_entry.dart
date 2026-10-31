@@ -75,6 +75,21 @@ class _LampEntryState extends State<LampEntry>
                         ),
                       ),
                     ),
+                    // Light spans the viewport, not the 500px reading column.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: heroHeight + 4,
+                      child: IgnorePointer(
+                        child: RepaintBoundary(
+                          child: CustomPaint(
+                            key: const Key('lamp-converging-beams'),
+                            painter: _LampPainter(progress: beam),
+                          ),
+                        ),
+                      ),
+                    ),
                     SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
                         20,
@@ -93,12 +108,6 @@ class _LampEntryState extends State<LampEntry>
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    RepaintBoundary(
-                                      child: CustomPaint(
-                                        key: const Key('lamp-converging-beams'),
-                                        painter: _LampPainter(progress: beam),
-                                      ),
-                                    ),
                                     Positioned(
                                       top: heroHeight * .59,
                                       left: 0,
@@ -285,23 +294,19 @@ class _LampPainter extends CustomPainter {
     final origin = Offset(cx, sourceY);
 
     // The soft pool of color behind the emitter, rather than a flat tint.
-    final atmosphere = Rect.fromCenter(
-      center: Offset(cx, sourceY - h * .025),
-      width: w * 1.30,
-      height: h * .74,
-    );
-    canvas.drawOval(
-      atmosphere,
+    final wholeHero = Rect.fromLTWH(0, 0, w, h);
+    canvas.drawRect(
+      wholeHero,
       Paint()
         ..shader = ui.Gradient.radial(
           Offset(cx, sourceY - h * .025),
-          math.max(w * .65, h * .36),
+          math.max(w * .56, h * .60),
           [
-            const Color(0xAA268FA5).withValues(alpha: .36 * p),
-            const Color(0x5547ADC5).withValues(alpha: .18 * p),
+            const Color(0xAA268FA5).withValues(alpha: .25 * p),
+            const Color(0x5547ADC5).withValues(alpha: .09 * p),
             const Color(0x002D7E9B),
           ],
-          const [0.0, .42, 1.0],
+          const [0.0, .35, 1.0],
         ),
     );
 
@@ -354,6 +359,24 @@ class _LampPainter extends CustomPainter {
             const [0, .24, .67, 1],
           ),
       );
+      // Fade the beam horizontally as well, so no rectangular boundary
+      // is ever visible at a device's viewport edge.
+      canvas.drawRect(
+        beamArea,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = ui.Gradient.linear(
+            Offset(0, sourceY),
+            Offset(w, sourceY),
+            const [
+              Color(0x00FFFFFF),
+              Color(0xFFFFFFFF),
+              Color(0xFFFFFFFF),
+              Color(0x00FFFFFF),
+            ],
+            const [0, .16, .84, 1],
+          ),
+      );
       canvas.restore();
 
       // Close-in glow is slightly brighter but still feathered on both sides.
@@ -388,6 +411,22 @@ class _LampPainter extends CustomPainter {
             const [0, .55, 1],
           ),
       );
+      canvas.drawRect(
+        beamArea,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = ui.Gradient.linear(
+            Offset(0, sourceY),
+            Offset(w, sourceY),
+            const [
+              Color(0x00FFFFFF),
+              Color(0xFFFFFFFF),
+              Color(0xFFFFFFFF),
+              Color(0x00FFFFFF),
+            ],
+            const [0, .16, .84, 1],
+          ),
+      );
       canvas.restore();
     }
 
@@ -402,8 +441,8 @@ class _LampPainter extends CustomPainter {
         width: width,
         height: height,
       );
-      canvas.drawOval(
-        halo,
+      canvas.drawRect(
+        wholeHero,
         Paint()
           ..shader = ui.Gradient.radial(
             halo.center,
