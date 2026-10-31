@@ -1,0 +1,46 @@
+name: HAIZ Pocket Lamp Android Smoke
+
+on:
+  push:
+    branches:
+      - feat/pocket-lamp-entry-20261030
+    paths:
+      - 'app/**'
+      - '.github/workflows/pocket-lamp-android-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Fetch dependencies
+        run: flutter pub get
+        working-directory: app
+      - name: Analyze Lamp bridge
+        run: flutter analyze lib/ui/pocket_lamp_entrance.dart
+        working-directory: app
+      - name: Compile Android debug APK
+        run: flutter build apk --debug
+        working-directory: app
+      - name: Check artifact
+        run: test -s app/build/app/outputs/flutter-apk/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-lamp-android-debug
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
