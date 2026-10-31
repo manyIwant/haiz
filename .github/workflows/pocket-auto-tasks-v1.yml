@@ -31,6 +31,12 @@ jobs:
           node-version: '24'
       - run: npm ci --ignore-scripts
         working-directory: services/academic
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
       - run: node scripts/qa/run-live.mjs
   flutter:
     name: Flutter all tests
