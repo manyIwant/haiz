@@ -8,7 +8,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'core/pocket_store.dart';
 import 'core/academic_session.dart';
 import 'ui/kit.dart';
-import 'ui/lamp_entry.dart';
+import 'ui/pocket_lamp_entrance.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
 import 'ui/schedule_page.dart';
@@ -103,7 +103,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
             builder: (context) {
               final reduce = MediaQuery.of(context).disableAnimations;
               if (!_entered) {
-                return LampEntry(
+                return PocketLampEntrance(
                   onEnter: () => setState(() => _entered = true),
                 );
               }
