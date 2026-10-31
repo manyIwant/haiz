@@ -281,7 +281,7 @@ class _LampPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
     final sourceY = h * .46;
-    final p = progress.clamp(0.0, 1.0);
+    final p = progress;
     final origin = Offset(cx, sourceY);
 
     // The soft pool of color behind the emitter, rather than a flat tint.
