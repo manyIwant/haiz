@@ -66,10 +66,12 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     // Native notification/share queues are shared across the whole device;
     // never expose them as a particular signed-in user's private inbox.
     if (widget.store.isCloudAccount) {
-      if (mounted) setState(() {
-        _incoming = const [];
-        _monitor = null;
-      });
+      if (mounted) {
+        setState(() {
+          _incoming = const [];
+          _monitor = null;
+        });
+      }
       return;
     }
     if (!MessageIntakeBridge.available) return;
