@@ -2,24 +2,26 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif; }
-html, body, #root { margin: 0; min-height: 100%; width: 100%; background: #020617; }
+html, body, #root { margin: 0; min-height: 100%; width: 100%; background: #090908; }
 * { box-sizing: border-box; }
 body { -webkit-font-smoothing: antialiased; }
-.entry-shell { position: relative; isolation: isolate; min-height: 100svh; background: #020617; overflow: hidden; }
-.entry-shell > .original-lamp { position: absolute; inset: 0; pointer-events: none; }
+/* The upstream Lamp keeps its conic geometry and animation. Only its cyan tokens are
+   themed to warm amber at build time; the surrounding typography follows the palette. */
+.entry-shell { position: relative; isolation: isolate; min-height: 100svh; background: #090908; overflow: hidden; }
+.entry-shell > .original-lamp { position: absolute; inset: 0; pointer-events: none; background-color: #090908 !important; }
 .entry-overlay { position: relative; z-index: 80; display: flex; flex-direction: column; align-items: center; min-height: 100svh; padding: clamp(310px, 40vh, 410px) 24px 40px; pointer-events: none; }
 .identity { text-align: center; }
-.identity h1 { color: #f0fbff; font-size: clamp(43px, 5vw, 58px); font-weight: 300; letter-spacing: .24em; padding-left: .24em; margin: 0; line-height: 1.12; }
-.identity p { color: #94b8c3; font-size: 10px; letter-spacing: .23em; margin: 17px 0 0; }
-.login-panel { pointer-events: auto; margin-top: 46px; width: min(100%, 440px); padding: 28px 28px 22px; border-radius: 23px; border: 1px solid rgb(130 195 208 / .22); background: linear-gradient(145deg, rgb(15 34 49 / .89), rgb(4 17 31 / .93)); box-shadow: 0 36px 95px rgb(0 0 0 / .28); backdrop-filter: blur(16px); }
-.login-panel .eyebrow { margin: 0 0 19px; color: #91c9d1; font-size: 10px; letter-spacing: .19em; }
-.login-panel h2 { margin: 0 0 11px; color: #f5fbfe; font-size: 25px; font-weight: 500; }
-.login-panel .desc { color: #acc5d0; font-size: 14px; line-height: 1.8; margin: 0; }
-.login-panel .enter { display: flex; align-items: center; justify-content: center; min-height: 53px; margin: 25px 0 0; background: #b8edef; color: #0a2735; border-radius: 13px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background .18s ease, transform .18s ease; }
-.login-panel .enter:hover { background: #defcff; transform: translateY(-2px); }
+.identity h1 { color: #fff8ed; font-size: clamp(43px, 5vw, 58px); font-weight: 300; letter-spacing: .24em; padding-left: .24em; margin: 0; line-height: 1.12; }
+.identity p { color: #c5b394; font-size: 10px; letter-spacing: .23em; margin: 17px 0 0; }
+.login-panel { pointer-events: auto; margin-top: 46px; width: min(100%, 440px); padding: 28px 28px 22px; border-radius: 23px; border: 1px solid rgb(241 196 119 / .24); background: linear-gradient(145deg, rgb(36 29 22 / .87), rgb(14 14 14 / .94)); box-shadow: 0 36px 95px rgb(0 0 0 / .34), inset 0 1px 0 rgb(255 233 185 / .055); backdrop-filter: blur(16px); }
+.login-panel .eyebrow { margin: 0 0 19px; color: #dfbe87; font-size: 10px; letter-spacing: .19em; }
+.login-panel h2 { margin: 0 0 11px; color: #fff9ef; font-size: 25px; font-weight: 500; }
+.login-panel .desc { color: #d4c7b4; font-size: 14px; line-height: 1.8; margin: 0; }
+.login-panel .enter { display: flex; align-items: center; justify-content: center; min-height: 53px; margin: 25px 0 0; background: #f3d18f; color: #322315; border-radius: 13px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background .18s ease, transform .18s ease; }
+.login-panel .enter:hover { background: #ffe5ad; transform: translateY(-2px); }
 .login-panel .enter:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
-.login-panel .privacy { margin: 15px 0 0; text-align: center; font-size: 11px; line-height: 1.6; color: #93b0ba; }
-.footer { margin: 27px 0 0; color: #7196a4; font-size: 9px; letter-spacing: .17em; text-align: center; }
+.login-panel .privacy { margin: 15px 0 0; text-align: center; font-size: 11px; line-height: 1.6; color: #bbaa91; }
+.footer { margin: 27px 0 0; color: #ac9270; font-size: 9px; letter-spacing: .17em; text-align: center; }
 @media (max-width: 600px) {
   .entry-overlay { padding: clamp(256px, 35vh, 340px) 20px 36px; }
   .identity h1 { font-size: 45px; }
