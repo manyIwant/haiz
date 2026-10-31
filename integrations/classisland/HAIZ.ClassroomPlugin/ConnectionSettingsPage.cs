@@ -35,7 +35,7 @@ public sealed class ConnectionSettingsPage : SettingsPageBase
     };
     private readonly CheckBox _auto = new()
     {
-        Content = "晚修自动投放（仅当天课表最后两节自习）",
+        Content = "按最后两节自习自动打开独立作业看板",
         IsEnabled = false
     };
     private readonly Button _import = new() { Content = "验证并连接", MinWidth = 130 };
@@ -100,13 +100,13 @@ public sealed class ConnectionSettingsPage : SettingsPageBase
         var study = new StackPanel { Spacing = 10 };
         study.Children.Add(new TextBlock
         {
-            Text = "03 · 晚修投放",
+            Text = "03 · 自动晚修投放",
             FontWeight = FontWeight.SemiBold, FontSize = 18
         });
         study.Children.Add(_auto);
         study.Children.Add(new TextBlock
         {
-            Text = "默认关闭。启用后只在 ClassIsland 检测到当天最后两节有效自习课时显示；老师可以随时关闭本节的看板。正式教室使用前须完成 Windows 真机测试。",
+            Text = "不必添加任何顶部课表组件。默认关闭；启用后仅在当天最后两节自习期间展示独立窗口，离开自习时段自动收起，老师可关闭本节看板。正式使用须完成 Windows 真机验收。",
             TextWrapping = TextWrapping.Wrap, Foreground = Brush.Parse("#58727E")
         });
         study.Children.Add(_disconnect);
@@ -256,7 +256,7 @@ public sealed class ConnectionSettingsPage : SettingsPageBase
             DisplaySettingsStore.Save(config);
             _status.Text = enabled
                 ? "已启用晚修自动展示。请在教师授权的测试课表中验证。"
-                : "晚修自动展示已关闭，普通作业组件仍可使用。";
+                : "晚修自动展示已关闭，不占用课表栏。";
         }
         catch
         {
