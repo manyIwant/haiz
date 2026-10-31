@@ -17,6 +17,8 @@ class PocketStore extends ChangeNotifier {
   bool ready = false;
   int generation = 0;
   String? namespace;
+  Future<void> Function(String json)? _remoteWrite;
+  bool get isCloudAccount => namespace?.startsWith('haiz/cloud/v1/') ?? false;
   String? storageError;
   bool legacyArchiveAvailable = false;
   bool _legacyImported = false;
@@ -41,6 +43,8 @@ class PocketStore extends ChangeNotifier {
   void lock() {
     generation++;
     namespace = null;
+    _remoteWrite = null;
+    legacyArchiveAvailable = false;
     ready = false;
     _ticker?.cancel();
     _focusEndsAt = null;
@@ -87,6 +91,38 @@ class PocketStore extends ChangeNotifier {
     lock();
     final ticket = generation;
     return _open(ticket, () async => accountNamespace(origin, identity));
+  }
+
+  /// Signed-in data lives on a per-user RLS-protected server, not in
+  /// SharedPreferences. Loading finishes before exposing its namespace.
+  Future<void> openCloudAccount({
+    required String userId,
+    required Future<String?> Function() read,
+    required Future<void> Function(String json) write,
+  }) async {
+    if (!RegExp(r'^[a-fA-F0-9-]{36}$').hasMatch(userId)) {
+      throw const FormatException('服务器身份标识无效');
+    }
+    lock();
+    final ticket = generation;
+    await _pending;
+    try {
+      final raw = await read();
+      if (_disposed || generation != ticket) return;
+      final data = raw == null
+          ? const PersonalSnapshot()
+          : PersonalSnapshot.decode(raw);
+      _remoteWrite = write;
+      namespace = 'haiz/cloud/v1/$userId';
+      _apply(data);
+    } catch (error, stack) {
+      if (_disposed || generation != ticket) return;
+      storageError = '账号记录加载失败。未打开其他人的记录，请检查网络。';
+      debugPrint('Cloud account load failed (\${error.runtimeType})\n$stack');
+    }
+    if (_disposed || generation != ticket) return;
+    ready = true;
+    _notify();
   }
 
   Future<void> _open(int ticket, Future<String> Function() resolve) async {
@@ -139,12 +175,23 @@ class PocketStore extends ChangeNotifier {
     final scope = namespace;
     if (!_writable || scope == null) return;
     final ticket = generation;
+    final remoteWrite = _remoteWrite;
     final raw = _snapshot().encode();
     _pending = _pending.then((_) async {
+      // Preserve queued legacy/guest writes in their original captured scope.
+      // Only cloud writes need invalidation when the verified user changes.
+      if (remoteWrite != null &&
+          (_disposed || ticket != generation || namespace != scope)) {
+        return;
+      }
       try {
-        await _prefs.setString('$scope/personal.v1', raw);
-        if (await _prefs.getString('$scope/personal.v1') != raw) {
-          throw StateError('个人存储写入校验失败');
+        if (remoteWrite case final save?) {
+          await save(raw);
+        } else {
+          await _prefs.setString('$scope/personal.v1', raw);
+          if (await _prefs.getString('$scope/personal.v1') != raw) {
+            throw StateError('个人存储写入校验失败');
+          }
         }
       } catch (error, stack) {
         debugPrint('Personal storage write failed (${error.runtimeType})\n$stack');
