@@ -385,6 +385,7 @@ class _LampPainter extends CustomPainter {
               const Color(0xFFB8FFFF).withValues(alpha: opacity * p),
               const Color(0x0091EFF4),
             ],
+            const [0.0, 0.5, 1.0],
           ),
       );
     }
