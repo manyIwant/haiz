@@ -35,10 +35,12 @@ jobs:
           set -euo pipefail
           test -s app/build/web/main.dart.js
           test -s app/build/web/index.html
+          git fetch origin preview/pocket-lamp-staged-20261030
+          git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
+          rm -rf lamp-preview
           mkdir -p lamp-preview
           cp -R app/build/web/. lamp-preview/
           touch lamp-preview/.nojekyll
-          git switch -c preview/pocket-lamp-staged-20261030
           git add -f lamp-preview/
           git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
           git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
