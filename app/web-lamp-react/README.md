@@ -1,12 +1,13 @@
-# HAIZ Pocket Lamp Web gateway
+# HAIZ Pocket — Illuminated Wall Entrance
 
-This React/Vite entry page uses the unmodified official Aceternity UI LampContainer, fetched at build time with Motion and Tailwind CSS. Clicking "进入本机空间" opens the actual Flutter Web app at ./app/?fromLamp=1.
+The user-selected visual reference is a blue brick wall with a **warm physical wall lamp** and frosted-glass entrance card. This version intentionally follows that reference, rather than pretending the physical wall-light scene is Aceternity's abstract conic-gradient Lamp.
 
-- Official component: https://ui.aceternity.com/components/lamp
-- Official registry: https://ui.aceternity.com/registry/lamp.json
-- Author: Manu Arora / Aceternity UI
-- Licensing: https://ui.aceternity.com/licence
+- A resolution-independent **1920×1080 SVG** wall texture with individually drawn bricks, surface grain and lamp fixture lives at `public/brick-wall-hd.svg`. No blurry low-resolution bitmap is needed.
+- CSS simulates bulb ignition and a warm illumination expanding over the wall. Motion reveals the card after the light.
+- "重播灯光" replays the effect; `prefers-reduced-motion` disables animation.
+- `./app/?fromLamp=1` opens the actual compiled Flutter Web workspace, **not an account-authentication endpoint**.
+- Android/iOS can show this online entrance via WebView; a local Flutter fallback remains for offline use.
 
-The repository stores a reference and fetch script, not a vendored copy of the component's source. Aceternity's license permits websites as end products but limits redistribution of the original component source as a standalone asset. This is why GitHub Actions fetches the component when building.
+Build with `npm install && npm run build` from `app/web-lamp-react/`. Preview base: `/lamp-preview/`.
 
-To build: run npm install and npm run build in app/web-lamp-react. The resulting dist/ uses /lamp-preview/ as its base URL.
+Aceternity reference and component retrieval scripts remain in the repository for design history, but **this particular reference-faithful login entrance is a custom scene, not Aceternity's unmodified component**.
