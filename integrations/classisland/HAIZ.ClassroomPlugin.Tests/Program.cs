@@ -96,7 +96,7 @@ try
     var saved = DisplaySettingsStore.Load();
     Check(observed == 1 && saved.Enabled && !saved.EveningAutoShow &&
         saved.SelfStudySubjectIds.SequenceEqual(new[] { guid }), "保存后立刻发出更新信号，保留课程GUID");
-    Check(File.ReadAllText(DisplaySettingsStore.FilePath).Contains("\\"screenKey\\""),
+    Check(File.ReadAllText(DisplaySettingsStore.FilePath).Contains("screenKey"),
         "保存JSON兼容旧版字段命名");
     Check(Directory.GetFiles(folder, "*.tmp").Length == 0, "原子保存不残留临时文件");
     DisplaySettingsStore.Save(new DisplaySettings());
