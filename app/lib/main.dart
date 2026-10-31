@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'domain/message_intake_bridge.dart';
 
@@ -33,7 +34,9 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   late final PocketStore store = PocketStore();
   late final AcademicSession session = AcademicSession(store);
   int tab = 0;
-  bool _entered = false;
+  // Web Lamp gateway already displayed the entrance. Open the actual
+  // device-local Flutter workspace directly after explicit CTA navigation.
+  bool _entered = kIsWeb && Uri.base.queryParameters['fromLamp'] == '1';
   bool showLab = false;
   bool showAcademic = false;
 
