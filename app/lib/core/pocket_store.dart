@@ -178,7 +178,10 @@ class PocketStore extends ChangeNotifier {
     final remoteWrite = _remoteWrite;
     final raw = _snapshot().encode();
     _pending = _pending.then((_) async {
-      if (_disposed || ticket != generation || namespace != scope) return;
+      // Preserve queued legacy/guest writes in their original captured scope.
+      // Only cloud writes need invalidation when the verified user changes.
+      if (remoteWrite != null &&
+          (_disposed || ticket != generation || namespace != scope)) return;
       try {
         if (remoteWrite case final save?) {
           await save(raw);
