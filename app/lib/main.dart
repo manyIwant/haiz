@@ -7,6 +7,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'core/pocket_store.dart';
 import 'core/academic_session.dart';
 import 'ui/kit.dart';
+import 'ui/lamp_entry.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
 import 'ui/schedule_page.dart';
@@ -32,6 +33,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   late final PocketStore store = PocketStore();
   late final AcademicSession session = AcademicSession(store);
   int tab = 0;
+  bool _entered = false;
   bool showLab = false;
   bool showAcademic = false;
 
@@ -41,7 +43,10 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
     MessageIntakeBridge.channel.setMethodCallHandler((call) async {
       if (call.method == 'sharedNotice') {
         MessageIntakeBridge.markChanged();
-        if (mounted) _switchTab(2);
+        if (mounted) {
+          setState(() => _entered = true);
+          _switchTab(2);
+        }
       }
     });
     store
@@ -59,6 +64,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                 now.difference(item.receivedAt).inSeconds >= 0 &&
                 now.difference(item.receivedAt).inSeconds < 20,
           )) {
+            setState(() => _entered = true);
             _switchTab(2);
           }
         })
@@ -93,6 +99,11 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
           home: Builder(
             builder: (context) {
               final reduce = MediaQuery.of(context).disableAnimations;
+              if (!_entered) {
+                return LampEntry(
+                  onEnter: () => setState(() => _entered = true),
+                );
+              }
               return Scaffold(
                 body: SafeArea(
                   bottom: false,
