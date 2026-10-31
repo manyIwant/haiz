@@ -23,8 +23,11 @@ jobs:
       - name: Dependencies
         run: flutter pub get
         working-directory: app
-      - name: Verify Lamp entry
-        run: flutter test test/lamp_entry_test.dart --reporter expanded
+      - name: Analyze native Lamp WebView bridge
+        run: flutter analyze lib/ui/pocket_lamp_entrance.dart
+        working-directory: app
+      - name: Verify Lamp entry and local fallback
+        run: flutter test test/lamp_entry_test.dart test/pocket_lamp_entrance_test.dart --reporter expanded
         working-directory: app
       - name: Build Flutter Web for isolated Pages path
         run: flutter build web --release --base-href /lamp-preview/app/ --no-web-resources-cdn --no-wasm-dry-run
