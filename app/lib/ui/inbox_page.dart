@@ -738,7 +738,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     if (!MessageIntakeBridge.available) {
       return PocketCard(
         child: Text(
-          '网页预览支持手动粘贴与导入文档。消息分享入口和指定群通知监测需要 Android 安装版。',
+          '网页版不支持原生消息接收。Android 可按授权接收指定群通知；iPhone 可通过系统分享扩展接收文字。',
           style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
         ),
       );
@@ -767,7 +767,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '微信、QQ 等指定群的新通知可在授权后自动进入；也可以主动从聊天中分享一段通知。',
+                MessageIntakeBridge.supportsNotificationMonitoring
+                    ? '微信、QQ 等指定群的新通知可在授权后自动进入；也可以主动分享。'
+                    : 'iPhone 登录 HAIZ 班级服务后可自动获取教师发布的作业；无法后台读取微信消息。支持分享的页面可选择「存入 HAIZ 收件」，否则可复制文字粘贴。',
                 style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
               ),
               if (_incoming.isEmpty) ...[
@@ -825,7 +827,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           ),
         ),
         const SizedBox(height: 14),
-        ExpansionTile(
+        if (MessageIntakeBridge.supportsNotificationMonitoring)
+          ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 2),
           childrenPadding: const EdgeInsets.only(bottom: 16),
           title: Text(
