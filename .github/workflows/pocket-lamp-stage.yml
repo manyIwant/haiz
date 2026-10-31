@@ -77,17 +77,19 @@ jobs:
           git fetch origin preview/pocket-lamp-staged-20261030
           git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
           rm -rf lamp-preview
-          mkdir -p lamp-preview/app lamp-preview/demo
+          mkdir -p lamp-preview/app lamp-preview/demo login
           cp -R "$RUNNER_TEMP/lamp-flutter-dist/." lamp-preview/app/
           cp "$RUNNER_TEMP/lamp-login/index.html" lamp-preview/index.html
           cp "$RUNNER_TEMP/lamp-login/demo.html" lamp-preview/demo/index.html
           cp "$RUNNER_TEMP/lamp-login/wall-photo.webp" lamp-preview/wall-photo.webp
+          cp "$RUNNER_TEMP/lamp-login/index.html" login/index.html
           touch lamp-preview/.nojekyll
           test -s lamp-preview/app/main.dart.js
           test -s lamp-preview/index.html
           test -s lamp-preview/demo/index.html
           test -s lamp-preview/wall-photo.webp
-          git add -f lamp-preview/
+          test -s login/index.html
+          git add -f lamp-preview/ login/
           git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
           git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
           echo "Staged release tree under lamp-preview/ on preview/pocket-lamp-staged-20261030"
