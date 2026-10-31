@@ -6,12 +6,16 @@ on:
       - feat/pocket-lamp-entry-20261030
   workflow_dispatch:
 
+concurrency:
+  group: pocket-lamp-stage-preview
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
 jobs:
   stage:
-    name: Build upstream React Lamp and existing Flutter workspace
+    name: Build HD brick-wall Lamp and existing Flutter workspace
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +42,7 @@ jobs:
       - name: Install React Lamp build dependencies
         run: npm install --no-audit --no-fund
         working-directory: app/web-lamp-react
-      - name: Fetch official Lamp and build React gateway
+      - name: Build animated high-definition Lamp gateway
         run: npm run build
         working-directory: app/web-lamp-react
       - name: Stage complete release in separate branch (not main)
@@ -51,6 +55,7 @@ jobs:
           cp -R app/web-lamp-react/dist/. "$RUNNER_TEMP/lamp-react-dist/"
           cp -R app/build/web/. "$RUNNER_TEMP/lamp-flutter-dist/"
           test -s "$RUNNER_TEMP/lamp-react-dist/index.html"
+          test -s "$RUNNER_TEMP/lamp-react-dist/brick-wall-hd.svg"
           test -s "$RUNNER_TEMP/lamp-flutter-dist/main.dart.js"
           git fetch origin preview/pocket-lamp-staged-20261030
           git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
