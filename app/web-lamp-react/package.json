@@ -1,0 +1,24 @@
+{
+  "name": "haiz-pocket-original-lamp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch:lamp": "node scripts/fetch-lamp.mjs",
+    "build": "npm run fetch:lamp && vite build",
+    "dev": "npm run fetch:lamp && vite --host 0.0.0.0"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "motion": "^12.0.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "@vitejs/plugin-react": "^5.0.0"
+  }
+}
