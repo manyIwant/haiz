@@ -27,7 +27,7 @@ jobs:
         run: flutter test test/lamp_entry_test.dart --reporter expanded
         working-directory: app
       - name: Build Flutter Web for isolated Pages path
-        run: flutter build web --release --base-href /lamp-preview/ --no-web-resources-cdn --no-wasm-dry-run
+        run: flutter build web --release --base-href /lamp-preview/app/ --no-web-resources-cdn --no-wasm-dry-run
         working-directory: app
       - name: Stage complete release in separate branch (not main)
         shell: bash
@@ -38,9 +38,12 @@ jobs:
           git fetch origin preview/pocket-lamp-staged-20261030
           git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
           rm -rf lamp-preview
-          mkdir -p lamp-preview
-          cp -R app/build/web/. lamp-preview/
+          mkdir -p lamp-preview/app
+          cp -R app/build/web/. lamp-preview/app/
+          cp app/web-lamp/index.html lamp-preview/index.html
           touch lamp-preview/.nojekyll
+          test -s lamp-preview/app/main.dart.js
+          test -s lamp-preview/index.html
           git add -f lamp-preview/
           git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
           git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
