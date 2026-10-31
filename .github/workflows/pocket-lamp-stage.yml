@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   stage:
-    name: Build and stage Lamp Flutter Web files
+    name: Build upstream React Lamp and existing Flutter workspace
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,22 +29,36 @@ jobs:
       - name: Build Flutter Web for isolated Pages path
         run: flutter build web --release --base-href /lamp-preview/app/ --no-web-resources-cdn --no-wasm-dry-run
         working-directory: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install React Lamp build dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: app/web-lamp-react
+      - name: Fetch official Lamp and build React gateway
+        run: npm run build
+        working-directory: app/web-lamp-react
       - name: Stage complete release in separate branch (not main)
         shell: bash
         run: |
           set -euo pipefail
           test -s app/build/web/main.dart.js
           test -s app/build/web/index.html
-          cp app/web-lamp/index.html "$RUNNER_TEMP/lamp-gateway.html"
+          mkdir -p "$RUNNER_TEMP/lamp-react-dist" "$RUNNER_TEMP/lamp-flutter-dist"
+          cp -R app/web-lamp-react/dist/. "$RUNNER_TEMP/lamp-react-dist/"
+          cp -R app/build/web/. "$RUNNER_TEMP/lamp-flutter-dist/"
+          test -s "$RUNNER_TEMP/lamp-react-dist/index.html"
+          test -s "$RUNNER_TEMP/lamp-flutter-dist/main.dart.js"
           git fetch origin preview/pocket-lamp-staged-20261030
           git switch -C preview/pocket-lamp-staged-20261030 origin/preview/pocket-lamp-staged-20261030
           rm -rf lamp-preview
           mkdir -p lamp-preview/app
-          cp -R app/build/web/. lamp-preview/app/
-          cp "$RUNNER_TEMP/lamp-gateway.html" lamp-preview/index.html
+          cp -R "$RUNNER_TEMP/lamp-flutter-dist/." lamp-preview/app/
+          cp -R "$RUNNER_TEMP/lamp-react-dist/." lamp-preview/
           touch lamp-preview/.nojekyll
           test -s lamp-preview/app/main.dart.js
           test -s lamp-preview/index.html
+          test -n "$(find lamp-preview/assets -name '*.js' -print -quit)"
           git add -f lamp-preview/
           git -c user.name='HAIZ Preview Builder' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'build(preview): stage compiled Lamp Flutter Web'
           git push origin HEAD:refs/heads/preview/pocket-lamp-staged-20261030
