@@ -17,7 +17,18 @@ if (!item || typeof item.content !== "string" || !item.content.includes("LampCon
 }
 const dest = new URL("../src/components/ui/lamp.tsx", import.meta.url);
 await mkdir(new URL("../src/components/ui/", import.meta.url), { recursive: true });
-await writeFile(dest, item.content);
+// Keep the original LampContainer component, geometry and Motion timing.
+// The user-selected palette is a deliberate build-time token override only:
+// cyan -> soft warm amber. No reimplementation of the original light effect.
+const amberLamp = item.content
+  .replaceAll("cyan-500", "amber-400")
+  .replaceAll("cyan-400", "amber-300");
+const cyanCount = (item.content.match(/cyan-(?:500|400)/g) || []).length;
+if (cyanCount < 2 || amberLamp === item.content) {
+  throw new Error("Official Lamp cyan palette changed; refuse silent unthemed build");
+}
+await writeFile(dest, amberLamp);
 const hash = createHash("sha256").update(item.content).digest("hex");
-console.log("Official Aceternity Lamp source downloaded, sha256=" + hash);
+console.log("Original Aceternity Lamp source downloaded, sha256=" + hash);
+console.log("Only light-color tokens changed to warm amber, replaced count=" + cyanCount);
 console.log("Source: " + upstream);
