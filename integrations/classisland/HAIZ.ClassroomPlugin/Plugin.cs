@@ -14,13 +14,12 @@ public sealed class Plugin : PluginBase
     {
         var configFile = Path.Combine(PluginConfigFolder, "haiz-screen.json");
         DisplaySettingsStore.FilePath = configFile;
-        HomeworkComponent.ConfigFile = configFile;
         EveningHomeworkService.ConfigFile = configFile;
 
-        // Preserve the v1.3 native component and register a separate,
-        // opt-in timetable watcher. Neither service changes ClassIsland data.
+        // Automation-only plugin: no ClassIsland toolbar component is registered.
+        // The independent background watcher reads the real timetable and opens
+        // a normal non-topmost window only during the two final self-study lessons.
         services.AddSettingsPage<ConnectionSettingsPage>();
-        services.AddComponent<HomeworkComponent>();
         services.AddHostedService<EveningHomeworkService>();
     }
 }
