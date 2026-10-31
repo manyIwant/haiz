@@ -19,7 +19,7 @@ jobs:
           node-version: '24'
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
-      - name: Capture official Aceternity Lamp and real Flutter Web
+      - name: Capture user-reference wall Lamp and real Flutter Web
         run: |
           mkdir -p lamp-screenshots
           node --input-type=module <<'JS'
@@ -37,10 +37,10 @@ jobs:
             await page.waitForTimeout(9000);
             await page.screenshot({ path: `lamp-screenshots/${name}.png`, fullPage: true });
             const links = await page.locator('a[href="./app/?fromLamp=1"]').count();
-            const originalLamp = await page.locator('.original-lamp').count();
+            const wallPhoto = await page.locator('.wall-photo').count();
             const title = await page.locator('h1').allTextContents();
-            console.log(JSON.stringify({ name, url: page.url(), hasRealAppLink: !!links, originalLamp, title, pageErrors: errors }));
-            if (!links || !originalLamp || !title.includes('HAIZ') || errors.length) process.exitCode = 1;
+            console.log(JSON.stringify({ name, url: page.url(), hasRealAppLink: !!links, wallPhoto, title, pageErrors: errors }));
+            if (!links || !wallPhoto || !title.includes('Login') || errors.length) process.exitCode = 1;
             await page.goto('https://haiz.space/lamp-preview/app/?fromLamp=1', { waitUntil: 'domcontentloaded', timeout: 60000 });
             await page.waitForTimeout(8000);
             await page.screenshot({ path: `lamp-screenshots/${name}-flutter-app.png`, fullPage: true });
