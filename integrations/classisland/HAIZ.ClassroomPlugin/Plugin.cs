@@ -13,11 +13,13 @@ public sealed class Plugin : PluginBase
     public override void Initialize(HostBuilderContext context, IServiceCollection services)
     {
         var configFile = Path.Combine(PluginConfigFolder, "haiz-screen.json");
+        DisplaySettingsStore.FilePath = configFile;
         HomeworkComponent.ConfigFile = configFile;
         EveningHomeworkService.ConfigFile = configFile;
 
         // Preserve the v1.3 native component and register a separate,
         // opt-in timetable watcher. Neither service changes ClassIsland data.
+        services.AddSettingsPage<ConnectionSettingsPage>();
         services.AddComponent<HomeworkComponent>();
         services.AddHostedService<EveningHomeworkService>();
     }

@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../HAIZ.ClassroomPlugin/EveningPolicy.cs" Link="EveningPolicy.cs" />
+    <Compile Include="../HAIZ.ClassroomPlugin/DisplayConnection.cs" Link="DisplayConnection.cs" />
   </ItemGroup>
 </Project>

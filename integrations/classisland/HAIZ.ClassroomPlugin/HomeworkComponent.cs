@@ -38,15 +38,22 @@ public sealed class HomeworkComponent : ComponentBase
             Children = { title, lines },
         };
         title.Text = "HAIZ · 班级任务";
-        lines.Text = "请在插件配置目录填写 haiz-screen.json";
+        lines.Text = "请前往 设置 → HAIZ 教室连接 绑定班级";
         timer.Tick += async (_, _) => await RefreshAsync();
         AttachedToVisualTree += (_, _) =>
         {
+            DisplaySettingsStore.Changed += RefreshOnSettingsChanged;
             timer.Start();
             _ = RefreshAsync();
         };
-        DetachedFromVisualTree += (_, _) => timer.Stop();
+        DetachedFromVisualTree += (_, _) =>
+        {
+            DisplaySettingsStore.Changed -= RefreshOnSettingsChanged;
+            timer.Stop();
+        };
     }
+
+    private void RefreshOnSettingsChanged() => _ = RefreshAsync();
 
     private async Task RefreshAsync()
     {
@@ -56,7 +63,7 @@ public sealed class HomeworkComponent : ComponentBase
         {
             if (!File.Exists(ConfigFile))
             {
-                lines.Text = "请配置 HTTPS 服务地址及只读屏幕凭据";
+                lines.Text = "请前往 设置 → HAIZ 教室连接 绑定班级";
                 return;
             }
             using var configDoc = JsonDocument.Parse(await File.ReadAllTextAsync(ConfigFile));
