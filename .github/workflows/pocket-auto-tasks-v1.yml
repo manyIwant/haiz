@@ -45,7 +45,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v3
+      - name: Confirm Android SDK available
+        run: test -x "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" || test -x "${ANDROID_HOME}/cmdline-tools/16.0/bin/sdkmanager"
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.8'
