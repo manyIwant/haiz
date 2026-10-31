@@ -1,0 +1,54 @@
+name: HAIZ ClassIsland guided setup QA
+
+on:
+  push:
+    branches:
+      - feat/classisland-guided-setup-20261030
+  pull_request:
+    paths:
+      - "integrations/classisland/**"
+      - ".github/workflows/haiz-classisland-guided.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build native plugin with ClassIsland Plugin SDK
+        run: dotnet build integrations/classisland/HAIZ.ClassroomPlugin/HAIZ.ClassroomPlugin.csproj --configuration Release -p:CreateCipx=false --nologo
+      - name: Run pure timetable and connection tests
+        run: dotnet run --project integrations/classisland/HAIZ.ClassroomPlugin.Tests/HAIZ.ClassroomPlugin.Tests.csproj --configuration Release
+      - name: Package Windows preview, verify required metadata
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $output = "integrations/classisland/HAIZ.ClassroomPlugin/bin/Release/net8.0"
+          $required = @("HAIZ.ClassroomPlugin.dll", "HAIZ.ClassroomPlugin.deps.json", "HAIZ.ClassroomPlugin.runtimeconfig.json", "manifest.yml", "README.md", "icon.png")
+          foreach ($file in $required) {
+            if (!(Test-Path (Join-Path $output $file))) { throw "Missing plugin package file: $file" }
+          }
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Compress-Archive -Path ($required | ForEach-Object { Join-Path $output $_ }) -DestinationPath "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.zip" -Force
+          Rename-Item "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.zip" "HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx"
+          $entryNames = (tar -tf "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx")
+          foreach ($file in $required) {
+            if ($entryNames -notcontains $file) { throw "Package entry missing: $file" }
+          }
+          (Get-FileHash "artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx" -Algorithm SHA256).Hash | Out-File "artifacts/SHA256.txt"
+      - name: Upload tested Windows CIPX
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiz-classisland-guided-preview-windows
+          path: |
+            artifacts/HAIZ-ClassIsland-Guided-v0.3.0-preview.cipx
+            artifacts/SHA256.txt
+          if-no-files-found: error
