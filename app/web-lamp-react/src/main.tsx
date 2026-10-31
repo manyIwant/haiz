@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { motion, MotionConfig, useReducedMotion } from "motion/react";
 import "./styles.css";
@@ -25,17 +25,24 @@ function AccountOutline({ label, icon }: { label: string; icon: "user" | "lock" 
 
 function Entrance() {
   const reduced = useReducedMotion();
-  const initial = reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 };
+  const [sequence, setSequence] = useState(0);
+  const initial = reduced ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 24, scale: 0.985 };
   return (
     <main className="wall-scene">
-      <div className="wall-photo" aria-hidden="true" />
-      <div className="light-bloom" aria-hidden="true" />
-      <div className="lamp-highlight" aria-hidden="true" />
+      <div className="lighting-stage" key={sequence} aria-hidden="true">
+        <div className="wall-photo" />
+        <div className="wall-illumination" />
+        <div className="wall-ray" />
+        <div className="light-bloom" />
+        <div className="lamp-halo" />
+        <div className="lamp-highlight" />
+      </div>
       <motion.section
+        key={sequence}
         className="login-card"
         initial={initial}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduced ? 0 : 0.9, delay: reduced ? 0 : 0.35, ease: "easeOut" }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: reduced ? 0 : 1, delay: reduced ? 0 : 1.18, ease: [0.16, 1, 0.3, 1] }}
         aria-labelledby="login-title"
       >
         <h1 id="login-title">Login</h1>
@@ -54,6 +61,9 @@ function Entrance() {
         <p className="register" aria-hidden="true">Don't have an account? <strong>Register</strong></p>
       </motion.section>
       <p className="access-note">HAIZ POCKET · 本机访客体验，不需要填写账号或密码</p>
+      <button className="replay-light" type="button" onClick={() => setSequence((previous) => previous + 1)} aria-label="重新播放壁灯点亮动画">
+        <span aria-hidden="true">↺</span> 重播灯光
+      </button>
     </main>
   );
 }
