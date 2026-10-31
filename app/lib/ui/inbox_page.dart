@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
+import '../core/academic_session.dart';
 import '../domain/notice_parser.dart';
 import '../domain/message_intake_bridge.dart';
 import '../domain/notice_import_service.dart';
@@ -14,8 +17,10 @@ class _Draft {
   final String original;
   final bool ambiguous;
   bool selected = true;
+  final String clientKey;
   _Draft(NoticeCandidate c)
-    : title = c.title,
+    : clientKey = noticeProposalKey(c),
+      title = c.title,
       subject = c.subject,
       due = c.due,
       source = c.source,
@@ -30,7 +35,8 @@ String _humanDue(DateTime? date) => date == null
 class InboxPage extends StatefulWidget {
   final PocketStore store;
   final VoidCallback onSaved;
-  const InboxPage({super.key, required this.store, required this.onSaved});
+  final AcademicSession? session;
+  const InboxPage({super.key, required this.store, required this.onSaved, this.session});
   @override
   State<InboxPage> createState() => _InboxPageState();
 }
@@ -46,7 +52,12 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   List<IncomingNotice> _incoming = const [];
   MonitorConfiguration? _monitor;
   bool _groupsLoaded = false;
+  bool _wechatOptIn = false;
   bool _monitorBusy = false;
+  bool _submittingClass = false;
+  bool _aiPreprocessing = false;
+  final Map<String, List<NoticeCandidate>> _aiResults = {};
+  final Set<String> _aiSeen = {};
   String? _currentIncomingId;
 
   @override
@@ -73,11 +84,92 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         _monitor = setting;
         if (!_groupsLoaded) {
           _groupsController.text = setting?.groups ?? '';
+          _wechatOptIn = setting?.wechat ?? false;
           _groupsLoaded = true;
         }
       });
+      unawaited(_preprocessIncoming(items));
     } catch (_) {
       if (mounted) setState(() => _notice = '无法读取本地消息队列，请重试。');
+    }
+  }
+
+  Future<void> _setAiConsent(bool value) async {
+    if (value) {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('开启 AI 语义识别？'),
+          content: const Text('打开 HAIZ 收件箱后，指定群的待审消息将发送到'
+              'HAIZ 服务端配置的 AI 提供商进行分析。发送前会对电话号码、'
+              '邮箱、链接做基础脱敏，但仍可能包含个人信息。'
+              '请确保班级管理者与群成员知情同意。默认关闭，不会自动发布。'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('保持关闭')),
+            FilledButton(onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('同意开启')),
+          ],
+        ),
+      );
+      if (accepted != true || !mounted) return;
+    }
+    try {
+      await widget.store.setSemanticExtractionConsent(value);
+      if (!mounted) return;
+      setState(() => _notice = value
+          ? '已开启 AI 预解析；服务端需要配置模型，原始通知仍保存在本机。'
+          : '已关闭 AI 预解析。');
+      if (value) unawaited(_preprocessIncoming(_incoming));
+    } catch (_) {
+      if (mounted) setState(() => _notice = 'AI 选项保存失败；请检查班级登录状态。');
+    }
+  }
+
+  Future<void> _preprocessIncoming(List<IncomingNotice> items) async {
+    final session = widget.session;
+    if (_aiPreprocessing || !widget.store.semanticExtractionConsent ||
+        session == null || session.identity == null ||
+        session.role != 'student' || session.busy) { return; }
+    final scope = widget.store.namespace;
+    final generation = widget.store.generation;
+    final loginGeneration = session.generation;
+    if (scope == null || !scope.startsWith('haiz/v1/')) return;
+    final now = DateTime.now();
+    final pending = items.where((entry) =>
+      !_aiSeen.contains(entry.id) &&
+      !entry.receivedAt.isAfter(now) &&
+      now.difference(entry.receivedAt).inDays < 7).take(4).toList();
+    if (pending.isEmpty) return;
+    _aiPreprocessing = true;
+    try {
+      for (final entry in pending) {
+        if (!mounted || widget.store.generation != generation ||
+            session.generation != loginGeneration ||
+            widget.store.namespace != scope ||
+            !widget.store.semanticExtractionConsent) { return; }
+        _aiSeen.add(entry.id);
+        final semantic = await session.extractSemanticNotice(
+          text: entry.text, capturedAt: entry.receivedAt,
+        );
+        if (!mounted || widget.store.generation != generation ||
+            session.generation != loginGeneration ||
+            widget.store.namespace != scope) { return; }
+        if (semantic == null) continue;
+        setState(() {
+          _aiResults[entry.id] = semantic;
+          if (_currentIncomingId == entry.id) {
+            if (semantic.isNotEmpty) {
+              _drafts..clear()..addAll(semantic.map(_Draft.new));
+              _notice = 'AI 已生成多项候选；请核对内容和截止日期。';
+            } else {
+              _notice = 'AI 没有识别到明确作业，保留规则候选供核对。';
+            }
+          }
+        });
+      }
+    } finally {
+      _aiPreprocessing = false;
     }
   }
 
@@ -88,6 +180,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       final setting = await MessageIntakeBridge.configure(
         enabled: enabled,
         groups: _groupsController.text,
+        includeWeChat: _wechatOptIn,
       );
       if (!mounted) return;
       setState(() {
@@ -114,6 +207,19 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     // export lines still match the parser's anchored structured format.
     _input.text = entry.text;
     _extract(today: entry.receivedAt);
+    final cached = _aiResults[entry.id];
+    if (cached != null) {
+      setState(() {
+        if (cached.isNotEmpty) {
+          _drafts..clear()..addAll(cached.map(_Draft.new));
+        }
+        _notice = cached.isEmpty
+            ? 'AI 未识别到明确任务，已保留本机规则候选。'
+            : 'AI 语义结果已生成，请逐项核对。';
+      });
+    } else if (widget.store.semanticExtractionConsent) {
+      unawaited(_preprocessIncoming([entry]));
+    }
   }
 
   Future<void> _dismissIncoming(IncomingNotice entry) async {
@@ -257,6 +363,77 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     subject.dispose();
   }
 
+  Future<void> _submitToClass() async {
+    final session = widget.session;
+    if (_submittingClass || session == null || session.role != 'student' ||
+        session.identity == null || session.selectedClass == null) { return; }
+    if (widget.store.generation != _composeGeneration) {
+      setState(() => _notice = '账号已切换，请重新提取消息后再提交。');
+      return;
+    }
+    final candidates = _drafts.where((d) => d.selected && d.title.trim().isNotEmpty).toList();
+    if (candidates.isEmpty) return;
+    if (candidates.length > 10) {
+      setState(() => _notice = '一次最多提交10条作业，请分批检查。');
+      return;
+    }
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('提交班级审核？'),
+        content: Text(
+          '将向当前已加入班级提交 ${candidates.length} 条作业候选（科目、标题、截止日期）。'
+          '不会上传微信原文、发送者、群聊记录。班级审核者确认后才会发布给同学。'
+          '请先确保班级成员同意以这种方式共享作业信息。',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('确认提交任务字段')),
+        ],
+      ),
+    );
+    if (accepted != true || !mounted ||
+        widget.store.generation != _composeGeneration) { return; }
+    final loginGeneration = session.generation;
+    final scope = widget.store.namespace;
+    setState(() => _submittingClass = true);
+    int submitted = 0;
+    try {
+      for (final draft in candidates) {
+        if (session.generation != loginGeneration ||
+            widget.store.namespace != scope ||
+            widget.store.generation != _composeGeneration) {
+          if (mounted) setState(() => _notice = '账号已切换，停止上传；请重新检查剩余候选。');
+          return;
+        }
+        final ok = await session.submitClassSuggestion(
+          title: draft.title,
+          subject: draft.subject,
+          due: draft.due == null ? null : _humanDue(draft.due),
+          clientKey: draft.clientKey,
+        );
+        if (!ok) {
+          if (mounted) {
+            setState(() => _notice =
+                '已提交 $submitted 条，剩余候选未上传：${session.error ?? '请检查连接或权限'}');
+          }
+          return;
+        }
+        submitted++;
+        if (mounted) setState(() => draft.selected = false);
+      }
+      if (!mounted || session.generation != loginGeneration ||
+          widget.store.generation != _composeGeneration) { return; }
+      // Retain the native notification until user chooses local save/ignore;
+      // posting a structured suggestion is not permission to erase its source.
+      setState(() => _notice = '已提交 $submitted 条结构化任务至班级待审核队列；尚未对全班发布。');
+    } finally {
+      if (mounted) setState(() => _submittingClass = false);
+    }
+  }
+
   Future<void> _commit() async {
     if (widget.store.generation != _composeGeneration) {
       setState(() {
@@ -332,6 +509,22 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 subtitle: '从聊天分享，或接收指定群通知；核对后成为任务。',
               ),
               const SizedBox(height: 14),
+              if (widget.session?.identity != null &&
+                  widget.session?.role == 'student' &&
+                  widget.session?.selectedClass != null) ...[
+                PocketCard(
+                  child: SwitchListTile.adaptive(
+                    key: const Key('ai-semantic-opt-in'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('自动 AI 语义理解作业'),
+                    subtitle: const Text('默认关闭。开启后进入收件箱时自动解析指定群候选；'
+                        '单条通知经基础脱敏后发送给 HAIZ 配置的模型。未配置时保留规则解析。'),
+                    value: widget.store.semanticExtractionConsent,
+                    onChanged: _setAiConsent,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               _nativeInboxSection(context),
               const SizedBox(height: 22),
               PocketCard(
@@ -341,7 +534,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     const SectionLabel('粘贴一段通知'),
                     const SizedBox(height: 8),
                     Text(
-                      '从 QQ、钉钉、学习通等应用点「分享 → HAIZ」，可直接加入待审阅消息；也能手动粘贴、导入文档。',
+                      '从微信、QQ、钉钉、学习通等应用点「分享 → HAIZ」，可直接加入待审阅消息；也能手动粘贴、导入文档。',
                       style: TextStyle(color: p.secondary, fontSize: 12),
                     ),
                     const SizedBox(height: 14),
@@ -479,6 +672,24 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     label: const Text('确认并加入我的任务'),
                   ),
                 ),
+                if (widget.session?.role == 'student' &&
+                    widget.session?.selectedClass != null) ...[
+                  const SizedBox(height: 9),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const Key('submit-mobile-suggestion'),
+                      onPressed: _submittingClass || !_drafts.any((d) => d.selected)
+                          ? null : _submitToClass,
+                      icon: const Icon(Icons.cloud_upload_outlined),
+                      label: Text(_submittingClass
+                          ? '正在提交审核…' : '提交选中任务给班级审核'),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text('默认不上传。仅提交你确认的任务字段，不包含聊天原文。审核通过才会被其他同学看到。',
+                    style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5)),
+                ],
               ] else ...[
                 const SectionLabel('处理规则'),
                 const SizedBox(height: 13),
@@ -489,15 +700,15 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                       _line(
                         context,
                         Icons.filter_alt_outlined,
-                        '寻找行动词',
-                        '交、完成、带好、复习等',
+                        '本机规则初筛',
+                        '优先筛选可能与作业有关的通知，AI 可进一步理解多个行动项',
                       ),
                       const SizedBox(height: 17),
                       _line(
                         context,
                         Icons.event_outlined,
-                        '辅助识别日期',
-                        '今天、明天、周几或明确日期；以导入日为相对日期基准',
+                        '语义理解与日期校验',
+                        '选用 AI 时要求模型提供原文证据；不明确的期限保持待确认',
                       ),
                       const SizedBox(height: 17),
                       _line(
@@ -556,7 +767,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '无需登录消息平台。把群里的一段作业通知分享给 HAIZ，就会进入这里。',
+                '微信、QQ 等指定群的新通知可在授权后自动进入；也可以主动从聊天中分享一段通知。',
                 style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
               ),
               if (_incoming.isEmpty) ...[
@@ -586,6 +797,15 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     fontSize: 13,
                   ),
                 ),
+                if (_aiResults.containsKey(message.id)) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    _aiResults[message.id]!.isEmpty
+                        ? 'AI 预解析：未识别到明确作业，请人工核对'
+                        : 'AI 预解析：发现 ${_aiResults[message.id]!.length} 项候选作业，等待核对',
+                    style: TextStyle(color: p.accent, fontSize: 11),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -624,9 +844,22 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
           ),
           children: [
             Text(
-              '只处理 QQ / TIM / 钉钉 / 学习通中，通知标题含下列群名称、正文含学习行动词的消息。'
-              ' 不读私聊、不读历史消息、不上传内容；只是候选，须你确认才能加入待办。',
+              '支持 QQ / TIM / 钉钉 / 学习通，微信须单独勾选。只有通知标题、会话标题或副标题包含你指定的群名称，'
+              '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'
+              '请使用足够独特的群名；无法读取已隐藏的通知内容或历史消息，也不会上传消息。'
+              ' 保存为待办前仍需人工确认。',
               style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              key: const Key('enable-wechat'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text('同时收集指定微信群的作业通知'),
+              subtitle: const Text('默认关闭。开启后仍只按你填写的群名称过滤，并需要 Android 系统通知授权。'),
+              value: _wechatOptIn,
+              onChanged: _monitorBusy
+                  ? null
+                  : (value) => setState(() => _wechatOptIn = value),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -635,7 +868,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               maxLength: 250,
               decoration: const InputDecoration(
                 labelText: '指定群名称关键词（每行一个）',
-                hintText: '例如：某班作业通知群',
+                hintText: '例如：高一13班作业通知群',
                 border: OutlineInputBorder(),
               ),
             ),
