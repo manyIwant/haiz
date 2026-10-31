@@ -20,7 +20,7 @@ body { -webkit-font-smoothing: antialiased; }
 }
 .login-card {
   width: 326px; min-height: 313px; position: absolute;
-  left: 50%; top: 34.8svh; transform: translateX(-50%);
+  left: 50%; top: 34.8svh; translate: -50% 0;
   padding: 22px 24px 23px; border: 1px solid rgba(205,202,213,.34); border-radius: 15px;
   background: linear-gradient(180deg, rgba(122,112,117,.965) 0%, rgba(78,76,97,.965) 48%, rgba(39,56,98,.975) 100%);
   box-shadow: 0 10px 22px rgba(0,0,0,.09), inset 0 1px 0 rgba(255,255,255,.055);
