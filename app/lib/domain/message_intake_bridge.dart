@@ -35,10 +35,12 @@ class MonitorConfiguration {
   final bool enabled;
   final bool granted;
   final String groups;
+  final bool wechat;
   const MonitorConfiguration({
     required this.enabled,
     required this.granted,
     required this.groups,
+    required this.wechat,
   });
 
   factory MonitorConfiguration.fromNative(Map<Object?, Object?> value) =>
@@ -46,17 +48,22 @@ class MonitorConfiguration {
         enabled: value['enabled'] == true,
         granted: value['granted'] == true,
         groups: value['groups']?.toString() ?? '',
+        wechat: value['wechat'] == true,
       );
 }
 
-/// Android platform share sheet + filtered NotificationListenerService.
-/// No inbox polling, permissions, or platform calls occur on the web.
+/// Android: opt-in group notification listener and shares.
+/// iOS: user-invoked Share Extension; never background WeChat monitoring.
+/// Web: no native message capture.
 class MessageIntakeBridge {
   static final revision = ValueNotifier<int>(0);
   static void markChanged() => revision.value++;
 
   static const channel = MethodChannel('space.haiz.pocket/message_intake');
   static bool get available =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+  static bool get supportsNotificationMonitoring =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   static Future<List<IncomingNotice>> entries() async {
@@ -82,11 +89,12 @@ class MessageIntakeBridge {
   static Future<MonitorConfiguration?> configure({
     required bool enabled,
     required String groups,
+    bool includeWeChat = false,
   }) async {
-    if (!available) return null;
+    if (!supportsNotificationMonitoring) return null;
     final value = await channel.invokeMethod<Map<dynamic, dynamic>>(
       'setConfiguration',
-      {'enabled': enabled, 'groups': groups},
+      {'enabled': enabled, 'groups': groups, 'wechat': includeWeChat},
     );
     return value == null
         ? null
@@ -94,7 +102,7 @@ class MessageIntakeBridge {
   }
 
   static Future<void> notificationSettings() async {
-    if (!available) return;
+    if (!supportsNotificationMonitoring) return;
     await channel.invokeMethod<bool>('requestNotificationSettings');
   }
 

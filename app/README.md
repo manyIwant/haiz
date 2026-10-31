@@ -1,9 +1,9 @@
 # HAIZ Pocket · Flutter App
 
-HAIZ Pocket 是面向校园的非官方、本地优先学习工具。Android 预览版与 Web 预览版使用同一套 Flutter 页面、任务和收件逻辑，原生通知与分享入口只在 Android 上可用。
+HAIZ Pocket 是面向校园的非官方、本地优先学习工具。Android 预览版与 Web 预览版使用同一套 Flutter 页面、任务和收件逻辑，Android 支持获授权的指定群通知接收，iOS Share Extension 支持用户主动分享；班级任务同步须部署独立 HAIZ Academic HTTPS 服务。
 
 - 网页可交互预览：https://haiz.space/app-preview/inspect.html
-- Android ARM64 最新 APK：[`HAIZ Pocket v1.4 Optical v2`](../releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk)
+- 主分支旧版 Android APK（不含本次自动任务集成）：[`HAIZ Pocket v1.4 Optical v2`](../releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk)
 - 当前版本：`1.4.0-preview.4+8`
 - 最新版包含：今天、课表、收件、专注、校园，编辑任务、到期提醒、外部文本分享、可选学校群通知候选收件。
 - 收件箱仅创建待核对候选事项，用户确认后才保存为任务；不提供 QQ、钉钉或学习通官方 API 登录能力。
@@ -40,3 +40,5 @@ Android Release 使用作者私有签名材料，配置文件不在公开仓库�
 
 详见 [消息收件授权与限制](../docs/authorized-message-intake-20261029.md)、
 [光学玻璃 v2 设计与测试说明](../docs/app-optical-lens-v2-20261029.md)。
+
+> 自动任务集成候选版的真实状态和发布门槛见 [RELEASE-AUTO-TASKS-V1](../docs/RELEASE-AUTO-TASKS-V1.md)。当前分支不是经真机验收的稳定发行版。

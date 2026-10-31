@@ -1,0 +1,107 @@
+name: HAIZ Pocket Automatic Tasks V1 QA
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: pocket-v1-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  academic:
+    name: Academic backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+        working-directory: services/academic
+      - run: npm test
+        working-directory: services/academic
+  live-http:
+    name: Synthetic authenticated HTTP contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+        working-directory: services/academic
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: node scripts/qa/run-live.mjs
+  flutter:
+    name: Flutter all tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter analyze
+        working-directory: app
+      - run: flutter test --reporter expanded
+        working-directory: app
+  android:
+    name: Disposable QA signed Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Confirm Android SDK available
+        run: test -x "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" || test -x "${ANDROID_HOME}/cmdline-tools/16.0/bin/sdkmanager"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - name: QA key & release build (not official signing)
+        working-directory: app
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Isolate the QA install from the existing signed HAIZ preview; never require uninstalling it.
+          sed -i 's/applicationId = "space.haiz.app.preview"/applicationId = "space.haiz.app.qa"/' android/app/build.gradle.kts
+          grep -q 'applicationId = "space.haiz.app.qa"' android/app/build.gradle.kts
+          qa_home=$(mktemp -d)
+          trap 'rm -rf "$qa_home"' EXIT
+          mkdir -p "$qa_home/.config/haiz-android"
+          keytool -genkeypair -noprompt -keystore "$qa_home/qa.jks" -alias qa -keyalg RSA -keysize 2048 -validity 14 -storepass syntheticqa -keypass syntheticqa -dname 'CN=HAIZ QA'
+          printf 'storeFile=%s\nstorePassword=syntheticqa\nkeyAlias=qa\nkeyPassword=syntheticqa\n' "$qa_home/qa.jks" > "$qa_home/.config/haiz-android/signing.properties"
+          JAVA_TOOL_OPTIONS="-Duser.home=$qa_home" flutter build apk --release --no-pub
+          shasum -a 256 build/app/outputs/flutter-apk/app-release.apk > build/app/outputs/flutter-apk/app-release.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pocket-v1-QA-signed-android-not-production
+          path: |
+            app/build/app/outputs/flutter-apk/app-release.apk
+            app/build/app/outputs/flutter-apk/app-release.apk.sha256
+          if-no-files-found: error
+  ios:
+    name: iOS unsigned compilation & Share Extension
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter build ios --release --no-codesign --no-pub
+        working-directory: app

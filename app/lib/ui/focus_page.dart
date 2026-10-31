@@ -11,44 +11,16 @@ class FocusPage extends StatelessWidget {
     final task = store.activeTask;
     final generation = store.generation;
     if (task == null) return;
-    final note = TextEditingController(text: store.noteFor(task.id));
-    final saved = await showDialog<bool>(
+    final saved = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('学习接力 · 保存思路'),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: TextField(
-            controller: note,
-            autofocus: true,
-            maxLines: 8,
-            minLines: 5,
-            maxLength: 5000,
-            decoration: const InputDecoration(
-              hintText: '上次解到哪里？下一步准备做什么？\n把未完成的思路留下。',
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('保存到本机'),
-          ),
-        ],
-      ),
+      builder: (_) => _StudyRelayDialog(initialText: store.noteFor(task.id)),
     );
-    if (saved == true && store.generation == generation) {
-      store.setTaskNote(task.id, note.text);
-    } else if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('已切换账号，笔记未写入任何账号。')));
+    if (saved != null && store.generation == generation) {
+      store.setTaskNote(task.id, saved);
+    } else if (saved != null && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('已切换账号，笔记未写入任何账号。')));
     }
-    note.dispose();
   }
 
   String get timerText {
@@ -355,4 +327,59 @@ class FocusPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The dialog owns its controller until its exit animation has unmounted.
+/// Disposing immediately after showDialog completes leaves the TextField using
+/// a disposed controller during the route's reverse transition.
+class _StudyRelayDialog extends StatefulWidget {
+  const _StudyRelayDialog({required this.initialText});
+  final String initialText;
+
+  @override
+  State<_StudyRelayDialog> createState() => _StudyRelayDialogState();
+}
+
+class _StudyRelayDialogState extends State<_StudyRelayDialog> {
+  late final TextEditingController _note;
+
+  @override
+  void initState() {
+    super.initState();
+    _note = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('学习接力 · 保存思路'),
+    content: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 480),
+      child: TextField(
+        controller: _note,
+        autofocus: true,
+        maxLines: 8,
+        minLines: 5,
+        maxLength: 5000,
+        decoration: const InputDecoration(
+          hintText: '上次解到哪里？下一步准备做什么？\n把未完成的思路留下。',
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('取消'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, _note.text),
+        child: const Text('保存到本机'),
+      ),
+    ],
+  );
 }
