@@ -1,11 +1,11 @@
 name: HAIZ Pocket Automatic Tasks V1 QA
 on:
-  push:
-    branches:
-      - integration/pocket-auto-tasks-v1-20261030
   pull_request:
     branches: [main]
   workflow_dispatch:
+concurrency:
+  group: pocket-v1-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
