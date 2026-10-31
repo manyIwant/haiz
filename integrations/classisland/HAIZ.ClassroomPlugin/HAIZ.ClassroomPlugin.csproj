@@ -7,6 +7,9 @@
     <CreateCipx>true</CreateCipx>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="HomeworkComponent.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="ClassIsland.PluginSdk" Version="2.0.0.*">
       <ExcludeAssets>runtime; native</ExcludeAssets>
     </PackageReference>
