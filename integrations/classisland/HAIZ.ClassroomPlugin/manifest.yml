@@ -1,10 +1,10 @@
 id: space.haiz.classroom
-name: HAIZ 班级任务 · 晚修自动看板
-description: 在设置中一键绑定 HAIZ 教室链接、检查作业同步，可选最后两节自习自动显示
+name: HAIZ 晚修自动作业看板
+description: 不占用 ClassIsland 课表栏；按当天最后两节自习课自动显示 HAIZ 作业
 entranceAssembly: "HAIZ.ClassroomPlugin.dll"
 url: https://github.com/manyIwant/haiz
 apiVersion: 2.0.0.0
-version: 0.3.0.0
+version: 0.4.0.0
 author: HAIZ Independent Project
 readme: README.md
 icon: icon.png
