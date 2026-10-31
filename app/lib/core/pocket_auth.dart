@@ -162,7 +162,8 @@ class PocketAuthController extends ChangeNotifier {
       _subscription = client!.auth.onAuthStateChange.listen((event) {
         if (event.event == AuthChangeEvent.signedOut) {
           _lockToGuest('会话已结束，请重新登录。');
-        } else if (event.event == AuthChangeEvent.tokenRefreshed &&
+        } else if ((event.event == AuthChangeEvent.tokenRefreshed ||
+                event.event == AuthChangeEvent.signedIn) &&
             userId != null &&
             event.session?.user.id != userId) {
           _lockToGuest('账号会话已变化，请重新登录。');
@@ -194,7 +195,8 @@ class PocketAuthController extends ChangeNotifier {
     final current = auth.currentSession;
     final user = response.user;
     if (ticket != _epoch || user == null || current == null ||
-        current.user.id != user.id || current.isExpired) {
+        current.user.id != user.id || current.isExpired ||
+        user.emailConfirmedAt == null) {
       throw StateError('身份验证未通过');
     }
     final cloud = PocketCloudSnapshot(client!, user.id);
