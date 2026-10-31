@@ -145,7 +145,7 @@ label.field-label{display:block;font-size:11px;color:#f6e7d2;letter-spacing:.02e
 <p class="bottom">还没有可用账号？ <a id="guest-link" href="/lamp-preview/app/?fromLamp=1">进入本机访客空间</a></p><p class="service-notice">正式账号服务尚未上线，密码登录暂不可用。测试灯光请访问 <a href="/lamp-preview/demo/">演示页面</a>。</p>
 </form>
 </section><div class="foot">HAIZ · POCKET · SECURE SIGN-IN</div>
-</div></main>
+<div class="preview-tools"><button type="button" class="replay" id="replay" aria-label="重置登录灯光效果">↺ 重播灯光</button></div></main>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -230,12 +230,10 @@ label.field-label{display:block;font-size:11px;color:#f6e7d2;letter-spacing:.02e
     const account = username.value.trim(), secret = password.value;
     if (!account) { deny('请输入账号。'); username.focus(); return; }
     if (!secret) { deny('请输入密码。'); password.focus(); return; }
-    // This deliberately *untrusted* identity is exclusively for UI acceptance
-    // testing. It cannot authenticate users or unlock real personal data.
-    // For any non-demo identity, only the first-party domain may attempt real
-    // server authentication. Downloaded previews NEVER send real passwords.
+    // The public page accepts no hardcoded demo credentials. Only the
+    // first-party service may verify real accounts.
     if (location.origin !== 'https://haiz.space') {
-      deny('这是独立预览：只支持上方的演示账户，请不要输入真实密码。');
+      deny('请仅在 HAIZ 正式网站使用账号登录。');
       return;
     }
     preview = false; errorLatched = false; submitting = true; phase('checking');
