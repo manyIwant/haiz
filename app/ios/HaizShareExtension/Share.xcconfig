@@ -1,0 +1,2 @@
+// Keep the share extension's version aligned with the Flutter host app.
+#include "../Flutter/Generated.xcconfig"

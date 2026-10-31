@@ -47,7 +47,8 @@ class MainActivity : FlutterActivity() {
                         "setConfiguration" -> {
                             val enabled = call.argument<Boolean>("enabled") ?: false
                             val groups = call.argument<String>("groups") ?: ""
-                            result.success(MessageIntakeStore.setConfiguration(this, enabled, groups))
+                            val wechat = call.argument<Boolean>("wechat") ?: false
+                            result.success(MessageIntakeStore.setConfiguration(this, enabled, groups, wechat))
                         }
                         "requestNotificationSettings" -> {
                             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))

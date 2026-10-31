@@ -42,6 +42,7 @@ void main() {
                   'enabled': false,
                   'granted': false,
                   'groups': '',
+                  'wechat': false,
                 };
               case 'setConfiguration':
                 saved.addAll((call.arguments as Map).cast<String, Object?>());
@@ -49,6 +50,7 @@ void main() {
                   'enabled': saved['enabled'],
                   'granted': false,
                   'groups': saved['groups'],
+                  'wechat': saved['wechat'],
                 };
               case 'removeEntry':
                 entries.removeWhere(
@@ -67,14 +69,155 @@ void main() {
       expect((await MessageIntakeBridge.entries()).single.id, 'message-1');
       final config = await MessageIntakeBridge.configuration();
       expect(config?.enabled, isFalse);
-      await MessageIntakeBridge.configure(enabled: true, groups: '高一13班');
+      expect(config?.wechat, isFalse);
+      await MessageIntakeBridge.configure(
+        enabled: true,
+        groups: '高一13班',
+        includeWeChat: true,
+      );
       expect(saved['groups'], '高一13班');
+      expect(saved['wechat'], true);
       expect(calls, contains('setConfiguration'));
       await MessageIntakeBridge.remove('message-1');
       expect(await MessageIntakeBridge.entries(), isEmpty);
       debugDefaultTargetPlatformOverride = null;
     },
   );
+
+  testWidgets(
+    'captured school-group notice requires explicit review and save',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final entries = <Map<String, Object?>>[
+        {
+          'id': 'notice-1',
+          'source': 'QQ 群通知',
+          'title': '示例班群',
+          'text': '【HAIZ任务】物理｜完成实验报告｜2026-10-30｜未验证',
+          'receivedAt': DateTime(2026, 10, 29).millisecondsSinceEpoch,
+        },
+      ];
+      final calls = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(MessageIntakeBridge.channel, (call) async {
+            calls.add(call.method);
+            switch (call.method) {
+              case 'getEntries':
+                return entries;
+              case 'getConfiguration':
+                return <String, Object?>{
+                  'enabled': false,
+                  'granted': false,
+                  'groups': '',
+                };
+              case 'removeEntry':
+                entries.clear();
+                return true;
+              default:
+                return true;
+            }
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(MessageIntakeBridge.channel, null);
+      });
+
+      final store = PocketStore();
+      addTearDown(store.dispose);
+      await store.load();
+      var navigated = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => PocketSkin(
+            colors: PocketPalette.forName('porcelain'),
+            child: child ?? const SizedBox.shrink(),
+          ),
+          home: Scaffold(
+            body: InboxPage(store: store, onSaved: () => navigated++),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(store.tasks, isEmpty); // No silent task creation.
+      expect(find.text('1 条待审阅'), findsOneWidget);
+      await tester.ensureVisible(find.text('提取并审核'));
+      await tester.tap(find.text('提取并审核'));
+      await tester.pumpAndSettle();
+      expect(find.text('等待你确认'), findsOneWidget);
+      expect(store.tasks, isEmpty);
+      await tester.ensureVisible(find.text('确认并加入我的任务'));
+      await tester.tap(find.text('确认并加入我的任务'));
+      await tester.pumpAndSettle();
+
+      expect(store.tasks.single.title, '完成实验报告');
+      expect(store.tasks.single.dueIso, '2026-10-30');
+      expect(store.tasks.single.source, contains('QQ 群通知'));
+      expect(store.tasks.single.originalNotice, contains('【HAIZ任务】'));
+      expect(entries, isEmpty);
+      expect(calls, contains('removeEntry'));
+      expect(navigated, 1);
+      expect(tester.takeException(), isNull);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+  test('iOS accepts user-shared notices but cannot monitor notifications', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    expect(MessageIntakeBridge.available, isTrue);
+    expect(MessageIntakeBridge.supportsNotificationMonitoring, isFalse);
+
+    final calls = <String>[];
+    final entries = <Map<String, Object?>>[
+      {
+        'id': 'ios-share:demo',
+        'source': 'iOS 分享 · 用户主动',
+        'title': '分享的文字',
+        'text': '语文作业：完成读书摘录。',
+        'receivedAt': DateTime(2026, 10, 29).millisecondsSinceEpoch,
+      },
+    ];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(MessageIntakeBridge.channel, (call) async {
+      calls.add(call.method);
+      if (call.method == 'getEntries') return entries;
+      if (call.method == 'removeEntry') {
+        entries.removeWhere((e) => e['id'] == (call.arguments as Map)['id']);
+        return true;
+      }
+      if (call.method == 'getConfiguration') {
+        return {
+          'enabled': false,
+          'granted': false,
+          'groups': '',
+          'wechat': false,
+        };
+      }
+      return true;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(
+          MessageIntakeBridge.channel,
+          null,
+        ));
+    expect((await MessageIntakeBridge.entries()).single.source, contains('iOS 分享'));
+    expect((await MessageIntakeBridge.configuration())?.enabled, false);
+    expect(
+      await MessageIntakeBridge.configure(enabled: true, groups: '某班作业群'),
+      isNull,
+    );
+    await MessageIntakeBridge.notificationSettings();
+    expect(calls, isNot(contains('setConfiguration')));
+    expect(calls, isNot(contains('requestNotificationSettings')));
+    await MessageIntakeBridge.remove('ios-share:demo');
+    expect(await MessageIntakeBridge.entries(), isEmpty);
+  });
 
   testWidgets(
     'captured school-group notice requires explicit review and save',

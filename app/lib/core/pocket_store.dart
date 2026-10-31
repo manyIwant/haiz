@@ -15,6 +15,7 @@ class PocketStore extends ChangeNotifier {
   Future<void> _pending = Future.value();
   bool _disposed = false;
   bool ready = false;
+  bool semanticExtractionConsent = false;
   int generation = 0;
   String? namespace;
   String? storageError;
@@ -42,6 +43,7 @@ class PocketStore extends ChangeNotifier {
     generation++;
     namespace = null;
     ready = false;
+    semanticExtractionConsent = false;
     _ticker?.cancel();
     _focusEndsAt = null;
     focusRunning = false;
@@ -98,6 +100,10 @@ class PocketStore extends ChangeNotifier {
       if (_disposed || ticket != generation) return;
       namespace = scope;
       _apply(data);
+      // Private, account-scoped, default-off setting; no cross-user reuse.
+      semanticExtractionConsent = scope.startsWith('haiz/v1/') &&
+          await _prefs.getBool('$scope/semantic-extraction-consent.v1') == true;
+      if (_disposed || ticket != generation) return;
       // Archive failures only hide the migration prompt and keep originals;
       // they must never make a healthy namespace read-only.
       try {
@@ -156,6 +162,20 @@ class PocketStore extends ChangeNotifier {
     });
   }
 
+  /// A user-controlled setting requiring an active verified account.
+  /// Does not enable any native background capture or third-party upload by itself.
+  Future<void> setSemanticExtractionConsent(bool value) async {
+    final scope = namespace;
+    if (!_writable || scope == null || !scope.startsWith('haiz/v1/')) {
+      throw StateError('请先登录已核准的班级账号。');
+    }
+    final ticket = generation;
+    await _prefs.setBool('$scope/semantic-extraction-consent.v1', value);
+    if (_disposed || ticket != generation || namespace != scope) return;
+    semanticExtractionConsent = value;
+    _notify();
+  }
+
   Future<void> flush() async {
     await _pending;
     if (storageError != null) throw StateError(storageError!);
@@ -163,7 +183,9 @@ class PocketStore extends ChangeNotifier {
 
   Future<void> importLegacyArchive({required bool ownerConfirmed}) async {
     final scope = namespace;
-    if (!ownerConfirmed || !_writable || scope == null ||
+    if (!ownerConfirmed ||
+        !_writable ||
+        scope == null ||
         !scope.startsWith('haiz/v1/')) {
       throw StateError('须登录数据所属账号并明确确认后导入');
     }
@@ -174,34 +196,54 @@ class PocketStore extends ChangeNotifier {
       final legacy = await archive.read();
       if (ticket != generation || _disposed) return;
       if (_legacyImported) return;
-      // Compute inside the write queue so a queued edit cannot be overwritten
-      // by a merge based on stale in-memory state.
-      var merged = const PersonalSnapshot();
+      // Serialize the archive write but rebase against live in-memory edits.
+      // Ordinary edits remain synchronous and can occur across any await.
       final write = _pending.then((_) async {
-        // Re-check inside the queue: the account may have been switched or
-        // logged out while this migration waited behind earlier writes. The
-        // confirmation belongs to the account that was open when it was given,
-        // so a stale migration must neither claim the archive nor write it.
         if (ticket != generation ||
             _disposed ||
             namespace != scope ||
             !_writable) {
           throw StateError('账号已切换，旧数据迁移已取消；归档与原始记录仍保留');
         }
-        merged = _mergeLegacy(legacy);
+        if (_legacyImported) {
+          return; // A second concurrent import is already done.
+        }
+        _mergeLegacy(legacy); // Check conflicts BEFORE claiming ownership.
         await archive.claim(scope);
-        final raw = merged.encode();
+        if (ticket != generation ||
+            _disposed ||
+            namespace != scope ||
+            !_writable) {
+          // The ownership claim was for the former account. Never bring
+          // its data into the new account; the original owner can retry.
+          return;
+        }
+
+        // Incorporate edits performed during the ownership claim.
+        final mergedForDisk = _mergeLegacy(legacy);
+        final raw = mergedForDisk.encode();
         await _prefs.setString('$scope/personal.v1', raw);
         if (await _prefs.getString('$scope/personal.v1') != raw) {
           throw StateError('历史导入校验失败，归档仍保留');
         }
+        if (ticket != generation ||
+            _disposed ||
+            namespace != scope ||
+            !_writable) {
+          return; // Never expose A's archive in another account's state.
+        }
+
+        // More edits may have happened while the destination write was pending.
+        // Rebase again and queue a final snapshot AFTER those ordinary writes;
+        // otherwise an older queued save would silently erase the imported data.
+        final current = _mergeLegacy(legacy);
+        _apply(current);
+        _persist();
+        _notify();
       });
       _pending = write.catchError((Object _) {});
       await write;
-      if (ticket == generation && !_disposed) {
-        _apply(merged);
-        _notify();
-      }
+      await flush(); // Do not report import complete before the final save.
     } catch (error) {
       if (ticket == generation && !_disposed && error is! StateError) {
         storageError = '旧数据导入未完成，归档和原始记录仍保留。';
@@ -232,7 +274,7 @@ class PocketStore extends ChangeNotifier {
   int get doneCount => tasks.where((x) => x.completed).length;
 
   void setAppearance(String value) {
-    if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) return;
+    if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) { return; }
     appearance = value;
     _persist(); _notify();
   }

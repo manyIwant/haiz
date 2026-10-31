@@ -55,6 +55,28 @@ final class _ClaimGate extends InMemorySharedPreferencesAsync {
   }
 }
 
+// Pause the migration's destination write, not just the ownership claim.
+final class _DestinationGate extends InMemorySharedPreferencesAsync {
+  _DestinationGate(super.data) : super.withData();
+  final entered = Completer<void>();
+  final release = Completer<void>();
+  bool block = true;
+
+  @override
+  Future<bool> setString(
+    String key,
+    String value,
+    SharedPreferencesOptions options,
+  ) async {
+    if (key.endsWith('/personal.v1') && block) {
+      block = false;
+      entered.complete();
+      await release.future;
+    }
+    return super.setString(key, value, options);
+  }
+}
+
 final class _WriteFailure extends InMemorySharedPreferencesAsync {
   _WriteFailure() : super.empty();
   final entered = Completer<void>();
@@ -138,6 +160,48 @@ void main() {
     expect(store.tasks.map((task) => task.title), expectedTitles);
     expect(saved.legacyImported, isTrue);
   });
+
+  test('QA-STORAGE-06 editing while destination write waits preserves both versions', () async {
+    final platform = _DestinationGate(_legacy());
+    final store = await _account(platform);
+    final migration = store.importLegacyArchive(ownerConfirmed: true);
+    await platform.entered.future;
+    store.addTask('写入尚未完成时新增的私人任务', '地理');
+    platform.release.complete();
+    await migration;
+    await store.flush();
+    final key = '${store.namespace}/personal.v1';
+    final saved = PersonalSnapshot.decode(
+      (await SharedPreferencesAsync().getString(key))!,
+    );
+    final expected = containsAll(['写入尚未完成时新增的私人任务', '旧任务']);
+    expect(store.tasks.map((task) => task.title), expected);
+    expect(saved.tasks.map((task) => task.title), expected);
+    expect(saved.legacyImported, true);
+  });
+
+  test(
+    'QA-STORAGE-07 two imports in flight never duplicate archived tasks',
+    () async {
+      final platform = _ClaimGate(_legacy());
+      final store = await _account(platform);
+      final first = store.importLegacyArchive(ownerConfirmed: true);
+      await platform.entered.future;
+      final second = store.importLegacyArchive(ownerConfirmed: true);
+      platform.release.complete();
+      await Future.wait([first, second]);
+      await store.flush();
+      expect(store.tasks.where((task) => task.id == 'legacy-task').length, 1);
+      expect(
+        PersonalSnapshot.decode(
+          (await SharedPreferencesAsync().getString(
+            '${store.namespace}/personal.v1',
+          ))!,
+        ).tasks.where((task) => task.id == 'legacy-task').length,
+        1,
+      );
+    },
+  );
 
   test('QA-STORAGE-02 invalid calendar date is rejected without importing legacy bytes', () async {
     final raw = {

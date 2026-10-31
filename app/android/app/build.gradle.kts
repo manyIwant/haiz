@@ -56,6 +56,7 @@ android {
 
 dependencies {
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    testImplementation("junit:junit:4.13.2")
 }
 
 kotlin {

@@ -64,11 +64,11 @@ void main() {
     // The sheet stays open while the account changes underneath it.
     await store.openGuest();
 
-    await tester.tap(find.text('添加到今天'));
+    await tester.tap(find.byKey(const Key('save-task')));
     await tester.pumpAndSettle();
 
     expect(store.tasks, isEmpty);
-    expect(find.text('已切换账号，任务未写入任何账号。'), findsOneWidget);
+    expect(find.text('已切换账号，本次修改没有保存。'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });
