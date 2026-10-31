@@ -330,12 +330,14 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
     );
     if (yes == true) {
       await pocketAuth.signOut();
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _entered = false;
         tab = 0;
         showLab = false;
         showAcademic = false;
-      });
+        });
+      }
     }
   }
 
