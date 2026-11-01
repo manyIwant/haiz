@@ -3,9 +3,9 @@
 HAIZ Pocket 是面向校园的非官方、本地优先学习工具。Android 预览版与 Web 预览版使用同一套 Flutter 页面、任务和收件逻辑，Android 支持获授权的指定群通知接收，iOS Share Extension 支持用户主动分享；班级任务同步须部署独立 HAIZ Academic HTTPS 服务。
 
 - 网页可交互预览：https://haiz.space/app-preview/inspect.html
-- 主分支旧版 Android APK（不含本次自动任务集成）：[`HAIZ Pocket v1.4 Optical v2`](../releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk)
-- 当前版本：`1.4.0-preview.4+8`
-- 最新版包含：今天、课表、收件、专注、校园，编辑任务、到期提醒、外部文本分享、可选学校群通知候选收件。
+- Android 正式签名 APK：[`HAIZ Android v1.5.0`](https://github.com/manyIwant/haiz/releases/tag/haiz-android-v1.5.0)（包名与旧 v1.4.0 相同、原证书签名，可在系统安装确认后覆盖升级）
+- Android 当前正式版本：`1.5.0+2100`（旧版 `1.4.0+2008`）
+- 最新版包含：今天、课表、收件、专注、校园，编辑任务、到期提醒、外部文本分享、可选学校群通知候选收件，以及 Android 应用内安全更新中心。首次需手动安装 v1.5.0；以后可在应用内检查并下载新版，安装需 Android 系统确认。
 - 收件箱仅创建待核对候选事项，用户确认后才保存为任务；不提供 QQ、钉钉或学习通官方 API 登录能力。
 
 ## 本地开发
@@ -42,3 +42,12 @@ Android Release 使用作者私有签名材料，配置文件不在公开仓库�
 [光学玻璃 v2 设计与测试说明](../docs/app-optical-lens-v2-20261029.md)。
 
 > 自动任务集成候选版的真实状态和发布门槛见 [RELEASE-AUTO-TASKS-V1](../docs/RELEASE-AUTO-TASKS-V1.md)。当前分支不是经真机验收的稳定发行版。
+
+
+## Android 升级和签名保管
+
+首次从旧 HAIZ 升级请直接安装同包名、同原签名的 v1.5.0 APK；**不要先卸载旧应用**，避免丢失本地数据。
+应用启动后可检查更新，更新入口会显示下载、SHA-256 校验结果并调用系统安装器。
+目前公开最新更新清单：<https://haiz.space/updates/latest.json>。
+GitHub Actions 可生成候选安装包，作者 Mac 使用私有原证书签名并发布到 Releases，证书不上传公开仓库。
+发布流程及真机验收说明见 [HAIZ Android 更新系统](../docs/HAIZ-ANDROID-IN-APP-UPDATES.md)。
