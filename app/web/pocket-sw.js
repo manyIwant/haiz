@@ -22,11 +22,15 @@ function isPublicAsset(url) {
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
-    for (const path of HAIZ_PRECACHE) {
-      const url = new URL(path, SCOPE).href;
-      const response = await fetch(url, { cache: 'reload' });
-      if (!response.ok) throw new Error('HAIZ offline asset unavailable: ' + path);
-      await cache.put(url, response);
+    // Bounded parallelism shortens install time without downloading every
+    // optional Flutter/PDF renderer into the first-launch cache.
+    for (let i = 0; i < HAIZ_PRECACHE.length; i += 3) {
+      await Promise.all(HAIZ_PRECACHE.slice(i, i + 3).map(async path => {
+        const url = new URL(path, SCOPE).href;
+        const response = await fetch(url, { cache: 'reload' });
+        if (!response.ok) throw new Error('HAIZ offline asset unavailable: ' + path);
+        await cache.put(url, response);
+      }));
     }
   })());
 });
