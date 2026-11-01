@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: haiz-pocket-macos-webkit-qa
-          path: webkit-acceptance/report.json
+          path: webkit-acceptance/
           retention-days: 14
           if-no-files-found: warn
       - name: Publish accurate capability boundary
