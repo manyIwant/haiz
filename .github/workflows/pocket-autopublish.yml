@@ -49,6 +49,15 @@ jobs:
       - name: Validate PWA security and offline startup
         run: node --test tests/pocket-pwa.test.mjs
 
+      - name: Prepare self-hosted Chinese and English OCR engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/haiz-ocr-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund \
+            tesseract.js@7.0.0 tesseract.js-core@7.0.0 \
+            @tesseract.js-data/eng@1.0.0 @tesseract.js-data/chi_sim@1.0.0
+          node scripts/prepare-pocket-ocr.mjs "$RUNNER_TEMP/haiz-ocr-deps/node_modules"
+
       - name: Build Flutter Web with optional public Supabase configuration
         working-directory: app
         env:
