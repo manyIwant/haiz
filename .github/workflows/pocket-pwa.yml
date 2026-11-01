@@ -46,6 +46,15 @@ jobs:
       - name: Existing Flutter regression tests
         working-directory: app
         run: flutter test
+      - name: Prepare self-hosted Chinese and English OCR engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/haiz-ocr-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund \
+            tesseract.js@7.0.0 tesseract.js-core@7.0.0 \
+            @tesseract.js-data/eng@1.0.0 @tesseract.js-data/chi_sim@1.0.0
+          node scripts/prepare-pocket-ocr.mjs "$RUNNER_TEMP/haiz-ocr-deps/node_modules"
+
       - name: Build production-like PWA under /pocket/
         working-directory: app
         run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
