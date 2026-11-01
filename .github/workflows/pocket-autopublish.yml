@@ -49,9 +49,31 @@ jobs:
       - name: Validate PWA security and offline startup
         run: node --test tests/pocket-pwa.test.mjs
 
-      - name: Compile Flutter Web for /pocket/
+      - name: Build Flutter Web with optional public Supabase configuration
         working-directory: app
-        run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
+        env:
+          HAIZ_PUBLIC_SUPABASE_URL: ${{ vars.HAIZ_SUPABASE_URL }}
+          HAIZ_PUBLIC_SUPABASE_KEY: ${{ vars.HAIZ_SUPABASE_PUBLISHABLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run)
+          if [[ -n "$HAIZ_PUBLIC_SUPABASE_URL" || -n "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
+            if [[ -z "$HAIZ_PUBLIC_SUPABASE_URL" || -z "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
+              echo "::error::Both public Supabase URL and publishable key must be configured together."
+              exit 1
+            fi
+            if [[ "$HAIZ_PUBLIC_SUPABASE_URL" != https://* ]]; then
+              echo "::error::The public Supabase URL must use HTTPS."
+              exit 1
+            fi
+            args+=("--dart-define=HAIZ_SUPABASE_URL=$HAIZ_PUBLIC_SUPABASE_URL")
+            args+=("--dart-define=HAIZ_SUPABASE_PUBLISHABLE_KEY=$HAIZ_PUBLIC_SUPABASE_KEY")
+            echo "Building authenticated-capable Pocket; cloud RLS still requires independent end-to-end testing"
+          else
+            echo "::notice::No production Supabase variables: building the intentionally guest-only Pocket app"
+          fi
+          flutter build web "${args[@]}"
 
       - name: Generate versioned offline shell
         run: |
