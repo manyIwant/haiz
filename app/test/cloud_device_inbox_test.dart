@@ -68,13 +68,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(reads, 1);
     expect(find.text('1 条待审阅'), findsOneWidget);
+    await tester.ensureVisible(find.text('提取并审核'));
+    await tester.tap(find.text('提取并审核'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('确认并加入我的任务'));
+    await tester.tap(find.text('确认并加入我的任务'));
+    await tester.pumpAndSettle();
+    expect(store.tasks, hasLength(1));
+    expect(store.tasks.single.originalNotice, isEmpty);
+    expect(store.tasks.single.source, '本机消息（已确认）');
+    final readsBeforeSwitch = reads;
 
     await store.openCloudAccount(
       userId: 'bob', read: () async => null, write: (_) async {},
     );
     await showInbox('bob');
     expect(find.byKey(const Key('unlock-cloud-device-inbox')), findsOneWidget);
-    expect(reads, 1);
+    expect(reads, readsBeforeSwitch);
     expect(find.text('1 条待审阅'), findsNothing);
     expect(tester.takeException(), isNull);
   });
