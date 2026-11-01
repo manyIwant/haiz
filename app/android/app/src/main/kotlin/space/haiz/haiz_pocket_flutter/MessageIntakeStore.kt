@@ -18,16 +18,12 @@ internal object MessageIntakeStore {
     private const val SEEN = "seen"
     private const val GROUPS = "group_keywords"
     private const val ENABLED = "monitor_enabled"
+    private const val WECHAT_ENABLED = "wechat_enabled"
     private const val MAX_QUEUE = 60
     private const val MAX_SEEN = 160
     private const val MAX_TEXT = 4000
 
-    val allowedApps = setOf(
-        "com.tencent.mobileqq",       // QQ
-        "com.tencent.tim",            // TIM
-        "com.alibaba.android.rimet",  // DingTalk
-        "com.chaoxing.mobile"         // Xuexitong
-    )
+    val allowedApps = SchoolNoticePolicy.allowedApps
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
@@ -35,17 +31,19 @@ internal object MessageIntakeStore {
     fun configuration(c: Context): Map<String, Any> = mapOf(
         "enabled" to prefs(c).getBoolean(ENABLED, false),
         "groups" to (prefs(c).getString(GROUPS, "") ?: ""),
+        "wechat" to prefs(c).getBoolean(WECHAT_ENABLED, false),
         "granted" to notificationAccessGranted(c)
     )
 
     @Synchronized
-    fun setConfiguration(c: Context, enable: Boolean, groups: String): Map<String, Any> {
+    fun setConfiguration(c: Context, enable: Boolean, groups: String, wechat: Boolean = false): Map<String, Any> {
         val normalized = groups.split('\n', ',', '，', ';', '；')
             .map { it.trim().take(48) }.filter { it.length >= 2 }.distinct()
             .take(10).joinToString("\n")
         // No group filter = never monitor any notification.
         prefs(c).edit()
             .putString(GROUPS, normalized)
+            .putBoolean(WECHAT_ENABLED, wechat)
             .putBoolean(ENABLED, enable && normalized.isNotBlank())
             .apply()
         return configuration(c)
@@ -62,17 +60,26 @@ internal object MessageIntakeStore {
         }
     }
 
-    fun monitorAllowed(c: Context, pkg: String, title: String, text: String): Boolean {
+    fun monitorAllowed(
+        c: Context,
+        pkg: String,
+        title: String,
+        text: String,
+        conversationTitle: String = "",
+        subText: String = "",
+    ): Boolean {
         if (pkg !in allowedApps) return false
         val pref = prefs(c)
         if (!pref.getBoolean(ENABLED, false) || !notificationAccessGranted(c)) return false
+        // WeChat is a new source: never silently enable it for existing installs.
+        if (pkg == "com.tencent.mm" && !pref.getBoolean(WECHAT_ENABLED, false)) return false
         val groups = (pref.getString(GROUPS, "") ?: "")
             .split('\n').filter { it.length >= 2 }
-        if (groups.isEmpty() || groups.none { title.contains(it, ignoreCase = true) }) {
-            return false // Never capture arbitrary private conversations.
-        }
-        if (text.length < 5 || !Regex("交|完成|提交|上交|复习|预习|背诵|默写|练习|整理|准备|带好|带上|作业|实验报告|截止|测验|通知").containsMatchIn(text)) return false
-        return true
+        // Only selected conversation metadata can match the group allowlist.
+        // A chat body mentioning the group name must NEVER be sufficient.
+        return SchoolNoticePolicy.shouldCollect(
+            pkg, title, conversationTitle, subText, text, groups
+        )
     }
 
     private fun hash(value: String): String {

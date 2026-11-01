@@ -56,19 +56,26 @@ void main() {
     await tester.pumpWidget(_frame(TodayPage(store: store, onNavigate: (_) {})));
     await tester.tap(find.byTooltip('添加任务'));
     await tester.pumpAndSettle();
+    // Address the editor field explicitly. The integrated inbox/command
+    // palette may add other TextFields elsewhere in the widget tree.
     await tester.enterText(
-      find.byType(TextField).last,
+      find.byKey(const Key('task-title')),
       '切换账号后不应写入的任务',
+    );
+    await tester.pump();
+    expect(
+      tester.widget<FilledButton>(find.byKey(const Key('save-task'))).onPressed,
+      isNotNull,
     );
 
     // The sheet stays open while the account changes underneath it.
     await store.openGuest();
 
-    await tester.tap(find.text('添加到今天'));
+    await tester.tap(find.byKey(const Key('save-task')));
     await tester.pumpAndSettle();
 
     expect(store.tasks, isEmpty);
-    expect(find.text('已切换账号，任务未写入任何账号。'), findsOneWidget);
+    expect(find.text('已切换账号，本次修改没有保存。'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });

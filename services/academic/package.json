@@ -1,0 +1,17 @@
+{
+  "name": "haiz-academic",
+  "version": "1.4.0-preview.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.22.0" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test.mjs tests/*.test.mjs",
+    "test:coverage": "node --experimental-test-coverage --test-coverage-include=*.mjs --test-coverage-exclude=test.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80 --test test.mjs tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

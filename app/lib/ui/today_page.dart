@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
+import '../core/academic_session.dart';
 import '../domain/pocket_models.dart';
 import 'kit.dart';
 import 'editorial.dart';
@@ -9,8 +10,9 @@ import 'task_workflow.dart';
 
 class TodayPage extends StatefulWidget {
   final PocketStore store;
+  final AcademicSession? session;
   final ValueChanged<int> onNavigate;
-  const TodayPage({super.key, required this.store, required this.onNavigate});
+  const TodayPage({super.key, required this.store, required this.onNavigate, this.session});
 
   @override
   State<TodayPage> createState() => _TodayPageState();
@@ -156,6 +158,40 @@ class _TodayPageState extends State<TodayPage> {
                   ),
                 ],
               ),
+              if (widget.session?.identity != null) ...[
+                const SizedBox(height: 20),
+                Row(children: [
+                  Expanded(child: SectionLabel('班级最新作业',
+                      trailing: widget.session!.selectedClass == null ? '尚未加入班级' : 'HAIZ Academic · 已发布')),
+                  IconButton(
+                    tooltip: '同步班级作业',
+                    icon: const Icon(Icons.refresh_rounded),
+                    onPressed: widget.session!.busy ? null
+                        : () => widget.session!.refresh(),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                if (widget.session!.assignments.isEmpty)
+                  PocketCard(child: Text(
+                    '当前班级暂无已发布作业，或尚未完成刷新。请确认网络与班级权限。',
+                    style: TextStyle(color: p.secondary, fontSize: 12),
+                  )),
+                for (final item in widget.session!.assignments.take(8))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: PocketCard(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${item['subject'] ?? '其他'} · ${item['title'] ?? ''}',
+                          style: TextStyle(color: p.foreground,
+                              fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 5),
+                        Text('截止：${item['due'] ?? '待确认'} · 班级正式发布',
+                          style: TextStyle(color: p.secondary, fontSize: 11)),
+                      ],
+                    )),
+                  ),
+              ],
               const SizedBox(height: 26),
               const SectionLabel('时间与课程', trailing: '按本机课表显示'),
               const SizedBox(height: 12),
