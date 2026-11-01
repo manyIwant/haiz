@@ -17,6 +17,39 @@ APK 包名固定为 `space.haiz.app.preview`，没有修改 ID。
 证书。现有预览包若不是用长期正式证书签名，也不能被新的正式签名包覆盖。
 首次迁移前务必备份离线数据并验证账号云同步；绝不要直接卸载仍有本地数据的应用。
 
+## 已核验的旧版兼容性
+
+仓库归档 `releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk`
+实际包名是 `space.haiz.app.preview`，`versionCode=2008`，
+签名 SHA-256 为
+`FEC8D3962D1D35CF6A975722734DA7D525E166421994C5D175AB71FC3C89D169`。
+2026-11-01 在作者 Mac 上验证 `~/.config/haiz-android/signing.properties`
+指向的现有 `haiz-preview-release.jks` 与旧版签名一致。
+
+**首次稳定更新应使用 1.5.0、构建号 2100 或更高。**
+不要依照旧示例使用构建号 11，否则手机会判定为降级而拒绝覆盖。
+
+## 完全不上传签名私钥的 Mac 发布模式
+
+已内置一套私钥只留在自己 Mac 上的替代工作流：
+
+1. GitHub Actions 运行 `haiz-android-local-sign-candidate.yml`，
+   填写 `version=1.5.0`、`version_code=2100`。
+   输出的 `CANDIDATE.apk` 仅供本地重新签名，**禁止直接分发或安装**。
+2. 构建成功后，在保管签名密钥的 Mac 上运行：
+
+   ```bash
+   python3 scripts/haiz_release_from_candidate.py <GitHub_Run_ID> 1.5.0 2100 "收件箱修复与应用内更新"
+   ```
+
+3. 本地脚本读取已有的 `signing.properties`，使用 Mac 上的
+   `apksigner` 完成签名，比较**已发布旧版的证书指纹**、包名和构建号，
+   只上传验证过的已签名 APK 及哈希，并发布 `updates/latest.json`。
+
+这一路径完全不要求将 keystore 加入 GitHub Secrets。
+以后也可使用 Secrets 工作流完成云端签名，但必须先由本人安全配置私钥，
+不要通过聊天、截图或公开提交暴露密钥。
+
 ## 仅一次：建立长期签名密钥
 
 在你自己的可信 Mac 上生成并**永久保存** Android Keystore，例如：
@@ -48,7 +81,7 @@ Repository secrets：
 
 1. 先合并、验证功能和测试，确保 main 已包含本次修复。
 2. 在仓库 Actions 中打开 **HAIZ Android · Stable signed in-app updates**，选择 Run workflow（main）。
-3. 输入新版本号（如 `1.0.1`）、严格递增的 `version_code`（首版从 `11` 开始），以及更新说明。
+3. 输入新版本号（如 `1.0.1`）、严格递增的 `version_code`（首版建议 `2100`），以及更新说明。
 4. 工作流运行 Flutter 检查与测试，通过后用上述**同一套私有签名**生成安装包。
 5. 发布不可覆盖的 `haiz-android-v1.0.1` Release，包含
    `HAIZ-Pocket-Android.apk` 和 `SHA256SUMS.txt`。
