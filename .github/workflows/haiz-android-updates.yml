@@ -134,6 +134,13 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk "$GITHUB_WORKSPACE/HAIZ-Pocket-Android.apk"
           SDK_BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           "$SDK_BUILD_TOOLS/apksigner" verify --verbose "$GITHUB_WORKSPACE/HAIZ-Pocket-Android.apk"
+          # The app must retain the same signer as shipped HAIZ v1.4.0.
+          expected="fec8d3962d1d35cf6a975722734da7d525e166421994c5d175ab71fc3c89d169"
+          actual="$("$SDK_BUILD_TOOLS/apksigner" verify --print-certs "$GITHUB_WORKSPACE/HAIZ-Pocket-Android.apk" | awk '/Signer #1 certificate SHA-256 digest:/{print tolower($NF); exit}')"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::This keystore cannot replace the installed HAIZ v1.4.0 APK."
+            exit 1
+          fi
           (cd "$GITHUB_WORKSPACE" && sha256sum HAIZ-Pocket-Android.apk > SHA256SUMS.txt)
       - name: Publish immutable release, then update HAIZ discovery manifest
         shell: bash
