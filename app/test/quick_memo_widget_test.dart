@@ -111,7 +111,7 @@ void main() {
     expect(store.tasks.first.title, '后天带实验器材');
   });
 
-  testWidgets('switching account cancels pending completion and clears draft',
+  testWidgets('reopening guest preserves immediate checkoff and clears draft',
       (tester) async {
     final store = PocketStore();
     addTearDown(store.dispose);
@@ -132,7 +132,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
 
-    expect(store.tasks.single.completed, isFalse);
+    // The completed bit was committed before the animation; reopening the
+    // same guest namespace must retain it, even though UI drafts are cleared.
+    expect(store.tasks.single.completed, isTrue);
     final input = tester.widget<TextField>(
         find.byKey(const Key('quick-memo-input')));
     expect(input.controller!.text, isEmpty);
