@@ -1,0 +1,30 @@
+name: HAIZ V3 · Transaction and fallback QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'prototypes/haiz-world/**'
+      - '.github/workflows/v3-transaction-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'prototypes/haiz-world/**'
+      - '.github/workflows/v3-transaction-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v3-transaction:
+    name: V3 rollback and mobile transfer budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check V3 installation rollback and mobile low tier
+        run: node --test prototypes/haiz-world/tests/v3-transaction.test.mjs
