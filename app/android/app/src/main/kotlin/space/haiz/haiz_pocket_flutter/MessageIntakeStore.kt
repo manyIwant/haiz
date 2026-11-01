@@ -43,6 +43,12 @@ internal object MessageIntakeStore {
             .map { it.trim().take(48) }.filter { it.length >= 2 }.distinct()
             .take(10).joinToString("\n")
         // No group filter = never monitor any notification.
+        val old = prefs(c)
+        if (old.getString(GROUPS, "") != normalized ||
+            old.getBoolean(ENABLED, false) != (enable && normalized.isNotBlank()) ||
+            old.getBoolean(WECHAT_ENABLED, false) != wechat) {
+            WechatMonitorDiagnostics.reset(c)
+        }
         prefs(c).edit()
             .putString(GROUPS, normalized)
             .putBoolean(WECHAT_ENABLED, wechat)
@@ -60,6 +66,22 @@ internal object MessageIntakeStore {
             val component = ComponentName.unflattenFromString(name)
             component?.packageName == c.packageName && component.className == target
         }
+    }
+
+    fun wechatMonitorActive(c: Context): Boolean {
+        val pref = prefs(c)
+        return pref.getBoolean(ENABLED, false) && pref.getBoolean(WECHAT_ENABLED, false) &&
+            notificationAccessGranted(c)
+    }
+
+    fun monitoredGroups(c: Context): List<String> =
+        (prefs(c).getString(GROUPS, "") ?: "").split('\\n').filter { it.length >= 2 }
+
+    fun wechatDecision(c: Context, title: String, text: String,
+                       conversationTitle: String, subText: String): String {
+        if (!wechatMonitorActive(c)) return "disabled"
+        return SchoolNoticePolicy.decision(
+            "com.tencent.mm", title, conversationTitle, subText, text, monitoredGroups(c))
     }
 
     fun monitorAllowed(

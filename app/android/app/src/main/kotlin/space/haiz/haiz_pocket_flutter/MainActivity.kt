@@ -86,6 +86,11 @@ class MainActivity : FlutterActivity() {
                     when (call.method) {
                         "getEntries" -> result.success(MessageIntakeStore.entries(this))
                         "getConfiguration" -> result.success(MessageIntakeStore.configuration(this))
+                        "getWechatDiagnostics" -> result.success(WechatMonitorDiagnostics.snapshot(this))
+                        "resetWechatDiagnostics" -> {
+                            WechatMonitorDiagnostics.reset(this)
+                            result.success(WechatMonitorDiagnostics.snapshot(this))
+                        }
                         "setConfiguration" -> {
                             val enabled = call.argument<Boolean>("enabled") ?: false
                             val groups = call.argument<String>("groups") ?: ""
