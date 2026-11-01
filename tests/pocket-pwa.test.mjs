@@ -24,6 +24,9 @@ test('PWA Flutter entry point includes iOS metadata and safe updates', () => {
   assert.match(html, /pocket-client\.js/);
   assert.match(html, /pocket-ui\.css/);
   assert.match(html, /manifest\.json/);
+  const bootstrap = readFileSync(join(projectRoot, 'app/web/flutter_bootstrap.js'), 'utf8');
+  assert.match(bootstrap, /_flutter\\.loader\\.load\\(\\);/);
+  assert.doesNotMatch(bootstrap, /serviceWorkerSettings/);
   const client = readFileSync(join(projectRoot, 'app/web/pocket-client.js'), 'utf8');
   assert.match(client, /HAIZ_APPLY_UPDATE/);
   assert.match(client, /registration\.update\(\)/);
@@ -35,7 +38,7 @@ test('PWA packager generates a versioned, scoped service worker and never precac
   try {
     const fixture = {
       'index.html': '<html></html>',
-      'flutter_bootstrap.js': 'boot();',
+      'flutter_bootstrap.js': '_flutter.loader.load();',
       'main.dart.js': 'start();',
       'manifest.json': '{}',
       'pocket-client.js': 'start();',
