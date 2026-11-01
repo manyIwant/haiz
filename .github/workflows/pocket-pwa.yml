@@ -76,6 +76,10 @@ jobs:
         run: |
           set -euo pipefail
           npm ci --ignore-scripts --no-audit --no-fund
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+          fc-cache -f
+          fc-match -f '%{family}\n' ':lang=zh'
           export HAIZ_TEST_CHROME="$(command -v google-chrome || command -v google-chrome-stable || true)"
           if [[ -z "$HAIZ_TEST_CHROME" ]]; then
             echo "::error::GitHub runner has no system Chrome; real OCR smoke is required"
