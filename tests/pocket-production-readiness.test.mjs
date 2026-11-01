@@ -41,6 +41,6 @@ test('production build only accepts a public key, with optional HAIZ URL',()=>{
   assert.match(workflow,/sb_publishable_\*/);
   assert.match(workflow,/zifcxtjwzbjabcjpqhgp\.supabase\.co/);
   assert.match(workflow,/Supabase URL is set but its publishable key is missing/);
-  assert.match(workflow,/guest-only Pocket app/);
+  assert.match(workflow,/Flutter source defaults to HAIZ's public Supabase key/);
   assert.doesNotMatch(workflow,/service_role/);
 });
