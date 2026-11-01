@@ -47,7 +47,7 @@ jobs:
           flutter test
 
       - name: Validate PWA security and offline startup
-        run: node --test tests/pocket-pwa.test.mjs
+        run: node --test tests/pocket-pwa.test.mjs tests/pocket-web-ocr.test.mjs
 
       - name: Prepare self-hosted Chinese and English OCR engine
         shell: bash
