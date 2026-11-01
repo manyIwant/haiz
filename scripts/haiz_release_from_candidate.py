@@ -75,7 +75,13 @@ def verify_signature(apksigner, apk):
 
 def verify_package(aapt, apk, version, code):
     info = run(str(aapt), "dump", "badging", str(apk)).stdout.splitlines()[0]
-    fields = dict(re.findall(r"(name|versionCode|versionName)='([^']+)'", info))
+    match = re.match(
+        r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'",
+        info,
+    )
+    if not match:
+        raise RuntimeError("Unable to read Android package metadata")
+    fields = dict(zip(("name", "versionCode", "versionName"), match.groups()))
     if fields != {"name": PACKAGE, "versionCode": str(code), "versionName": version}:
         raise RuntimeError("Package ID or version mismatch: " + str(fields))
 
