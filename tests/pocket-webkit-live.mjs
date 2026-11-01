@@ -7,8 +7,9 @@ import {webkit} from 'playwright';
 // Real macOS WebKit. NOT Safari.app remote automation or an iPhone.
 const url='https://haiz.space/pocket/?fromLamp=1';
 const profile=await mkdtemp(join(tmpdir(),'haiz-webkit-live-'));
-const report={engine:'Playwright WebKit / macOS (not iPhone)',checks:[],started:new Date().toISOString()};
+const report={engine:'Playwright WebKit / macOS (not iPhone)',checks:[],started:new Date().toISOString(),pageErrors:[],failedRequests:[]};
 let context=null;
+let activePage=null;
 const note=(name,details)=>{report.checks.push({name,...details});console.log(name,JSON.stringify(details));};
 async function readSyntheticImage(page,language,text) {
  const start=Date.now();
@@ -34,16 +35,19 @@ try{
   headless:true,viewport:{width:390,height:844},serviceWorkers:'allow',acceptDownloads:true
  });
  let page=context.pages()[0]||await context.newPage();
+ activePage=page;
+ page.on('pageerror',e=>report.pageErrors.push(String(e).slice(0,280)));
+ page.on('requestfailed',r=>report.failedRequests.push({url:r.url().slice(0,160),error:r.failure()?.errorText}));
  const requests=[];
  page.on('request',req=>requests.push({method:req.method(),url:req.url()}));
  const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForSelector('flutter-view',{timeout:30000});
+ await page.waitForSelector('flutter-view',{state:'attached',timeout:22000});
  await page.waitForFunction(()=>typeof window.HAIZ_OCR?.recognize==='function',null,{timeout:15000});
  assert.equal(response.status(),200);
- note('Flutter WebKit boot',{pass:true,http:response.status()});
+ note('Flutter WebKit boot',{pass:true,http:response.status(),box:await page.locator('flutter-view').first().boundingBox()});
  await page.evaluate(()=>localStorage.setItem('haiz-qa-only','hello'));
  await page.reload({waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForSelector('flutter-view',{timeout:30000});
+ await page.waitForSelector('flutter-view',{state:'attached',timeout:22000});
  assert.equal(await page.evaluate(()=>localStorage.getItem('haiz-qa-only')),'hello');
  note('Page reload storage',{pass:true});
  const start=requests.length;
@@ -83,15 +87,21 @@ try{
   headless:true,viewport:{width:390,height:844},serviceWorkers:'allow'
  });
  page=context.pages()[0]||await context.newPage();
+ activePage=page;
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForSelector('flutter-view',{timeout:30000});
+ await page.waitForSelector('flutter-view',{state:'attached',timeout:22000});
  assert.equal(await page.evaluate(()=>localStorage.getItem('haiz-qa-only')),'hello');
  await page.evaluate(()=>localStorage.removeItem('haiz-qa-only'));
  note('Process restart storage',{pass:true});
  report.result='PASS';
 }catch(e){
  report.result='FAIL';report.error=String(e).slice(0,1100);
- note('Failure',{pass:false,error:report.error});process.exitCode=1;
+ note('Failure',{pass:false,error:report.error});
+ if(activePage){
+  try{report.document=await activePage.evaluate(()=>({title:document.title,location:location.href,viewCount:document.querySelectorAll('flutter-view').length,bodyText:document.body.innerText.slice(0,250),ocr:typeof window.HAIZ_OCR?.recognize}));}catch(_){}
+  try{await mkdir(resolve('webkit-acceptance'),{recursive:true});await activePage.screenshot({path:resolve('webkit-acceptance/failure.png')});}catch(_){}
+ }
+ process.exitCode=1;
 }finally{
  if(context)await context.close().catch(()=>{});
  await rm(profile,{recursive:true,force:true});
