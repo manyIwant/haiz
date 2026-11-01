@@ -10,14 +10,21 @@ import 'pocket_store.dart';
 /// Only a public/publishable key belongs in a mobile or web binary.
 /// Never embed a service_role or secret key in dart-defines.
 class PocketAuthConfig {
-  static const url = String.fromEnvironment('HAIZ_SUPABASE_URL');
+  // This endpoint is public project metadata, not a credential. A build can
+  // override it, but HAIZ's default now points to its actual Free project.
+  static const url = String.fromEnvironment(
+    'HAIZ_SUPABASE_URL',
+    defaultValue: 'https://zifcxtjwzbjabcjpqhgp.supabase.co',
+  );
   static const publishableKey =
       String.fromEnvironment('HAIZ_SUPABASE_PUBLISHABLE_KEY');
 
+  // Only modern public client keys are accepted. A secret/service-role key
+  // must never turn into a credential embedded in a Web/APK/IPA build.
   static bool get configured =>
       Uri.tryParse(url)?.scheme == 'https' &&
       Uri.tryParse(url)?.host.isNotEmpty == true &&
-      publishableKey.isNotEmpty;
+      publishableKey.startsWith('sb_publishable_');
 }
 
 /// Keychain on iOS, Android Keystore-backed encrypted storage on Android.
