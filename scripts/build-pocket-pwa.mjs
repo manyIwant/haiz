@@ -33,6 +33,11 @@ async function walk(folder) {
   return output;
 }
 
+const bootstrap = await readFile(join(root, 'flutter_bootstrap.js'), 'utf8');
+if (/_flutter\\.loader\\.load\\s*\\(\\s*\\{[\\s\\S]{0,200}?serviceWorkerSettings\\s*:/.test(bootstrap)) {
+  throw new Error('Legacy Flutter worker registration conflicts with pocket-sw.js');
+}
+
 const files = await walk(root);
 const available = new Map(files.map(file => [file.path, file]));
 for (const item of MUST_HAVE) {
