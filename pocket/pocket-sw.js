@@ -2,7 +2,7 @@
  * Only public application files are cached. Account data, APIs and cross-origin
  * requests (including Supabase) never enter Cache Storage.
  */
-const HAIZ_VERSION = "19e831d62b87-9dbfd677a5f7";
+const HAIZ_VERSION = "8258cbb05236-7e59e0959757";
 const HAIZ_PRECACHE = ["assets/AssetManifest.bin","assets/AssetManifest.bin.json","assets/FontManifest.json","assets/fonts/MaterialIcons-Regular.otf","assets/fonts/fallback/Roboto-Regular.ttf","assets/shaders/haiz_optical.frag","assets/shaders/ink_sparkle.frag","assets/shaders/stretch_effect.frag","canvaskit/canvaskit.js","canvaskit/canvaskit.wasm","canvaskit/chromium/canvaskit.js","canvaskit/chromium/canvaskit.wasm","canvaskit/webparagraph/canvaskit.js","canvaskit/webparagraph/canvaskit.wasm","favicon.png","flutter.js","flutter_bootstrap.js","icons/Icon-192.png","icons/Icon-512.png","icons/Icon-maskable-192.png","icons/Icon-maskable-512.png","index.html","install.html","main.dart.js","manifest.json","pocket-client.js","pocket-ui.css"];
 const CACHE_PREFIX = 'haiz-pocket-';
 const SHELL_CACHE = CACHE_PREFIX + 'shell-' + HAIZ_VERSION;
