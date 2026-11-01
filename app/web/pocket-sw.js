@@ -16,7 +16,8 @@ function isPublicAsset(url) {
   }
   const relative = url.href.slice(SCOPE.length).split('?')[0];
   return /^(assets|canvaskit|icons)\//.test(relative) ||
-    /^(main\.dart\.js|flutter\.js|flutter_bootstrap\.js|manifest\.json|pocket-client\.js|favicon\.png)$/.test(relative);
+    /^ocr\/(vendor\/(tesseract|worker)\.min\.js|core\/tesseract-core[-a-z0-9]*\.wasm(\.js)?|lang\/(chi_sim|eng)\.traineddata\.gz)$/.test(relative) ||
+    /^(main\.dart\.js|flutter\.js|flutter_bootstrap\.js|manifest\.json|pocket-client\.js|pocket-ocr\.js|favicon\.png)$/.test(relative);
 }
 
 self.addEventListener('install', event => {
