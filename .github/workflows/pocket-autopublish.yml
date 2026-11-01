@@ -1,0 +1,132 @@
+name: HAIZ Pocket · Auto Publish PWA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'scripts/build-pocket-pwa.mjs'
+      - 'tests/pocket-pwa.test.mjs'
+      - '.github/workflows/pocket-autopublish.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: haiz-pocket-publish-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  deploy:
+    name: Verify Flutter and publish only /pocket/
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+
+      - name: Validate source and test personal data isolation
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Validate PWA security and offline startup
+        run: node --test tests/pocket-pwa.test.mjs
+
+      - name: Compile Flutter Web for /pocket/
+        working-directory: app
+        run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
+
+      - name: Generate versioned offline shell
+        run: |
+          node scripts/build-pocket-pwa.mjs app/build/web
+          node --check app/build/web/pocket-sw.js
+          node --check app/build/web/pocket-client.js
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/manifest.json
+          test -s app/build/web/pwa-build.json
+          ! grep -q '__HAIZ_PRECACHE__' app/build/web/pocket-sw.js
+
+      - name: Preserve root site and prepare pocket-only commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f CNAME
+          test "$(cat CNAME)" = "haiz.space"
+          before_index="$(sha256sum index.html | cut -d' ' -f1)"
+          before_cname="$(sha256sum CNAME | cut -d' ' -f1)"
+          mkdir -p pocket
+          rsync -a --delete app/build/web/ pocket/
+          test "$(sha256sum index.html | cut -d' ' -f1)" = "$before_index"
+          test "$(sha256sum CNAME | cut -d' ' -f1)" = "$before_cname"
+          test -s pocket/pocket-sw.js
+          test -s pocket/main.dart.js
+          git add -A pocket/
+          if git diff --cached --quiet; then
+            echo "No Pocket changes to deploy"
+            exit 0
+          fi
+          changed="$(git diff --cached --name-only | grep -Ev '^pocket/' || true)"
+          if [[ -n "$changed" ]]; then
+            echo "::error::Unexpected changed site files: $changed"
+            exit 1
+          fi
+
+      - name: Commit and push only if still based on current main
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          source_sha="$(git rev-parse HEAD)"
+          current_sha="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [[ "$source_sha" != "$current_sha" ]]; then
+            echo "::error::main changed during build; refusing to publish stale Flutter code"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "deploy(pocket): rebuild installable PWA from $GITHUB_SHA"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Request legacy GitHub Pages rebuild
+        if: steps.publish.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"; then
+            echo "Requested Pages refresh"
+          else
+            echo "::warning::Pages API build request was not accepted. Verify the deployment in Actions."
+          fi
+
+      - name: Publish summary
+        if: always()
+        run: |
+          echo "## HAIZ Pocket /pocket/ deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Scope: https://haiz.space/pocket/" >> "$GITHUB_STEP_SUMMARY"
+          echo "Root campus pages and CNAME are not modified." >> "$GITHUB_STEP_SUMMARY"
+          echo "iPhone hardware, Web Push and browser OCR are not validated by this workflow." >> "$GITHUB_STEP_SUMMARY"
