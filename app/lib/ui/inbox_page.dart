@@ -56,6 +56,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   bool _groupsLoaded = false;
   bool _wechatOptIn = false;
   bool _monitorBusy = false;
+  bool _monitorExpanded = false;
   bool _submittingClass = false;
   bool _aiPreprocessing = false;
   final Map<String, List<NoticeCandidate>> _aiResults = {};
@@ -898,26 +899,66 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         ),
         const SizedBox(height: 14),
         if (MessageIntakeBridge.supportsNotificationMonitoring)
-          ExpansionTile(
-          // Keep expansion bool separate from the scroll view's offset (double).
-          key: const PageStorageKey('inbox-monitor-tile'),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 2),
-          childrenPadding: const EdgeInsets.only(bottom: 16),
-          title: Text(
-            '指定群通知自动收集',
-            style: TextStyle(
-              color: p.foreground,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          subtitle: Text(
-            _monitor?.enabled == true
-                ? (_monitor?.granted == true ? '已启用 · 仅指定群' : '等待系统通知授权')
-                : '默认关闭 · 需要你明确开启',
-            style: TextStyle(color: p.secondary, fontSize: 11),
-          ),
-          children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              InkWell(
+                key: const Key('monitor-settings-toggle'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => setState(() => _monitorExpanded = !_monitorExpanded),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '指定群通知自动收集',
+                              style: TextStyle(
+                                color: p.foreground,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              _monitor?.enabled == true
+                                  ? (_monitor?.granted == true
+                                      ? '已启用 · 仅指定群'
+                                      : '等待系统通知授权')
+                                  : '默认关闭 · 需要你明确开启',
+                              style: TextStyle(color: p.secondary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _monitorExpanded ? 0.5 : 0,
+                        duration: Duration(
+                          milliseconds: PocketSkin.of(context).reducedMotion ? 0 : 180,
+                        ),
+                        child: Icon(Icons.keyboard_arrow_down_rounded, color: p.secondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // A local disclosure does not read/write PageStorage. In release
+              // mode an invalid PageStorage value becomes a large grey ErrorWidget.
+              AnimatedSize(
+                alignment: Alignment.topCenter,
+                curve: Curves.easeInOutCubic,
+                duration: Duration(
+                  milliseconds: PocketSkin.of(context).reducedMotion ? 0 : 220,
+                ),
+                child: _monitorExpanded
+                    ? Padding(
+                        key: const Key('monitor-settings-panel'),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
             Text(
               '支持 QQ / TIM / 钉钉 / 学习通，微信须单独勾选。只有通知标题、会话标题或副标题包含你指定的群名称，'
               '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'
@@ -938,6 +979,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 12),
             TextField(
+              key: const Key('monitor-groups-input'),
               controller: _groupsController,
               maxLines: 2,
               maxLength: 250,
@@ -1015,8 +1057,13 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   style: TextStyle(color: p.accent, fontSize: 11),
                 ),
               ),
-          ],
-        ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
       ],
     );
   }
