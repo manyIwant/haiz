@@ -84,7 +84,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       ),
     );
     if (!mounted || !widget.store.isCloudAccount ||
-        widget.store.generation != generation || agreed != true) return;
+        widget.store.generation != generation || agreed != true) {
+      return;
+    }
     setState(() => _deviceInboxApprovedGeneration = generation);
     await _refreshIncoming();
   }
@@ -120,7 +122,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       final items = await MessageIntakeBridge.entries();
       final setting = await MessageIntakeBridge.configuration();
       if (!mounted || widget.store.generation != generation ||
-          !_canReadDeviceInbox) return;
+          !_canReadDeviceInbox) {
+        return;
+      }
       setState(() {
         _incoming = items;
         _monitor = setting;
