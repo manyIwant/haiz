@@ -56,7 +56,9 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
 
   Future<void> _submit() async {
     if (!widget.auth.configured || widget.auth.busy ||
-        !(_form.currentState?.validate() ?? false)) return;
+        !(_form.currentState?.validate() ?? false)) {
+      return;
+    }
     setState(() => _status = null);
     if (_register) {
       final ok = await widget.auth.signUp(_email.text, _password.text);
