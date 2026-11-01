@@ -503,8 +503,12 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         draft.title,
         draft.subject,
         due: draft.due,
-        source: '导入 · $_currentSource',
-        originalNotice: draft.original,
+        // Cloud snapshots contain only the reviewed task fields. Never send
+        // private chat text or conversation titles through task provenance.
+        source: widget.store.isCloudAccount
+            ? '本机消息（已确认）'
+            : '导入 · $_currentSource',
+        originalNotice: widget.store.isCloudAccount ? '' : draft.original,
       );
       added++;
     }
