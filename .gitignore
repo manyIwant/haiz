@@ -23,3 +23,9 @@ build/
 
 # Real-browser screenshots are generated locally by npm run test:browser.
 tests/artifacts/
+
+# Author-supplied Every Joule original: never publish without explicit redistribution rights.
+every-joule-offline/app/
+every-joule-offline/offline-index.json
+every-joule-offline/import-audit.json
+**/every-joule-permission*.txt
