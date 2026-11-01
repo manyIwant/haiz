@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'domain/message_intake_bridge.dart';
+import 'domain/haiz_app_updates.dart';
+import 'ui/haiz_update_sheet.dart';
 
 import 'package:pdfrx/pdfrx.dart';
 
@@ -56,11 +58,24 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
   bool _entered = kIsWeb && Uri.base.queryParameters['fromLamp'] == '1';
   bool showLab = false;
   bool showAcademic = false;
+  bool _hasAppUpdate = false;
+
+  Future<void> _checkAppUpdateQuietly() async {
+    if (!HaizAppUpdates.available) return;
+    try {
+      final installed = await HaizAppUpdates.installed();
+      final release = await HaizAppUpdates.check(current: installed);
+      if (mounted) setState(() => _hasAppUpdate = release != null);
+    } catch (_) {
+      // Never block offline use or expose a network error on launch.
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAppUpdateQuietly());
     _classRefreshTimer = Timer.periodic(const Duration(minutes: 3), (_) {
       if (_appIsForeground && session.identity != null && !pocketAuth.authenticated) {
         session.refresh();
@@ -248,6 +263,41 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                                 },
                               ),
                       ),
+                      if (store.ready && HaizAppUpdates.available)
+                        Positioned(
+                          top: 8,
+                          right: 66,
+                          child: SafeArea(
+                            child: Material(
+                              color: p.card,
+                              borderRadius: BorderRadius.circular(24),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  IconButton(
+                                    key: const Key('app-update-entry'),
+                                    tooltip: '检查 HAIZ 更新',
+                                    icon: Icon(Icons.system_update_alt_rounded,
+                                        color: p.accent),
+                                    onPressed: () => showHaizUpdateSheet(context),
+                                  ),
+                                  if (_hasAppUpdate)
+                                    Positioned(
+                                      right: 4,
+                                      top: 4,
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: p.accent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const SizedBox(width: 8, height: 8),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       if (store.ready)
                         Positioned(
                           right: 12,
