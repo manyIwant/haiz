@@ -1,0 +1,57 @@
+name: HAIZ Pocket · macOS WebKit Acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - qa/pocket-macos-webkit-smoke-20261101
+      - main
+    paths:
+      - 'tests/pocket-webkit-live.mjs'
+      - '.github/workflows/pocket-webkit-live.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: haiz-pocket-webkit
+  cancel-in-progress: true
+
+jobs:
+  webkit:
+    name: Real WebKit OCR and browser smoke (NOT iPhone)
+    runs-on: macos-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install declared testing dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install Playwright WebKit engine
+        run: npx playwright install webkit
+      - name: Verify macOS WebKit engine and source syntax
+        run: |
+          sw_vers
+          node --check tests/pocket-webkit-live.mjs
+      - name: Test live HAIZ bilingual OCR and browser storage
+        run: node tests/pocket-webkit-live.mjs
+      - name: Upload evidence, including failure details
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-macos-webkit-qa
+          path: webkit-acceptance/report.json
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Publish accurate capability boundary
+        if: always()
+        run: |
+          echo "## HAIZ Pocket WebKit verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tests run in macOS Playwright WebKit (NOT Safari.app or iPhone)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Successful OCR does not prove arbitrary screenshot accuracy." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic JSON download does not verify actual Flutter file picker." >> "$GITHUB_STEP_SUMMARY"
+          echo "Offline reload and iPhone Home Screen storage are not certified." >> "$GITHUB_STEP_SUMMARY"
+          test ! -f webkit-acceptance/report.json || cat webkit-acceptance/report.json >> "$GITHUB_STEP_SUMMARY"
