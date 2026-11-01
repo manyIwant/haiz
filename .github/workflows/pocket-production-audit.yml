@@ -1,0 +1,47 @@
+name: HAIZ Pocket · Production Acceptance Evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'scripts/pocket-production-readiness.mjs'
+      - 'tests/pocket-production-readiness.test.mjs'
+      - '.github/workflows/pocket-autopublish.yml'
+      - '.github/workflows/pocket-production-audit.yml'
+  schedule:
+    - cron: '20 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Generate honest six-area readiness report (not iPhone certification)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check static evidence and fail-closed audit logic
+        run: node --test tests/pocket-production-readiness.test.mjs
+      - name: Inspect the public HTTPS PWA and record missing gates
+        run: node scripts/pocket-production-readiness.mjs --live
+      - name: Add production hold report to the job summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f production-acceptance-output/report.md ]]; then
+            cat production-acceptance-output/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Readiness report did not run successfully' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haiz-pocket-production-acceptance-evidence
+          path: production-acceptance-output/
+          retention-days: 21
+          if-no-files-found: warn
