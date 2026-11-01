@@ -6,6 +6,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
+/// Shared 8-point UI rhythm. Editorial/cinematic compositions may opt out.
+abstract final class PocketSpace {
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 16;
+  static const double md = 24;
+  static const double lg = 32;
+  static const double xl = 48;
+  static const double dockClearance = 128;
+}
+
+abstract final class PocketType {
+  static const double micro = 12;
+  static const double caption = 13;
+  static const double body = 14;
+  static const double section = 18;
+  static const double pageTitle = 32;
+}
+
 class PocketPalette {
   final Color background;
   final Color card;
@@ -89,7 +108,7 @@ class PocketCard extends StatefulWidget {
   const PocketCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(PocketSpace.sm),
     this.onTap,
   });
   @override
@@ -106,7 +125,7 @@ class _PocketCardState extends State<PocketCard> {
   @override
   Widget build(BuildContext context) {
     final skin = PocketSkin.of(context), p = skin.colors;
-    final r = BorderRadius.circular(14);
+    final r = BorderRadius.circular(16);
     return AnimatedScale(
       scale: widget.onTap != null && down && !skin.reducedMotion ? .989 : 1,
       duration: Duration(milliseconds: skin.reducedMotion ? 0 : 145),
@@ -156,9 +175,9 @@ class Eyebrow extends StatelessWidget {
       text.toUpperCase(),
       style: TextStyle(
         color: p.accent,
-        fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.9,
+        fontSize: PocketType.micro,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
       ),
     );
   }
@@ -178,17 +197,16 @@ class PageTitle extends StatelessWidget {
           title,
           style: TextStyle(
             color: p.foreground,
-            fontFamily: 'serif',
-            fontWeight: FontWeight.w500,
-            fontSize: 34,
+            fontWeight: FontWeight.w600,
+            fontSize: PocketType.pageTitle,
             letterSpacing: -1.35,
             height: 1.22,
           ),
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: PocketSpace.xs),
         Text(
           subtitle,
-          style: TextStyle(color: p.secondary, fontSize: 13, height: 1.55),
+          style: TextStyle(color: p.secondary, fontSize: PocketType.caption, height: 1.55),
         ),
       ],
     );
@@ -209,12 +227,12 @@ class SectionLabel extends StatelessWidget {
           title,
           style: TextStyle(
             color: p.foreground,
-            fontSize: 18,
+            fontSize: PocketType.section,
             fontWeight: FontWeight.w700,
           ),
         ),
         if (trailing.isNotEmpty)
-          Text(trailing, style: TextStyle(color: p.secondary, fontSize: 12)),
+          Text(trailing, style: TextStyle(color: p.secondary, fontSize: PocketType.micro)),
       ],
     );
   }
@@ -239,7 +257,7 @@ class PocketPill extends StatelessWidget {
       onPressed: onTap,
       color: filled ? p.accent : p.tertiary,
       borderRadius: BorderRadius.circular(15),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: PocketSpace.sm, vertical: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -272,13 +290,7 @@ class GlassDock extends StatefulWidget {
     CupertinoIcons.timer,
     CupertinoIcons.map,
   ];
-  static const selectedIcons = [
-    CupertinoIcons.house_fill,
-    CupertinoIcons.calendar,
-    CupertinoIcons.tray_fill,
-    CupertinoIcons.timer_fill,
-    CupertinoIcons.map_fill,
-  ];
+  static const selectedIcons = icons; // Active state uses color + surface, not mixed filled glyphs.
   static const names = ['今天', '课表', '收件', '专注', '校园'];
   @override
   State<GlassDock> createState() => _GlassDockState();
@@ -327,7 +339,7 @@ class _GlassDockState extends State<GlassDock>
     final reduced = PocketSkin.of(context).reducedMotion;
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.only(bottom: 11),
+      minimum: const EdgeInsets.only(bottom: PocketSpace.xs),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Center(
@@ -378,7 +390,7 @@ class _GlassDockState extends State<GlassDock>
                       builder: (context, c) {
                         final cell = (c.maxWidth - 10) / GlassDock.names.length;
                         return SizedBox(
-                          height: 66,
+                          height: 72,
                           child: Stack(
                             children: [
                               Positioned.fill(
@@ -399,10 +411,10 @@ class _GlassDockState extends State<GlassDock>
                                           end: Alignment.bottomRight,
                                           colors: [
                                             Colors.white.withValues(
-                                              alpha: p.dark ? .21 : .55,
+                                              alpha: p.dark ? .17 : .38,
                                             ),
                                             p.accent.withValues(
-                                              alpha: p.dark ? .22 : .14,
+                                              alpha: p.dark ? .12 : .08,
                                             ),
                                             Colors.white.withValues(
                                               alpha: p.dark ? .09 : .29,
@@ -482,15 +494,15 @@ class _GlassDockState extends State<GlassDock>
                                                       : p.secondary,
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
+                                              const SizedBox(height: PocketSpace.xxs),
                                               Text(
                                                 GlassDock.names[i],
                                                 style: TextStyle(
                                                   color: widget.index == i
                                                       ? p.accent
                                                       : p.secondary,
-                                                  fontSize: 10.3,
-                                                  letterSpacing: -.2,
+                                                  fontSize: PocketType.micro,
+                                                  letterSpacing: 0,
                                                   fontWeight: widget.index == i
                                                       ? FontWeight.w700
                                                       : FontWeight.w500,
