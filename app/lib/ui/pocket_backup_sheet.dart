@@ -24,7 +24,7 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   String _message(Object error) => switch (error) {
     FormatException e => e.message,
-    StateError e => '${e.message}',
+    StateError e => e.message.toString(),
     _ => '文件操作未完成，请检查系统权限后重试。',
   };
 
