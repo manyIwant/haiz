@@ -21,6 +21,52 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
   String? _prepared;
   PersonalBackup? _preview;
   String? _status;
+  int? _preparedGeneration;
+  int? _previewGeneration;
+  late int _scopeGeneration;
+
+  @override
+  void initState() {
+    super.initState();
+    _scopeGeneration = widget.store.generation;
+    widget.store.addListener(_onStoreChanged);
+  }
+
+  void _onStoreChanged() {
+    if (widget.store.generation == _scopeGeneration) return;
+    _scopeGeneration = widget.store.generation;
+    // Clear data immediately, even if Navigator keeps the sheet mounted
+    // across logout or a guest/account switch.
+    _prepared = null;
+    _preview = null;
+    _status = null;
+    _preparedGeneration = null;
+    _previewGeneration = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant PocketBackupSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.store != widget.store) {
+      oldWidget.store.removeListener(_onStoreChanged);
+      widget.store.addListener(_onStoreChanged);
+      _scopeGeneration = widget.store.generation;
+      _prepared = null;
+      _preview = null;
+      _status = null;
+      _preparedGeneration = null;
+      _previewGeneration = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.store.removeListener(_onStoreChanged);
+    super.dispose();
+  }
 
   String _message(Object error) => switch (error) {
     FormatException e => e.message,
@@ -30,12 +76,15 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   Future<void> _prepareExport() async {
     if (_busy) return;
-    setState(() { _busy = true; _status = null; _prepared = null; });
+    final generation = widget.store.generation;
+    setState(() { _busy = true; _status = null; _prepared = null; _preparedGeneration = null; });
     try {
       final value = await widget.store.exportGuestBackup();
-      if (!mounted) return;
+      if (!mounted || generation != widget.store.generation ||
+          !widget.store.guestBackupAvailable) return;
       setState(() {
         _prepared = value;
+        _preparedGeneration = generation;
         _status = '备份已在本机准备好。点击「保存 JSON」完成下载。';
       });
     } catch (error) {
@@ -47,7 +96,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   Future<void> _saveExport() async {
     final data = _prepared;
-    if (data == null || _busy) return;
+    if (data == null || _busy ||
+        _preparedGeneration != widget.store.generation ||
+        !widget.store.guestBackupAvailable) return;
     setState(() { _busy = true; _status = null; });
     try {
       final today = DateTime.now();
@@ -71,7 +122,8 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   Future<void> _pickImport() async {
     if (_busy) return;
-    setState(() { _busy = true; _status = null; _preview = null; });
+    final generation = widget.store.generation;
+    setState(() { _busy = true; _status = null; _preview = null; _previewGeneration = null; });
     try {
       final file = await FilePicker.pickFile(
         type: FileType.custom,
@@ -87,9 +139,11 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
         throw const FormatException('备份超过 4 MB，未修改任何数据');
       }
       final backup = PersonalBackup.decode(utf8.decode(bytes));
-      if (!mounted) return;
+      if (!mounted || generation != widget.store.generation ||
+          !widget.store.guestBackupAvailable) return;
       setState(() {
         _preview = backup;
+        _previewGeneration = generation;
         _status = '文件已校验。确认后只会补充缺失记录，不会删除已有内容。';
       });
     } catch (error) {
@@ -101,7 +155,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   Future<void> _restore() async {
     final backup = _preview;
-    if (backup == null || _busy) return;
+    final generation = widget.store.generation;
+    if (backup == null || _busy || _previewGeneration != generation ||
+        !widget.store.guestBackupAvailable) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -125,7 +181,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !mounted ||
+        generation != widget.store.generation ||
+        !widget.store.guestBackupAvailable) return;
     setState(() { _busy = true; _status = null; });
     try {
       final result = await widget.store.mergeGuestBackup(
@@ -135,6 +193,8 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
       setState(() {
         _preview = null;
         _prepared = null;
+        _preparedGeneration = null;
+        _previewGeneration = null;
         _status = '已保存：新增 ${result.tasksAdded} 条任务、'
             '${result.coursesAdded} 条课程、${result.focusAdded} 条专注记录。';
       });
@@ -178,7 +238,8 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
               icon: const Icon(Icons.archive_outlined),
               label: const Text('准备备份文件'),
             ),
-            if (_prepared != null)
+            if (_prepared != null && enabled &&
+                _preparedGeneration == widget.store.generation)
               OutlinedButton.icon(
                 key: const Key('backup-save-json'),
                 onPressed: !_busy ? _saveExport : null,
@@ -192,7 +253,8 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
               icon: const Icon(Icons.file_open_outlined),
               label: const Text('选择备份文件并校验'),
             ),
-            if (_preview case final backup?) ...[
+            if (enabled && _previewGeneration == widget.store.generation &&
+                _preview case final backup?) ...[
               const SizedBox(height: 12),
               Text(
                 '备份时间：${backup.createdAt.toLocal()}\n'
