@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import '../domain/pocket_models.dart';
 import 'personal_snapshot.dart';
 
 /// A user-carried, local-only backup. The checksum detects accidental file
@@ -22,13 +21,17 @@ class PersonalBackup {
   static String create(PersonalSnapshot snapshot, {DateTime? now}) {
     _validate(snapshot);
     final payload = snapshot.encode();
-    return jsonEncode({
+    final data = jsonEncode({
       'format': format,
       'version': 1,
       'createdAt': (now ?? DateTime.now()).toUtc().toIso8601String(),
       'snapshot': jsonDecode(payload),
       'sha256': sha256.convert(utf8.encode(payload)).toString(),
     });
+    if (utf8.encode(data).length > maxBytes) {
+      throw const FormatException('备份内容超过 4 MB');
+    }
+    return data;
   }
 
   static PersonalBackup decode(String raw) {
