@@ -42,9 +42,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
     _status = null;
     _preparedGeneration = null;
     _previewGeneration = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
+    // Identity switches happen outside this sheet's build; refresh now
+    // so the old download button disappears in the same frame.
+    if (mounted) setState(() {});
   }
 
   @override
