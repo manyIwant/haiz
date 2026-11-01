@@ -352,10 +352,10 @@ class _TodayPageState extends State<TodayPage> {
                       trailing: '${store.doneCount}/${store.tasks.length} 已完成',
                     ),
                   ),
-                  IconButton.filledTonal(
-                    tooltip: '添加任务',
+                  TextButton.icon(
                     onPressed: () => _editTask(context),
-                    icon: const Icon(Icons.add_rounded),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('新建任务'),
                   ),
                 ],
               ),
@@ -542,21 +542,11 @@ class _TodayPageState extends State<TodayPage> {
                 actionLabel: '快速记录',
                 onTap: () => _quickFocus.requestFocus(),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _editTask(context),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('新建任务'),
-                  ),
-                  const SizedBox(width: 10),
-                  TextButton.icon(
-                    onPressed: () => onNavigate(2),
-                    icon: const Icon(Icons.file_download_outlined, size: 17),
-                    label: const Text('导入通知'),
-                  ),
-                ],
+              const SizedBox(height: 9),
+              TextButton.icon(
+                onPressed: () => onNavigate(2),
+                icon: const Icon(Icons.file_download_outlined, size: 17),
+                label: const Text('导入通知'),
               ),
               if (widget.session?.identity != null) ...[
                 const SizedBox(height: 20),
