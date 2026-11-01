@@ -1,8 +1,8 @@
 {
-  "version": "b79a972900cb-73442c7ee1b8",
+  "version": "19e831d62b87-9dbfd677a5f7",
   "scope": "/pocket/",
   "offline_asset_count": 27,
-  "offline_asset_bytes": 20550380,
+  "offline_asset_bytes": 20575071,
   "runtime_asset_policy": "same-origin static files only",
   "includes_user_data": false
 }
