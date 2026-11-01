@@ -75,7 +75,7 @@ jobs:
             echo "::error::Supabase URL is set but its publishable key is missing."
             exit 1
           else
-            echo "::notice::No public key configured: keeping the guest-only Pocket app"
+            echo "::notice::No override configured; Flutter source defaults to HAIZ's public Supabase key"
           fi
           flutter build web "${args[@]}"
 
