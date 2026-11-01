@@ -61,9 +61,9 @@ class TaskSenseEngine {
     String? timeKind,
   }) {
     final suggestion = QuickTaskDateParser.suggest(evidence, now);
-    final isDeadline = timeKind == 'deadline' ||
-        (timeKind == null &&
-            RegExp(r'交|上交|提交|截止|到期|之前完成|前完成').hasMatch(evidence));
+    // A model label alone cannot turn an ordinary study plan into a due date.
+    final isDeadline = timeKind != 'planned' &&
+        RegExp(r'交|上交|提交|截止|到期|之前完成|前完成').hasMatch(evidence);
     final due = isDeadline ? suggestion?.date : null;
     final hasPlan = RegExp(r'今晚|今夜|今天晚上|明早|明晚|复习|预习|准备').hasMatch(evidence);
     final hint = due != null
