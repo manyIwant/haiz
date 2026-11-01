@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,11 +43,13 @@ class HaizPocketApp extends StatefulWidget {
   State<HaizPocketApp> createState() => _HaizPocketAppState();
 }
 
-class _HaizPocketAppState extends State<HaizPocketApp> {
+class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserver {
   late final PocketStore store = PocketStore();
   late final AcademicSession session = AcademicSession(store);
   late final PocketAuthController pocketAuth =
       PocketAuthController(store, widget.cloudClient);
+  Timer? _classRefreshTimer;
+  bool _appIsForeground = true;
   int tab = 0;
   // Web Lamp gateway already displayed the entrance. Open the actual
   // device-local Flutter workspace directly after explicit CTA navigation.
@@ -56,10 +60,16 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _classRefreshTimer = Timer.periodic(const Duration(minutes: 3), (_) {
+      if (_appIsForeground && session.identity != null && !pocketAuth.authenticated) {
+        session.refresh();
+      }
+    });
     MessageIntakeBridge.channel.setMethodCallHandler((call) async {
       if (call.method == 'sharedNotice') {
         MessageIntakeBridge.markChanged();
-        if (mounted) {
+        if (mounted && !pocketAuth.authenticated) {
           setState(() => _entered = true);
           _switchTab(2);
         }
@@ -74,7 +84,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
           final items = await MessageIntakeBridge.entries();
           final now = DateTime.now();
           if (!mounted) return;
-          if (items.any(
+          if (!pocketAuth.authenticated && items.any(
             (item) =>
                 item.source.startsWith('系统分享') &&
                 now.difference(item.receivedAt).inSeconds >= 0 &&
@@ -88,7 +98,17 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appIsForeground = state == AppLifecycleState.resumed;
+    if (_appIsForeground && session.identity != null && !pocketAuth.authenticated) {
+      session.refresh();
+    }
+  }
+
+  @override
   void dispose() {
+    _classRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     MessageIntakeBridge.channel.setMethodCallHandler(null);
     pocketAuth.dispose();
     session.dispose();
@@ -184,6 +204,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> {
                                   2 => InboxPage(
                                     key: ValueKey('inbox-${store.namespace}'),
                                     store: store,
+                                    session: pocketAuth.authenticated ? null : session,
                                     onSaved: () => _switchTab(0),
                                   ),
                                   3 => FocusPage(
