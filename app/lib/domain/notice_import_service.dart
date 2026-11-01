@@ -7,6 +7,8 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:pdfrx/pdfrx.dart';
 import 'package:xml/xml.dart';
 
+import 'web_ocr.dart' as web_ocr;
+
 /// Local extraction. No extracted text or picture is sent to a remote model.
 /// Caller must put output through the editable human-confirmation workflow.
 class NoticeImportService {
@@ -37,7 +39,14 @@ class NoticeImportService {
 
     if (['png', 'jpg', 'jpeg'].contains(extension)) {
       if (kIsWeb) {
-        throw UnsupportedError('截图离线 OCR 暂时只在 Android / iOS App 支持。');
+        // Must receive only bytes explicitly chosen by the user. Browser OCR
+        // runs with the locally hosted Tesseract worker and language files.
+        final bytes = await file.readAsBytes();
+        if (bytes.length > maxBytes) {
+          throw StateError('文件超过 12 MB，请选一页截图或更小的图片。');
+        }
+        final text = await web_ocr.recognizeScreenshot(bytes);
+        return ('截图 · ${file.name}', _limit(text));
       }
       final path = file.path;
       if (path == null || path.isEmpty) {
@@ -78,6 +87,10 @@ class NoticeImportService {
         throw UnsupportedError('暂不支持此文件格式。');
     }
   }
+
+  static String webOcrStatus() => web_ocr.webOcrStatus();
+
+  static void cancelImageOcr() => web_ocr.cancelWebOcr();
 
   static String _limit(String value) =>
       value.length > maxCharacters ? value.substring(0, maxCharacters) : value;
