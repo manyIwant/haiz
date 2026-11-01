@@ -34,9 +34,9 @@ class HaizMessageListener : NotificationListenerService() {
             "com.chaoxing.mobile" -> "学习通通知"
             else -> return
         }
-        MessageIntakeStore.append(
+        if (MessageIntakeStore.append(
             this, label, displayTitle, text,
             if (sbn.postTime > 0) sbn.postTime else System.currentTimeMillis()
-        )
+        )) MainActivity.notifyIncoming()
     }
 }

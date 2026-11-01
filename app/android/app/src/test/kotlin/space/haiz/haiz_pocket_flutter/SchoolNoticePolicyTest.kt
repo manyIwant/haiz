@@ -35,6 +35,13 @@ class SchoolNoticePolicyTest {
         ))
     }
 
+    @Test fun readingAssignmentIsNotSilentlyDiscarded() {
+        assertTrue(SchoolNoticePolicy.shouldCollect(
+            "com.tencent.mm", "高一13班学习群", "", "",
+            "请阅读语文课本第12页。", groups
+        ))
+    }
+
     @Test fun irrelevantGroupMessageIsNotCaptured() {
         assertFalse(SchoolNoticePolicy.shouldCollect(
             "com.tencent.mm", "高一13班学习群", "", "",

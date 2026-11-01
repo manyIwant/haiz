@@ -2,12 +2,34 @@ package space.haiz.haiz_pocket_flutter
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import java.lang.ref.WeakReference
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    companion object {
+        private var foreground: WeakReference<MainActivity>? = null
+        fun notifyIncoming() {
+            Handler(Looper.getMainLooper()).post {
+                foreground?.get()?.intakeChannel?.invokeMethod("nativeNotice", null)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        foreground = WeakReference(this)
+        intakeChannel?.invokeMethod("nativeNotice", null)
+    }
+
+    override fun onPause() {
+        if (foreground?.get() === this) foreground = null
+        super.onPause()
+    }
     private val channelName = "space.haiz.pocket/message_intake"
     private var intakeChannel: MethodChannel? = null
 

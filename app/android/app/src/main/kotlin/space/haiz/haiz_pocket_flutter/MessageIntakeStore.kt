@@ -7,6 +7,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
 import java.util.Locale
+import java.text.SimpleDateFormat
+import java.util.Date
 
 /**
  * Explicit-opt-in, device-only inbox. Only selected school group notifications
@@ -92,13 +94,16 @@ internal object MessageIntakeStore {
     fun append(c: Context, source: String, title: String, text: String, at: Long): Boolean {
         val cleaned = text.trim().take(MAX_TEXT)
         if (cleaned.isEmpty()) return false
-        val id = hash("$source\u0000$title\u0000$cleaned")
+        // A repeated assignment on another day is a new candidate, not a duplicate.
+        val localDay = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date(at))
+        val id = hash("$source\u0000$title\u0000$cleaned\u0000$localDay")
         val pref = prefs(c)
         val queue = JSONArray(pref.getString(QUEUE, "[]") ?: "[]")
         val seen = JSONArray(pref.getString(SEEN, "[]") ?: "[]")
-        if ((0 until seen.length()).any { seen.optJSONObject(it)?.optString("id") == id }) {
-            return false
-        }
+        val weekAgo = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
+        val recent = (0 until seen.length()).mapNotNull { seen.optJSONObject(it) }
+            .filter { it.optLong("at", 0L) >= weekAgo }
+        if (recent.any { it.optString("id") == id }) return false
         val entry = JSONObject()
             .put("id", id)
             .put("source", source.take(120))
@@ -110,11 +115,9 @@ internal object MessageIntakeStore {
         val seenNext = JSONArray().put(
             JSONObject().put("id", id).put("at", at)
         )
-        val weekAgo = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
-        for (i in 0 until seen.length()) {
-            val old = seen.optJSONObject(i) ?: continue
+        for (old in recent) {
             if (seenNext.length() >= MAX_SEEN) break
-            if (old.optLong("at", 0L) > weekAgo) seenNext.put(old)
+            seenNext.put(old)
         }
         pref.edit().putString(QUEUE, next.toString())
             .putString(SEEN, seenNext.toString()).apply()
