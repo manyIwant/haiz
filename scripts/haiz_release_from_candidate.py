@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 REPO = "manyIwant/haiz"
 PACKAGE = "space.haiz.app.preview"
@@ -32,8 +33,22 @@ def run(*args, input_text=None, extra_env=None, check=True):
     )
 
 
+def github_read(*args):
+    """Retry transient GitHub network errors, never retry writes blindly."""
+    last = None
+    for attempt in range(4):
+        result = run(*args, check=False)
+        if result.returncode == 0 or "HTTP 404" in result.stderr:
+            return result
+        last = result
+        time.sleep(2 ** attempt)
+    raise RuntimeError("GitHub read/download failed after retries")
+
+
 def github_json(endpoint):
-    result = run("gh", "api", endpoint)
+    result = github_read("gh", "api", endpoint)
+    if result.returncode:
+        raise RuntimeError("GitHub API resource not found")
     return json.loads(result.stdout)
 
 
@@ -87,9 +102,9 @@ def verify_package(aapt, apk, version, code):
 
 
 def read_existing_manifest():
-    result = run("gh", "api", f"repos/{REPO}/contents/updates/latest.json", check=False)
+    result = github_read("gh", "api", f"repos/{REPO}/contents/updates/latest.json")
     if result.returncode != 0:
-        if "404" in result.stderr:
+        if "HTTP 404" in result.stderr:
             return None, None
         raise RuntimeError("Unable to verify current update manifest")
     payload = json.loads(result.stdout)
@@ -128,8 +143,8 @@ def main():
         folder = Path(temp)
         artifact = f"haiz-android-candidate-{version}-{code}"
         print("Downloading CI candidate (not yet suitable for distribution)...", flush=True)
-        run("gh", "run", "download", str(run_id), "--repo", REPO,
-            "--name", artifact, "--dir", str(folder))
+        github_read("gh", "run", "download", str(run_id), "--repo", REPO,
+                    "--name", artifact, "--dir", str(folder))
         candidate = folder / "HAIZ-Pocket-Android-CANDIDATE.apk"
         if not candidate.is_file() or candidate.stat().st_size < 1_000_000:
             raise RuntimeError("Candidate APK missing")
