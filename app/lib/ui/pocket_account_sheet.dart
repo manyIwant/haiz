@@ -9,9 +9,11 @@ class PocketAccountSheet extends StatefulWidget {
     super.key,
     required this.auth,
     required this.onSuccess,
+    this.initiallyRegister = false,
   });
   final PocketAuthController auth;
   final VoidCallback onSuccess;
+  final bool initiallyRegister;
 
   @override
   State<PocketAccountSheet> createState() => _PocketAccountSheetState();
@@ -21,26 +23,53 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
   bool _showPassword = false;
-  bool _register = false;
+  late bool _register;
   String? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _register = widget.initiallyRegister;
+  }
+
+  void _changeMode(bool register) {
+    if (widget.auth.busy || _register == register) return;
+    widget.auth.clearError();
+    _password.clear();
+    _confirmPassword.clear();
+    setState(() {
+      _register = register;
+      _showPassword = false;
+      _status = null;
+    });
+  }
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (widget.auth.busy || !_form.currentState!.validate()) return;
+    if (!widget.auth.configured || widget.auth.busy ||
+        !(_form.currentState?.validate() ?? false)) {
+      return;
+    }
     setState(() => _status = null);
     if (_register) {
       final ok = await widget.auth.signUp(_email.text, _password.text);
       if (mounted && ok) {
+        _password.clear();
+        _confirmPassword.clear();
         setState(() {
-          _status = '注册请求已提交。请前往邮箱完成验证，再返回登录。';
+          _status = '注册请求已提交。请查收验证邮件（包括垃圾邮件），'
+              '验证邮箱后再使用密码登录。';
           _register = false;
+          _showPassword = false;
         });
       }
     } else {
@@ -53,10 +82,12 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
   }
 
   Future<void> _reset() async {
-    if (_email.text.trim().isEmpty) {
-      setState(() => _status = '先输入账号邮箱，再发送重置邮件。');
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+        .hasMatch(_email.text.trim())) {
+      setState(() => _status = '请先输入有效的账号邮箱。');
       return;
     }
+    widget.auth.clearError();
     await widget.auth.sendReset(_email.text);
     if (mounted && widget.auth.error == null) {
       setState(() => _status = '如果邮箱已注册，系统会发送密码重置说明。');
@@ -81,20 +112,32 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  _register ? '创建 HAIZ 账号' : '登录 HAIZ 账号',
+                  _register ? '创建 HAIZ 账号' : '欢迎回来',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '你的个人课表、待办与专注记录由账号独立保存。'
-                  '访客记录不会未经确认就合并。',
+                  _register
+                      ? '用邮箱创建账号，完成邮箱验证后即可登录云端空间。'
+                      : '登录后可同步个人课表、待办与专注记录。',
                   style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 18),
+                SegmentedButton<bool>(
+                  key: const Key('auth-mode-switch'),
+                  segments: const [
+                    ButtonSegment<bool>(value: false, label: Text('登录')),
+                    ButtonSegment<bool>(value: true, label: Text('注册')),
+                  ],
+                  selected: {_register},
+                  showSelectedIcon: false,
+                  onSelectionChanged: widget.auth.busy
+                      ? null : (values) => _changeMode(values.first),
                 ),
                 const SizedBox(height: 20),
                 if (!widget.auth.configured) ...[
                   const Text(
-                    '账号服务尚未配置。当前仍可使用本机访客空间，'
-                    '管理员部署身份服务后即可开放登录。',
+                    '账号服务暂时不可用，你仍可免登录使用本机空间。',
                     key: Key('auth-not-configured'),
                   ),
                   const SizedBox(height: 14),
@@ -107,13 +150,12 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                   textInputAction: TextInputAction.next,
                   enabled: widget.auth.configured && !widget.auth.busy,
                   decoration: const InputDecoration(
-                    labelText: '邮箱',
+                    labelText: '电子邮箱',
                     prefixIcon: Icon(Icons.mail_outline_rounded),
                   ),
-                  validator: (value) => value == null ||
-                          !value.contains('@') ||
-                          value.trim().length < 5
-                      ? '请输入有效邮箱' : null,
+                  validator: (value) => !RegExp(
+                    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                  ).hasMatch(value?.trim() ?? '') ? '请输入有效邮箱' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -125,11 +167,12 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                     _register ? AutofillHints.newPassword
                         : AutofillHints.password
                   ],
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
+                  textInputAction: _register
+                      ? TextInputAction.next : TextInputAction.done,
+                  onFieldSubmitted: _register ? null : (_) => _submit(),
                   enabled: widget.auth.configured && !widget.auth.busy,
                   decoration: InputDecoration(
-                    labelText: '密码',
+                    labelText: _register ? '设置密码（至少 8 位）' : '密码',
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
                     suffixIcon: IconButton(
                       onPressed: () => setState(
@@ -148,8 +191,32 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                           ? '请设置至少 8 位密码'
                           : null,
                 ),
+                if (_register) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('account-confirm-password'),
+                    controller: _confirmPassword,
+                    obscureText: !_showPassword,
+                    autofillHints: const [AutofillHints.newPassword],
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
+                    enabled: widget.auth.configured && !widget.auth.busy,
+                    decoration: const InputDecoration(
+                      labelText: '确认密码',
+                      prefixIcon: Icon(Icons.verified_user_outlined),
+                    ),
+                    validator: (value) => value != _password.text
+                        ? '两次输入的密码不一致' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '注册后需要验证邮箱。访客数据不会自动合并到账号中。',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: 15),
-                if (_status != null) Text(_status!),
+                if (_status != null)
+                  Text(_status!, key: const Key('account-status')),
                 if (widget.auth.error != null)
                   Text(
                     widget.auth.error!,
@@ -167,33 +234,26 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                             width: 19, height: 19,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(_register ? '注册并验证邮箱' : '安全登录'),
+                        : Text(_register
+                            ? '创建账号并发送验证邮件' : '登录 HAIZ'),
                   ),
                 ),
                 const SizedBox(height: 6),
-                if (widget.auth.configured)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: widget.auth.busy ? null : () {
-                          setState(() {
-                            _register = !_register;
-                            _status = null;
-                          });
-                        },
-                        child: Text(_register ? '已有账号，返回登录' : '创建账号'),
-                      ),
-                      TextButton(
-                        onPressed: widget.auth.busy ? null : _reset,
-                        child: const Text('忘记密码'),
-                      ),
-                    ],
+                if (!_register && widget.auth.configured)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      key: const Key('auth-forgot-password'),
+                      onPressed: widget.auth.busy ? null : _reset,
+                      child: const Text('忘记密码？'),
+                    ),
                   ),
                 const SizedBox(height: 10),
                 OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('返回本机空间'),
+                  key: const Key('auth-continue-guest'),
+                  onPressed: widget.auth.busy
+                      ? null : () => Navigator.of(context).pop(),
+                  child: const Text('暂不登录，使用本机空间'),
                 ),
               ],
             ),
@@ -207,13 +267,16 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
 Future<void> showPocketAccountSheet(
   BuildContext context,
   PocketAuthController auth,
-  VoidCallback onSuccess,
-) => showModalBottomSheet<void>(
+  VoidCallback onSuccess, {
+  bool initiallyRegister = false,
+}) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
+  constraints: const BoxConstraints(maxWidth: 540),
   builder: (ctx) => PocketAccountSheet(
     auth: auth,
     onSuccess: onSuccess,
+    initiallyRegister: initiallyRegister,
   ),
 );

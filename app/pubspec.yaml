@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 # VersionCode must exceed shipped Android v1.4.0 (2008).
 # Keep this in sync with signed release artifacts; never decrease.
-version: 1.5.4+2104
+version: 1.5.5+2105
 
 environment:
   sdk: ^3.13.7

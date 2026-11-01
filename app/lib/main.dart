@@ -165,14 +165,27 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                       onEnter: () => setState(() => _entered = true),
                     ),
                     Positioned(
-                      right: 20,
-                      top: 40,
+                      right: 16,
+                      top: 12,
                       child: SafeArea(
-                        child: FilledButton.tonalIcon(
-                          key: const Key('pocket-account-entry'),
-                          onPressed: () => _openAccountLogin(context),
-                          icon: const Icon(Icons.person_outline),
-                          label: const Text('账号登录'),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            OutlinedButton(
+                              key: const Key('pocket-account-entry'),
+                              onPressed: () => _openAccountLogin(context),
+                              child: const Text('登录'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.tonalIcon(
+                              key: const Key('pocket-register-entry'),
+                              onPressed: () =>
+                                  _openAccountLogin(context, register: true),
+                              icon: const Icon(Icons.person_add_alt_1_outlined,
+                                  size: 18),
+                              label: const Text('注册'),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -382,7 +395,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
     );
   }
 
-  Future<void> _openAccountLogin(BuildContext context) async {
+  Future<void> _openAccountLogin(BuildContext context, {bool register = false}) async {
     // The existing AcademicSession and Pocket identity are different products.
     // Never let a legacy academic namespace overwrite the new RLS namespace.
     if (session.userId != null) {
@@ -402,6 +415,7 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
           });
         }
       },
+      initiallyRegister: register,
     );
   }
 
