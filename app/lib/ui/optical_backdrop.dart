@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Live optical transmission is available only on Flutter's Impeller backend.
@@ -16,18 +17,30 @@ class OpticalBackdrop extends StatelessWidget {
           .then<ui.FragmentProgram?>((program) => program)
           .catchError((Object _) => null);
 
+  // On some Android OpenGL/Impeller drivers ImageFilter.shader can render
+  // stale or inverted backdrop tiles outside the floating navigation bar.
+  // Prefer Flutter's stable Gaussian blur for Android (and web). Keep the
+  // painted lens/reflections in GlassDock; only optical refraction is skipped.
+  static ui.ImageFilter _blur() => ui.ImageFilter.blur(
+        sigmaX: 13,
+        sigmaY: 13,
+        tileMode: TileMode.clamp,
+      );
+
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android) {
+      return ClipRect(
+        child: BackdropFilter(filter: _blur(), child: child),
+      );
+    }
+
     return FutureBuilder<ui.FragmentProgram?>(
       future: _program,
       builder: (context, snapshot) {
         // The first vec2 and sampler are bound by Flutter's compositor,
         // not by Dart. Only the third float (dark theme) is ours.
-        ui.ImageFilter filter = ui.ImageFilter.blur(
-          sigmaX: 13,
-          sigmaY: 13,
-          tileMode: TileMode.clamp,
-        );
+        ui.ImageFilter filter = _blur();
         if (ui.ImageFilter.isShaderFilterSupported && snapshot.hasData) {
           try {
             final shader = snapshot.data!.fragmentShader();
@@ -38,7 +51,9 @@ class OpticalBackdrop extends StatelessWidget {
             // The lens rim and glaze remain visible without Impeller.
           }
         }
-        return BackdropFilter(filter: filter, child: child);
+        return ClipRect(
+          child: BackdropFilter(filter: filter, child: child),
+        );
       },
     );
   }
