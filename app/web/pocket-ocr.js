@@ -12,6 +12,7 @@
   const MAX_BYTES = 12 * 1024 * 1024;
   let scriptPromise;
   let activeWorker = null;
+  let inFlight = false;
   let runId = 0;
   let currentStatus = '';
 
@@ -53,11 +54,12 @@
   }
 
   async function recognize(bytes) {
-    if (activeWorker || currentStatus !== '') {
+    if (inFlight) {
       throw new Error('已有截图正在识别，请先取消或完成');
     }
     const mime = validateImage(bytes);
     const ticket = ++runId;
+    inFlight = true;
     setStatus('正在加载本地 OCR 引擎');
     let worker = null;
     try {
@@ -96,6 +98,7 @@
     } finally {
       if (activeWorker === worker) activeWorker = null;
       if (worker) await worker.terminate().catch(() => {});
+      inFlight = false;
       if (ticket === runId) setStatus('');
     }
   }
