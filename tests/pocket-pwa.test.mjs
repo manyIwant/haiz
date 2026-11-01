@@ -25,7 +25,7 @@ test('PWA Flutter entry point includes iOS metadata and safe updates', () => {
   assert.match(html, /pocket-ui\.css/);
   assert.match(html, /manifest\.json/);
   const bootstrap = readFileSync(join(projectRoot, 'app/web/flutter_bootstrap.js'), 'utf8');
-  assert.match(bootstrap, /_flutter\\.loader\\.load\\(\\);/);
+  assert.match(bootstrap, /_flutter\.loader\.load\(\);/);
   assert.doesNotMatch(bootstrap, /serviceWorkerSettings/);
   const client = readFileSync(join(projectRoot, 'app/web/pocket-client.js'), 'utf8');
   assert.match(client, /HAIZ_APPLY_UPDATE/);
