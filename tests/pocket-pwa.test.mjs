@@ -45,6 +45,8 @@ test('PWA packager generates a versioned, scoped service worker and never precac
       'pocket-ui.css': 'body{}',
       'assets/AssetManifest.bin': 'assets',
       'assets/campus/local.jpg': 'example',
+      'canvaskit/canvaskit.wasm': 'renderer',
+      'assets/packages/pdfrx/assets/pdfium.wasm': 'optional pdf library',
       'api/user.json': '{"private":true}'
     };
     for (const [path, data] of Object.entries(fixture)) {
@@ -63,6 +65,11 @@ test('PWA packager generates a versioned, scoped service worker and never precac
     assert.ok(!result.includes('__HAIZ_PRECACHE__'));
     assert.match(result, /"main\.dart\.js"/);
     assert.ok(!result.includes('"api/user.json"'), "API files must never be cached");
+    assert.match(result, /"canvaskit\/canvaskit\.wasm"/);
+    assert.ok(!result.includes('"assets/packages/pdfrx/assets/pdfium.wasm"'),
+      'Heavy PDFium library should be downloaded only when needed');
+    assert.ok(report.offline_asset_bytes <= 24 * 1024 * 1024,
+      'Mobile Safari initial shell must remain under 24 MiB');
     assert.ok(report.offline_asset_count > 0);
     assert.equal(report.includes_user_data, false);
     new Script(result);
