@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/domain/message_intake_bridge.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('wechat diagnostics separates permissions, connection and filtering', () {
     const cfg = MonitorConfiguration(
       enabled: true, granted: true, groups: '测试班群', wechat: true,
