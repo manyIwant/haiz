@@ -98,6 +98,24 @@ jobs:
           test -s app/build/web/pwa-build.json
           ! grep -q '__HAIZ_PRECACHE__' app/build/web/pocket-sw.js
 
+      - name: Run real Chromium OCR smoke with no image uploads
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          export HAIZ_TEST_CHROME="$(command -v google-chrome || command -v google-chrome-stable || true)"
+          if [[ -z "$HAIZ_TEST_CHROME" ]]; then
+            echo "::error::GitHub runner has no system Chrome; real OCR smoke is required"
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/haiz-ocr-http/pocket"
+          rsync -a app/build/web/ "$RUNNER_TEMP/haiz-ocr-http/pocket/"
+          python3 -m http.server 8877 --bind 127.0.0.1 --directory "$RUNNER_TEMP/haiz-ocr-http" > "$RUNNER_TEMP/haiz-ocr-http.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 2
+          node tests/pocket-web-ocr-browser.mjs
+
       - name: Preserve root site and prepare pocket-only commit
         shell: bash
         run: |
