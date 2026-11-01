@@ -75,7 +75,7 @@ internal object MessageIntakeStore {
     }
 
     fun monitoredGroups(c: Context): List<String> =
-        (prefs(c).getString(GROUPS, "") ?: "").split('\\n').filter { it.length >= 2 }
+        (prefs(c).getString(GROUPS, "") ?: "").split('\n').filter { it.length >= 2 }
 
     fun wechatDecision(c: Context, title: String, text: String,
                        conversationTitle: String, subText: String): String {
