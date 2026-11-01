@@ -33,12 +33,14 @@ test('strict production gate fails closed until every area is accepted', () => {
   assert.match(result.stderr,/PRODUCTION HOLD/);
 });
 
-test('production build may only accept paired public Supabase variables',()=>{
+test('production build only accepts a public key, with optional HAIZ URL',()=>{
   const workflow=readFileSync(resolve(root,
     '.github/workflows/pocket-autopublish.yml'),'utf8');
   assert.match(workflow,/vars\.HAIZ_SUPABASE_URL/);
   assert.match(workflow,/vars\.HAIZ_SUPABASE_PUBLISHABLE_KEY/);
-  assert.match(workflow,/Both public Supabase URL and publishable key/);
-  assert.match(workflow,/guest-only Pocket app/);
+  assert.match(workflow,/sb_publishable_\*/);
+  assert.match(workflow,/zifcxtjwzbjabcjpqhgp\.supabase\.co/);
+  assert.match(workflow,/Supabase URL is set but its publishable key is missing/);
+  assert.match(workflow,/Flutter source defaults to HAIZ's public Supabase key/);
   assert.doesNotMatch(workflow,/service_role/);
 });
