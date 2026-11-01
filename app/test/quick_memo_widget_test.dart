@@ -61,8 +61,11 @@ void main() {
         greaterThan(tester.getCenter(find.text('记得带学生证')).dx));
 
     await tester.tap(check);
+    await tester.pump();
+    // Completion must be durable immediately, before the visual exit finishes.
+    expect(store.tasks.single.completed, isTrue);
     await tester.pump(const Duration(milliseconds: 120));
-    expect(store.tasks.single.completed, isFalse);
+    expect(store.tasks.single.completed, isTrue);
     await tester.pump(const Duration(milliseconds: 450));
     await tester.pumpAndSettle();
     expect(store.tasks.single.completed, isTrue);
@@ -73,6 +76,39 @@ void main() {
     expect(store.tasks.single.completed, isFalse);
     expect(find.text('记得带学生证'), findsOneWidget);
     await store.flush();
+  });
+
+  testWidgets('quick memo suggests, but does not force, a due date',
+      (tester) async {
+    final store = PocketStore();
+    addTearDown(store.dispose);
+    await store.load();
+    await showToday(tester, store);
+
+    await tester.enterText(find.byKey(const Key('quick-memo-input')),
+        '明天交数学作业');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('quick-memo-date-suggestion')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('quick-memo-add')));
+    await tester.pumpAndSettle();
+    expect(store.tasks.single.dueIso, isNull);
+    expect(store.tasks.single.title, '明天交数学作业');
+
+    await tester.enterText(find.byKey(const Key('quick-memo-input')),
+        '后天带实验器材');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quick-memo-date-suggestion')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quick-memo-add')));
+    await tester.pumpAndSettle();
+    final target = DateTime.now();
+    final due = DateTime(target.year, target.month, target.day)
+        .add(const Duration(days: 2));
+    final expected = '${due.year.toString().padLeft(4, '0')}-'
+        '${due.month.toString().padLeft(2, '0')}-'
+        '${due.day.toString().padLeft(2, '0')}';
+    expect(store.tasks.first.dueIso, expected);
+    expect(store.tasks.first.title, '后天带实验器材');
   });
 
   testWidgets('switching account cancels pending completion and clears draft',
