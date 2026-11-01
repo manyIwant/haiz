@@ -95,7 +95,9 @@ class _TodayPageState extends State<TodayPage> {
 
   void _checkOff(TaskItem task) {
     if (_finishingTasks.contains(task.id) ||
-        !store.ready || store.storageError != null) return;
+        !store.ready || store.storageError != null) {
+      return;
+    }
     if (task.completed) {
       store.toggleTask(task.id);
       return;
@@ -124,15 +126,21 @@ class _TodayPageState extends State<TodayPage> {
       return;
     }
     _showCompletedUndo(task.id, ticket);
-    if (reduced) return;
+    if (reduced) {
+      return;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || store.generation != ticket ||
-          !_exitingTasks.containsKey(task.id)) return;
+          !_exitingTasks.containsKey(task.id)) {
+        return;
+      }
       setState(() => _collapsedTasks.add(task.id));
     });
     Future<void>.delayed(const Duration(milliseconds: 390), () {
-      if (!mounted || store.generation != ticket) return;
+      if (!mounted || store.generation != ticket) {
+        return;
+      }
       setState(() {
         _finishingTasks.remove(task.id);
         _exitingTasks.remove(task.id);
