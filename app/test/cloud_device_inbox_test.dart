@@ -86,6 +86,7 @@ void main() {
     expect(find.byKey(const Key('unlock-cloud-device-inbox')), findsOneWidget);
     expect(reads, readsBeforeSwitch);
     expect(find.text('1 条待审阅'), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
     expect(tester.takeException(), isNull);
   });
 }
