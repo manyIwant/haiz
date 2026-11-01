@@ -50,12 +50,21 @@ try {
   assert.match(text,/homework/i,'OCR did not recognize the test English word: '+text);
   assert.match(text,/36/,'OCR did not recognize the test number: '+text);
   const during = requests.slice(requestStart);
+  // Flutter may asynchronously fetch public Google fonts for its UI. That is
+  // separate from screenshot OCR. Audit every image upload and every OCR
+  // dependency independently instead of misclassifying unrelated font GETs.
   const offOrigin = during.filter(req => req.url.startsWith('http') &&
     new URL(req.url).origin !== new URL(url).origin);
-  assert.deepEqual(offOrigin,[],'Local OCR must not contact third-party origins');
+  const fontRequests = offOrigin.filter(req =>
+    new URL(req.url).hostname === 'fonts.gstatic.com' && req.method === 'GET');
+  const otherExternal = offOrigin.filter(req => !fontRequests.includes(req));
+  assert.deepEqual(otherExternal,[],
+    'Only pre-existing public Flutter UI font GETs may leave the origin');
   const uploads = during.filter(req => !['GET','HEAD','OPTIONS'].includes(req.method));
   assert.deepEqual(uploads,[],'No image upload is permitted during OCR');
   const ocrRequests = during.filter(req=>req.url.includes('/pocket/ocr/'));
+  assert.ok(ocrRequests.every(req => new URL(req.url).origin === new URL(url).origin),
+    'All OCR scripts, WASM and models must remain same-origin');
   assert.ok(ocrRequests.some(req=>req.url.includes('/ocr/vendor/tesseract.min.js')),
     'The OCR engine must load from HAIZ');
   assert.ok(ocrRequests.some(req=>req.url.includes('/ocr/lang/chi_sim.traineddata.gz')),
@@ -66,7 +75,8 @@ try {
     status:'PASS',engine:'Tesseract.js 7 local',
     result:text.trim(),elapsedMs:Date.now()-started,
     ocrRequests:ocrRequests.length,uploads:uploads.length,
-    offOrigin:offOrigin.length,errors:errors.slice(0,4)
+    externalUiFonts:fontRequests.length,otherExternal:otherExternal.length,
+    errors:errors.slice(0,4)
   },null,2));
 }finally{
   await browser.close();
