@@ -7,7 +7,10 @@ import android.service.notification.StatusBarNotification
 /** Only captures notifications AFTER the user enables monitoring and grants
  * Android's Notification Access permission. No network operations. */
 class HaizMessageListener : NotificationListenerService() {
-    companion object { @Volatile var connected = false; private set }
+    companion object {
+        @Volatile var connected = false
+            private set
+    }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
