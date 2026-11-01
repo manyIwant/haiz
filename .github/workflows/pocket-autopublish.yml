@@ -60,7 +60,7 @@ jobs:
           args=(--release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run)
           if [[ -n "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
             if [[ "$HAIZ_PUBLIC_SUPABASE_KEY" != sb_publishable_* ]]; then
-              echo "::error::HAIZ_SUPABASE_PUBLISHABLE_KEY must be a public sb_publishable_ key; never use a secret or service_role key."
+              echo "::error::HAIZ_SUPABASE_PUBLISHABLE_KEY must start with sb_publishable_. Refusing non-public credentials."
               exit 1
             fi
             project_url="${HAIZ_PUBLIC_SUPABASE_URL:-https://zifcxtjwzbjabcjpqhgp.supabase.co}"
