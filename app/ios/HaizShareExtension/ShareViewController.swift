@@ -71,10 +71,13 @@ final class ShareViewController: SLComposeServiceViewController {
       return
     }
     let now = Int(Date().timeIntervalSince1970 * 1000)
-    let digest = SHA256.hash(data: Data(text.utf8))
+    let day = Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970)
+    let digest = SHA256.hash(data: Data("\(day):\(text)".utf8))
       .map { String(format: "%02x", $0) }.joined()
     let id = "ios-share:\(digest)"
+    let weekAgo = now - (7 * 24 * 60 * 60 * 1000)
     var seen = defaults.array(forKey: seenKey) as? [[String: Any]] ?? []
+    seen = seen.filter { ($0["at"] as? Int ?? 0) >= weekAgo }
     if seen.contains(where: { ($0["id"] as? String) == id }) {
       extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
       return
@@ -89,7 +92,6 @@ final class ShareViewController: SLComposeServiceViewController {
       "receivedAt": now
     ], at: 0)
     if inbox.count > 60 { inbox = Array(inbox.prefix(60)) }
-    let weekAgo = now - (7 * 24 * 60 * 60 * 1000)
     seen.insert(["id": id, "at": now], at: 0)
     seen = Array(seen.filter { ($0["at"] as? Int ?? 0) >= weekAgo }.prefix(160))
     defaults.set(inbox, forKey: queueKey)

@@ -17,10 +17,12 @@ class _Draft {
   final String original;
   final bool ambiguous;
   bool selected = true;
-  final String clientKey;
+  String get clientKey => noticeProposalKey(NoticeCandidate(
+    title: title, subject: subject, due: due,
+    source: source, original: original, ambiguous: ambiguous,
+  ));
   _Draft(NoticeCandidate c)
-    : clientKey = noticeProposalKey(c),
-      title = c.title,
+    : title = c.title,
       subject = c.subject,
       due = c.due,
       source = c.source,
@@ -59,6 +61,33 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   final Map<String, List<NoticeCandidate>> _aiResults = {};
   final Set<String> _aiSeen = {};
   String? _currentIncomingId;
+  int? _deviceInboxApprovedGeneration;
+
+  bool get _canReadDeviceInbox => !widget.store.isCloudAccount ||
+      _deviceInboxApprovedGeneration == widget.store.generation;
+
+  Future<void> _unlockDeviceInbox() async {
+    final generation = widget.store.generation;
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('查看此设备的消息？'),
+        content: const Text('本机通知与系统分享属于设备级队列，不按 HAIZ 账号自动分隔。'
+            '仅在你本人管理的设备上继续；此操作不会把微信原文上传至云端。'
+            '若多人共用设备，请先关闭通知监测并清理旧消息。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('确认查看本机消息')),
+        ],
+      ),
+    );
+    if (!mounted || !widget.store.isCloudAccount ||
+        widget.store.generation != generation || agreed != true) return;
+    setState(() => _deviceInboxApprovedGeneration = generation);
+    await _refreshIncoming();
+  }
 
   @override
   void initState() {
@@ -74,7 +103,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   }
 
   Future<void> _refreshIncoming() async {
-    if (widget.store.isCloudAccount) {
+    if (!_canReadDeviceInbox) {
       if (mounted) {
         setState(() {
           _incoming = const [];
@@ -86,10 +115,12 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       return;
     }
     if (!MessageIntakeBridge.available) return;
+    final generation = widget.store.generation;
     try {
       final items = await MessageIntakeBridge.entries();
       final setting = await MessageIntakeBridge.configuration();
-      if (!mounted) return;
+      if (!mounted || widget.store.generation != generation ||
+          !_canReadDeviceInbox) return;
       setState(() {
         _incoming = items;
         _monitor = setting;
@@ -185,11 +216,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   }
 
   Future<void> _setMonitor(bool enabled) async {
-    if (widget.store.isCloudAccount) {
-      if (mounted) {
-        setState(() => _notice =
-            '本机分享和通知属于设备级队列，已登录云端账号不可查看或监测。');
-      }
+    if (!_canReadDeviceInbox) {
+      if (mounted) setState(() => _notice = '请先确认此设备的本机消息访问权限。');
       return;
     }
     if (_monitorBusy) return;
@@ -758,6 +786,22 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         child: Text(
           '网页版不支持原生消息接收。Android 可按授权接收指定群通知；iPhone 可通过系统分享扩展接收文字。',
           style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
+        ),
+      );
+    }
+    if (!_canReadDeviceInbox) {
+      return PocketCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('设备级消息队列与 HAIZ 云端账号互相独立。为了避免账号切换时直接展示别人的通知，请先确认你正在使用本人管理的设备。'),
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const Key('unlock-cloud-device-inbox'),
+              onPressed: _unlockDeviceInbox,
+              child: const Text('查看本机待审核消息'),
+            ),
+          ],
         ),
       );
     }

@@ -82,9 +82,9 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
       }
     });
     MessageIntakeBridge.channel.setMethodCallHandler((call) async {
-      if (call.method == 'sharedNotice') {
+      if (call.method == 'sharedNotice' || call.method == 'nativeNotice') {
         MessageIntakeBridge.markChanged();
-        if (mounted && !pocketAuth.authenticated) {
+        if (call.method == 'sharedNotice' && mounted) {
           setState(() => _entered = true);
           _switchTab(2);
         }
@@ -99,9 +99,10 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
           final items = await MessageIntakeBridge.entries();
           final now = DateTime.now();
           if (!mounted) return;
-          if (!pocketAuth.authenticated && items.any(
+          if (items.any(
             (item) =>
-                item.source.startsWith('系统分享') &&
+                (item.source.startsWith('系统分享') ||
+                 item.source.startsWith('iOS 分享')) &&
                 now.difference(item.receivedAt).inSeconds >= 0 &&
                 now.difference(item.receivedAt).inSeconds < 20,
           )) {
