@@ -63,6 +63,17 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   }
 
   Future<void> _refreshIncoming() async {
+    // Native notification/share queues are shared across the whole device;
+    // never expose them as a particular signed-in user's private inbox.
+    if (widget.store.isCloudAccount) {
+      if (mounted) {
+        setState(() {
+          _incoming = const [];
+          _monitor = null;
+        });
+      }
+      return;
+    }
     if (!MessageIntakeBridge.available) return;
     try {
       final items = await MessageIntakeBridge.entries();
@@ -82,6 +93,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   }
 
   Future<void> _setMonitor(bool enabled) async {
+    if (widget.store.isCloudAccount) {
+      setState(() => _notice = '本机通知队列属于设备访客空间，云账号暂不读取该队列。');
+      return;
+    }
     if (_monitorBusy) return;
     setState(() => _monitorBusy = true);
     try {

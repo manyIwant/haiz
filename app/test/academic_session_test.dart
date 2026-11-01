@@ -41,6 +41,7 @@ class ServerFixture {
   List<String> classIds = ['math'];
   bool offline = false;
   bool badLogin = false;
+  bool aiReady = false;
   int? denied;
   Map<String, dynamic>? customIdentity;
   Completer<http.Response>? delayedLogin;
@@ -70,6 +71,30 @@ class ServerFixture {
               identityFor(user, instance: instance, classes: classIds),
           'error': null,
           'meta': {},
+        });
+      }
+      if (request.url.path == '/api/ai/extract') {
+        if (!aiReady) {
+          return jsonResponse({'error': 'model unavailable'}, status: 503);
+        }
+        return jsonResponse({
+          'reviewRequired': true,
+          'items': [
+            {
+              'subject': '物理',
+              'title': '完成实验报告',
+              'due': '2026-11-01',
+              'evidence': '物理周日交实验报告',
+              'ambiguous': false,
+            },
+            {
+              'subject': '英语',
+              'title': '复习 Unit 4 单词',
+              'due': null,
+              'evidence': '英语单词下周再测',
+              'ambiguous': true,
+            },
+          ],
         });
       }
       if (request.url.path == '/api/classes') {
@@ -154,6 +179,49 @@ void main() {
       );
     },
   );
+
+  test('AI semantic parsing requires account-scoped consent and preserves review', () async {
+    final store = PocketStore();
+    await store.load();
+    final server = ServerFixture()..aiReady = true;
+    final session = AcademicSession(store, clientFactory: server.client);
+    await session.login('https://school.test', 'A', 'pw');
+    expect(store.semanticExtractionConsent, isFalse);
+    const text = '物理周日交实验报告；英语单词下周再测';
+    final before = await session.extractSemanticNotice(
+      text: text,
+      capturedAt: DateTime(2026, 10, 29, 11),
+    );
+    expect(before, isNull);
+    expect(server.requests.where((r) => r.url.path == '/api/ai/extract'), isEmpty);
+
+    await store.setSemanticExtractionConsent(true);
+    final suggestions = await session.extractSemanticNotice(
+      text: text,
+      capturedAt: DateTime(2026, 10, 29, 11),
+    );
+    expect(suggestions, hasLength(2));
+    expect(suggestions![0].title, '完成实验报告');
+    expect(suggestions[1].ambiguous, isTrue);
+    expect(suggestions[1].due, isNull);
+    expect(store.tasks, isEmpty, reason: 'AI cannot silently create local tasks');
+    final request = server.requests.lastWhere((r) => r.url.path == '/api/ai/extract');
+    final sent = jsonDecode(request.body) as Map<String, dynamic>;
+    expect(sent['consent'], isTrue);
+    expect(sent['message'], text);
+    expect(sent['capturedAt'], contains('2026-10-29'));
+
+    server.user = 'B';
+    await session.login('https://school.test', 'B', 'pw');
+    expect(store.semanticExtractionConsent, isFalse);
+    server.user = 'A';
+    await session.login('https://school.test', 'A', 'pw');
+    expect(store.semanticExtractionConsent, isTrue);
+    await store.setSemanticExtractionConsent(false);
+    expect(store.semanticExtractionConsent, isFalse);
+    session.dispose();
+    store.dispose();
+  });
 
   test(
     'opens an account only after verified identity and isolates two students',

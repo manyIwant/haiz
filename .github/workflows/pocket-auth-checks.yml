@@ -1,0 +1,60 @@
+name: HAIZ Pocket account auth and RLS checks
+
+on:
+  push:
+    branches: [feat/pocket-auth-rls-20261031]
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'supabase/**'
+      - '.github/workflows/pocket-auth-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Analyze auth, store, main, inbox
+        working-directory: app
+        run: flutter analyze lib/main.dart lib/core/pocket_auth.dart lib/core/pocket_store.dart lib/ui/pocket_account_sheet.dart lib/ui/inbox_page.dart
+      - name: Namespace regression tests
+        working-directory: app
+        run: flutter test test/pocket_auth_isolation_test.dart test/personal_store_operations_test.dart test/student_isolation_test.dart --reporter expanded
+      - name: Flutter Web release (disabled account mode without project credentials)
+        working-directory: app
+        run: flutter build web --release --base-href /lamp-preview/app/ --no-web-resources-cdn --no-wasm-dry-run
+
+  android-compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Compile native Android with secure-storage integration
+        working-directory: app
+        run: flutter build apk --debug
+      - name: Check debug APK
+        run: test -s app/build/app/outputs/flutter-apk/app-debug.apk
