@@ -4,8 +4,14 @@ import 'package:haiz_pocket_flutter/core/pocket_auth.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/ui/pocket_account_sheet.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
   testWidgets('Registration opens directly and rejects unequal passwords',
       (tester) async {
     final store = PocketStore();
