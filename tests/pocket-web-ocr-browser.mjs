@@ -58,7 +58,7 @@ try {
     ctx.fillStyle = 'white';
     ctx.fillRect(0,0,1200,270);
     ctx.fillStyle = 'black';
-    ctx.font = 'bold 106px "Noto Sans SC", "Noto Sans CJK SC", sans-serif';
+    ctx.font = 'bold 106px "Noto Sans CJK SC", sans-serif';
     ctx.fillText('数学作业',50,175);
     const blob = await new Promise((resolve,reject) =>
       canvas.toBlob(file => file ? resolve(file) : reject(new Error('Chinese PNG failed')), 'image/png'));
