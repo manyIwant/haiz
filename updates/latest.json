@@ -1,9 +1,9 @@
 {
   "packageId": "space.haiz.app.preview",
-  "versionName": "1.5.3",
-  "versionCode": 2103,
-  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.3/HAIZ-Pocket-Android.apk",
-  "sha256": "a28a7ebfb1391f50510729e01e3a3a04ad1bfefe0e6f1b227a5186616020f723",
+  "versionName": "1.5.4",
+  "versionCode": 2104,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.4/HAIZ-Pocket-Android.apk",
+  "sha256": "2c21451f5a4b4696c7bf710c4b4868c7331a38ee1188c3147fdd6d347613c01e",
   "sizeBytes": 109752406,
-  "notes": "新增微信通知本机诊断：查看系统授权、监听状态、群名匹配、作业关键词和入箱结果；不记录被过滤通知内容。"
+  "notes": "更新 Supabase Free 默认公开客户端配置；保留微信通知诊断与个人数据隔离；修复旧 RC 重复发布流程。正式账号与跨设备同步仍需验收。"
 }
