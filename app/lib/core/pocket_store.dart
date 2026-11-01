@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/pocket_models.dart';
 import 'legacy_archive.dart';
 import 'personal_snapshot.dart';
+import 'personal_backup.dart';
 import 'storage_scope.dart';
 
 /// Device-local personal data. Account namespaces require verified identity.
@@ -14,6 +15,7 @@ class PocketStore extends ChangeNotifier {
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
   Future<void> _pending = Future.value();
   bool _disposed = false;
+  bool _backupRestoreInProgress = false;
   bool ready = false;
   bool semanticExtractionConsent = false;
   int generation = 0;
@@ -43,6 +45,7 @@ class PocketStore extends ChangeNotifier {
   /// Close visibility synchronously, before any disk/network await.
   void lock() {
     generation++;
+    _backupRestoreInProgress = false;
     namespace = null;
     _remoteWrite = null;
     legacyArchiveAvailable = false;
@@ -174,7 +177,58 @@ class PocketStore extends ChangeNotifier {
     legacyImported: _legacyImported,
   );
 
-  bool get _writable => ready && namespace != null && storageError == null;
+  bool get _writable => ready && namespace != null &&
+      storageError == null && !_backupRestoreInProgress;
+
+  bool get guestBackupAvailable => _writable &&
+      (namespace?.startsWith('haiz/guest/v1/') ?? false);
+
+  /// Guest backups are never posted to the server or mixed with RLS accounts.
+  Future<String> exportGuestBackup() async {
+    if (!guestBackupAvailable) throw StateError('仅本机访客空间支持手动备份');
+    final ticket = generation;
+    final scope = namespace;
+    await flush();
+    if (ticket != generation || scope != namespace ||
+        !guestBackupAvailable) {
+      throw StateError('数据空间已切换，已取消导出');
+    }
+    return PersonalBackup.create(_snapshot());
+  }
+
+  /// Add nonconflicting records into the current guest workspace.
+  /// The existing snapshot is never overwritten or deleted.
+  Future<BackupMerge> mergeGuestBackup(
+    PersonalBackup backup, {required bool confirmed}
+  ) async {
+    if (!confirmed || !guestBackupAvailable) {
+      throw StateError('须在本机访客空间明确确认后才能导入备份');
+    }
+    final ticket = generation;
+    final scope = namespace!;
+    _backupRestoreInProgress = true;
+    try {
+      await flush();
+      if (_disposed || generation != ticket || namespace != scope) {
+        throw StateError('数据空间已切换，导入已取消');
+      }
+      final result = PersonalBackup.merge(_snapshot(), backup.snapshot);
+      final raw = result.merged.encode();
+      // Save and read back before showing restored personal information.
+      await _prefs.setString('$scope/personal.v1', raw);
+      if (await _prefs.getString('$scope/personal.v1') != raw) {
+        throw StateError('备份保存校验失败，原始文件仍保留');
+      }
+      if (_disposed || generation != ticket || namespace != scope) {
+        throw StateError('账号已经切换，未向新空间载入备份');
+      }
+      _apply(result.merged);
+      _notify();
+      return result;
+    } finally {
+      if (generation == ticket) _backupRestoreInProgress = false;
+    }
+  }
 
   void _persist() {
     final scope = namespace;
