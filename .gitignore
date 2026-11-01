@@ -23,3 +23,6 @@ build/
 
 # Real-browser screenshots are generated locally by npm run test:browser.
 tests/artifacts/
+
+# Generated audit data; never commit live acceptance environment details.
+production-acceptance-output/
