@@ -38,7 +38,7 @@ test('PWA packager generates a versioned, scoped service worker and never precac
   try {
     const fixture = {
       'index.html': '<html></html>',
-      'flutter_bootstrap.js': '_flutter.loader.load();',
+      'flutter_bootstrap.js': '_flutter.buildConfig={"builds":[{"renderer":"canvaskit"}]};_flutter.loader.load();',
       'main.dart.js': 'start();',
       'manifest.json': '{}',
       'pocket-client.js': 'start();',
@@ -46,6 +46,9 @@ test('PWA packager generates a versioned, scoped service worker and never precac
       'assets/AssetManifest.bin': 'assets',
       'assets/campus/local.jpg': 'example',
       'canvaskit/canvaskit.wasm': 'renderer',
+      'canvaskit/chromium/canvaskit.wasm': 'chromium renderer',
+      'canvaskit/webparagraph/canvaskit.wasm': 'alternative renderer',
+      'canvaskit/skwasm.wasm': 'unused renderer',
       'assets/packages/pdfrx/assets/pdfium.wasm': 'optional pdf library',
       'api/user.json': '{"private":true}'
     };
@@ -66,6 +69,9 @@ test('PWA packager generates a versioned, scoped service worker and never precac
     assert.match(result, /"main\.dart\.js"/);
     assert.ok(!result.includes('"api/user.json"'), "API files must never be cached");
     assert.match(result, /"canvaskit\/canvaskit\.wasm"/);
+    assert.ok(result.includes('"canvaskit/chromium/canvaskit.wasm"'));
+    assert.ok(result.includes('"canvaskit/webparagraph/canvaskit.wasm"'));
+    assert.ok(!result.includes('"canvaskit/skwasm.wasm"'));
     assert.ok(!result.includes('"assets/packages/pdfrx/assets/pdfium.wasm"'),
       'Heavy PDFium library should be downloaded only when needed');
     assert.ok(report.offline_asset_bytes <= 24 * 1024 * 1024,
