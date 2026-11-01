@@ -189,8 +189,6 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                         ),
                       ),
                     ),
-                      ),
-                    ),
                   ],
                 );
               }
