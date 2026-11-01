@@ -393,14 +393,18 @@ class PocketStore extends ChangeNotifier {
   /// reject double taps and retries; account switches invalidate old drafts.
   bool addSenseDraftsBatch(List<TaskItem> drafts, {required int expectedGeneration}) {
     if (!_writable || expectedGeneration != generation ||
-        drafts.isEmpty || drafts.length > 8) return false;
+        drafts.isEmpty || drafts.length > 8) {
+      return false;
+    }
     final ids = drafts.map((t) => t.id).toSet();
     if (ids.length != drafts.length ||
         drafts.any((t) => t.id.isEmpty ||
             t.title.trim().isEmpty || t.title.trim().length > 140 ||
             t.subject.trim().isEmpty || t.completed ||
             t.source != 'HAIZ Sense') ||
-        tasks.any((t) => ids.contains(t.id))) return false;
+        tasks.any((t) => ids.contains(t.id))) {
+      return false;
+    }
     tasks = List.unmodifiable([...drafts, ...tasks]);
     _persist();
     _notify();
