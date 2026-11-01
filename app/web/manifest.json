@@ -4,7 +4,7 @@
   "start_url": ".",
   "display": "standalone",
   "background_color": "#F5F3EF",
-  "theme_color": "#307F69",
+  "theme_color": "#182532",
   "description": "Offline-first student task, timetable, and focus experience.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
