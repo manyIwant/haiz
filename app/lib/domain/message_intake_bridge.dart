@@ -52,6 +52,49 @@ class MonitorConfiguration {
       );
 }
 
+/// Local-only counters: rejected messages, chat titles and sender IDs are never stored.
+class WechatNotificationDiagnostics {
+  final bool listenerConnected;
+  final int observedCount;
+  final int savedCount;
+  final DateTime? lastObservedAt;
+  final String lastResult;
+  const WechatNotificationDiagnostics({
+    required this.listenerConnected,
+    required this.observedCount,
+    required this.savedCount,
+    required this.lastObservedAt,
+    required this.lastResult,
+  });
+
+  factory WechatNotificationDiagnostics.fromNative(Map<Object?, Object?> map) {
+    final ts = map['lastObservedAt'];
+    return WechatNotificationDiagnostics(
+      listenerConnected: map['listenerConnected'] == true,
+      observedCount: (map['observedCount'] as num?)?.toInt() ?? 0,
+      savedCount: (map['savedCount'] as num?)?.toInt() ?? 0,
+      lastObservedAt: ts is num && ts > 0
+          ? DateTime.fromMillisecondsSinceEpoch(ts.toInt()) : null,
+      lastResult: map['lastResult']?.toString() ?? '',
+    );
+  }
+
+  String status(MonitorConfiguration? config) {
+    if (config?.enabled != true || config?.wechat != true) return '微信监测未开启';
+    if (config?.granted != true) return '缺少 Android 通知使用权';
+    if (!listenerConnected) return '通知监听服务未连接，请检查系统授权或后台限制';
+    if (observedCount == 0) return '服务已连接，尚未观察到新微信通知';
+    return switch (lastResult) {
+      'group_mismatch' => '收到微信通知，但群名未匹配，请检查群关键词',
+      'text_unavailable' => '收到微信通知，但正文过短或不可见',
+      'action_mismatch' => '收到微信通知，但没有作业行动关键词',
+      'duplicate' => '收到重复微信通知，已跳过',
+      'accepted' => '微信作业通知已入箱，请人工审核',
+      _ => '收到微信通知，诊断结果待确认',
+    };
+  }
+}
+
 /// Android: opt-in group notification listener and shares.
 /// iOS: user-invoked Share Extension; never background WeChat monitoring.
 /// Web: no native message capture.
@@ -99,6 +142,20 @@ class MessageIntakeBridge {
     return value == null
         ? null
         : MonitorConfiguration.fromNative(value.map((k, v) => MapEntry(k, v)));
+  }
+
+  static Future<WechatNotificationDiagnostics?> wechatDiagnostics() async {
+    if (!supportsNotificationMonitoring) return null;
+    final raw = await channel.invokeMethod<Map<dynamic, dynamic>>('getWechatDiagnostics');
+    return raw == null ? null : WechatNotificationDiagnostics.fromNative(
+      raw.map((k, v) => MapEntry(k, v)));
+  }
+
+  static Future<WechatNotificationDiagnostics?> resetWechatDiagnostics() async {
+    if (!supportsNotificationMonitoring) return null;
+    final raw = await channel.invokeMethod<Map<dynamic, dynamic>>('resetWechatDiagnostics');
+    return raw == null ? null : WechatNotificationDiagnostics.fromNative(
+      raw.map((k, v) => MapEntry(k, v)));
   }
 
   static Future<void> notificationSettings() async {

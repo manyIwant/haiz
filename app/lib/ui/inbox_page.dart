@@ -53,6 +53,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   final _groupsController = TextEditingController();
   List<IncomingNotice> _incoming = const [];
   MonitorConfiguration? _monitor;
+  WechatNotificationDiagnostics? _wechatDiagnostics;
   bool _groupsLoaded = false;
   bool _wechatOptIn = false;
   bool _monitorBusy = false;
@@ -111,6 +112,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         setState(() {
           _incoming = const [];
           _monitor = null;
+          _wechatDiagnostics = null;
           _aiResults.clear();
           _aiSeen.clear();
         });
@@ -122,6 +124,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     try {
       final items = await MessageIntakeBridge.entries();
       final setting = await MessageIntakeBridge.configuration();
+      WechatNotificationDiagnostics? diagnostic;
+      if (MessageIntakeBridge.supportsNotificationMonitoring) {
+        try {
+          diagnostic = await MessageIntakeBridge.wechatDiagnostics();
+        } catch (_) {
+          // Keep the inbox working if a previous native bridge is installed.
+        }
+      }
       if (!mounted || widget.store.generation != generation ||
           !_canReadDeviceInbox) {
         return;
@@ -129,6 +139,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       setState(() {
         _incoming = items;
         _monitor = setting;
+        _wechatDiagnostics = diagnostic;
         if (!_groupsLoaded) {
           _groupsController.text = setting?.groups ?? '';
           _wechatOptIn = setting?.wechat ?? false;
@@ -242,6 +253,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   : '请先填写至少两个字的指定班群名称。')
             : '已停止后台通知候选收集，既有待审核内容仍可处理。';
       });
+      await _refreshIncoming();
     } catch (_) {
       if (mounted) setState(() => _notice = '保存通知接入设置失败。');
     } finally {
@@ -905,7 +917,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               InkWell(
                 key: const Key('monitor-settings-toggle'),
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => setState(() => _monitorExpanded = !_monitorExpanded),
+                onTap: () {
+                  setState(() => _monitorExpanded = !_monitorExpanded);
+                  if (_monitorExpanded) unawaited(_refreshIncoming());
+                },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
                   child: Row(
@@ -959,6 +974,65 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+            const SizedBox(height: 12),
+            PocketCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Expanded(child: Text('微信通知接入诊断',
+                        style: TextStyle(color: p.foreground, fontWeight: FontWeight.w600))),
+                    IconButton(
+                      key: const Key('wechat-diag-refresh'),
+                      tooltip: '刷新微信接入诊断',
+                      onPressed: _refreshIncoming,
+                      icon: Icon(Icons.refresh_rounded, color: p.accent),
+                    ),
+                  ]),
+                  Text(
+                    _wechatDiagnostics?.status(_monitor) ?? '设备诊断暂不可用',
+                    key: const Key('wechat-diag-status'),
+                    style: TextStyle(color: p.accent, fontSize: 12, height: 1.5),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '监听服务：${_wechatDiagnostics?.listenerConnected == true ? "已连接" : "未连接"}'
+                    ' · 微信通知：${_wechatDiagnostics?.observedCount ?? 0} 条'
+                    ' · 已入箱：${_wechatDiagnostics?.savedCount ?? 0} 条',
+                    key: const Key('wechat-diag-counts'),
+                    style: TextStyle(color: p.secondary, fontSize: 11),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _wechatDiagnostics?.lastObservedAt == null
+                        ? '暂无微信通知处理记录'
+                        : '最近收到：${_wechatDiagnostics!.lastObservedAt!.toLocal()}',
+                    style: TextStyle(color: p.secondary, fontSize: 11),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '仅在明确开启微信监测后记录处理原因、次数和时间。'
+                    '不保存被过滤通知的正文、群名、发送人，也不会上传云端。',
+                    style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      key: const Key('wechat-diag-reset'),
+                      onPressed: () async {
+                        try {
+                          await MessageIntakeBridge.resetWechatDiagnostics();
+                          await _refreshIncoming();
+                        } catch (_) {
+                          if (mounted) setState(() => _notice = '清零诊断计数失败，请重试。');
+                        }
+                      },
+                      child: const Text('清零诊断计数（不删除消息）'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Text(
               '支持 QQ / TIM / 钉钉 / 学习通，微信须单独勾选。只有通知标题、会话标题或副标题包含你指定的群名称，'
               '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'

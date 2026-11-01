@@ -7,6 +7,15 @@ import org.junit.Test
 class SchoolNoticePolicyTest {
     private val groups = listOf("高一13班学习群")
 
+    @Test fun classifiedReasonsExplainFilteredNotifications() {
+        fun result(title: String, body: String) = SchoolNoticePolicy.decision(
+            "com.tencent.mm", title, "", "", body, groups)
+        assertTrue(result("高一13班学习群", "数学作业：明天交练习册。") == "accepted")
+        assertTrue(result("朋友", "数学作业：明天交练习册。") == "group_mismatch")
+        assertTrue(result("高一13班学习群", "Hi") == "text_unavailable")
+        assertTrue(result("高一13班学习群", "明天早点出发哦") == "action_mismatch")
+    }
+
     @Test fun wechatGroupTaskIsEligible() {
         assertTrue(SchoolNoticePolicy.shouldCollect(
             "com.tencent.mm", "高一13班学习群", "", "",
