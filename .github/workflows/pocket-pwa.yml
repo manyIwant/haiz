@@ -1,0 +1,70 @@
+name: HAIZ Pocket PWA · validate and package
+
+on:
+  push:
+    branches:
+      - feat/pocket-pwa-offline-20261031
+    paths:
+      - 'app/**'
+      - 'scripts/build-pocket-pwa.mjs'
+      - 'tests/pocket-pwa.test.mjs'
+      - '.github/workflows/pocket-pwa.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'scripts/build-pocket-pwa.mjs'
+      - 'tests/pocket-pwa.test.mjs'
+      - '.github/workflows/pocket-pwa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-pwa:
+    name: Flutter Web / offline shell / install / update verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify PWA source files and security boundaries
+        run: node --test tests/pocket-pwa.test.mjs
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Resolve Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Static analysis
+        working-directory: app
+        run: flutter analyze
+      - name: Existing Flutter regression tests
+        working-directory: app
+        run: flutter test
+      - name: Build production-like PWA under /pocket/
+        working-directory: app
+        run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
+      - name: Generate offline asset cache and update version
+        run: node scripts/build-pocket-pwa.mjs app/build/web
+      - name: Verify generated service worker and output
+        run: |
+          node --check app/build/web/pocket-sw.js
+          node --check app/build/web/pocket-client.js
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/manifest.json
+          test -s app/build/web/install.html
+          test -s app/build/web/pwa-build.json
+          grep -q '/pocket/' app/build/web/index.html
+          ! grep -q '__HAIZ_PRECACHE__' app/build/web/pocket-sw.js
+          cat app/build/web/pwa-build.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-pwa-preview
+          path: app/build/web/
+          if-no-files-found: error
+          retention-days: 14

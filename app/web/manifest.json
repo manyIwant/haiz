@@ -1,7 +1,7 @@
 {
   "name": "HAIZ Pocket",
   "short_name": "HAIZ Pocket",
-  "start_url": ".",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F3EF",
   "theme_color": "#182532",
@@ -30,6 +30,28 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "scope": "./",
+  "lang": "zh-CN",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "快速进入学习空间",
+      "short_name": "今日",
+      "description": "跳过入口动画，查看 HAIZ Pocket 今日学习空间",
+      "url": "./?fromLamp=1",
+      "icons": [
+        {
+          "src": "icons/Icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

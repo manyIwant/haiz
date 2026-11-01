@@ -1,0 +1,57 @@
+.haiz-pwa-notice {
+  position: fixed;
+  z-index: 2147483646;
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  max-width: 490px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid rgba(206, 183, 148, .42);
+  border-radius: 18px;
+  color: #f9f6f0;
+  background: rgba(24, 37, 50, .96);
+  box-shadow: 0 12px 40px rgba(16, 24, 32, .24);
+  font: 13px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.haiz-pwa-notice-text { flex: 1; min-width: 0; }
+.haiz-pwa-notice button {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+}
+.haiz-pwa-notice-action {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  color: #172431;
+  background: #e5cba0;
+  font-weight: 650 !important;
+}
+.haiz-pwa-notice-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 32px;
+  background: transparent;
+  color: #e1e2e3;
+  font-size: 20px !important;
+}
+.haiz-pwa-notice button:focus-visible {
+  outline: 2px solid #f3d9ac;
+  outline-offset: 2px;
+}
+@media (max-width: 360px) {
+  .haiz-pwa-notice { gap: 8px; padding: 10px; }
+  .haiz-pwa-notice-action { padding: 7px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .haiz-pwa-notice { animation: haiz-pwa-rise .25s ease-out; }
+  @keyframes haiz-pwa-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
