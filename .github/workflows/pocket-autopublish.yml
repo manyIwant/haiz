@@ -58,20 +58,24 @@ jobs:
         run: |
           set -euo pipefail
           args=(--release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run)
-          if [[ -n "$HAIZ_PUBLIC_SUPABASE_URL" || -n "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
-            if [[ -z "$HAIZ_PUBLIC_SUPABASE_URL" || -z "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
-              echo "::error::Both public Supabase URL and publishable key must be configured together."
+          if [[ -n "$HAIZ_PUBLIC_SUPABASE_KEY" ]]; then
+            if [[ "$HAIZ_PUBLIC_SUPABASE_KEY" != sb_publishable_* ]]; then
+              echo "::error::HAIZ_SUPABASE_PUBLISHABLE_KEY must be a public sb_publishable_ key; never use a secret or service_role key."
               exit 1
             fi
-            if [[ "$HAIZ_PUBLIC_SUPABASE_URL" != https://* ]]; then
+            project_url="${HAIZ_PUBLIC_SUPABASE_URL:-https://zifcxtjwzbjabcjpqhgp.supabase.co}"
+            if [[ "$project_url" != https://* ]]; then
               echo "::error::The public Supabase URL must use HTTPS."
               exit 1
             fi
-            args+=("--dart-define=HAIZ_SUPABASE_URL=$HAIZ_PUBLIC_SUPABASE_URL")
+            args+=("--dart-define=HAIZ_SUPABASE_URL=$project_url")
             args+=("--dart-define=HAIZ_SUPABASE_PUBLISHABLE_KEY=$HAIZ_PUBLIC_SUPABASE_KEY")
-            echo "Building authenticated-capable Pocket; cloud RLS still requires independent end-to-end testing"
+            echo "Building HAIZ Pocket with public Supabase configuration; RLS and real-device verification remain required"
+          elif [[ -n "$HAIZ_PUBLIC_SUPABASE_URL" ]]; then
+            echo "::error::Supabase URL is set but its publishable key is missing."
+            exit 1
           else
-            echo "::notice::No production Supabase variables: building the intentionally guest-only Pocket app"
+            echo "::notice::No public key configured: keeping the guest-only Pocket app"
           fi
           flutter build web "${args[@]}"
 
