@@ -26,9 +26,44 @@ class _TodayPageState extends State<TodayPage> {
   final TextEditingController _quickText = TextEditingController();
   final FocusNode _quickFocus = FocusNode();
   final Set<String> _finishingTasks = <String>{};
+  late int _observedGeneration;
+
+  @override
+  void initState() {
+    super.initState();
+    _observedGeneration = store.generation;
+    store.addListener(_watchAccountChange);
+  }
+
+  void _watchAccountChange() {
+    if (_observedGeneration == store.generation) return;
+    _observedGeneration = store.generation;
+    _quickText.clear();
+    _quickFocus.unfocus();
+    if (mounted) {
+      setState(() {
+        view = TaskView.pending;
+        _finishingTasks.clear();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant TodayPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.store != store) {
+      oldWidget.store.removeListener(_watchAccountChange);
+      store.addListener(_watchAccountChange);
+      _observedGeneration = store.generation;
+      _quickText.clear();
+      _finishingTasks.clear();
+      view = TaskView.pending;
+    }
+  }
 
   @override
   void dispose() {
+    store.removeListener(_watchAccountChange);
     _quickText.dispose();
     _quickFocus.dispose();
     super.dispose();
@@ -40,8 +75,10 @@ class _TodayPageState extends State<TodayPage> {
       return;
     }
     store.addTask(text, '速记');
-    _quickText.clear();
-    if (view != TaskView.pending) setState(() => view = TaskView.pending);
+    setState(() {
+      _quickText.clear();
+      view = TaskView.pending;
+    });
   }
 
   void _checkOff(TaskItem task) {
