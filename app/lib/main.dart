@@ -16,6 +16,7 @@ import 'core/academic_session.dart';
 import 'ui/kit.dart';
 import 'ui/pocket_lamp_entrance.dart';
 import 'ui/pocket_account_sheet.dart';
+import 'ui/pocket_backup_sheet.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
 import 'ui/schedule_page.dart';
@@ -264,6 +265,24 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                                 },
                               ),
                       ),
+                      if (store.ready)
+                        Positioned(
+                          top: 8,
+                          right: HaizAppUpdates.available ? 120 : 66,
+                          child: SafeArea(
+                            child: Material(
+                              color: p.card,
+                              borderRadius: BorderRadius.circular(24),
+                              child: IconButton(
+                                key: const Key('pocket-backup-entry'),
+                                tooltip: '备份与恢复个人记录',
+                                icon: Icon(Icons.cloud_download_outlined,
+                                    color: p.accent),
+                                onPressed: () => showPocketBackupSheet(context, store),
+                              ),
+                            ),
+                          ),
+                        ),
                       if (store.ready && HaizAppUpdates.available)
                         Positioned(
                           top: 8,
