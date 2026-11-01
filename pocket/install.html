@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#182532">
+  <title>安装 HAIZ Pocket · 免费 iPhone 版</title>
+  <link rel="icon" href="favicon.png">
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif; background:#f5f3ef; color:#203141; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; padding:calc(35px + env(safe-area-inset-top)) max(22px,env(safe-area-inset-left)) calc(40px + env(safe-area-inset-bottom)); }
+    main { max-width:680px; margin:0 auto; }
+    .eyebrow { color:#877154; letter-spacing:.2em; font-size:11px; font-weight:700; text-transform:uppercase; }
+    h1 { font: 600 clamp(36px,9vw,62px)/1.15 Georgia,"Songti SC",serif; margin:14px 0; letter-spacing:-.03em; }
+    p { line-height:1.9; color:#53616a; }
+    .hero { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:34px; }
+    .app-icon { width:78px; height:78px; border-radius:20px; box-shadow:0 8px 24px #1b29391d; }
+    .card { background:#fffefa; border:1px solid #ded5c9; border-radius:20px; padding:23px 24px; margin:16px 0; }
+    h2 { font-size:18px; margin:0 0 15px; }
+    ol { margin:0; padding-left:23px; }
+    li { line-height:2; padding:6px 0; }
+    strong { color:#1e3243; }
+    .cta { display:inline-block; background:#203242; color:#fff; text-decoration:none; border-radius:12px; font-weight:650; padding:14px 22px; }
+    .secondary { margin-left:12px; color:#4e6677; }
+    .note { font-size:13px; line-height:1.8; padding:15px; border-left:3px solid #b78b54; background:#ece8e0; }
+    footer { margin:25px 0; font-size:12px; color:#7e888e; line-height:1.9; }
+    a:focus-visible { outline:3px solid #a57b49; outline-offset:4px; }
+    @media(max-width:480px){ .hero{align-items:center}.app-icon{width:64px;height:64px}.card{padding:20px}.secondary{display:block;margin:16px 0;} }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">HAIZ / Pocket / Web App</div>
+  <div class="hero">
+    <div>
+      <h1>把学习空间<br>放进主屏幕。</h1>
+      <p>无需 IPA、证书或 App Store。HAIZ Pocket 可以作为网页 App 运行，界面与原生 Flutter Pocket 共用业务代码。</p>
+    </div>
+    <img class="app-icon" src="icons/Icon-192.png" width="78" height="78" alt="HAIZ Pocket 图标">
+  </div>
+  <a class="cta" href="./">打开 HAIZ Pocket</a>
+  <a class="secondary" href="https://haiz.space/">返回 HAIZ 校园网站</a>
+  <section class="card">
+    <h2>在 iPhone 上安装</h2>
+    <ol>
+      <li>用 <strong>Safari</strong> 打开此页面，并点「打开 HAIZ Pocket」。</li>
+      <li>点击 Safari 的 <strong>分享</strong> 按钮。</li>
+      <li>找到并选择 <strong>添加到主屏幕</strong>，名称保留「HAIZ Pocket」。</li>
+      <li>点「添加」，从主屏幕打开 HAIZ Pocket，即可获得独立 App 窗口。</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>你能获得什么</h2>
+    <p>课表、任务、学习记录、专注工具、文件选择，以及已缓存资源可用时的离线启动。联网重新打开会检查新版本；发现更新时由你确认刷新。</p>
+    <p class="note">注意：网页版不能在后台自动读取微信聊天，也不能充当 iOS 原生分享扩展。推送提醒还需要部署经用户授权的 Web Push 服务。浏览器本地记录也可能在清理网站数据时丢失，请妥善备份重要内容。</p>
+  </section>
+  <footer>HAIZ 是独立校园学习工具，并非学校官方 App。分享或上传内容前请先核对隐私与授权。</footer>
+</main>
+</body>
+</html>
