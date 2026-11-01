@@ -49,6 +49,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   String? _notice;
   String _currentSource = '手动粘贴';
   bool _importing = false;
+  bool _importCancelled = false;
+  String _ocrStatus = '';
+  Timer? _ocrStatusTimer;
   int _composeGeneration = 0;
   final _groupsController = TextEditingController();
   List<IncomingNotice> _incoming = const [];
@@ -298,6 +301,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     MessageIntakeBridge.revision.removeListener(_refreshIncoming);
+    _ocrStatusTimer?.cancel();
+    if (_importing) NoticeImportService.cancelImageOcr();
     _groupsController.dispose();
     _input.dispose();
     super.dispose();
@@ -318,11 +323,21 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
 
   Future<void> _importDocument() async {
     if (_importing) return;
-    setState(() => _importing = true);
+    setState(() {
+      _importing = true;
+      _importCancelled = false;
+      _ocrStatus = '';
+    });
     final generation = widget.store.generation;
+    _ocrStatusTimer?.cancel();
+    _ocrStatusTimer = Timer.periodic(const Duration(milliseconds: 400), (_) {
+      if (!mounted || !_importing) return;
+      final status = NoticeImportService.webOcrStatus();
+      if (status != _ocrStatus) setState(() => _ocrStatus = status);
+    });
     try {
       final result = await NoticeImportService.pickAndExtract();
-      if (result == null || !mounted) return;
+      if (result == null || !mounted || _importCancelled) return;
       if (widget.store.generation != generation) {
         setState(() => _notice = '读取期间已切换账号，本次导入已取消，没有写入任何账号。');
         return;
@@ -335,10 +350,28 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         setState(() => _notice = '${result.$1} 已在本机读取。请检查提取的原文和每项任务，日期可能需要修改。');
       }
     } catch (error) {
-      if (mounted) setState(() => _notice = '导入未成功：$error。可复制文档文字后手动粘贴。');
+      if (mounted) {
+        setState(() => _notice = _importCancelled
+            ? '已取消本次图片识别，没有保存任何任务。'
+            : '导入未成功：$error。可复制文档文字后手动粘贴。');
+      }
     } finally {
-      if (mounted) setState(() => _importing = false);
+      _ocrStatusTimer?.cancel();
+      _ocrStatusTimer = null;
+      if (mounted) {
+        setState(() {
+          _importing = false;
+          _ocrStatus = '';
+        });
+      }
     }
+  }
+
+  void _cancelImport() {
+    if (!_importing) return;
+    _importCancelled = true;
+    NoticeImportService.cancelImageOcr();
+    setState(() => _notice = '已请求取消识别，现有任务不会被更改。');
   }
 
   Future<void> _edit(_Draft d) async {
@@ -639,6 +672,17 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                           ),
                           label: Text(_importing ? '正在读取' : '导入截图 / 文档'),
                         ),
+                        if (_importing) ...[
+                          if (_ocrStatus.isNotEmpty)
+                            Text(_ocrStatus,
+                              style: TextStyle(color: p.secondary, fontSize: 12)),
+                          TextButton.icon(
+                            key: const Key('cancel-screenshot-ocr'),
+                            onPressed: _importCancelled ? null : _cancelImport,
+                            icon: const Icon(Icons.cancel_outlined, size: 17),
+                            label: const Text('取消识别'),
+                          ),
+                        ],
                         OutlinedButton.icon(
                           onPressed: () {
                             _currentIncomingId = null;
