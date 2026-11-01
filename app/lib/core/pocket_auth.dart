@@ -16,8 +16,13 @@ class PocketAuthConfig {
     'HAIZ_SUPABASE_URL',
     defaultValue: 'https://zifcxtjwzbjabcjpqhgp.supabase.co',
   );
-  static const publishableKey =
-      String.fromEnvironment('HAIZ_SUPABASE_PUBLISHABLE_KEY');
+  // Supabase publishable keys are intentionally public client identifiers.
+  // The repository default lets the production PWA and native builds use
+  // the same HAIZ project without distributing any privileged credentials.
+  static const publishableKey = String.fromEnvironment(
+    'HAIZ_SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_GTIgGu3KDj6eWH7BVn44Jg_DytcsPr0',
+  );
 
   // Only modern public client keys are accepted. A secret/service-role key
   // must never turn into a credential embedded in a Web/APK/IPA build.
