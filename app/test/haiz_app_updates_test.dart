@@ -28,7 +28,7 @@ void main() {
     expect(parsed.versionCode, 11);
     expect(parsed.sha256.length, 64);
     final client = MockClient((_) async =>
-        http.Response(jsonEncode(signedManifest()), 200));
+        http.Response(jsonEncode(signedManifest()), 200, headers: {'content-type': 'application/json; charset=utf-8'}));
     final available = await HaizAppUpdates.check(
       current: installed, client: client);
     expect(available?.versionCode, 11);
@@ -37,7 +37,7 @@ void main() {
 
   test('older and absent releases never trigger an update', () async {
     final client = MockClient((_) async =>
-        http.Response(jsonEncode(signedManifest(code: 9)), 200));
+        http.Response(jsonEncode(signedManifest(code: 9)), 200, headers: {'content-type': 'application/json; charset=utf-8'}));
     expect(await HaizAppUpdates.check(current: installed, client: client),
         isNull);
     client.close();
@@ -68,7 +68,7 @@ void main() {
       throwsFormatException,
     );
     final client = MockClient((_) async =>
-        http.Response(jsonEncode({...signedManifest(), 'packageId': 'other.app'}), 200));
+        http.Response(jsonEncode({...signedManifest(), 'packageId': 'other.app'}), 200, headers: {'content-type': 'application/json; charset=utf-8'}));
     await expectLater(
       HaizAppUpdates.check(current: installed, client: client),
       throwsFormatException,
@@ -78,7 +78,7 @@ void main() {
 
   test('update manifest requires HTTPS', () async {
     final client = MockClient((_) async =>
-        http.Response(jsonEncode(signedManifest()), 200));
+        http.Response(jsonEncode(signedManifest()), 200, headers: {'content-type': 'application/json; charset=utf-8'}));
     await expectLater(
       HaizAppUpdates.check(
         current: installed, client: client,
