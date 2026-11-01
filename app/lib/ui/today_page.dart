@@ -352,10 +352,13 @@ class _TodayPageState extends State<TodayPage> {
                       trailing: '${store.doneCount}/${store.tasks.length} 已完成',
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: () => _editTask(context),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('新建任务'),
+                  Tooltip(
+                    message: '添加任务',
+                    child: TextButton.icon(
+                      onPressed: () => _editTask(context),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('新建任务'),
+                    ),
                   ),
                 ],
               ),
