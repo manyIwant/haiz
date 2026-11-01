@@ -6,6 +6,47 @@
   const HERO_IDS = ['yihao', 'lanshu', 'yanchi'];
   const originalBuild = global.CampusWorld.build;
 
+  // Preserve the original world until ALL V3 assets and anchors are installed.
+  // The old renderer uses mutable geometry and instance buffers, so simply
+  // removing imported groups is not enough to recover from a partial failure.
+  function captureLegacyScene(scene, world) {
+    const originalWater = world.waterSurface;
+    const snapshots = [];
+    scene.traverse(object => {
+      snapshots.push({
+        object,
+        children: new Set(object.children),
+        visible: object.visible,
+        geometry: object.isMesh ? object.geometry : null,
+        count: object.isInstancedMesh ? object.count : null,
+        instanceData: object.isInstancedMesh ? object.instanceMatrix.array.slice() : null,
+      });
+    });
+    return () => {
+      // Drop imported models, planting tiles, terrain and classroom additions.
+      for (const item of snapshots) {
+        for (const child of [...item.object.children]) {
+          if (!item.children.has(child)) item.object.remove(child);
+        }
+      }
+      // Restore geometry/visibility and instancing rearranged by V3 installation.
+      for (const item of snapshots) {
+        const object = item.object;
+        object.visible = item.visible;
+        if (item.geometry && object.geometry !== item.geometry) {
+          object.geometry?.dispose();
+          object.geometry = item.geometry;
+        }
+        if (item.instanceData) {
+          object.instanceMatrix.array.set(item.instanceData);
+          object.count = item.count;
+          object.instanceMatrix.needsUpdate = true;
+        }
+      }
+      world.waterSurface = originalWater;
+    };
+  }
+
   function removeTriangles(mesh, keep) {
     if (!mesh.geometry?.attributes.position || mesh.isInstancedMesh) return;
     const geometry = mesh.geometry, positions = geometry.attributes.position;
@@ -143,6 +184,7 @@
     const state = { status: 'loading', file: null, error: null, mode: 'overview' };
     let environment = null, materials = new Set(), hero = null, teaching = null, campus = null, cameraContext = null, rockBounds = null;
     const source = world.buildings.find(b => b.data.id === 'yihao');
+    const rollback = captureLegacyScene(scene, world);
     try {
       const loaded = await loadRegion(quality, progress); hero = loaded.root;
       hero.name = 'HAIZ Blender V3 regions'; hero.updateMatrixWorld(true);
@@ -169,16 +211,22 @@
       if (world.waterSurface) world.waterSurface.visible = false;
       world.waterSurface = null;
       teaching = global.HaizV3Teaching?.build(world) || null;
+      // Low-tier/mobile sessions avoid the additional full-campus, terrain
+      // and planting downloads (~50+ MiB). They retain the original world
+      // outside the lower-resolution V3 hero region.
+      if (quality === 'low') {
+        state.campusSkipped = 'low-tier bandwidth budget';
+      } else {
+        campus = await global.HaizV3Campus.install(scene, world, quality,
+          {materials:prepareMaterials,retainInterior:retainTeachingInterior,filterTriangles:removeTriangles,batch:batchRegion}, progress);
+        materials = new Set([...materials, ...campus.materials]);
+      }
       state.status = 'ready'; state.file = loaded.file;
     } catch (error) {
-      state.status = 'fallback'; state.error = error.message;
-      console.warn('HAIZ V3 regional model:', error);
-    }
-    if(state.status === 'ready') {
-      try {
-        campus = await global.HaizV3Campus.install(scene, world, quality, {materials:prepareMaterials,retainInterior:retainTeachingInterior,filterTriangles:removeTriangles,batch:batchRegion}, progress);
-        materials = new Set([...materials, ...campus.materials]);
-      } catch(error) { state.campusError = error.message; console.warn('HAIZ V3 campus:', error); }
+      rollback();
+      hero = null; teaching = null; campus = null; rockBounds = null; materials = new Set();
+      state.status = 'fallback'; state.error = String(error?.message || error);
+      console.warn('HAIZ V3 model installation reverted to original campus:', error);
     }
     const bounds = rockBounds;
     const colliders = state.status === 'ready' && bounds ? [
