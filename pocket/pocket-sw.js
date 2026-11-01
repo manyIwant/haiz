@@ -2,8 +2,8 @@
  * Only public application files are cached. Account data, APIs and cross-origin
  * requests (including Supabase) never enter Cache Storage.
  */
-const HAIZ_VERSION = "a3ab2e90c0d3-d2fd068e7a05";
-const HAIZ_PRECACHE = ["assets/AssetManifest.bin","assets/AssetManifest.bin.json","assets/FontManifest.json","assets/fonts/fallback/Roboto-Regular.ttf","assets/fonts/MaterialIcons-Regular.otf","assets/NOTICES","assets/packages/cupertino_icons/assets/CupertinoIcons.ttf","assets/packages/material_ui/shaders/ink_sparkle.frag","assets/packages/pdfrx/assets/pdfium_client.js","assets/packages/pdfrx/assets/pdfium_worker.js","assets/packages/pdfrx/assets/pdfium.wasm","assets/shaders/haiz_optical.frag","assets/shaders/ink_sparkle.frag","assets/shaders/stretch_effect.frag","canvaskit/canvaskit.js","canvaskit/canvaskit.js.symbols","canvaskit/canvaskit.wasm","canvaskit/chromium/canvaskit.js","canvaskit/chromium/canvaskit.js.symbols","canvaskit/chromium/canvaskit.wasm","canvaskit/skwasm_heavy.js","canvaskit/skwasm_heavy.js.symbols","canvaskit/skwasm_heavy.wasm","canvaskit/skwasm.js","canvaskit/skwasm.js.symbols","canvaskit/skwasm.wasm","canvaskit/webparagraph/canvaskit.js","canvaskit/webparagraph/canvaskit.js.symbols","canvaskit/webparagraph/canvaskit.wasm","canvaskit/wimp.js","canvaskit/wimp.js.symbols","canvaskit/wimp.wasm","flutter_bootstrap.js","flutter.js","index.html","main.dart.js","manifest.json","pocket-client.js",".last_build_id","assets/assets/campus/campus_erhao.jpg","assets/assets/campus/campus_fengqitang.jpg","favicon.png","icons/Icon-192.png","icons/Icon-512.png","icons/Icon-maskable-192.png","icons/Icon-maskable-512.png","install.html","pocket-ui.css","version.json"];
+const HAIZ_VERSION = "93e4a8b0a8d9-73442c7ee1b8";
+const HAIZ_PRECACHE = ["assets/AssetManifest.bin","assets/AssetManifest.bin.json","assets/FontManifest.json","assets/fonts/MaterialIcons-Regular.otf","assets/fonts/fallback/Roboto-Regular.ttf","assets/shaders/haiz_optical.frag","assets/shaders/ink_sparkle.frag","assets/shaders/stretch_effect.frag","canvaskit/canvaskit.js","canvaskit/canvaskit.wasm","canvaskit/skwasm.js","canvaskit/skwasm.wasm","canvaskit/skwasm_heavy.js","canvaskit/skwasm_heavy.wasm","favicon.png","flutter.js","flutter_bootstrap.js","icons/Icon-192.png","icons/Icon-512.png","icons/Icon-maskable-192.png","icons/Icon-maskable-512.png","index.html","install.html","main.dart.js","manifest.json","pocket-client.js","pocket-ui.css"];
 const CACHE_PREFIX = 'haiz-pocket-';
 const SHELL_CACHE = CACHE_PREFIX + 'shell-' + HAIZ_VERSION;
 const RUNTIME_CACHE = CACHE_PREFIX + 'assets-' + HAIZ_VERSION;
@@ -22,11 +22,15 @@ function isPublicAsset(url) {
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
-    for (const path of HAIZ_PRECACHE) {
-      const url = new URL(path, SCOPE).href;
-      const response = await fetch(url, { cache: 'reload' });
-      if (!response.ok) throw new Error('HAIZ offline asset unavailable: ' + path);
-      await cache.put(url, response);
+    // Bounded parallelism shortens install time without downloading every
+    // optional Flutter/PDF renderer into the first-launch cache.
+    for (let i = 0; i < HAIZ_PRECACHE.length; i += 3) {
+      await Promise.all(HAIZ_PRECACHE.slice(i, i + 3).map(async path => {
+        const url = new URL(path, SCOPE).href;
+        const response = await fetch(url, { cache: 'reload' });
+        if (!response.ok) throw new Error('HAIZ offline asset unavailable: ' + path);
+        await cache.put(url, response);
+      }));
     }
   })());
 });
