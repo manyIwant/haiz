@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/pocket_store.dart';
 import '../core/academic_session.dart';
 import '../domain/pocket_models.dart';
+import '../domain/quick_task_date_parser.dart';
 import 'kit.dart';
 import 'editorial.dart';
 import 'command_palette.dart';
@@ -26,6 +27,9 @@ class _TodayPageState extends State<TodayPage> {
   final TextEditingController _quickText = TextEditingController();
   final FocusNode _quickFocus = FocusNode();
   final Set<String> _finishingTasks = <String>{};
+  final Map<String, TaskItem> _exitingTasks = <String, TaskItem>{};
+  final Set<String> _collapsedTasks = <String>{};
+  bool _dateAccepted = false;
   late int _observedGeneration;
 
   @override
@@ -40,10 +44,13 @@ class _TodayPageState extends State<TodayPage> {
     _observedGeneration = store.generation;
     _quickText.clear();
     _quickFocus.unfocus();
+    _dateAccepted = false;
     if (mounted) {
       setState(() {
         view = TaskView.pending;
         _finishingTasks.clear();
+        _exitingTasks.clear();
+        _collapsedTasks.clear();
       });
     }
   }
@@ -57,6 +64,9 @@ class _TodayPageState extends State<TodayPage> {
       _observedGeneration = store.generation;
       _quickText.clear();
       _finishingTasks.clear();
+      _exitingTasks.clear();
+      _collapsedTasks.clear();
+      _dateAccepted = false;
       view = TaskView.pending;
     }
   }
@@ -74,37 +84,68 @@ class _TodayPageState extends State<TodayPage> {
     if (text.isEmpty || text.length > 140 || !store.ready || store.storageError != null) {
       return;
     }
-    store.addTask(text, '速记');
+    final suggestion = QuickTaskDateParser.suggest(text, DateTime.now());
+    store.addTask(text, '速记', due: _dateAccepted ? suggestion?.date : null);
     setState(() {
       _quickText.clear();
+      _dateAccepted = false;
       view = TaskView.pending;
     });
   }
 
   void _checkOff(TaskItem task) {
-    if (_finishingTasks.contains(task.id)) return;
+    if (_finishingTasks.contains(task.id) ||
+        !store.ready || store.storageError != null) {
+      return;
+    }
     if (task.completed) {
       store.toggleTask(task.id);
       return;
     }
+
     final ticket = store.generation;
     final reduced = PocketSkin.of(context).reducedMotion ||
         MediaQuery.of(context).disableAnimations;
-    if (reduced) {
-      store.toggleTask(task.id);
-      _showCompletedUndo(task.id, ticket);
+
+    // Persist first. Exit animations are only visual copies of a task,
+    // never a delayed write: leaving the app cannot lose a completed task.
+    if (!reduced) {
+      setState(() {
+        _finishingTasks.add(task.id);
+        _exitingTasks[task.id] = task;
+      });
+    }
+    store.toggleTask(task.id);
+    if (!store.tasks.any((item) => item.id == task.id && item.completed)) {
+      if (!reduced) {
+        setState(() {
+          _finishingTasks.remove(task.id);
+          _exitingTasks.remove(task.id);
+        });
+      }
       return;
     }
-    setState(() => _finishingTasks.add(task.id));
-    Future<void>.delayed(const Duration(milliseconds: 370), () {
-      if (!mounted) return;
-      final sameTask = store.generation == ticket &&
-          store.tasks.any((item) => item.id == task.id && !item.completed);
-      if (sameTask) {
-        store.toggleTask(task.id);
-        _showCompletedUndo(task.id, ticket);
+    _showCompletedUndo(task.id, ticket);
+    if (reduced) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || store.generation != ticket ||
+          !_exitingTasks.containsKey(task.id)) {
+        return;
       }
-      setState(() => _finishingTasks.remove(task.id));
+      setState(() => _collapsedTasks.add(task.id));
+    });
+    Future<void>.delayed(const Duration(milliseconds: 390), () {
+      if (!mounted || store.generation != ticket) {
+        return;
+      }
+      setState(() {
+        _finishingTasks.remove(task.id);
+        _exitingTasks.remove(task.id);
+        _collapsedTasks.remove(task.id);
+      });
     });
   }
 
@@ -119,6 +160,13 @@ class _TodayPageState extends State<TodayPage> {
         onPressed: () {
           if (store.generation != ticket) return;
           if (store.tasks.any((item) => item.id == taskId && item.completed)) {
+            if (mounted) {
+              setState(() {
+                _finishingTasks.remove(taskId);
+                _exitingTasks.remove(taskId);
+                _collapsedTasks.remove(taskId);
+              });
+            }
             store.toggleTask(taskId);
           }
         },
@@ -196,7 +244,11 @@ class _TodayPageState extends State<TodayPage> {
     final p = PocketSkin.of(context).colors;
     final now = DateTime.now();
     final current = nextCourse(store.courses, now);
-    final tasks = tasksForView(store.tasks, view, now);
+    final tasks = tasksForView([
+      ...store.tasks.where((task) => !_exitingTasks.containsKey(task.id)),
+      ..._exitingTasks.values,
+    ], view, now);
+    final dateSuggestion = QuickTaskDateParser.suggest(_quickText.text, now);
     return SingleChildScrollView(
       key: const PageStorageKey('today_scroll'),
       physics: const BouncingScrollPhysics(),
@@ -249,7 +301,7 @@ class _TodayPageState extends State<TodayPage> {
                         maxLines: 1,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _addQuickNote(),
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) => setState(() => _dateAccepted = false),
                         decoration: InputDecoration(
                           hintText: '想到什么，随手记下来…',
                           counterText: '',
@@ -271,36 +323,27 @@ class _TodayPageState extends State<TodayPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              CampusPhotoPanel(
-                asset: 'assets/campus/campus_fengqitang.jpg',
-                eyebrow: 'A SCHOOL THAT REMEMBERS',
-                title: store.remainingCount == 0
-                    ? '当前没有待办'
-                    : '还有 ${store.remainingCount} 项待办',
-                caption: current == null
-                    ? '随手写下一件事，完成后轻轻勾除'
-                    : '下一节 ${current.name} · ${minutesText(current.startMinute)}',
-                actionLabel: '快速记录',
-                onTap: () => _quickFocus.requestFocus(),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _editTask(context),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('新建任务'),
-                  ),
-                  const SizedBox(width: 10),
-                  TextButton.icon(
-                    onPressed: () => onNavigate(2),
-                    icon: const Icon(Icons.file_download_outlined, size: 17),
-                    label: const Text('导入通知'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 27),
+              if (dateSuggestion != null) ...[
+                const SizedBox(height: 7),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      key: const Key('quick-memo-date-suggestion'),
+                      label: Text(_dateAccepted
+                          ? '已采用 · ${dateSuggestion.label}'
+                          : '建议日期 · ${dateSuggestion.label}'),
+                      selected: _dateAccepted,
+                      onSelected: (selected) =>
+                          setState(() => _dateAccepted = selected),
+                    ),
+                    Text('可选，不会自动设置',
+                        style: TextStyle(fontSize: 11, color: p.secondary)),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 13),
               Row(
                 children: [
                   Expanded(
@@ -309,10 +352,13 @@ class _TodayPageState extends State<TodayPage> {
                       trailing: '${store.doneCount}/${store.tasks.length} 已完成',
                     ),
                   ),
-                  IconButton.filledTonal(
-                    tooltip: '添加任务',
-                    onPressed: () => _editTask(context),
-                    icon: const Icon(Icons.add_rounded),
+                  Tooltip(
+                    message: '添加任务',
+                    child: TextButton.icon(
+                      onPressed: () => _editTask(context),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('新建任务'),
+                    ),
                   ),
                 ],
               ),
@@ -354,7 +400,15 @@ class _TodayPageState extends State<TodayPage> {
                   ),
                 ),
               for (final task in tasks)
-                Padding(
+                AnimatedSize(
+                  key: ValueKey('animated-task-${task.id}'),
+                  duration: Duration(milliseconds:
+                      PocketSkin.of(context).reducedMotion ? 0 : 290),
+                  curve: Curves.easeInOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: _collapsedTasks.contains(task.id)
+                      ? const SizedBox.shrink()
+                      : Padding(
                   padding: const EdgeInsets.only(bottom: 9),
                   child: AnimatedOpacity(
                     opacity: _finishingTasks.contains(task.id) ? 0.16 : 1,
@@ -413,18 +467,6 @@ class _TodayPageState extends State<TodayPage> {
                             ),
                           ),
                         ),
-                        IconButton(
-                          tooltip: '接着学习',
-                          onPressed: () {
-                            store.chooseFocusTask(task.id);
-                            onNavigate(3);
-                          },
-                          icon: Icon(
-                            Icons.play_arrow_rounded,
-                            size: 20,
-                            color: p.accent,
-                          ),
-                        ),
                         PopupMenuButton<String>(
                           tooltip: '任务操作',
                           padding: EdgeInsets.zero,
@@ -435,6 +477,10 @@ class _TodayPageState extends State<TodayPage> {
                           ),
                           onSelected: (choice) {
                             if (choice == 'edit') _editTask(context, task);
+                            if (choice == 'focus') {
+                              store.chooseFocusTask(task.id);
+                              onNavigate(3);
+                            }
                             if (choice == 'source') _showSource(context, task);
                             if (choice == 'delete') _deleteTask(context, task);
                           },
@@ -442,6 +488,10 @@ class _TodayPageState extends State<TodayPage> {
                             const PopupMenuItem(
                               value: 'edit',
                               child: Text('编辑任务与日期'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'focus',
+                              child: Text('接着学习'),
                             ),
                             if (task.originalNotice.isNotEmpty)
                               const PopupMenuItem(
@@ -481,6 +531,26 @@ class _TodayPageState extends State<TodayPage> {
                     ),
                   ),
                 ),
+                ),
+              const SizedBox(height: 14),
+              CampusPhotoPanel(
+                asset: 'assets/campus/campus_fengqitang.jpg',
+                eyebrow: 'A SCHOOL THAT REMEMBERS',
+                title: store.remainingCount == 0
+                    ? '当前没有待办'
+                    : '还有 ${store.remainingCount} 项待办',
+                caption: current == null
+                    ? '随手写下一件事，完成后轻轻勾除'
+                    : '下一节 ${current.name} · ${minutesText(current.startMinute)}',
+                actionLabel: '快速记录',
+                onTap: () => _quickFocus.requestFocus(),
+              ),
+              const SizedBox(height: 9),
+              TextButton.icon(
+                onPressed: () => onNavigate(2),
+                icon: const Icon(Icons.file_download_outlined, size: 17),
+                label: const Text('导入通知'),
+              ),
               if (widget.session?.identity != null) ...[
                 const SizedBox(height: 20),
                 Row(children: [
