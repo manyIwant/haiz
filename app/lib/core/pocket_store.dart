@@ -15,6 +15,7 @@ class PocketStore extends ChangeNotifier {
   Future<void> _pending = Future.value();
   bool _disposed = false;
   bool ready = false;
+  bool semanticExtractionConsent = false;
   int generation = 0;
   String? namespace;
   Future<void> Function(String json)? _remoteWrite;
@@ -45,6 +46,7 @@ class PocketStore extends ChangeNotifier {
     namespace = null;
     _remoteWrite = null;
     legacyArchiveAvailable = false;
+    semanticExtractionConsent = false;
     ready = false;
     _ticker?.cancel();
     _focusEndsAt = null;
@@ -134,6 +136,9 @@ class PocketStore extends ChangeNotifier {
       if (_disposed || ticket != generation) return;
       namespace = scope;
       _apply(data);
+      semanticExtractionConsent = scope.startsWith('haiz/v1/') &&
+          await _prefs.getBool('$scope/semantic-extraction-consent.v1') == true;
+      if (_disposed || ticket != generation) return;
       // Archive failures only hide the migration prompt and keep originals;
       // they must never make a healthy namespace read-only.
       try {
@@ -201,6 +206,18 @@ class PocketStore extends ChangeNotifier {
         }
       }
     });
+  }
+
+  Future<void> setSemanticExtractionConsent(bool value) async {
+    final scope = namespace;
+    if (!_writable || scope == null || !scope.startsWith('haiz/v1/')) {
+      throw StateError('请先登录已核准的班级账号。');
+    }
+    final ticket = generation;
+    await _prefs.setBool('$scope/semantic-extraction-consent.v1', value);
+    if (_disposed || ticket != generation || namespace != scope) return;
+    semanticExtractionConsent = value;
+    _notify();
   }
 
   Future<void> flush() async {
