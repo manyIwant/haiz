@@ -20,6 +20,15 @@ void main() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(MessageIntakeBridge.channel, (call) async {
       if (call.method == 'getEntries') return <Map<String, Object?>>[];
+      if (call.method == 'getWechatDiagnostics') {
+        return <String, Object?>{
+          'listenerConnected': false,
+          'observedCount': 0,
+          'savedCount': 0,
+          'lastObservedAt': 0,
+          'lastResult': '',
+        };
+      }
       if (call.method == 'getConfiguration') {
         return <String, Object?>{
           'enabled': false, 'granted': false, 'wechat': false, 'groups': '',
@@ -60,6 +69,8 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(panelKey), findsOneWidget);
     expect(find.byKey(const Key('enable-wechat')), findsOneWidget);
+    expect(find.byKey(const Key('wechat-diag-status')), findsOneWidget);
+    expect(find.text('微信监测未开启'), findsOneWidget);
     expect(find.byKey(groupsKey), findsOneWidget);
 
     await tester.ensureVisible(find.byKey(groupsKey));
