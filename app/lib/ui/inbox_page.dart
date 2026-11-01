@@ -899,6 +899,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
         const SizedBox(height: 14),
         if (MessageIntakeBridge.supportsNotificationMonitoring)
           ExpansionTile(
+          // Keep expansion bool separate from the scroll view's offset (double).
+          key: const PageStorageKey('inbox-monitor-tile'),
           tilePadding: const EdgeInsets.symmetric(horizontal: 2),
           childrenPadding: const EdgeInsets.only(bottom: 16),
           title: Text(
