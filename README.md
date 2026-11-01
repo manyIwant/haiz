@@ -4,12 +4,12 @@
 
 **Still learning. Still making.**
 
-## HAIZ 能量实验室 · 十课互动物理
+## HAIZ 物理实验室 · Every Joule 原版与原创练习
 
-- [打开原创十课互动实验室](physics-lab.html)（静态独立页面，适用于手机和电脑）
-- 包含能量储存、动能、弹性势能、弹跳、比热容、功率、效率、电站与电网、食物中的化学能、能量守恒；各课提供参数调整、动态示意与简化计算，完成记录仅存本机。
-- 灵感参考 [Techartist 的 Every Joule 原作](https://iamtechartist.com/Apps/every-joule/)，页面内明确致谢、链接原作。此功能**不是原作代码/完整3D课程的镜像或移植**；原作未提供明确再发布许可，因此不复制原作代码和美术资源。
-- 已进行脚本解析和10课基础交互模拟检查，尚未进行真实手机/WebGL 浏览器验收。
+- [打开 Every Joule 原版入口](physics-lab.html)（由作者网站实时加载到跨站 iframe；若浏览器或作者网站禁止嵌入，可点击页面上的「在作者官网打开完整原版」）
+- [打开 HAIZ 自制十课简化练习](physics-lab-practice.html)（独立实现、简化参数计算，具有进度记录）
+- **作品与版权归属：** Every Joule © 2026 Techartist；原作者官网 <https://iamtechartist.com/Apps/every-joule/>。HAIZ 不托管、不下载、不修改原作者的课程代码、3D 模型或音效，iframe 内的资源来自原作者网站。嵌入效果受作者站点的 CSP/X-Frame-Options 和浏览器第三方内容限制影响。
+- 原版十课的具体内容以作者网站实际发布为准，需要 WebGL 图形加速；网站直达不意味着 HAIZ 获得再分发许可。
 
 ## HAIZ Pocket · 移动端预览
 
