@@ -175,9 +175,13 @@ class HaizUpdateRelease {
     }
     final url = Uri.tryParse(rawUrl);
     // A release manifest cannot redirect the app to arbitrary APK providers.
+    final segments = url?.pathSegments ?? const <String>[];
     if (url == null || url.scheme != 'https' || url.host != 'github.com' ||
-        !RegExp(r'^/manyIwant/haiz/releases/download/haiz-android-v[^/]+/HAIZ-Pocket-Android\\.apk$')
-            .hasMatch(url.path) ||
+        segments.length != 6 ||
+        segments[0] != 'manyIwant' || segments[1] != 'haiz' ||
+        segments[2] != 'releases' || segments[3] != 'download' ||
+        !segments[4].startsWith('haiz-android-v') ||
+        segments[5] != 'HAIZ-Pocket-Android.apk' ||
         url.hasQuery || url.hasFragment) {
       throw const FormatException('不可信的安装包下载地址');
     }
@@ -188,7 +192,7 @@ class HaizUpdateRelease {
       apkUrl: url,
       sha256: sha.toLowerCase(),
       sizeBytes: size,
-      notes: notes is String ? notes.substring(0, notes.length.clamp(0, 2000)) : '',
+      notes: notes is String ? (notes.length > 2000 ? notes.substring(0, 2000) : notes) : '',
     );
   }
 }
