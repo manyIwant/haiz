@@ -49,6 +49,23 @@ try {
   });
   assert.match(text,/homework/i,'OCR did not recognize the test English word: '+text);
   assert.match(text,/36/,'OCR did not recognize the test number: '+text);
+  const chinese = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 270;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0,0,1200,270);
+    ctx.fillStyle = 'black';
+    ctx.font = 'bold 106px "Noto Sans SC", "Noto Sans CJK SC", sans-serif';
+    ctx.fillText('数学作业',50,175);
+    const blob = await new Promise((resolve,reject) =>
+      canvas.toBlob(file => file ? resolve(file) : reject(new Error('Chinese PNG failed')), 'image/png'));
+    return await window.HAIZ_OCR.recognize(new Uint8Array(await blob.arrayBuffer()));
+  });
+  assert.match(chinese,/数学|作业/,
+    'Chinese OCR did not recognize either target word: '+chinese);
   const during = requests.slice(requestStart);
   // Flutter may asynchronously fetch public Google fonts for its UI. That is
   // separate from screenshot OCR. Audit every image upload and every OCR
@@ -73,7 +90,7 @@ try {
     'English language model must be self-hosted');
   console.log(JSON.stringify({
     status:'PASS',engine:'Tesseract.js 7 local',
-    result:text.trim(),elapsedMs:Date.now()-started,
+    result:text.trim(),chineseResult:chinese.trim(),elapsedMs:Date.now()-started,
     ocrRequests:ocrRequests.length,uploads:uploads.length,
     externalUiFonts:fontRequests.length,otherExternal:otherExternal.length,
     errors:errors.slice(0,4)
