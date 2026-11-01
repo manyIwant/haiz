@@ -1,9 +1,9 @@
 {
   "packageId": "space.haiz.app.preview",
-  "versionName": "1.5.2",
-  "versionCode": 2102,
-  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.2/HAIZ-Pocket-Android.apk",
-  "sha256": "91a96f342803595fe09999e90c909b31a3b29c34b6651be7abc7fd1c91673ef3",
-  "sizeBytes": 109637718,
-  "notes": "修复微信指定群通知设置展开后出现灰色异常区域；移除旧折叠面板状态恢复冲突并增加回归测试。保留原有微信授权与任务审核。"
+  "versionName": "1.5.3",
+  "versionCode": 2103,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.3/HAIZ-Pocket-Android.apk",
+  "sha256": "a28a7ebfb1391f50510729e01e3a3a04ad1bfefe0e6f1b227a5186616020f723",
+  "sizeBytes": 109752406,
+  "notes": "新增微信通知本机诊断：查看系统授权、监听状态、群名匹配、作业关键词和入箱结果；不记录被过滤通知内容。"
 }
