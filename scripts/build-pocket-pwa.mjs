@@ -12,7 +12,7 @@ const root = resolve(process.argv[2] || 'app/build/web');
 const MAX_PRECACHE_BYTES = 24 * 1024 * 1024;
 const MUST_HAVE = [
   'index.html', 'flutter_bootstrap.js', 'main.dart.js',
-  'manifest.json', 'pocket-client.js'
+  'manifest.json', 'pocket-client.js', 'pocket-ocr.js'
 ];
 
 async function walk(folder) {
@@ -39,6 +39,18 @@ if (/_flutter\.loader\.load\s*\(\s*\{[\s\S]{0,200}?serviceWorkerSettings\s*:/.te
 }
 
 const files = await walk(root);
+const requiredOcrPaths = [
+  'ocr/vendor/tesseract.min.js',
+  'ocr/vendor/worker.min.js',
+  'ocr/lang/eng.traineddata.gz',
+  'ocr/lang/chi_sim.traineddata.gz',
+  'ocr/manifest.json'
+];
+for (const path of requiredOcrPaths) {
+  if (!files.some(file => file.path === path && file.size > 1000)) {
+    throw new Error('HAIZ browser OCR is missing a locally hosted file: ' + path);
+  }
+}
 const available = new Map(files.map(file => [file.path, file]));
 for (const item of MUST_HAVE) {
   if (!available.has(item)) throw new Error('Required Flutter Web file missing: ' + item);
@@ -54,7 +66,7 @@ if (!canvasKitBuild && !skwasmBuild) {
 }
 const OFFLINE_SHELL = new Set([
   ...MUST_HAVE,
-  'flutter.js', 'pocket-ui.css', 'install.html', 'favicon.png',
+  'flutter.js', 'pocket-ui.css', 'install.html', 'favicon.png', 'pocket-ocr.js',
   ...(canvasKitBuild ? [
     'canvaskit/canvaskit.js', 'canvaskit/canvaskit.wasm',
     'canvaskit/chromium/canvaskit.js', 'canvaskit/chromium/canvaskit.wasm',

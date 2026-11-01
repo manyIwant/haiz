@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '24'
       - name: Verify PWA source files and security boundaries
-        run: node --test tests/pocket-pwa.test.mjs
+        run: node --test tests/pocket-pwa.test.mjs tests/pocket-web-ocr.test.mjs
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.8'
@@ -46,6 +46,15 @@ jobs:
       - name: Existing Flutter regression tests
         working-directory: app
         run: flutter test
+      - name: Prepare self-hosted Chinese and English OCR engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/haiz-ocr-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund \
+            tesseract.js@7.0.0 tesseract.js-core@7.0.0 \
+            @tesseract.js-data/eng@1.0.0 @tesseract.js-data/chi_sim@1.0.0
+          node scripts/prepare-pocket-ocr.mjs "$RUNNER_TEMP/haiz-ocr-deps/node_modules"
+
       - name: Build production-like PWA under /pocket/
         working-directory: app
         run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
@@ -62,6 +71,28 @@ jobs:
           grep -q '/pocket/' app/build/web/index.html
           ! grep -q '__HAIZ_PRECACHE__' app/build/web/pocket-sw.js
           cat app/build/web/pwa-build.json
+      - name: Run real Chromium OCR smoke with no image uploads
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+          fc-cache -f
+          fc-match -f '%{family}\n' ':lang=zh'
+          export HAIZ_TEST_CHROME="$(command -v google-chrome || command -v google-chrome-stable || true)"
+          if [[ -z "$HAIZ_TEST_CHROME" ]]; then
+            echo "::error::GitHub runner has no system Chrome; real OCR smoke is required"
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/haiz-ocr-http/pocket"
+          rsync -a app/build/web/ "$RUNNER_TEMP/haiz-ocr-http/pocket/"
+          python3 -m http.server 8877 --bind 127.0.0.1 --directory "$RUNNER_TEMP/haiz-ocr-http" > "$RUNNER_TEMP/haiz-ocr-http.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 2
+          node tests/pocket-web-ocr-browser.mjs
+
       - uses: actions/upload-artifact@v4
         with:
           name: haiz-pocket-pwa-preview

@@ -26,3 +26,6 @@ tests/artifacts/
 
 # Generated audit data; never commit live acceptance environment details.
 production-acceptance-output/
+
+# Self-hosted OCR vendor binaries are generated from pinned packages during CI.
+app/web/ocr/
