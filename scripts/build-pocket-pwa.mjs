@@ -34,7 +34,7 @@ async function walk(folder) {
 }
 
 const bootstrap = await readFile(join(root, 'flutter_bootstrap.js'), 'utf8');
-if (/_flutter\\.loader\\.load\\s*\\(\\s*\\{[\\s\\S]{0,200}?serviceWorkerSettings\\s*:/.test(bootstrap)) {
+if (/_flutter\.loader\.load\s*\(\s*\{[\s\S]{0,200}?serviceWorkerSettings\s*:/.test(bootstrap)) {
   throw new Error('Legacy Flutter worker registration conflicts with pocket-sw.js');
 }
 
