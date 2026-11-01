@@ -1,0 +1,173 @@
+"use strict";
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const http = require("node:http");
+const { chromium } = require("playwright");
+const root = path.resolve(__dirname, "../../..");
+const output = path.resolve(process.env.HAIZ_ATLAS_ARTIFACTS || path.join(__dirname, "artifacts"));
+const contentTypes = { ".html":"text/html; charset=utf-8", ".css":"text/css; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".jpg":"image/jpeg", ".png":"image/png", ".webp":"image/webp", ".svg":"image/svg+xml", ".woff2":"font/woff2", ".json":"application/json" };
+fs.mkdirSync(output, { recursive:true });
+const server = http.createServer((request,response) => {
+  try {
+    const parsed = new URL(request.url, "http://localhost");
+    let local = path.resolve(root, "." + decodeURIComponent(parsed.pathname));
+    if (!local.startsWith(root + path.sep) && local !== root) { response.writeHead(403).end(); return; }
+    if (fs.statSync(local).isDirectory()) local = path.join(local, "index.html");
+    response.setHeader("Content-Type",contentTypes[path.extname(local)] || "application/octet-stream");
+    fs.createReadStream(local).on("error", () => response.writeHead(404).end()).pipe(response);
+  } catch { response.writeHead(404).end(); }
+});
+(async () => {
+  await new Promise(resolve => server.listen(0,"127.0.0.1",resolve));
+  const origin = "http://127.0.0.1:" + server.address().port;
+  const browser = await chromium.launch({headless:true,args:["--no-sandbox"]});
+  const errors = [], outside = [], checks = [];
+  const pass = label => { checks.push(label); console.log("PASS "+label); };
+  try {
+    const page = await browser.newPage({viewport:{width:1440,height:900},reducedMotion:"no-preference"});
+    page.on("pageerror",err=>errors.push(err.message));
+    page.on("request",request=>{if(!request.url().startsWith(origin)) outside.push(request.url())});
+    await page.goto(origin+"/world/atlas/");
+    await page.locator("#sceneVisual").waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await page.locator(".scene-card").isVisible(), true);
+    assert.equal(await page.locator("#spatialStage").isVisible(), true);
+    const firstScene = await page.locator("#spatialStage").boundingBox();
+    assert.ok(firstScene.height >= 600 && firstScene.y < 130, "campus photo must own the initial viewport");
+    assert.equal(await page.locator(".spatial-pin").count(),4);
+    await page.locator('[data-spatial-place="library"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"图书馆");
+    assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../stillroom/");
+    const arrival = new URL(await page.locator("#spatialLocation3d").getAttribute("href"), page.url());
+    assert.equal(arrival.pathname,"/world/campus.html");
+    assert.equal(arrival.searchParams.get("focus"),"library");
+    assert.equal(arrival.searchParams.get("observe"),"1");
+    assert.equal(arrival.searchParams.get("quality"),null,"desktop arrives at balanced quality");
+
+    await page.locator('[data-spatial-place="fengqi"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"凤栖堂");
+    await page.locator('[data-spatial-place="pond"]').click();
+    assert.equal(await page.locator("#spatialLocationName").innerText(),"砚池");
+    await page.locator("#spatialReset").click();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-place"),"overview");
+    pass("spatial campus takes first viewport; four landmark choices resolve to real routes");
+    await page.locator('[data-spatial-mood="dusk"]').click();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-mood"),"dusk");
+    await page.reload();
+    assert.equal(await page.locator("#spatialStage").getAttribute("data-mood"),"dusk");
+    await page.locator('[data-spatial-mood="day"]').click();
+    pass("editorial time palettes persist without claiming live weather");
+    await page.screenshot({path:path.join(output,"atlas-1440.png"),fullPage:true});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1), true);
+    pass("1440px rendering and no horizontal overflow");
+    await page.locator("#themeSelect").selectOption("ocean");
+    assert.equal(await page.locator("html").getAttribute("data-theme"),"ocean");
+    await page.reload();
+    assert.equal(await page.locator("html").getAttribute("data-theme"),"ocean");
+    assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","saved Ocean theme must paint immediately, without a Porcelain flash");
+    pass("three-theme persistence and first-paint fidelity");
+    await page.locator("#taskInput").fill("<img src=x onerror=alert(1)>");
+    await page.locator("#taskForm button").click();
+    assert.equal(await page.locator("#taskList li span").first().innerText(),"<img src=x onerror=alert(1)>");
+    assert.equal(await page.locator("#taskList img").count(),0);
+    pass("safe local text persistence");
+    await page.locator(".dock-item[data-view=study]").click();
+    assert.equal(await page.locator("#spatialStage").isHidden(),true,"study experience must not remain behind the dashboard");
+    await page.locator(".dock-item[data-view=campus]").click();
+    assert.equal(await page.locator("#spatialStage").isVisible(),true,"campus returns to spatial experience");
+    await page.locator(".dock-item[data-view=study]").click();
+    assert.match(await page.locator("#editionTitle").innerText(),/把喧闹留在门外/);
+    await page.waitForTimeout(700);
+    const offset = await page.evaluate(() => {
+      const dock = document.querySelector(".float-dock"),lens=document.querySelector("#dockLens"),active=dock.querySelector(".dock-item.is-active");
+      return Math.abs(lens.getBoundingClientRect().left - active.getBoundingClientRect().left);
+    });
+    assert.ok(offset < 1.5,"spring should settle beneath active icon; difference "+offset);
+    pass("finite dock spring convergence");
+    await page.locator("#sceneLink").click();
+    await page.locator("#scenePortal.is-visible").waitFor();
+    assert.match(await page.locator("#portalTitle").innerText(),/世界/);
+    await page.screenshot({path:path.join(output,"atlas-handoff-1440.png")});
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#scenePortal").isHidden(),true);
+    pass("cinematic handoff can be cancelled with Escape");
+    await page.keyboard.press("Control+k");
+    assert.equal(await page.locator("#commandDialog").isVisible(),true);
+    await page.locator("#commandInput").fill("三维");
+    assert.ok(await page.locator("#commandResults a").count()>=1);
+    await page.keyboard.press("Escape");
+    pass("command search opens from keyboard");
+    await page.locator("#sceneLink").click();
+    await page.locator("#scenePortal.is-visible").waitFor();
+    await Promise.all([page.waitForURL("**/world/stillroom/"),page.locator("#portalSkip").click()]);
+    pass("skip button navigates to real STILLROOM route");
+
+    for (const width of [390,320,768]) {
+      await page.setViewportSize({width,height:844});
+      await page.goto(origin+"/world/atlas/#home");
+      await page.evaluate(() => document.fonts.ready);
+      const overflow = await page.evaluate(() => {
+        const w = innerWidth;
+        return { viewport:w,scrollWidth:document.documentElement.scrollWidth,
+          offenders:[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({rect})=>rect.width>0&&(rect.right>w+2||rect.left < -2)).slice(0,12).map(({el,rect})=>({tag:el.tagName,cls:typeof el.className==="string"?el.className:"",id:el.id,left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}))};
+      });
+      console.log("OVERFLOW_INSPECT "+JSON.stringify(overflow));
+      assert.ok(overflow.scrollWidth <= width+1,"overflow width="+width);
+      assert.equal(await page.locator("body").evaluate(element => getComputedStyle(element).backgroundColor),"rgb(16, 33, 41)","mobile Ocean theme must not flash pale background");
+      assert.equal(await page.locator("#spatialStage").isVisible(),true);
+      await page.locator('[data-spatial-place="classroom"]').click();
+      assert.equal(await page.locator("#spatialLocationAction").getAttribute("href"),"../room/immersive/");
+      const arrival = new URL(await page.locator("#spatialLocation3d").getAttribute("href"),page.url());
+      assert.equal(arrival.searchParams.get("focus"),"yihao");
+      assert.equal(arrival.searchParams.get("observe"),"1");
+
+      const geometry = await page.evaluate(() => ({
+        viewport:innerWidth,
+        workspace:document.querySelector(".workspace").getBoundingClientRect().width,
+        main:document.querySelector("#main").getBoundingClientRect().width,
+        scene:document.querySelector(".scene-card").getBoundingClientRect().width,
+        heading:document.querySelector("#editionTitle").getBoundingClientRect().height,
+        documentHeight:document.documentElement.scrollHeight,
+        spatialWidth:document.querySelector("#spatialStage").getBoundingClientRect().width,
+        visiblePins:[...document.querySelectorAll(".spatial-pin")].every(el=>{
+          const b=el.getBoundingClientRect(),scene=document.querySelector("#spatialStage").getBoundingClientRect();
+          return b.width >= 40 && b.left >= scene.left-1 && b.right <= scene.right+1;
+        })
+      }));
+      console.log("MOBILE_GEOMETRY "+JSON.stringify(geometry));
+      assert.ok(geometry.main >= width*.85 && geometry.scene >= width*.68,"mobile main must use the viewport width");
+      assert.ok(geometry.heading < 240 && geometry.documentHeight < 4900,"mobile content cannot collapse into a tall narrow column");
+      assert.ok(geometry.spatialWidth >= width*.95 && geometry.visiblePins,"spatial controls stay visible and clickable at "+width+"px");
+      if(width===390) await page.screenshot({path:path.join(output,"atlas-390.png"),fullPage:true});
+      if(width===320) await page.screenshot({path:path.join(output,"atlas-320.png"),fullPage:true});
+    }
+    pass("390 / 320 / 768px widths");
+    await page.emulateMedia({reducedMotion:"reduce"});
+    await page.goto(origin+"/world/atlas/#study");
+    assert.equal(await page.locator(".dock-item.is-active").getAttribute("data-view"),"study");
+    const reducedProbe = await page.evaluate(() => ({
+      media:matchMedia("(prefers-reduced-motion: reduce)").matches,
+      view:document.querySelector(".dock-item.is-active")?.dataset.view,
+      target:document.querySelector("#sceneLink")?.getAttribute("href"),
+      portal:document.querySelector("#scenePortal")?.hidden,
+      hash:location.hash
+    }));
+    console.log("REDUCED_PREFLIGHT "+JSON.stringify(reducedProbe));
+    assert.equal(reducedProbe.media,true,"reduced motion media must be active");
+    assert.equal(reducedProbe.target,"../stillroom/","deep-linked study must target real STILLROOM");
+    await page.locator("#sceneLink").click();
+    await page.waitForTimeout(350);
+    console.log("REDUCED_RESULT "+JSON.stringify({url:page.url(),errors}));
+    assert.ok(page.url().endsWith("/world/stillroom/"),"reduced-motion navigation should be direct");
+    pass("reduced motion skips cinematic delay");
+    assert.deepEqual(outside,[],"all resources should remain same-origin");
+    assert.deepEqual(errors,[],"no uncaught browser errors");
+    pass("no remote requests or uncaught page errors");
+    fs.writeFileSync(path.join(output,"browser-results.json"),JSON.stringify({checks,errors,outside,environment:"Linux Playwright Chromium; simulated widths; not physical device"},null,2));
+    console.log("TOTAL "+checks.length+" checks passed");
+    await page.close();
+  } finally {
+    await browser.close();
+  }
+})().catch(error => {console.error(error);process.exitCode=1}).finally(()=>server.close());

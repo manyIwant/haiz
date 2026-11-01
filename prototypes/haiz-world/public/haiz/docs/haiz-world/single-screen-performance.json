@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-21T04:36:50.105Z",
+  "platform": "Linux cloud / headless Chromium",
+  "browser": "154.0.8037.57",
+  "viewport": "1920x1080",
+  "contexts": 1,
+  "seconds": 20.001208429,
+  "cpuPercentOneCore": 2.2998610390612217,
+  "summedBrowserRssMiB": 488.22265625,
+  "jsHeapMiB": 2.2236976623535156,
+  "webglLoaded": false,
+  "note": "20 秒空闲采样，RSS 包含共享内存重复计数，非 Windows 希沃保证。"
+}

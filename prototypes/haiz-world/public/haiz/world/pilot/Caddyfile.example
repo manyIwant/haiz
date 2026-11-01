@@ -1,0 +1,11 @@
+# Replace with your own authorized domain. Caddy obtains a trusted TLS certificate.
+# Run Caddy on the same host as the loopback Node service. Do not expose port 8790.
+haiz-demo.example.org {
+    request_body {
+        max_size 48KB
+    }
+    reverse_proxy 127.0.0.1:8790
+    header {
+        -Server
+    }
+}

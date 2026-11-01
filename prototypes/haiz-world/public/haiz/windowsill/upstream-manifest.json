@@ -1,0 +1,344 @@
+{
+  "qiaosi": {
+    "repository": "https://github.com/TangfanOVO/qiaosi",
+    "commit": "309508f1ce637269638810d9b1e43cb5d1aeb7bd",
+    "license": "AGPL-3.0-only"
+  },
+  "icons": {
+    "repository": "https://github.com/TangfanOVO/fanfan-icons",
+    "commit": "5ecb58513b66f9dd801fb2542d588ebd96f9f9b5",
+    "license": "MIT"
+  },
+  "three": {
+    "version": "0.170.0",
+    "integrity": "sha512-FQK+LEpYc0fBD+J8g6oSEyyNzjp+Q7Ks1C568WWaoMRLW+TkNNWmenWeGgJjV105Gd+p/2ql1ZcjYvNiPZBhuQ==",
+    "license": "MIT"
+  },
+  "files": [
+    {
+      "file": "scene/src/index.template.html",
+      "source": "qiaosi",
+      "sha256": "708a951929b3f560a9a40b21773fdfc77dcd3fa910c7e3cdfc46802f97519cc3"
+    },
+    {
+      "file": "scene/src/js/00-setup.js",
+      "source": "qiaosi",
+      "sha256": "04216591b0b9131361a030f7652079aa8835b327df398cd4485e26693b17ea90"
+    },
+    {
+      "file": "scene/src/js/01-materials-textures.js",
+      "source": "qiaosi",
+      "sha256": "c1010044287fd114ea3dc02e27a008a4f8477b8e3604c603033c98c230a608e0"
+    },
+    {
+      "file": "scene/src/js/02-room-window-curtain.js",
+      "source": "qiaosi",
+      "sha256": "c107eb2c4032cd80a72b973961523e7846c5adbbd14bec290d481954382845f9"
+    },
+    {
+      "file": "scene/src/js/03-sky-sea-beach.js",
+      "source": "qiaosi",
+      "sha256": "3537954148a0caa87adf213a089b037523010e21fc928c82a9b10310f47f67b4"
+    },
+    {
+      "file": "scene/src/js/04-willow.js",
+      "source": "qiaosi",
+      "sha256": "4cfa404cd680a463ba282fc987c3e573d5398655586d6813e8ddc7590fbaa5e1"
+    },
+    {
+      "file": "scene/src/js/05-magnolia-geometry.js",
+      "source": "qiaosi",
+      "sha256": "b580a00b0cc866cc116c909e08cc863e1efe1be14232f68bfb95046031879afe"
+    },
+    {
+      "file": "scene/src/js/06-model-loading-helpers.js",
+      "source": "qiaosi",
+      "sha256": "45395ab9574e55fcd319324f8806331768813790ecb9d343247ce95fff87ca59"
+    },
+    {
+      "file": "scene/src/js/07-gulls.js",
+      "source": "qiaosi",
+      "sha256": "39ddb16392e92e4c35a9dae7d8c5c6302b5289d3aa635d1ccd62340194fde773"
+    },
+    {
+      "file": "scene/src/js/08-desk-materials-furin-books.js",
+      "source": "qiaosi",
+      "sha256": "b49de56dd37f66df772d32b56dc340f982bf93981da62845a5dbdacb5c131b53"
+    },
+    {
+      "file": "scene/src/js/09-left-writing-corner.js",
+      "source": "qiaosi",
+      "sha256": "32250e0b53fbe8b9a974b09149f04f1bae708d1901980236ce993bcec57b1ebd"
+    },
+    {
+      "file": "scene/src/js/10-middle-reading-tea.js",
+      "source": "qiaosi",
+      "sha256": "2224a96cafa60c094d177101e9cc39b99fbb774db89aa01922875f1fed5459a9"
+    },
+    {
+      "file": "scene/src/js/11-right-window-corner.js",
+      "source": "qiaosi",
+      "sha256": "7841aa98134cf7faf38160fb8f907621ec22fa26848619af7e3e56d522229335"
+    },
+    {
+      "file": "scene/src/js/12-windowsill.js",
+      "source": "qiaosi",
+      "sha256": "a58ed2e4e6338ca6ce41b0c75dbf3ec90fb635ed9b9b8fee572da0f0afefee27"
+    },
+    {
+      "file": "scene/src/js/13-desk-pet.js",
+      "source": "qiaosi",
+      "sha256": "2a1f646b363c66dcf57ddad8bb10cd8e4d01e02aaa04fa1a105fbd92697ec48e"
+    },
+    {
+      "file": "scene/src/js/14-light-time-season.js",
+      "source": "qiaosi",
+      "sha256": "85f2155c28c7b1400e2d13338e0236beb6b7f1a219cf153223303a44ef618721"
+    },
+    {
+      "file": "scene/src/js/15-falling-leaves.js",
+      "source": "qiaosi",
+      "sha256": "df0ecc05eff221c1ebeb9d87c277d812b26f3ed399b52d9019bbc1e2db58751c"
+    },
+    {
+      "file": "scene/src/js/16-weather.js",
+      "source": "qiaosi",
+      "sha256": "ad42de511a98ab016317de2c4d8b623968bf67d64a668eaa6e21829ca279fa01"
+    },
+    {
+      "file": "scene/src/js/17-tags-camera-glass.js",
+      "source": "qiaosi",
+      "sha256": "926ea0d179e993b5446ba7f3efbffc4139026d906965137ede9f8d3a4652588c"
+    },
+    {
+      "file": "scene/src/js/18-input-sliders.js",
+      "source": "qiaosi",
+      "sha256": "2533f60a758cdc8cf189adccf863a4ebf68453eebf35ef28c82fab942024314a"
+    },
+    {
+      "file": "scene/src/js/19-frame-api.js",
+      "source": "qiaosi",
+      "sha256": "8d16182b6f83f8325ae51d1aec090291f7188c7ba8649e92f9b2d9130bc140a2"
+    },
+    {
+      "file": "scene/models/bookcase.gltf.json",
+      "source": "qiaosi",
+      "sha256": "977663c2639f220644d3f3b48ef2a75a2818cee5e6d5fc4566fc4211bbe0844b"
+    },
+    {
+      "file": "scene/models/laptop.gltf.json",
+      "source": "qiaosi",
+      "sha256": "a0e3127058a8eb6e842cba18f5c59aeb11785923a322b7fb3b13411064813882"
+    },
+    {
+      "file": "scene/models/organizer.gltf.json",
+      "source": "qiaosi",
+      "sha256": "0687541210dd6b2844da1d93b5848d26ca1fefd08c2f553019301c483b7c170f"
+    },
+    {
+      "file": "scene/models/phone.gltf.json",
+      "source": "qiaosi",
+      "sha256": "9e2b2cf2273151b836c3e83dbabcb0cf31a1ac2099628688bbadaec29a36a476"
+    },
+    {
+      "file": "scene/blender/furniture.py",
+      "source": "qiaosi",
+      "sha256": "49b9794403af8e26ba89021c4f12549e7d8202ead0355249ae8d34f9ecad86ea"
+    },
+    {
+      "file": "scene/blender/glb2json.py",
+      "source": "qiaosi",
+      "sha256": "8fc56bcb955bf2df77b375e1b8c4e732aefcdee57e7e02cb2ea93d155ea673a4"
+    },
+    {
+      "file": "scene/blender/laptop.py",
+      "source": "qiaosi",
+      "sha256": "51a3ec92c28954d9bd5b13ba4e3a0314333da48d945888b5c3acb3ccb8d65c3f"
+    },
+    {
+      "file": "scene/blender/phone.py",
+      "source": "qiaosi",
+      "sha256": "da8ecc4a2499ad5b11dbd112e3722aa8f5bd9332d0d6fe3b08eacfa40423df8c"
+    },
+    {
+      "file": "scene/build.mjs",
+      "source": "qiaosi",
+      "sha256": "a733c8342f7783c87a602ee72b0b3de94b04aa390bd793781eacf7250756dfd1"
+    },
+    {
+      "file": "scene/UPSTREAM-README.md",
+      "source": "qiaosi",
+      "sha256": "5afe5f56c77975cffa68bda1d7a0fc8b3ed0ae3c6294c1fc1c83d2f5c21aa5f1"
+    },
+    {
+      "file": "LICENSE",
+      "source": "qiaosi",
+      "sha256": "8d56b405468aad11f87ab5763f901e276e08d9646ff5c8481b1762b6b789e9ed"
+    },
+    {
+      "file": "UPSTREAM-COMMERCIAL.md",
+      "source": "qiaosi",
+      "sha256": "7afa7a8a82cfa7099e46bcf67ab055d5f473d9ef76f5be3adc0cd344c2faf7bf"
+    },
+    {
+      "file": "vendor/voice-note/voice-note.js",
+      "source": "qiaosi",
+      "sha256": "bbcac340bf55f868d4cabe0ad7cb88420dd9ef7cba10e783fcce0105aa8c5ebd"
+    },
+    {
+      "file": "vendor/voice-note/voice-note.css",
+      "source": "qiaosi",
+      "sha256": "d0b492b7749cfd8c3901ba68d38dc09f32d101210cad1c5e747c85a011ee9eba"
+    },
+    {
+      "file": "vendor/voice-note/README.md",
+      "source": "qiaosi",
+      "sha256": "f872f1dce02dca7393ec5b60d32180996b714fc3ff88e0e26083247ab0c87b2e"
+    },
+    {
+      "file": "vendor/three/LICENSE",
+      "source": "three",
+      "sha256": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+    },
+    {
+      "file": "vendor/voice-note/TABLER-LICENSE",
+      "source": "tabler",
+      "sha256": "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"
+    },
+    {
+      "file": "vendor/fanfan/LICENSE",
+      "source": "fanfan",
+      "sha256": "be7f2efc2e89758f44b32eaf26b87e6e2880d036954b4c0f5d28abbac8bbca60"
+    },
+    {
+      "file": "vendor/fanfan/cat-book.svg",
+      "source": "fanfan",
+      "sha256": "98d49df2248d7b12fc4d46aac3cddb372eb570b6daf7337c7a5f6d8f3c5184eb"
+    },
+    {
+      "file": "vendor/fanfan/cat-clock.svg",
+      "source": "fanfan",
+      "sha256": "11c60f7a8e7a21bc46bd622945e73b0bb9c94fcd4ee315ef721197e5e463bf6f"
+    },
+    {
+      "file": "vendor/fanfan/cat-coffee.svg",
+      "source": "fanfan",
+      "sha256": "be5c191467d396ac333414c137cb2a3baeab0f09a49955586dec6fa45619688f"
+    },
+    {
+      "file": "vendor/fanfan/cat-mail.svg",
+      "source": "fanfan",
+      "sha256": "30929fe6c1e181b740460e5df74c8d98ff27e8b6bcca88306ce41fe964c66735"
+    },
+    {
+      "file": "vendor/fanfan/cat-music.svg",
+      "source": "fanfan",
+      "sha256": "834669a73ddbae9a187611f5b223874a6bd846c4f3a0aae50aa62fb508f13245"
+    },
+    {
+      "file": "vendor/fanfan/cat-star.svg",
+      "source": "fanfan",
+      "sha256": "1e9210ad59064dc8c56ed331962d33a883fa0fed69f40835547b44f84a69c202"
+    },
+    {
+      "file": "vendor/three/build/three.module.js",
+      "source": "three",
+      "sha256": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"
+    },
+    {
+      "file": "vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js",
+      "source": "three",
+      "sha256": "d20aeaf7077c459a8d952d215738d7b44fba028440bb862d84b622a34f0c80bb"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/EffectComposer.js",
+      "source": "three",
+      "sha256": "d234e578618fa816955ebdc059c049c577e203e650e33cf22bde3f232c29e669"
+    },
+    {
+      "file": "vendor/three/examples/jsm/shaders/CopyShader.js",
+      "source": "three",
+      "sha256": "4e3346db194db56a596cd074e9bdb39fb5eb52040c333e0d29dc4eb1324d3b1d"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/ShaderPass.js",
+      "source": "three",
+      "sha256": "3b28a1ee27e0eb96c0eab137a1f442ccf127a926904eced2d51e125ec44af781"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/Pass.js",
+      "source": "three",
+      "sha256": "b3c6128340eaa37e40a6a2f1b738e894c855239417d50959759b34a2b5e89f92"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/MaskPass.js",
+      "source": "three",
+      "sha256": "328cf7db0da5d9be83ffe39d54b01d5ac1fddf108cc98182ddbb056f5c8b537f"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/RenderPass.js",
+      "source": "three",
+      "sha256": "6c9b8a539ea16e898f65e4760f14937ef9ea94043bd9842c141e0301f41903e8"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/BokehPass.js",
+      "source": "three",
+      "sha256": "581ad606035764f92a6c5124980ddeb78c09cb076d2bdeb6c760ca9d0a8332ec"
+    },
+    {
+      "file": "vendor/three/examples/jsm/shaders/BokehShader.js",
+      "source": "three",
+      "sha256": "a6558cc4baf2c372c192828e9fffcf088d22f80291ac72a13a5be6d3b7a18ddc"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/GTAOPass.js",
+      "source": "three",
+      "sha256": "980b036767c439cf2aadd0e869b2e51b2ec00736a75a5ad1bb69dddb03254fe8"
+    },
+    {
+      "file": "vendor/three/examples/jsm/shaders/GTAOShader.js",
+      "source": "three",
+      "sha256": "e1f5dd89bca4ee679a4aca50c3ef3513926be71f6860c38e31a62cc9d7120b39"
+    },
+    {
+      "file": "vendor/three/examples/jsm/shaders/PoissonDenoiseShader.js",
+      "source": "three",
+      "sha256": "3dab419b23529f8fd59e2713458502f9f51d2dd3af3e1285dc671fcc451d49fb"
+    },
+    {
+      "file": "vendor/three/examples/jsm/math/SimplexNoise.js",
+      "source": "three",
+      "sha256": "9b8d541b77b0ddc79afaa6a1de8941452c191b8b9006f04e7b8fc422e2b263f7"
+    },
+    {
+      "file": "vendor/three/examples/jsm/postprocessing/OutputPass.js",
+      "source": "three",
+      "sha256": "32f879d2179087676631c799857a885586b3cdd13b9731bd3b13f06428bd58b7"
+    },
+    {
+      "file": "vendor/three/examples/jsm/shaders/OutputShader.js",
+      "source": "three",
+      "sha256": "4944cecd49c0d4d1520a4d927bde8a590fd43f041ee913252b9451855a01d0f0"
+    },
+    {
+      "file": "vendor/three/examples/jsm/lights/RectAreaLightUniformsLib.js",
+      "source": "three",
+      "sha256": "b35b74887bd558a05cd39be33e278a37852187591161f10ad5d96c9c2893343c"
+    },
+    {
+      "file": "vendor/three/examples/jsm/lights/RectAreaLightTexturesLib.js",
+      "source": "three",
+      "sha256": "438c9aa76f101f1f515e09ce674fb062a3ea04d33fc2d0320b0b9755fd17f5d2"
+    },
+    {
+      "file": "vendor/three/examples/jsm/utils/BufferGeometryUtils.js",
+      "source": "three",
+      "sha256": "c25b7930e570e9ec56173cd3b866ec8d2e10016630db3937efb439daf1cedbf6"
+    },
+    {
+      "file": "vendor/three/examples/jsm/loaders/GLTFLoader.js",
+      "source": "three",
+      "sha256": "45139faddd5aaf48ed2d62203d976e5cbd703db1a592de40527f9f6cf58abd44"
+    }
+  ]
+}

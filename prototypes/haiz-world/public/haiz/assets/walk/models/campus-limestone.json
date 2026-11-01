@@ -1,0 +1,41 @@
+{
+  "generator": "Blender 4.3.2",
+  "source": "scripts/build-landscape.py",
+  "license": "CC0-1.0",
+  "reference": "assets/images/campus/campus_yanchi.jpg",
+  "provenance": "Original procedural sculpture and Cycles PBR bakes; not photogrammetry.",
+  "textureSize": 1024,
+  "variants": [
+    {
+      "name": "Limestone_0_high",
+      "triangles": 1808
+    },
+    {
+      "name": "Limestone_0_low",
+      "triangles": 288
+    },
+    {
+      "name": "Limestone_1_high",
+      "triangles": 1808
+    },
+    {
+      "name": "Limestone_1_low",
+      "triangles": 288
+    },
+    {
+      "name": "Limestone_2_high",
+      "triangles": 1808
+    },
+    {
+      "name": "Limestone_2_low",
+      "triangles": 288
+    }
+  ],
+  "inscription": {
+    "text": "砚池",
+    "font": "Noto Serif CJK (SIL OFL 1.1)",
+    "method": "Boolean-cut mesh; typographic interpretation, not traced calligraphy"
+  },
+  "bytes": 5753376,
+  "sha256": "e3f645865a9aa1b7ff90c504f381f37e5a914e8d877c23281357a72d7ba51175"
+}

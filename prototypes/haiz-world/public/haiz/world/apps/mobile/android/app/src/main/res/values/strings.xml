@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HAIZ Study</string>
+    <string name="title_activity_main">HAIZ Study</string>
+    <string name="package_name">space.haiz.study</string>
+    <string name="custom_url_scheme">space.haiz.study</string>
+</resources>

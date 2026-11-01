@@ -1,0 +1,56 @@
+
+> haiz-round02@2.1.0 test
+> node --test tests/core.test.mjs tests/round2.test.mjs tests/focus.test.mjs tests/homework.test.mjs
+
+✔ 作品未获逐步审核和同意，不能展示 (2.3341ms)
+✔ 未完成活动不可提交；退回后需重新审核 (0.605181ms)
+✔ 截止时间计时跨后台与重载准确，暂停不消耗时间 (0.777069ms)
+✔ 未审核活动不可报名；已报名可取消 (1.568078ms)
+✔ 损坏与不兼容的本机存储能降级 (0.589437ms)
+✔ focus pause and resume retain time; ending never counts unattended work (1.94454ms)
+✔ reopening, clock changes and invalid backups cannot fabricate elapsed focus (0.384702ms)
+✔ private focus context survives export normalization and stays out of public data (12.172008ms)
+✔ last TWO self-study lessons from today, not a separate timetable (21.418962ms)
+✔ missing, conflicting, stale or overlapping timetables fail closed (2.527141ms)
+✔ assignments have immutable identity, version conflicts, ownership and daily expiry (12.525398ms)
+✔ review gating and field whitelists exclude private information (1.424645ms)
+✔ thought survives validation and edits without duplicate; next step required (11.625921ms)
+✔ public display hides ordinary content in class and filters scope, windows, review and expiry (0.998337ms)
+✔ students cannot publish, import, approve or withdraw; urgent requires admin and reason (1.424627ms)
+✔ public export uses whitelist; imports become pending and require receiver review (1.486136ms)
+✔ malformed and invalid dates fail closed, zero length periods rejected, edit preserves record (5.047367ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 540.820167
+
+> haiz-round02@2.1.0 test:server
+> node --test tests/server.test.mjs tests/homework-server.test.mjs
+
+✔ homework API enforces class scope, owner, review, version and persistence (188.299ms)
+✔ localhost service enforces identity, scope, review, version conflicts and source failure (142.012219ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 678.116529
+
+> haiz-round02@2.1.0 test:flow
+> node --test tests/flow-server.test.mjs
+
+✔ Flow: ownership, revisions, confirmation, idempotency, feed projection, withdrawal and persistence (149.674805ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 289.408079

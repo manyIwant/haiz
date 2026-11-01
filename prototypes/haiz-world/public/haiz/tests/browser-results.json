@@ -1,0 +1,239 @@
+{
+  "date": "2026-10-20T06:54:41.261Z",
+  "browser": "154.0.8037.57",
+  "results": [
+    {
+      "target": "cinematic root / desktop",
+      "checks": [
+        "root is the cinematic entry",
+        "editorial home, darkroom and director studio remain accessible",
+        "320/375/390 px mobile portals remain reachable without overlay interference",
+        "opening ready before user-initiated 3D loading",
+        "chapter seek and speed controls",
+        "sound off by default"
+      ],
+      "passed": true
+    },
+    {
+      "target": "cinematic root / mobile",
+      "checks": [
+        "root is the cinematic entry",
+        "editorial home, darkroom and director studio remain accessible",
+        "320/375/390 px mobile portals remain reachable without overlay interference",
+        "opening ready before user-initiated 3D loading",
+        "chapter seek and speed controls",
+        "sound off by default"
+      ],
+      "passed": true
+    },
+    {
+      "target": "1440×960 desktop",
+      "checks": [
+        "category filter",
+        "photo hotspots",
+        "persistent local collection",
+        "material and relief maps",
+        "real 3D material lab",
+        "wetness, tiling, shape, and lighting controls",
+        "search and empty state",
+        "opt-in audio toggle",
+        "clear collection",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "390×844 mobile emulation",
+      "checks": [
+        "category filter",
+        "photo hotspots",
+        "persistent local collection",
+        "material and relief maps",
+        "real 3D material lab",
+        "wetness, tiling, shape, and lighting controls",
+        "search and empty state",
+        "opt-in audio toggle",
+        "clear collection",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "route studio / desktop",
+      "checks": [
+        "real model footprints",
+        "preset and custom sequence",
+        "accessible reordering controls and retained focus",
+        "six-stop limit and empty state",
+        "persistent route and climate",
+        "map paper toggle",
+        "safe text rendering in camera archive",
+        "camera removal",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "route studio / mobile",
+      "checks": [
+        "real model footprints",
+        "preset and custom sequence",
+        "accessible reordering controls and retained focus",
+        "six-stop limit and empty state",
+        "persistent route and climate",
+        "map paper toggle",
+        "safe text rendering in camera archive",
+        "camera removal",
+        "no horizontal overflow"
+      ],
+      "passed": true
+    },
+    {
+      "target": "cinematic → real campus iframe",
+      "checks": [
+        "user-initiated world startup",
+        "same-origin ready handshake",
+        "arrival control takeover",
+        "keyboard-focusable live campus"
+      ],
+      "passed": true
+    },
+    {
+      "target": "Chromium WebGL / software renderer",
+      "checks": [
+        "real WebGL and leaf/depth shader compilation",
+        "34 nodes and 16 classrooms",
+        "six PBR facade and forecourt material families",
+        "1024px generated glaze with procedural normal and physical clearcoat",
+        "normal maps and wetness response",
+        "deep-linked climate and observation settings",
+        "three rendered architectural viewpoints",
+        "P releases pointer lock for camera controls",
+        "camera lens and downloaded postcard",
+        "saved camera archive and accurate URL restoration",
+        "custom journey launch from director studio",
+        "digital passport after campus travel",
+        "no browser errors or missing assets"
+      ],
+      "passed": true,
+      "evidence": {
+        "diagnostics": {
+          "nodes": 34,
+          "classrooms": 16,
+          "environment": "HDR",
+          "trees": 301,
+          "colliders": 1810,
+          "quality": "high",
+          "climate": "afterrain",
+          "reflection": false,
+          "tour": null,
+          "drawCalls": 507,
+          "triangles": 1004459,
+          "fps": 60,
+          "loaded": true,
+          "position": {
+            "x": 14.194999999999997,
+            "z": -22.098649999999992
+          }
+        },
+        "observation": true,
+        "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+        "surfaces": [
+          "ceramic",
+          "forecourt",
+          "granite",
+          "roof",
+          "stone",
+          "timber"
+        ]
+      },
+      "wetness": {
+        "dry": 0.62,
+        "wet": 0.33840000000000003,
+        "normal": true,
+        "physical": true
+      },
+      "glaze": [
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        },
+        {
+          "width": 1024,
+          "normal": 512,
+          "mirrored": true,
+          "physical": true
+        }
+      ],
+      "restored": {
+        "position": {
+          "x": 74.4,
+          "z": 23.8
+        },
+        "yaw": 1.101,
+        "pitch": 0.16,
+        "lens": 32,
+        "climate": "afterrain"
+      }
+    }
+  ],
+  "errors": [],
+  "failedRequests": [],
+  "limitations": "SwiftShader software WebGL and mobile viewport emulation; no hardware FPS, physical touch or on-site measurements."
+}

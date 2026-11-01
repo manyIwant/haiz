@@ -1,0 +1,11 @@
+✔ Flow: ownership, revisions, confirmation, idempotency, feed projection, withdrawal and persistence (136.697865ms)
+✔ HTTPS pilot invitations, scoped handoff, cookies, revocation, restart, reset, public projection (884.44414ms)
+✔ expired invitations and sessions fail closed; login attempts rate limited (209.310995ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1661.526667

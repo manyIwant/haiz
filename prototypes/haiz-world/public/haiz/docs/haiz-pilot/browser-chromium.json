@@ -1,0 +1,44 @@
+{
+  "engine": "chromium",
+  "platform": "linux",
+  "checks": [
+    {
+      "name": "teacher task walkthrough",
+      "materialClicks": 1,
+      "materialMs": 234,
+      "quickActions": "填一句文字 + 一次保存",
+      "quickMs": 1396,
+      "realTeacher": false
+    },
+    {
+      "name": "HTTPS distinct browser contexts share server draft; other teacher isolated",
+      "physicalDevices": false
+    },
+    {
+      "name": "field-specific title, summary and material conflict selection"
+    },
+    {
+      "name": "offline reload uses current-session draft; reconnect syncs"
+    },
+    {
+      "name": "HttpOnly Secure cookie; no private drafts in persistent localStorage"
+    },
+    {
+      "name": "preview → publish → public-only display → revoke",
+      "latency": 1962
+    },
+    {
+      "name": "student example project → private work survives reload"
+    },
+    {
+      "name": "revoked cookie rejected and private view removed"
+    },
+    {
+      "name": "logout revokes server session"
+    }
+  ],
+  "errors": [],
+  "tls": "local self-signed test certificate; browser ignoreHTTPSErrors, not a public trusted deployment",
+  "physicalDevices": "NOT_TESTED",
+  "realTeachers": "NOT_TESTED"
+}

@@ -1,0 +1,57 @@
+name: HAIZ ATLAS UI smoke
+on:
+  pull_request:
+    paths:
+      - 'world/atlas/**'
+      - 'world/app.js'
+      - 'world/campus.html'
+      - 'world/campus-journey-ui.*'
+      - '.github/workflows/haiz-atlas-ui.yml'
+  push:
+    branches:
+      - 'feat/openui-campus-console-20261025'
+    paths:
+      - 'world/atlas/**'
+      - 'world/app.js'
+      - 'world/campus.html'
+      - 'world/campus-journey-ui.*'
+      - '.github/workflows/haiz-atlas-ui.yml'
+permissions:
+  contents: read
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check
+        run: |
+          node --check world/app.js
+          node --check world/atlas/app.js
+          node --check world/atlas/dock-spring.js
+          node --check world/atlas/theme-boot.js
+          node --check world/atlas/spatial.js
+          node --check world/campus-journey-ui.js
+          node --check world/atlas/tests/browser.cjs
+          node --check world/atlas/tests/world-browser.cjs
+      - name: Route and accessibility smoke
+        run: node --test world/atlas/tests/smoke.test.cjs
+      - name: Install browser dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Chromium interaction and screenshot verification
+        run: node world/atlas/tests/browser.cjs
+      - name: Actual WebGL place arrival (Linux SwiftShader)
+        run: node world/atlas/tests/world-browser.cjs
+      - name: Upload browser screenshots and checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiz-atlas-responsive-previews
+          path: world/atlas/tests/artifacts/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,17 @@
+
+/* HAIZ WORLD / PLACE CONNECTIONS — contextual, not a monitoring dashboard. */
+.haiz-place-connection{display:grid;grid-template-columns:108px minmax(0,1fr);gap:17px;margin:18px 0 25px;padding:12px;border:1px solid rgba(41,75,60,.18);border-radius:9px;background:#edf1e8;color:#173e35}
+.haiz-place-connection .haiz-connection-photo{width:108px;height:125px;display:block;object-fit:cover;border-radius:5px}
+.haiz-connection-copy{min-width:0;align-self:center}
+.haiz-connection-category{display:block;font:600 10px/1.4 Inter,-apple-system,sans-serif;letter-spacing:.15em;color:#63776a}
+.haiz-connection-title{font:400 25px/1.35 "Songti SC","STSong",Georgia,serif;margin:6px 0 5px;color:#1f4132}
+.haiz-connection-description{font-size:12px;line-height:1.6;color:#51665a;margin:4px 0 9px}
+.haiz-connection-actions{display:flex;flex-wrap:wrap;gap:8px 17px;align-items:center}
+.haiz-connection-actions a,.haiz-arrival-back{color:#30563a;text-decoration:underline;text-underline-offset:4px;font-size:12px;min-height:24px}
+.haiz-connection-actions a:focus-visible,.haiz-arrival-back:focus-visible{outline:3px solid #b88751;outline-offset:3px}
+.haiz-connection-actions .haiz-connection-back{color:#738479}
+.haiz-arrival-back{display:inline-flex;margin:18px 0;color:#f7f3e1;font-size:13px;letter-spacing:.05em}
+#mapDialog .haiz-place-connection{margin:4px 0 22px;background:#eff3eb}
+#pauseDialog .haiz-place-connection{margin-top:14px}
+@media(max-width:660px){.haiz-place-connection{grid-template-columns:85px minmax(0,1fr);gap:10px;padding:9px}.haiz-place-connection .haiz-connection-photo{width:85px;height:124px}.haiz-connection-title{font-size:21px}.haiz-connection-description{font-size:11px}.haiz-connection-actions a{font-size:11px}}
+@media(max-width:360px){.haiz-place-connection{grid-template-columns:70px minmax(0,1fr)}.haiz-place-connection .haiz-connection-photo{width:70px;height:135px}}

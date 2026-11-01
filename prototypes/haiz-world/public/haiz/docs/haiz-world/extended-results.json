@@ -1,0 +1,81 @@
+{
+  "environment": "Chromium SwiftShader; not physical device",
+  "results": [
+    {
+      "check": "减少动态偏好阻止持续观景",
+      "passed": true
+    },
+    {
+      "check": "保留的窗台场景与四件家具实际加载",
+      "passed": true,
+      "diagnostics": {
+        "revision": "170",
+        "quality": "low",
+        "paused": true,
+        "suspended": false,
+        "reduced": true,
+        "frames": 3,
+        "drawCalls": 849,
+        "triangles": 1145061,
+        "sound": false,
+        "focus": null,
+        "view": 0,
+        "models": 4
+      }
+    },
+    {
+      "check": "首页不加载 Three",
+      "passed": true,
+      "metrics": {
+        "paint": [
+          {
+            "name": "first-paint",
+            "startTime": 392
+          },
+          {
+            "name": "first-contentful-paint",
+            "startTime": 392
+          }
+        ],
+        "resources": [
+          {
+            "name": "/assets/campus.webp",
+            "decodedBodySize": 394656,
+            "transferSize": 0
+          },
+          {
+            "name": "/style.css",
+            "decodedBodySize": 50947,
+            "transferSize": 51247
+          },
+          {
+            "name": "/app.js",
+            "decodedBodySize": 0,
+            "transferSize": 300
+          },
+          {
+            "name": "/core.js",
+            "decodedBodySize": 3530,
+            "transferSize": 0
+          },
+          {
+            "name": "/data.js",
+            "decodedBodySize": 3568,
+            "transferSize": 0
+          },
+          {
+            "name": "/assets/sora-400.woff2",
+            "decodedBodySize": 13380,
+            "transferSize": 0
+          },
+          {
+            "name": "/assets/icon.svg",
+            "decodedBodySize": 237,
+            "transferSize": 0
+          }
+        ],
+        "webglLoaded": false
+      }
+    }
+  ]
+}

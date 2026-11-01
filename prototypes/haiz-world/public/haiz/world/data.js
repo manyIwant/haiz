@@ -1,0 +1,11 @@
+export const places=[
+{id:'feng',name:'凤栖堂',en:'UNDER THE GREEN EAVES',number:'01',tag:'建筑 · 记忆',line:'在绿瓦与朱柱之间，听见时光。',body:'绿瓦叠檐、暖红立柱、浅墙和木格窗，是原仓库照片里可辨认的特征。新的体素小景保留这些视觉线索；屋顶尺度、景观位置仍是艺术推演。',photo:'../assets/images/campus/campus_fengqitang.jpg',source:'../data/architecture.json',old:'../campus-3d.html',position:'68% 48%'},
+{id:'tree',name:'榄仁树下',en:'A LITTLE ROOM FOR SHADE',number:'02',tag:'自然 · 停留',line:'树荫是校园里，没有门的一间房。',body:'既有校园资料记录了北门与一号教学楼前的榄仁树。这里用层叠树冠表达热带树荫；树龄、枝形和精确位置没有新增实地核验。',photo:'../assets/images/campus/scenery_01.jpg',source:'../assets/walk/campus.json',old:'../memory-walk.html',position:'16% 42%'},
+{id:'pond',name:'砚池',en:'LIGHT ON THE WATER',number:'03',tag:'风景 · 创作',line:'把匆忙留在岸上，把光留在水里。',body:'沿用原仓库的砚池照片与资料入口。此处的水面、石岸和作品展签属于概念场景，不能用于实地导航。你在工作台完成的演示作品，也可以经过审核来到这里。',photo:'../assets/images/campus/campus_yanchi.jpg',source:'../assets/walk/campus.json',old:'../architecture.html',position:'66% 85%'}];
+export const clubs=[
+{id:'photo',name:'光影记录社',type:'艺术',icon:'camera',color:'gold',desc:'用镜头留住那些平常却闪光的瞬间。',project:'校园的另一种光',cover:'campus',count:'摄影 / 观察 / 策展'},
+{id:'code',name:'造物实验室',type:'科学',icon:'box',color:'green',desc:'把一个「如果」，做成可以运行的东西。',project:'一起建造数字校园',cover:'code',count:'编程 / 建模 / 实验'},
+{id:'literature',name:'树下文学社',type:'人文',icon:'book',color:'clay',desc:'写下此刻，也读懂另一个人的世界。',project:'给校园的一封信',cover:'literature',count:'写作 / 阅读 / 校刊'},
+{id:'music',name:'回声音乐社',type:'艺术',icon:'music',color:'blue',desc:'一起练习，听见不同声音之间的默契。',project:'收集校园的声音',cover:'music',count:'音乐 / 合奏 / 声音'}];
+export const events=[{id:'light',name:'寻找校园的另一种光',club:'光影记录社',date:'11.07',time:'演示安排 · 周六 16:30',place:'概念地点 · 砚池',approved:true,capacity:12,kind:'摄影漫步',desc:'用三张照片记录一束光。结束后选出一张，为它写一段不超过一百字的展签。请勿拍摄未获同意的人物。'}, {id:'sound',name:'给树荫配一段声音',club:'回声音乐社',date:'11.14',time:'演示安排 · 周六 15:00',place:'概念地点 · 榄仁树',approved:true,capacity:0,kind:'声音共创',desc:'用自己创作的声音，留下一个想象中的课间。本次演示名额为零，可以体验候补与取消。'}, {id:'build',name:'一起来造一片屋檐',club:'造物实验室',date:'待定',time:'创作提案 · 尚未审核',place:'地点待确认',approved:false,capacity:8,kind:'体素建模',desc:'探索屋檐的层次和光影。提案尚未审核，没有正式报名入口。'}];
+export const states={draft:'草稿',submitted:'待教师审核',teacher_approved:'待作者公开选择',public_requested:'待管理员审核',published:'已进入本机展览',returned:'待修改',withdrawn:'已撤回',removed:'已下架'};

@@ -1,0 +1,15 @@
+{
+  "platform": "linux",
+  "os": "6.18.55",
+  "node": "v24.19.0",
+  "browser": "154.0.8037.57",
+  "viewport": "1920x1080",
+  "sampleSeconds": 15.008364827999998,
+  "openContexts": 4,
+  "chromiumAllProcessesCpuPercentOneCore": 3.3314755186866636,
+  "chromiumSummedRssMiB": 1205.46875,
+  "displayJsHeapUsedMiB": 3.304424285888672,
+  "nodeCpuPercentOneCore": 0.1255966270544873,
+  "nodeRssMiB": 123.30078125,
+  "notes": "Linux 云环境，4 个浏览器配置同开，15 秒空闲窗口；Chromium RSS 包含共享页重复计数。不是单屏 Windows / 希沃常驻资源保证。"
+}

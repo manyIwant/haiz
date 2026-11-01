@@ -1,0 +1,12 @@
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+const root=process.cwd(),evidence=[];let browser;
+const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new URL(req.url,'http://local').pathname);if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(file,(e,b)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css'})[path.extname(file)]||'application/octet-stream');res.end(b);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+for(const mobile of [false,true]){const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},hasTouch:mobile,isMobile:mobile,reducedMotion:'reduce'}),page=await context.newPage();let requests=0;const errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/campus-3d.html*',route=>{requests++;return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>Intentionally unavailable campus</title>'});});
+const start=performance.now();await page.goto('http://127.0.0.1:'+server.address().port+'/index.html');await page.waitForFunction(()=>window.HMZCinematic&&!document.getElementById('play').disabled,null,{timeout:30000});
+const openingReadyMs=performance.now()-start;assert.equal(requests,0);assert.equal(await page.locator('#campusFrame').getAttribute('src'),null);await page.click('#play');await page.waitForFunction(()=>document.getElementById('campusFrame').getAttribute('src'));await page.waitForLoadState('networkidle');assert.equal(requests,1);
+await page.evaluate(()=>HMZCinematic.setProgress(.3));await page.waitForFunction(()=>HMZCinematic.progress()===.3);assert.deepEqual(errors,[]);evidence.push({mobile,openingReadyMs,campusRequestedBeforePlay:false,openingWorksWithoutCampusHandshake:true,errors});await context.close();}
+const report={date:new Date().toISOString(),passed:true,evidence,limits:'Local cached assets and software WebGL; readiness times are not public-network loading promises.'};fs.writeFileSync('tests/loading-browser-results.json',JSON.stringify(report,null,2)+'\n');console.log(report);
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{await browser?.close();server.close();});

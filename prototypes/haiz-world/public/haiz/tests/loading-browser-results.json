@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-20T06:49:42.466Z",
+  "passed": true,
+  "evidence": [
+    {
+      "mobile": false,
+      "openingReadyMs": 508.7814139999999,
+      "campusRequestedBeforePlay": false,
+      "openingWorksWithoutCampusHandshake": true,
+      "errors": []
+    },
+    {
+      "mobile": true,
+      "openingReadyMs": 397.000493,
+      "campusRequestedBeforePlay": false,
+      "openingWorksWithoutCampusHandshake": true,
+      "errors": []
+    }
+  ],
+  "limits": "Local cached assets and software WebGL; readiness times are not public-network loading promises."
+}

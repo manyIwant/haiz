@@ -1,0 +1,773 @@
+{
+  "source": {
+    "path": "/Users/a11/manyiwant/HAIZ-BLENDER-V3/HAIZ-Campus-V3.blend",
+    "sha256": "37ed29c0c191a5f27f3dddf6555cdd944e21329f4a69a711e69aede389b73e9b",
+    "bytes": 51639297,
+    "modifiedUtc": "2026-10-30T12:18:49.362Z"
+  },
+  "exportedUtc": "2026-11-01T05:43:15.867808+00:00",
+  "anchors": [
+    {
+      "name": "SITE_beimen",
+      "blender": [
+        13.00094985961914,
+        158.5998992919922,
+        0.0
+      ],
+      "gltf": [
+        13.00094985961914,
+        0.0,
+        -158.5998992919922
+      ]
+    },
+    {
+      "name": "SITE_canteen1",
+      "blender": [
+        202.00320434570312,
+        22.00225067138672,
+        0.0
+      ],
+      "gltf": [
+        202.00320434570312,
+        0.0,
+        -22.00225067138672
+      ]
+    },
+    {
+      "name": "SITE_canteen3",
+      "blender": [
+        -136.99844360351562,
+        -40.29710006713867,
+        0.0
+      ],
+      "gltf": [
+        -136.99844360351562,
+        0.0,
+        40.29710006713867
+      ]
+    },
+    {
+      "name": "SITE_chem",
+      "blender": [
+        -34.00120162963867,
+        -30.50255012512207,
+        0.0
+      ],
+      "gltf": [
+        -34.00120162963867,
+        0.0,
+        30.50255012512207
+      ]
+    },
+    {
+      "name": "SITE_corr_34",
+      "blender": [
+        -23.004249572753906,
+        -75.50070190429688,
+        0.0
+      ],
+      "gltf": [
+        -23.004249572753906,
+        0.0,
+        75.50070190429688
+      ]
+    },
+    {
+      "name": "SITE_corr_big",
+      "blender": [
+        -13.401749610900879,
+        -73.39649963378906,
+        0.0
+      ],
+      "gltf": [
+        -13.401749610900879,
+        0.0,
+        73.39649963378906
+      ]
+    },
+    {
+      "name": "SITE_corr_e12",
+      "blender": [
+        40.10504913330078,
+        32.69860076904297,
+        0.0
+      ],
+      "gltf": [
+        40.10504913330078,
+        0.0,
+        -32.69860076904297
+      ]
+    },
+    {
+      "name": "SITE_corr_sci2",
+      "blender": [
+        -8.400099754333496,
+        -11.397749900817871,
+        0.0
+      ],
+      "gltf": [
+        -8.400099754333496,
+        0.0,
+        11.397749900817871
+      ]
+    },
+    {
+      "name": "SITE_corr_w12",
+      "blender": [
+        -11.097149848937988,
+        33.107749938964844,
+        0.0
+      ],
+      "gltf": [
+        -11.097149848937988,
+        0.0,
+        -33.107749938964844
+      ]
+    },
+    {
+      "name": "SITE_dorm_f",
+      "blender": [
+        -92.00029754638672,
+        -37.09904861450195,
+        0.0
+      ],
+      "gltf": [
+        -92.00029754638672,
+        0.0,
+        37.09904861450195
+      ]
+    },
+    {
+      "name": "SITE_dorm_m",
+      "blender": [
+        146.50074768066406,
+        39.954750061035156,
+        0.0
+      ],
+      "gltf": [
+        146.50074768066406,
+        0.0,
+        -39.954750061035156
+      ]
+    },
+    {
+      "name": "SITE_dorm_m_m",
+      "blender": [
+        157.9987030029297,
+        39.9463996887207,
+        0.0
+      ],
+      "gltf": [
+        157.9987030029297,
+        0.0,
+        -39.9463996887207
+      ]
+    },
+    {
+      "name": "SITE_dorm_m_n",
+      "blender": [
+        157.9987030029297,
+        12.107500076293945,
+        0.0
+      ],
+      "gltf": [
+        157.9987030029297,
+        0.0,
+        -12.107500076293945
+      ]
+    },
+    {
+      "name": "SITE_dorm_m_s",
+      "blender": [
+        157.9987030029297,
+        67.802001953125,
+        0.0
+      ],
+      "gltf": [
+        157.9987030029297,
+        0.0,
+        -67.802001953125
+      ]
+    },
+    {
+      "name": "SITE_erhao",
+      "blender": [
+        13.401749610900879,
+        7.197700023651123,
+        0.0
+      ],
+      "gltf": [
+        13.401749610900879,
+        0.0,
+        -7.197700023651123
+      ]
+    },
+    {
+      "name": "SITE_fengqitang",
+      "blender": [
+        -25.200300216674805,
+        116.09839630126953,
+        0.0
+      ],
+      "gltf": [
+        -25.200300216674805,
+        0.0,
+        -116.09839630126953
+      ]
+    },
+    {
+      "name": "SITE_fengqitang_ting",
+      "blender": [
+        -25.200300216674805,
+        116.10675048828125,
+        0.0
+      ],
+      "gltf": [
+        -25.200300216674805,
+        0.0,
+        -116.10675048828125
+      ]
+    },
+    {
+      "name": "SITE_hujulongpan",
+      "blender": [
+        10.495949745178223,
+        78.59854888916016,
+        0.0
+      ],
+      "gltf": [
+        10.495949745178223,
+        0.0,
+        -78.59854888916016
+      ]
+    },
+    {
+      "name": "SITE_keji",
+      "blender": [
+        56.504451751708984,
+        152.70480346679688,
+        0.0
+      ],
+      "gltf": [
+        56.504451751708984,
+        0.0,
+        -152.70480346679688
+      ]
+    },
+    {
+      "name": "SITE_kexue",
+      "blender": [
+        16.49959945678711,
+        -30.50255012512207,
+        0.0
+      ],
+      "gltf": [
+        16.49959945678711,
+        0.0,
+        30.50255012512207
+      ]
+    },
+    {
+      "name": "SITE_lanshu",
+      "blender": [
+        49.097999572753906,
+        78.09754943847656,
+        0.0
+      ],
+      "gltf": [
+        49.097999572753906,
+        0.0,
+        -78.09754943847656
+      ]
+    },
+    {
+      "name": "SITE_library",
+      "blender": [
+        109.0927505493164,
+        63.59360122680664,
+        0.0
+      ],
+      "gltf": [
+        109.0927505493164,
+        0.0,
+        -63.59360122680664
+      ]
+    },
+    {
+      "name": "SITE_nanmen",
+      "blender": [
+        -56.195499420166016,
+        -203.39764404296875,
+        0.0
+      ],
+      "gltf": [
+        -56.195499420166016,
+        0.0,
+        203.39764404296875
+      ]
+    },
+    {
+      "name": "SITE_sanhao",
+      "blender": [
+        -33.400001525878906,
+        -59.794349670410156,
+        0.0
+      ],
+      "gltf": [
+        -33.400001525878906,
+        0.0,
+        59.794349670410156
+      ]
+    },
+    {
+      "name": "SITE_sihao",
+      "blender": [
+        -33.50019836425781,
+        -91.00665283203125,
+        0.0
+      ],
+      "gltf": [
+        -33.50019836425781,
+        0.0,
+        91.00665283203125
+      ]
+    },
+    {
+      "name": "SITE_xiaoyouhui",
+      "blender": [
+        77.19574737548828,
+        116.9000015258789,
+        0.0
+      ],
+      "gltf": [
+        77.19574737548828,
+        0.0,
+        -116.9000015258789
+      ]
+    },
+    {
+      "name": "SITE_yanchi",
+      "blender": [
+        58.60029983520508,
+        -62.39955139160156,
+        0.0
+      ],
+      "gltf": [
+        58.60029983520508,
+        0.0,
+        62.39955139160156
+      ]
+    },
+    {
+      "name": "SITE_yanlintang",
+      "blender": [
+        38.000850677490234,
+        113.99420166015625,
+        0.0
+      ],
+      "gltf": [
+        38.000850677490234,
+        0.0,
+        -113.99420166015625
+      ]
+    },
+    {
+      "name": "SITE_yanlintang_ting",
+      "blender": [
+        38.000850677490234,
+        114.00254821777344,
+        0.0
+      ],
+      "gltf": [
+        38.000850677490234,
+        0.0,
+        -114.00254821777344
+      ]
+    },
+    {
+      "name": "SITE_yihao",
+      "blender": [
+        14.194999694824219,
+        53.59865188598633,
+        0.0
+      ],
+      "gltf": [
+        14.194999694824219,
+        0.0,
+        -53.59865188598633
+      ]
+    },
+    {
+      "name": "SITE_yishu",
+      "blender": [
+        32.29779815673828,
+        -103.09745025634766,
+        0.0
+      ],
+      "gltf": [
+        32.29779815673828,
+        0.0,
+        103.09745025634766
+      ]
+    },
+    {
+      "name": "SITE_yundong",
+      "blender": [
+        -152.24554443359375,
+        136.89825439453125,
+        0.0
+      ],
+      "gltf": [
+        -152.24554443359375,
+        0.0,
+        -136.89825439453125
+      ]
+    },
+    {
+      "name": "SITE_zhiwuyuan",
+      "blender": [
+        -109.60209655761719,
+        -108.60009765625,
+        0.0
+      ],
+      "gltf": [
+        -109.60209655761719,
+        0.0,
+        108.60009765625
+      ]
+    },
+    {
+      "name": "SITE_zhiwuyuan_pond",
+      "blender": [
+        -123.5967025756836,
+        -102.59645080566406,
+        0.0
+      ],
+      "gltf": [
+        -123.5967025756836,
+        0.0,
+        102.59645080566406
+      ]
+    }
+  ],
+  "buildingIds": [
+    "beimen",
+    "keji",
+    "xiaoyouhui",
+    "erhao",
+    "kexue",
+    "chem",
+    "sanhao",
+    "sihao",
+    "library",
+    "canteen1",
+    "canteen3",
+    "dorm_f",
+    "yishu",
+    "nanmen",
+    "corr_w12",
+    "corr_e12",
+    "corr_sci2",
+    "corr_big",
+    "corr_34",
+    "zhiwuyuan",
+    "zhiwuyuan_pond",
+    "fengqitang",
+    "fengqitang_ting",
+    "yanlintang",
+    "yanlintang_ting",
+    "dorm_m",
+    "dorm_m_n",
+    "dorm_m_m",
+    "dorm_m_s"
+  ],
+  "assets": {
+    "campus": {
+      "file": "campus.glb",
+      "bytes": 47925112,
+      "sha256": "263a8f525b7eeca55c36fc52c45d41fd1601475717916a6d5fb2fff00d53f16d",
+      "nodes": 413,
+      "meshes": 384,
+      "trianglesUnique": 575576,
+      "instances": 0,
+      "textureMaxDimension": 512
+    },
+    "terrain": {
+      "file": "terrain.glb",
+      "bytes": 3276428,
+      "sha256": "87668a6481a926462b1ddc4c2d24ab3d00591dae684b7dccb968b0d9ae8ea513",
+      "nodes": 6,
+      "meshes": 6,
+      "trianglesUnique": 3012,
+      "instances": 0,
+      "textureMaxDimension": 512
+    },
+    "planting": {
+      "file": "planting.glb",
+      "bytes": 11843012,
+      "sha256": "fef00018c245e7ed098300daf6d07d4f660c1829e19776350cf3b1d0b3996869",
+      "nodes": 17,
+      "meshes": 16,
+      "trianglesUnique": 87724,
+      "instances": 642,
+      "textureMaxDimension": 512
+    },
+    "plantingMobile": {
+      "file": "planting-mobile.glb",
+      "bytes": 5145088,
+      "sha256": "e88caaeadd33da68c7fd598842b2fb8947dd61347322216305bb43cb2effe44e",
+      "nodes": 17,
+      "meshes": 16,
+      "trianglesUnique": 50536,
+      "instances": 642,
+      "textureMaxDimension": 256
+    }
+  },
+  "preservedLegacy": [
+    "sports detailed track and courts",
+    "ground-floor classroom contents",
+    "navigation and information"
+  ],
+  "mobileReduction": {
+    "technique": "Source export.py leaf-stride thinning; retain every third complete leaf",
+    "nodeNames": [
+      "V3 mixed 269 leaves",
+      "V3 mixed 044 leaves",
+      "V3 mixed 294 leaves",
+      "V3 mixed 282 leaves",
+      "V3 terminalia 094 leaves",
+      "V3 mixed 015 leaves",
+      "V3 terminalia 008 leaves",
+      "V3 terminalia 031 leaves",
+      "V3 mixed 054 leaves",
+      "V3 terminalia 132 leaves",
+      "V3 terminalia 151 leaves",
+      "V3 mixed 091 leaves",
+      "V3 mixed 164 leaves",
+      "V3 terminalia 059 leaves",
+      "V3 mixed 143 leaves",
+      "V3 mixed 170 leaves",
+      "V3 mixed 055 leaves",
+      "V3 terminalia 136 leaves",
+      "V3 terminalia 152 leaves",
+      "V3 mixed 095 leaves",
+      "V3 terminalia 011 leaves",
+      "V3 mixed 016 leaves",
+      "V3 terminalia 032 leaves",
+      "V3 mixed 159 leaves",
+      "V3 mixed 188 leaves",
+      "V3 terminalia 051 leaves",
+      "V3 mixed 141 leaves",
+      "V3 terminalia 088 leaves",
+      "V3 mixed 179 leaves",
+      "V3 mixed 168 leaves",
+      "V3 terminalia 125 leaves",
+      "V3 mixed 193 leaves",
+      "V3 banyan 062 leaves",
+      "V3 terminalia 065 leaves",
+      "V3 mixed 145 leaves",
+      "V3 mixed 186 leaves",
+      "V3 terminalia 166 leaves",
+      "V3 terminalia 081 leaves",
+      "V3 mixed 175 leaves",
+      "V3 mixed 200 leaves",
+      "V3 mixed 096 leaves",
+      "V3 terminalia 137 leaves",
+      "V3 terminalia 069 leaves",
+      "V3 terminalia 108 leaves",
+      "V3 mixed 019 leaves",
+      "V3 terminalia 012 leaves",
+      "V3 terminalia 034 leaves",
+      "V3 banyan 128 leaves",
+      "V3 mixed 219 leaves",
+      "V3 mixed 191 leaves",
+      "V3 terminalia 206 leaves",
+      "V3 mixed 210 leaves",
+      "V3 banyan 197 leaves",
+      "V3 mixed 181 leaves",
+      "V3 terminalia 153 leaves",
+      "V3 mixed 196 leaves",
+      "V3 mixed 228 leaves",
+      "V3 terminalia 232 leaves",
+      "V3 mixed 003 leaves",
+      "V3 mixed 216 leaves",
+      "V3 banyan 298 leaves",
+      "V3 mixed 253 leaves",
+      "V3 terminalia 287 leaves",
+      "V3 terminalia 185 leaves",
+      "V3 mixed 205 leaves",
+      "V3 mixed 241 leaves",
+      "V3 terminalia 249 leaves",
+      "V3 mixed 097 leaves",
+      "V3 terminalia 018 leaves",
+      "V3 mixed 022 leaves",
+      "V3 terminalia 035 leaves",
+      "V3 terminalia 072 leaves",
+      "V3 mixed 014 leaves",
+      "V3 terminalia 110 leaves",
+      "V3 mixed 063 leaves",
+      "V3 mixed 261 leaves",
+      "V3 banyan 090 leaves",
+      "V3 mixed 223 leaves",
+      "V3 terminalia 230 leaves",
+      "V3 mixed 001 leaves",
+      "V3 mixed 214 leaves",
+      "V3 banyan 236 leaves",
+      "V3 mixed 251 leaves",
+      "V3 terminalia 280 leaves",
+      "V3 banyan 147 leaves",
+      "V3 mixed 238 leaves",
+      "V3 terminalia 245 leaves",
+      "V3 mixed 007 leaves",
+      "V3 mixed 267 leaves",
+      "V3 mixed 042 leaves",
+      "V3 mixed 258 leaves",
+      "V3 mixed 281 leaves",
+      "V3 terminalia 292 leaves",
+      "V3 mixed 029 leaves",
+      "V3 mixed 273 leaves",
+      "V3 mixed 098 leaves",
+      "V3 terminalia 077 leaves",
+      "V3 terminalia 113 leaves",
+      "V3 terminalia 140 leaves",
+      "V3 mixed 025 leaves",
+      "V3 terminalia 027 leaves",
+      "V3 terminalia 046 leaves",
+      "V3 mixed 053 leaves",
+      "V3 mixed 247 leaves",
+      "V3 terminalia 266 leaves",
+      "V3 mixed 263 leaves",
+      "V3 mixed 040 leaves",
+      "V3 mixed 289 leaves",
+      "V3 mixed 075 leaves",
+      "V3 mixed 255 leaves",
+      "V3 mixed 278 leaves",
+      "V3 mixed 270 leaves",
+      "V3 mixed 047 leaves",
+      "V3 mixed 087 leaves",
+      "V3 mixed 296 leaves",
+      "V3 mixed 284 leaves",
+      "V3 terminalia 005 leaves",
+      "V3 mixed 275 leaves",
+      "V3 terminalia 079 leaves",
+      "V3 terminalia 115 leaves",
+      "V3 mixed 026 leaves",
+      "V3 mixed 004 leaves",
+      "V3 banyan 009 leaves",
+      "V3 mixed 038 leaves",
+      "V3 mixed 043 leaves",
+      "V3 mixed 067 leaves",
+      "V3 mixed 076 leaves",
+      "V3 mixed 291 leaves",
+      "V3 mixed 173 leaves",
+      "V3 mixed 161 leaves",
+      "V3 mixed 099 leaves",
+      "V3 mixed 142 leaves",
+      "V3 terminalia 118 leaves",
+      "V3 mixed 070 leaves",
+      "V3 mixed 078 leaves",
+      "V3 banyan 092 leaves",
+      "V3 mixed 100 leaves",
+      "V3 banyan 148 leaves",
+      "V3 mixed 122 leaves",
+      "V3 mixed 028 leaves",
+      "V3 mixed 180 leaves",
+      "V3 mixed 119 leaves",
+      "V3 mixed 169 leaves",
+      "V3 mixed 194 leaves",
+      "V3 terminalia 068 leaves",
+      "V3 mixed 158 leaves",
+      "V3 mixed 187 leaves",
+      "V3 terminalia 048 leaves",
+      "V3 mixed 139 leaves",
+      "V3 terminalia 082 leaves",
+      "V3 mixed 176 leaves",
+      "V3 mixed 201 leaves",
+      "V3 terminalia 138 leaves",
+      "V3 mixed 167 leaves",
+      "V3 terminalia 124 leaves",
+      "V3 mixed 192 leaves",
+      "V3 banyan 056 leaves",
+      "V3 banyan 050 leaves",
+      "V3 mixed 071 leaves",
+      "V3 mixed 084 leaves",
+      "V3 banyan 116 leaves",
+      "V3 mixed 102 leaves",
+      "V3 banyan 150 leaves",
+      "V3 mixed 127 leaves",
+      "V3 terminalia 058 leaves",
+      "V3 mixed 212 leaves",
+      "V3 terminalia 213 leaves",
+      "V3 terminalia 104 leaves",
+      "V3 mixed 184 leaves",
+      "V3 terminalia 160 leaves",
+      "V3 mixed 174 leaves",
+      "V3 mixed 198 leaves",
+      "V3 mixed 229 leaves",
+      "V3 terminalia 235 leaves",
+      "V3 mixed 218 leaves",
+      "V3 mixed 189 leaves",
+      "V3 banyan 045 leaves",
+      "V3 terminalia 204 leaves",
+      "V3 mixed 209 leaves",
+      "V3 banyan 154 leaves",
+      "V3 mixed 243 leaves",
+      "V3 terminalia 265 leaves",
+      "V3 mixed 195 leaves",
+      "V3 mixed 225 leaves",
+      "V3 terminalia 231 leaves",
+      "V3 mixed 085 leaves",
+      "V3 banyan 117 leaves",
+      "V3 mixed 103 leaves",
+      "V3 mixed 133 leaves",
+      "V3 mixed 036 leaves",
+      "V3 terminalia 000 leaves",
+      "V3 mixed 002 leaves",
+      "V3 mixed 013 leaves",
+      "V3 mixed 215 leaves",
+      "V3 banyan 250 leaves",
+      "V3 mixed 252 leaves",
+      "V3 terminalia 283 leaves",
+      "V3 terminalia 178 leaves",
+      "V3 mixed 202 leaves",
+      "V3 mixed 240 leaves",
+      "V3 terminalia 246 leaves",
+      "V3 mixed 268 leaves",
+      "V3 mixed 260 leaves",
+      "V3 terminalia 220 leaves",
+      "V3 mixed 221 leaves",
+      "V3 terminalia 297 leaves",
+      "V3 mixed 274 leaves",
+      "V3 banyan 207 leaves",
+      "V3 mixed 248 leaves",
+      "V3 terminalia 272 leaves",
+      "V3 mixed 233 leaves",
+      "V3 terminalia 239 leaves",
+      "V3 mixed 006 leaves",
+      "V3 mixed 264 leaves",
+      "V3 mixed 041 leaves",
+      "V3 mixed 114 leaves",
+      "V3 terminalia 126 leaves",
+      "V3 terminalia 061 leaves",
+      "V3 mixed 144 leaves",
+      "V3 mixed 135 leaves",
+      "V3 terminalia 089 leaves",
+      "V3 mixed 037 leaves",
+      "V3 mixed 290 leaves",
+      "V3 mixed 256 leaves",
+      "V3 mixed 279 leaves",
+      "V3 mixed 064 leaves",
+      "V3 terminalia 288 leaves",
+      "V3 mixed 271 leaves",
+      "V3 mixed 052 leaves",
+      "V3 mixed 299 leaves",
+      "V3 mixed 262 leaves",
+      "V3 mixed 039 leaves",
+      "V3 mixed 286 leaves",
+      "V3 mixed 074 leaves",
+      "V3 mixed 276 leaves",
+      "V3 mixed 060 leaves"
+    ],
+    "meshCount": 6
+  }
+}

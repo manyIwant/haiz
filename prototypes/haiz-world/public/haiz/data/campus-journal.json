@@ -1,0 +1,25 @@
+{
+  "edition":"NO. 03 · AUTUMN / 校园创作样刊",
+  "notice":"社团、活动提案与课间电台均为创作示例，不代表学校或真实社团公告。资料新闻保留原有来源，未核实资料单独标注。",
+  "clubs":[
+    {"id":"light","name":"光合作用","en":"THE LIGHT ROOM","category":"影像","number":"01","intro":"不急着按快门。先看见，树影怎样走过一条长廊。","detail":"摄影与影像创作社团提案。用手机或相机记录校园里的光线、人物背影与微小变化；每一次拍摄之后，认真讨论一张照片为什么值得留下。","image":"assets/images/campus/scenery_13.jpg","activity":"一条长廊的十二种光","when":"活动提案 · 排期待定","place":"校园长廊 · 场地待确认","tags":["摄影","短片","校园观察"],"sample":true},
+    {"id":"orbit","name":"未命名轨道","en":"UNNAMED ORBIT","category":"科学","number":"02","intro":"抬头之前，我们先学会在一片天空里找到方向。","detail":"天文与自然观察社团提案。从认星、观测记录，到用简单器材测量一棵树的高度，让好奇心有一份可以反复验证的笔记。","image":"assets/images/campus/campus_playground.jpg","activity":"给校园绘一张夜空手图","when":"活动提案 · 排期待定","place":"开放场地 · 需校方许可","tags":["天文","观测","科学"],"sample":true},
+    {"id":"algorithm","name":"解集之外","en":"BEYOND THE SOLUTION","category":"科学","number":"03","intro":"答案可以相同，抵达答案的路不必一样。","detail":"信息学与创客社团提案。一起拆解算法、做小型网页实验、阅读开源代码。欢迎第一次写程序的人，也欢迎带着一道没有想明白的问题来。","image":"assets/images/web/acad-jy-xuesheng.jpg","activity":"把校园的一件小事写成程序","when":"工作坊提案 · 排期待定","place":"教室或机房 · 场地待确认","tags":["算法","网页","开源"],"sample":true},
+    {"id":"echo","name":"回声未完","en":"THE UNFINISHED ECHO","category":"音乐","number":"04","intro":"先听见彼此，然后才是合奏。","detail":"音乐与合唱社团提案。把一段旋律拆开，听见每个声部的呼吸；也尝试采集校园声音，做一首属于日常的声音拼贴。","image":"assets/images/web/news-guzheng.jpg","activity":"一首只有校园声音的歌","when":"共创提案 · 排期待定","place":"艺术空间 · 场地待确认","tags":["合唱","器乐","声音采集"],"sample":true},
+    {"id":"margin","name":"页边有风","en":"NOTES IN THE MARGIN","category":"文学","number":"05","intro":"有些话不在标准答案里，在页边。","detail":"文学与阅读社团提案。读短篇、写微小说、交换匿名书评。每期选择一个微小而具体的题目，让不同的人写出完全不同的世界。","image":"assets/images/campus/scenery_09.jpg","activity":"写一封寄给三年后的短信","when":"征稿提案 · 无实际投稿渠道","place":"阅读空间 · 场地待确认","tags":["阅读","诗歌","微小说"],"sample":true},
+    {"id":"court","name":"下一回合","en":"ONE MORE ROUND","category":"运动","number":"06","intro":"比分会归零，认真跑过的距离不会。","detail":"运动与校园体育社团提案。不编造赛果，也不许诺名次。只是邀请愿意运动的人一起学习规则、练习配合，记录一次普通训练。","image":"assets/images/campus/scenery_01.jpg","activity":"没有排名的投篮练习","when":"训练提案 · 排期待定","place":"球场 · 场地待确认","tags":["篮球","运动","合作"],"sample":true}
+  ],
+  "radio":[
+    {"id":"r1","tag":"树荫档案","title":"榄仁树竞选“最稳定的情绪支持者”。","body":"在这则虚构的校园小报里，它的竞选宣言只有一条：明天也在。竞选团队暂时只有几只鸟。","sample":true},
+    {"id":"r2","tag":"图书馆传说","title":"“看完这页就走”的背面，还有一页。","body":"有人把它当作一个阅读悖论，也有人觉得这只是一张很懂拖延症的书签。故事由编辑虚构，书倒是真的值得继续读。","sample":true},
+    {"id":"r3","tag":"失物招领处","title":"寻找一阵被夹在练习册里的风。","body":"失主称：它大概在某次下课时吹进来，后来被一道没有解完的题压住了。找到的人，请替它把窗打开。纯属微小说。","sample":true},
+    {"id":"r4","tag":"球场气象台","title":"今天的夕阳，疑似延长了最后一局。","body":"哨声已经响过，影子还在奔跑。本台不提供天气预报，只负责收集不太舍得结束的傍晚。虚构栏目，不是校园新闻。","sample":true}
+  ],
+  "places":[
+    {"id":"fengqitang","name":"凤栖堂","en":"FENGQI HALL","image":"assets/images/campus/campus_fengqitang.jpg","body":"绿瓦与柱廊围出的安静，是校园里另一种时间尺度。建筑位置沿用既有校园空间数据，漫游中的立面仍为近似表达。"},
+    {"id":"lanshu","name":"百年榄仁树","en":"THE OLD TERMINALIA","image":"assets/images/web/lanshu-1600.jpg","body":"一号教学楼前的大叶榄仁树，是校园里最具辨识度的自然地标之一。叶子换过许多遍，树荫仍被一届届学生经过。"},
+    {"id":"yihao","name":"一号教学楼","en":"CLASSROOMS, OPEN","image":"assets/images/campus/campus_yihao.jpg","body":"从校道走进首层门厅，再走过教室门。四栋教学楼共开放16间想象教室，布置不代表实际班级空间。"},
+    {"id":"yanchi","name":"砚池","en":"A MOMENT BY THE WATER","image":"assets/images/campus/campus_yanchi.jpg","body":"一池水把楼影与树影放在一起。沿用校园资料中的水景节点，作为步行路径上的停顿。"},
+    {"id":"yundong","name":"操场","en":"AFTER THE LAST BELL","image":"assets/images/campus/campus_playground.jpg","body":"跑道、树梢和远处的夕阳。一片值得慢下来经过的校园空间。"}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-31",
+  "hardware": "Apple M5, ANGLE Metal Renderer, Darwin 25.6, local Chromium preview",
+  "quality": "balanced",
+  "viewport": [1440, 960],
+  "drawingBuffer": [1459, 1070],
+  "camera": {"position": [14.195, 3.1, -96], "target": [14.195, 10, -53.59865], "fov": 62},
+  "baseline": {"samples": 90, "rafFps": 60.1122, "frameP50Ms": 16.7, "frameP95Ms": 17.6, "cpuSubmissionP50Ms": 3.1, "cpuSubmissionP95Ms": 3.4, "drawCalls": 625, "triangles": 1059434, "geometries": 819, "textures": 136},
+  "v3": {"samples": 120, "rafFps": 60.4504, "frameP50Ms": 16.7, "frameP95Ms": 17.4, "cpuSubmissionP50Ms": 2.8, "cpuSubmissionP95Ms": 3.2, "drawCalls": 724, "triangles": 1623334, "geometries": 653, "textures": 148, "sceneTextureRGBAEstimateMiB": 273.375, "sceneGeometryAttributesMiB": 234.123},
+  "method": "Visible-page requestAnimationFrame, manually rendering paused scene through actual WebGLRenderer. P50/P95 use sorted sample ranks. Resource estimates inspect all scene references including hidden fallback objects.",
+  "limitations": ["Different sample counts; small timing changes do not establish a speedup", "CPU submission is not GPU duration", "V3 has higher draw calls and triangle count", "RGBA8 texture estimate includes generated mipmaps, can duplicate shared references and excludes HDR precision, render targets and driver allocations", "Geometry estimate can count shared backing storage more than once", "No sustained traversal, thermal, battery, internet bandwidth or real phone benchmark"],
+  "browserValidation": {"nodes": 34, "originalClassroomDoorwaysTraversed": 16, "upperClassroom": "yihao-201", "upperFloorY": 3.8, "runtimeErrorsAfterFinalReload": [], "mobile": {"viewport": [390,844], "quality": "low", "heroAsset": "hero-mobile.glb", "pixelRatio": 0.85, "shadows": false, "horizontalOverflow": false}}
+}

@@ -1,0 +1,17 @@
+{
+  "name": "haiz-round02",
+  "version": "0.5.0-preview.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start:sync": "node scripts/classroom-server.mjs",
+    "test": "node --test tests/core.test.mjs tests/round2.test.mjs tests/focus.test.mjs tests/homework.test.mjs tests/quality-governor.test.cjs",
+    "test:server": "node --test tests/server.test.mjs tests/homework-server.test.mjs",
+    "test:homework": "node tests/homework-browser.mjs",
+    "test:flow": "node --test tests/flow-server.test.mjs",
+    "test:flow:browser": "cd .. && node world/tests/flow-browser.mjs",
+    "start:pilot": "node pilot/server.mjs",
+    "test:pilot": "node --test tests/pilot-server.test.mjs",
+    "test:pilot:browser": "cd .. && node world/tests/pilot-browser.mjs"
+  }
+}

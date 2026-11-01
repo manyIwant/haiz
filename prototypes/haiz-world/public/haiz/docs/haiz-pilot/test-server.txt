@@ -1,0 +1,19 @@
+
+> haiz-round02@2.1.0 test:server
+> node --test tests/server.test.mjs tests/homework-server.test.mjs
+
+✔ homework API enforces class scope, owner, review, version and persistence (197.670528ms)
+✔ localhost service enforces identity, scope, review, version conflicts and source failure (123.157904ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 710.97978
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

@@ -1,0 +1,51 @@
+name: HAIZ immersive classroom quality
+
+on:
+  push:
+    paths:
+      - 'world/room/immersive/**'
+      - 'world/stillroom/**'
+      - 'tests/immersive-classroom-browser.cjs'
+      - 'assets/walk/textures/**'
+      - 'assets/walk/style.css'
+      - '.github/workflows/haiz-immersive-room.yml'
+  pull_request:
+    paths:
+      - 'world/room/immersive/**'
+      - 'world/stillroom/**'
+      - 'tests/immersive-classroom-browser.cjs'
+      - 'assets/walk/textures/**'
+      - 'assets/walk/style.css'
+      - '.github/workflows/haiz-immersive-room.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  immersive-webgl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate JavaScript syntax
+        run: |
+          node --check world/room/immersive/scene.js
+          node --check tests/immersive-classroom-browser.cjs
+      - name: Install Chromium WebGL runtime
+        run: |
+          npx playwright install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -p "require('playwright').chromium.executablePath()")" >> "$GITHUB_ENV"
+      - name: Render desktop/mobile weather and study handoff
+        run: node tests/immersive-classroom-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haiz-immersive-classroom-evidence
+          path: tests/artifacts/immersive/
+          if-no-files-found: warn

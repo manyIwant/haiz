@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "at": "2026-10-25T01:18:44.474Z",
+  "checks": [
+    "Real integrated study initializes independently; skip/repeat preserve note and export control",
+    "Five decode/network failures enter actual tools and return without trapping navigation",
+    "All three bundled MP4 films play to ended and reveal initialized real study tools",
+    "Reduced motion makes no video element/request"
+  ],
+  "errors": [],
+  "environment": "Linux Chromium native bundle; NOT physical device; recording uncut browser automation"
+}

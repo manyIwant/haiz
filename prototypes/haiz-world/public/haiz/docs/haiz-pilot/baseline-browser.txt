@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "E2E-01 mobile → separate desktop context, same draft",
+    "E2E-05 visible 409, merge retains both edits",
+    "E2E-06 offline edit survives reload and reconnect",
+    "E2E-02/03 explicit confirmation and public projection, 886ms loopback observed",
+    "E2E-04 revoke while display offline removed on reconnect",
+    "E2E-07 student publication rejected",
+    "E2E-08 no AI service, draft operation works",
+    "student club detail → private work persisted",
+    "E2E-09/10 six widths, dark/contrast, reduced motion, Ctrl K keyboard navigation",
+    "classroom pure mode",
+    "no browser page errors",
+    "E2E-11 offline cache expires without reconnect",
+    "multiple local drafts reopen the selected object",
+    "storage failure does not falsely report persisted draft"
+  ],
+  "latencyMs": 886,
+  "errors": []
+}

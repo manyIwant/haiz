@@ -1,0 +1,12 @@
+{
+ "name":"STILLROOM · 一室之间",
+ "short_name":"STILLROOM",
+ "description":"一间安静、沉浸、轻盈的自习室",
+ "start_url":"./",
+ "scope":"./",
+ "display":"standalone",
+ "background_color":"#192322",
+ "theme_color":"#192322",
+ "lang":"zh-CN",
+ "icons":[{"src":"assets/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
