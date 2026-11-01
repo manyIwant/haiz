@@ -87,6 +87,11 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
   void _save() {
     if (_title.text.trim().isEmpty) return;
     if (widget.store.generation != widget.generation) {
+      // The sheet owns the stale edit and can still display a visible failure
+      // even if its parent page was replaced while account scope changed.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已切换账号，本次修改没有保存。')),
+      );
       Navigator.of(context).pop(false);
       return;
     }
