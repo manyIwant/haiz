@@ -18,7 +18,7 @@ void main() {
     final store = PocketStore();
     addTearDown(store.dispose);
     await store.openCloudAccount(
-      userId: 'alice', read: () async => null, write: (_) async {},
+      userId: '11111111-1111-4111-8111-111111111111', read: () async => null, write: (_) async {},
     );
     expect(store.isCloudAccount, isTrue);
 
@@ -80,7 +80,7 @@ void main() {
     final readsBeforeSwitch = reads;
 
     await store.openCloudAccount(
-      userId: 'bob', read: () async => null, write: (_) async {},
+      userId: '22222222-2222-4222-8222-222222222222', read: () async => null, write: (_) async {},
     );
     await showInbox('bob');
     expect(find.byKey(const Key('unlock-cloud-device-inbox')), findsOneWidget);
