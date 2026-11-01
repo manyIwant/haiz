@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173c35">
+<meta name="description" content="Every Joule 离线原版：等待原作者授权与完整资源包导入。">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Every Joule · HAIZ 离线版</title>
+<style>
+:root{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#173d36;background:#e9e8df}
+*{box-sizing:border-box}body{margin:0}button,a{font:inherit}a{color:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid #b78253;outline-offset:3px}
+.wrap{max-width:1600px;padding:0 25px 30px;margin:auto}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #aabbb2;gap:16px}
+.brand{font:700 23px Georgia,serif;letter-spacing:-1px;text-decoration:none}.brand span{color:#b68658}
+header nav{display:flex;gap:22px;font-size:12px}header nav a{text-underline-offset:4px}
+.intro{padding:30px 0 20px;display:flex;align-items:end;justify-content:space-between;gap:20px}
+.kicker{font-size:10px;letter-spacing:.18em;color:#aa7651}
+h1{font:400 clamp(30px,5vw,61px)/1.1 Georgia,"Songti SC",serif;letter-spacing:-.05em;margin:8px 0 12px}
+p{line-height:1.8}.intro p{margin:0;font-size:13px;color:#5a7468}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.button{background:#173c35;color:#fff;border:1px solid #173c35;border-radius:99px;padding:12px 16px;text-decoration:none;cursor:pointer;font-weight:600;font-size:12px}
+.button.alt{background:transparent;color:#173c35}.button:disabled{opacity:.48;cursor:not-allowed}
+.viewer{border:1px solid #a8b7ad;background:#edf0e7;border-radius:14px;overflow:hidden;min-height:510px}
+.blank{min-height:510px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:30px;text-align:center}
+.blank strong{font:400 clamp(22px,4vw,37px) Georgia,"Songti SC",serif;color:#315548}
+.blank p{font-size:13px;max-width:590px;color:#657970}
+iframe{display:block;width:100%;height:min(77vh,900px);min-height:530px;border:0;background:#f7f4e9}
+.info{display:flex;align-items:start;justify-content:space-between;gap:25px;font-size:11px;color:#63786d}
+.info p{max-width:850px}.info a{color:#275a45}
+.progress{font-size:12px;color:#527262}
+@media(max-width:800px){.wrap{padding:0 13px 20px}.intro{display:block}.controls{margin-top:18px}.info{display:block}iframe{height:68vh;min-height:430px}}
+</style>
+</head><body><div class="wrap">
+<header><a class="brand" href="../index.html">haiz<span>.</span>space</a><nav><a href="../physics-lab.html">在线原版</a><a href="../physics-lab-practice.html">原创练习</a><a href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">作者官网 ↗</a></nav></header>
+<main>
+<section class="intro"><div><div class="kicker">AUTHORISED OFFLINE EDITION / PREPARATION</div><h1>Every Joule · 离线原版</h1><p>原版十课的独立加载容器。不会通过缓存作者网站来擅自制作离线副本；只有取得明确许可与原始资源包后才可启用。</p></div>
+<div class="controls"><button type="button" class="button alt" id="save" disabled>下载完整离线资源</button><a class="button" id="open" href="#" aria-disabled="true" hidden>进入原版 ↗</a></div></section>
+<div class="viewer" id="viewer">
+<div class="blank" id="blank"><div class="kicker">SOURCE PACKAGE NOT INSTALLED</div><strong>正在等待原作者授权资源包</strong><p id="status" role="status">目前这里尚未包含 Every Joule 的原作源码、模型、纹理、声音或教学内容。获得 Techartist 许可后，可通过工程导入程序安装完整原版。</p><p class="progress" id="progress" aria-live="polite"></p></div>
+</div></main>
+<footer class="info"><p><strong>版权与使用范围：</strong>Every Joule © 2026 Techartist。原作版权归作者所有。HAIZ 的离线加载器与工具代码是独立编写的，不能代表作者授权。上线和分发完整原版前，必须确认许可允许离线使用、复制、公开网站托管及可再分发的安装包。</p><p><a href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">访问 Techartist 原版 ↗</a></p></footer>
+</div>
+<script>
+(async function(){
+'use strict';
+const base='./', status=document.getElementById('status'),progress=document.getElementById('progress'), save=document.getElementById('save'),open=document.getElementById('open');
+let manifest;
+try{
+ const res=await fetch(base+'offline-index.json',{cache:'no-store'});
+ if(!res.ok)throw new Error('尚未导入');
+ const obj=await res.json();
+ if(!obj.files?.length||!obj.files.includes('app/index.html'))throw new Error('文件清单不完整');
+ manifest=obj;
+}catch{status.textContent='未检测到授权导入的完整原版资源包。你仍可使用 HAIZ 在线入口或访问作者官网。';return;}
+status.textContent='已检测到本地原版资源清单（'+manifest.files.length+' 个文件）。可以直接打开；点击“下载完整离线资源”预存到浏览器。';
+const frame=document.createElement('iframe');frame.title='Every Joule · Techartist 原版（本地授权资源）';frame.src='./app/index.html';frame.allow='fullscreen; autoplay; gamepad; xr-spatial-tracking';frame.setAttribute('allowfullscreen','');frame.setAttribute('loading','eager');document.getElementById('blank').hidden=true;document.getElementById('viewer').appendChild(frame);
+open.hidden=false;open.href='./app/index.html';open.removeAttribute('aria-disabled');
+if(!('serviceWorker' in navigator)){save.textContent='此浏览器不支持离线安装';return;}
+let registration;
+try{registration=await navigator.serviceWorker.register('./sw.js',{scope:'./'});await navigator.serviceWorker.ready;save.disabled=false;}
+catch{save.textContent='离线缓存不可用';return;}
+navigator.serviceWorker.addEventListener('message',event=>{
+ const d=event.data||{};
+ if(d.type==='PROGRESS'){progress.textContent='离线缓存：'+d.done+' / '+d.total+' 个文件';}
+ if(d.type==='FINISHED'){save.disabled=false;save.textContent='离线资源已保存 ✓';progress.textContent='缓存校验完成。可断开网络后重新打开本页验证。';}
+ if(d.type==='FAILED'){save.disabled=false;save.textContent='重试保存离线资源';progress.textContent='保存中断：'+String(d.reason||'未知原因');}
+ if(d.type==='STATUS'){if(d.ready){save.textContent='离线资源已保存 ✓';progress.textContent='完整离线缓存已就绪。';}}
+});
+const worker=registration.active||registration.waiting||registration.installing;
+if(worker)worker.postMessage({type:'STATUS'});
+save.addEventListener('click',()=>{
+ const w=registration.active||navigator.serviceWorker.controller;
+ if(!w){progress.textContent='离线服务尚未激活';return;}
+ save.disabled=true;save.textContent='正在保存…';w.postMessage({type:'DOWNLOAD'});
+});
+})();
+</script>
+</body></html>
