@@ -23,6 +23,7 @@ async function walk(folder) {
       output.push(...await walk(abs));
     } else if (entry.isFile()) {
       const path = relative(root, abs).split(sep).join('/');
+      if (/^(api|auth|private|user|account)\//i.test(path)) continue;
       if (/\.(map|dSYM)$/i.test(path) ||
           path === 'pocket-sw.js' || path === 'pwa-build.json' ||
           path === 'flutter_service_worker.js') continue;
