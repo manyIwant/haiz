@@ -51,7 +51,7 @@ void main() {
       ),
       home: AnimatedBuilder(
         animation: store,
-        builder: (_, __) => Scaffold(
+        builder: (context, _) => Scaffold(
           body: TodayPage(store: store, onNavigate: (_) {}),
         ),
       ),
