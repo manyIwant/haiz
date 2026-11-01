@@ -103,9 +103,12 @@ jobs:
       - name: Flutter packages
         working-directory: app
         run: flutter pub get
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
       - name: Run native Kotlin notification policy tests
         working-directory: app/android
-        run: ./gradlew :app:testDebugUnitTest --no-daemon
+        run: gradle :app:testDebugUnitTest --no-daemon
       - name: Build separately installable QA-signed release variant
         working-directory: app
         shell: bash
