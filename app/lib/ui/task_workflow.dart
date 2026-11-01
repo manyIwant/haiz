@@ -87,12 +87,23 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
   void _save() {
     if (_title.text.trim().isEmpty) return;
     if (widget.store.generation != widget.generation) {
-      // The sheet owns the stale edit and can still display a visible failure
-      // even if its parent page was replaced while account scope changed.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已切换账号，本次修改没有保存。')),
-      );
-      Navigator.of(context).pop(false);
+      // Do not silently dismiss a draft when the account changed underneath
+      // the editor. Keep the explanation visible until acknowledged.
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('无法保存'),
+          content: const Text('已切换账号，本次修改没有保存。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('知道了'),
+            ),
+          ],
+        ),
+      ).then((_) {
+        if (mounted) Navigator.of(context).pop(false);
+      });
       return;
     }
     if (widget.task case final TaskItem task) {
