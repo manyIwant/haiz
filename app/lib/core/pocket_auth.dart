@@ -158,6 +158,12 @@ class PocketAuthController extends ChangeNotifier {
   String? error;
 
   bool get configured => client != null;
+  /// Called when switching UI modes, without altering the authenticated session.
+  void clearError() {
+    if (error == null) return;
+    error = null;
+    _notify();
+  }
   bool get authenticated => userId != null && store.isCloudAccount &&
       store.namespace == 'haiz/cloud/v1/$userId' &&
       store.storageError == null;
