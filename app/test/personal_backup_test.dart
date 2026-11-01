@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:haiz_pocket_flutter/core/personal_backup.dart';
 import 'package:haiz_pocket_flutter/core/personal_snapshot.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
+import 'package:haiz_pocket_flutter/ui/pocket_backup_sheet.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -131,4 +133,29 @@ void main() {
         throwsA(isA<StateError>()));
     expect(store.tasks, isEmpty);
   });
+  testWidgets('prepared guest backup is erased on identity scope change',
+      (tester) async {
+    final store = PocketStore();
+    addTearDown(store.dispose);
+    await store.openGuest();
+    store.addTask('本机访客私人记录', '数学');
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: PocketBackupSheet(store: store)),
+    ));
+    await tester.tap(find.byKey(const Key('backup-prepare-export')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('backup-save-json')), findsOneWidget);
+
+    store.lock();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('backup-save-json')), findsNothing);
+
+    // Reopening the same local installation must not revive the old prepared
+    // export. A new user action is required for every new session generation.
+    await store.openGuest();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('backup-save-json')), findsNothing);
+  });
+
 }
