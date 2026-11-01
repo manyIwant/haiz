@@ -59,6 +59,7 @@ test('PWA packager generates a versioned, scoped service worker and never precac
     assert.ok(!result.includes('__HAIZ_BUILD_ID__'));
     assert.ok(!result.includes('__HAIZ_PRECACHE__'));
     assert.match(result, /"main\.dart\.js"/);
+    assert.ok(!result.includes('"api/user.json"'), "API files must never be cached");
     assert.ok(report.offline_asset_count > 0);
     assert.equal(report.includes_user_data, false);
     new Script(result);
