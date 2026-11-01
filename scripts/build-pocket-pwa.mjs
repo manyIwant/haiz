@@ -9,7 +9,7 @@ import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
 
 const root = resolve(process.argv[2] || 'app/build/web');
-const MAX_PRECACHE_BYTES = 48 * 1024 * 1024;
+const MAX_PRECACHE_BYTES = 24 * 1024 * 1024;
 const MUST_HAVE = [
   'index.html', 'flutter_bootstrap.js', 'main.dart.js',
   'manifest.json', 'pocket-client.js'
@@ -43,20 +43,27 @@ const available = new Map(files.map(file => [file.path, file]));
 for (const item of MUST_HAVE) {
   if (!available.has(item)) throw new Error('Required Flutter Web file missing: ' + item);
 }
-const essential = file => MUST_HAVE.includes(file.path) ||
-  file.path === 'flutter.js' ||
-  file.path.startsWith('canvaskit/') ||
-  /^assets\/(AssetManifest|FontManifest|NOTICES|fonts\/|packages\/|shaders\/)/.test(file.path);
+// Precache only the real app shell and renderer paths. Flutter also ships
+// symbols, alternate renderers, PDFium and other multi-MB optional assets.
+// Those are fetched on demand and cached by the runtime asset handler.
+// A huge install event may never finish on mobile Safari.
+const OFFLINE_SHELL = new Set([
+  ...MUST_HAVE,
+  'flutter.js', 'pocket-ui.css', 'install.html', 'favicon.png',
+  'canvaskit/canvaskit.js', 'canvaskit/canvaskit.wasm',
+  'canvaskit/skwasm.js', 'canvaskit/skwasm.wasm',
+  'canvaskit/skwasm_heavy.js', 'canvaskit/skwasm_heavy.wasm'
+]);
+const essential = file => OFFLINE_SHELL.has(file.path) ||
+  file.path.startsWith('icons/') ||
+  /^assets\/(AssetManifest|FontManifest|fonts\/|shaders\/)/.test(file.path);
 
-files.sort((a, b) => Number(essential(b)) - Number(essential(a)) ||
-  a.path.localeCompare(b.path));
-const chosen = [];
-let bytes = 0;
-for (const file of files) {
-  if (essential(file) || bytes + file.size <= MAX_PRECACHE_BYTES) {
-    chosen.push(file.path);
-    bytes += file.size;
-  }
+const chosen = files.filter(essential)
+  .map(file => file.path)
+  .sort();
+const bytes = chosen.reduce((sum, path) => sum + available.get(path).size, 0);
+if (bytes > MAX_PRECACHE_BYTES) {
+  throw new Error('The offline shell exceeded the 24 MiB startup budget');
 }
 const hash = createHash('sha256');
 for (const file of files) {
