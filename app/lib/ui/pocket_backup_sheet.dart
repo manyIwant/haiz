@@ -81,7 +81,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
     try {
       final value = await widget.store.exportGuestBackup();
       if (!mounted || generation != widget.store.generation ||
-          !widget.store.guestBackupAvailable) return;
+          !widget.store.guestBackupAvailable) {
+        return;
+      }
       setState(() {
         _prepared = value;
         _preparedGeneration = generation;
@@ -98,7 +100,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
     final data = _prepared;
     if (data == null || _busy ||
         _preparedGeneration != widget.store.generation ||
-        !widget.store.guestBackupAvailable) return;
+        !widget.store.guestBackupAvailable) {
+      return;
+    }
     setState(() { _busy = true; _status = null; });
     try {
       final today = DateTime.now();
@@ -140,7 +144,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
       }
       final backup = PersonalBackup.decode(utf8.decode(bytes));
       if (!mounted || generation != widget.store.generation ||
-          !widget.store.guestBackupAvailable) return;
+          !widget.store.guestBackupAvailable) {
+        return;
+      }
       setState(() {
         _preview = backup;
         _previewGeneration = generation;
@@ -157,7 +163,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
     final backup = _preview;
     final generation = widget.store.generation;
     if (backup == null || _busy || _previewGeneration != generation ||
-        !widget.store.guestBackupAvailable) return;
+        !widget.store.guestBackupAvailable) {
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -183,7 +191,9 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
     );
     if (confirmed != true || !mounted ||
         generation != widget.store.generation ||
-        !widget.store.guestBackupAvailable) return;
+        !widget.store.guestBackupAvailable) {
+      return;
+    }
     setState(() { _busy = true; _status = null; });
     try {
       final result = await widget.store.mergeGuestBackup(
