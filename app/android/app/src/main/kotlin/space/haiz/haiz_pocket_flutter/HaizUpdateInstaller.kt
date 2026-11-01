@@ -13,10 +13,11 @@ import java.io.File
  * Android Package Installer performs final signature checks and requires user approval.
  */
 object HaizUpdateInstaller {
+    @Suppress("DEPRECATION")
     fun installedVersion(activity: FlutterActivity): Map<String, Any> {
         val info = activity.packageManager.getPackageInfo(activity.packageName, 0)
         val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else
-            @Suppress("DEPRECATION") info.versionCode.toLong()
+            info.versionCode.toLong()
         return mapOf(
             "packageId" to activity.packageName,
             "versionCode" to code,
@@ -24,6 +25,7 @@ object HaizUpdateInstaller {
         )
     }
 
+    @Suppress("DEPRECATION")
     fun install(activity: FlutterActivity, path: String, expectedCode: Long): String {
         val base = File(activity.cacheDir, "haiz_updates").canonicalFile
         val apk = File(path).canonicalFile
