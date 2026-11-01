@@ -42,6 +42,12 @@ test('PWA packager generates a versioned, scoped service worker and never precac
       'main.dart.js': 'start();',
       'manifest.json': '{}',
       'pocket-client.js': 'start();',
+      'pocket-ocr.js': 'window.HAIZ_OCR={};',
+      'ocr/vendor/tesseract.min.js': 'x'.repeat(1100),
+      'ocr/vendor/worker.min.js': 'y'.repeat(1100),
+      'ocr/lang/eng.traineddata.gz': 'e'.repeat(1100),
+      'ocr/lang/chi_sim.traineddata.gz': 'c'.repeat(1100),
+      'ocr/manifest.json': 'm'.repeat(1100),
       'pocket-ui.css': 'body{}',
       'assets/AssetManifest.bin': 'assets',
       'assets/campus/local.jpg': 'example',
@@ -68,6 +74,11 @@ test('PWA packager generates a versioned, scoped service worker and never precac
     assert.ok(!result.includes('__HAIZ_PRECACHE__'));
     assert.match(result, /"main\.dart\.js"/);
     assert.ok(!result.includes('"api/user.json"'), "API files must never be cached");
+    assert.match(result, /"pocket-ocr\.js"/);
+    assert.ok(!result.includes('"ocr/lang/chi_sim.traineddata.gz"'),
+      'OCR language model must not be included in first-launch precache');
+    assert.ok(!result.includes('"ocr/lang/eng.traineddata.gz"'),
+      'OCR English model is loaded only when importing screenshots');
     assert.match(result, /"canvaskit\/canvaskit\.wasm"/);
     assert.ok(result.includes('"canvaskit/chromium/canvaskit.wasm"'));
     assert.ok(result.includes('"canvaskit/webparagraph/canvaskit.wasm"'));
