@@ -208,6 +208,10 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.store.guestBackupAvailable;
+    final visiblePreview = enabled &&
+            _previewGeneration == widget.store.generation
+        ? _preview
+        : null;
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
@@ -253,8 +257,7 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
               icon: const Icon(Icons.file_open_outlined),
               label: const Text('选择备份文件并校验'),
             ),
-            if (enabled && _previewGeneration == widget.store.generation &&
-                _preview case final backup?) ...[
+            if (visiblePreview case final backup?) ...[
               const SizedBox(height: 12),
               Text(
                 '备份时间：${backup.createdAt.toLocal()}\n'
