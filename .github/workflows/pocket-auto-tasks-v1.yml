@@ -79,7 +79,9 @@ jobs:
           sed -i 's/applicationId = "space.haiz.app.preview"/applicationId = "space.haiz.app.qa"/' android/app/build.gradle.kts
           grep -q 'applicationId = "space.haiz.app.qa"' android/app/build.gradle.kts
           qa_home=$(mktemp -d)
-          trap 'rm -rf "$qa_home"' EXIT
+          # Gradle may still be shutting down its daemons after a successful build.
+          # A best-effort cleanup must not fail an already verified APK artifact.
+          trap 'rm -rf "$qa_home" 2>/dev/null || true' EXIT
           mkdir -p "$qa_home/.config/haiz-android"
           keytool -genkeypair -noprompt -keystore "$qa_home/qa.jks" -alias qa -keyalg RSA -keysize 2048 -validity 14 -storepass syntheticqa -keypass syntheticqa -dname 'CN=HAIZ QA'
           printf 'storeFile=%s\nstorePassword=syntheticqa\nkeyAlias=qa\nkeyPassword=syntheticqa\n' "$qa_home/qa.jks" > "$qa_home/.config/haiz-android/signing.properties"
