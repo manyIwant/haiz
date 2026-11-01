@@ -56,9 +56,16 @@ void main() {
     await tester.pumpWidget(_frame(TodayPage(store: store, onNavigate: (_) {})));
     await tester.tap(find.byTooltip('添加任务'));
     await tester.pumpAndSettle();
+    // Address the editor field explicitly. The integrated inbox/command
+    // palette may add other TextFields elsewhere in the widget tree.
     await tester.enterText(
-      find.byType(TextField).last,
+      find.byKey(const Key('task-title')),
       '切换账号后不应写入的任务',
+    );
+    await tester.pump();
+    expect(
+      tester.widget<FilledButton>(find.byKey(const Key('save-task'))).onPressed,
+      isNotNull,
     );
 
     // The sheet stays open while the account changes underneath it.
