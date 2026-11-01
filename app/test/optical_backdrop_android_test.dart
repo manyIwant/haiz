@@ -48,8 +48,8 @@ void main() {
     expect(find.byType(ClipRect), findsOneWidget);
     expect(tester.getSize(find.byType(BackdropFilter)), const Size(320, 66));
     expect(tester.takeException(), isNull);
-    // Test-framework invariants run before addTearDown callbacks.
-    // Reset the foundation override inside the body as well.
+    // Widget-test invariants are checked before addTearDown callbacks.
+    // Reset the global override before this test body exits.
     debugDefaultTargetPlatformOverride = null;
   });
 }

@@ -38,6 +38,26 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "space.haiz.pocket/app_updates"
+        ).setMethodCallHandler { call, result ->
+            try {
+                when (call.method) {
+                    "getInstalledVersion" -> result.success(
+                        HaizUpdateInstaller.installedVersion(this)
+                    )
+                    "installApk" -> {
+                        val path = call.argument<String>("path") ?: ""
+                        val code = (call.argument<Number>("versionCode"))?.toLong() ?: 0L
+                        result.success(HaizUpdateInstaller.install(this, path, code))
+                    }
+                    else -> result.notImplemented()
+                }
+            } catch (error: Exception) {
+                result.error("UPDATE_INSTALL_FAILED", error.message ?: "Install failed", null)
+            }
+        }
         intakeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         intakeChannel?.setMethodCallHandler { call, result ->
                 try {

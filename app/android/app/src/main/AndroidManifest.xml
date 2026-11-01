@@ -1,10 +1,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Fetch the online Aceternity Lamp entrance; offline Flutter UI remains available. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for explicit, user-approved APK installs on Android 8+. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="HAIZ Preview"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Only APKs in our private haiz_updates cache may be shared. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/haiz_update_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true"
