@@ -163,3 +163,55 @@ jobs:
             --notes-file docs/releases/pocket-v1.0.0-rc.1.md \
             --prerelease \
             --verify-tag=false
+
+
+  ios-unsigned:
+    name: Build unsigned HAIZ Pocket iOS IPA (manual signing required)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Show toolchain versions
+        run: |
+          xcodebuild -version
+          flutter --version
+          pod --version
+      - name: Resolve Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Build iPhone app without Apple signing
+        working-directory: app
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build ios --release --no-codesign --no-pub
+          test -d build/ios/iphoneos/Runner.app
+          test -f build/ios/iphoneos/Runner.app/Runner
+          file build/ios/iphoneos/Runner.app/Runner
+          mkdir -p "$GITHUB_WORKSPACE/ipa/Payload"
+          ditto build/ios/iphoneos/Runner.app "$GITHUB_WORKSPACE/ipa/Payload/Runner.app"
+          (
+            cd "$GITHUB_WORKSPACE/ipa"
+            /usr/bin/zip -q -r "$GITHUB_WORKSPACE/HAIZ-Pocket-main-unsigned.ipa" Payload
+          )
+          test -s "$GITHUB_WORKSPACE/HAIZ-Pocket-main-unsigned.ipa"
+          (
+            cd "$GITHUB_WORKSPACE"
+            shasum -a 256 HAIZ-Pocket-main-unsigned.ipa > HAIZ-Pocket-main-unsigned.sha256
+            printf 'Source commit: %s\nFlutter: 3.47.8\nSigning: UNSIGNED; cannot install without device-specific Apple signing\n' "$GITHUB_SHA" > HAIZ-Pocket-main-build-info.txt
+          )
+      - name: Upload unsigned IPA as test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-ios-unsigned
+          path: |
+            HAIZ-Pocket-main-unsigned.ipa
+            HAIZ-Pocket-main-unsigned.sha256
+            HAIZ-Pocket-main-build-info.txt
+          if-no-files-found: error
+          retention-days: 14
