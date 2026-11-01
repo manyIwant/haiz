@@ -26,21 +26,16 @@ order by tablename, policyname;
 
 期望 `app_cloud_table` 返回 `pocket_snapshots`，并显示 `pocket_snapshots` 的 SELECT / INSERT / UPDATE 三条所有者策略。**这只能证明结构存在，不能代替两账号的越权测试。**
 
-## 把公开密钥加到 GitHub 自动发布
+## 公开密钥已经接入（不需要手动设置 GitHub 变量）
 
-在 [GitHub 仓库 Actions variables](https://github.com/manyIwant/haiz/settings/variables/actions) 添加 Repository variable：
-
-| Name | Value |
-| --- | --- |
-| `HAIZ_SUPABASE_PUBLISHABLE_KEY` | 在 Supabase **Settings → API Keys** 复制 `default` 行以 `sb_publishable_` 开头的密钥 |
-
-- `HAIZ_SUPABASE_URL` 可不填：仓库默认使用上面新建项目地址；未来换项目时可在 GitHub Actions variables 中覆写。
-- 这是**可在浏览器使用的公开密钥**，仍要依赖数据库 RLS 安全策略；但不要上传 `sb_secret_`、`service_role`、Postgres 密码、签名证书或登录账号密码。
-- 当前仅 `pocket-autopublish.yml` 会给 **`/pocket/` 网页版**注入以上变量。Android APK、iOS IPA 的原生发布流程需要在**各自构建命令**中注入同样的公开密钥，不能因此声称 APK/IPA 已启用云端登录。
+- HAIZ 新 Supabase 项目的 **Project URL 与 Publishable key 已作为公开客户端默认配置**写入 `app/lib/core/pocket_auth.dart`。两项都是可公开的前端配置；原本的 `HAIZ_SUPABASE_URL` 和 `HAIZ_SUPABASE_PUBLISHABLE_KEY` 编译参数仍可覆盖默认值。
+- **用户不需要再复制密钥到 GitHub Actions。** `pocket-autopublish.yml` 未设置相关 variables 时直接使用客户端默认配置；其他应用构建也能使用相同默认值。最终登录是否可用仍取决于 `pocket_snapshots` 表、RLS、邮箱确认状态和实际测试。
+- 发布至公开仓库和前端的**只能**是 `sb_publishable_` 类型的密钥。禁止放入 `sb_secret_`、`service_role`、Postgres 密码、签名证书或登录账号密码。
+- 客户端配置无法替代独立生产验收，也不能证明旧版 APK/IPA 自动更新到了新构建版本。
 
 ## 发布与验收门槛
 
-- 完成 SQL 迁移且设置公开变量后，运行 [HAIZ Pocket Auto Publish PWA](https://github.com/manyIwant/haiz/actions/workflows/pocket-autopublish.yml)（main 上）；它会测试、打包并只更新 `/pocket/`，不会改主站页面。
+- 完成 SQL 迁移、并确认 PR 构建检查通过后，运行 [HAIZ Pocket Auto Publish PWA](https://github.com/manyIwant/haiz/actions/workflows/pocket-autopublish.yml)（main 上）；它会测试、打包并只更新 `/pocket/`，不会改主站页面。
 - 在 `https://haiz.space/pocket/` 尝试使用**已手动创建、邮箱已确认**的测试账号登录。登录后添加待办、刷新页面，再检查两台设备的账号数据；浏览器刷新会失去登录态，这是当前客户端刻意采取的 Web 临时会话行为，需重新登录才能再次加载云端数据。
 - 用第二个测试账号尝试读取第一个账号的任务，确认只能看到自己的内容。检查断网、冲突提交、退出登录的数据清空。不要把 RLS 代码存在就当作数据库已验证。
 - 邮件注册、密码找回的**公开上线**需要可用的外部 SMTP 服务。默认 Supabase 邮件仅供有限的测试使用，不要承诺能向所有学生发送验证码。
