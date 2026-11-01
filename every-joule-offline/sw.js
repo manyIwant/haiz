@@ -20,16 +20,21 @@ self.addEventListener('fetch',event=>{
  const url=new URL(req.url);
  if(url.origin!==scope.origin||!url.href.startsWith(scope.href))return;
  event.respondWith((async()=>{
+ // Refresh the manifest online so a newly authorized export never reads a stale manifest.
+ const isManifest=url.pathname.endsWith('/offline-index.json');
  const cached=await caches.match(req);
- if(cached)return cached;
+ if(cached&&!isManifest)return cached;
  try{
   const response=await fetch(req);
-  if(response.ok && (url.pathname.endsWith('/index.html')||url.pathname.endsWith('/manifest.webmanifest'))) {
-   const c=await caches.open(SHELL_CACHE);
+  if(response.ok && (isManifest||url.pathname.endsWith('/index.html')||url.pathname.endsWith('/manifest.webmanifest'))) {
+   const c=await caches.open(isManifest?CONTENT_CACHE:SHELL_CACHE);
    await c.put(req,response.clone());
   }
   return response;
- }catch(e){return new Response('离线资源尚未完整安装。请联网后使用“下载完整离线资源”。',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});}
+ }catch(e){
+  if(cached)return cached;
+  return new Response('离线资源尚未完整安装。请联网后使用“下载完整离线资源”。',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
+ }
  })());
 });
 async function pack(){
@@ -43,6 +48,8 @@ async function pack(){
   if(u.origin!==scope.origin||!u.href.startsWith(scope.href))throw new Error('资源路径不在离线目录中：'+file);
  }
  const c=await caches.open(CONTENT_CACHE);
+ // An interrupted cache download must never leave the previous ready marker in place.
+ await c.delete(new URL('./offline-ready.json',scope));
  let done=0;
  for(const file of fileList){
   const url=new URL(file,scope);
