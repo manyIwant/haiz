@@ -1,0 +1,9 @@
+{
+  "packageId": "space.haiz.app.preview",
+  "versionName": "1.5.0",
+  "versionCode": 2100,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.0/HAIZ-Pocket-Android.apk",
+  "sha256": "ed16e1e3b6ef6e7e4f40593cc3e9300f08c4b939a2ea473d4b701ded0ef61622",
+  "sizeBytes": 109736022,
+  "notes": "修复 Android 收件箱灰屏；加入应用内安全更新和覆盖安装；优化待办操作。"
+}
