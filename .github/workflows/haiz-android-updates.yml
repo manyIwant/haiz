@@ -23,6 +23,11 @@ on:
 permissions:
   contents: read
 
+# A manual release must never race another manifest update.
+concurrency:
+  group: haiz-android-stable-release
+  cancel-in-progress: false
+
 jobs:
   verify:
     name: Verify updater and Flutter build
@@ -85,7 +90,12 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && (( VERSION_CODE > 10 ))
+          # Archived HAIZ v1.4.0 already shipped as code 2008, signed with
+          # the same long-lived keystore. Never publish a downgrade to phones.
+          if ! [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] || (( VERSION_CODE <= 2008 )); then
+            echo "::error::Use versionCode > 2008 (first stable OTA: 2100)."
+            exit 1
+          fi
           [[ -n "$KEYSTORE_BASE64" && -n "$KEYSTORE_PASSWORD" &&
              -n "$KEY_ALIAS" && -n "$KEY_PASSWORD" ]] || {
             echo "::error::Configure the four HAIZ_ANDROID_* repository secrets before publishing."
