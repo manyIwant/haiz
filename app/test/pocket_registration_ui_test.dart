@@ -19,6 +19,8 @@ void main() {
       store,
       SupabaseClient('https://example.supabase.co', 'sb_publishable_test'),
     );
+    // Production refresh loop is disabled in deterministic widget tests.
+    auth.client!.auth.stopAutoRefresh();
     addTearDown(() {
       auth.dispose();
       store.dispose();
@@ -52,6 +54,8 @@ void main() {
       store,
       SupabaseClient('https://example.supabase.co', 'sb_publishable_test'),
     );
+    // Production refresh loop is disabled in deterministic widget tests.
+    auth.client!.auth.stopAutoRefresh();
     addTearDown(() {
       auth.dispose();
       store.dispose();
