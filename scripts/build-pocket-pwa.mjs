@@ -47,12 +47,24 @@ for (const item of MUST_HAVE) {
 // symbols, alternate renderers, PDFium and other multi-MB optional assets.
 // Those are fetched on demand and cached by the runtime asset handler.
 // A huge install event may never finish on mobile Safari.
+const canvasKitBuild = /"renderer"\s*:\s*"canvaskit"/.test(bootstrap);
+const skwasmBuild = /"renderer"\s*:\s*"skwasm"/.test(bootstrap);
+if (!canvasKitBuild && !skwasmBuild) {
+  throw new Error('Flutter Web renderer could not be identified for offline caching');
+}
 const OFFLINE_SHELL = new Set([
   ...MUST_HAVE,
   'flutter.js', 'pocket-ui.css', 'install.html', 'favicon.png',
-  'canvaskit/canvaskit.js', 'canvaskit/canvaskit.wasm',
-  'canvaskit/skwasm.js', 'canvaskit/skwasm.wasm',
-  'canvaskit/skwasm_heavy.js', 'canvaskit/skwasm_heavy.wasm'
+  ...(canvasKitBuild ? [
+    'canvaskit/canvaskit.js', 'canvaskit/canvaskit.wasm',
+    'canvaskit/chromium/canvaskit.js', 'canvaskit/chromium/canvaskit.wasm',
+    'canvaskit/webparagraph/canvaskit.js', 'canvaskit/webparagraph/canvaskit.wasm'
+  ] : []),
+  ...(skwasmBuild ? [
+    'canvaskit/skwasm.js', 'canvaskit/skwasm.wasm',
+    'canvaskit/skwasm_heavy.js', 'canvaskit/skwasm_heavy.wasm',
+    'canvaskit/wimp.js', 'canvaskit/wimp.wasm'
+  ] : [])
 ]);
 const essential = file => OFFLINE_SHELL.has(file.path) ||
   file.path.startsWith('icons/') ||

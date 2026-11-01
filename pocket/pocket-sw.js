@@ -2,8 +2,8 @@
  * Only public application files are cached. Account data, APIs and cross-origin
  * requests (including Supabase) never enter Cache Storage.
  */
-const HAIZ_VERSION = "93e4a8b0a8d9-73442c7ee1b8";
-const HAIZ_PRECACHE = ["assets/AssetManifest.bin","assets/AssetManifest.bin.json","assets/FontManifest.json","assets/fonts/MaterialIcons-Regular.otf","assets/fonts/fallback/Roboto-Regular.ttf","assets/shaders/haiz_optical.frag","assets/shaders/ink_sparkle.frag","assets/shaders/stretch_effect.frag","canvaskit/canvaskit.js","canvaskit/canvaskit.wasm","canvaskit/skwasm.js","canvaskit/skwasm.wasm","canvaskit/skwasm_heavy.js","canvaskit/skwasm_heavy.wasm","favicon.png","flutter.js","flutter_bootstrap.js","icons/Icon-192.png","icons/Icon-512.png","icons/Icon-maskable-192.png","icons/Icon-maskable-512.png","index.html","install.html","main.dart.js","manifest.json","pocket-client.js","pocket-ui.css"];
+const HAIZ_VERSION = "b79a972900cb-73442c7ee1b8";
+const HAIZ_PRECACHE = ["assets/AssetManifest.bin","assets/AssetManifest.bin.json","assets/FontManifest.json","assets/fonts/MaterialIcons-Regular.otf","assets/fonts/fallback/Roboto-Regular.ttf","assets/shaders/haiz_optical.frag","assets/shaders/ink_sparkle.frag","assets/shaders/stretch_effect.frag","canvaskit/canvaskit.js","canvaskit/canvaskit.wasm","canvaskit/chromium/canvaskit.js","canvaskit/chromium/canvaskit.wasm","canvaskit/webparagraph/canvaskit.js","canvaskit/webparagraph/canvaskit.wasm","favicon.png","flutter.js","flutter_bootstrap.js","icons/Icon-192.png","icons/Icon-512.png","icons/Icon-maskable-192.png","icons/Icon-maskable-512.png","index.html","install.html","main.dart.js","manifest.json","pocket-client.js","pocket-ui.css"];
 const CACHE_PREFIX = 'haiz-pocket-';
 const SHELL_CACHE = CACHE_PREFIX + 'shell-' + HAIZ_VERSION;
 const RUNTIME_CACHE = CACHE_PREFIX + 'assets-' + HAIZ_VERSION;
