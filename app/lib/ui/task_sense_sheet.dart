@@ -29,6 +29,7 @@ class _TaskSenseSheetState extends State<TaskSenseSheet> {
   bool _useCloud = false;
   bool _busy = false;
   bool _saving = false;
+  int _analysisRevision = 0;
   String? _notice;
 
   @override
@@ -78,6 +79,7 @@ class _TaskSenseSheetState extends State<TaskSenseSheet> {
     if (!mounted || !_validScope) return;
     setState(() {
       _drafts = result;
+      _analysisRevision++;
       _busy = false;
       _notice = notice;
     });
@@ -220,7 +222,7 @@ class _TaskSenseSheetState extends State<TaskSenseSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         TextFormField(
-                          key: Key('sense-title-$i'),
+                          key: Key('sense-title-$_analysisRevision-$i'),
                           initialValue: _drafts[i].title,
                           maxLength: 140,
                           maxLines: null,
