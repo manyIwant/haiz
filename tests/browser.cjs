@@ -18,7 +18,7 @@ let browser;
   function observe(page){page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('response',r=>{if(r.status()>=400)failedRequests.push(r.status()+' '+r.url());});}
   for(const mobile of [false,true]){
     const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:900},hasTouch:mobile,isMobile:mobile,reducedMotion:mobile?'reduce':'no-preference'}),page=await context.newPage();observe(page);
-    page.setDefaultTimeout(180000);await page.goto(base+'/');await page.waitForFunction(()=>window.HMZCinematic&&window.HaizExperience);
+    page.setDefaultTimeout(180000);await page.goto(base+'/descent.html');await page.waitForFunction(()=>window.HMZCinematic&&window.HaizExperience);
     assert.equal(await page.locator('#campusFrame').getAttribute('src'),null,'opening must not wait for or request the full campus before play');
     assert.equal(await page.locator('a[href="journal.html"]').count(),1);
     assert.equal(await page.locator('#opening a[href="director.html"]').count(),1);
@@ -85,7 +85,7 @@ let browser;
   }
   {
     const context=await browser.newContext({viewport:{width:1100,height:760},reducedMotion:'reduce'}),entry=await context.newPage();observe(entry);
-    entry.setDefaultTimeout(90000);await entry.goto(base+'/');await entry.waitForFunction(()=>window.HMZCinematic);
+    entry.setDefaultTimeout(90000);await entry.goto(base+'/descent.html');await entry.waitForFunction(()=>window.HMZCinematic);
     await entry.click('#play');await entry.evaluate(()=>HMZCinematic.setProgress(1));
     const frame=await(await entry.$('#campusFrame')).contentFrame();
     await frame.waitForFunction(()=>window.haizWalk,null,{timeout:120000});

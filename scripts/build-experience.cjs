@@ -1,5 +1,4 @@
-// The static host always serves index.html. Keep one cinematic source of truth,
-// and retain the editorial home at journal.html rather than redirecting visitors.
+// Refresh shared site assets on every page except the homepage, which loads them itself.
 const fs=require('node:fs');
 for(const file of fs.readdirSync('.').filter(p=>p.endsWith('.html')&&p!=='index.html'&&p!=='physics-lab.html'&&p!=='physics-lab-practice.html')){
   let html=fs.readFileSync(file,'utf8');
@@ -12,9 +11,10 @@ for(const file of fs.readdirSync('.').filter(p=>p.endsWith('.html')&&p!=='index.
   if(file==='campus-3d.html'&&!html.includes('assets/walk/sports.js'))html=html.replace(/(<script defer src="assets\/walk\/world\.js)/,'<script defer src="assets/walk/sports.js?v=24"></script>\n  <script defer src="assets/walk/map.js?v=24"></script>\n  $1');
   html=html.replace(/assets\/walk\/(surfaces|architecture|atelier|app|climate|reflections|world|landscape|review|interiors|movement|decor|sports|map|campus-data|atlas-details)\.js\?v=\d+/g,'assets/walk/$1.js?v=25');
   html=html.replace(/assets\/js\/director\.js\?v=\d+/g,'assets/js/director.js?v=25');
-  html=html.replace(/assets\/cinematic\/descent\.js\?v=\d+/g,'assets/cinematic/descent.js?v=21');
+  html=html.replace(/assets\/cinematic\/descent\.js\?v=\d+/g,'assets/cinematic/descent.js?v=27');
   html=html.replace(/assets\/walk\/style\.css\?v=\d+/g,'assets/walk/style.css?v=12');
   fs.writeFileSync(file,html);
 }
-fs.copyFileSync('descent.html','index.html');
-console.log('Cinematic index.html ready; editorial home preserved at journal.html.');
+// index.html is the hand-authored tree homepage (lanren/); the cinematic descent
+// lives on at descent.html and the editorial home at journal.html.
+console.log('Shared assets refreshed; tree homepage at index.html, descent at descent.html, journal at journal.html.');

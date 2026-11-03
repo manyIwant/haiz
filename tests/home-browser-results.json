@@ -1,0 +1,13 @@
+{
+  "results": [
+    "one short wheel flick walks from 此刻 to the next stop 根 and settles (hash #roots)",
+    "keyboard End/Home walk to 叶 and back to 此刻",
+    "spine jump to 枝; 4 leader lines pinned on screen",
+    "a falling leaf is caught by clicking it, annotated and kept in the book",
+    "entry click dollies, draws the veil and navigates to about.html",
+    "returning restores the stop (根) and the book (1 leaf)",
+    "static fallback lists all 18 entries as a readable page",
+    "phone 390×844: no horizontal overflow, tier low"
+  ],
+  "renderer": "Chromium + SwiftShader (software); not a hardware frame-rate measurement"
+}

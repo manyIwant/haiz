@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "solar geometry at 20°N (solstice culmination, bearings, night, Haikou clock, campus frame)",
+    "phenology continuous to 0.026 per quarter-day; winter red, February bare, May shade, summer fruit",
+    "six stops, continuous rail, poses exact at stops, 18 destinations exist and match the HTML",
+    "Blender assets: 5773 rosettes, 6357 branches, meshopt GLB with baked colour attribute"
+  ]
+}

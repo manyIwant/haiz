@@ -1,13 +1,169 @@
-<!doctype html><html lang="zh-CN"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08131a"><meta name="description" content="从星球到海南，从城市到树荫。一段保持地理焦点的下降镜头，抵达海南中学府城校区。"><title>从星球到树荫 · haiz.space</title>
-<link rel="icon" href="assets/walk/icon.svg"><link rel="stylesheet" href="assets/cinematic/descent.css?v=9"><script defer src="assets/vendor/three.min.js"></script><script defer src="assets/cinematic/aligned/manifest.js"></script><script defer src="assets/cinematic/descent-core.js?v=8"></script><script defer src="assets/cinematic/descent.js?v=21"></script><link rel="stylesheet" href="assets/css/experience.css?v=12"><script defer src="assets/js/experience.js?v=12"></script><link rel="stylesheet" href="assets/css/atelier-ui.css?v=12"><script defer src="assets/js/atelier-ui.js?v=12"></script></head><body>
-<main id="stage" aria-label="从星球到校园的下降镜头">
-<canvas id="journey" aria-label="地球与地理影像"></canvas><img id="fallback" src="assets/cinematic/campus_z17.jpg" alt="府城校园及周边的俯瞰影像" hidden><iframe id="campusFrame" title="抵达海南中学三维校园" data-campus-src="campus-3d.html?arrival=descent" tabindex="-1"></iframe><div class="shade" aria-hidden="true"></div><div class="locator" id="locator" aria-hidden="true"><span></span><small>海南中学 · 府城</small></div>
-<header><a href="index.html" class="brand">haiz<span>.space</span></a><p>A SCHOOL THAT REMEMBERS</p><div class="entry-links"><a href="journal.html" class="skip">校园杂志 ↗</a><a href="campus-3d.html" class="skip">直接走进校园 ↗</a></div></header>
-<section id="opening" class="opening"><p class="eyebrow">A JOURNEY TOWARDS HOME</p><h1>从一颗星球，<br>到一处树荫<span>。</span></h1><p class="intro">距离慢慢缩短，<br>一个地方，慢慢有了名字。</p><button id="play" disabled><span id="playText">正在准备影像</span><b aria-hidden="true">↘</b></button><p id="loadStatus" class="load-status" role="status">读取本地地理影像…</p><div class="opening-portals"><a href="physics-lab.html" class="quiet-link">物理实验室 · 十节能量实验 ↗</a><a href="windowsill/index.html" class="quiet-link">课间窗台 · 便签、专注、书信与本机留声 ↗</a><a href="darkroom.html" class="quiet-link">共感暗房 · 显影、编曲、寄出一个课间 ↗</a><a href="director.html" class="quiet-link">探索导演台 · 编排你的路线 ↗</a><a href="memory-walk.html" class="quiet-link">轻量阅读 · 树荫下的三次停留 ↗</a></div></section>
-<aside class="coordinates"><span>DESTINATION / WGS84 ≈</span><b>19.998055° N</b><b>110.342823° E</b><small id="altitude">距地表 —</small></aside>
-<section id="caption" class="caption" hidden aria-live="polite"><p class="eyebrow" id="chapterLabel">01 / PLANET</p><h2 id="chapterTitle">在同一颗星球上。</h2><p id="chapterText">镜头朝向海南，保持同一处地理焦点。</p></section>
-<section id="arrival" class="arrival" hidden><p class="eyebrow">YOU HAVE ARRIVED</p><h2>现在，<br>把脚步交给你。</h2><button id="enterCampus">从北门继续行走 <span>↗</span></button><p id="arrivalStatus" role="status">三维校园正在准备…</p><a href="campus-3d.html?enter=gate" class="quiet-link">单独打开校园 ↗</a></section>
-<footer id="controls" hidden><div class="timeline"><button id="toggle" aria-label="暂停下降">Ⅱ</button><input id="progress" aria-label="下降镜头进度" type="range" min="0" max="1" step="0.0001" value="0"><select id="journeySpeed" aria-label="镜头播放速度"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select><span id="elapsed">00:00 / 00:32</span></div><nav aria-label="跳转观看位置"><button data-progress="0">星球</button><button data-progress=".29">岛屿</button><button data-progress=".49">海口</button><button data-progress=".68">府城</button><button data-progress=".87">校园</button><button data-progress="1">抵达</button></nav><p class="journey-hint">滚轮 / 上下滑动改变距离 · 空格暂停 · ← → 微调</p></footer>
-<div class="attribution" id="attribution"><a href="https://doc.arcgis.com/en/data-appliance/2024/maps/world-imagery.htm" target="_blank" rel="noopener">Imagery © Esri, Maxar, Earthstar Geographics, GIS User Community</a><span>地理影像 → 近似校园模型 · 非实时影像</span></div></main>
-<noscript><div class="no-script"><p>这段镜头需要 JavaScript。</p><a href="memory-walk.html">阅读校园路线 ↗</a></div></noscript></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1713">
+<title>haiz.space · 一棵榄仁树</title>
+<meta name="description" content="海南中学府城校区的非官方数字校园。从一号教学楼前的百年榄仁树出发：绕树而行，进入校园漫游、校史档案、校园杂志与课间工具。">
+<meta property="og:title" content="haiz.space · 一棵榄仁树">
+<meta property="og:description" content="一所学校，从一棵树开始认识。">
+<meta property="og:image" content="lanren/assets/poster.jpg">
+<link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="preload" href="assets/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="lanren/assets/poster.jpg" as="image" fetchpriority="high">
+<link rel="stylesheet" href="lanren/home.css?v=1">
+<link rel="stylesheet" href="assets/css/experience.css?v=12"><script defer src="assets/js/experience.js?v=12"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "./lanren/vendor/three/three.module.min.js",
+  "three/addons/": "./lanren/vendor/three/addons/"
+} }
+</script>
+<script type="module" src="lanren/js/home.js?v=1"></script>
+</head>
+<body class="home">
+<div class="stage" aria-hidden="true">
+  <img id="poster" class="poster" src="lanren/assets/poster.jpg" alt="" width="1600" height="900">
+  <canvas id="world" tabindex="-1"></canvas>
+  <svg id="leaders" class="leaders"></svg>
+  <div class="grain"></div>
+</div>
+<div id="veil" class="veil" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="brand" href="index.html" aria-label="haiz.space 主页"><b>haiz</b><span>.space</span><small>海南中学 · 府城</small></a>
+  <p class="status" aria-live="polite"><i class="live" aria-hidden="true"></i><span id="date">海口</span><span id="clock"></span><span id="phase" class="phase"></span><button id="nowButton" class="now" hidden>回到此刻</button></p>
+  <nav class="tools" aria-label="工具">
+    <button id="searchButton" class="tool">搜索 <kbd>⌘K</kbd></button>
+    <button id="bookButton" class="tool">书页 <b id="bookCount">0</b></button>
+    <button id="soundButton" class="tool" aria-pressed="false"><i class="dot" aria-hidden="true"></i><span>声音</span></button>
+  </nav>
+</header>
+
+<nav id="spine" class="spine" aria-label="绕树而行：六个停留">
+  <ol>
+    <li><a href="#now" data-go="0"><span>00</span>此刻</a></li>
+    <li><a href="#roots" data-go="1"><span>01</span>根</a></li>
+    <li><a href="#trunk" data-go="2"><span>02</span>干</a></li>
+    <li><a href="#limb" data-go="3"><span>03</span>枝</a></li>
+    <li><a href="#crown" data-go="4"><span>04</span>冠</a></li>
+    <li><a href="#leaves" data-go="5"><span>05</span>叶</a></li>
+  </ol>
+</nav>
+
+<main id="chapters" class="chapters">
+  <section id="now" class="chapter" data-i="0">
+    <p class="kicker">海南中学 · 府城校区 · 一号教学楼前</p>
+    <h1 class="title">一棵<br>榄仁树<span>。</span></h1>
+    <p class="lede">学校的景观介绍说，它的枝叶如龙腾伸展，被视为庇护海中的宝树。这里按海口此刻的太阳与季节照亮它。</p>
+    <p class="src">海南中学官网《海南中学校园景观简介》，经本项目资料转引；光照与季节为模型推演</p>
+    <p class="begin"><a href="#roots" data-go="1">绕树而行 <span aria-hidden="true">↓</span></a><small>滚动或下滑，走到树的另一面</small></p>
+  </section>
+
+  <section id="roots" class="chapter" data-i="1">
+    <p class="kicker"><span>01</span>根 · 来处</p>
+    <h2 class="title">从 1923 年<br>长出来</h2>
+    <p class="lede">海南中学前身是 1923 年创办的私立琼海中学。2023 年百年校庆，《海南日报》的报道以校园里的百年榄仁树开篇。这棵树的确切树龄没有年轮测定。</p>
+    <p class="src">学校简介（本站「学校」页）；海南日报 2023-10-30</p>
+    <ul class="entries">
+      <li><a href="about.html" data-anchor="0">学校与校园手图<small>历史、地标、手绘平面</small></a></li>
+      <li><a href="news.html" data-anchor="1">新闻档案<small>原仓库报道，分类与检索</small></a></li>
+      <li><a href="alumni.html" data-anchor="2">校友<small>公开资料中的海中人</small></a></li>
+      <li><a href="memory-walk.html" data-anchor="3">树荫下的三次停留<small>北门 · 榄仁树 · 砚池，无需三维</small></a></li>
+    </ul>
+  </section>
+
+  <section id="trunk" class="chapter" data-i="2">
+    <p class="kicker"><span>02</span>干 · 走进校园</p>
+    <h2 class="title">从树下，<br>走进校园</h2>
+    <p class="lede">一号教学楼是全校体量最大的教学主楼，一层设校史馆与国粹馆。楼前这棵树与中轴线上题有「虎踞龙盘」的太湖石相互呼应。</p>
+    <p class="src">海南中学官网《学校简介》《海南中学校园景观简介》，经本项目资料转引</p>
+    <ul class="entries">
+      <li><a href="campus-3d.html?focus=lanshu" data-anchor="0" data-dark>第一人称校园<small>从这棵树出发，16 间可步入的想象教室</small></a></li>
+      <li><a href="descent.html" data-anchor="1" data-dark>从星球到树荫<small>原首页：一段保持地理焦点的下降镜头</small></a></li>
+      <li><a href="architecture.html" data-anchor="2">建筑观察手册<small>实拍、材质与光影</small></a></li>
+      <li><a href="director.html" data-anchor="3">探索导演台<small>编排你自己的步行路线</small></a></li>
+    </ul>
+  </section>
+
+  <section id="limb" class="chapter" data-i="3">
+    <p class="kicker"><span>03</span>枝 · 日子</p>
+    <h2 class="title">一根伸向<br>远处的横枝</h2>
+    <p class="lede">主干在两米多处分叉，一根横枝几乎水平地向东伸出十余米，在巨石旁压到离地不足两米，又重新昂起。北门入口处另有一株大叶榄仁，一前一后为海中学子送来绿荫。</p>
+    <p class="src">枝形依实拍（区大伟 摄）重建，长度为推算；「一前一后」见学校景观简介</p>
+    <ul class="entries">
+      <li><a href="journal.html" data-anchor="0">校园杂志<small>影像、手记与校园正在发生的事</small></a></li>
+      <li><a href="clubs.html" data-anchor="1">社团提案<small>六个清楚标注的创作提案</small></a></li>
+      <li><a href="life.html" data-anchor="2">课间电台<small>虚构小报、个人选择、本机便笺</small></a></li>
+      <li><a href="admissions.html" data-anchor="3">来访与招生<small>来访指引与官方招生入口</small></a></li>
+    </ul>
+  </section>
+
+  <section id="crown" class="chapter" data-i="4">
+    <p class="kicker"><span>04</span>冠 · 课间</p>
+    <h2 class="title">抬头，<br>是光</h2>
+    <p class="lede">属名 Terminalia 指“末端”：叶子簇生在枝顶，一层层平展开来。地上那些圆形的亮斑并不是叶缝的形状，而是太阳本身的像——每道叶隙都是一枚小孔。</p>
+    <p class="src">植物学资料（NParks、香港绿化资料等）；小孔成像为光学常识，场景按太阳视直径 0.53° 计算光斑</p>
+    <ul class="entries">
+      <li><a href="windowsill/index.html" data-anchor="0" data-dark>课间窗台<small>便签、专注、书信与本机留声</small></a></li>
+      <li><a href="darkroom.html" data-anchor="1">共感暗房<small>显影、编曲，寄出一个课间</small></a></li>
+      <li><a href="physics-lab.html" data-anchor="2" data-dark>物理实验室<small>Every Joule 原版与自制练习</small></a></li>
+      <li><a href="pocket/index.html" data-anchor="3" data-dark>HAIZ Pocket<small>移动端应用，可安装的 PWA</small></a></li>
+      <li><a href="login/index.html" data-anchor="4" data-dark>登录<small>Pocket 账户 · 登录与注册</small></a></li>
+    </ul>
+  </section>
+
+  <section id="leaves" class="chapter" data-i="5">
+    <p class="kicker"><span>05</span>叶 · 留下</p>
+    <h2 class="title">等一片<br>叶子落下</h2>
+    <p class="lede">落叶之前，叶子会转黄、转红，再到赭褐。按海口的季节推演，它在冬季最红。在树下多停一会儿，总会有一片叶子落下——接住它，夹进你的书页。</p>
+    <p class="src">落叶变色见植物学资料；海口的季节时间为本站依资料作出的近似模型，不是对这棵树的观测</p>
+    <div class="rulers" role="group" aria-label="拨动时间">
+      <label><span>一日</span><input id="dayRange" type="range" min="0" max="1439" step="1" value="900" aria-label="一天中的时刻（海口时间）"><output id="dayOut"></output></label>
+      <label><span>一年</span><input id="yearRange" type="range" min="1" max="365" step="1" value="307" aria-label="一年中的日子"><output id="yearOut"></output></label>
+    </div>
+    <ul class="entries">
+      <li><button type="button" data-action="book" data-anchor="0">我的书页<small>接住的叶子，只存在这台设备上</small></button></li>
+      <li><a href="contact.html" data-anchor="1">关于本站<small>创作者、来源、隐私与站点地图</small></a></li>
+    </ul>
+  </section>
+</main>
+
+<p id="hint" class="hint" aria-hidden="true"><span>滚动 · 绕树而行</span><span>拖动 · 环顾</span><span class="fine">点按树叶 · 拨动它</span></p>
+<p id="whisper" class="whisper" aria-live="polite"></p>
+<p id="catchHint" class="catch-hint" aria-hidden="true">接住它</p>
+
+<dialog id="specimen" class="specimen" aria-labelledby="specTitle">
+  <div class="paper">
+    <canvas id="specCanvas" width="900" height="1200" aria-label="这片叶子的标本图"></canvas>
+    <div class="spec-text">
+      <p class="eyebrow" id="specFrom">接住了一片叶子</p>
+      <h2 id="specTitle">—</h2>
+      <dl id="specFacts"></dl>
+      <label class="note"><span>在叶旁写一句（只存在这台设备上）</span>
+        <input id="specNote" maxlength="40" placeholder="比如：那天下午有风"></label>
+      <div class="spec-actions">
+        <button id="specKeep" class="solid">夹进书里</button>
+        <button id="specLet" class="ghost">让它落下</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="book" class="book" aria-labelledby="bookTitle">
+  <div class="book-page">
+    <header><h2 id="bookTitle">书页</h2><p>在这棵树下接住的叶子。只保存在这台设备的浏览器里，不会上传。</p>
+      <button class="close" data-close aria-label="合上书页">合上</button></header>
+    <div id="bookGrid" class="book-grid"></div>
+    <footer><button id="bookExport" class="solid">把这一页存成图片</button><button id="bookClear" class="ghost">清空书页</button></footer>
+  </div>
+</dialog>
+
+<footer class="colophon">
+  <p>haiz.space 是海南中学府城校区的非官方数字校园，由 manyIwant 创作。树依实拍重建骨架、在 Blender 中生成，不是测绘；校史与景观文字注明出处，季节与光照是模型。<a href="contact.html">来源与隐私</a></p>
+</footer>
+<noscript><style>.chapters .chapter{opacity:1!important;position:relative!important;transform:none!important;pointer-events:auto!important}</style></noscript>
+</body>
+</html>
