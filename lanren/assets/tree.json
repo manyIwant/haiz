@@ -1,15 +1,15 @@
 {
- "generator": "scripts/lanren/build_tree.py",
+ "generator": "scripts/lanren/build_tree.py (v2: growing species concept model)",
  "blender": "5.2.3 LTS",
  "seed": 1923,
- "frame": "three.js / glTF Y-up; +X campus east along the No.1 building facade, -Z campus north towards the North Gate",
+ "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
+ "water": -0.85,
  "counts": {
-  "branches": 6357,
-  "rosettes": 5773,
-  "fruits": 1228,
-  "barkVertices": 106588
+  "branches": 15893,
+  "rosettes": 14687,
+  "barkVertices": 219785
  },
- "rosetteStride": 12,
+ "rosetteStride": 15,
  "rosetteLayout": [
   "px",
   "py",
@@ -20,60 +20,32 @@
   "size",
   "flex",
   "occlusion",
-  "height",
-  "rand0",
-  "rand1"
+  "tEmerge",
+  "tOldDrop",
+  "rand",
+  "padX",
+  "padY",
+  "padZ"
  ],
- "fruitLayout": [
-  "px",
-  "py",
-  "pz",
-  "rand"
- ],
- "canopyBounds": [
-  [
-   -11.83,
-   1.93,
-   -9.9
+ "pads": 37,
+ "growth": {
+  "emergeRange": [
+   0.04,
+   0.676
   ],
-  [
-   15.42,
-   13.87,
-   8.12
-  ]
- ],
+  "emergeMedian": 0.362
+ },
  "anchors": {
-  "trunkBase": [
-   -0.3,
-   0.8,
+  "trunk": [
+   0.1,
+   1.6,
    -0.0
   ],
-  "fork": [
-   0.1,
-   3.0,
-   -0.1
-  ],
-  "dragonDip": [
-   8.411,
-   1.89,
-   -1.071
-  ],
-  "dragonRise": [
-   12.093,
-   10.377,
-   0.026
-  ],
-  "crownTop": [
-   -0.361,
-   13.641,
-   -0.193
-  ],
-  "eastLimb": [
-   -9.002,
-   6.85,
-   -2.029
+  "limbDip": [
+   8.7,
+   1.85,
+   -0.9
   ]
  },
- "aoBaked": true,
- "reference": "assets/images/web/lanshu-1600.jpg (区大伟 摄) — scaffold proportions read from this photograph; not a survey"
+ "note": "Species concept model of Terminalia catappa (tiered Aubréville architecture). Not a survey of the campus tree."
 }

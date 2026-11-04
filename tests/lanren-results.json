@@ -1,8 +1,10 @@
 {
   "checks": [
-    "solar geometry at 20°N (solstice culmination, bearings, night, Haikou clock, campus frame)",
-    "phenology continuous to 0.026 per quarter-day; winter red, February bare, May shade, summer fruit",
-    "six stops, continuous rail, poses exact at stops, 18 destinations exist and match the HTML",
-    "Blender assets: 5773 rosettes, 6357 branches, meshopt GLB with baked colour attribute"
+    "growth is monotone from 0 (end of winter) to 1 (full leaf)",
+    "camera path continuous (≤0.54 m per 1 %), above water, clear of the trunk, 314° around the tree",
+    "art-directed light keys finite and blended between viewpoints (dawn → evening)",
+    "18 destinations exist and match index.html (generated from chapters.js)",
+    "Blender tree: 15893 branches, 14687 rosettes in 37 pads; emergence 0.04–0.68; 323 rosettes keep last year's leaves",
+    "pressed-leaf dates use Haikou time"
   ]
 }

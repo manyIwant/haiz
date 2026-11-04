@@ -410,7 +410,7 @@ def build_paving(size=1024, tiles=4):
 
 
 if __name__ == '__main__':
-    which = sys.argv[1:] or ['leaf', 'bark', 'paving']
+    which = sys.argv[1:] or ['leaf', 'bark']
     if 'leaf' in which:
         build_leaf_atlas()
     if 'bark' in which:

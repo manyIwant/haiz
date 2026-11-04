@@ -1,19 +1,21 @@
-// Assembles the place and owns the render loop's visual state.
+// Assembles the island, the growing tree, light and the film-like finish.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { Pass } from 'three/addons/postprocessing/Pass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { installPCSS } from './pcss.js';
 import { createCanopy, createLooseLeaves, UNIFORMS } from './foliage.js';
-import {
-  createSky, skyState, makeBarkMaterial, makeBarkDepthMaterial, makeStoneMaterial,
-  createGround, createBuilding, createPlanting
-} from './environment.js';
+import { createSky, makeBarkMaterial, makeIslandMaterial, createWater, createGrass } from './environment.js';
 import { Litter } from './litter.js';
 
 export const TIERS = {
-  high: { shadow: 4096, blocker: 16, pcf: 28, density: 1.0, ratio: 2, planting: true },
-  medium: { shadow: 4096, blocker: 12, pcf: 18, density: 0.8, ratio: 1.5, planting: true },
-  low: { shadow: 2048, blocker: 8, pcf: 12, density: 0.55, ratio: 1.25, planting: false }
+  high: { shadow: 4096, blocker: 14, pcf: 24, density: 0.72, geo: [2, 2], ratio: 2, msaa: 4, reflect: 'full', bloom: true, grass: 16000 },
+  medium: { shadow: 2048, blocker: 10, pcf: 16, density: 0.5, geo: [2, 1], ratio: 1.5, msaa: 4, reflect: 'half', bloom: true, grass: 9000 },
+  low: { shadow: 2048, blocker: 8, pcf: 10, density: 0.34, geo: [2, 1], ratio: 1.25, msaa: 0, reflect: false, bloom: false, grass: 4000 }
 };
 
 export function pickTier() {
@@ -26,15 +28,154 @@ export function pickTier() {
   return cores >= 6 ? 'high' : 'medium';
 }
 
-const SHADOW_HALF = 21;
+const SHADOW_HALF = 18;
 const SHADOW_FAR = 120;
+
+// ------------------------------------------------------------------ atmosphere pass
+// Height fog with sun-ward scattering, mist that drifts over the water, and
+// light shafts found by marching from each pixel towards the sun on screen.
+const AtmosphereShader = {
+  uniforms: {
+    tDiffuse: { value: null }, tDepth: { value: null },
+    uProjInv: { value: new THREE.Matrix4() }, uViewInv: { value: new THREE.Matrix4() },
+    uCamPos: { value: new THREE.Vector3() }, uNear: { value: 0.1 }, uFar: { value: 900 },
+    uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uSunScreen: { value: new THREE.Vector3(0.5, 0.5, 0) },
+    uSunCol: { value: new THREE.Color() }, uFogCol: { value: new THREE.Color() },
+    uDensity: { value: 0.02 }, uFalloff: { value: 0.12 }, uMist: { value: 0.5 }, uRays: { value: 0.5 },
+    uTime: { value: 0 }, uWater: { value: -0.85 }
+  },
+  vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+#include <packing>
+uniform sampler2D tDiffuse; uniform sampler2D tDepth;
+uniform mat4 uProjInv; uniform mat4 uViewInv; uniform vec3 uCamPos;
+uniform vec3 uSunDir; uniform vec3 uSunScreen; uniform vec3 uSunCol; uniform vec3 uFogCol;
+uniform float uDensity; uniform float uFalloff; uniform float uMist; uniform float uRays; uniform float uTime; uniform float uWater;
+varying vec2 vUv;
+float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
+vec3 worldAt(vec2 uv, float d){
+  vec4 ndc = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+  vec4 v = uProjInv * ndc; v /= v.w;
+  return (uViewInv * v).xyz;
+}
+void main(){
+  vec4 col = texture2D(tDiffuse, vUv);
+  float d = texture2D(tDepth, vUv).x;
+  bool sky = d >= 0.99999;
+  vec3 wp = worldAt(vUv, sky ? 0.9999 : d);
+  vec3 rd = wp - uCamPos;
+  float dist = sky ? 700.0 : length(rd);
+  rd = normalize(rd);
+  // exponential height fog, integrated along the ray (closed form)
+  float b = uFalloff;
+  float h0 = uCamPos.y - uWater;
+  float ry = abs(rd.y) < 1e-4 ? 1e-4 : rd.y;
+  float fogAmt = uDensity * exp(-h0 * b) * (1.0 - exp(-dist * ry * b)) / (ry * b);
+  // drifting mist close to the water
+  vec2 mp = (uCamPos.xz + rd.xz * min(dist, 60.0)) * 0.06 + vec2(uTime * 0.012, uTime * 0.005);
+  float mist = (vn(mp) * 0.6 + vn(mp * 2.7) * 0.4);
+  float low = exp(-max(0.0, (sky ? 2.0 : wp.y) - uWater) * 0.55);
+  fogAmt += uMist * mist * low * (1.0 - exp(-dist * 0.035)) * 0.9;
+  fogAmt = 1.0 - exp(-fogAmt);
+  if (sky) fogAmt *= 0.35 * smoothstep(0.35, 0.0, rd.y);
+  float mie = pow(max(dot(rd, uSunDir), 0.0), 7.0);
+  vec3 fogC = uFogCol + uSunCol * mie * 0.55;
+  vec3 c = mix(col.rgb, fogC, clamp(fogAmt, 0.0, 1.0));
+  // light shafts: march towards the sun on screen, collecting open sky
+  if (uRays > 0.001 && uSunScreen.z > 0.0) {
+    vec2 delta = (uSunScreen.xy - vUv) / 28.0;
+    vec2 uv = vUv;
+    float illum = 0.0, decay = 1.0;
+    float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    uv += delta * jitter;
+    for (int i = 0; i < 28; i++) {
+      uv += delta;
+      float sd = texture2D(tDepth, uv).x;
+      illum += step(0.99999, sd) * decay;
+      decay *= 0.965;
+    }
+    illum /= 28.0;
+    float near = smoothstep(0.9, 0.0, length((vUv - uSunScreen.xy) * vec2(1.6, 1.0)));
+    c += uSunCol * illum * near * uRays * 0.9;
+  }
+  gl_FragColor = vec4(c, col.a);
+}`
+};
+
+// The scene is drawn into its own target (MSAA + depth texture); the
+// atmosphere pass reads colour and depth from it and starts the chain.
+class ScenePass extends Pass {
+  constructor(scene, camera, target) { super(); Object.assign(this, { scene, camera, target }); this.needsSwap = false; }
+  render(renderer) { renderer.setRenderTarget(this.target); renderer.clear(); renderer.render(this.scene, this.camera); }
+}
+class AtmospherePass extends ShaderPass {
+  constructor(target) {
+    super(AtmosphereShader, 'tUnused');
+    this.uniforms.tDiffuse.value = target.texture;
+    this.uniforms.tDepth.value = target.depthTexture;
+  }
+}
+
+// shallow depth of field for close views: a gathered disc blur sized by the
+// circle of confusion from the depth buffer (off when aperture is 0)
+const FocusShader = {
+  uniforms: { tDiffuse: { value: null }, tDepth: { value: null }, uFocus: { value: 4 }, uAperture: { value: 0 },
+    uNear: { value: 0.08 }, uFar: { value: 1200 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) } },
+  vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+#include <packing>
+uniform sampler2D tDiffuse; uniform sampler2D tDepth;
+uniform float uFocus; uniform float uAperture; uniform float uNear; uniform float uFar; uniform vec2 uTexel;
+varying vec2 vUv;
+float viewDist(vec2 uv){ return -perspectiveDepthToViewZ(texture2D(tDepth, uv).x, uNear, uFar); }
+float coc(float z){ return clamp(abs(z - uFocus) / max(z, 0.1) * uAperture * 26.0, 0.0, 14.0); }
+void main(){
+  vec4 c = texture2D(tDiffuse, vUv);
+  if (uAperture < 0.01) { gl_FragColor = c; return; }
+  float r0 = coc(viewDist(vUv));
+  vec3 acc = c.rgb; float wsum = 1.0;
+  for (int i = 0; i < 20; i++) {
+    float rr = sqrt((float(i) + 0.5) / 20.0);
+    float th = float(i) * 2.39996;
+    vec2 o = vec2(cos(th), sin(th)) * rr;
+    vec2 uv = vUv + o * 14.0 * uTexel;
+    float ri = coc(viewDist(uv));
+    float w = smoothstep(rr * 14.0 - 1.0, rr * 14.0 + 1.0, max(min(ri, r0 + 2.0), 0.0));
+    acc += texture2D(tDiffuse, uv).rgb * w; wsum += w;
+  }
+  gl_FragColor = vec4(acc / wsum, c.a);
+}`
+};
+
+// vignette, grain and a gentle split-tone grade, after tone mapping
+const FinishShader = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarm: { value: 0.5 }, uVig: { value: 0.32 } },
+  vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+uniform sampler2D tDiffuse; uniform float uTime; uniform float uWarm; uniform float uVig;
+varying vec2 vUv;
+void main(){
+  vec3 c = texture2D(tDiffuse, vUv).rgb;
+  float l = dot(c, vec3(0.299, 0.587, 0.114));
+  vec3 shadowT = mix(vec3(0.94, 0.98, 1.06), vec3(0.97, 0.98, 1.03), uWarm);
+  vec3 highT = mix(vec3(1.0, 0.99, 0.97), vec3(1.05, 1.0, 0.92), uWarm);
+  c *= mix(shadowT, highT, smoothstep(0.15, 0.85, l));
+  vec2 q = vUv - 0.5;
+  c *= 1.0 - uVig * smoothstep(0.25, 0.85, length(q * vec2(1.25, 1.0)));
+  float n = fract(sin(dot(vUv * 1000.0 + uTime * 13.7, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  c += n * 0.022;
+  gl_FragColor = vec4(c, 1.0);
+}`
+};
 
 export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const tier = TIERS[tierName];
   installPCSS({ frustumWidth: SHADOW_HALF * 2, depthRange: SHADOW_FAR - 1, blocker: tier.blocker, pcf: tier.pcf });
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, tier.ratio));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+  const ratio = Math.min(window.devicePixelRatio || 1, tier.ratio);
+  renderer.setPixelRatio(ratio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -42,15 +183,13 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(52, 1, 0.08, 900);
-  scene.fog = new THREE.FogExp2(0xb8c4c8, 0.0095);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.08, 1200);
 
   // ---------------------------------------------------------------- assets
   const base = new URL('../assets/', import.meta.url);
   const texLoader = new THREE.TextureLoader();
   let done = 0;
-  const total = 9;
-  const tick = (x) => { done++; onProgress(done / total); return x; };
+  const tick = (x) => { onProgress(++done / 9); return x; };
   const tex = (name, srgb) => texLoader.loadAsync(new URL(name, base).href).then((t) => {
     if (srgb) t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -59,18 +198,18 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const gltf = new GLTFLoader();
   gltf.setMeshoptDecoder(MeshoptDecoder);
   const bin = (name) => fetch(new URL(name, base)).then((r) => { if (!r.ok) throw new Error(name); return r.arrayBuffer(); }).then(tick);
-  const [treeG, stonesG, rosBuf, fruitBuf, meta, atlas, leafN, barkColor, barkNormal, pavingColor, pavingNormal] = await Promise.all([
+  const [treeG, islandG, rosBuf, meta, atlas, leafN, barkColor, barkNormal] = await Promise.all([
     gltf.loadAsync(new URL('tree.glb', base).href).then(tick),
-    gltf.loadAsync(new URL('stones.glb', base).href).then(tick),
-    bin('rosettes.bin'), bin('fruits.bin'),
-    fetch(new URL('tree.json', base)).then((r) => r.json()),
+    gltf.loadAsync(new URL('island.glb', base).href).then(tick),
+    bin('rosettes.bin'),
+    fetch(new URL('tree.json', base)).then((r) => r.json()).then(tick),
     tex('leaf-atlas-web.png', false), tex('leaf-normal-web.png', false),
-    tex('bark-color.jpg', true), tex('bark-normal.jpg', false),
-    tex('paving-color.jpg', true), tex('paving-normal.jpg', false)
+    tex('bark-color.jpg', true), tex('bark-normal.jpg', false)
   ]);
   for (const t of [barkColor, barkNormal]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const WATER = meta.water;
 
-  // ---------------------------------------------------------------- sky & light
+  // ---------------------------------------------------------------- light
   const sky = createSky();
   scene.add(sky);
   const sun = new THREE.DirectionalLight(0xffffff, 3);
@@ -78,238 +217,166 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   sun.shadow.mapSize.set(tier.shadow, tier.shadow);
   Object.assign(sun.shadow.camera, { left: -SHADOW_HALF, right: SHADOW_HALF, top: SHADOW_HALF, bottom: -SHADOW_HALF, near: 1, far: SHADOW_FAR });
   sun.shadow.camera.updateProjectionMatrix();
-  sun.shadow.bias = -0.00025;
-  sun.shadow.normalBias = 0.018;
-  const sunTarget = new THREE.Object3D();
-  sunTarget.position.set(3.5, 3, 0);
-  scene.add(sunTarget);
-  sun.target = sunTarget;
+  sun.shadow.bias = -0.0003;
+  sun.shadow.normalBias = 0.02;
+  const target = new THREE.Object3D();
+  target.position.set(2.5, 5, 0);
+  scene.add(target);
+  sun.target = target;
   scene.add(sun);
-  // light spilling from lit classrooms at night, from the facade side
-  const spill = new THREE.DirectionalLight(0xffc98f, 0);
-  spill.position.set(4, 6, 30);
-  spill.target = sunTarget;
-  scene.add(spill);
+  const hemi = new THREE.HemisphereLight(0xbfd2e0, 0x2a2a20, 0.15);
+  scene.add(hemi);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene();
-  const envSky = new THREE.Mesh(sky.geometry, sky.material);   // shares uniforms
+  const envSky = new THREE.Mesh(sky.geometry, sky.material);
   envSky.frustumCulled = false;
   envScene.add(envSky);
   let envRT = null;
 
   // ---------------------------------------------------------------- tree
-  const barkMat = makeBarkMaterial({ barkColor, barkNormal });
-  const barkDepth = makeBarkDepthMaterial();
   let bark = null;
   treeG.scene.traverse((o) => { if (o.isMesh) bark = o; });
-  bark.material = barkMat;
-  bark.customDepthMaterial = barkDepth;
-  bark.castShadow = true;
-  bark.receiveShadow = true;
+  bark.material = makeBarkMaterial({ barkColor, barkNormal });
+  bark.customDepthMaterial = makeBarkMaterial({}, true);
+  bark.castShadow = bark.receiveShadow = true;
   bark.frustumCulled = false;
   scene.add(bark);
 
-  const stoneMat = makeStoneMaterial();
-  const stones = [];
-  stonesG.scene.traverse((o) => {
-    if (o.isMesh) { o.material = stoneMat; o.castShadow = true; o.receiveShadow = true; stones.push(o); }
-  });
-  scene.add(stonesG.scene);
+  let island = null;
+  islandG.scene.traverse((o) => { if (o.isMesh) island = o; });
+  island.material = makeIslandMaterial();
+  island.castShadow = island.receiveShadow = true;
+  scene.add(island);
+
+  // heightfield of the island, rasterised from its triangles (for grass and litter)
+  const HF = 96, HR = 8.6;
+  const hf = new Float32Array(HF * HF).fill(WATER - 1);
+  {
+    const p = island.geometry.attributes.position, idx = island.geometry.index;
+    const n = idx ? idx.count : p.count;
+    const get = (i) => (idx ? idx.getX(i) : i);
+    for (let t = 0; t < n; t += 3) {
+      for (let k = 0; k < 3; k++) {
+        const v = get(t + k);
+        const x = p.getX(v), y = p.getY(v), z = p.getZ(v);
+        const gx = Math.round((x + HR) / (2 * HR) * (HF - 1)), gz = Math.round((z + HR) / (2 * HR) * (HF - 1));
+        if (gx >= 0 && gz >= 0 && gx < HF && gz < HF) hf[gz * HF + gx] = Math.max(hf[gz * HF + gx], y);
+      }
+    }
+  }
+  const heightAt = (x, z) => {
+    const fx = (x + HR) / (2 * HR) * (HF - 1), fz = (z + HR) / (2 * HR) * (HF - 1);
+    const ix = Math.max(0, Math.min(HF - 2, Math.floor(fx))), iz = Math.max(0, Math.min(HF - 2, Math.floor(fz)));
+    const tx = fx - ix, tz = fz - iz;
+    const a = hf[iz * HF + ix], b = hf[iz * HF + ix + 1], c = hf[(iz + 1) * HF + ix], d = hf[(iz + 1) * HF + ix + 1];
+    return Math.max(WATER, (a * (1 - tx) + b * tx) * (1 - tz) + (c * (1 - tx) + d * tx) * tz);
+  };
+  const inIsland = (x, z) => heightAt(x, z) > WATER + 0.25;
 
   const rosettes = new Float32Array(rosBuf);
   const stride = meta.rosetteStride;
-  const canopy = createCanopy(rosettes, stride, atlas, leafN, tier.density);
+  const canopy = createCanopy(rosettes, stride, atlas, leafN, tier.density, tier.geo);
   scene.add(canopy.mesh);
+  const grass = createGrass(heightAt, tier.grass, inIsland);
+  scene.add(grass);
 
-  // fruits: small instanced drupes, visible in season
-  const fruitArr = new Float32Array(fruitBuf);
-  const fruitGeo = new THREE.SphereGeometry(1, 10, 8);
-  fruitGeo.scale(0.019, 0.03, 0.014);
-  const fruitMat = new THREE.MeshStandardMaterial({ color: 0x55702a, roughness: 0.45 });
-  const fruits = new THREE.InstancedMesh(fruitGeo, fruitMat, fruitArr.length / 4);
-  {
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    for (let i = 0; i < fruits.count; i++) {
-      q.setFromEuler(new THREE.Euler(0.3 * Math.sin(i), i, 0.4 * Math.cos(i * 1.7)));
-      m.compose(new THREE.Vector3(fruitArr[i * 4], fruitArr[i * 4 + 1], fruitArr[i * 4 + 2]), q, new THREE.Vector3(1, 1, 1));
-      fruits.setMatrixAt(i, m);
-    }
-    fruits.castShadow = true;
-    fruits.receiveShadow = true;
-  }
-  scene.add(fruits);
+  const water = createWater(WATER, tier.reflect, ratio);
+  scene.add(water);
+  const wu = water.material.uniforms;
 
-  // ---------------------------------------------------------------- place
-  const ground = createGround({ pavingColor, pavingNormal }, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
-  scene.add(ground.group);
-  const building = createBuilding();
-  scene.add(building.group);
-  scene.add(createPlanting(atlas, tier.planting ? 1 : 0.5));
-
-  // ---------------------------------------------------------------- campus trees (impostors)
-  // The campus around the terrace is planted densely. Rather than inventing
-  // other species, we render this tree off-screen from two sides and stand
-  // those images around the plaza as distant, fogged trees. They are
-  // re-baked whenever the light changes, so they share the hour.
-  const IMP_LAYER = 3;
-  bark.layers.enable(IMP_LAYER);
-  canopy.mesh.layers.enable(IMP_LAYER);
-  sun.layers.enable(IMP_LAYER);
-  spill.layers.enable(IMP_LAYER);
-  const impRT = new THREE.WebGLRenderTarget(1024, 512, { samples: 4 });
-  impRT.texture.colorSpace = THREE.LinearSRGBColorSpace;
-  const impCam = new THREE.OrthographicCamera(-15.5, 15.5, 15.5, 0, 0.1, 100);
-  impCam.layers.set(IMP_LAYER);
-  function bakeImpostor() {
-    const prevT = renderer.getRenderTarget();
-    const prevC = renderer.getClearColor(new THREE.Color());
-    const prevA = renderer.getClearAlpha();
-    const prevFog = scene.fog;
-    scene.fog = null;
-    renderer.setClearColor(0x000000, 0);
-    renderer.setRenderTarget(impRT);
-    renderer.clear();
-    // two views side by side: from the north and from the west
-    for (const [i, pos, look] of [[0, [3, 0, -40], [3, 0, 0]], [1, [-40, 0, 0], [0, 0, 0]]]) {
-      impCam.position.set(...pos);
-      impCam.lookAt(...look);
-      impCam.updateMatrixWorld();
-      impRT.viewport.set(i * 512, 0, 512, 512);
-      impRT.scissor.set(i * 512, 0, 512, 512);
-      impRT.scissorTest = true;
-      renderer.setRenderTarget(impRT);
-      renderer.render(scene, impCam);
-    }
-    impRT.scissorTest = false;
-    impRT.viewport.set(0, 0, 1024, 512);
-    renderer.setRenderTarget(prevT);
-    renderer.setClearColor(prevC, prevA);
-    scene.fog = prevFog;
-  }
-  const impMat = new THREE.MeshBasicMaterial({ map: impRT.texture, alphaTest: 0.5, side: THREE.DoubleSide });
-  impMat.onBeforeCompile = (sh) => {
-    sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-  diffuseColor.rgb *= 0.92;`);
-  };
-  const impostors = new THREE.Group();
-  const PLACES = [
-    // x, z, scale, view (0 north / 1 west), mirror
-    [-34, -16, 0.72, 0, 1], [-52, -24, 0.9, 1, -1], [-22, -34, 0.62, 1, 1], [26, -30, 0.8, 0, -1],
-    [44, -14, 0.95, 1, 1], [58, -36, 0.7, 0, 1], [-70, -12, 0.85, 0, -1], [6, -58, 0.9, 1, 1],
-    [-40, -60, 1.0, 0, 1], [36, 4, 0.66, 1, -1], [70, 0, 0.9, 0, 1], [-14, -80, 1.1, 1, -1]
-  ];
-  for (const [x, z, k, view, mirror] of PLACES) {
-    const g = new THREE.PlaneGeometry(31, 15.5);
-    g.translate(0, 7.75, 0);
-    const uv = g.attributes.uv;
-    for (let i = 0; i < uv.count; i++) uv.setX(i, (view + uv.getX(i)) * 0.5);
-    const m = new THREE.Mesh(g, impMat);
-    m.position.set(x, z < -11 ? -0.6 : 0, z);
-    m.scale.set(k * mirror, k, k);
-    m.userData.billboard = true;
-    impostors.add(m);
-  }
-  scene.add(impostors);
-  function faceImpostors(cam) {
-    for (const m of impostors.children) m.rotation.y = Math.atan2(cam.position.x - m.position.x, cam.position.z - m.position.z);
-  }
-
-  const loose = createLooseLeaves(1500, atlas, leafN);
+  const loose = createLooseLeaves(900, atlas, leafN);
   scene.add(loose.mesh);
-  const litter = new Litter(loose, rosettes, stride, 1500);
+  const litter = new Litter(loose, rosettes, stride, 900, heightAt, WATER);
 
-  // ---------------------------------------------------------------- state
-  let needsBake = true;
-  const state = { sunVec: new THREE.Vector3(0, 1, 0), alt: 1, envAlt: 99, envAz: 99, night: 0 };
+  // ---------------------------------------------------------------- post
+  const depthTex = new THREE.DepthTexture(1, 1);
+  depthTex.type = THREE.UnsignedIntType;
+  const sceneRT = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: tier.msaa, depthTexture: depthTex });
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new ScenePass(scene, camera, sceneRT));
+  const atmo = new AtmospherePass(sceneRT);
+  atmo.uniforms.uWater.value = WATER;
+  composer.addPass(atmo);
+  const focus = new ShaderPass(FocusShader);
+  focus.uniforms.tDepth.value = sceneRT.depthTexture;
+  composer.addPass(focus);
+  let bloom = null;
+  if (tier.bloom) { bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.65, 0.92); composer.addPass(bloom); }
+  composer.addPass(new OutputPass());
+  const finish = new ShaderPass(FinishShader);
+  composer.addPass(finish);
 
-  function setSun(vec, altRad) {
-    state.sunVec.set(vec[0], vec[1], vec[2]).normalize();
-    state.alt = altRad;
-    const sk = skyState(altRad);
+  // ---------------------------------------------------------------- staging
+  const state = { envKey: '', sunDir: new THREE.Vector3(0, 1, 0) };
+  const tmp = new THREE.Vector3();
+  /**
+   * stage: { grow, sunDir (world, towards the sun), sunCol, sunI, zenith, horizon, glow,
+   *          fog, density, mist, rays, exposure, warm, cloud }
+   */
+  function setStage(s) {
+    UNIFORMS.uGrow.value = s.grow;
+    state.sunDir.copy(s.sunDir).normalize();
+    sun.position.copy(target.position).addScaledVector(state.sunDir, 60);
+    sun.color.copy(s.sunCol);
+    sun.intensity = s.sunI;
     const u = sky.material.uniforms;
-    u.uSun.value.copy(state.sunVec);
-    u.uAlt.value = Math.sin(altRad);
-    u.uZenith.value.setRGB(...sk.zenith);
-    u.uHorizon.value.setRGB(...sk.horizon);
-    u.uGlow.value.setRGB(...sk.glow);
-    u.uNight.value = sk.night;
-    state.night = sk.night;
-    const deg = sk.deg;
-    const day = THREE.MathUtils.smoothstep(deg, -3, 10);
-    if (deg > -4) {
-      sun.position.copy(sunTarget.position).addScaledVector(state.sunVec, 60);
-      const warm = THREE.MathUtils.smoothstep(deg, 0, 35);
-      sun.color.setRGB(1.0, 0.62 + 0.34 * warm, 0.38 + 0.52 * warm);
-      sun.intensity = 3.4 * day;
-    } else {
-      // moonlight-like key from high in the south-east, cool and dim
-      sun.position.copy(sunTarget.position).add(new THREE.Vector3(18, 40, 22));
-      sun.color.setRGB(0.55, 0.65, 0.95);
-      sun.intensity = 0.16 * sk.night;
-    }
-    spill.intensity = 0.55 * sk.night * study;
-    building.night.value = sk.night * study;
-    scene.fog.color.setRGB(...sk.horizon.map((v) => Math.min(1, v * 0.95)));
-    scene.environmentIntensity = 0.55 + 0.45 * day;
-    renderer.toneMappingExposure = 1.0 + 0.9 * sk.night;
-    // rebuild image-based light when the sky changed noticeably
-    if (Math.abs(deg - state.envAlt) > 1.5 || Math.abs(state.sunVec.x - state.envAz) > 0.08) {
-      state.envAlt = deg; state.envAz = state.sunVec.x;
+    u.uSun.value.copy(state.sunDir);
+    u.uZenith.value.copy(s.zenith); u.uHorizon.value.copy(s.horizon); u.uGlow.value.copy(s.glow); u.uSunCol.value.copy(s.sunCol);
+    u.uCloud.value = s.cloud;
+    wu.uHorizon.value.copy(s.horizon); wu.uZenith.value.copy(s.zenith); wu.uGlow.value.copy(s.glow); wu.uSun.value.copy(state.sunDir);
+    hemi.color.copy(s.zenith).multiplyScalar(2.2);
+    hemi.groundColor.setRGB(0.05, 0.05, 0.04);
+    const a = atmo.uniforms;
+    a.uSunDir.value.copy(state.sunDir); a.uSunCol.value.copy(s.sunCol).multiplyScalar(0.35 + 0.1 * s.sunI);
+    a.uFogCol.value.copy(s.fog); a.uDensity.value = s.density; a.uMist.value = s.mist; a.uRays.value = s.rays;
+    renderer.toneMappingExposure = s.exposure;
+    focus.uniforms.uFocus.value = s.focus || 4;
+    focus.uniforms.uAperture.value = s.aperture || 0;
+    finish.uniforms.uWarm.value = s.warm;
+    if (bloom) bloom.strength = 0.22 + 0.25 * s.rays;
+    // image-based light follows the sky, re-baked when it changed enough
+    const key = [s.horizon.r, s.zenith.b, state.sunDir.x, state.sunDir.y].map((v) => v.toFixed(2)).join();
+    if (key !== state.envKey) {
+      state.envKey = key;
       if (envRT) envRT.dispose();
       envRT = pmrem.fromScene(envScene, 0, 1, 1000);
       scene.environment = envRT.texture;
-      needsBake = true;
     }
-  }
-
-  // Evening self-study is common in Chinese senior high schools; the lit
-  // hours here (weekdays 18:40-22:20, school months) are an assumption,
-  // not the school's timetable.
-  let study = 1;
-  function setStudyLights(parts) {
-    const h = parts.minutes / 60;
-    const term = !(parts.month === 7 || parts.month === 8 || (parts.month === 2 && parts.day < 15));
-    const weekday = parts.weekday >= 1 && parts.weekday <= 5 || parts.weekday === 0;  // Sunday evening study too
-    study = term && weekday && h > 18.66 && h < 22.33 ? 1 : 0.05;
-    building.night.value = state.night * study;
-    spill.intensity = 0.55 * state.night * study;
-  }
-
-  function setSeason(s) {
-    UNIFORMS.uTurn.value = s.turn;
-    UNIFORMS.uFlush.value = s.flush;
-    UNIFORMS.uSummer.value = s.summer;
-    fruits.visible = s.fruit > 0.05;
-    const ripe = s.ripe;
-    // green drupes ripening to yellow-brown, then a dull purplish red
-    const c0 = [0.10, 0.17, 0.035], c1 = [0.42, 0.30, 0.06], c2 = [0.24, 0.06, 0.04];
-    const k = Math.min(1, ripe * 1.6), k2 = Math.max(0, ripe - 0.6) / 0.4;
-    const c = c0.map((v, i) => (v + (c1[i] - v) * k) * (1 - k2) + c2[i] * k2);
-    fruitMat.color.setRGB(c[0], c[1], c[2]);
-    // hide a share of fruits according to the season amount
-    const n = fruitArr.length / 4;
-    fruits.count = Math.round(n * 0.45 * Math.min(1, s.fruit));
   }
 
   function resize() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     renderer.setSize(w, h, false);
+    composer.setSize(w, h);
+    const pr = renderer.getPixelRatio();
+    sceneRT.setSize(Math.round(w * pr), Math.round(h * pr));
     camera.aspect = w / h;
-    camera.fov = w / h < 0.8 ? 64 : 52;
+    camera.fov = w / h < 0.8 ? 58 : 42;
     camera.updateProjectionMatrix();
   }
 
-  function beforeRender() {
-    if (needsBake) { bakeImpostor(); needsBake = false; }
-    faceImpostors(camera);
+  function render(t) {
+    sky.material.uniforms.uTimeS.value = t;
+    wu.uTimeW.value = t;
+    const a = atmo.uniforms;
+    a.uTime.value = t;
+    camera.updateMatrixWorld();
+    a.uProjInv.value.copy(camera.projectionMatrixInverse);
+    a.uViewInv.value.copy(camera.matrixWorld);
+    a.uCamPos.value.copy(camera.position);
+    a.uNear.value = camera.near; a.uFar.value = camera.far;
+    focus.uniforms.uNear.value = camera.near; focus.uniforms.uFar.value = camera.far;
+    focus.uniforms.uTexel.value.set(1 / sceneRT.width, 1 / sceneRT.height);
+    tmp.copy(camera.position).addScaledVector(state.sunDir, 500).project(camera);
+    const facing = camera.getWorldDirection(new THREE.Vector3()).dot(state.sunDir);
+    a.uSunScreen.value.set(tmp.x * 0.5 + 0.5, tmp.y * 0.5 + 0.5, facing > 0.05 ? facing : 0);
+    finish.uniforms.uTime.value = t % 100;
+    composer.render();
   }
 
   return {
-    beforeRender,
-    setStudyLights,
-    renderer, scene, camera, sky, sun, canopy, bark, stones, building, litter, meta, rosettes, stride, ground: ground.ground,
-    atlas, setSun, setSeason, resize, state, tier
+    renderer, scene, camera, sun, canopy, bark, island, water, grass, litter, meta, rosettes, stride,
+    heightAt, inIsland, setStage, resize, render, tier, composer
   };
 }

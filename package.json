@@ -19,7 +19,7 @@
     "test:rain-performance": "node tests/rain-index.cjs && node tests/rain-performance-browser.cjs",
     "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview",
     "test:home": "node tests/lanren.cjs && node tests/home-browser.cjs",
-    "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh"
+    "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh && node scripts/lanren/build-home.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

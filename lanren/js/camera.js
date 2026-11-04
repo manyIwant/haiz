@@ -3,7 +3,7 @@
 // up the tree); dragging adds a free look on top that eases back when the
 // walk resumes. No cuts: every move is continuous.
 import * as THREE from 'three';
-import { frameOf } from './chapters.js';
+import { poseAt } from './chapters.js';
 
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const damp = (cur, target, lambda, dt) => target + (cur - target) * Math.exp(-lambda * dt);
@@ -13,7 +13,7 @@ export class DwellCamera {
   constructor(camera, dom) {
     this.camera = camera;
     this.dom = dom;
-    this.s = { ex: 4.6, ey: 1.25, ez: -9.4, lx: 3.5, ly: 3.6, lz: 0 };
+    this.s = { ex: 6, ey: 1, ez: 33, lx: 2.5, ly: 5.6, lz: 0.4 };
     this.rail = null;             // () => frame
     this.off = { az: 0, pitch: 0 };
     this.offTarget = { az: 0, pitch: 0 };
@@ -22,7 +22,6 @@ export class DwellCamera {
     this.enabled = true;
     this.onTap = null;
     this.onHover = null;
-    this.onScroll = null;         // (deltaPixels) for the rail
     this.push = null;             // transition push towards a point
     this._bind();
   }
@@ -33,14 +32,15 @@ export class DwellCamera {
   snap() { if (this.rail) Object.assign(this.s, this.rail()); }
 
   _bind() {
+    // Vertical scrolling stays native (wheel, trackpad, touch); a drag looks around.
     const el = this.dom;
     const pts = new Map();
-    let moved = 0, downT = 0, lastY = 0, swipe = false, startX = 0, startY = 0;
+    let moved = 0, downT = 0;
     el.addEventListener('pointerdown', (e) => {
       if (!this.enabled) return;
-      el.setPointerCapture?.(e.pointerId);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      moved = 0; downT = performance.now(); lastY = e.clientY; startX = e.clientX; startY = e.clientY; swipe = false;
+      moved = 0; downT = performance.now();
+      if (e.pointerType !== 'touch') el.setPointerCapture?.(e.pointerId);
       this.dragging = true;
       this.touch();
     });
@@ -52,31 +52,24 @@ export class DwellCamera {
       p.x = e.clientX; p.y = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
       if (moved < 6) return;
-      // on touch, a mostly vertical swipe walks the rail; horizontal looks around
-      if (e.pointerType === 'touch' && !swipe && Math.abs(e.clientY - startY) > Math.abs(e.clientX - startX) * 1.3) swipe = true;
-      if (swipe && this.onScroll) {
-        this.onScroll((lastY - e.clientY) * 2.2);
-        lastY = e.clientY;
-      } else {
-        const k = e.pointerType === 'touch' ? 0.0052 : 0.0034;
-        this.offTarget.az = clamp(this.offTarget.az + dx * k, -1.4, 1.4);
-        this.offTarget.pitch = clamp(this.offTarget.pitch + dy * k * 0.8, -0.5, 0.8);
-      }
+      const k = e.pointerType === 'touch' ? 0.005 : 0.0032;
+      this.offTarget.az = clamp(this.offTarget.az + dx * k, -1.2, 1.2);
+      if (e.pointerType !== 'touch') this.offTarget.pitch = clamp(this.offTarget.pitch + dy * k * 0.8, -0.45, 0.7);
       this.touch();
     });
     const up = (e) => {
       const was = pts.has(e.pointerId);
       pts.delete(e.pointerId);
       if (pts.size === 0) this.dragging = false;
-      if (was && moved <= 6 && performance.now() - downT < 600) this.onTap?.(e);
+      if (was && moved <= 6 && performance.now() - downT < 600 && e.type === 'pointerup') this.onTap?.(e);
     };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
   }
 
   /** Place a camera exactly at a stop's pose (no smoothing, no breath). */
-  static place(camera, pose) {
-    const f = frameOf(pose);
+  static place(camera, i) {
+    const f = poseAt(i);
     camera.position.set(f.ex, f.ey, f.ez);
     camera.lookAt(f.lx, f.ly, f.lz);
     camera.updateMatrixWorld();
@@ -88,7 +81,7 @@ export class DwellCamera {
     this.off.az = damp(this.off.az, this.offTarget.az, 6, dt);
     this.off.pitch = damp(this.off.pitch, this.offTarget.pitch, 6, dt);
     // follow the rail softly so scroll input never feels mechanical
-    for (const k of KEYS) s[k] = damp(s[k], base[k], 5.5, wallDt);
+    for (const k of KEYS) s[k] = damp(s[k], base[k], 6.5, wallDt);
     const t = performance.now() / 1000;
     const breath = Math.sin(t * 0.9) * 0.012 + Math.sin(t * 0.31) * 0.01;
     const pos = new THREE.Vector3(s.ex, s.ey + breath, s.ez);
@@ -98,6 +91,8 @@ export class DwellCamera {
     let yaw = Math.atan2(look.x, look.z) - this.off.az;
     let pitch = clamp(Math.asin(clamp(look.y / len, -1, 1)) + this.off.pitch, -0.95, 1.45);
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+    // portrait screens see less sideways: step back along the view so the subject still fits
+    if (this.camera.aspect < 0.8) pos.addScaledVector(dir, -Math.min(8, len * 0.3) * (0.8 - this.camera.aspect) / 0.35);
     if (this.push) {
       // a short dolly towards a chosen anchor before leaving the page
       const pp = this.push;
