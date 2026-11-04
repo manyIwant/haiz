@@ -404,7 +404,7 @@ function wireTree() {
 
 // ------------------------------------------------------------------ loop
 let paused = params.has('capture');
-let last = performance.now(), frames = 0, dwell = 0, slowAcc = 0, slowN = 0;
+let last = performance.now(), frames = 0, dwell = 0, slowAcc = 0, slowN = 0, openingFall = 0.5;
 const fwd = new THREE.Vector3(), sunDir = new THREE.Vector3();
 const C = (a) => new THREE.Color(a[0], a[1], a[2]);
 function step(dt, wallDt = dt) {
@@ -429,6 +429,14 @@ function step(dt, wallDt = dt) {
   cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
+  if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
+    openingFall = 1.6 + Math.random() * 2.4;
+    const ros = world.rosettes, st = world.stride;
+    for (let k = 0; k < 40; k++) {
+      const i = Math.floor(Math.random() * (ros.length / st)) * st;
+      if (ros[i + 10] > 0 && ros[i + 1] > 4) { world.litter.release(new THREE.Vector3(ros[i], ros[i + 1], ros[i + 2]), 0.85 + Math.random() * 0.3); break; }
+    }
+  }
   world.litter.update(dt, grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, active === N - 1);
   sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
   updateNav(p, grow);

@@ -8,14 +8,14 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { installPCSS } from './pcss.js';
-import { createCanopy, createLooseLeaves, UNIFORMS } from './foliage.js';
-import { createSky, makeBarkMaterial, makeIslandMaterial, createWater, createGrass, createDistance } from './environment.js';
+import { createCanopy, createLooseLeaves, createShrubs, mulberry, UNIFORMS } from './foliage.js';
+import { createSky, makeBarkMaterial, makeIslandMaterial, createWater, createGrass, createDistance, createMotes } from './environment.js';
 import { Litter } from './litter.js';
 
 export const TIERS = {
-  high: { shadow: 4096, blocker: 14, pcf: 24, density: 1.0, leafTex: 'full', geo: [2, 2], ratio: 2, msaa: 4, reflect: 'full', bloom: true, grass: 16000, shadowEvery: 1 },
-  medium: { shadow: 2048, blocker: 10, pcf: 16, density: 0.7, leafTex: 'full', geo: [2, 1], ratio: 1.5, msaa: 4, reflect: 'half', bloom: true, grass: 9000, shadowEvery: 2 },
-  low: { shadow: 2048, blocker: 8, pcf: 10, density: 0.45, leafTex: 'lo', geo: [2, 1], ratio: 1.25, msaa: 0, reflect: false, bloom: false, grass: 4000, shadowEvery: 3 }
+  high: { shadow: 4096, blocker: 14, pcf: 24, density: 1.0, leafTex: 'full', geo: [2, 2], ratio: 2, msaa: 4, reflect: 'full', bloom: true, grass: 16000, shadowEvery: 1, shrubs: 34 },
+  medium: { shadow: 2048, blocker: 10, pcf: 16, density: 0.7, leafTex: 'full', geo: [2, 1], ratio: 1.5, msaa: 4, reflect: 'half', bloom: true, grass: 9000, shadowEvery: 2, shrubs: 24 },
+  low: { shadow: 2048, blocker: 8, pcf: 10, density: 0.45, leafTex: 'lo', geo: [2, 1], ratio: 1.25, msaa: 0, reflect: false, bloom: false, grass: 4000, shadowEvery: 3, shrubs: 14 }
 };
 
 export function pickTier() {
@@ -303,10 +303,25 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const canopy = createCanopy(rosettes, stride, atlas, leafN, tier.density, tier.geo);
   scene.add(canopy.mesh);
   const grass = createGrass(heightAt, tier.grass, (x, z) => inIsland(x, z) && rockAt(x, z) < 0.35);
+  // undergrowth: shrubs on soil between the granite, clear of the trunk and the buttresses
+  {
+    const r = mulberry(29), spots = [];
+    for (let k = 0; k < 900 && spots.length < tier.shrubs; k++) {
+      const a = r() * Math.PI * 2, d = 2.2 + Math.sqrt(r()) * 4.8;
+      const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      if (!inIsland(x, z) || rockAt(x, z) > 0.3) continue;
+      if (spots.some((p) => Math.hypot(p[0] - x, p[2] - z) < 0.9)) continue;
+      spots.push([x, heightAt(x, z) - 0.05, z, 0.3 + r() * 0.45]);
+    }
+    if (spots.length) scene.add(createShrubs(spots, atlas, leafN));
+  }
   scene.add(grass);
 
   const distance = createDistance(WATER);
   scene.add(distance);
+  const motes = createMotes(tierName === 'low' ? 260 : 600);
+  scene.add(motes);
+  motes.material.uniforms.uPx.value = ratio;
   const water = createWater(WATER, tier.reflect, ratio);
   scene.add(water);
   const wu = water.material.uniforms;
@@ -351,6 +366,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     u.uZenith.value.copy(s.zenith); u.uHorizon.value.copy(s.horizon); u.uGlow.value.copy(s.glow); u.uSunCol.value.copy(s.sunCol);
     u.uCloud.value = s.cloud;
     distance.material.uniforms.uSun.value.copy(state.sunDir);
+    motes.material.uniforms.uSunM.value.copy(state.sunDir);
+    motes.material.uniforms.uSunColM.value.copy(s.sunCol).multiplyScalar(0.3 * s.sunI * (0.3 + s.rays));
     distance.material.uniforms.uHorizon.value.copy(s.horizon);
     distance.material.uniforms.uGlow.value.copy(s.glow);
     wu.uHorizon.value.copy(s.horizon); wu.uZenith.value.copy(s.zenith); wu.uGlow.value.copy(s.glow); wu.uSun.value.copy(state.sunDir);
@@ -389,6 +406,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   function render(t) {
     sky.material.uniforms.uTimeS.value = t;
+    motes.material.uniforms.uTimeM.value = t;
     wu.uTimeW.value = t;
     const a = atmo.uniforms;
     a.uTime.value = t;

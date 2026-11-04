@@ -199,14 +199,16 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   // weathered granite: pale grey with dark mica and light feldspar specks,
   // streaks where rain runs off, lichen on the tops, algae at the waterline
   float speck = inn(vIP * 61.0);
-  vec3 rock = mix(vec3(0.22, 0.195, 0.17), vec3(0.37, 0.335, 0.29), g1);   // Hainan granite: grey with warm feldspar
+  vec3 rock = mix(vec3(0.15, 0.14, 0.125), vec3(0.27, 0.25, 0.22), g1);   // Hainan granite: weathered grey, warm feldspar
   rock *= 0.9 + 0.2 * inn(vIP * 23.0);
   rock = mix(rock, vec3(0.06, 0.055, 0.05), smoothstep(0.78, 0.9, speck) * 0.7);
   rock = mix(rock, vec3(0.42, 0.40, 0.37), smoothstep(0.1, 0.0, speck) * 0.5);
   float streak = inn(vec3(vIP.x * 3.0, vIP.y * 0.9, vIP.z * 3.0) + inn(vIP * 5.0) * 0.8);
   rock *= 1.0 - 0.16 * smoothstep(0.6, 0.9, streak) * (1.0 - normalize(vIN).y);
-  float lich = smoothstep(0.58, 0.78, inn(vIP * 2.3 + 9.0)) * smoothstep(0.2, 0.8, normalize(vIN).y);
-  rock = mix(rock, mix(vec3(0.36, 0.35, 0.26), vec3(0.42, 0.30, 0.14), inn(vIP * 9.0)), lich * 0.6);
+  float lich = smoothstep(0.55, 0.78, inn(vIP * 2.3 + 9.0)) * smoothstep(0.2, 0.8, normalize(vIN).y);
+  rock = mix(rock, mix(vec3(0.30, 0.29, 0.21), vec3(0.06, 0.07, 0.04), inn(vIP * 9.0)), lich * 0.55);
+  // moss and dark weathering where water stands in the joints
+  rock = mix(rock, vec3(0.05, 0.075, 0.03) * (0.6 + 0.6 * smoothstep(0.2, 0.9, uGrow)), smoothstep(0.62, 0.85, inn(vIP * 4.5 + 3.0)) * smoothstep(0.3, 0.9, normalize(vIN).y) * 0.5);
   vec3 soil = mix(vec3(0.07, 0.055, 0.04), vec3(0.12, 0.095, 0.065), g1);
   vec3 moss = mix(vec3(0.10, 0.085, 0.04), vec3(0.055, 0.11, 0.028), smoothstep(0.1, 0.8, uGrow));
   float mossy = smoothstep(0.35, 0.75, inn(vIP * 1.6)) * smoothstep(0.4, 0.9, normalize(vIN).y);
@@ -368,4 +370,52 @@ attribute vec3 aOff; attribute vec4 aData; varying float vGT; varying float vGR;
   mesh.frustumCulled = false;
   mesh.receiveShadow = true;
   return mesh;
+}
+
+// ------------------------------------------------------------------ motes
+// Dust and pollen hanging in the air under and around the crown. They are
+// invisible in flat light and catch the sun only when you look towards it.
+export function createMotes(count = 600) {
+  const rand = mulberry(4242);
+  const pos = new Float32Array(count * 3), seed = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const a = rand() * Math.PI * 2, r = Math.pow(rand(), 0.7) * 13;
+    pos[i * 3] = 0.6 + Math.cos(a) * r; pos[i * 3 + 1] = 0.3 + Math.pow(rand(), 1.4) * 9.5; pos[i * 3 + 2] = -0.2 + Math.sin(a) * r;
+    seed[i] = rand();
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTimeM: { value: 0 }, uSunM: { value: new THREE.Vector3(0, 1, 0) }, uSunColM: { value: new THREE.Color() }, uPx: { value: 1 } },
+    vertexShader: /* glsl */`
+      uniform float uTimeM; uniform vec3 uSunM; uniform float uPx;
+      attribute float aSeed; varying float vA;
+      void main(){
+        vec3 p = position;
+        float t = uTimeM * (0.08 + 0.06 * aSeed);
+        p += vec3(sin(t * 3.1 + aSeed * 40.0), sin(t * 2.3 + aSeed * 17.0) * 0.6, cos(t * 2.7 + aSeed * 23.0)) * 0.6;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        float d = -mv.z;
+        vec3 v = normalize(p - cameraPosition);
+        float fwd = pow(max(dot(v, uSunM), 0.0), 5.0);
+        vA = fwd * smoothstep(0.6, 2.0, d) * (1.0 - smoothstep(9.0, 16.0, d)) * (0.4 + 0.6 * fract(aSeed * 7.3));
+        gl_PointSize = (2.0 + 3.6 * fract(aSeed * 3.7)) * uPx * clamp(6.0 / d, 0.6, 3.0);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uSunColM; varying float vA;
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float a = smoothstep(0.5, 0.0, length(c)) * vA;
+        if (a < 0.003) discard;
+        gl_FragColor = vec4(uSunColM * a * 1.6, a);
+      }`
+  });
+  const pts = new THREE.Points(g, mat);
+  pts.frustumCulled = false;
+  pts.renderOrder = 5;
+  pts.name = 'motes';
+  return pts;
 }

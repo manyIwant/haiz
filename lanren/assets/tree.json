@@ -9,7 +9,7 @@
   "clumps": 209,
   "rosettes": 11514,
   "oldRosettes": 2924,
-  "barkVertices": 250458,
+  "barkVertices": 262335,
   "islandVertices": 24649
  },
  "rosetteStride": 16,
@@ -132,8 +132,8 @@
    "max_iter": 320
   },
   "pipe": {
-   "tip": 0.0085,
-   "exp": 2.3
+   "tip": 0.009,
+   "exp": 2.12
   },
   "growth": {
    "L_new": [

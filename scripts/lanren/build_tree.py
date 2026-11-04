@@ -55,7 +55,7 @@ P = {
               'mass_r': (2.8, 4.4), 'mass_h': (1.5, 2.3), 'top_masses': 5},
     'sc': {'step': 0.24, 'influence': 6.5, 'kill': 0.36, 'momentum': 0.85, 'jitter': 0.16,
            'up': 0.05, 'level': 0.8, 'min_z': -0.4, 'max_z': 0.72, 'max_iter': 320},
-    'pipe': {'tip': 0.0085, 'exp': 2.3},
+    'pipe': {'tip': 0.009, 'exp': 2.12},
     # sympodial short shoots fanning out from every tip, each ending in a rosette
     'twig': {'fan': (3, 6), 'len': (0.16, 0.38), 'spread': 70, 'rise': (2, 18), 'gap': 0.15, 'second': 0.55},
     # this season: shoots of length L_new extend from the tips, then leaves open
@@ -64,6 +64,7 @@ P = {
     'bark_tile': 0.9,
 }
 rng = random.Random(P['seed'])
+rng_isl = random.Random(P['seed'] * 7 + 1)   # islet and roots: their own stream
 # mathutils.noise_vector draws on a session-seeded state: pin it, or every build differs
 noise.seed_set(P['seed'])
 np_rng = np.random.default_rng(P['seed'])
@@ -94,22 +95,31 @@ def horiz(v):
 # Hainan's coasts are strewn with rounded granite boulders: a few large ones
 # hold the roots, smaller ones run into the water.
 def make_boulders():
+    """Granite tors: a few big rounded blocks round the trunk (some split along
+    joints), medium blocks on the slopes, cobbles at the waterline."""
     out = []
-    big = [(-1.9, 1.5, 2.1, 1.5, 1.0), (1.7, -1.8, 1.8, 1.3, 0.85), (2.5, 1.4, 1.5, 1.1, 0.7),
-           (-2.6, -1.4, 1.6, 1.2, 0.75), (0.2, 2.9, 1.3, 1.0, 0.6)]
-    for (x, y, rx, ry, top) in big:
-        out.append(dict(x=x, y=y, rx=rx, ry=ry, top=top, rot=rng.uniform(0, math.pi), seed=rng.random() * 50))
-    for k in range(17):
-        ang = k / 17 * 2 * math.pi + rng.uniform(-0.2, 0.2)
-        rr = rng.uniform(4.2, 6.6)
-        x, y = math.cos(ang) * rr, math.sin(ang) * rr * 0.86
-        s = rng.uniform(0.55, 1.35)
-        out.append(dict(x=x, y=y, rx=s * rng.uniform(0.9, 1.3), ry=s * rng.uniform(0.7, 1.0),
-                        top=rng.uniform(-0.75, -0.05) + s * 0.25, rot=rng.uniform(0, math.pi), seed=rng.random() * 50))
+    big = [(-2.3, 1.8, 2.2, 1.5, 0.5, 3.0), (2.0, -2.1, 1.9, 1.35, 0.42, 2.6), (3.0, 1.7, 1.5, 1.1, 0.3, 3.2),
+           (-3.1, -1.6, 1.6, 1.2, 0.34, 2.4), (0.4, 3.4, 1.3, 1.0, 0.2, 2.8), (-0.7, -3.5, 1.15, 0.85, 0.12, 2.5)]
+    for (x, y, rx, ry, top, pw) in big:
+        out.append(dict(x=x, y=y, rx=rx, ry=ry, top=top, p=pw, rot=rng_isl.uniform(0, math.pi), seed=rng_isl.random() * 50))
+    for k in range(13):
+        ang = k / 13 * 2 * math.pi + rng_isl.uniform(-0.25, 0.25)
+        rr = rng_isl.uniform(3.9, 5.6)
+        sc = rng_isl.uniform(0.6, 1.3)
+        out.append(dict(x=math.cos(ang) * rr, y=math.sin(ang) * rr * 0.86, rx=sc * rng_isl.uniform(0.9, 1.3), ry=sc * rng_isl.uniform(0.65, 1.0),
+                        top=rng_isl.uniform(-0.6, 0.0) + sc * 0.22, p=rng_isl.uniform(2.2, 3.2), rot=rng_isl.uniform(0, math.pi), seed=rng_isl.random() * 50))
+    for k in range(22):   # cobbles at the waterline
+        ang = rng_isl.uniform(0, 2 * math.pi)
+        rr = rng_isl.uniform(5.6, 7.4)
+        sc = rng_isl.uniform(0.25, 0.6)
+        out.append(dict(x=math.cos(ang) * rr, y=math.sin(ang) * rr * 0.86, rx=sc, ry=sc * rng_isl.uniform(0.7, 1.0),
+                        top=WATER + rng_isl.uniform(-0.05, 0.22), p=rng_isl.uniform(2.0, 2.6), rot=rng_isl.uniform(0, math.pi), seed=rng_isl.random() * 50))
     return out
 
 
 BOULDERS = make_boulders()
+for _ in range(146):   # the v3 tree was art-directed with these draws spent on the old islet
+    rng.random()
 
 
 def mound(x, y):
@@ -120,24 +130,32 @@ def mound(x, y):
 
 
 def boulder_top(b, x, y):
-    """Weathered granite: steep flanks, a broad uneven top, joints and facets."""
+    """A rounded granite block: squarish in plan (superellipse), steep flanks,
+    a broad slightly tilted top, deep joints that split big blocks."""
     c, s = math.cos(b['rot']), math.sin(b['rot'])
     dx, dy = x - b['x'], y - b['y']
-    # warp the outline so no boulder is an ellipse
-    w = noise.noise(Vector((dx * 0.7, dy * 0.7, b['seed'] + 3.0)))
-    u, v = (dx * c + dy * s) / (b['rx'] * (1 + 0.18 * w)), (-dx * s + dy * c) / (b['ry'] * (1 + 0.18 * w))
-    q = 1 - u * u - v * v
-    if q <= 0:
+    w = noise.noise(Vector((dx * 0.6, dy * 0.6, b['seed'] + 3.0)))
+    u = (dx * c + dy * s) / (b['rx'] * (1 + 0.14 * w))
+    v = (-dx * s + dy * c) / (b['ry'] * (1 + 0.14 * w))
+    pw = b.get('p', 2.0)
+    d = (abs(u) ** pw + abs(v) ** pw) ** (1.0 / pw)
+    if d >= 1:
         return -99.0
-    p = Vector((x * 0.9, y * 0.9, b['seed']))
-    h = b['rx'] * 0.6 * (q ** 0.42)
-    h *= 1 + 0.16 * noise.noise(p) + 0.07 * noise.noise(p * 2.7) + 0.03 * noise.noise(p * 7.3)
-    # flattened, slightly tilted top (exfoliation sheets) and a joint or two
-    tilt = 0.08 * (u * math.cos(b['seed']) + v * math.sin(b['seed']))
-    h = min(h, b['rx'] * 0.5 + tilt * b['rx'])
-    joint = abs(noise.noise(Vector((x * 1.6, y * 1.6, b['seed'] * 2.0))))
-    h -= 0.06 * max(0.0, 0.08 - joint) / 0.08 * min(1.0, q * 4)
-    return b['top'] - b['rx'] * 0.6 + h
+    q = 1 - d * d
+    R = b['rx']
+    p = Vector((x * 0.8, y * 0.8, b['seed']))
+    h = R * 0.62 * (q ** 0.3)
+    h *= 1 + 0.1 * noise.noise(p) + 0.05 * noise.noise(p * 2.9) + 0.025 * noise.noise(p * 8.1)
+    tilt = 0.1 * (u * math.cos(b['seed']) + v * math.sin(b['seed']))
+    h = min(h, R * 0.52 + tilt * R)
+    # joints: deep, slightly wandering grooves across the bigger blocks
+    if R > 1.1:
+        ja = b['seed'] * 1.7
+        jl = abs((dx * math.cos(ja) + dy * math.sin(ja)) + 0.25 * noise.noise(Vector((x * 0.7, y * 0.7, b['seed']))))
+        h -= 0.26 * max(0.0, 1 - jl / 0.09) * min(1.0, q * 3)
+    small = abs(noise.noise(Vector((x * 2.2, y * 2.2, b['seed'] * 2.0))))
+    h -= 0.05 * max(0.0, 0.06 - small) / 0.06 * min(1.0, q * 4)
+    return b['top'] - R * 0.62 + h
 
 
 def ground(x, y):
@@ -634,25 +652,55 @@ if '--skeleton' in sys.argv:
     skeleton_preview(os.path.join(BUILD, 'skeleton-%d.png' % P['seed']))
     sys.exit(0)
 
-# ------------------------------------------------------------------ roots over the boulders
-root_chains = []
-for k in range(11):
-    ang = k / 11 * 2 * math.pi + rng.uniform(-0.18, 0.18)
+# ------------------------------------------------------------------ buttress roots over the granite
+# Old Terminalia grow plank buttresses: tall, thin flanges that leave the
+# trunk high up, drop to the ground and run on as roots that grip the rocks.
+BUTTRESS = []
+n_b = 7
+for k in range(n_b):
+    ang = k / n_b * 2 * math.pi + rng_isl.uniform(-0.22, 0.22)
+    BUTTRESS.append(dict(az=ang, h0=rng_isl.uniform(1.5, 2.3), hr=rng_isl.uniform(0.45, 0.8), L=rng_isl.uniform(3.8, 6.0), w0=rng_isl.uniform(0.26, 0.36), ph=rng_isl.random() * 6))
+
+
+def root_path(ang, h0, L, w0, ph, start_r=0.95, step=0.1, sub=False):
+    """Points with (half-width, half-height) of a root running out from the trunk."""
     d = Vector((math.cos(ang), math.sin(ang), 0))
-    L = rng.uniform(2.8, 5.2)
     side = Vector((-d.y, d.x, 0))
-    r0 = rng.uniform(0.2, 0.32)
-    chain = []
-    s = 0.0
-    while s < L:
-        q = d * (0.5 + s) + side * math.sin(s * 1.1 + k) * 0.35
+    pts = []
+    s_ = 0.0
+    while s_ <= L:
+        t = s_ / L
+        rho = start_r + s_
+        q = d * rho + side * (math.sin(s_ * 0.85 + ph) * 0.38 * min(1.0, s_ / 1.2))
         g, _ = ground(q.x, q.y)
-        rr = lerp(r0, 0.03, (s / L) ** 0.7)
-        z = g + rr * 0.45 + 0.28 * math.exp(-s * 1.4)
-        chain.append((Vector((q.x, q.y, z)), rr))
-        s += 0.11
-    chain.insert(0, (Vector((d.x * 0.25, d.y * 0.25, 0.55)), r0 * 1.2))
-    root_chains.append(chain)
+        w = lerp(w0, 0.04, t ** 0.75)
+        H = h0 * math.exp(-s_ / 1.0) if not sub else 0.0       # the plank: tall near the trunk
+        hh = max(w * 0.9, H * 0.5 + w * 0.5)
+        z = g + hh * 0.5 - 0.02
+        pts.append((Vector((q.x, q.y, z)), w, hh))
+        s_ += step
+    return pts
+
+
+root_chains = []
+for bt in BUTTRESS:
+    main = root_path(bt['az'], bt['hr'], bt['L'], bt['w0'], bt['ph'], start_r=0.75)
+    root_chains.append(main)
+    # one or two side roots leave the main root and grip their own rocks
+    for j in range(rng_isl.randint(1, 2)):
+        i0 = int(len(main) * rng_isl.uniform(0.3, 0.55))
+        p0, w_, _ = main[i0]
+        da = rng_isl.choice((-1, 1)) * rng_isl.uniform(0.45, 0.85)
+        ang2 = math.atan2(p0.y, p0.x) + da
+        sub = root_path(ang2, 0, bt['L'] * rng_isl.uniform(0.4, 0.6), w_ * 0.75, bt['ph'] + 2, start_r=math.hypot(p0.x, p0.y), sub=True)
+        sub.insert(0, (p0.copy(), w_ * 0.8, w_ * 0.8))
+        root_chains.append(sub)
+# small surface roots between the buttresses
+for k in range(9):
+    ang = rng_isl.uniform(0, 2 * math.pi)
+    root_chains.append(root_path(ang, 0.25, rng_isl.uniform(1.8, 3.2), rng_isl.uniform(0.09, 0.15), rng_isl.random() * 6, start_r=1.0, sub=True))
+for _ in range(33):   # keep the tree's stream where the art-directed build had it
+    rng.random()
 
 
 # ------------------------------------------------------------------ mesh
@@ -662,12 +710,18 @@ def flex_of(i):
     return max(0.0, min(1.0, (1 - min(1.0, rad[i] / 0.22)) ** 1.6 * (0.35 + 0.65 * min(1.0, d / 11))))
 
 
-def trunk_profile(z, th):
+def trunk_profile(z, az):
+    """Radius factor of the trunk at height z and world azimuth az: flutes that
+    run down into the buttresses, a general flare, irregular lobes."""
     h = max(0.0, (z - P['trunk']['base']) / (P['trunk']['fork'] - P['trunk']['base']))
-    lobes = (0.24 * math.cos(5 * th + 0.6) + 0.14 * math.cos(3 * th + 2.1) + 0.08 * math.cos(7 * th + 4.0)
-             + 0.06 * math.cos(2 * th + 1.0))
-    flare = math.exp(-h * 6.0)
-    return 1.0 + lobes * (0.25 + 1.6 * flare) * (1 - 0.55 * h) + 0.75 * flare
+    lobes = (0.12 * math.cos(5 * az + 0.6) + 0.08 * math.cos(3 * az + 2.1) + 0.05 * math.cos(7 * az + 4.0))
+    flute = 0.0
+    for bt in BUTTRESS:
+        da = math.atan2(math.sin(az - bt['az']), math.cos(az - bt['az']))
+        reach = math.exp(-max(0.0, z - bt['h0'] * 0.55) * 1.6)
+        flute += math.exp(-(da / 0.23) ** 2) * (0.55 + 0.9 * math.exp(-max(0.0, z) * 1.8)) * reach
+    flare = math.exp(-h * 5.0)
+    return 1.0 + lobes * (0.6 + flare) + 0.32 * flare + flute * 0.62
 
 
 def build_chains():
@@ -740,11 +794,13 @@ def build_mesh(chains):
             ring = []
             for j in range(sides):
                 th = 2 * math.pi * j / sides
-                kk = prof(points[i].z, th) if prof else 1.0
-                off = (Nn * math.cos(th) + Bv * math.sin(th)) * r * kk
+                dirv = Nn * math.cos(th) + Bv * math.sin(th)
+                kk = prof(points[i].z, math.atan2(dirv.y, dirv.x)) if prof else 1.0
+                off = dirv * r * kk
                 p = points[i] + off
                 if r > 0.05:
-                    p += off.normalized() * r * 0.07 * noise.noise(p * 2.1 + Vector((r_max * 37, 0, 0)))
+                    p += dirv * r * (0.07 * noise.noise(p * 2.1 + Vector((r_max * 37, 0, 0)))
+                                     + (0.08 * noise.noise(p * 0.8 + Vector((5.0, r_max * 11, 0))) if r > 0.25 else 0.0))
                 v = bm.verts.new(p)
                 v[col] = (1.0, flexes[i], youth_of(r), 1.0)
                 v[lb] = births[i]
@@ -766,6 +822,54 @@ def build_mesh(chains):
         tipv[lr] = radii[-1] * 0.9
         for j in range(sides):
             f = bm.faces.new((rings[-1][j], rings[-1][(j + 1) % sides], tipv))
+            f.smooth = True
+            for loop in f.loops:
+                loop[uvl].uv = (0.5 * rep_u, vs[-1] + 0.05)
+
+    def root_tube(chain):
+        """Roots: sections are upright ellipses (tall planks near the trunk)."""
+        n = len(chain)
+        if n < 2:
+            return
+        sides = 14
+        rings, vs, acc = [], [], 0.0
+        for i, (p, w, hh) in enumerate(chain):
+            a_ = chain[max(0, i - 1)][0]
+            b_ = chain[min(n - 1, i + 1)][0]
+            T = (b_ - a_).normalized()
+            sd = T.cross(UP)
+            sd = sd.normalized() if sd.length > 1e-5 else Vector((1, 0, 0))
+            upv = T.cross(sd).normalized()      # (sd, upv, T) right-handed: faces point outward
+            if i > 0:
+                acc += (p - chain[i - 1][0]).length
+            vs.append(acc / TILE)
+            ring = []
+            for j in range(sides):
+                th = 2 * math.pi * j / sides
+                q = p + sd * math.cos(th) * w + upv * math.sin(th) * hh
+                q += (sd * math.cos(th) + upv * math.sin(th)) * w * 0.12 * noise.noise(q * 2.4)
+                v = bm.verts.new(q)
+                v[col] = (1.0, 0.0, 0.0, 1.0)
+                v[lb] = -9.0
+                v[lr] = 0.0
+                ring.append(v)
+            rings.append(ring)
+        rep_u = max(1, round(2 * math.pi * chain[0][1] * 1.5 / TILE))
+        for i in range(n - 1):
+            a2, c2 = rings[i], rings[i + 1]
+            for j in range(sides):
+                j2 = (j + 1) % sides
+                f = bm.faces.new((a2[j], a2[j2], c2[j2], c2[j]))
+                f.smooth = True
+                u0, u1 = rep_u * j / sides, rep_u * (j + 1) / sides
+                for loop, uv in zip(f.loops, ((u0, vs[i]), (u1, vs[i]), (u1, vs[i + 1]), (u0, vs[i + 1]))):
+                    loop[uvl].uv = uv
+        tip = bm.verts.new(chain[-1][0] + (chain[-1][0] - chain[-2][0]).normalized() * chain[-1][1])
+        tip[col] = (1.0, 0.0, 0.0, 1.0)
+        tip[lb] = -9.0
+        tip[lr] = 0.0
+        for j in range(sides):
+            f = bm.faces.new((rings[-1][j], rings[-1][(j + 1) % sides], tip))
             f.smooth = True
             for loop in f.loops:
                 loop[uvl].uv = (0.5 * rep_u, vs[-1] + 0.05)
@@ -796,8 +900,7 @@ def build_mesh(chains):
         tube(pts_, rads, births, flexes, youth, kinds, prof)
         n_tubes += 1
     for chain in root_chains:
-        tube([p for p, _ in chain], [r for _, r in chain], [-9.0] * len(chain), [0.0] * len(chain), lambda r: 0.0,
-             [K_ROOT] * len(chain))
+        root_tube(chain)
     print('tubes', n_tubes)
     # growth data travels as a second UV set (TEXCOORD_1 = birth, ring radius);
     # the glTF exporter writes v as 1 - v, so store 1 - radius.

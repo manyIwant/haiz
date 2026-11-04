@@ -144,7 +144,7 @@ export function buildLeafInstances(ros, stride, density = 1, sizeK = 1) {
     n2.crossVectors(blade, s2).normalize();
     basis.makeBasis(blade, n2, s2.multiplyScalar(-1));
     q.setFromRotationMatrix(basis);
-    const len = (0.21 + rand() * 0.12) * (0.72 + 0.28 * outer) * scaleComp * lenK;
+    const len = (0.19 + rand() * 0.15) * (0.58 + 0.5 * outer) * scaleComp * lenK;
     const off = 0.015 + rand() * 0.03;
     const back = (1 - outer) * 0 + outer * (0.02 + rand() * 0.07);   // outer (older) leaves sit lower on the shoot
     at.set(px + blade.x * off - sdir.x * back, py + blade.y * off * 0.5 - sdir.y * back, pz + blade.z * off - sdir.z * back);
@@ -193,7 +193,7 @@ export const UNIFORMS = {
   uWindDir: { value: new THREE.Vector3(0.8, 0, -0.6).normalize() },
   uTouchO: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, -99, 0, -99)) },
   uTouchD: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 1, 0, 0)) },
-  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.55 }
+  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 }
 };
 
 /** A MeshStandardMaterial (or depth material) patched into a growing leaf. */
@@ -210,7 +210,7 @@ ${WIND_GLSL}
 ${GROW_GLSL}
 uniform float uFar;
 ${loose ? 'attribute vec4 aLoose;' : 'attribute vec4 aRosette;\nattribute vec4 aLeaf;\nattribute vec4 aPad;'}
-varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell;`)
+varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell; varying float vTone;`)
       .replace('#include <uv_vertex>', `#include <uv_vertex>
 ${loose
     ? 'float variant = aLoose.y; float age = aLoose.x; float scl = 1.0; float young = 0.0; float fold = 0.0; float erect = 0.0; float uu = 1.0;'
@@ -221,8 +221,20 @@ ${loose
 vAge = age; vYoung = young; vVar = fract(variant * 0.37 + ${loose ? 'aLoose.z' : 'aLeaf.x * 13.0'});
 vOcc = ${loose ? '0.0' : 'aLeaf.w'};
 vShell = ${loose ? '1.0' : 'aPad.w'};
+// every clump has its own tone: some yellower in the sun, some bluer in the shade
+vTone = ${loose ? 'fract(aLoose.z * 7.13)' : 'fract(sin(dot(aPad.xyz, vec3(12.9898, 78.233, 37.719))) * 43758.5453)'};
+// gusts roll across the crown and turn leaves over: their pale undersides shimmer in waves
+float flip = 0.0;
+${loose ? '' : `{
+  vec2 wd = normalize(uWindDir.xz + vec2(1e-4));
+  float front = dot(aRosette.xz, wd) * 0.3 - uTime * 0.95 + sin(aRosette.x * 0.21 + aRosette.z * 0.17) * 1.4;
+  float wave = pow(0.5 + 0.5 * sin(front), 7.0);
+  flip = wave * smoothstep(0.16, 0.5, uWind * (0.4 + uGust)) * (0.65 + 0.7 * fract(aLeaf.x * 31.0)) * (0.35 + 0.65 * aRosette.w) * 1.4;
+}`}
 vAir = ${loose ? 'aLoose.w' : '1.0'};
 ${loose ? 'vPadN = vec3(0.0, 1.0, 0.0);' : '// volume normal: outward from the centre of the leaf pad (flattened plates)\nvPadN = normalize(mat3(viewMatrix) * normalize((aRosette.xyz - aPad.xyz) * vec3(1.0, 1.4, 1.0) + vec3(0.0, 0.3, 0.0)));'}`)
+      .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+  objectNormal.yz = vec2(objectNormal.y * cos(flip) - objectNormal.z * sin(flip), objectNormal.y * sin(flip) + objectNormal.z * cos(flip));`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
 ${loose ? '' : `
   // unfolding: the blade opens along the midrib and lowers from erect to spread
@@ -232,6 +244,7 @@ ${loose ? '' : `
   transformed.z = sz * az * cos(fold);
   float ce = cos(erect), se = sin(erect);
   transformed.xy = vec2(transformed.x * ce - transformed.y * se, transformed.x * se + transformed.y * ce);
+  transformed.yz = vec2(transformed.y * cos(flip) - transformed.z * sin(flip), transformed.y * sin(flip) + transformed.z * cos(flip));
   transformed *= scl;
   ${depth ? '' : `#ifdef USE_INSTANCING
   {
@@ -253,12 +266,15 @@ ${loose ? '' : `
       .replace('#include <common>', `#include <common>
 ${LEAF_COLOUR_GLSL}
 uniform float uTransmit;
-varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell;`)
+varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell; varying float vTone;`)
       .replace('#include <map_fragment>', `
   vec4 lt = texture2D(map, vMapUv);
   float leafVein = lt.g;
   ${depth ? '' : `
   vec3 lc = leafColour(vAge, lt.b, vYoung, vVar);
+  float matureG = (1.0 - smoothstep(0.1, 0.5, vAge)) * (1.0 - smoothstep(0.1, 0.6, vYoung));
+  lc *= mix(vec3(1.0), mix(vec3(0.86, 0.97, 1.08), vec3(1.16, 1.07, 0.78), vTone), matureG);
+  lc = mix(lc, lc * vec3(1.18, 1.14, 0.86), vShell * 0.35 * matureG);
   lc = mix(lc, mix(lc, vec3(0.13, 0.06, 0.03), 0.45) * 0.8, 1.0 - vAir);
   float lum = lt.r * 1.38 * (0.82 + 0.36 * fract(vVar * 7.31));
   vec3 base = lc * lum + lt.g * 0.012 * (1.0 - vAge);
@@ -276,7 +292,7 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   vec3 nb = mix(normal, vPadN, padK * vAir);
   // a back face can point exactly away from its clump: never normalise a zero vector
   normal = dot(nb, nb) > 1e-5 ? normalize(nb) : vPadN;`)
-        .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = gl_FrontFacing ? mix(0.46, 0.75, max(vAge, vYoung * 0.5)) : 0.85;')
+        .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = gl_FrontFacing ? mix(0.3, 0.62, max(vAge, vYoung * 0.6)) : 0.85;')
         .replace('#include <lights_fragment_begin>', 'vec3 leafTransmit = vec3(0.0); vec3 leafFwd = vec3(0.0);\n#include <lights_fragment_begin>')
         .replace('#include <aomap_fragment>', `
   // canopy occlusion (baked per rosette): the inside of the crown is darker
@@ -292,8 +308,8 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   // looking towards the sun through a blade: it glows (forward scattering)
   reflectedLight.directDiffuse += leafFwd * tint * 1.6 * thin * uTransmit * vAir;
   // a waxy but not mirror-like blade: keep the sky's sheen from frosting the crown
-  reflectedLight.directSpecular *= 0.55;
-  reflectedLight.indirectSpecular *= 0.4;
+  reflectedLight.directSpecular *= 0.85;
+  reflectedLight.indirectSpecular *= 0.3;
   #if defined( USE_ENVMAP ) && defined( STANDARD )
     reflectedLight.indirectDiffuse += getIBLIrradiance(-geometryNormal) * envMapIntensity * tint * 0.4 * thin * (1.0 - 0.7 * vOcc) * vAir;
   #endif`);
@@ -336,4 +352,38 @@ export function createLooseLeaves(capacity, atlas, normal) {
   mesh.customDepthMaterial = makeLeafMaterial({ atlas, depth: true, loose: true });
   mesh.frustumCulled = false;
   return { mesh, attr, loose };
+}
+
+/**
+ * Evergreen undergrowth on the islet's soil: small domed shrubs of small leaves,
+ * built from the same leaf blades (static, mature green).
+ */
+export function createShrubs(spots, atlas, normal) {
+  const rand = mulberry(611);
+  const mats = [], loose = [];
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), at = new THREE.Vector3(), sc = new THREE.Vector3();
+  for (const [x, y, z, size] of spots) {
+    const n = Math.round(40 + 70 * size);
+    for (let k = 0; k < n; k++) {
+      const th = rand() * Math.PI * 2, ph = Math.acos(1 - rand() * 0.95);
+      const r = size * (0.55 + 0.45 * Math.sqrt(rand()));
+      at.set(x + Math.cos(th) * Math.sin(ph) * r, y + Math.cos(ph) * r * 0.75, z + Math.sin(th) * Math.sin(ph) * r);
+      e.set((rand() - 0.5) * 1.2, -th + (rand() - 0.5) * 0.8, 0.35 - ph * 0.6 + (rand() - 0.5) * 0.6);
+      q.setFromEuler(e);
+      const len = 0.07 + rand() * 0.07;
+      m.compose(at, q, sc.set(len, len, len));
+      mats.push(...m.elements);
+      loose.push(0.0, Math.floor(rand() * 4), rand(), 1);
+    }
+  }
+  const g = leafGeometry(2, 2);
+  g.setAttribute('aLoose', new THREE.InstancedBufferAttribute(new Float32Array(loose), 4));
+  const mesh = new THREE.InstancedMesh(g, makeLeafMaterial({ atlas, normal, loose: true }), loose.length / 4);
+  mesh.instanceMatrix.array.set(mats);
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.customDepthMaterial = makeLeafMaterial({ atlas, depth: true, loose: true });
+  mesh.frustumCulled = false;
+  return mesh;
 }
