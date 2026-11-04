@@ -1254,8 +1254,7 @@ class S5(Scene):
         calm = rp(t, self.s("s5_11"), 2.0)
         P["U"] = 1.0 - 0.35 * calm
         P["turb"] = 1.0 - 0.3 * calm
-        end = rp(t, self.tl.total - 2.6, 2.5)
-        P["exposure"] = 1.0 - end
+        P["fade"] = rp(t, self.tl.total - 2.6, 2.5)          # whole frame, text included
         self.lower(t, P)
 
     def draw(self, C, t, f):
@@ -1537,6 +1536,9 @@ class Film:
                             post)
         for op in C.disp:
             op(planes)
+        fd = P.get("fade", 0.0)
+        if fd > 0:
+            planes = [p * (1.0 - fd) for p in planes]
         return R.finish(planes, grain.get(f))
 
 
