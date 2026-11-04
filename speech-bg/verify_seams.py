@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Check that the loops close and the intro hands off to the loop with no seam.
 
-For each loop, compare the wrap-around step (last frame → first frame) with the
-ordinary frame-to-frame steps inside the clip. A seamless loop has a wrap step
-that is indistinguishable from a normal step. The intro → loop hand-off is
-checked the same way.
+The wrap-around step (last frame → first frame) always lands on an H.264
+keyframe (frame 0 is an I-frame), and a step into a keyframe carries extra
+coding noise. So the fair baseline is the step into the *other* keyframes
+inside the same clip (59→60, 119→120, …), which the viewer already sees every
+two seconds. A seamless loop has a wrap step indistinguishable from those.
+The intro → loop hand-off is checked the same way.
 """
 import glob
 import os
@@ -31,6 +33,24 @@ def nframes(path):
     return int(out.strip())
 
 
+def keyframes(path, limit=400):
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                          "frame=pict_type", "-of", "csv=p=0", path],
+                         capture_output=True, text=True, check=True).stdout.split()
+    return [i for i, t in enumerate(out[:limit]) if t.startswith("I") and i > 0]
+
+
+def key_baseline(path):
+    """Mean step into in-clip keyframes, and mean ordinary step."""
+    ks = keyframes(path)[:5]
+    last = ks[-1]
+    fr = frames(path, f"lte(n,{last})")
+    steps = np.array([mad(fr[i], fr[i + 1]) for i in range(len(fr) - 1)])
+    key = np.array([steps[k - 1] for k in ks])
+    plain = np.delete(steps, [k - 1 for k in ks])
+    return float(key.mean()), float(key.max()), float(plain.mean())
+
+
 def mad(a, b):
     return float(np.abs(a - b).mean())
 
@@ -40,28 +60,29 @@ def main(out_dir):
     loops = sorted(p for p in glob.glob(os.path.join(out_dir, "*.mp4")) if not os.path.basename(p).startswith("01_"))
     for p in loops:
         n = nframes(p)
-        head = frames(p, "lt(n,40)")
-        tail = frames(p, f"gte(n,{n - 2})")
-        inner = [mad(head[i], head[i + 1]) for i in range(len(head) - 1)]
+        head = frames(p, "lt(n,1)")
+        tail = frames(p, f"gte(n,{n - 1})")
         wrap = mad(tail[-1], head[0])
-        ratio = wrap / (np.mean(inner) + 1e-9)
-        good = ratio < 1.6
+        key, key_max, plain = key_baseline(p)
+        ratio = wrap / key
+        good = ratio < 1.25
         ok &= good
-        print(f"{'OK ' if good else 'BAD'} {os.path.basename(p)}: {n} frames, wrap step {wrap:.3f} "
-              f"vs typical {np.mean(inner):.3f} (max {np.max(inner):.3f}), ratio {ratio:.2f}")
+        print(f"{'OK ' if good else 'BAD'} {os.path.basename(p)}: {n} frames, wrap {wrap:.3f} | "
+              f"in-clip keyframe steps {key:.3f} (max {key_max:.3f}) | plain steps {plain:.3f} | "
+              f"wrap/keyframe {ratio:.2f}")
     intro = glob.glob(os.path.join(out_dir, "01_*.mp4"))
     title = glob.glob(os.path.join(out_dir, "02_*.mp4"))
     if intro and title:
         ni = nframes(intro[0])
-        it = frames(intro[0], f"gte(n,{ni - 30})")
-        lh = frames(title[0], "lt(n,2)")
-        inner = [mad(it[i], it[i + 1]) for i in range(len(it) - 1)]
+        it = frames(intro[0], f"gte(n,{ni - 1})")
+        lh = frames(title[0], "lt(n,1)")
         hand = mad(it[-1], lh[0])
-        ratio = hand / (np.mean(inner) + 1e-9)
-        good = ratio < 1.6
+        key, _, _ = key_baseline(title[0])
+        ratio = hand / key
+        good = ratio < 1.25
         ok &= good
-        print(f"{'OK ' if good else 'BAD'} intro → loop hand-off: step {hand:.3f} vs typical "
-              f"{np.mean(inner):.3f}, ratio {ratio:.2f}")
+        print(f"{'OK ' if good else 'BAD'} intro → loop hand-off: step {hand:.3f} vs in-clip keyframe "
+              f"steps {key:.3f}, ratio {ratio:.2f}")
     return 0 if ok else 1
 
 
