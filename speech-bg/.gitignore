@@ -2,3 +2,4 @@ __pycache__/
 *.rgb
 # render outputs: ignored while rendering; finished, verified videos are added with `git add -f`
 out/
+film/
