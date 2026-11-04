@@ -7,13 +7,13 @@ import { poseAt } from './chapters.js';
 
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const damp = (cur, target, lambda, dt) => target + (cur - target) * Math.exp(-lambda * dt);
-const KEYS = ['ex', 'ey', 'ez', 'lx', 'ly', 'lz', 'fov'];
+const KEYS = ['ex', 'ey', 'ez', 'lx', 'ly', 'lz', 'fov', 'auth'];
 
 export class DwellCamera {
   constructor(camera, dom) {
     this.camera = camera;
     this.dom = dom;
-    this.s = { ex: 6, ey: 1, ez: 33, lx: 2.5, ly: 5.6, lz: 0.4, fov: 40 };
+    this.s = { ex: 6, ey: 1, ez: 33, lx: 2.5, ly: 5.6, lz: 0.4, fov: 40, auth: 0 };
     this.rail = null;             // () => frame
     this.off = { az: 0, pitch: 0 };
     this.offTarget = { az: 0, pitch: 0 };
@@ -72,17 +72,19 @@ export class DwellCamera {
     const f = poseAt(i);
     camera.position.set(f.ex, f.ey, f.ez);
     camera.lookAt(f.lx, f.ly, f.lz);
-    camera.fov = DwellCamera.fovFor(f.fov, camera.aspect);
+    camera.fov = DwellCamera.fovFor(f.fov, camera.aspect, f.auth || 0);
     DwellCamera.applyShift(camera);
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
   }
 
   /** Shots are composed for a 16:9 frame; narrower screens widen the lens to keep the subject. */
-  static fovFor(fov, aspect) {
+  static fovFor(fov, aspect, auth = 0) {
     const ref = 16 / 9;
     if (aspect >= ref) return fov;
-    const t = Math.tan((fov * Math.PI) / 360) * Math.min(2.1, Math.pow(ref / aspect, 0.72)) * DwellCamera.shiftFor(aspect);
+    // a shot composed for phones only needs the lens shift; others widen to keep their subject
+    const widen = Math.min(2.1, Math.pow(ref / aspect, 0.72));
+    const t = Math.tan((fov * Math.PI) / 360) * (1 + (widen - 1) * (1 - auth)) * DwellCamera.shiftFor(aspect);
     return Math.min(110, (Math.atan(t) * 360) / Math.PI);
   }
 
@@ -112,7 +114,7 @@ export class DwellCamera {
     let pitch = clamp(Math.asin(clamp(look.y / len, -1, 1)) + this.off.pitch, -1.52, 1.52);
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     // portrait screens see less sideways: step back along the view so the subject still fits
-    const fov = DwellCamera.fovFor(s.fov, this.camera.aspect);
+    const fov = DwellCamera.fovFor(s.fov, this.camera.aspect, s.auth || 0);
     const shifted = DwellCamera.shiftFor(this.camera.aspect) > 1;
     if (Math.abs(fov - this.camera.fov) > 0.01 || shifted !== !!this.camera.view?.enabled) {
       this.camera.fov = fov;
@@ -120,15 +122,29 @@ export class DwellCamera {
       this.camera.updateProjectionMatrix();
     }
     if (this.push) {
-      // a short dolly towards a chosen anchor before leaving the page
+      // leaving: each section has its own short move through the tree
       const pp = this.push;
       pp.t = Math.min(1, pp.t + dt / pp.d);
       const e = pp.t * pp.t * (3 - 2 * pp.t);
       const toward = pp.point.clone().sub(pos);
       const dist = toward.length();
       toward.normalize();
-      pos.addScaledVector(toward, e * Math.min(dist * 0.5, 3));   // a short push, never a flight
-      dir.lerp(toward, e * 0.6).normalize();
+      if (pp.kind === 'shade') {          // sink along the trunk into the shade at its foot
+        pos.addScaledVector(toward, e * Math.min(dist * 0.55, 3.2));
+        pos.y -= e * 0.25;
+        dir.lerp(toward, e * 0.8).normalize();
+      } else if (pp.kind === 'map') {     // rise to look straight down: the crown becomes a plan
+        pos.y += e * e * 7;
+        dir.lerp(new THREE.Vector3(0.02, -1, 0.01), e).normalize();
+      } else if (pp.kind === 'light') {   // through the gap in the leaves, towards the sun
+        pos.addScaledVector(dir, e * e * 5);
+      } else if (pp.kind === 'pull') {    // step back across the water: the whole tree, small
+        pos.addScaledVector(dir, -e * 14);
+        pos.y += e * 1.6;
+      } else {                            // leaf: lean in to the blade
+        pos.addScaledVector(toward, e * Math.min(dist * 0.4, 0.45));
+        dir.lerp(toward, e * 0.5).normalize();
+      }
     }
     this.camera.position.copy(pos);
     this.camera.lookAt(pos.clone().add(dir));

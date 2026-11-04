@@ -70,8 +70,10 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // an entry leaves through the veil; coming back returns to that viewpoint
   await page.evaluate(() => window.scrollTo(0, document.getElementById('archive').offsetTop));
   await page.waitForFunction(() => window.__haizHome.info().active === 2, null, { timeout: 180000 });
-  await page.waitForTimeout(1500);
-  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-archive a[href="news.html"]', { noWaitAfter: true })]);
+  // the camera has arrived (not just entered the section) before the slab is clicked
+  await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 2) < 1e-3, null, { timeout: 180000 });
+  await page.waitForTimeout(2500);
+  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-archive a[href="news.html"]', { noWaitAfter: true, timeout: 90000 })]);
   results.push('entry click draws the veil and navigates to news.html');
   await page.goto(base + '/index.html?quality=low&test=1');
   await ready(page);

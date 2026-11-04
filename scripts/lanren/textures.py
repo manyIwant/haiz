@@ -138,138 +138,152 @@ LEAF_W, LEAF_H = 512, 1024     # one cell of the atlas
 SS = 2                         # supersampling
 
 
+def worley_aniso(x, y, seed, ang, sx, sy):
+    """F2-F1 cell walls on a grid rotated by ang and stretched (sx, sy):
+    used for the ladder-like tertiary veins between the secondaries."""
+    c, s = math.cos(ang), math.sin(ang)
+    u = (x * c + y * s) * sx
+    v = (-x * s + y * c) * sy
+    return worley_f21(u, v, seed)
+
+
 def leaf_variant(idx, seed):
+    """One Terminalia catappa blade, from leaf anatomy rather than a picture:
+    obovate lamina on a long cuneate base and a stout petiole; 6-9 alternate,
+    unevenly spaced secondary veins that arch towards the apex and loop into a
+    marginal vein; ladder-like tertiaries between them; a fine areole net;
+    a puckered (bullate) lamina; tone that varies across the blade."""
     rng = np.random.default_rng(seed)
     H, W = LEAF_H * SS, LEAF_W * SS
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
-    # leaf-local coordinates: t from petiole tip (0) to apex (1); x in metres-ish
-    t_base, t_apex = 0.075, 0.975          # petiole occupies the bottom strip
+    t_base, t_apex = 0.085, 0.975
     t = (H - 1 - yy) / (H - 1)
     t = (t - t_base) / (t_apex - t_base)
-    x = (xx - (W - 1) / 2) / ((W - 1) / 2)  # -1..1
+    x = (xx - (W - 1) / 2) / ((W - 1) / 2)
 
-    # slight asymmetry + overall curvature of the midrib
-    bend = rng.uniform(-0.05, 0.05)
-    mid = bend * np.sin(np.clip(t, 0, 1) * math.pi) + rng.uniform(-0.015, 0.015) * t
+    bend = rng.uniform(-0.06, 0.06)
+    mid = bend * np.sin(np.clip(t, 0, 1) * math.pi) + rng.uniform(-0.02, 0.02) * t
     xr = x - mid
-
-    # obovate outline
-    a, b = 0.86 + rng.uniform(-0.06, 0.06), 0.33 + rng.uniform(-0.04, 0.05)
     tc = np.clip(t, 1e-4, 1 - 1e-4)
+
+    # outline: widest at ~0.68, long wedge-shaped base, broad apex with a short point
+    widest = rng.uniform(0.64, 0.72)
+    a = 1.15 + rng.uniform(-0.1, 0.1)
+    b = a * (1 - widest) / widest
     f = tc ** a * (1 - tc) ** b
-    fmax = (a / (a + b)) ** a * (b / (a + b)) ** b
-    f = f / fmax
-    # auricle: base flares slightly then pinches to the petiole
-    f += 0.07 * np.exp(-((tc - 0.06) / 0.035) ** 2)
-    # short acumen at the apex
-    f *= 1.0 - 0.18 * np.exp(-((1 - tc) / 0.06) ** 2) * (1 - np.exp(-(xr / 0.03) ** 2))
-    width = 0.94 + rng.uniform(-0.05, 0.03)
-    asym = 1.0 + np.sign(xr) * rng.uniform(0.0, 0.05)
-    # gently undulating entire margin
-    wav = 1.0 + 0.012 * np.sin(tc * 38 + seed) + 0.008 * np.sin(tc * 91 + seed * 2)
+    f /= (widest ** a * (1 - widest) ** b)
+    f = np.where(tc > widest, np.power(np.clip(f, 0, 1), 0.55), f)          # fuller, rounder apex
+    f += 0.05 * np.exp(-((tc - 0.035) / 0.03) ** 2)                         # small auricle at the base
+    tipm = np.exp(-((1 - tc) / 0.045) ** 2)
+    f *= 1.0 - 0.22 * tipm * (1 - np.exp(-(xr / 0.04) ** 2))                 # short acumen
+    width = rng.uniform(0.9, 0.97)
+    asym = 1.0 + np.sign(xr) * rng.uniform(0.01, 0.06)
+    wav = 1.0 + 0.016 * np.sin(tc * rng.uniform(30, 44) + seed) + 0.009 * np.sin(tc * 97 + seed * 2.3)
     halfw = width * f * asym * wav
     inside = (np.abs(xr) < halfw) & (t > 0) & (t < 1)
-
-    # normalised coordinates across the lamina
-    s = np.clip(np.abs(xr) / np.maximum(halfw, 1e-4), 0, 1)
-    edge = 1 - s                                  # 1 at midrib, 0 at margin
-    # distance from margin in pixels (approx) for antialias + margin tone
+    s_ = np.clip(np.abs(xr) / np.maximum(halfw, 1e-4), 0, 1)                # 0 midrib .. 1 margin
     edge_px = (halfw - np.abs(xr)) * (W / 2)
 
-    # ---- veins
-    midrib_w = 0.016 * (1.15 - 0.85 * np.clip(t, 0, 1))
-    midrib = np.exp(-(xr / midrib_w) ** 2)
-    n_pairs = int(rng.integers(7, 10))
+    # midrib: broad and pale at the base, tapering to the apex
+    midrib_w = 0.024 * (1.25 - 0.95 * np.clip(t, 0, 1)) + 0.003
+    midrib = np.exp(-(np.abs(xr) / midrib_w) ** 2.2)
+
+    # secondaries: alternate, uneven, arching up and looping near the margin
     lateral = np.zeros_like(t)
     lat_axis = np.zeros_like(t)
     for side in (-1, 1):
-        starts = np.linspace(0.07, 0.86, n_pairs) + rng.uniform(-0.018, 0.018, n_pairs)
+        n = int(rng.integers(7, 10))
+        base = np.linspace(0.05, 0.86, n) ** rng.uniform(0.92, 1.08)
+        starts = base + (0.03 if side > 0 else 0.0) + rng.uniform(-0.022, 0.022, n)
+        sel = (np.sign(xr) == side)
         for k, t0 in enumerate(starts):
-            rise = 0.20 + 0.10 * t0 + rng.uniform(-0.02, 0.03)
-            # vein path: t = t0 + rise * s^1.35 (arching towards the apex)
-            sel = (np.sign(xr) == side)
-            tv = t0 + rise * np.power(s, 1.35)
+            if t0 > 0.93:
+                continue
+            rise = 0.16 + 0.16 * t0 + rng.uniform(-0.025, 0.035)
+            pw = rng.uniform(1.35, 1.7)
+            tv = t0 + rise * np.power(s_, pw) + 0.06 * np.power(np.clip(s_ - 0.75, 0, 1) / 0.25, 2)   # turns up near the margin
             d = (t - tv)
-            w = 0.0055 * (1.0 - 0.75 * s) + 0.0012
-            v = np.exp(-(d / w) ** 2) * (s < 0.93) * sel
-            lateral = np.maximum(lateral, v * (1 - 0.45 * s))
+            w = 0.0065 * (1.0 - 0.72 * s_) * (1.1 - 0.4 * t0) + 0.0011
+            fade = np.clip((0.97 - s_) / 0.07, 0, 1)
+            v = np.exp(-(d / w) ** 2) * fade * sel
+            lateral = np.maximum(lateral, v * (1 - 0.35 * s_))
             lat_axis = np.maximum(lat_axis, np.exp(-(d / (w * 5)) ** 2) * sel)
-    # tertiary reticulation: thin cell walls from a stretched voronoi-ish noise
-    cellx = xx / W * 34
-    celly = yy / H * 58
-    f21 = worley_f21(cellx, celly, seed + 99)
-    retic = np.exp(-(f21 / 0.07) ** 2)
+    # marginal vein: a faint line following the margin, where the secondaries loop
+    marginal = np.exp(-((s_ - 0.93) / 0.012) ** 2) * 0.5 * (t > 0.08)
 
-    veins = np.clip(np.maximum(midrib, lateral * 0.85) + 0.3 * retic * (1 - midrib), 0, 1)
+    # tertiaries: ladder-like cross veins, roughly at right angles to the secondaries
+    tert = np.zeros_like(t)
+    for side in (-1, 1):
+        ang = side * 0.95
+        f21 = worley_aniso(xx / W * 2.0, yy / H * 4.0, seed + 50 + side, ang, 9.0, 34.0)
+        tert = np.maximum(tert, np.exp(-(f21 / 0.09) ** 2) * (np.sign(xr) == side))
+    areole = np.exp(-(worley_f21(xx / W * 70, yy / H * 140, seed + 99) / 0.08) ** 2)
+    veins = np.clip(np.maximum(np.maximum(midrib, lateral * 0.9), marginal) + 0.28 * tert * (1 - midrib) + 0.16 * areole * (1 - midrib), 0, 1)
 
-    # ---- lamina tone
-    n1 = fbm(xx / W, yy / H, seed, 6, 4)
-    n2 = fbm(xx / W, yy / H, seed + 7, 22, 3)
-    tone = 0.70 + 0.16 * (n1 - 0.5) + 0.06 * (n2 - 0.5)
-    tone += 0.045 * veins + 0.03 * midrib      # veins only slightly paler on the upper side
-    tone -= 0.05 * np.exp(-(edge_px / (6 * SS)) ** 2)   # darker rim
-    # interveinal bulge (light between veins, slightly darker beside them)
-    tone += 0.035 * (lat_axis - lateral)
+    # lamina tone: broad patches, a slightly lighter base and margin, darker beside the veins
+    n1 = fbm(xx / W, yy / H, seed, 4, 4)
+    n2 = fbm(xx / W, yy / H, seed + 7, 18, 3)
+    tone = 0.64 + 0.18 * (n1 - 0.5) + 0.06 * (n2 - 0.5)
+    tone += 0.05 * np.clip(0.25 - t, 0, 0.25) / 0.25                          # paler near the base
+    tone += 0.05 * np.clip(s_ - 0.8, 0, 0.2) / 0.2                            # paler rim
+    tone -= 0.05 * (lat_axis - lateral)                                        # interveinal cushions shade
+    tone += 0.06 * midrib + 0.035 * lateral
+    tone -= 0.06 * np.exp(-(edge_px / (3 * SS)) ** 2)                         # dark cut edge
 
-    # blemishes: a few dry spots and, on one variant, a caterpillar bite
     blem = np.zeros_like(t)
-    for _ in range(int(rng.integers(2, 6))):
-        cx, cy = rng.uniform(-0.6, 0.6), rng.uniform(0.15, 0.9)
-        r = rng.uniform(0.012, 0.035)
-        dist = np.sqrt(((xr - cx) / 1.0) ** 2 + ((t - cy) * 1.9) ** 2)
-        blem = np.maximum(blem, np.exp(-(dist / r) ** 4))
-    tone -= 0.22 * blem
+    for _ in range(int(rng.integers(1, 5))):
+        cx, cy = rng.uniform(-0.65, 0.65), rng.uniform(0.15, 0.92)
+        r = rng.uniform(0.008, 0.03)
+        dist = np.sqrt((xr - cx) ** 2 + ((t - cy) * 1.9) ** 2)
+        blem = np.maximum(blem, np.exp(-(dist / r) ** 3))
+    tone -= 0.2 * blem
     hole = np.zeros_like(inside)
     if idx == 2:
-        cx, cy = 0.62 * np.sign(rng.uniform(-1, 1)), 0.55
+        cx, cy = 0.62 * np.sign(rng.uniform(-1, 1)), 0.58
         dist = np.sqrt((xr - cx) ** 2 + ((t - cy) * 1.7) ** 2)
-        wob = 1 + 0.25 * np.sin(np.arctan2(t - cy, xr - cx) * 7)
-        hole = dist < 0.11 * wob
-    if idx == 3:  # small margin tear
-        cx = -np.sign(rng.uniform(-1, 1)) * 0.85
-        dist = np.sqrt((xr - cx) ** 2 + ((t - 0.42) * 3.0) ** 2)
-        hole = dist < 0.09
+        wob = 1 + 0.3 * np.sin(np.arctan2(t - cy, xr - cx) * 6 + 1.0) + 0.1 * np.sin(np.arctan2(t - cy, xr - cx) * 17)
+        hole = dist < 0.1 * wob
+    if idx == 3:
+        cx = -np.sign(rng.uniform(-1, 1)) * 0.86
+        dist = np.sqrt((xr - cx) ** 2 + ((t - 0.44) * 3.2) ** 2)
+        hole = dist < 0.085 * (1 + 0.25 * np.sin(np.arctan2(t - 0.44, xr - cx) * 5))
 
-    # ---- senescence order (0 = first to colour, 1 = last)
+    # senescence order (0 first to colour): margin and apex first, interveinal patches
     low = fbm(xx / W, yy / H, seed + 31, 3.2, 4)
-    mid_m = fbm(xx / W, yy / H, seed + 53, 9.0, 3)
-    # interveinal mottling: patches bounded by the lateral veins
-    mott = mid_m * (1 - 0.6 * lat_axis)
-    sen = 0.22 * (1 - np.clip(edge * 2.2, 0, 1)) + 0.65 * low + 0.45 * mott + 0.25 * blem \
-        - 0.10 * veins + 0.10 * (1 - np.clip(t, 0, 1))
-    # apex region colours slightly earlier
-    sen += 0.08 * np.clip(t - 0.6, 0, 1)
+    mott = fbm(xx / W, yy / H, seed + 53, 9.0, 3) * (1 - 0.6 * lat_axis)
+    sen = 0.28 * (1 - np.clip((1 - s_) * 2.4, 0, 1)) + 0.6 * low + 0.45 * mott + 0.25 * blem - 0.1 * veins \
+        + 0.1 * (1 - np.clip(t, 0, 1)) + 0.1 * np.clip(t - 0.6, 0, 1)
     sen = -sen
     lam = inside & ~hole
 
-    # ---- petiole: short, thick, slightly curved
+    # petiole: short, stout, slightly curved, flaring into the blade
     tp = (H - 1 - yy) / (H - 1)
-    pet_mask = (tp >= 0.0) & (tp <= t_base + 0.01)
-    pet_x = (x - 0.0 - 0.02 * (t_base - tp) / t_base)
-    pet_w = 0.028 + 0.012 * tp / t_base
+    pet_mask = (tp >= 0.0) & (tp <= t_base + 0.012)
+    pet_x = (x - 0.025 * ((t_base - tp) / t_base) ** 2)
+    pet_w = 0.03 + 0.016 * (tp / t_base) ** 2
     petiole = pet_mask & (np.abs(pet_x) < pet_w)
 
     cover = lam | petiole
     sen_eq = equalize(sen, lam)
     sen_eq[petiole] = 0.98
-    # midrib & petiole turn last-but-ish; keep them coherent
     sen_eq = np.where(lam, sen_eq * (1 - 0.35 * midrib) + 0.35 * midrib * 0.9, sen_eq)
 
-    R = np.where(petiole, 0.62, tone)
+    R = np.where(petiole, 0.6, tone)
     G = np.where(petiole, 1.0, veins)
     B = sen_eq
     A = cover.astype(np.float64)
 
-    # height for normals: veins sunken on adaxial side, bulging lamina between
-    hgt = -0.9 * veins + 0.35 * lat_axis + 0.15 * (n2 - 0.5)
+    # height: veins impressed above (raised below), cushions of lamina between them
+    cushion = np.clip(lat_axis - lateral, 0, 1) * 0.5 + 0.25 * (1 - tert) * (1 - midrib)
+    hgt = -1.1 * midrib - 0.75 * lateral - 0.3 * tert - 0.12 * areole + 0.35 * cushion + 0.12 * (n2 - 0.5)
     hgt = np.where(cover, hgt, 0)
-    hgt = np.where(petiole, 0.8, hgt)
+    hgt = np.where(petiole, 0.9, hgt)
 
-    def down(a):
-        return a.reshape(LEAF_H, SS, LEAF_W, SS).mean(axis=(1, 3))
+    def down(a_):
+        return a_.reshape(LEAF_H, SS, LEAF_W, SS).mean(axis=(1, 3))
 
     rgba = np.stack([down(R), down(G), down(B), down(A)], -1)
-    nrm = normal_from_height(down(hgt), 3.2, wrap=False)
+    nrm = normal_from_height(down(hgt), 3.6, wrap=False)
     return rgba, nrm
 
 

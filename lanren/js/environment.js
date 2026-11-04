@@ -160,17 +160,19 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
              mix(mix(bh(i + vec3(0,0,1)), bh(i + vec3(1,0,1)), f.x), mix(bh(i + vec3(0,1,1)), bh(i + vec3(1,1,1)), f.x), f.y), f.z); }`)
         .replace('#include <map_fragment>', `#include <map_fragment>
   float youth = vBark.b;
-  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.15, 0.10, 0.075), smoothstep(0.3, 1.0, youth) * 0.7);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.19, 0.155, 0.12), smoothstep(0.3, 1.0, youth) * 0.7);
   // this season's shoots: smooth, reddish green
-  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.16, 0.12, 0.05), vNew * 0.85);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.20, 0.17, 0.10), vNew * 0.8);
   float up = normalize(vWN).y;
   float mossN = bn(vWP * 2.3) * 0.6 + bn(vWP * 7.0) * 0.4;
   float moss = smoothstep(0.35, 0.85, up) * (1.0 - youth) * smoothstep(0.45, 0.7, mossN);
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.05, 0.075, 0.02), moss * 0.85);
   diffuseColor.rgb *= mix(0.75, 1.0, smoothstep(-0.5, 1.2, vWP.y));`)
         .replace('#include <aomap_fragment>', `
-  float bao = mix(0.25, 1.0, vBark.r);
-  reflectedLight.indirectDiffuse *= bao; reflectedLight.indirectSpecular *= bao;`);
+  float bao = mix(mix(0.25, 0.6, vBark.b), 1.0, vBark.r);
+  // under the crown the ambient light has passed through leaves: warmer, greener, not sky-blue
+  vec3 under = mix(vec3(0.72, 0.82, 0.55), vec3(1.0), smoothstep(0.35, 0.9, vBark.r));
+  reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;`);
     }
   };
   mat.customProgramCacheKey = () => 'bark2-' + depth;
@@ -179,16 +181,38 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
 
 // ------------------------------------------------------------------ island
 // COLOR_0 = (ao, rockiness, wetness). Moss and soil green up with growth.
-export function makeIslandMaterial() {
+/** The inscription 「虎踞龙盘」 cut into the plinth, drawn with the visitor's own Kai or serif face. */
+function inscriptionTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '600 190px "STKaiti", "KaiTi", "Kaiti SC", "LXGW WenKai", "BiauKai", "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif';
+  ['虎', '踞', '龙', '盘'].forEach((ch, i) => g.fillText(ch, 128 + i * 256, 132));
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+export function makeIslandMaterial(inscr = null) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, envMapIntensity: 0.6 });
+  const iu = {
+    uInscr: { value: inscr ? inscriptionTexture() : null }, uInscrOn: { value: inscr ? 1 : 0 },
+    uInscrC: { value: new THREE.Vector3(...(inscr?.centre || [0, -99, 0])) }, uInscrN: { value: new THREE.Vector3(...(inscr?.normal || [0, 0, 1])) },
+    uInscrT: { value: new THREE.Vector3(...(inscr?.tangent || [1, 0, 0])) }, uInscrSize: { value: new THREE.Vector2(...(inscr?.size || [2.2, 0.42])) }
+  };
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uGrow = UNIFORMS.uGrow;
+    Object.assign(sh.uniforms, iu);
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nattribute vec4 color; varying vec4 vI; varying vec3 vIP; varying vec3 vIN;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvI = color; vIP = position; vIN = normal;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
 uniform float uGrow;
+uniform sampler2D uInscr; uniform float uInscrOn; uniform vec3 uInscrC; uniform vec3 uInscrN; uniform vec3 uInscrT; uniform vec2 uInscrSize;
 varying vec4 vI; varying vec3 vIP; varying vec3 vIN;
 float ih(vec3 p){ return fract(sin(dot(p, vec3(7.13, 157.1, 113.7))) * 43758.5453); }
 float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -216,6 +240,29 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   c = mix(c, rock, smoothstep(0.3, 0.6, vI.g));
   vec3 algae = vec3(0.04, 0.05, 0.03);
   c = mix(c, algae, vI.b * 0.75);
+  // the scholar's rock (alpha 0): pitted grey limestone, dark in its hollows;
+  // its plinth (alpha 0.5): dark granite carrying the inscription
+  float taihu = 1.0 - smoothstep(0.2, 0.3, vI.a);
+  float plinth = smoothstep(0.25, 0.35, vI.a) * (1.0 - smoothstep(0.65, 0.75, vI.a));
+  if (taihu > 0.01) {
+    vec3 lime = mix(vec3(0.11, 0.11, 0.105), vec3(0.23, 0.225, 0.21), g1) * (0.84 + 0.3 * inn(vIP * 9.0));
+    lime *= 1.0 - 0.3 * smoothstep(0.55, 0.9, inn(vec3(vIP.x * 7.0, vIP.y * 0.7, vIP.z * 7.0)));
+    lime = mix(lime, vec3(0.07, 0.075, 0.06), smoothstep(0.64, 0.86, inn(vIP * 3.1 + 5.0)) * 0.4);
+    c = mix(c, lime, taihu);
+  }
+  if (plinth > 0.01) {
+    vec3 gran = vec3(0.045, 0.045, 0.048) * (0.85 + 0.3 * inn(vIP * 40.0)) + vec3(0.06) * smoothstep(0.82, 0.95, inn(vIP * 90.0));
+    if (uInscrOn > 0.5) {
+      vec3 rel = vIP - uInscrC;
+      vec2 st = vec2(dot(rel, uInscrT) / uInscrSize.x + 0.5, rel.y / uInscrSize.y + 0.5);
+      float facing = dot(normalize(vIN), uInscrN);
+      if (st.x > 0.0 && st.x < 1.0 && st.y > 0.0 && st.y < 1.0 && facing > 0.6) {
+        float ink = texture2D(uInscr, vec2(st.x, st.y)).a;
+        gran = mix(gran, vec3(0.42, 0.40, 0.36), ink * 0.85);     // cut, pale characters
+      }
+    }
+    c = mix(c, gran, plinth);
+  }
   diffuseColor.rgb = c;`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
   {
@@ -226,12 +273,12 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
     vec2 dh = vec2(dFdx(hh), dFdy(hh)) * mix(0.004, 0.022, smoothstep(0.3, 0.6, vI.g));
     normal = normalize(abs(det) * normal - sign(det) * (dh.x * r1 + dh.y * r2));
   }`)
-      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = mix(0.92, 0.35, vI.b);')
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = mix(mix(0.92, 0.35, vI.b), 0.42, smoothstep(0.25, 0.35, vI.a) * (1.0 - smoothstep(0.65, 0.75, vI.a)));')
       .replace('#include <aomap_fragment>', `
   float iao = mix(0.3, 1.0, vI.r);
   reflectedLight.indirectDiffuse *= iao; reflectedLight.indirectSpecular *= iao;`);
   };
-  mat.customProgramCacheKey = () => 'island2';
+  mat.customProgramCacheKey = () => 'island3-' + (inscr ? 1 : 0);
   return mat;
 }
 

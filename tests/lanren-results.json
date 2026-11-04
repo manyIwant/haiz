@@ -1,10 +1,10 @@
 {
   "checks": [
     "growth is monotone from 0 (end of winter) to 1 (full leaf)",
-    "camera path continuous (≤0.59 m per 0.5 %, 147 m in all), above water, clear of the trunk; six shots exact",
+    "camera path continuous (≤0.54 m per 0.5 %, 168 m in all), above water, clear of the trunk; six shots exact",
     "art-directed light keys (world-space sun, haze, grade) finite and blended between shots",
     "18 destinations exist and match index.html (generated from chapters.js)",
-    "Blender tree: 35580 branch nodes (space colonisation), 209 clumps, 11514 rosettes (2924 with last year's leaves); new leaves emerge 0.20–0.42",
+    "Blender tree: 33774 branch nodes (space colonisation), 192 clumps, 10947 rosettes (2789 with last year's leaves); new leaves emerge 0.20–0.41",
     "pressed-leaf dates use Haikou time"
   ]
 }

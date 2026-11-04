@@ -56,6 +56,10 @@ P = {
     'sc': {'step': 0.24, 'influence': 6.5, 'kill': 0.36, 'momentum': 0.85, 'jitter': 0.16,
            'up': 0.05, 'level': 0.8, 'min_z': -0.4, 'max_z': 0.72, 'max_iter': 320},
     'pipe': {'tip': 0.009, 'exp': 2.12},
+    # limbs: number of elbows and how far each turns (degrees)
+    'elbow': {'n': (2, 4), 'az': 30, 'el': 14},
+    # colonised branches kink now and then (probability per step, strength)
+    'kink': (0.075, 0.75),
     # sympodial short shoots fanning out from every tip, each ending in a rosette
     'twig': {'fan': (3, 6), 'len': (0.16, 0.38), 'spread': 70, 'rise': (2, 18), 'gap': 0.15, 'second': 0.55},
     # this season: shoots of length L_new extend from the tips, then leaves open
@@ -217,12 +221,20 @@ def limb(from_node, az, e0, e1, L, r0, r1, upturn=0.0, drift=0.0, seed=0.0, grow
     n = max(3, int(L / STEP))
     nodes = []
     prev = from_node
+    # sympodial elbows: Terminalia limbs run straight, then turn where a side
+    # bud took over; each elbow is a short, firm change of direction that stays
+    elbows = [(rng.uniform(0.18, 0.88), rng.uniform(-P['elbow']['az'], P['elbow']['az']), rng.uniform(-P['elbow']['el'], P['elbow']['el']))
+              for _ in range(rng.randint(*P['elbow']['n']))]
     for i in range(1, n + 1):
         s = i / n
         e = lerp(e0, e1, ss(0.0, 0.75, s)) + upturn * ss(0.72, 1.0, s)
         if dip:
             e += dip[0] * math.sin(math.pi * min(1.0, s / dip[1])) * (1 if s < dip[1] else 0)
         a = az + drift * math.sin(s * math.pi * 1.4 + seed)
+        for (se, ka, ke) in elbows:
+            k = ss(se - 0.035, se + 0.035, s)
+            a += ka * k
+            e += ke * k
         d = dir_of(a, e)
         d = (d + wobble_vec(p, seed, 0.35) * 0.22).normalized()
         p = p + d * STEP
@@ -338,11 +350,13 @@ while tries < 90000:
     tries += 1
     th = rng.uniform(0, 2 * math.pi)
     R = crown_R(th)
-    rn = math.sqrt(rng.random()) * 1.06
+    rn = math.sqrt(rng.random()) * (1.06 if rng.random() > 0.08 else 1.16)
     z = rng.uniform(crown_under(min(rn, 1)), crown_top(min(rn, 1)) + 0.4)
     p = Vector((CX + math.cos(th) * rn * R, CY + math.sin(th) * rn * R, z))
     depth = min(crown_top(min(rn, 1)) - z, (1.06 - rn) * R)
     if depth > C['shell'] and rng.random() > 0.1:
+        continue
+    if noise.noise(p * 0.21 + Vector((4.0, 7.0, 1.0))) > 0.38:     # open windows in the crown
         continue
     q = in_masses(p) + 0.35 * noise.noise(p * 0.45)
     if q > 1.0:
@@ -405,6 +419,10 @@ def colonise(points):
             d = v.normalized()
             mom = SC['momentum'] * (1.0 if kind[i] == K_SC else 0.55)
             d = d + dirs[i] * mom + Vector((0, 0, SC['up'])) + wobble_vec(pos[i], 9, 1.3) * SC['jitter']
+            # now and then a branch kinks (a side bud takes over), so no curve is too smooth
+            hk = (i * 2654435761 + len(kids[i]) * 97) % 10007 / 10007.0
+            if hk < P['kink'][0]:
+                d = d + wobble_vec(pos[i] * 3.0, 21, 2.7).normalized() * P['kink'][1]
             d.z *= SC['level']
             d.normalize()
             # branches lean outward and up, never hang straight down or shoot vertically
@@ -935,13 +953,110 @@ def build_island():
                 continue
             f = bm.faces.new([v for v, _ in q])
             f.smooth = True
+    n_ground = len(bm.verts)
+    # the scholar's rock: Hainan Middle School's 太湖石 「虎踞龙盘」 stands by the
+    # campus Terminalia; here it rises from the islet under the long limb
+    tm = build_taihu()
+    n_rock = tm['n_rock']
+    bm.from_mesh(tm)
+    bpy.data.meshes.remove(tm)
     me = bpy.data.meshes.new('island')
     bm.to_mesh(me)
     bm.free()
     rock = me.attributes.new('rock', 'FLOAT', 'POINT')
+    taihu = me.attributes.new('taihu', 'FLOAT', 'POINT')
     for v in me.vertices:
-        rock.data[v.index].value = ground(v.co.x, v.co.y)[1]
+        is_t = v.index >= n_ground
+        rock.data[v.index].value = 1.0 if is_t else ground(v.co.x, v.co.y)[1]
+        # 1 = the scholar's rock, 0.5 = its plinth, 0 = islet
+        taihu.data[v.index].value = (1.0 if v.index < n_ground + n_rock else 0.5) if is_t else 0.0
     return me
+
+
+# The scholar's rock in front of No. 1 Teaching Building, after the photograph
+# in assets/images/campus/campus_taihushi.jpg (provided by the site's author):
+# a long, recumbent grey limestone, honeycombed and pierced, a raised head on
+# the left and a crest on the right, set on a dark stone plinth that carries
+# the inscription 「虎踞龙盘」.
+TAIHU = {'at': (-3.6, -2.55), 'yaw': math.radians(-14), 'length': 3.6, 'height': 1.38, 'depth': 1.2,
+         'plinth': (3.9, 1.4, 0.5), 'seed': 19}
+
+
+def build_taihu():
+    r_ = random.Random(TAIHU['seed'])
+    L, Hh, D = TAIHU['length'], TAIHU['height'], TAIHU['depth']
+    px, py, pz = TAIHU['plinth']
+    x0, y0 = TAIHU['at']
+    g0, _ = ground(x0, y0)
+    top = max(g0, WATER + 0.1) + pz * 0.55              # the plinth's top face (the rest is sunk)
+    rot = Matrix.Rotation(TAIHU['yaw'], 4, 'Z')
+    mb = bpy.data.metaballs.new('taihu')
+    mb.resolution = 0.045
+    mb.render_resolution = 0.045
+    mb.threshold = 0.62
+    ob = bpy.data.objects.new('TaihuMB', mb)
+    bpy.context.scene.collection.objects.link(ob)
+
+    def put(x, y, z, sx, sy, sz, neg=False):
+        el = mb.elements.new()
+        el.type = 'ELLIPSOID'
+        el.radius = 1.0
+        el.stiffness = 2.6 if neg else 1.25
+        el.use_negative = neg
+        q = rot @ Vector((x, y, 0))
+        el.co = (x0 + q.x, y0 + q.y, z)
+        el.size_x, el.size_y, el.size_z = sx, sy, sz
+        el.rotation = (rot @ Matrix.Rotation(r_.uniform(-0.3, 0.3), 4, 'Z')).to_quaternion()
+
+    # the body: head high on the left, a lower middle, a crest rising on the right
+    # the body: one continuous mass (heavily overlapping lobes) with a raised
+    # head on the left, a lower middle and a crest rising on the right
+    prof = [(-0.48, 0.92), (-0.36, 1.0), (-0.22, 0.84), (-0.08, 0.7), (0.06, 0.66), (0.2, 0.74), (0.32, 0.88), (0.42, 1.0), (0.5, 0.82)]
+    for (u, hk) in prof:
+        h = Hh * hk
+        put(u * L, r_.uniform(-0.08, 0.08), top + h * 0.36, L * 0.17 * r_.uniform(0.9, 1.1), D * 0.55 * r_.uniform(0.85, 1.05), h * 0.62)
+        put(u * L + r_.uniform(-0.15, 0.15), r_.uniform(-0.18, 0.18), top + h * 0.78, L * 0.11, D * 0.36, h * 0.32)
+    put(0.46 * L, 0.05, top + Hh * 0.98, 0.34, 0.24, 0.36)        # the crest's tip
+    put(-0.47 * L, 0.0, top + Hh * 0.98, 0.46, 0.36, 0.32)       # the head
+    # honeycomb (透、漏): hollows that open on the surface, several right through
+    for k in range(46):
+        u = r_.uniform(-0.48, 0.48)
+        hk = 0.2 + 0.68 * r_.random()
+        through = k % 4 == 0
+        side = r_.choice((-1, 1))
+        sz = r_.uniform(0.1, 0.27)
+        put(u * L, (0.0 if through else side * D * r_.uniform(0.42, 0.55)), top + Hh * hk * 0.9,
+            sz * r_.uniform(0.8, 1.3), (D * 0.9 if through else sz * 1.2), sz * r_.uniform(0.8, 1.3), neg=True)
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(ob.evaluated_get(dg))
+    bpy.data.objects.remove(ob)
+    bpy.data.metaballs.remove(mb)
+    for v in me.vertices:      # sharp weathered ridges, pits and pockmarks (皱)
+        p = v.co
+        rid = 1 - abs(noise.noise(Vector((p.x * 2.6, p.y * 2.6, p.z * 1.6))))
+        rid2 = 1 - abs(noise.noise(Vector((p.x * 6.0 + 3.0, p.y * 6.0, p.z * 4.0))))
+        pit = max(0.0, noise.noise(p * 9.0 + Vector((7.0, 1.0, 2.0))) - 0.25)
+        d = 0.085 * rid ** 5 + 0.03 * rid2 ** 4 - 0.07 * pit + 0.012 * noise.noise(p * 18.0)
+        v.co = p + v.normal * d * (1 - 0.5 * max(0.0, v.normal.z))
+        if v.co.z < top:
+            v.co.z = top
+    # the plinth: a dark granite block, slightly bevelled
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    n_rock = len(bm.verts)
+    ret = bmesh.ops.create_cube(bm, size=1.0)
+    for v in ret['verts']:
+        q = rot @ Vector((v.co.x * px, v.co.y * py, 0))
+        v.co = Vector((x0 + q.x, y0 + q.y, top - pz * (0.5 - v.co.z) - 0.25 * (0.5 - v.co.z)))
+    bmesh.ops.bevel(bm, geom=list({e for v in ret['verts'] for e in v.link_edges}), offset=0.03, segments=2, affect='EDGES')
+    me2 = bpy.data.meshes.new('taihu')
+    bm.to_mesh(me2)
+    bm.free()
+    bpy.data.meshes.remove(me)
+    for poly in me2.polygons:
+        poly.use_smooth = True
+    me2['n_rock'] = n_rock
+    return me2
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1005,8 +1120,10 @@ rk = isl_me.attributes['rock']
 for v in isl_me.vertices:
     rock = max(rk.data[v.index].value, min(1.0, (1 - max(0.0, v.normal.z)) * 2.0))
     wet = max(0.0, min(1.0, 1 - (v.co.z - WATER) / 0.3))
-    icol.data[v.index].color = (isl_ao[v.index], rock, wet, 1.0)
+    # alpha marks the scholar's rock (0) apart from the granite and soil (1)
+    icol.data[v.index].color = (isl_ao[v.index], rock, wet, 1.0 - isl_me.attributes['taihu'].data[v.index].value)
 isl_me.attributes.remove(isl_me.attributes['rock'])
+isl_me.attributes.remove(isl_me.attributes['taihu'])
 isl_me.color_attributes.active_color = icol
 isl_me.color_attributes.render_color_index = isl_me.color_attributes.active_color_index
 print('island AO %.1fs' % (time.time() - T0))
@@ -1067,6 +1184,9 @@ meta = {
               'bounds': {'min': to3(Vector((min(p.x for p in bx), min(p.y for p in bx), min(p.z for p in bx)))),
                          'max': to3(Vector((max(p.x for p in bx), max(p.y for p in bx), max(p.z for p in bx))))}},
     'anchors': {'trunk': to3(Vector((0.1, 0, 1.6))), 'fork': to3(pos[FORK]),
+                'taihu': to3(Vector((TAIHU['at'][0], TAIHU['at'][1], max(ground(*TAIHU['at'])[0], WATER + 0.1) + TAIHU['plinth'][2] * 0.55 + TAIHU['height'] * 0.5))),
+                'plinth': {'centre': to3(Vector((TAIHU['at'][0], TAIHU['at'][1], max(ground(*TAIHU['at'])[0], WATER + 0.1) + TAIHU['plinth'][2] * 0.55 - TAIHU['plinth'][2] * 0.5 + 0.1))),
+                           'yaw': round(TAIHU['yaw'], 4), 'size': list(TAIHU['plinth'])},
                 'limbDip': to3(pos[at(dragon, 0.62)]), 'limbEnd': to3(pos[dragon[-1]])},
     'params': {k: v for k, v in P.items() if k in ('crown', 'sc', 'pipe', 'growth')},
     'note': 'Species concept model of Terminalia catappa (open-grown, tiered). Not a survey of the campus tree.'

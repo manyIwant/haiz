@@ -3,10 +3,10 @@
 // the six viewpoints) drives the camera, the tree's growth, the light of the
 // day and which part of HAIZ is open.
 import * as THREE from 'three';
-import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, AXIS } from './chapters.js';
+import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
 import { sunPosition, haikouParts } from './sun.js';
-import { UNIFORMS, leafVisible } from './foliage.js';
+import { UNIFORMS, leafVisible, createHeroLeaves } from './foliage.js';
 import { Specimens } from './specimen.js';
 import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
@@ -63,7 +63,7 @@ for (const p of panels) p.addEventListener('focusin', () => { const i = +p.datas
 
 // ------------------------------------------------------------------ panels (GSAP reveals)
 let panelTl = null;
-const SOFT = '.chap-label, .lede, .zh, .begin, .note-intro';
+const SOFT = '.chap-label, .lede, .zh, .specimen-label, .begin, .note-intro';
 function setActive(i) {
   if (i === active) return;
   const prev = active;
@@ -85,7 +85,7 @@ function setActive(i) {
   if (i >= 0) {
     const inn = panels[i];
     inn.classList.add('is-active');
-    slabPos.init = false;
+    slabPos.init = false; slabPos.rest = 0;
     if (g && !reduceMotion) {
       panelTl?.kill();
       panelTl = g.timeline({ delay: prev >= 0 ? 0.25 : 0.1 });
@@ -184,12 +184,14 @@ const leadHalo = document.createElementNS(SVGNS, 'circle'); leadHalo.setAttribut
 const leadPin = document.createElementNS(SVGNS, 'circle'); leadPin.setAttribute('class', 'pin'); leadPin.setAttribute('r', '2.6');
 leader.append(leadPath, leadHalo, leadPin);
 svg.append(leader);
-const slabPos = { x: 0, y: 0, ry: -6, init: false };
+const slabPos = { x: 0, y: 0, ry: -6, init: false, rest: 0 };
 const tmpV = new THREE.Vector3();
 function placeSlab(settle) {
   const panel = active >= 0 ? panels[active] : null;
   const slab = panel?.querySelector('.slab');
   if (!slab || innerWidth <= 760) { leader.style.opacity = '0'; return; }
+  // once the shot has rested a moment, the slab is frozen until the camera moves again
+  if (settle > 0.995 && slabPos.init) { if (++slabPos.rest > 20) return; } else slabPos.rest = 0;
   const mode = CHAPTERS[active].ui.slab;
   const W = innerWidth, H = innerHeight;
   const sw = slab.offsetWidth, sh = slab.offsetHeight;
@@ -235,17 +237,100 @@ function placeSlab(settle) {
   for (const c of [leadHalo, leadPin]) { c.setAttribute('cx', ax.toFixed(1)); c.setAttribute('cy', ay.toFixed(1)); }
 }
 
-// ------------------------------------------------------------------ leaving: dolly + veil
-function leave(href, dark, x, y, anchor) {
-  if (world && anchor) cam.push = { point: anchor.clone(), t: 0, d: 0.95 };
-  const veil = $('#veil');
-  veil.style.setProperty('--veil', dark ? '#0b1310' : '#f7f3eb');
-  const g = window.gsap;
-  if (g && !reduceMotion) {
-    g.fromTo(veil, { clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${Math.hypot(innerWidth, innerHeight)}px at ${x}px ${y}px)`, duration: 0.95, ease: 'power3.inOut', onComplete: () => { location.href = href; } });
-  } else location.href = href;
+// ------------------------------------------------------------------ leaving: through the tree into a page
+// Every section leaves through its own moment of the tree (see chapters.js ui.exit):
+// shade: sink into the shade at the trunk's foot, the dark page rises from the ground
+// leaf:  a leaf-shaped sheet of paper opens from the blade the shot looks at
+// map:   rise overhead; the crown's real outline is drawn as contours on paper
+// light: push through the gap in the leaves towards the sun; the light becomes the page
+// pull:  step back across the water, then the page settles in
+const LEAF_MASK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 160"><path d="M50 158 C47 140 44 132 34 118 C14 92 4 70 6 46 C8 18 28 2 50 2 C72 2 92 18 94 46 C96 70 86 92 66 118 C56 132 53 140 50 158Z" fill="#000"/></svg>');
+let crownOutline = null;
+const exitLight = { boost: 1 };   // the light exit brightens the scene towards the page
+function crownContours() {
+  // the tree's real top-down outline: farthest rosette per bearing, smoothed
+  if (crownOutline || !world) return crownOutline;
+  const ros = world.rosettes, st = world.stride, B = 72, far = new Float32Array(B);
+  for (let i = 0; i < ros.length; i += st) {
+    const dx = ros[i] - AXIS.x, dz = ros[i + 2] - AXIS.z;
+    const b = Math.floor(((Math.atan2(dz, dx) + Math.PI) / (2 * Math.PI)) * B) % B;
+    far[b] = Math.max(far[b], Math.hypot(dx, dz));
+  }
+  const sm = [...far].map((_, b) => (far[(b + B - 1) % B] + 2 * far[b] + far[(b + 1) % B]) / 4);
+  const R = Math.max(...sm) || 1;
+  crownOutline = [1, 0.74, 0.5, 0.28].map((k, j) => {
+    let d = '';
+    for (let b = 0; b <= B; b++) {
+      const a = (b / B) * Math.PI * 2 - Math.PI, r = (sm[b % B] / R) * k * (1 + 0.03 * Math.sin(b * 0.9 + j * 2));
+      d += (b ? 'L' : 'M') + (Math.cos(a) * r * 40).toFixed(2) + ',' + (Math.sin(a) * r * 40).toFixed(2);
+    }
+    return d + 'Z';
+  });
+  return crownOutline;
 }
-addEventListener('pageshow', (e) => { if (e.persisted) { $('#veil').style.clipPath = ''; if (cam) cam.push = null; } });
+function leave(href, dark, x, y, anchor) {
+  const kind = active >= 0 ? CHAPTERS[active].ui.exit || 'leaf' : 'leaf';
+  const W = innerWidth, H = innerHeight, colour = dark ? '#0b1310' : '#f7f3eb';
+  // where the move is aimed: the scene's own anchor, projected to the screen
+  let ax = x, ay = y;
+  if (world && anchor) {
+    const point = kind === 'shade' ? new THREE.Vector3(0.1, 0.6, 0) : anchor.clone();
+    cam.push = { kind, point, t: 0, d: kind === 'pull' ? 1.5 : 1.2 };
+    const v = anchor.clone().project(world.camera);
+    if (v.z < 1) { ax = (v.x * 0.5 + 0.5) * W; ay = (-v.y * 0.5 + 0.5) * H; }
+  }
+  const veil = $('#veil');
+  veil.style.setProperty('--veil', colour);
+  veil.replaceChildren();
+  const g = window.gsap;
+  const go = () => { location.href = href; };
+  if (!g || reduceMotion) return go();
+  if (kind === 'shade') {
+    g.fromTo(veil, { clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0% 0 0 0)', duration: 1.15, delay: 0.3, ease: 'power2.in', onComplete: go });
+  } else if (kind === 'map') {
+    const svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('viewBox', '-50 -50 100 100');
+    svg.setAttribute('class', 'veil-map');
+    for (const d of crownContours() || []) {
+      const p = document.createElementNS(SVGNS, 'path');
+      p.setAttribute('d', d);
+      svg.append(p);
+    }
+    veil.append(svg);
+    veil.style.clipPath = 'none';
+    g.fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.8, delay: 0.45, ease: 'power2.inOut' });
+    g.fromTo(svg.querySelectorAll('path'), { strokeDashoffset: 400 }, { strokeDashoffset: 0, duration: 1.1, delay: 0.55, stagger: 0.12, ease: 'power2.out',
+      onComplete: () => g.delayedCall(0.25, go) });
+  } else if (kind === 'light') {
+    veil.style.clipPath = 'none';
+    veil.style.background = `radial-gradient(circle at ${ax}px ${ay}px, #fffaf0 0%, #fbf3e2 var(--r), rgba(251, 243, 226, 0) calc(var(--r) * 1.6))`;
+    g.fromTo(veil, { '--r': '0px', opacity: 1 }, { '--r': Math.hypot(W, H) + 'px', duration: 1.25, delay: 0.35, ease: 'power2.in', onComplete: go });
+    g.to(exitLight, { boost: 2.6, duration: 1.4, ease: 'power2.in' });
+  } else if (kind === 'pull') {
+    veil.style.clipPath = 'none';
+    g.fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.7, delay: 0.95, ease: 'power2.in', onComplete: go });
+  } else {   // leaf
+    const big = Math.hypot(W, H) * 2.6;
+    veil.style.clipPath = 'none';
+    veil.style.webkitMask = veil.style.mask = `url("${LEAF_MASK}") no-repeat`;
+    const set = (s) => {
+      const p = `${(ax - s / 2).toFixed(1)}px ${(ay - s * 0.8).toFixed(1)}px`, z = `${s.toFixed(1)}px ${(s * 1.6).toFixed(1)}px`;
+      veil.style.webkitMaskPosition = veil.style.maskPosition = p;
+      veil.style.webkitMaskSize = veil.style.maskSize = z;
+    };
+    const o = { s: 0 };
+    set(0);
+    g.to(o, { s: big, duration: 1.15, delay: 0.25, ease: 'power3.in', onUpdate: () => set(o.s), onComplete: go });
+  }
+}
+addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  const v = $('#veil');
+  v.replaceChildren();
+  for (const k of ['clipPath', 'opacity', 'background', 'mask', 'webkitMask']) v.style[k] = '';
+  if (cam) cam.push = null;
+  exitLight.boost = 1;
+});
 for (const a of $$('.panel .entries a')) {
   a.addEventListener('click', (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || !body.classList.contains('spatial')) return;
@@ -269,9 +354,10 @@ async function start3D() {
     console.error(err);
     return goStatic();
   }
+  setPortrait(innerWidth / innerHeight < 0.85);
   aimStudy();
   world.resize();
-  addEventListener('resize', () => world.resize());
+  addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
   cam.rail = () => override || poseAt(state.p);
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
@@ -292,39 +378,43 @@ function goStatic() {
   panels.forEach((p) => { p.classList.add('is-active'); p.removeAttribute('inert'); });
 }
 
-// The details shot looks closely at a real cluster of new leaves, half open,
-// from just below and outside the crown: the sun stands high behind them, so
-// the light comes through the blades and the deeper crown melts into bokeh.
+// The details shot is a portrait of one real cluster of new leaves on the rim
+// of a lower tier. The camera stands level, just outside the crown, looking in:
+// behind the leaves is the shaded inside of the crown with a few sky gaps, so
+// the lit, glossy blades stand out. The sun rakes in from the outer side to
+// draw out their relief. Those leaves get finely tessellated hero blades.
 const STUDY = 2;
-const STUDY_RANK = 5;   // art-directed for the locked tree (seed 2611); preview others with ?study=k
+const STUDY_RANK = 1;   // art-directed for the locked tree (seed 2611); preview others with ?study=k
 function aimStudy() {
   const ros = world.rosettes, st = world.stride;
   const ranked = [];
   for (let i = 0; i < ros.length; i += st) {
     const x = ros[i], y = ros[i + 1], z = ros[i + 2], tE = ros[i + 9];
     const r = Math.hypot(x - AXIS.x, z - AXIS.z);
-    if (y < 4.6 || y > 7.4 || r < 8.5 || r > 12.5 || tE < 0.29 || tE > 0.37) continue;
-    // a quiet side of the tree (away from the long limb), real foliage behind
+    if (y < 4.4 || y > 7.0 || r < 7.5 || r > 12.5 || tE < 0.28 || tE > 0.36) continue;
+    // a quiet side of the tree (away from the long limb), real foliage behind,
+    // the rosette sitting on the outer shell of its clump
     const th = Math.atan2(x - AXIS.x, z - AXIS.z);
-    const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.5 - Math.abs(y - 5.8) * 0.5
-      - Math.abs(tE - 0.33) * 10 - ros[i + 8] * 2.5 + r * 0.2;
+    const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.2 - Math.abs(y - 5.5) * 0.5
+      - Math.abs(tE - 0.31) * 8 - ros[i + 8] * 1.6 + ros[i + 15] * 1.2 + r * 0.12;
     ranked.push([s, i]);
   }
   if (!ranked.length) return;
   ranked.sort((a, b) => b[0] - a[0]);
-  // the chosen cluster (art-directed rank; ?study=k previews others)
   const best = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? STUDY_RANK))][1];
-  const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.05, ros[best + 2]);
+  const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.06, ros[best + 2]);
   const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
   const side = new THREE.Vector3(-out.z, 0, out.x);
-  const eye = P.clone().addScaledVector(out, 1.15).addScaledVector(side, 0.32).add(new THREE.Vector3(0, -0.55, 0));
-  const look = P.clone().addScaledVector(out, -0.05);
-  const view = look.clone().sub(eye).normalize();
-  retarget(STUDY, eye.toArray(), look.toArray(), 27);
-  // the sun high over the outside of the crown: it lights the blades from above,
-  // and from below we see that light come through them
-  LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(Math.atan2(out.x, out.z)) + 50, 56];
+  // a little above the cluster, looking in and slightly down into the shaded tier
+  const eye = P.clone().addScaledVector(out, 0.85).addScaledVector(side, 0.28).add(new THREE.Vector3(0, 0.36, 0));
+  const look = P.clone().addScaledVector(out, -0.1).add(new THREE.Vector3(0, -0.06, 0));
+  retarget(STUDY, eye.toArray(), look.toArray(), 23);
+  // the sun from the far side, over the cluster: grazing light that glints on
+  // the glossy blades and glows through their edges
+  LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(Math.atan2(-out.x, -out.z)) + 28, 34];
   ANCHORS[STUDY].copy(P);
+  const hero = createHeroLeaves(world.canopy, P, 2.4);
+  if (hero) world.scene.add(hero);
   buildOrbitRefresh();
 }
 function buildOrbitRefresh() { buildOrbit(); orbitDots = $$('#orbitDots .dot'); }
@@ -421,7 +511,7 @@ function step(dt, wallDt = dt) {
   const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
   world.setStage({ grow, sunDir, sunCol: C(L.sunCol), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
-    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
+    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure * exitLight.boost, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
     aperture: L.aperture, focus: L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez)) });
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));

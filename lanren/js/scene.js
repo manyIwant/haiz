@@ -28,7 +28,7 @@ export function pickTier() {
   return cores >= 6 ? 'high' : 'medium';
 }
 
-const SHADOW_HALF = 18;
+const SHADOW_HALF = 24;
 const SHADOW_FAR = 120;
 
 // ------------------------------------------------------------------ atmosphere pass
@@ -260,7 +260,17 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   let island = null;
   islandG.scene.traverse((o) => { if (o.isMesh) island = o; });
-  island.material = makeIslandMaterial();
+  // 「虎踞龙盘」 cut into the front of the scholar's rock's plinth
+  const pl = meta.anchors.plinth;
+  let inscr = null;
+  if (pl) {
+    const yaw = pl.yaw;                                   // Blender Z rotation
+    const n = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));   // the plinth front (Blender -y) in three.js
+    const tg = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const c = new THREE.Vector3(...pl.centre).addScaledVector(n, pl.size[1] / 2);
+    inscr = { centre: c.toArray(), normal: n.toArray(), tangent: tg.toArray(), size: [1.7, 0.3] };
+  }
+  island.material = makeIslandMaterial(inscr);
   island.castShadow = island.receiveShadow = true;
   scene.add(island);
 
@@ -322,6 +332,18 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const motes = createMotes(tierName === 'low' ? 260 : 600);
   scene.add(motes);
   motes.material.uniforms.uPx.value = ratio;
+  // the tree's shadow on the shallow lagoon (strongest near the islet, gone in deep water)
+  const shadowCatch = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.ShadowMaterial({ opacity: 0.32, transparent: true, depthWrite: false }));
+  shadowCatch.rotation.x = -Math.PI / 2;
+  shadowCatch.position.y = WATER + 0.012;
+  shadowCatch.receiveShadow = true;
+  shadowCatch.renderOrder = -4;
+  shadowCatch.material.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvSC = position.xy;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC;')
+      .replace('gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );', 'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) * smoothstep( 26.0, 9.0, length( vSC ) ) );');
+  };
+  scene.add(shadowCatch);
   const water = createWater(WATER, tier.reflect, ratio);
   scene.add(water);
   const wu = water.material.uniforms;

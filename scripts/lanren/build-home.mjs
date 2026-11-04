@@ -24,6 +24,7 @@ const panels = CHAPTERS.map((c, i) => `
     <div class="titling">
       ${i === 0 ? `<h1 class="display" id="t-${c.id}">${lines(c.en)}</h1>` : `<h2 class="display" id="t-${c.id}">${lines(c.en)}</h2>`}
       <p class="zh">${esc(c.zh)}</p>
+      ${c.specimen ? `<p class="specimen-label"><i>${esc(c.specimen[0])}</i><span>${esc(c.specimen[1])}</span><span>${esc(c.specimen[2])}</span></p>` : ''}
       ${i === 0 ? '<p class="begin"><a href="#campus">Scroll <i aria-hidden="true">↓</i></a><small>绕树而行：滚动、下滑或按空格键</small></p>' : ''}
     </div>
     ${c.entries.length ? `<div class="slab">

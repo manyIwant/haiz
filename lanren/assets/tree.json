@@ -5,12 +5,12 @@
  "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
  "water": -0.85,
  "counts": {
-  "nodes": 35580,
-  "clumps": 209,
-  "rosettes": 11514,
-  "oldRosettes": 2924,
-  "barkVertices": 262335,
-  "islandVertices": 24649
+  "nodes": 33774,
+  "clumps": 192,
+  "rosettes": 10947,
+  "oldRosettes": 2789,
+  "barkVertices": 250390,
+  "islandVertices": 34001
  },
  "rosetteStride": 16,
  "rosetteLayout": [
@@ -33,10 +33,10 @@
  ],
  "growth": {
   "emergeRange": [
-   0.196,
-   0.418
+   0.199,
+   0.408
   ],
-  "emergeMedian": 0.292,
+  "emergeMedian": 0.291,
   "oldDropRange": [
    0.03,
    0.34
@@ -53,14 +53,14 @@
   "rim": 4.6,
   "bounds": {
    "min": [
-    -16.228,
+    -17.516,
     -0.75,
-    12.894
+    11.557
    ],
    "max": [
-    13.636,
-    15.923,
-    -12.91
+    13.251,
+    16.003,
+    -12.477
    ]
   }
  },
@@ -75,15 +75,33 @@
    3.059,
    -0.072
   ],
+  "taihu": [
+   -3.6,
+   0.886,
+   2.55
+  ],
+  "plinth": {
+   "centre": [
+    -3.6,
+    0.046,
+    2.55
+   ],
+   "yaw": -0.2443,
+   "size": [
+    3.9,
+    1.4,
+    0.5
+   ]
+  },
   "limbDip": [
-   -6.805,
-   2.516,
-   1.376
+   -6.857,
+   2.41,
+   0.772
   ],
   "limbEnd": [
-   -10.718,
-   2.767,
-   2.797
+   -10.706,
+   3.261,
+   0.834
   ]
  },
  "params": {

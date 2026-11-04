@@ -54,7 +54,7 @@ vec3 leafColour(float age, float sen, float young, float variant){
   c = mix(c, red, smoothstep(sen + 0.30, sen + 0.46, a));
   c = mix(c, brown, smoothstep(sen + 0.95, sen + 1.2, a));
   // Terminalia's new flush: bronze-red buds, then a bright yellow-green
-  vec3 fresh = mix(vec3(0.12, 0.24, 0.04), vec3(0.34, 0.11, 0.04), smoothstep(0.66, 0.95, young));
+  vec3 fresh = mix(vec3(0.075, 0.15, 0.03), vec3(0.30, 0.10, 0.04), smoothstep(0.66, 0.95, young));
   return mix(c, fresh, smoothstep(0.0, 0.45, young));
 }
 `;
@@ -83,13 +83,25 @@ void leafGrow(float tE, float old, out float u, out float scl, out float young, 
 `;
 
 // Build one leaf blade: a quad folded along the midrib and arched to the tip.
-export function leafGeometry(cols = 2, rows = 4, aspect = 0.62) {
+export function leafGeometry(cols = 2, rows = 4, aspect = 0.62, shape = null) {
+  // A blade along +x (petiole at 0, apex at 1), width along z, folded a little
+  // along the midrib and arched. With `shape` (hero blades seen up close) the
+  // margins droop, the lamina waves gently and the blade twists a touch.
   const pos = [], uv = [], idx = [];
   for (let r = 0; r <= rows; r++) {
     const t = r / rows;
     for (let c = 0; c <= cols; c++) {
       const s = c / cols * 2 - 1;
-      pos.push(t, Math.abs(s) * aspect * 0.5 * 0.16 - 0.10 * t * t + 0.05 * t, s * aspect * 0.5);
+      let x = t, y = Math.abs(s) * aspect * 0.5 * 0.16 - 0.10 * t * t + 0.05 * t, z = s * aspect * 0.5;
+      if (shape) {
+        y -= shape.cup * s * s * aspect * 0.5;                                   // margins roll down (leathery blade)
+        y += shape.wave * Math.sin(t * Math.PI * shape.waves + Math.sign(s) * 1.3) * Math.abs(s) ** 1.5;
+        y += shape.lift * t * t * t;                                              // the apex lifts
+        const tw = shape.twist * t;                                               // a slight twist along the midrib
+        const cz = Math.cos(tw), sz = Math.sin(tw);
+        [y, z] = [y * cz - z * sz, y * sz + z * cz];
+      }
+      pos.push(x, y, z);
       uv.push((s + 1) / 2, t);
     }
   }
@@ -273,11 +285,14 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   ${depth ? '' : `
   vec3 lc = leafColour(vAge, lt.b, vYoung, vVar);
   float matureG = (1.0 - smoothstep(0.1, 0.5, vAge)) * (1.0 - smoothstep(0.1, 0.6, vYoung));
+  float rimK = smoothstep(0.55, 0.98, abs(vMapUv.x * 4.0 - floor(vMapUv.x * 4.0) - 0.5) * 2.0);
+  lc = mix(lc, lc * vec3(1.5, 0.95, 0.75), rimK * smoothstep(0.05, 0.4, vYoung) * 0.6);
   lc *= mix(vec3(1.0), mix(vec3(0.86, 0.97, 1.08), vec3(1.16, 1.07, 0.78), vTone), matureG);
   lc = mix(lc, lc * vec3(1.18, 1.14, 0.86), vShell * 0.35 * matureG);
   lc = mix(lc, mix(lc, vec3(0.13, 0.06, 0.03), 0.45) * 0.8, 1.0 - vAir);
   float lum = lt.r * 1.38 * (0.82 + 0.36 * fract(vVar * 7.31));
-  vec3 base = lc * lum + lt.g * 0.012 * (1.0 - vAge);
+  vec3 base = lc * lum;
+  base = mix(base, base * vec3(1.42, 1.36, 0.82) + vec3(0.006, 0.006, 0.0), lt.g * 0.55 * (1.0 - vAge));
   if (!gl_FrontFacing) base = mix(base, base * vec3(1.45, 1.55, 1.25) + 0.008, 0.6);
   diffuseColor.rgb = base;`}
   float la = (lt.a - 0.5) / max(fwidth(lt.a), 1e-4) + 0.5;
@@ -292,7 +307,7 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   vec3 nb = mix(normal, vPadN, padK * vAir);
   // a back face can point exactly away from its clump: never normalise a zero vector
   normal = dot(nb, nb) > 1e-5 ? normalize(nb) : vPadN;`)
-        .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = gl_FrontFacing ? mix(0.3, 0.62, max(vAge, vYoung * 0.6)) : 0.85;')
+        .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = gl_FrontFacing ? mix(0.26, 0.6, vAge) - 0.06 * vYoung : 0.82;')
         .replace('#include <lights_fragment_begin>', 'vec3 leafTransmit = vec3(0.0); vec3 leafFwd = vec3(0.0);\n#include <lights_fragment_begin>')
         .replace('#include <aomap_fragment>', `
   // canopy occlusion (baked per rosette): the inside of the crown is darker
@@ -302,11 +317,13 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
         .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
   // light through the blade: thin young leaves glow most
   // light through the blade: veins and the reticulum are thicker and pass less of it
-  vec3 tint = (diffuseColor.rgb * vec3(2.1, 2.2, 1.1) + vec3(0.012, 0.016, 0.0)) * (1.0 - 0.5 * leafVein);
-  float thin = 1.0 + 1.4 * vYoung;
-  reflectedLight.directDiffuse += leafTransmit * tint * 0.85 * thin * uTransmit * vAir;
+  // light through the blade is a little yellower than the blade and varies
+  // leaf to leaf with its thickness; veins pass less of it
+  vec3 tint = (diffuseColor.rgb * vec3(1.55, 1.5, 0.75) + vec3(0.008, 0.01, 0.0)) * mix(vec3(1.0), vec3(0.95, 0.85, 0.5), leafVein);
+  float thin = (1.0 + 0.55 * vYoung) * (0.6 + 0.65 * fract(vVar * 5.17));
+  reflectedLight.directDiffuse += leafTransmit * tint * 0.7 * thin * uTransmit * vAir;
   // looking towards the sun through a blade: it glows (forward scattering)
-  reflectedLight.directDiffuse += leafFwd * tint * 1.6 * thin * uTransmit * vAir;
+  reflectedLight.directDiffuse += leafFwd * tint * 1.1 * thin * uTransmit * vAir;
   // a waxy but not mirror-like blade: keep the sky's sheen from frosting the crown
   reflectedLight.directSpecular *= 0.85;
   reflectedLight.indirectSpecular *= 0.3;
@@ -385,5 +402,41 @@ export function createShrubs(spots, atlas, normal) {
   mesh.receiveShadow = true;
   mesh.customDepthMaterial = makeLeafMaterial({ atlas, depth: true, loose: true });
   mesh.frustumCulled = false;
+  return mesh;
+}
+
+/**
+ * Hero level of detail: the leaves near `centre` (the cluster the details shot
+ * looks at) move from the canopy's coarse blades to finely tessellated, cupped
+ * blades. They keep every per-leaf attribute, so they grow, sway and colour
+ * exactly as before; the canopy's copies are collapsed to nothing.
+ */
+export function createHeroLeaves(canopy, centre, radius, atlas, normal) {
+  const d = canopy.data, n = d.count;
+  const pick = [];
+  for (let i = 0; i < n; i++) {
+    const dx = d.rosette[i * 4] - centre.x, dy = d.rosette[i * 4 + 1] - centre.y, dz = d.rosette[i * 4 + 2] - centre.z;
+    if (dx * dx + dy * dy + dz * dz < radius * radius) pick.push(i);
+  }
+  if (!pick.length) return null;
+  const g = leafGeometry(6, 14, 0.62, { cup: 0.11, wave: 0.012, waves: 3.2, lift: 0.05, twist: 0.12 });
+  const rosA = new Float32Array(pick.length * 4), leafA = new Float32Array(pick.length * 4), padA = new Float32Array(pick.length * 4);
+  const mats = new Float32Array(pick.length * 16);
+  const im = canopy.mesh.instanceMatrix.array;
+  pick.forEach((i, k) => {
+    for (let c = 0; c < 4; c++) { rosA[k * 4 + c] = d.rosette[i * 4 + c]; leafA[k * 4 + c] = d.leaf[i * 4 + c]; padA[k * 4 + c] = d.pad[i * 4 + c]; }
+    for (let c = 0; c < 16; c++) { mats[k * 16 + c] = im[i * 16 + c]; im[i * 16 + c] = 0; }
+  });
+  canopy.mesh.instanceMatrix.needsUpdate = true;
+  g.setAttribute('aRosette', new THREE.InstancedBufferAttribute(rosA, 4));
+  g.setAttribute('aLeaf', new THREE.InstancedBufferAttribute(leafA, 4));
+  g.setAttribute('aPad', new THREE.InstancedBufferAttribute(padA, 4));
+  const mesh = new THREE.InstancedMesh(g, canopy.mesh.material, pick.length);
+  mesh.instanceMatrix.array.set(mats);
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.castShadow = mesh.receiveShadow = true;
+  mesh.customDepthMaterial = canopy.mesh.customDepthMaterial;
+  mesh.frustumCulled = false;
+  mesh.name = 'hero-leaves';
   return mesh;
 }

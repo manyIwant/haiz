@@ -12,8 +12,9 @@ export const WATER = -0.85;
 export const CHAPTERS = [
   {
     id: 'tree', index: '01', label: '开场 · 初遇', en: ['A Tree', 'Connects Everything'], zh: '一棵树，连接所有可能',
-    lede: '海南中学府城校区一号教学楼前，有一棵百年榄仁树。这是它的数字化身：冬末，去年的红叶还挂在枝头。向下滚动，绕着它走，看它抽枝、发芽、展叶，也走进 HAIZ 的每一个角落。',
-    note: '物种概念模型：依大叶榄仁的形态特征创作，并非校园那棵树的测绘',
+    lede: '海南中学府城校区一号教学楼前，一棵百年榄仁树与太湖石「虎踞龙盘」相互呼应。这是它的数字化身：冬末，去年的红叶还挂在枝头。向下滚动，绕着它走，看它抽枝、发芽、展叶，也走进 HAIZ 的每一个角落。',
+    specimen: ['Terminalia catappa L.', '大叶榄仁 · 使君子科', '海南中学府城校区 · 一号教学楼前'],
+    note: '树为依物种特征创作的概念模型；太湖石依校园实拍重建。都不是测绘',
     ui: { slab: 'none' },
     entries: []
   },
@@ -21,7 +22,7 @@ export const CHAPTERS = [
     id: 'campus', index: '02', label: '缓慢靠近 · 苏醒', en: ['Explore', 'the Campus'], zh: '校园 · 探索',
     lede: '走近树干，沿着主枝向上看：芽从枝梢醒来，光从枝杈间落下。从这里走进校园——第一人称漫游、从一颗星球降落到树下，或者编排你自己的路线。',
     note: '三维校园沿用项目既有空间数据，建筑为近似模型',
-    ui: { slab: 'right', anchor: [0.15, 2.6, 0.2] },
+    ui: { slab: 'right', anchor: [0.15, 2.6, 0.2], exit: 'shade' },
     entries: [
       { href: 'campus-3d.html?focus=lanshu', title: '第一人称校园', en: 'Walk the campus', note: '从榄仁树出发，16 间可步入的想象教室', dark: true, primary: true },
       { href: 'descent.html', title: '从星球到树荫', en: 'The descent', note: '一段保持地理焦点的下降镜头', dark: true },
@@ -32,7 +33,7 @@ export const CHAPTERS = [
     id: 'archive', index: '03', label: '叶片特写 · 细节', en: ['Details', 'Matter'], zh: '档案 · 来处',
     lede: '新叶对折着展开，逆光里能看见每一条叶脉。来处也是这样一点点展开的：1923 年创办的私立琼海中学、百年校庆时以这棵树开篇的报道、从这里走出去的人。',
     note: '学校简介（本站「学校」页）；《海南日报》2023-10-30。树龄未经年轮测定',
-    ui: { slab: 'right', anchor: 'study' },
+    ui: { slab: 'right', anchor: 'study', exit: 'leaf' },
     entries: [
       { href: 'news.html', title: '新闻档案', en: 'News archive', note: '原仓库报道，分类与检索', primary: true },
       { href: 'alumni.html', title: '校友', en: 'Alumni', note: '公开资料中的海中人' },
@@ -41,9 +42,9 @@ export const CHAPTERS = [
   },
   {
     id: 'map', index: '04', label: '俯瞰树冠 · 地图', en: ['Campus', 'Map'], zh: '地图 · 空间',
-    lede: '升到树冠上方，一层层枝叶铺开，像一张地图。校园也有它的平面：手绘的校园图、三处可以慢慢走的地点，和写给来访者的指引。',
+    lede: '升到树冠上方，树影落在浅水上，像一张摊开的地图。校园也有它的平面：手绘的校园图、三处可以慢慢走的地点，和写给来访者的指引。',
     note: '校园手图沿用项目既有平面数据，为近似表达',
-    ui: { slab: 'right', anchor: [5.5, 13.2, 1.5] },
+    ui: { slab: 'right', anchor: [5.5, 13.2, 1.5], exit: 'map' },
     entries: [
       { href: 'about.html#campusAtlas', title: '学校与校园手图', en: 'Campus atlas', note: '历史、地标与手绘平面', primary: true },
       { href: 'memory-walk.html', title: '树荫下的三次停留', en: 'Three stops', note: '北门 · 榄仁树 · 砚池，无需三维' },
@@ -54,7 +55,7 @@ export const CHAPTERS = [
     id: 'days', index: '05', label: '透过树冠 · 远眺', en: ['Looking', 'Forward'], zh: '日子 · 创作',
     lede: '从叶丛里向外望，远处是水面与正在落下的光。那些正在发生、将要发生的事：校园杂志、社团提案、课间电台，和一间可以寄出课间的暗房。',
     note: '远景为艺术表达，不是校园实景',
-    ui: { slab: 'right', anchor: [-460, 12, 170] },
+    ui: { slab: 'right', anchor: [-460, 12, 170], exit: 'light' },
     entries: [
       { href: 'journal.html', title: '校园杂志', en: 'Journal', note: '影像、手记与校园正在发生的事', primary: true },
       { href: 'clubs.html', title: '社团提案', en: 'Clubs', note: '六个清楚标注的创作提案' },
@@ -66,7 +67,7 @@ export const CHAPTERS = [
     id: 'whole', index: '06', label: '全盛 · 共同生长', en: ['Growing', 'Together'], zh: '工具 · 全部',
     lede: '它终于枝繁叶茂，整个 HAIZ 都长在这棵树上：课间的小工具、随身的 Pocket、你在树下接住的叶子，和全站的每一个入口。',
     note: '落叶前转红、春季抽新叶，见植物学资料；书页只保存在这台设备上',
-    ui: { slab: 'grid', anchor: [-2.2, 9.8, 1.2] },
+    ui: { slab: 'grid', anchor: [-2.2, 9.8, 1.2], exit: 'pull' },
     entries: [
       { href: 'windowsill/index.html', title: '课间窗台', en: 'Windowsill', note: '便签、专注、书信与本机留声', dark: true, primary: true },
       { href: 'physics-lab.html', title: '物理实验室', en: 'Physics lab', note: 'Every Joule 原版与自制练习', dark: true },
@@ -97,17 +98,17 @@ export const STAGES = [
  * `study` is re-aimed at load time on a real cluster of new leaves.
  */
 export const KEYS = [
-  { t: 0, eye: [8.5, 0.95, 38], look: [-3.4, 6.3, 0], fov: 33 },                    // 01 first encounter
+  { t: 0, eye: [8.5, 0.95, 38], look: [-8.6, 6.9, 1.5], fov: 33, portrait: { eye: [6.0, 0.9, 30], look: [-1.8, 7.2, 0], fov: 58 } },                    // 01 first encounter
   { t: 0.55, eye: [5.6, 1.4, 19], look: [0.6, 6.0, -1], fov: 42 },
   { t: 1, eye: [3.1, 0.75, 5.0], look: [-0.9, 8.6, -2.2], fov: 64 },                // 02 awakening: up the trunk
   { t: 1.5, eye: [6.0, 2.4, 8.0], look: [3.0, 6.8, 1.0], fov: 50 },
   { t: 2, eye: [9.0, 5.1, 5.6], look: [9.6, 5.5, 4.6], fov: 26, study: true },      // 03 details: new leaves
   { t: 2.45, eye: [19, 15, 17], look: [2, 8, 0], fov: 40 },
-  { t: 3, eye: [14, 26, 18], look: [1.5, 5.5, -0.5], fov: 52 },                   // 04 map: above the crown
+  { t: 3, eye: [2.5, 36, 9], look: [1.2, 4.5, -1.5], fov: 50, portrait: { eye: [1.5, 46, 3.5], look: [0.9, 4.5, -0.6], fov: 66 } },                   // 04 map: above the crown
   { t: 3.5, eye: [-14, 17, 16], look: [-4, 7, 3], fov: 44 },
-  { t: 4, eye: [-6.3, 5.5, 7.4], look: [-42, 4.5, 20], fov: 54 },                   // 05 looking forward
+  { t: 4, eye: [-5.5, 5.0, 5.0], look: [-45, 5.5, 14], fov: 58 },                   // 05 looking forward
   { t: 4.5, eye: [-13, 3.4, 17.5], yaw: 172, pitch: 6, fov: 48 },
-  { t: 5, eye: [-18.6, 1.05, 25.6], look: [4.4, 6.9, 2.6], fov: 38 }                   // 06 full bloom
+  { t: 5, eye: [-21.5, 1.1, 29.5], look: [5.0, 6.6, 3.3], fov: 38, portrait: { eye: [-15.5, 1.0, 21.5], look: [0.4, 7.6, -0.2], fov: 61 } }                   // 06 full bloom
 ];
 
 /** Light and atmosphere per shot. sun: world azimuth (deg, atan2(x, z)) and elevation. */
@@ -120,10 +121,10 @@ export const LIGHT = [
     fog: [0.62, 0.56, 0.50], density: 0.0011, mist: 0.03, rays: 1.0, exposure: 0.9, warm: 0.75, cloud: 0.5, aperture: 0.1, focus: 6.5, sat: 1.1, contrast: 1.1 },
   // 03 late morning, the sun behind the new leaves
   { sun: [62, 26], sunCol: [1.0, 0.9, 0.72], I: 4.0, zenith: [0.07, 0.20, 0.52], horizon: [0.52, 0.64, 0.76], glow: [1.0, 0.82, 0.55],
-    fog: [0.52, 0.62, 0.70], density: 0.0010, mist: 0.02, rays: 0.4, exposure: 1.0, warm: 0.5, cloud: 0.45, aperture: 1.0, focus: 0, sat: 1.1, contrast: 1.06 },
-  // 04 midday from above: side light for the relief of the tiers
-  { sun: [215, 17], sunCol: [1.0, 0.86, 0.66], I: 4.6, zenith: [0.05, 0.17, 0.50], horizon: [0.44, 0.58, 0.74], glow: [0.8, 0.72, 0.56],
-    fog: [0.30, 0.38, 0.36], density: 0.0065, mist: 0.6, rays: 0.0, exposure: 0.8, warm: 0.45, cloud: 0.45, aperture: 0, focus: 0, sat: 0.98, contrast: 1.12 },
+    fog: [0.52, 0.62, 0.70], density: 0.0010, mist: 0.02, rays: 0.4, exposure: 0.82, warm: 0.5, cloud: 0.45, aperture: 1.0, focus: 0, sat: 1.1, contrast: 1.06 },
+  // 04 from above: a low side sun lays the tree's shadow across the shallow lagoon
+  { sun: [92, 27], sunCol: [1.0, 0.88, 0.70], I: 4.6, zenith: [0.05, 0.17, 0.50], horizon: [0.44, 0.58, 0.74], glow: [0.8, 0.72, 0.56],
+    fog: [0.34, 0.42, 0.42], density: 0.0025, mist: 0.12, rays: 0.0, exposure: 0.86, warm: 0.45, cloud: 0.45, aperture: 0, focus: 0, sat: 1.0, contrast: 1.12 },
   // 05 golden hour seen from inside the crown
   { sun: [302, 12], sunCol: [1.0, 0.68, 0.40], I: 3.4, zenith: [0.14, 0.18, 0.32], horizon: [0.95, 0.62, 0.40], glow: [1.5, 0.74, 0.34],
     fog: [0.80, 0.58, 0.42], density: 0.0014, mist: 0.05, rays: 0.6, exposure: 0.95, warm: 0.85, cloud: 0.4, aperture: 0.16, focus: 0, sat: 1.06, contrast: 1.05 },
@@ -150,8 +151,15 @@ function orient(k) {
 }
 
 export const FRAMES = [];      // resolved keys
+let PORTRAIT = false;
+/** Phones get their own compositions for the shots that define one (key.portrait). */
+export function setPortrait(on) { if (on !== PORTRAIT) { PORTRAIT = on; rebuildFrames(); } return PORTRAIT; }
+export function isPortrait() { return PORTRAIT; }
 export function rebuildFrames() {
-  const f = KEYS.map((k) => ({ t: k.t, ex: k.eye[0], ey: k.eye[1], ez: k.eye[2], fov: k.fov, ...orient(k) }));
+  const f = KEYS.map((k0) => {
+    const k = PORTRAIT && k0.portrait ? { ...k0, ...k0.portrait, authored: true } : k0;
+    return { t: k.t, ex: k.eye[0], ey: k.eye[1], ez: k.eye[2], fov: k.fov, auth: PORTRAIT && k.authored ? 1 : 0, ...orient(k) };
+  });
   // unwrap yaw so each move turns the short way (waypoints steer longer turns)
   for (let i = 1; i < f.length; i++) {
     while (f[i].yaw - f[i - 1].yaw > 180) f[i].yaw -= 360;
@@ -180,7 +188,7 @@ function crNU(t0, t1, t2, t3, p0, p1, p2, p3, t) {
   const u = (t - t1) / (t2 - t1), u2 = u * u, u3 = u2 * u;
   return (2 * u3 - 3 * u2 + 1) * p1 + (u3 - 2 * u2 + u) * m1 + (-2 * u3 + 3 * u2) * p2 + (u3 - u2) * m2;
 }
-const CH = ['ex', 'ey', 'ez', 'yaw', 'pitch', 'fov', 'dist'];
+const CH = ['ex', 'ey', 'ez', 'yaw', 'pitch', 'fov', 'dist', 'auth'];
 
 /** Camera at continuous progress p ∈ [0, 5]. */
 export function poseAt(p, frames = FRAMES) {
@@ -202,7 +210,7 @@ export function poseAt(p, frames = FRAMES) {
   const yaw = o.yaw * D2R, pitch = clamp(o.pitch, -89, 89) * D2R;
   const dist = Math.max(0.3, o.dist);
   return {
-    ex: o.ex, ey: o.ey, ez: o.ez, fov: o.fov, dist,
+    ex: o.ex, ey: o.ey, ez: o.ez, fov: o.fov, dist, auth: Math.min(1, Math.max(0, o.auth)),
     lx: o.ex + Math.sin(yaw) * Math.cos(pitch) * dist, ly: o.ey + Math.sin(pitch) * dist, lz: o.ez + Math.cos(yaw) * Math.cos(pitch) * dist,
     th: Math.atan2(o.ex - AXIS.x, o.ez - AXIS.z)
   };
