@@ -208,10 +208,13 @@ function placeSlab(settle) {
   }
   if (!slabPos.init) { slabPos.x = tx; slabPos.y = ty; slabPos.init = true; }
   // a little lag so the slab feels carried by the scene
-  if (Math.abs(tx - slabPos.x) > 0.6) slabPos.x += (tx - slabPos.x) * 0.14;
-  if (Math.abs(ty - slabPos.y) > 0.6) slabPos.y += (ty - slabPos.y) * 0.14;
+  // while moving the slab is carried by the scene; once the shot rests it holds
+  // still against the camera's breathing (a close anchor would otherwise drift)
+  const hold = settle > 0.98 ? 10 : 0.6;
+  if (Math.abs(tx - slabPos.x) > hold) slabPos.x += (tx - slabPos.x) * 0.14;
+  if (Math.abs(ty - slabPos.y) > hold) slabPos.y += (ty - slabPos.y) * 0.14;
   const ry = mode === 'dock' ? 0 : -4 - 6 * ((slabPos.x + sw / 2) / W - 0.5) + (visible ? (ax - slabPos.x) / W * 6 : 0);
-  if (Math.abs(ry - slabPos.ry) > 0.08) slabPos.ry += (ry - slabPos.ry) * 0.1;
+  if (Math.abs(ry - slabPos.ry) > (settle > 0.98 ? 1.2 : 0.08)) slabPos.ry += (ry - slabPos.ry) * 0.1;
   // write whole pixels and tenths of a degree only when they change, so the
   // slab settles completely once the camera rests (links must hold still)
   const sxS = Math.round(slabPos.x) + 'px', syS = Math.round(slabPos.y) + 'px', ryS = slabPos.ry.toFixed(1) + 'deg';
@@ -293,9 +296,10 @@ function goStatic() {
 // from just below and outside the crown: the sun stands high behind them, so
 // the light comes through the blades and the deeper crown melts into bokeh.
 const STUDY = 2;
+const STUDY_RANK = 5;   // art-directed for the locked tree (seed 2611); preview others with ?study=k
 function aimStudy() {
   const ros = world.rosettes, st = world.stride;
-  let best = -1, score = -1e9;
+  const ranked = [];
   for (let i = 0; i < ros.length; i += st) {
     const x = ros[i], y = ros[i + 1], z = ros[i + 2], tE = ros[i + 9];
     const r = Math.hypot(x - AXIS.x, z - AXIS.z);
@@ -304,9 +308,12 @@ function aimStudy() {
     const th = Math.atan2(x - AXIS.x, z - AXIS.z);
     const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.5 - Math.abs(y - 5.8) * 0.5
       - Math.abs(tE - 0.33) * 10 - ros[i + 8] * 2.5 + r * 0.2;
-    if (s > score) { score = s; best = i; }
+    ranked.push([s, i]);
   }
-  if (best < 0) return;
+  if (!ranked.length) return;
+  ranked.sort((a, b) => b[0] - a[0]);
+  // the chosen cluster (art-directed rank; ?study=k previews others)
+  const best = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? STUDY_RANK))][1];
   const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.05, ros[best + 2]);
   const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
   const side = new THREE.Vector3(-out.z, 0, out.x);

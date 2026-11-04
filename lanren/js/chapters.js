@@ -116,8 +116,8 @@ export const LIGHT = [
   { sun: [166, 8], sunCol: [1.0, 0.70, 0.42], I: 2.9, zenith: [0.13, 0.17, 0.30], horizon: [0.92, 0.60, 0.36], glow: [1.5, 0.78, 0.36],
     fog: [0.78, 0.56, 0.40], density: 0.0013, mist: 0.07, rays: 0.6, exposure: 0.92, warm: 0.8, cloud: 0.42, aperture: 0, focus: 0, sat: 1.08, contrast: 1.06 },
   // 02 morning: light breaking through the limbs above
-  { sun: [205, 40], sunCol: [1.0, 0.86, 0.66], I: 4.2, zenith: [0.06, 0.17, 0.48], horizon: [0.46, 0.58, 0.74], glow: [1.1, 0.8, 0.5],
-    fog: [0.50, 0.58, 0.66], density: 0.0011, mist: 0.03, rays: 0.9, exposure: 0.88, warm: 0.55, cloud: 0.5, aperture: 0.1, focus: 6.5, sat: 1.1, contrast: 1.1 },
+  { sun: [205, 34], sunCol: [1.0, 0.78, 0.52], I: 4.6, zenith: [0.10, 0.18, 0.40], horizon: [0.78, 0.66, 0.54], glow: [1.4, 0.85, 0.45],
+    fog: [0.62, 0.56, 0.50], density: 0.0011, mist: 0.03, rays: 1.0, exposure: 0.9, warm: 0.75, cloud: 0.5, aperture: 0.1, focus: 6.5, sat: 1.1, contrast: 1.1 },
   // 03 late morning, the sun behind the new leaves
   { sun: [62, 26], sunCol: [1.0, 0.9, 0.72], I: 4.0, zenith: [0.07, 0.20, 0.52], horizon: [0.52, 0.64, 0.76], glow: [1.0, 0.82, 0.55],
     fog: [0.52, 0.62, 0.70], density: 0.0010, mist: 0.02, rays: 0.4, exposure: 0.9, warm: 0.5, cloud: 0.45, aperture: 1.0, focus: 0, sat: 1.1, contrast: 1.06 },
@@ -129,7 +129,7 @@ export const LIGHT = [
     fog: [0.80, 0.58, 0.42], density: 0.0014, mist: 0.05, rays: 0.6, exposure: 0.95, warm: 0.85, cloud: 0.4, aperture: 0.16, focus: 0, sat: 1.06, contrast: 1.05 },
   // 06 full day: blue sky, clouds, the crown lit from the side
   { sun: [84, 38], sunCol: [1.0, 0.92, 0.76], I: 4.9, zenith: [0.04, 0.15, 0.50], horizon: [0.42, 0.58, 0.78], glow: [0.9, 0.78, 0.6],
-    fog: [0.46, 0.58, 0.72], density: 0.0010, mist: 0.03, rays: 0.0, exposure: 1.0, warm: 0.5, cloud: 0.62, aperture: 0, focus: 0, sat: 1.1, contrast: 1.08 }
+    fog: [0.46, 0.58, 0.72], density: 0.0010, mist: 0.03, rays: 0.0, exposure: 1.06, warm: 0.55, cloud: 0.62, aperture: 0, focus: 0, sat: 1.1, contrast: 1.08 }
 ];
 
 // ---------------------------------------------------------------- interpolation

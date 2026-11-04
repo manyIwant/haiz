@@ -45,7 +45,7 @@ T0 = time.time()
 # ------------------------------------------------------------------ parameters
 # Every art-directable number lives here (metres, degrees, growth units 0..1).
 P = {
-    'seed': 2611,
+    'seed': int(os.environ.get('TREE_SEED', 2611)),
     'water': -0.85,
     'trunk': {'base': -0.75, 'fork': 3.05, 'r_base': 0.98, 'r_fork': 0.68, 'lean': (0.22, 0.06)},
     # crown: a dome with a flattened top, wider towards the long limb (−x)
@@ -64,6 +64,8 @@ P = {
     'bark_tile': 0.9,
 }
 rng = random.Random(P['seed'])
+# mathutils.noise_vector draws on a session-seeded state: pin it, or every build differs
+noise.seed_set(P['seed'])
 np_rng = np.random.default_rng(P['seed'])
 UP = Vector((0, 0, 1))
 WATER = P['water']
@@ -629,7 +631,7 @@ def skeleton_preview(path):
 
 
 if '--skeleton' in sys.argv:
-    skeleton_preview(os.path.join(BUILD, 'skeleton.png'))
+    skeleton_preview(os.path.join(BUILD, 'skeleton-%d.png' % P['seed']))
     sys.exit(0)
 
 # ------------------------------------------------------------------ roots over the boulders

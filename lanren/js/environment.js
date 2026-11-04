@@ -199,7 +199,7 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   // weathered granite: pale grey with dark mica and light feldspar specks,
   // streaks where rain runs off, lichen on the tops, algae at the waterline
   float speck = inn(vIP * 61.0);
-  vec3 rock = mix(vec3(0.20, 0.19, 0.175), vec3(0.34, 0.325, 0.30), g1);
+  vec3 rock = mix(vec3(0.22, 0.195, 0.17), vec3(0.37, 0.335, 0.29), g1);   // Hainan granite: grey with warm feldspar
   rock *= 0.9 + 0.2 * inn(vIP * 23.0);
   rock = mix(rock, vec3(0.06, 0.055, 0.05), smoothstep(0.78, 0.9, speck) * 0.7);
   rock = mix(rock, vec3(0.42, 0.40, 0.37), smoothstep(0.1, 0.0, speck) * 0.5);

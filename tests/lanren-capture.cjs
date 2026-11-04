@@ -26,12 +26,12 @@ function serve() {
   const port = server.address().port;
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (require('fs').existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const vw = +(process.env.VW || 1280), vh = +(process.env.VH || 720);
-  const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: +(process.env.DSF || 1) });
   const logs = [];
   page.on('console', (m) => logs.push(m.type() + ': ' + m.text()));
   page.on('pageerror', (e) => logs.push('pageerror: ' + e.message));
   const q = process.env.Q || 'high';
-  await page.goto(`http://localhost:${port}/index.html?capture=1&quality=${q}`);
+  await page.goto(`http://localhost:${port}/index.html?capture=1&quality=${q}${process.env.QS || ''}`);
   try {
     await page.waitForFunction(() => window.__haizHome && window.__haizHome.world && document.body.classList.contains('ready'), null, { timeout: 180000 });
   } catch (e) { console.log(logs.join('\n')); throw e; }
@@ -47,7 +47,7 @@ function serve() {
     }, [view, time]);
     await page.waitForTimeout(+(process.env.WAIT || 1300));
     const f = path.join(out, `${view.startsWith('L') ? 'look' + shots.indexOf(spec) : view.replace('.', '_')}.png`);
-    await page.screenshot({ path: f });
+    await page.screenshot({ path: f, timeout: 240000 });
     console.log('shot', f, JSON.stringify(await page.evaluate(() => { const i = window.__haizHome.info(); return { cam: i.cam, p: i.p, grow: i.grow.toFixed(2), leaves: i.leaves, falling: i.falling, active: i.active, tier: i.tier }; })));
   }
   console.log(logs.filter((l) => !/GPU stall|swiftshader|Automatic fallback/i.test(l)).slice(0, 30).join('\n'));

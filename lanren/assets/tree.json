@@ -5,11 +5,11 @@
  "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
  "water": -0.85,
  "counts": {
-  "nodes": 34518,
-  "clumps": 204,
-  "rosettes": 10990,
-  "oldRosettes": 2785,
-  "barkVertices": 242257,
+  "nodes": 35580,
+  "clumps": 209,
+  "rosettes": 11514,
+  "oldRosettes": 2924,
+  "barkVertices": 250458,
   "islandVertices": 24649
  },
  "rosetteStride": 16,
@@ -33,8 +33,8 @@
  ],
  "growth": {
   "emergeRange": [
-   0.198,
-   0.406
+   0.196,
+   0.418
   ],
   "emergeMedian": 0.292,
   "oldDropRange": [
@@ -53,14 +53,14 @@
   "rim": 4.6,
   "bounds": {
    "min": [
-    -16.147,
+    -16.228,
     -0.75,
-    12.485
+    12.894
    ],
    "max": [
-    13.016,
-    16.115,
-    -12.734
+    13.636,
+    15.923,
+    -12.91
    ]
   }
  },
@@ -71,19 +71,19 @@
    -0.0
   ],
   "fork": [
-   0.23,
-   3.062,
-   -0.077
+   0.213,
+   3.059,
+   -0.072
   ],
   "limbDip": [
-   -6.878,
-   2.47,
-   0.98
+   -6.805,
+   2.516,
+   1.376
   ],
   "limbEnd": [
-   -10.877,
-   2.683,
-   2.284
+   -10.718,
+   2.767,
+   2.797
   ]
  },
  "params": {
