@@ -6,6 +6,12 @@
 - 截图：[screenshots/](screenshots/)（`old-*` 为 1.5.5，`v2-*` 为 2.0；同一份虚构数据，时间固定为周三 10:12）
 - 录屏：[haiz-2.0-flow.mp4](haiz-2.0-flow.mp4)（45 秒，真实运行的 Flutter Web 构建）
 
+## 在线预览
+
+https://claude.ai/artifact/HN4VL76NA1SzYNPsueMSYt （私有链接，需要在页面的分享菜单里授权他人才能打开）
+
+页面内嵌完整的 2.0 Flutter Web 构建（访客模式，可选按当天日期生成的虚构示例数据或空白首次打开），以及录屏和与 1.5.5 的对照截图。预览包与正式 PWA 的区别：去掉了 `<base href>`、Service Worker 和 PWA 安装脚本，不含截图 OCR 语言文件；中文回退字体（Noto Sans SC，Google Fonts 的 OFL 分片）随包放在 `app/gfonts/`，通过 `fontFallbackBaseUrl` 从本地加载，因为预览宿主不允许页面访问 fonts.gstatic.com。
+
 ## 本地运行
 
 ```bash
