@@ -53,7 +53,10 @@ class TodayScreen extends StatelessWidget {
                     actions: [LinkAction('知道了', onTap: store.clearFocusNotice)],
                   ),
                 ),
-              SliverToBoxAdapter(child: NowBlock(courses: store.courses, now: now)),
+              if (store.courses.isEmpty && store.tasks.isEmpty && store.notes.isEmpty)
+                SliverToBoxAdapter(child: _FirstSteps(actions: scope.actions))
+              else
+                SliverToBoxAdapter(child: NowBlock(courses: store.courses, now: now)),
               const SliverToBoxAdapter(child: _InboxPrompt()),
               SliverToBoxAdapter(
                 child: TaskGroupList(
@@ -62,7 +65,7 @@ class TodayScreen extends StatelessWidget {
                   groups: (open) => todayGroups(open, now),
                 ),
               ),
-              if (groups.isEmpty)
+              if (groups.isEmpty && !(store.courses.isEmpty && store.tasks.isEmpty && store.notes.isEmpty))
                 SliverToBoxAdapter(
                   child: EmptyNote(
                     title: store.tasks.any((t) => !t.completed)
@@ -84,6 +87,48 @@ class TodayScreen extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+/// A new user's 今天: the three things that make this page useful, each one
+/// tap away. Disappears as soon as any of them exists.
+class _FirstSteps extends StatelessWidget {
+  const _FirstSteps({required this.actions});
+  final HaizActions actions;
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    Widget step(int n, String title, String detail, VoidCallback onTap) => Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(Space.gutter, 12, Space.gutter - 4, 12),
+        child: Row(children: [
+          Container(
+            width: 24, height: 24, alignment: Alignment.center,
+            decoration: BoxDecoration(border: Border.all(color: c.ruleStrong), shape: BoxShape.circle),
+            child: Text('$n', style: TypeScale.caption(c.ink2).copyWith(fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: TypeScale.callout(c.ink).copyWith(fontWeight: FontWeight.w600)),
+            Text(detail, style: TypeScale.caption(c.ink3)),
+          ])),
+          Icon(Icons.chevron_right_rounded, size: 20, color: c.ink3),
+        ]),
+      ),
+    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(Space.gutter, 14, Space.gutter, 4),
+        child: Text('这一页会显示正在上的课、今明两天要交的作业和待确认的通知。先做这三件事：',
+            style: TypeScale.footnote(c.ink2)),
+      ),
+      step(1, '录入课表', '按节次添加，同一节课可以一次加到多天', () => actions.goTab(HaizTab.schedule)),
+      const Hairline(indent: 58),
+      step(2, '记一项作业', '写上截止日期，到期前会出现在这里', () => actions.capture()),
+      const Hairline(indent: 58),
+      step(3, '把班级通知变成任务', '粘贴通知或导入截图，确认后加入待办', () => actions.goTab(HaizTab.inbox)),
+    ]);
   }
 }
 

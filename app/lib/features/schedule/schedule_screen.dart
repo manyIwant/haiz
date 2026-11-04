@@ -273,16 +273,17 @@ class _DayStrip extends StatelessWidget {
                     color: d == selected ? c.inverse : Colors.transparent,
                     borderRadius: BorderRadius.circular(Radii.chip),
                   ),
-                  child: Column(children: [
-                    Text(weekdayName(d).substring(1), style: TypeScale.label(
-                        d == selected ? c.onInverse : (d == now.weekday ? c.signal : c.ink2))),
-                    const SizedBox(height: 2),
-                    Text('${monday.add(Duration(days: d - 1)).day}', style: TypeScale.micro(
-                        d == selected ? c.onInverse.withValues(alpha: .7) : c.ink3)),
-                    const SizedBox(height: 3),
-                    Text('${coursesForDay(courses, d).length}', style: TypeScale.micro(
-                        d == selected ? c.onInverse.withValues(alpha: .7) : c.ink3).copyWith(fontSize: 9)),
-                  ]),
+                  // Days without classes are dimmed instead of labelled "0".
+                  child: Opacity(
+                    opacity: d == selected || coursesForDay(courses, d).isNotEmpty ? 1 : .45,
+                    child: Column(children: [
+                      Text(weekdayName(d).substring(1), style: TypeScale.label(
+                          d == selected ? c.onInverse : (d == now.weekday ? c.signal : c.ink2))),
+                      const SizedBox(height: 2),
+                      Text('${monday.add(Duration(days: d - 1)).day}', style: TypeScale.micro(
+                          d == selected ? c.onInverse.withValues(alpha: .7) : c.ink3)),
+                    ]),
+                  ),
                 ),
               ),
             ),

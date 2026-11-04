@@ -140,9 +140,9 @@ CourseSlot? nextCourse(Iterable<CourseSlot> courses, DateTime now) {
 int focusMinutesToday(Iterable<FocusLog> logs, DateTime now) => logs
     .where(
       (log) =>
-          log.at.year == now.year &&
-          log.at.month == now.month &&
-          log.at.day == now.day,
+          log.at.toLocal().year == now.year &&
+          log.at.toLocal().month == now.month &&
+          log.at.toLocal().day == now.day,
     )
     .fold(0, (sum, log) => sum + log.minutes);
 

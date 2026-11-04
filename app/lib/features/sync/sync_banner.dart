@@ -5,7 +5,7 @@ import '../../core/pocket_store.dart';
 import '../../design/components.dart';
 import '../../design/theme.dart';
 import '../../design/tokens.dart';
-import '../../domain/pocket_models.dart';
+import '../../domain/planning.dart' show clockOf;
 
 /// Shown in the content flow when saving needs the user: a failed save that
 /// can be retried, a cloud conflict that needs a decision, or a record that
@@ -96,7 +96,7 @@ class SyncLine extends StatelessWidget {
     return ValueListenableBuilder<SyncStatus>(
       valueListenable: store.sync,
       builder: (context, s, _) {
-        final at = s.at == null ? '' : ' ${minutesText(s.at!.hour * 60 + s.at!.minute)}';
+        final at = s.at == null ? '' : ' ${clockOf(s.at!)}';
         final (text, color) = switch (s.phase) {
           SyncPhase.idle => ('', c.ink3),
           SyncPhase.saving => (s.cloud ? '正在保存到云端…' : '正在保存…', c.ink3),

@@ -6,7 +6,6 @@ import '../../design/components.dart';
 import '../../design/theme.dart';
 import '../../design/tokens.dart';
 import '../../domain/planning.dart';
-import '../../domain/pocket_models.dart';
 
 String clockText(int seconds) {
   final s = seconds.clamp(0, 99 * 3600);
@@ -275,7 +274,7 @@ class FocusScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 7),
                         child: Row(children: [
-                          SizedBox(width: 48, child: Text(minutesText(log.at.hour * 60 + log.at.minute),
+                          SizedBox(width: 48, child: Text(clockOf(log.at),
                               style: TypeScale.footnote(c.ink3))),
                           Expanded(child: Text(log.label, style: TypeScale.callout(c.ink), maxLines: 1, overflow: TextOverflow.ellipsis)),
                           Text('${log.minutes} 分钟', style: TypeScale.footnote(c.ink2)),
@@ -296,10 +295,10 @@ class FocusScreen extends StatelessWidget {
     if (session == null) return '选好时长后开始';
     final start = session.startedAt;
     if (session.phase == FocusPhase.paused) {
-      return '已暂停 · ${minutesText(start.hour * 60 + start.minute)} 开始';
+      return '已暂停 · ${clockOf(start)} 开始';
     }
     final end = session.endsAt!;
-    return '${minutesText(start.hour * 60 + start.minute)} 开始 · 预计 ${minutesText(end.hour * 60 + end.minute)} 结束';
+    return '${clockOf(start)} 开始 · 预计 ${clockOf(end)} 结束';
   }
 }
 

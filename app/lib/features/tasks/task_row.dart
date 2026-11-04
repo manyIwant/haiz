@@ -48,7 +48,6 @@ class TaskRow extends StatelessWidget {
     final row = Pressable(
       onTap: onOpen,
       onLongPress: () => _menu(context),
-      semanticLabel: null,
       child: Padding(
         padding: const EdgeInsets.only(left: 8, right: Space.gutter),
         child: Row(

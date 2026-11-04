@@ -6,7 +6,6 @@ import '../../design/components.dart';
 import '../../design/theme.dart';
 import '../../design/tokens.dart';
 import '../../domain/planning.dart';
-import '../../domain/pocket_models.dart';
 import '../sync/sync_banner.dart';
 import 'note_editor.dart';
 import 'task_row.dart';
@@ -242,7 +241,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
 String noteTime(DateTime t, DateTime now) {
   final days = dayOf(now).difference(dayOf(t)).inDays;
-  if (days == 0) return minutesText(t.hour * 60 + t.minute);
+  if (days == 0) return clockOf(t);
   if (days == 1) return '昨天';
   if (t.year == now.year) return '${t.month}月${t.day}日';
   return '${t.year}/${t.month}/${t.day}';

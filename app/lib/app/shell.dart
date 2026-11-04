@@ -316,6 +316,7 @@ class _CaptureButton extends StatelessWidget {
           ignoring: !visible,
           child: Tooltip(
             message: '新建（Ctrl/⌘ N）',
+            excludeFromSemantics: true,
             child: Semantics(
               button: true,
               label: '新建任务或备忘',

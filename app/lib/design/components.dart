@@ -62,8 +62,10 @@ class _PressableState extends State<Pressable> {
             ? c.raised.withValues(alpha: .45)
             : (widget.color ?? Colors.transparent);
     return Semantics(
+      container: true,
       button: enabled,
       label: widget.semanticLabel,
+      excludeSemantics: widget.semanticLabel != null,
       child: MouseRegion(
         cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
         onEnter: (_) => setState(() => _hover = true),
@@ -246,6 +248,7 @@ class _HaizCheckState extends State<HaizCheck> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final c = context.c;
     return Semantics(
+      container: true,
       checked: widget.checked,
       label: widget.label,
       button: true,
@@ -830,6 +833,7 @@ class BarAction extends StatelessWidget {
     final c = context.c;
     return Tooltip(
       message: label,
+      excludeFromSemantics: true,
       child: Pressable(
         onTap: onTap,
         radius: Radii.control,

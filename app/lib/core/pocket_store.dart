@@ -984,7 +984,7 @@ class PocketStore extends ChangeNotifier {
     }
     if (current.phase == FocusPhase.running) {
       if (current.remainingAt(now()) == 0) {
-        final end = current.endsAt!;
+        final end = current.endsAt!.toLocal();
         focusNotice = '上次专注已在 ${minutesText(end.hour * 60 + end.minute)} 结束，'
             '已记录 ${(current.targetSeconds / 60).round()} 分钟。';
         finishFocus(auto: true);

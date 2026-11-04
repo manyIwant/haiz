@@ -3,7 +3,18 @@ import 'pocket_models.dart';
 /// Pure planning rules shared by 今天, 待办 and 课表. No widgets, no clock
 /// reads: every function receives `now`, so the rules are testable.
 
-DateTime dayOf(DateTime t) => DateTime(t.year, t.month, t.day);
+/// Calendar day in local time. Stored timestamps may carry a UTC offset
+/// (another device, a backup); never derive a day from the UTC fields.
+DateTime dayOf(DateTime t) {
+  final l = t.toLocal();
+  return DateTime(l.year, l.month, l.day);
+}
+
+/// "10:25" in local time.
+String clockOf(DateTime t) {
+  final l = t.toLocal();
+  return minutesText(l.hour * 60 + l.minute);
+}
 
 DateTime? dueDate(TaskItem task) {
   final raw = task.dueIso;

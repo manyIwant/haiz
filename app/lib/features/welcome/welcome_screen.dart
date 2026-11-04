@@ -35,15 +35,16 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               SizedBox(
                 height: photo,
-                child: Stack(fit: StackFit.expand, children: [
+                child: Stack(fit: StackFit.expand, clipBehavior: Clip.none, children: [
                   Semantics(
                     image: true,
                     label: '校园照片',
                     child: Image.asset('assets/campus/campus_fengqitang.jpg', fit: BoxFit.cover),
                   ),
                   // Only to keep the photo's lower edge from cutting hard
-                  // into the page; it carries no colour of its own.
-                  DecoratedBox(
+                  // into the page; it carries no colour of its own. Extends
+                  // past the edge so no sub-pixel seam shows.
+                  Positioned(left: 0, right: 0, top: 0, bottom: -2, child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -52,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
                         colors: [c.canvas.withValues(alpha: 0), c.canvas],
                       ),
                     ),
-                  ),
+                  )),
                 ]),
               ),
               Padding(
