@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
-import 'package:haiz_pocket_flutter/ui/task_workflow.dart';
+import 'package:haiz_pocket_flutter/domain/planning.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -41,20 +41,26 @@ void main() {
         dueIso: '2026-10-25',
       ),
     ];
-    expect(tasksForView(tasks, TaskView.pending, now).map((x) => x.id), [
+    final open = tasks.where((t) => !t.completed);
+    final groups = groupByDue(open, now);
+    expect(groups.map((g) => g.$1), [
+      DueBucket.overdue, DueBucket.tomorrow, DueBucket.later, DueBucket.none,
+    ]);
+    expect(groups.expand((g) => g.$2).map((x) => x.id), [
       'overdue',
       'tomorrow',
       'future',
       'undated',
     ]);
-    expect(tasksForView(tasks, TaskView.upcoming, now).map((x) => x.id), [
+    // 今天 shows overdue + today + tomorrow only.
+    expect(todayGroups(tasks, now).expand((g) => g.$2).map((x) => x.id), [
       'overdue',
       'tomorrow',
     ]);
-    expect(tasksForView(tasks, TaskView.completed, now).single.id, 'done');
-    expect(taskDueText(tasks[2], now), '已逾期 2 天');
-    expect(taskDueText(tasks[3], now), '明日截止');
-    expect(taskDueText(tasks[0], now), '未设置截止日期');
+    expect(dueLabel(tasks[2], now), '逾期 2 天');
+    expect(dueLabel(tasks[3], now), '明天');
+    expect(dueLabel(tasks[1], now), '11月10日');
+    expect(dueLabel(tasks[0], now), '');
   });
 
   test(

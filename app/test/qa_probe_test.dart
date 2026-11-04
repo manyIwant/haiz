@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
-import 'package:haiz_pocket_flutter/ui/focus_page.dart';
+import 'package:haiz_pocket_flutter/features/tasks/task_editor.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -234,28 +234,27 @@ void main() {
       await _open(store, 'student-a');
       store.addTask('A 的任务', '数学');
       await store.flush();
-      store.chooseFocusTask(store.tasks.single.id);
+      // 2.0: the study note lives in the task editor (笔记 field).
       await tester.pumpWidget(
         MaterialApp(
           home: PocketSkin(
             colors: PocketPalette.forName(store.appearance),
-            child: Scaffold(body: FocusPage(store: store)),
+            child: Scaffold(body: Builder(builder: (context) => TextButton(
+              onPressed: () => showTaskEditor(context, store: store, task: store.tasks.single),
+              child: const Text('打开任务'),
+            ))),
           ),
         ),
       );
+      await tester.tap(find.text('打开任务'));
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('task-note')), findsOneWidget);
 
-      final trigger = find.text('记录学习思路');
-      expect(trigger, findsOneWidget);
-      await tester.tap(trigger);
-      await tester.pumpAndSettle();
-      expect(find.text('学习接力 · 保存思路'), findsOneWidget);
-
-      // The verified account changes while the note dialog is still open.
+      // The verified account changes while the editor is still open.
       await _open(store, 'student-b');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).last, '切换账号后敲入的思路');
-      await tester.tap(find.text('保存到本机'));
+      await tester.enterText(find.byKey(const Key('task-note')), '切换账号后敲入的思路');
+      await tester.tap(find.byKey(const Key('save-task')));
       await tester.pumpAndSettle();
       // Framework exceptions deliberately remain failures: QA must report
       // controller lifecycle defects rather than drain or suppress them.
@@ -263,7 +262,7 @@ void main() {
       expect(store.namespace, endsWith('student-b'));
       expect(store.tasks, isEmpty, reason: 'B must not receive A-era work');
       expect(store.taskNotes, isEmpty, reason: 'the note must not land in B');
-      expect(find.text('已切换账号，笔记未写入任何账号。'), findsOneWidget);
+      expect(find.text('账号已切换，这次修改没有写入任何账号。'), findsOneWidget);
     },
   );
 

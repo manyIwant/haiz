@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/message_intake_bridge.dart';
-import 'package:haiz_pocket_flutter/ui/inbox_page.dart';
+import 'package:haiz_pocket_flutter/features/inbox/inbox_screen.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -140,7 +140,7 @@ void main() {
             child: child ?? const SizedBox.shrink(),
           ),
           home: Scaffold(
-            body: InboxPage(store: store, onSaved: () => navigated++),
+            body: InboxScreen(store: store, onSaved: () => navigated++),
           ),
         ),
       );
@@ -152,8 +152,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('等待你确认'), findsOneWidget);
       expect(store.tasks, isEmpty);
-      await tester.ensureVisible(find.text('确认并加入我的任务'));
-      await tester.tap(find.text('确认并加入我的任务'));
+      await tester.ensureVisible(find.byKey(const Key('inbox-commit')));
+      await tester.tap(find.byKey(const Key('inbox-commit')));
       await tester.pumpAndSettle();
 
       expect(store.tasks.single.title, '完成实验报告');
@@ -275,7 +275,7 @@ void main() {
             child: child ?? const SizedBox.shrink(),
           ),
           home: Scaffold(
-            body: InboxPage(store: store, onSaved: () => navigated++),
+            body: InboxScreen(store: store, onSaved: () => navigated++),
           ),
         ),
       );
@@ -287,8 +287,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('等待你确认'), findsOneWidget);
       expect(store.tasks, isEmpty);
-      await tester.ensureVisible(find.text('确认并加入我的任务'));
-      await tester.tap(find.text('确认并加入我的任务'));
+      await tester.ensureVisible(find.byKey(const Key('inbox-commit')));
+      await tester.tap(find.byKey(const Key('inbox-commit')));
       await tester.pumpAndSettle();
 
       expect(store.tasks.single.title, '完成实验报告');

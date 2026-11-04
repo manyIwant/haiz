@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/message_intake_bridge.dart';
-import 'package:haiz_pocket_flutter/ui/inbox_page.dart';
+import 'package:haiz_pocket_flutter/features/inbox/inbox_screen.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -48,7 +48,7 @@ void main() {
           colors: PocketPalette.forName('porcelain'),
           child: child ?? const SizedBox.shrink(),
         ),
-        home: Scaffold(body: InboxPage(
+        home: Scaffold(body: InboxScreen(
           key: ValueKey('inbox-$id'),
           store: store,
           onSaved: () {},
@@ -71,8 +71,8 @@ void main() {
     await tester.ensureVisible(find.text('提取并审核'));
     await tester.tap(find.text('提取并审核'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('确认并加入我的任务'));
-    await tester.tap(find.text('确认并加入我的任务'));
+    await tester.ensureVisible(find.byKey(const Key('inbox-commit')));
+    await tester.tap(find.byKey(const Key('inbox-commit')));
     await tester.pumpAndSettle();
     expect(store.tasks, hasLength(1));
     expect(store.tasks.single.originalNotice, isEmpty);

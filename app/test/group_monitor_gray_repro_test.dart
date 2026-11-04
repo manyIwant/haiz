@@ -3,10 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/message_intake_bridge.dart';
-import 'package:haiz_pocket_flutter/ui/inbox_page.dart';
+import 'package:haiz_pocket_flutter/features/inbox/inbox_screen.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+
+/// Pages have a pinned header; tester.ensureVisible aligns to the very top
+/// and would park the target under it (real focus traversal does not).
+Future<void> reveal(WidgetTester tester, Finder finder) async {
+  await Scrollable.ensureVisible(tester.element(finder), alignment: .5);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   testWidgets('Android group monitor expands and scrolls without a grey error widget',
@@ -55,7 +62,7 @@ void main() {
         colors: PocketPalette.forName('porcelain'),
         child: child ?? const SizedBox.shrink(),
       ),
-      home: Scaffold(body: InboxPage(store: store, onSaved: () {})),
+      home: Scaffold(body: InboxScreen(store: store, onSaved: () {})),
     ));
     await tester.pumpAndSettle();
 
@@ -63,7 +70,7 @@ void main() {
     const panelKey = Key('monitor-settings-panel');
     const groupsKey = Key('monitor-groups-input');
     expect(find.byKey(panelKey), findsNothing);
-    await tester.ensureVisible(find.byKey(toggleKey));
+    await reveal(tester, find.byKey(toggleKey));
     await tester.tap(find.byKey(toggleKey));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -82,7 +89,7 @@ void main() {
     expect(find.text('保存并开启监测'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.ensureVisible(find.byKey(toggleKey));
+    await reveal(tester, find.byKey(toggleKey));
     await tester.tap(find.byKey(toggleKey));
     await tester.pumpAndSettle();
     expect(find.byKey(panelKey), findsNothing);

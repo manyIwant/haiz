@@ -11,10 +11,10 @@
   gap: 12px;
   box-sizing: border-box;
   padding: 12px 14px;
-  border: 1px solid rgba(206, 183, 148, .42);
-  border-radius: 18px;
-  color: #f9f6f0;
-  background: rgba(24, 37, 50, .96);
+  border: 0;
+  border-radius: 10px;
+  color: #F6F4EF;
+  background: #17181A;
   box-shadow: 0 12px 40px rgba(16, 24, 32, .24);
   font: 13px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
 }

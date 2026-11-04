@@ -4,7 +4,7 @@ import 'package:shared_preferences_platform_interface/in_memory_shared_preferenc
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
-import 'package:haiz_pocket_flutter/ui/inbox_page.dart';
+import 'package:haiz_pocket_flutter/features/inbox/inbox_screen.dart';
 import 'package:haiz_pocket_flutter/ui/ticker_lab_page.dart';
 
 Widget frame(Widget child) => MaterialApp(
@@ -30,12 +30,12 @@ void main() {
     });
 
     final store = PocketStore();
-    await tester.pumpWidget(frame(InboxPage(store: store, onSaved: () {})));
+    await tester.pumpWidget(frame(InboxScreen(store: store, onSaved: () {})));
     await tester.enterText(
       find.byKey(const Key('inbox-text')),
       '【HAIZ任务】物理｜完成纸带实验｜2026-10-29｜身份未验证',
     );
-    await tester.tap(find.text('提取候选'));
+    await tester.tap(find.byKey(const Key('inbox-extract')));
     await tester.pumpAndSettle();
     expect(find.text('等待你确认'), findsOneWidget);
     expect(find.text('完成纸带实验'), findsOneWidget);

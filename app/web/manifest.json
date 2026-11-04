@@ -1,11 +1,11 @@
 {
-  "name": "HAIZ Pocket",
-  "short_name": "HAIZ Pocket",
+  "name": "HAIZ",
+  "short_name": "HAIZ",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#F5F3EF",
-  "theme_color": "#182532",
-  "description": "Offline-first student task, timetable, and focus experience.",
+  "background_color": "#F6F4EF",
+  "theme_color": "#F6F4EF",
+  "description": "课表、作业、班级通知与专注。访客记录保存在本机。",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
@@ -41,9 +41,9 @@
   ],
   "shortcuts": [
     {
-      "name": "快速进入学习空间",
-      "short_name": "今日",
-      "description": "跳过入口动画，查看 HAIZ Pocket 今日学习空间",
+      "name": "今天",
+      "short_name": "今天",
+      "description": "直接打开 HAIZ 今天",
       "url": "./?fromLamp=1",
       "icons": [
         {

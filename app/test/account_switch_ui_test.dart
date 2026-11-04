@@ -8,9 +8,10 @@ import 'package:haiz_pocket_flutter/core/academic_session.dart';
 import 'package:haiz_pocket_flutter/core/pocket_store.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
 import 'package:haiz_pocket_flutter/ui/academic_page.dart';
-import 'package:haiz_pocket_flutter/ui/inbox_page.dart';
+import 'package:haiz_pocket_flutter/features/inbox/inbox_screen.dart';
 import 'package:haiz_pocket_flutter/ui/kit.dart';
-import 'package:haiz_pocket_flutter/ui/today_page.dart';
+import 'package:haiz_pocket_flutter/design/components.dart';
+import 'package:haiz_pocket_flutter/features/tasks/task_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -53,18 +54,22 @@ void main() {
       },
     );
 
-    await tester.pumpWidget(_frame(TodayPage(store: store, onNavigate: (_) {})));
-    await tester.tap(find.byTooltip('添加任务'));
+    await tester.pumpWidget(_frame(Builder(
+      builder: (context) => TextButton(
+        onPressed: () => showTaskEditor(context, store: store),
+        child: const Text('新建'),
+      ),
+    )));
+    await tester.tap(find.text('新建'));
     await tester.pumpAndSettle();
-    // Address the editor field explicitly. The integrated inbox/command
-    // palette may add other TextFields elsewhere in the widget tree.
+    // Address the editor field explicitly.
     await tester.enterText(
       find.byKey(const Key('task-title')),
       '切换账号后不应写入的任务',
     );
     await tester.pump();
     expect(
-      tester.widget<FilledButton>(find.byKey(const Key('save-task'))).onPressed,
+      tester.widget<HaizButton>(find.byKey(const Key('save-task'))).onPressed,
       isNotNull,
     );
 
@@ -75,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(store.tasks, isEmpty);
-    expect(find.text('已切换账号，本次修改没有保存。'), findsOneWidget);
+    expect(find.text('账号已切换，这次修改没有写入任何账号。'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });
@@ -105,21 +110,21 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _frame(InboxPage(store: store, onSaved: () {})),
+      _frame(InboxScreen(store: store, onSaved: () {})),
     );
     await tester.enterText(
       find.byKey(const Key('inbox-text')),
       '数学明天交练习册第36-39页。',
     );
-    await tester.tap(find.text('提取候选'));
+    await tester.tap(find.byKey(const Key('inbox-extract')));
     await tester.pumpAndSettle();
-    expect(find.text('确认并加入我的任务'), findsOneWidget);
+    expect(find.byKey(const Key('inbox-commit')), findsOneWidget);
 
     // Candidates belong to account A; switching accounts must discard them.
     await store.openGuest();
-    await tester.ensureVisible(find.text('确认并加入我的任务'));
+    await tester.ensureVisible(find.byKey(const Key('inbox-commit')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('确认并加入我的任务'));
+    await tester.tap(find.byKey(const Key('inbox-commit')));
     await tester.pumpAndSettle();
 
     expect(store.tasks, isEmpty);

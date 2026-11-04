@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haiz_pocket_flutter/domain/pocket_models.dart';
-import 'package:haiz_pocket_flutter/ui/kit.dart';
 
 void main() {
   test('time formatting, days and course sorting are deterministic', () {
@@ -58,33 +56,5 @@ void main() {
     expect(restored.completed, isTrue);
     expect(restored.example, isTrue);
     expect(restored.title, '学习物理');
-  });
-
-  testWidgets('three themes render and glass dock exposes five tabs', (
-    tester,
-  ) async {
-    for (final name in ['porcelain', 'obsidian', 'ocean']) {
-      final palette = PocketPalette.forName(name);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: PocketSkin(
-            colors: palette,
-            child: Scaffold(
-              body: Column(
-                children: [
-                  const Expanded(child: Center(child: Text('HAIZ'))),
-                  GlassDock(index: 0, onChange: (_) {}),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-      expect(find.text('今天'), findsOneWidget);
-      expect(find.text('课表'), findsOneWidget);
-      expect(find.text('专注'), findsOneWidget);
-      expect(find.text('校园'), findsOneWidget);
-      expect(find.text('收件'), findsOneWidget);
-    }
   });
 }

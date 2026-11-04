@@ -693,7 +693,9 @@ class PocketStore extends ChangeNotifier {
     _persist(); _notify();
   }
 
-  void deleteTask(String id) {
+  /// Deletes a task; it is kept in 最近删除 unless [toTrash] is false
+  /// (used when undoing a capture that was never really kept).
+  void deleteTask(String id, {bool toTrash = true}) {
     if (!_writable) return;
     final removed = tasks.where((x) => x.id == id).toList();
     tasks = List.unmodifiable(tasks.where((x) => x.id != id));
@@ -701,7 +703,7 @@ class PocketStore extends ChangeNotifier {
     taskNotes = Map.unmodifiable({for (final e in taskNotes.entries)
       if (e.key != id) e.key: e.value});
     if (activeTaskId == id) { activeTaskId = null; lastSavedTaskId = null; }
-    if (removed.isNotEmpty) {
+    if (removed.isNotEmpty && toTrash) {
       ext = ext.copyWith(trash: List.unmodifiable([
         TrashEntry(task: removed.first, deletedAt: now(), note: note),
         ...ext.trash.where((e) => e.task.id != id),
