@@ -393,15 +393,23 @@ class _ClassList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    final today = coursesForDay(courses, now.weekday);
+    final status = dayStatus(courses, now);
+    // After the last class, the useful list is the next school day's
+    // (what to pack tonight), not today's finished one.
+    final ahead = status.dayOver || !status.hasCourses;
+    final weekday = ahead ? status.tomorrowWeekday : now.weekday;
+    if (weekday == null) return const SizedBox.shrink();
+    final today = coursesForDay(courses, weekday);
     if (today.isEmpty) return const SizedBox.shrink();
-    final minute = now.hour * 60 + now.minute;
+    final minute = ahead ? -1 : now.hour * 60 + now.minute;
+    final title = !ahead ? '今日课程'
+        : weekday == now.weekday % 7 + 1 ? '明天的课程' : '${weekdayName(weekday)}的课程';
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      SectionHeader('今日课程', count: today.length),
+      SectionHeader(title, count: today.length),
       for (final (i, course) in today.indexed)
         Builder(builder: (context) {
-          final past = course.endMinute <= minute;
-          final live = course.startMinute <= minute && minute < course.endMinute;
+          final past = minute >= 0 && course.endMinute <= minute;
+          final live = minute >= 0 && course.startMinute <= minute && minute < course.endMinute;
           final ink = past ? c.ink3 : c.ink;
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: Space.gutter, vertical: 7),

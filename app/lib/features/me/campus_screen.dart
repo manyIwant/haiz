@@ -59,7 +59,7 @@ class CampusScreen extends StatelessWidget {
               child: Semantics(
                 label: '校园照片',
                 image: true,
-                child: Image.asset('assets/campus/campus_erhao.jpg', fit: BoxFit.cover,
+                child: Image.asset('assets/campus/campus_fengqitang.jpg', fit: BoxFit.cover,
                     color: c.dark ? Colors.black.withValues(alpha: .18) : null,
                     colorBlendMode: c.dark ? BlendMode.darken : null),
               ),
