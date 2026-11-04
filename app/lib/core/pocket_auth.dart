@@ -119,11 +119,18 @@ class PocketCloudSnapshot {
     if (_version == 0) {
       // Simultaneous new devices: the DB primary key rejects the loser
       // rather than overwriting its first write.
-      await client.from('pocket_snapshots').insert({
-        'user_id': userId,
-        'data': data,
-        'version': 1,
-      });
+      try {
+        await client.from('pocket_snapshots').insert({
+          'user_id': userId,
+          'data': data,
+          'version': 1,
+        });
+      } on PostgrestException catch (error) {
+        if (error.code == '23505') {
+          throw SnapshotConflict('另一台设备已创建云端记录，本次写入已停止，未覆盖云端数据');
+        }
+        rethrow;
+      }
       _version = 1;
     } else {
       final result = await client.from('pocket_snapshots')
@@ -133,7 +140,7 @@ class PocketCloudSnapshot {
           .select('version')
           .maybeSingle();
       if (result == null || result['version'] != _version + 1) {
-        throw StateError('另一台设备已更新记录，本次写入已停止，未覆盖云端数据');
+        throw SnapshotConflict('另一台设备已更新记录，本次写入已停止，未覆盖云端数据');
       }
       _version += 1;
     }

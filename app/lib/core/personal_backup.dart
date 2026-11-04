@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import 'haiz_extension.dart';
 import 'personal_snapshot.dart';
 
 /// A user-carried, local-only backup. The checksum detects accidental file
@@ -23,7 +24,9 @@ class PersonalBackup {
     final payload = snapshot.encode();
     final data = jsonEncode({
       'format': format,
-      'version': 1,
+      // Version 2 only when 2.0-only data is present. 1.5.5 rejects it with
+      // its own "unsupported backup" message instead of dropping notes.
+      'version': snapshot.ext.isEmpty ? 1 : 2,
       'createdAt': (now ?? DateTime.now()).toUtc().toIso8601String(),
       'snapshot': jsonDecode(payload),
       'sha256': sha256.convert(utf8.encode(payload)).toString(),
@@ -40,7 +43,8 @@ class PersonalBackup {
     }
     final value = jsonDecode(raw);
     if (value is! Map<String, dynamic> ||
-        value['format'] != format || value['version'] != 1 ||
+        value['format'] != format ||
+        (value['version'] != 1 && value['version'] != 2) ||
         value['snapshot'] is! Map<String, dynamic> ||
         value['sha256'] is! String || value['createdAt'] is! String) {
       throw const FormatException('不是受支持的 HAIZ 个人备份');
@@ -125,6 +129,7 @@ class PersonalBackup {
       }
     }
     final merged = PersonalSnapshot(
+      ext: _mergeExtension(current.ext, incoming.ext),
       tasks: tasks, courses: courses, focusLogs: focus, taskNotes: notes,
       activeTaskId: current.activeTaskId ??
           (byTask.containsKey(incoming.activeTaskId)
@@ -141,6 +146,25 @@ class PersonalBackup {
       focusAdded: addedFocus,
     );
   }
+}
+
+/// Additive: keeps every current note/deleted entry and only adds unknown ids.
+/// When both sides edited the same memo, the later edit wins.
+HaizExtension _mergeExtension(HaizExtension current, HaizExtension incoming) {
+  final notes = {for (final n in current.notes) n.id: n};
+  for (final note in incoming.notes) {
+    final old = notes[note.id];
+    if (old == null || note.updatedAt.isAfter(old.updatedAt)) notes[note.id] = note;
+  }
+  final trashIds = current.trash.map((t) => t.task.id).toSet();
+  return current.copyWith(
+    notes: List.unmodifiable(notes.values),
+    taskMeta: Map.unmodifiable({...incoming.taskMeta, ...current.taskMeta}),
+    trash: List.unmodifiable([
+      ...current.trash,
+      ...incoming.trash.where((t) => trashIds.add(t.task.id)),
+    ].take(HaizExtension.maxTrash)),
+  );
 }
 
 class BackupMerge {

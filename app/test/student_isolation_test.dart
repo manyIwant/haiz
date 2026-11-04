@@ -140,8 +140,11 @@ void main() {
     );
     store.setFocusDuration(1);
     store.startFocus();
-    store.focusRemaining = 0;
+    // 2.0 derives remaining time from wall-clock timestamps; advance the
+    // injected clock past the session end instead of overwriting a counter.
+    store.now = () => DateTime.now().add(const Duration(minutes: 2));
     store.finishFocus(auto: true);
+    store.now = DateTime.now;
     await store.flush();
     expect(store.focusLogs, hasLength(1));
 

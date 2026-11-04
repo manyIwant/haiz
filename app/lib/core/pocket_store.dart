@@ -1,16 +1,47 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/pocket_models.dart';
+import 'haiz_extension.dart';
 import 'legacy_archive.dart';
 import 'personal_snapshot.dart';
 import 'personal_backup.dart';
 import 'storage_scope.dart';
 
+export 'haiz_extension.dart'
+    show NoteItem, TrashEntry, TaskMeta, FocusSession, FocusPhase;
+
+/// Thrown by a cloud writer when another device saved a newer revision.
+/// Unlike transient failures it is not retried automatically.
+class SnapshotConflict extends StateError {
+  SnapshotConflict(super.message);
+}
+
+enum SyncPhase { idle, saving, saved, failed, conflict }
+
+/// Observable save state, separate from the store so a save does not
+/// rebuild every list. "saved" means the write was read back (device) or
+/// acknowledged with a new revision (cloud).
+@immutable
+class SyncStatus {
+  const SyncStatus(this.phase, {this.at, this.cloud = false});
+  final SyncPhase phase;
+  final DateTime? at;
+  final bool cloud;
+}
+
+enum _Fault { none, load, write, conflict }
+
 /// Device-local personal data. Account namespaces require verified identity.
+///
+/// Responsibilities kept here: namespace isolation, the serialized write
+/// queue and every mutation of the personal snapshot. Timer display and save
+/// status are exposed as separate listenables so a ticking focus clock or a
+/// background save never forces the whole app to rebuild.
 class PocketStore extends ChangeNotifier {
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
   Future<void> _pending = Future.value();
@@ -21,8 +52,10 @@ class PocketStore extends ChangeNotifier {
   int generation = 0;
   String? namespace;
   Future<void> Function(String json)? _remoteWrite;
+  Future<String?> Function()? _remoteRead;
   bool get isCloudAccount => namespace?.startsWith('haiz/cloud/v1/') ?? false;
   String? storageError;
+  _Fault _fault = _Fault.none;
   bool legacyArchiveAvailable = false;
   bool _legacyImported = false;
   bool get legacyImported => _legacyImported;
@@ -31,14 +64,29 @@ class PocketStore extends ChangeNotifier {
   List<FocusLog> focusLogs = const [];
   Map<String, String> taskNotes = const {};
   String appearance = 'porcelain';
+  HaizExtension ext = const HaizExtension();
   String? activeTaskId;
   String? lastSavedTaskId;
   int selectedWeekday = DateTime.now().weekday;
-  int focusTargetMinutes = 25;
-  int focusRemaining = 25 * 60;
-  bool focusRunning = false;
-  DateTime? _focusEndsAt;
+
+  /// Save state for the sync indicator.
+  final ValueNotifier<SyncStatus> sync =
+      ValueNotifier(const SyncStatus(SyncPhase.idle));
+
+  /// Remaining focus seconds, updated once a second only while running.
+  final ValueNotifier<int> focusClock = ValueNotifier(25 * 60);
   Timer? _ticker;
+
+  /// Set when a session ended while the app was closed or in background.
+  String? focusNotice;
+
+  /// Unsubmitted text (capture box, inbox paste). Memory-only for cloud
+  /// accounts; guests also keep it on this device. Cleared on every lock.
+  final Map<String, String> _drafts = {};
+  Timer? _draftSave;
+
+  /// Injectable clock for deterministic tests.
+  DateTime Function() now = DateTime.now;
 
   void _notify() { if (!_disposed) notifyListeners(); }
 
@@ -48,25 +96,35 @@ class PocketStore extends ChangeNotifier {
     _backupRestoreInProgress = false;
     namespace = null;
     _remoteWrite = null;
+    _remoteRead = null;
     legacyArchiveAvailable = false;
     semanticExtractionConsent = false;
     ready = false;
     _ticker?.cancel();
-    _focusEndsAt = null;
-    focusRunning = false;
-    focusTargetMinutes = 25;
-    focusRemaining = 25 * 60;
+    _ticker = null;
+    _draftSave?.cancel();
+    _draftSave = null;
+    _drafts.clear();
     tasks = const [];
     courses = const [];
     focusLogs = const [];
     taskNotes = const {};
+    ext = const HaizExtension();
+    focusNotice = null;
     activeTaskId = null;
     lastSavedTaskId = null;
     appearance = 'porcelain';
     selectedWeekday = DateTime.now().weekday;
     _legacyImported = false;
     storageError = null;
+    _fault = _Fault.none;
+    _setSync(const SyncStatus(SyncPhase.idle));
+    focusClock.value = focusTargetMinutes * 60;
     _notify();
+  }
+
+  void _setSync(SyncStatus value) {
+    if (!_disposed) sync.value = value;
   }
 
   Future<void> load() => openGuest();
@@ -118,15 +176,19 @@ class PocketStore extends ChangeNotifier {
           ? const PersonalSnapshot()
           : PersonalSnapshot.decode(raw);
       _remoteWrite = write;
+      _remoteRead = read;
       namespace = 'haiz/cloud/v1/$userId';
       _apply(data);
+      _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: true));
     } catch (error, stack) {
       if (_disposed || generation != ticket) return;
       storageError = '账号记录加载失败。未打开其他人的记录，请检查网络。';
-      debugPrint('Cloud account load failed (\${error.runtimeType})\n$stack');
+      _fault = _Fault.load;
+      debugPrint('Cloud account load failed (${error.runtimeType})\n$stack');
     }
     if (_disposed || generation != ticket) return;
     ready = true;
+    _reconcileFocus();
     _notify();
   }
 
@@ -137,11 +199,42 @@ class PocketStore extends ChangeNotifier {
       final raw = await _prefs.getString('$scope/personal.v1');
       final data = raw == null ? const PersonalSnapshot() : PersonalSnapshot.decode(raw);
       if (_disposed || ticket != generation) return;
+      // One-time rollback point before 2.0 adds its extension to a 1.5.5
+      // record. Never overwritten; failure to create it never blocks use.
+      if (raw != null && data.ext.isEmpty) {
+        try {
+          final backupKey = '$scope/personal.v1.pre2';
+          if (await _prefs.getString(backupKey) == null) {
+            await _prefs.setString(backupKey, raw);
+          }
+        } catch (error) {
+          debugPrint('Pre-2.0 rollback copy skipped (${error.runtimeType})');
+        }
+        if (_disposed || ticket != generation) return;
+      }
       namespace = scope;
       _apply(data);
       semanticExtractionConsent = scope.startsWith('haiz/v1/') &&
           await _prefs.getBool('$scope/semantic-extraction-consent.v1') == true;
       if (_disposed || ticket != generation) return;
+      if (scope.startsWith('haiz/guest/v1/')) {
+        try {
+          final drafts = await _prefs.getString('$scope/drafts.v1');
+          if (drafts != null) {
+            final value = jsonDecode(drafts);
+            if (value is Map) {
+              for (final e in value.entries) {
+                if (e.key is String && e.value is String) {
+                  _drafts[e.key as String] = e.value as String;
+                }
+              }
+            }
+          }
+        } catch (_) {
+          // A damaged draft cache is disposable; personal data is not.
+        }
+        if (_disposed || ticket != generation) return;
+      }
       // Archive failures only hide the migration prompt and keep originals;
       // they must never make a healthy namespace read-only.
       try {
@@ -150,13 +243,16 @@ class PocketStore extends ChangeNotifier {
         debugPrint('Legacy archive deferred (${error.runtimeType})\n$stack');
         legacyArchiveAvailable = false;
       }
+      _setSync(SyncStatus(SyncPhase.saved, at: now()));
     } catch (error, stack) {
       if (_disposed || ticket != generation) return;
       storageError = '本地记录暂不可用，原始数据已保留。请重试或联系支持。';
+      _fault = _Fault.load;
       debugPrint('Personal storage open failed (${error.runtimeType})\n$stack');
     }
     if (_disposed || ticket != generation) return;
     ready = true;
+    _reconcileFocus();
     _notify();
   }
 
@@ -166,19 +262,24 @@ class PocketStore extends ChangeNotifier {
     focusLogs = List.unmodifiable(data.focusLogs);
     taskNotes = Map.unmodifiable(data.taskNotes);
     appearance = data.appearance;
+    ext = data.ext;
     activeTaskId = data.activeTaskId;
     lastSavedTaskId = activeTaskId;
     _legacyImported = data.legacyImported;
+    focusClock.value = focusRemaining;
   }
 
   PersonalSnapshot _snapshot() => PersonalSnapshot(
     tasks: tasks, courses: courses, focusLogs: focusLogs, taskNotes: taskNotes,
     activeTaskId: activeTaskId, appearance: appearance,
-    legacyImported: _legacyImported,
+    legacyImported: _legacyImported, ext: ext,
   );
 
   bool get _writable => ready && namespace != null &&
       storageError == null && !_backupRestoreInProgress;
+
+  /// True when edits are accepted right now.
+  bool get writable => _writable;
 
   bool get guestBackupAvailable => _writable &&
       (namespace?.startsWith('haiz/guest/v1/') ?? false);
@@ -236,6 +337,7 @@ class PocketStore extends ChangeNotifier {
     final ticket = generation;
     final remoteWrite = _remoteWrite;
     final raw = _snapshot().encode();
+    _setSync(SyncStatus(SyncPhase.saving, cloud: remoteWrite != null));
     _pending = _pending.then((_) async {
       // Preserve queued legacy/guest writes in their original captured scope.
       // Only cloud writes need invalidation when the verified user changes.
@@ -244,22 +346,112 @@ class PocketStore extends ChangeNotifier {
         return;
       }
       try {
-        if (remoteWrite case final save?) {
-          await save(raw);
-        } else {
-          await _prefs.setString('$scope/personal.v1', raw);
-          if (await _prefs.getString('$scope/personal.v1') != raw) {
-            throw StateError('个人存储写入校验失败');
-          }
+        await _write(scope, raw, remoteWrite);
+        if (ticket == generation && !_disposed && _fault == _Fault.none) {
+          _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: remoteWrite != null));
         }
       } catch (error, stack) {
         debugPrint('Personal storage write failed (${error.runtimeType})\n$stack');
         if (ticket == generation && !_disposed) {
-          storageError = '保存未成功；请保持应用打开并重试，原始记录仍保留。';
+          _markWriteFault(error);
           _notify();
         }
       }
     });
+  }
+
+  Future<void> _write(String scope, String raw,
+      Future<void> Function(String)? remoteWrite) async {
+    if (remoteWrite case final save?) {
+      await save(raw);
+    } else {
+      await _prefs.setString('$scope/personal.v1', raw);
+      if (await _prefs.getString('$scope/personal.v1') != raw) {
+        throw StateError('个人存储写入校验失败');
+      }
+    }
+  }
+
+  void _markWriteFault(Object error) {
+    if (error is SnapshotConflict) {
+      _fault = _Fault.conflict;
+      storageError = '另一台设备更新了云端记录。为避免覆盖，本机已暂停保存。';
+      _setSync(SyncStatus(SyncPhase.conflict, cloud: true));
+    } else {
+      if (_fault != _Fault.conflict) _fault = _Fault.write;
+      storageError ??= '保存未成功；请保持应用打开并重试，原始记录仍保留。';
+      _setSync(SyncStatus(SyncPhase.failed, cloud: isCloudAccount));
+    }
+  }
+
+  /// The failure can be recovered by writing the current state again.
+  bool get canRetrySave => _fault == _Fault.write;
+
+  /// A newer cloud revision exists; the user must choose how to continue.
+  bool get hasCloudConflict => _fault == _Fault.conflict;
+
+  /// Writes the current in-memory state again after a transient failure.
+  /// Load failures and cloud conflicts are never "fixed" by a blind write.
+  Future<bool> retrySave() async {
+    final scope = namespace;
+    if (!canRetrySave || scope == null || !ready) return false;
+    final ticket = generation;
+    final remoteWrite = _remoteWrite;
+    final raw = _snapshot().encode();
+    _setSync(SyncStatus(SyncPhase.saving, cloud: remoteWrite != null));
+    try {
+      await _pending;
+      await _write(scope, raw, remoteWrite);
+      if (ticket != generation || _disposed) return false;
+      storageError = null;
+      _fault = _Fault.none;
+      _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: remoteWrite != null));
+      _notify();
+      return true;
+    } catch (error) {
+      if (ticket == generation && !_disposed) {
+        _markWriteFault(error);
+        _notify();
+      }
+      return false;
+    }
+  }
+
+  /// Conflict option A: discard this device's unsaved state, load the cloud.
+  Future<bool> reloadFromCloud() => _resolveConflict(merge: false);
+
+  /// Conflict option B: keep every record from both sides (by id; this
+  /// device's version wins for the same id), then save as a new revision.
+  Future<bool> mergeWithCloud() => _resolveConflict(merge: true);
+
+  Future<bool> _resolveConflict({required bool merge}) async {
+    final read = _remoteRead;
+    final write = _remoteWrite;
+    if (!hasCloudConflict || read == null || write == null) return false;
+    final ticket = generation;
+    final local = _snapshot();
+    try {
+      await _pending;
+      final raw = await read(); // Also refreshes the expected revision.
+      if (ticket != generation || _disposed) return false;
+      final remote = raw == null ? const PersonalSnapshot() : PersonalSnapshot.decode(raw);
+      final next = merge ? mergeSnapshots(local: local, remote: remote) : remote;
+      if (merge) await write(next.encode());
+      if (ticket != generation || _disposed) return false;
+      _apply(next);
+      storageError = null;
+      _fault = _Fault.none;
+      _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: true));
+      _reconcileFocus();
+      _notify();
+      return true;
+    } catch (error) {
+      if (ticket == generation && !_disposed) {
+        _markWriteFault(error is SnapshotConflict ? error : SnapshotConflict('$error'));
+        _notify();
+      }
+      return false;
+    }
   }
 
   Future<void> setSemanticExtractionConsent(bool value) async {
@@ -345,6 +537,7 @@ class PocketStore extends ChangeNotifier {
     } catch (error) {
       if (ticket == generation && !_disposed && error is! StateError) {
         storageError = '旧数据导入未完成，归档和原始记录仍保留。';
+        _fault = _Fault.load;
         _notify();
       }
       rethrow;
@@ -364,12 +557,20 @@ class PocketStore extends ChangeNotifier {
       focusLogs: [...focusLogs, ...legacy.focusLogs],
       taskNotes: {...legacy.taskNotes, ...taskNotes},
       activeTaskId: activeTaskId ?? legacy.activeTaskId,
-      appearance: appearance, legacyImported: true,
+      appearance: appearance, legacyImported: true, ext: ext,
     );
   }
 
+  // ---------------------------------------------------------------- tasks
+
   int get remainingCount => tasks.where((x) => !x.completed).length;
   int get doneCount => tasks.where((x) => x.completed).length;
+
+  TaskMeta metaFor(String id) => ext.taskMeta[id] ?? const TaskMeta();
+
+  void _setMeta(String id, TaskMeta meta) {
+    ext = ext.copyWith(taskMeta: Map.unmodifiable({...ext.taskMeta, id: meta}));
+  }
 
   void setAppearance(String value) {
     if (!_writable || !['porcelain', 'obsidian', 'ocean'].contains(value)) return;
@@ -377,16 +578,38 @@ class PocketStore extends ChangeNotifier {
     _persist(); _notify();
   }
 
-  void addTask(String title, String subject, {DateTime? due,
-      String source = '', String originalNotice = ''}) {
-    if (!_writable || title.trim().isEmpty) return;
+  /// 'system', 'light' or 'dark'. The 1.5.5 field follows explicit choices
+  /// so a 1.5.5 client opening the same record shows a matching theme.
+  String get themeMode => ext.themeMode;
+
+  void setThemeMode(String mode) {
+    if (!_writable || !HaizExtension.themeModes.contains(mode)) return;
+    ext = ext.copyWith(themeMode: mode);
+    if (mode == 'light') appearance = 'porcelain';
+    if (mode == 'dark') appearance = 'obsidian';
+    _persist(); _notify();
+  }
+
+  static String _iso(DateTime due) =>
+      '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}';
+
+  /// Returns the new task id, or null when nothing was written.
+  String? addTask(String title, String subject, {DateTime? due,
+      String source = '', String originalNotice = '', String note = ''}) {
+    if (!_writable || title.trim().isEmpty) return null;
+    final id = newId();
     tasks = List.unmodifiable([
-      TaskItem(id: newId(), title: title.trim(), subject: subject,
-        dueIso: due == null ? null :
-          '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
+      TaskItem(id: id, title: title.trim(), subject: subject,
+        dueIso: due == null ? null : _iso(due),
         source: source, originalNotice: originalNotice), ...tasks,
     ]);
+    final stamp = now();
+    _setMeta(id, TaskMeta(createdAt: stamp, updatedAt: stamp));
+    if (note.trim().isNotEmpty) {
+      taskNotes = Map.unmodifiable({...taskNotes, id: note.trim()});
+    }
     _persist(); _notify();
+    return id;
   }
 
   /// Correct a task without changing its identifier, completion, or source trail.
@@ -408,13 +631,12 @@ class PocketStore extends ChangeNotifier {
       subject: subject.trim(),
       completed: old.completed,
       example: false,
-      dueIso: due == null
-          ? null
-          : '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}',
+      dueIso: due == null ? null : _iso(due),
       source: old.source,
       originalNotice: old.originalNotice,
     );
     tasks = List.unmodifiable([...tasks]..[index] = updated);
+    _setMeta(id, metaFor(id).copyWith(updatedAt: now()));
     _persist();
     _notify();
     return true;
@@ -431,24 +653,60 @@ class PocketStore extends ChangeNotifier {
       activeTaskId = task.id;
       lastSavedTaskId = task.id;
     }
+    ext = ext.copyWith(trash: List.unmodifiable(
+        ext.trash.where((entry) => entry.task.id != task.id)));
     _persist();
     _notify();
     return true;
   }
 
+  /// Restore from "最近删除".
+  bool restoreFromTrash(String id) {
+    final matches = ext.trash.where((e) => e.task.id == id);
+    if (matches.isEmpty) return false;
+    final entry = matches.first;
+    return restoreTask(entry.task, note: entry.note);
+  }
+
+  void emptyTrash() {
+    if (!_writable || ext.trash.isEmpty) return;
+    ext = ext.copyWith(trash: const []);
+    _persist(); _notify();
+  }
+
   void toggleTask(String id) {
-    if (!_writable) return;
+    final task = tasks.where((x) => x.id == id);
+    if (task.isEmpty) return;
+    setTaskCompleted(id, !task.first.completed);
+  }
+
+  void setTaskCompleted(String id, bool completed) {
+    if (!_writable || !tasks.any((x) => x.id == id && x.completed != completed)) {
+      return;
+    }
     tasks = List.unmodifiable(tasks.map((x) => x.id == id
-        ? x.copyWith(completed: !x.completed) : x));
+        ? x.copyWith(completed: completed) : x));
+    final meta = metaFor(id);
+    _setMeta(id, completed
+        ? meta.copyWith(completedAt: now(), updatedAt: now())
+        : meta.copyWith(clearCompleted: true, updatedAt: now()));
     _persist(); _notify();
   }
 
   void deleteTask(String id) {
     if (!_writable) return;
+    final removed = tasks.where((x) => x.id == id).toList();
     tasks = List.unmodifiable(tasks.where((x) => x.id != id));
+    final note = taskNotes[id] ?? '';
     taskNotes = Map.unmodifiable({for (final e in taskNotes.entries)
       if (e.key != id) e.key: e.value});
     if (activeTaskId == id) { activeTaskId = null; lastSavedTaskId = null; }
+    if (removed.isNotEmpty) {
+      ext = ext.copyWith(trash: List.unmodifiable([
+        TrashEntry(task: removed.first, deletedAt: now(), note: note),
+        ...ext.trash.where((e) => e.task.id != id),
+      ].take(HaizExtension.maxTrash)));
+    }
     _persist(); _notify();
   }
 
@@ -469,24 +727,115 @@ class PocketStore extends ChangeNotifier {
     return null;
   }
 
+  TaskItem? taskById(String? id) {
+    if (id == null) return null;
+    for (final task in tasks) { if (task.id == id) return task; }
+    return null;
+  }
+
   void chooseFocusTask(String? id) {
     if (!_writable || (id != null && !tasks.any((t) => t.id == id))) return;
     activeTaskId = id; lastSavedTaskId = id;
     _persist(); _notify();
   }
 
+  // ---------------------------------------------------------------- notes
+
+  List<NoteItem> get notes => List.unmodifiable(
+      [...ext.notes]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)));
+
+  NoteItem? noteById(String id) {
+    for (final note in ext.notes) { if (note.id == id) return note; }
+    return null;
+  }
+
+  String? addNote(String text) {
+    if (!_writable || text.trim().isEmpty ||
+        ext.notes.length >= HaizExtension.maxNotes) {
+      return null;
+    }
+    final stamp = now();
+    final note = NoteItem(id: newId(), text: text.trim(), createdAt: stamp, updatedAt: stamp);
+    ext = ext.copyWith(notes: List.unmodifiable([note, ...ext.notes]));
+    _persist(); _notify();
+    return note.id;
+  }
+
+  bool updateNote(String id, String text) {
+    if (!_writable) return false;
+    final index = ext.notes.indexWhere((n) => n.id == id);
+    if (index < 0 || ext.notes[index].text == text) return false;
+    final list = [...ext.notes]..[index] = ext.notes[index].copyWith(text: text, updatedAt: now());
+    ext = ext.copyWith(notes: List.unmodifiable(list));
+    _persist(); _notify();
+    return true;
+  }
+
+  NoteItem? deleteNote(String id) {
+    if (!_writable) return null;
+    final note = noteById(id);
+    if (note == null) return null;
+    ext = ext.copyWith(notes: List.unmodifiable(ext.notes.where((n) => n.id != id)));
+    _persist(); _notify();
+    return note;
+  }
+
+  bool restoreNote(NoteItem note) {
+    if (!_writable || noteById(note.id) != null) return false;
+    ext = ext.copyWith(notes: List.unmodifiable([note, ...ext.notes]));
+    _persist(); _notify();
+    return true;
+  }
+
+  /// Explicit user action only: creates a task and keeps the memo, linked
+  /// both ways so the task's source remains traceable.
+  String? convertNoteToTask(String noteId, {required String title,
+      required String subject, DateTime? due}) {
+    final note = noteById(noteId);
+    if (note == null || !_writable) return null;
+    final id = addTask(title, subject, due: due, source: '来自备忘');
+    if (id == null) return null;
+    _setMeta(id, metaFor(id).copyWith(noteId: noteId));
+    final list = ext.notes.map((n) => n.id == noteId ? n.copyWith(taskId: id) : n);
+    ext = ext.copyWith(notes: List.unmodifiable(list));
+    _persist(); _notify();
+    return id;
+  }
+
+  // -------------------------------------------------------------- courses
+
   void setDay(int day) { selectedWeekday = day.clamp(1, 7); _notify(); }
 
-  void addCourse({required String name, required int weekday,
+  static bool _validCourse(String name, int weekday, int start, int end) =>
+      name.trim().isNotEmpty && end > start && weekday >= 1 && weekday <= 7 &&
+      start >= 0 && end <= 1440;
+
+  String? addCourse({required String name, required int weekday,
       required int startMinute, required int endMinute, String location = ''}) {
-    if (!_writable || name.trim().isEmpty || endMinute <= startMinute ||
-        weekday < 1 || weekday > 7 || startMinute < 0 || endMinute > 1440) {
-      return;
+    if (!_writable || !_validCourse(name, weekday, startMinute, endMinute)) {
+      return null;
     }
+    final id = newId();
     courses = List.unmodifiable([...courses,
-      CourseSlot(id: newId(), name: name.trim(), weekday: weekday,
+      CourseSlot(id: id, name: name.trim(), weekday: weekday,
         startMinute: startMinute, endMinute: endMinute, location: location.trim())]);
     _persist(); _notify();
+    return id;
+  }
+
+  /// Edit a course in place; its id stays stable.
+  bool updateCourse(String id, {required String name, required int weekday,
+      required int startMinute, required int endMinute, String location = ''}) {
+    if (!_writable || !_validCourse(name, weekday, startMinute, endMinute)) {
+      return false;
+    }
+    final index = courses.indexWhere((c) => c.id == id);
+    if (index < 0) return false;
+    courses = List.unmodifiable([...courses]..[index] = CourseSlot(
+      id: id, name: name.trim(), weekday: weekday, startMinute: startMinute,
+      endMinute: endMinute, location: location.trim()));
+    _persist(); _notify();
+    return true;
   }
 
   void deleteCourse(String id) {
@@ -495,57 +844,243 @@ class PocketStore extends ChangeNotifier {
     _persist(); _notify();
   }
 
+  bool restoreCourse(CourseSlot course) {
+    if (!_writable || courses.any((c) => c.id == course.id)) return false;
+    courses = List.unmodifiable([...courses, course]);
+    _persist(); _notify();
+    return true;
+  }
+
+  // ---------------------------------------------------------------- focus
+
+  FocusSession? get focusSession => ext.focus;
+  bool get focusRunning => ext.focus?.phase == FocusPhase.running;
+  bool get focusPaused => ext.focus?.phase == FocusPhase.paused;
+  int get focusTargetMinutes => ext.focusMinutes;
+
+  int get focusRemaining =>
+      ext.focus?.remainingAt(now()) ?? focusTargetMinutes * 60;
+
   void setFocusDuration(int minutes) {
-    if (!_writable || focusRunning) return;
-    focusTargetMinutes = minutes.clamp(1, 90);
-    focusRemaining = focusTargetMinutes * 60;
+    if (!_writable || ext.focus != null) return;
+    ext = ext.copyWith(focusMinutes: minutes.clamp(1, 180));
+    focusClock.value = focusTargetMinutes * 60;
+    _persist();
     _notify();
   }
 
+  /// Starts a new session or resumes a paused one.
   void startFocus() {
     if (!_writable || focusRunning) return;
-    focusRunning = true;
-    _focusEndsAt = DateTime.now().add(Duration(seconds: focusRemaining));
+    final stamp = now();
+    final current = ext.focus;
+    if (current != null) {
+      ext = ext.copyWith(focus: FocusSession(
+        id: current.id, taskId: current.taskId, label: current.label,
+        targetSeconds: current.targetSeconds, startedAt: current.startedAt,
+        phase: FocusPhase.running,
+        endsAt: stamp.add(Duration(seconds: current.remainingAt(stamp))),
+      ));
+    } else {
+      final task = activeTask;
+      ext = ext.copyWith(focus: FocusSession(
+        id: newId(), taskId: task?.id, label: task?.title ?? '自主学习',
+        targetSeconds: focusTargetMinutes * 60, startedAt: stamp,
+        phase: FocusPhase.running,
+        endsAt: stamp.add(Duration(minutes: focusTargetMinutes)),
+      ));
+    }
+    focusNotice = null;
+    _startTicker();
+    _persist();
+    _notify();
+  }
+
+  void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-    _notify();
+    focusClock.value = focusRemaining;
   }
 
   void _tick() {
-    final endAt = _focusEndsAt;
-    if (!focusRunning || endAt == null) return;
-    focusRemaining = endAt.difference(DateTime.now()).inSeconds
-        .clamp(0, focusTargetMinutes * 60);
-    if (focusRemaining == 0) { finishFocus(auto: true); } else { _notify(); }
+    if (!focusRunning) { _ticker?.cancel(); _ticker = null; return; }
+    final remaining = focusRemaining;
+    focusClock.value = remaining;
+    if (remaining == 0) finishFocus(auto: true);
   }
 
   void pauseFocus() {
-    if (!focusRunning) return;
-    _tick(); focusRunning = false; _focusEndsAt = null;
-    _ticker?.cancel(); _notify();
+    final current = ext.focus;
+    if (!_writable || current == null || current.phase != FocusPhase.running) return;
+    final remaining = current.remainingAt(now());
+    _ticker?.cancel();
+    _ticker = null;
+    if (remaining == 0) { finishFocus(auto: true); return; }
+    ext = ext.copyWith(focus: FocusSession(
+      id: current.id, taskId: current.taskId, label: current.label,
+      targetSeconds: current.targetSeconds, startedAt: current.startedAt,
+      phase: FocusPhase.paused, remainingSeconds: remaining,
+    ));
+    focusClock.value = remaining;
+    _persist(); _notify();
   }
 
+  /// Records the elapsed part of the session (if at least half a minute)
+  /// exactly once, then returns to idle. [auto] marks timer completion.
   void finishFocus({bool auto = false}) {
+    final current = ext.focus;
+    _ticker?.cancel();
+    _ticker = null;
     if (!_writable) return;
-    if (focusRunning && !auto) {
-      final endAt = _focusEndsAt;
-      if (endAt != null) {
-        focusRemaining = endAt.difference(DateTime.now()).inSeconds
-            .clamp(0, focusTargetMinutes * 60);
-      }
+    if (current == null) {
+      focusClock.value = focusTargetMinutes * 60;
+      _notify();
+      return;
     }
-    _ticker?.cancel(); _focusEndsAt = null; focusRunning = false;
-    final minutes = ((focusTargetMinutes * 60 - focusRemaining) / 60).round();
-    if (minutes > 0) {
-      focusLogs = List.unmodifiable([FocusLog(at: DateTime.now(), minutes: minutes,
-        label: activeTask?.title ?? '自主学习'), ...focusLogs]);
-      _persist();
+    final stamp = now();
+    final elapsed = current.elapsedAt(stamp);
+    final minutes = (elapsed / 60).round();
+    final already = ext.completedSessions.contains(current.id);
+    if (minutes > 0 && !already) {
+      final label = taskById(current.taskId)?.title ?? current.label;
+      focusLogs = List.unmodifiable([
+        FocusLog(at: stamp, minutes: minutes, label: label), ...focusLogs]);
     }
-    focusRemaining = focusTargetMinutes * 60; _notify();
+    ext = ext.copyWith(
+      clearFocus: true,
+      completedSessions: List.unmodifiable(
+          [current.id, ...ext.completedSessions.where((id) => id != current.id)].take(20)),
+    );
+    focusClock.value = focusTargetMinutes * 60;
+    _persist(); _notify();
   }
 
-  int get todayFocusMinutes => focusMinutesToday(focusLogs, DateTime.now());
+  /// Ends the session without a learning record.
+  void discardFocus() {
+    if (!_writable || ext.focus == null) return;
+    _ticker?.cancel();
+    _ticker = null;
+    ext = ext.copyWith(clearFocus: true);
+    focusClock.value = focusTargetMinutes * 60;
+    _persist(); _notify();
+  }
+
+  /// Call on load and whenever the app returns to the foreground: a session
+  /// that ended while the process was suspended or killed is completed once,
+  /// using its wall-clock end time, and the user is told what happened.
+  void reconcileFocus() {
+    if (!ready) return;
+    _reconcileFocus();
+    _notify();
+  }
+
+  void _reconcileFocus() {
+    final current = ext.focus;
+    if (current == null || !_writable) {
+      focusClock.value = focusRemaining;
+      return;
+    }
+    if (current.phase == FocusPhase.running) {
+      if (current.remainingAt(now()) == 0) {
+        final end = current.endsAt!;
+        focusNotice = '上次专注已在 ${minutesText(end.hour * 60 + end.minute)} 结束，'
+            '已记录 ${(current.targetSeconds / 60).round()} 分钟。';
+        finishFocus(auto: true);
+      } else {
+        _startTicker();
+      }
+    } else {
+      focusClock.value = focusRemaining;
+    }
+  }
+
+  void clearFocusNotice() {
+    if (focusNotice == null) return;
+    focusNotice = null;
+    _notify();
+  }
+
+  int get todayFocusMinutes => focusMinutesToday(focusLogs, now());
+
+  // --------------------------------------------------------------- drafts
+
+  String draft(String key) => _drafts[key] ?? '';
+
+  /// Keeps unsubmitted text across tab switches and, for guests, restarts.
+  void setDraft(String key, String value) {
+    if (namespace == null) return;
+    if (value.isEmpty) {
+      if (_drafts.remove(key) == null) return;
+    } else {
+      if (_drafts[key] == value) return;
+      _drafts[key] = value;
+    }
+    final scope = namespace!;
+    if (!scope.startsWith('haiz/guest/v1/')) return;
+    final ticket = generation;
+    _draftSave?.cancel();
+    _draftSave = Timer(const Duration(milliseconds: 600), () {
+      if (ticket != generation || namespace != scope || _disposed) return;
+      unawaited(_prefs.setString('$scope/drafts.v1', jsonEncode(_drafts))
+          .catchError((Object _) => false));
+    });
+  }
 
   @override
-  void dispose() { _disposed = true; generation++; _ticker?.cancel(); super.dispose(); }
+  void dispose() {
+    _disposed = true;
+    generation++;
+    _ticker?.cancel();
+    _draftSave?.cancel();
+    sync.dispose();
+    focusClock.dispose();
+    super.dispose();
+  }
+}
+
+/// Union by id; for the same id this device's record wins. Nothing present
+/// on either side is dropped, so a conflict never silently loses a record.
+PersonalSnapshot mergeSnapshots({
+  required PersonalSnapshot local,
+  required PersonalSnapshot remote,
+}) {
+  List<T> union<T>(List<T> mine, List<T> theirs, String Function(T) id) {
+    final seen = mine.map(id).toSet();
+    return [...mine, ...theirs.where((x) => seen.add(id(x)))];
+  }
+
+  final tasks = union(local.tasks, remote.tasks, (t) => t.id);
+  final logs = union(local.focusLogs, remote.focusLogs,
+      (l) => jsonEncode(l.toJson()));
+  final taskIds = tasks.map((t) => t.id).toSet();
+  final notes = {...remote.taskNotes, ...local.taskNotes}
+    ..removeWhere((key, _) => !taskIds.contains(key));
+  final localNotes = {for (final n in local.ext.notes) n.id: n};
+  for (final note in remote.ext.notes) {
+    final mine = localNotes[note.id];
+    if (mine == null || note.updatedAt.isAfter(mine.updatedAt)) {
+      localNotes[note.id] = note;
+    }
+  }
+  final trashIds = local.ext.trash.map((e) => e.task.id).toSet();
+  return PersonalSnapshot(
+    tasks: tasks,
+    courses: union(local.courses, remote.courses, (c) => c.id),
+    focusLogs: logs,
+    taskNotes: notes,
+    activeTaskId: local.activeTaskId,
+    appearance: local.appearance,
+    legacyImported: local.legacyImported || remote.legacyImported,
+    ext: local.ext.copyWith(
+      notes: localNotes.values.toList(),
+      taskMeta: {...remote.ext.taskMeta, ...local.ext.taskMeta},
+      trash: [
+        ...local.ext.trash,
+        ...remote.ext.trash.where((e) => trashIds.add(e.task.id)),
+      ].where((e) => !taskIds.contains(e.task.id)).take(HaizExtension.maxTrash).toList(),
+      completedSessions: {
+        ...local.ext.completedSessions, ...remote.ext.completedSessions,
+      }.take(20).toList(),
+    ),
+  );
 }

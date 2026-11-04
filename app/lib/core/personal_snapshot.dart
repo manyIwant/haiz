@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../domain/pocket_models.dart';
+import 'haiz_extension.dart';
 
 /// A single personal document; official assignments never enter this schema.
 class PersonalSnapshot {
@@ -8,6 +9,7 @@ class PersonalSnapshot {
     this.tasks = const [], this.courses = const [], this.focusLogs = const [],
     this.taskNotes = const {}, this.activeTaskId,
     this.appearance = 'porcelain', this.legacyImported = false,
+    this.ext = const HaizExtension(),
   });
 
   final List<TaskItem> tasks;
@@ -18,6 +20,17 @@ class PersonalSnapshot {
   final String appearance;
   final bool legacyImported;
 
+  /// 2.0 additions (notes, recently deleted, timestamps, focus session).
+  /// Omitted from the payload when empty so pure 1.5.5 data round-trips
+  /// byte-for-byte and keeps existing backup checksums stable.
+  final HaizExtension ext;
+
+  PersonalSnapshot copyWith({HaizExtension? ext}) => PersonalSnapshot(
+    tasks: tasks, courses: courses, focusLogs: focusLogs, taskNotes: taskNotes,
+    activeTaskId: activeTaskId, appearance: appearance,
+    legacyImported: legacyImported, ext: ext ?? this.ext,
+  );
+
   String encode() => jsonEncode({
     'version': 1,
     'tasks': tasks.map((x) => x.toJson()).toList(),
@@ -25,6 +38,7 @@ class PersonalSnapshot {
     'focusLogs': focusLogs.map((x) => x.toJson()).toList(),
     'taskNotes': taskNotes, 'activeTaskId': activeTaskId,
     'appearance': appearance, 'legacyImported': legacyImported,
+    if (!ext.isEmpty) 'haiz2': ext.toJson(),
   });
 
   factory PersonalSnapshot.decode(String raw) {
@@ -98,6 +112,7 @@ class PersonalSnapshot {
       taskNotes: Map<String, String>.unmodifiable(Map<String, String>.from(notes)),
       activeTaskId: tasks.any((t) => t.id == active) ? active as String? : null,
       appearance: appearance, legacyImported: value['legacyImported'] == true,
+      ext: HaizExtension.fromJson(value['haiz2']),
     );
   }
 
