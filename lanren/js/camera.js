@@ -72,7 +72,7 @@ export class DwellCamera {
     const f = poseAt(i);
     camera.position.set(f.ex, f.ey, f.ez);
     camera.lookAt(f.lx, f.ly, f.lz);
-    camera.fov = DwellCamera.fovFor(f.fov, camera.aspect, f.auth || 0);
+    camera.fov = DwellCamera.fovFor(f.fov, DwellCamera.screen(camera), f.auth || 0);
     DwellCamera.applyShift(camera);
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
@@ -91,10 +91,17 @@ export class DwellCamera {
   /** Portrait screens keep their lower part for words and links: a lens shift
    *  (not a tilt) lifts the subject into the upper part of the frame. */
   static shiftFor(aspect) { return aspect < 0.85 ? 1.32 : 1; }
+  /** The screen's own shape. camera.aspect cannot be trusted for this: setViewOffset overwrites it. */
+  static screen(camera) { return camera.userData.screen || camera.aspect; }
   static applyShift(camera) {
-    const k = DwellCamera.shiftFor(camera.aspect);
-    if (k > 1) camera.setViewOffset(1, k, 0, k - 1, 1, 1);
-    else if (camera.view && camera.view.enabled) camera.clearViewOffset();
+    const a = DwellCamera.screen(camera), k = DwellCamera.shiftFor(a);
+    // the window is the lower 1/k of a k-times-taller frame of the same width, so it keeps the
+    // screen's proportions (setViewOffset sets aspect = a / k; the window comes out a wide)
+    if (k > 1) camera.setViewOffset(a, k, 0, k - 1, a, 1);
+    else {
+      if (camera.view && camera.view.enabled) camera.clearViewOffset();
+      camera.aspect = a;
+    }
   }
 
   update(dt, wallDt = dt) {
@@ -114,9 +121,10 @@ export class DwellCamera {
     let pitch = clamp(Math.asin(clamp(look.y / len, -1, 1)) + this.off.pitch, -1.52, 1.52);
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     // portrait screens see less sideways: step back along the view so the subject still fits
-    const fov = DwellCamera.fovFor(s.fov, this.camera.aspect, s.auth || 0);
-    const shifted = DwellCamera.shiftFor(this.camera.aspect) > 1;
-    if (Math.abs(fov - this.camera.fov) > 0.01 || shifted !== !!this.camera.view?.enabled) {
+    const screen = DwellCamera.screen(this.camera);
+    const fov = DwellCamera.fovFor(s.fov, screen, s.auth || 0);
+    if (Math.abs(fov - this.camera.fov) > 0.01 || screen !== this.shapedFor) {
+      this.shapedFor = screen;
       this.camera.fov = fov;
       DwellCamera.applyShift(this.camera);
       this.camera.updateProjectionMatrix();
@@ -133,9 +141,9 @@ export class DwellCamera {
         pos.addScaledVector(toward, e * Math.min(dist * 0.55, 3.2));
         pos.y -= e * 0.25;
         dir.lerp(toward, e * 0.8).normalize();
-      } else if (pp.kind === 'map') {     // rise to look straight down: the crown becomes a plan
+      } else if (pp.kind === 'map') {     // rise and look down on the crown's centre: the crown becomes a plan
         pos.y += e * e * 7;
-        dir.lerp(new THREE.Vector3(0.02, -1, 0.01), e).normalize();
+        dir.lerp(pp.point.clone().sub(pos).normalize(), e).normalize();
       } else if (pp.kind === 'light') {   // through the gap in the leaves, towards the sun
         pos.addScaledVector(dir, e * e * 5);
       } else if (pp.kind === 'pull') {    // step back across the water: the whole tree, small

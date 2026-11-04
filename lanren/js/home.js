@@ -274,7 +274,9 @@ function leave(href, dark, x, y, anchor) {
   // where the move is aimed: the scene's own anchor, projected to the screen
   let ax = x, ay = y;
   if (world && anchor) {
-    const point = kind === 'shade' ? new THREE.Vector3(0.1, 0.6, 0) : anchor.clone();
+    // shade sinks to the trunk's foot; map rises over the crown's centre, so the crown
+    // ends where its contours are drawn (centre of the screen, north up)
+    const point = kind === 'shade' ? new THREE.Vector3(0.1, 0.6, 0) : kind === 'map' ? new THREE.Vector3(AXIS.x, 9.9, AXIS.z) : anchor.clone();
     cam.push = { kind, point, t: 0, d: kind === 'pull' ? 1.5 : 1.2 };
     const v = anchor.clone().project(world.camera);
     if (v.z < 1) { ax = (v.x * 0.5 + 0.5) * W; ay = (-v.y * 0.5 + 0.5) * H; }
@@ -298,7 +300,8 @@ function leave(href, dark, x, y, anchor) {
     }
     veil.append(svg);
     veil.style.clipPath = 'none';
-    g.fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.8, delay: 0.45, ease: 'power2.inOut' });
+    // the paper comes up slowly, so the contours are drawn over the fading crown
+    g.fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 1.35, delay: 0.4, ease: 'power1.inOut' });
     g.fromTo(svg.querySelectorAll('path'), { strokeDashoffset: 400 }, { strokeDashoffset: 0, duration: 1.1, delay: 0.55, stagger: 0.12, ease: 'power2.out',
       onComplete: () => g.delayedCall(0.25, go) });
   } else if (kind === 'light') {
@@ -559,7 +562,7 @@ window.__haizHome = {
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
   lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
-  info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +world.camera.aspect.toFixed(3)],
+  info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +(world.camera.userData.screen || world.camera.aspect).toFixed(3)],
     falling: world?.litter.falling.length, settled: world?.litter.settled.length, tier: document.documentElement.dataset.tier })
 };
 

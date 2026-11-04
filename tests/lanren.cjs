@@ -37,6 +37,19 @@ const mod = (p) => import(pathToFileURL(path.join(root, p)).href);
     const at = ch.poseAt(i), f = ch.shot(i);
     assert(Math.abs(at.ex - f.ex) < 1e-6 && Math.abs(at.ey - f.ey) < 1e-6 && Math.abs(at.fov - f.fov) < 1e-6, 'shot ' + i + ' exact');
   }
+  // phones fly their own compositions for the opening, the map and full bloom: same rules,
+  // a looser step (the map climbs higher so the whole crown fits a narrow screen)
+  ch.setPortrait(true);
+  let worstP = 0;
+  for (let p = 0; p < N - 1; p += 0.005) {
+    const a = ch.poseAt(p), b = ch.poseAt(p + 0.005);
+    worstP = Math.max(worstP, Math.hypot(a.ex - b.ex, a.ey - b.ey, a.ez - b.ez));
+    assert(a.ey > ch.WATER + 0.3, 'portrait eye above the water at p=' + p.toFixed(3));
+    assert(Math.hypot(a.ex - 0.15, a.ez) > 1.8 || a.ey > 3.6, 'portrait eye clear of the trunk at p=' + p.toFixed(3));
+  }
+  assert(worstP < 1.3, 'portrait camera jumps: ' + worstP.toFixed(2) + ' m per 0.5 %');
+  ch.setPortrait(false);
+  checks.push(`portrait path continuous (≤${worstP.toFixed(2)} m per 0.5 %), above water, clear of the trunk`);
   // the opening and closing shots frame the whole tree; the details shot is a close-up
   const far = (i) => Math.hypot(ch.shot(i).ex - ch.AXIS.x, ch.shot(i).ez - ch.AXIS.z);
   assert(far(0) > 30 && far(5) > 25 && ch.shot(2).fov < 32, 'shot scales: wide open, wide close, macro in between');

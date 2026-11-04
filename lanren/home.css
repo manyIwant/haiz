@@ -174,8 +174,8 @@ body.home #experienceDock { display: none; }
 .js body::before { content: ""; position: fixed; inset: 0; z-index: 30; background: #0d1210; pointer-events: none; transition: opacity 1.8s var(--ease); }
 .js body.painted::before { opacity: 0; }
 .veil-map { position: absolute; left: 50%; top: 50%; width: min(88vmin, 820px); height: min(88vmin, 820px); transform: translate(-50%, -50%); overflow: visible; }
-.veil-map path { fill: none; stroke: #5d6a52; stroke-width: 0.8; stroke-dasharray: 400; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.veil-map path:first-child { stroke: #2f3a2a; stroke-width: 1.6; }
+.veil-map path { fill: none; stroke: #5d6a52; stroke-width: 1.1; stroke-dasharray: 400; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.veil-map path:first-child { stroke: #2f3a2a; stroke-width: 2; }
 .veil { position: fixed; inset: 0; z-index: 40; pointer-events: none; background: var(--veil, var(--paper));
   clip-path: circle(0 at var(--vx, 50%) var(--vy, 50%)); }
 .colophon { position: relative; z-index: 5; padding: 30px var(--pad) 40px; font-size: 11px; color: var(--ink-3); max-width: 900px; }

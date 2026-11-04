@@ -339,9 +339,10 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   shadowCatch.receiveShadow = true;
   shadowCatch.renderOrder = -4;
   shadowCatch.material.onBeforeCompile = (sh) => {
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvSC = position.xy;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC;')
-      .replace('gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );', 'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) * smoothstep( 26.0, 9.0, length( vSC ) ) );');
+    // fades out at the lagoon's edge; from above (where the pale bed shows) the shade is deeper
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC; varying vec3 vSW;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvSC = position.xy; vSW = (modelMatrix * vec4(position, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vSC; varying vec3 vSW;')
+      .replace('gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );', 'float steepS = smoothstep( 0.45, 0.92, normalize( cameraPosition - vSW ).y );\n  gl_FragColor = vec4( color, opacity * mix( 1.0, 1.7, steepS ) * ( 1.0 - getShadowMask() ) * smoothstep( mix( 26.0, 29.5, steepS ), 9.0, length( vSC ) ) );');
   };
   scene.add(shadowCatch);
   const water = createWater(WATER, tier.reflect, ratio);
@@ -421,8 +422,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     composer.setSize(w, h);
     const pr = renderer.getPixelRatio();
     sceneRT.setSize(Math.round(w * pr), Math.round(h * pr));
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
+    camera.userData.screen = camera.aspect = w / h;
+    camera.updateProjectionMatrix();   // the dwell camera re-applies its lens shift for the new shape
     atmo.uniforms.uAspect.value = w / h;
   }
 

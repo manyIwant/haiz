@@ -245,7 +245,7 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   float taihu = 1.0 - smoothstep(0.2, 0.3, vI.a);
   float plinth = smoothstep(0.25, 0.35, vI.a) * (1.0 - smoothstep(0.65, 0.75, vI.a));
   if (taihu > 0.01) {
-    vec3 lime = mix(vec3(0.11, 0.11, 0.105), vec3(0.23, 0.225, 0.21), g1) * (0.84 + 0.3 * inn(vIP * 9.0));
+    vec3 lime = mix(vec3(0.075, 0.075, 0.072), vec3(0.18, 0.178, 0.168), g1) * (0.84 + 0.3 * inn(vIP * 9.0));   // dark grey, as in the site photograph
     lime *= 1.0 - 0.3 * smoothstep(0.55, 0.9, inn(vec3(vIP.x * 7.0, vIP.y * 0.7, vIP.z * 7.0)));
     lime = mix(lime, vec3(0.07, 0.075, 0.06), smoothstep(0.64, 0.86, inn(vIP * 3.1 + 5.0)) * 0.4);
     c = mix(c, lime, taihu);
@@ -315,7 +315,12 @@ void main(){
   float caust = pow(wn(p * 2.2 + vec2(t * 0.3, -t * 0.2)) * wn(p * 3.1 - vec2(t * 0.25, t * 0.15)), 1.5);
   vec3 deep = vec3(0.010, 0.030, 0.036);
   vec3 lagoon = mix(vec3(0.07, 0.15, 0.13), vec3(0.20, 0.21, 0.15), smoothstep(14.0, 5.0, rr)) * (0.85 + 0.5 * caust);
-  vec3 body = mix(deep, lagoon, shallow);
+  // seen from above, the light's path through shallow water is short: the sandy bed shows
+  // through, pale turquoise over sand (only steep views; low views keep the dark mirror)
+  float steep = smoothstep(0.45, 0.92, V.y);
+  vec3 bed = mix(vec3(0.075, 0.20, 0.19), vec3(0.30, 0.30, 0.22), smoothstep(18.0, 7.0, rr)) * (0.8 + 0.6 * caust);
+  lagoon = mix(lagoon, bed, steep);
+  vec3 body = mix(deep, lagoon, mix(shallow, smoothstep(34.0, 12.0, rr), steep));
   vec3 c = mix(body, refl, clamp(fres * 1.1 + 0.06, 0.0, 1.0));
   gl_FragColor = vec4(c, 1.0);
 }`;

@@ -100,7 +100,11 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   assert(overflow <= 0, 'no horizontal overflow on a phone: ' + overflow);
   const tier = await mp.evaluate(() => window.__haizHome.info().tier);
-  results.push(`phone 390×844: no horizontal overflow, tier ${tier}`);
+  // the portrait lens shift must keep the screen's proportions (setViewOffset rewrites camera.aspect)
+  await mp.evaluate(() => { window.__haizHome.go(5); window.__haizHome.still(0.1, 20); });
+  const shape = await mp.evaluate(() => { const e = window.__haizHome.world.camera.projectionMatrix.elements; return { drawn: e[5] / e[0], screen: innerWidth / innerHeight }; });
+  assert(Math.abs(shape.drawn / shape.screen - 1) < 0.01, `phone image keeps its proportions: drawn ${shape.drawn.toFixed(3)} vs screen ${shape.screen.toFixed(3)}`);
+  results.push(`phone 390×844: no horizontal overflow, true proportions under the lens shift, tier ${tier}`);
   fs.mkdirSync(path.join(root, 'tests/artifacts/home'), { recursive: true });
   await mp.evaluate(() => { window.__haizHome.go(4); window.__haizHome.still(0.1, 20); });
   await mp.waitForTimeout(1300);

@@ -993,51 +993,61 @@ def build_taihu():
     mb = bpy.data.metaballs.new('taihu')
     mb.resolution = 0.045
     mb.render_resolution = 0.045
-    mb.threshold = 0.62
+    mb.threshold = 0.6
     ob = bpy.data.objects.new('TaihuMB', mb)
     bpy.context.scene.collection.objects.link(ob)
 
-    def put(x, y, z, sx, sy, sz, neg=False):
+    def put(x, y, z, sx, sy, sz, neg=False, tilt=0.0):
         el = mb.elements.new()
         el.type = 'ELLIPSOID'
         el.radius = 1.0
-        el.stiffness = 2.6 if neg else 1.25
+        el.stiffness = 2.6 if neg else 1.4
         el.use_negative = neg
         q = rot @ Vector((x, y, 0))
         el.co = (x0 + q.x, y0 + q.y, z)
         el.size_x, el.size_y, el.size_z = sx, sy, sz
-        el.rotation = (rot @ Matrix.Rotation(r_.uniform(-0.3, 0.3), 4, 'Z')).to_quaternion()
+        el.rotation = (rot @ Matrix.Rotation(r_.uniform(-0.3, 0.3), 4, 'Z') @ Matrix.Rotation(tilt, 4, 'Y')).to_quaternion()
 
-    # the body: head high on the left, a lower middle, a crest rising on the right
-    # the body: one continuous mass (heavily overlapping lobes) with a raised
-    # head on the left, a lower middle and a crest rising on the right
-    prof = [(-0.48, 0.92), (-0.36, 1.0), (-0.22, 0.84), (-0.08, 0.7), (0.06, 0.66), (0.2, 0.74), (0.32, 0.88), (0.42, 1.0), (0.5, 0.82)]
-    for (u, hk) in prof:
-        h = Hh * hk
-        put(u * L, r_.uniform(-0.08, 0.08), top + h * 0.36, L * 0.17 * r_.uniform(0.9, 1.1), D * 0.55 * r_.uniform(0.85, 1.05), h * 0.62)
-        put(u * L + r_.uniform(-0.15, 0.15), r_.uniform(-0.18, 0.18), top + h * 0.78, L * 0.11, D * 0.36, h * 0.32)
-    put(0.46 * L, 0.05, top + Hh * 0.98, 0.34, 0.24, 0.36)        # the crest's tip
-    put(-0.47 * L, 0.0, top + Hh * 0.98, 0.46, 0.36, 0.32)       # the head
-    # honeycomb (透、漏): hollows that open on the surface, several right through
-    for k in range(46):
-        u = r_.uniform(-0.48, 0.48)
-        hk = 0.2 + 0.68 * r_.random()
-        through = k % 4 == 0
+    # after the site photograph: a massive, rugged block over the left two thirds
+    # whose broken top is roughly level; on the right it thins into a raised slab
+    # that juts out to a point, its underside lifted off the plinth.
+    # (u along the length, top and bottom in heights, depth in depths)
+    prof = [(-0.5, 0.70, 0.0, 0.70), (-0.43, 0.93, 0.0, 0.92), (-0.34, 1.0, 0.0, 1.0), (-0.24, 0.96, 0.0, 1.0),
+            (-0.13, 0.99, 0.0, 0.95), (-0.02, 0.92, 0.0, 0.9), (0.08, 0.86, 0.05, 0.82), (0.17, 0.78, 0.14, 0.7),
+            (0.26, 0.74, 0.24, 0.6), (0.35, 0.72, 0.30, 0.5), (0.43, 0.7, 0.36, 0.42), (0.5, 0.68, 0.44, 0.3)]
+    for (u, tk, bk, dk) in prof:
+        zt, zb = Hh * tk, Hh * bk
+        h = zt - zb
+        put(u * L, r_.uniform(-0.05, 0.05), top + zb + h * 0.46, L * 0.13 * r_.uniform(0.9, 1.15), D * 0.8 * dk, h * 0.9,
+            tilt=r_.uniform(-0.25, 0.25))
+        for _ in range(2):     # rough knobs and blades along the top edge
+            put(u * L + r_.uniform(-0.12, 0.12), r_.uniform(-0.25, 0.25) * D * dk, top + zt - r_.uniform(0.18, 0.3),
+                r_.uniform(0.18, 0.32), r_.uniform(0.16, 0.26), r_.uniform(0.14, 0.24), tilt=r_.uniform(-0.6, 0.6))
+    put(0.52 * L, 0.0, top + Hh * 0.58, 0.36, 0.2, 0.16, tilt=-0.35)     # the slab's tip
+    # caves at the foot of the block (dark mouths, right through), then the
+    # honeycomb (透、漏): hollows over the body, crowded on the block, some through
+    for (u, hk, sz) in [(-0.33, 0.2, 0.3), (-0.12, 0.18, 0.26), (0.05, 0.3, 0.2)]:
+        put(u * L, 0.0, top + Hh * hk, sz, D * 0.95, sz * 0.9, neg=True)
+    for k in range(72):
+        u = r_.uniform(-0.48, 0.4) if k % 3 else r_.uniform(-0.48, 0.05)
+        hk = 0.15 + 0.75 * r_.random()
+        through = k % 5 == 0
         side = r_.choice((-1, 1))
-        sz = r_.uniform(0.1, 0.27)
-        put(u * L, (0.0 if through else side * D * r_.uniform(0.42, 0.55)), top + Hh * hk * 0.9,
-            sz * r_.uniform(0.8, 1.3), (D * 0.9 if through else sz * 1.2), sz * r_.uniform(0.8, 1.3), neg=True)
+        sz = r_.uniform(0.06, 0.2) * (1.0 if r_.random() > 0.2 else 1.5)
+        put(u * L, (0.0 if through else side * D * r_.uniform(0.38, 0.5)), top + Hh * hk * 0.95,
+            sz * r_.uniform(0.8, 1.4), (D * 0.9 if through else sz * 1.3), sz * r_.uniform(0.7, 1.2), neg=True)
     dg = bpy.context.evaluated_depsgraph_get()
     me = bpy.data.meshes.new_from_object(ob.evaluated_get(dg))
     bpy.data.objects.remove(ob)
     bpy.data.metaballs.remove(mb)
-    for v in me.vertices:      # sharp weathered ridges, pits and pockmarks (皱)
+    for v in me.vertices:      # angular weathering (皱): sharp ridges, stepped facets, pits
         p = v.co
-        rid = 1 - abs(noise.noise(Vector((p.x * 2.6, p.y * 2.6, p.z * 1.6))))
-        rid2 = 1 - abs(noise.noise(Vector((p.x * 6.0 + 3.0, p.y * 6.0, p.z * 4.0))))
-        pit = max(0.0, noise.noise(p * 9.0 + Vector((7.0, 1.0, 2.0))) - 0.25)
-        d = 0.085 * rid ** 5 + 0.03 * rid2 ** 4 - 0.07 * pit + 0.012 * noise.noise(p * 18.0)
-        v.co = p + v.normal * d * (1 - 0.5 * max(0.0, v.normal.z))
+        rid = noise.ridged_multi_fractal(Vector((p.x * 1.7, p.y * 1.7, p.z * 1.3)), 0.9, 2.1, 4, 1.0, 2.2, noise_basis='PERLIN_ORIGINAL')
+        fac = noise.noise(Vector((p.x * 3.2, p.y * 3.2, p.z * 2.4)) + Vector((5.0, 2.0, 1.0)))
+        fac = math.copysign(abs(fac) ** 0.4, fac)          # plateaus with sharp steps between them
+        pit = max(0.0, noise.noise(p * 8.0 + Vector((7.0, 1.0, 2.0))) - 0.2)
+        d = 0.055 * (rid - 0.6) + 0.085 * fac - 0.09 * pit + 0.014 * noise.noise(p * 20.0)
+        v.co = p + v.normal * d * (1 - 0.4 * max(0.0, v.normal.z))
         if v.co.z < top:
             v.co.z = top
     # the plinth: a dark granite block, slightly bevelled
