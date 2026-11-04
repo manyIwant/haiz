@@ -4,7 +4,7 @@
 import { leafColour, stageName } from './season.js';
 import { formatClock, partOfDay } from './sun.js';
 
-const ATLAS_URL = new URL('../assets/leaf-atlas.png', import.meta.url).href;
+const ATLAS_URL = new URL('../assets/leaf-atlas-web.png', import.meta.url).href;
 let atlasPromise = null;
 function loadAtlas() {
   if (!atlasPromise) {

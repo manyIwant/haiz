@@ -3,10 +3,10 @@
 // the six viewpoints) drives the camera, the tree's growth, the light of the
 // day and which part of HAIZ is open.
 import * as THREE from 'three';
-import { CHAPTERS, FRAMES, poseAt, growAt, lightAt, retarget, AXIS } from './chapters.js';
+import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
 import { sunPosition, haikouParts } from './sun.js';
-import { UNIFORMS } from './foliage.js';
+import { UNIFORMS, leafVisible } from './foliage.js';
 import { Specimens } from './specimen.js';
 import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
@@ -63,6 +63,7 @@ for (const p of panels) p.addEventListener('focusin', () => { const i = +p.datas
 
 // ------------------------------------------------------------------ panels (GSAP reveals)
 let panelTl = null;
+const SOFT = '.chap-label, .lede, .zh, .begin, .note-intro';
 function setActive(i) {
   if (i === active) return;
   const prev = active;
@@ -73,27 +74,36 @@ function setActive(i) {
   if (prev >= 0) {
     const out = panels[prev];
     if (g && !reduceMotion) {
-      g.to(out.querySelectorAll('.display .line > span'), { yPercent: -105, duration: 0.45, ease: 'power3.in', stagger: 0.04, overwrite: true });
-      g.to(out.querySelectorAll('.idx, .zh, .lede, .entries li, .note, .begin'), { opacity: 0, y: -10, duration: 0.35, overwrite: true,
-        onComplete: () => { if (active !== prev) out.classList.remove('is-active'); } });
+      const any = (q) => [...out.querySelectorAll(q)];
+      g.to(any('.display .line > span'), { yPercent: -105, duration: 0.45, ease: 'power3.in', stagger: 0.04, overwrite: true });
+      g.to(any(SOFT), { opacity: 0, y: -8, duration: 0.35, overwrite: true });
+      // the slab is placed by CSS variables; animate a lift variable, never its transform
+      if (out.querySelector('.slab')) g.to(out.querySelector('.slab'), { opacity: 0, '--lift': '14px', duration: 0.4, ease: 'power2.in', overwrite: true });
+      g.delayedCall(0.45, () => { if (active !== prev) out.classList.remove('is-active'); });
     } else out.classList.remove('is-active');
   }
   if (i >= 0) {
     const inn = panels[i];
     inn.classList.add('is-active');
+    slabPos.init = false;
     if (g && !reduceMotion) {
       panelTl?.kill();
       panelTl = g.timeline({ delay: prev >= 0 ? 0.25 : 0.1 });
-      panelTl.fromTo(inn.querySelectorAll('.display .line > span'), { yPercent: 108 }, { yPercent: 0, duration: 1.15, ease: 'power4.out', stagger: 0.09 }, 0)
-        .fromTo(inn.querySelectorAll('.idx, .zh, .lede, .entries li, .note, .begin'), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.05 }, 0.15);
+      const any = (q) => [...inn.querySelectorAll(q)];
+      panelTl.fromTo(any('.display .line > span'), { yPercent: 108 }, { yPercent: 0, duration: 1.15, ease: 'power4.out', stagger: 0.09 }, 0)
+        .fromTo(any(SOFT), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.06 }, 0.1);
+      const slab = inn.querySelector('.slab');
+      if (slab) {
+        panelTl.fromTo(slab, { opacity: 0, '--lift': '26px' }, { opacity: 1, '--lift': '0px', duration: 1.0, ease: 'power3.out' }, 0.35)
+          .fromTo(any('.entries li'), { opacity: 0, x: 10 }, { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out', stagger: 0.05 }, 0.5);
+      }
     }
     try { sessionStorage.setItem('haiz.home', JSON.stringify({ c: i, t: Date.now() })); } catch { /* storage blocked */ }
     const id = CHAPTERS[i].id;
     if (location.hash.slice(1) !== id) history.replaceState(null, '', i === 0 ? location.pathname + location.search : '#' + id);
     $('#whereIdx').textContent = CHAPTERS[i].index;
-    $('#whereName').textContent = i === 0 ? '一棵树' : CHAPTERS[i].zh.split(' · ')[0];
-    setCard(i);
-  } else setCard(-1);
+    $('#whereName').textContent = CHAPTERS[i].label.split(' · ')[1] || CHAPTERS[i].label;
+  }
 }
 
 // ------------------------------------------------------------------ helpers & static UI
@@ -106,61 +116,120 @@ for (const b of $$('[data-action="book"]')) b.addEventListener('click', () => sp
 for (const b of $$('[data-action="search"]')) b.addEventListener('click', () => $('#exploreOpen')?.click());
 $('#soundButton').addEventListener('click', async () => $('#soundButton').setAttribute('aria-pressed', String(await sound.toggle())));
 
-// orbit navigator: each viewpoint sits at its real azimuth around the tree
+// navigator: the camera's real path, seen from above (reference 09). Stations
+// sit where the shots are; the dot is the camera right now.
 const SVGNS = 'http://www.w3.org/2000/svg';
+const NAV = { scale: 1, samples: [] };
+// radial log scale: the far opening and closing shots and the close ones all read
+const navXY = (x, z) => {
+  const dx = x - AXIS.x, dz = z - AXIS.z, r = Math.hypot(dx, dz) || 1e-6;
+  const k = (Math.log(1 + r / 4) * NAV.scale) / r;
+  return [(dx * k).toFixed(1), (dz * k).toFixed(1)];
+};
 function buildOrbit() {
   const g = $('#orbitDots');
-  FRAMES.forEach((f, i) => {
-    const x = Math.sin(f.th) * 44, y = Math.cos(f.th) * 44;
-    const c = document.createElementNS(SVGNS, 'circle');
-    c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1)); c.setAttribute('r', '3.6');
-    c.setAttribute('class', 'dot');
-    c.addEventListener('click', () => goTo(i));
+  g.replaceChildren();
+  NAV.samples = [];
+  let far = 1;
+  for (let k = 0; k <= 250; k++) {
+    const q = poseAt((k / 250) * (N - 1));
+    NAV.samples.push(q);
+    far = Math.max(far, Math.hypot(q.ex - AXIS.x, q.ez - AXIS.z));
+  }
+  NAV.scale = 46 / Math.log(1 + far / 4);
+  $('#orbitPath').setAttribute('d', 'M' + NAV.samples.map((q) => navXY(q.ex, q.ez).join(',')).join(' L'));
+  CHAPTERS.forEach((c, i) => {
+    const f = shot(i);
+    const [x, y] = navXY(f.ex, f.ez);
+    const dot = document.createElementNS(SVGNS, 'circle');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', '3.4');
+    dot.setAttribute('class', 'dot');
+    dot.addEventListener('click', () => goTo(i));
     const t = document.createElementNS(SVGNS, 'text');
-    t.setAttribute('x', (x * 1.27).toFixed(1)); t.setAttribute('y', (y * 1.27 + 2.4).toFixed(1));
+    const out = Math.hypot(+x, +y) || 1;
+    t.setAttribute('x', (+x + (x / out) * 9).toFixed(1)); t.setAttribute('y', (+y + (y / out) * 9 + 2.5).toFixed(1));
     t.setAttribute('text-anchor', 'middle'); t.setAttribute('class', 'lab');
-    t.textContent = CHAPTERS[i].index;
-    g.append(c, t);
+    t.textContent = c.index;
+    g.append(dot, t);
   });
 }
 buildOrbit();
-const orbitDots = $$('#orbitDots .dot');
+let orbitDots = $$('#orbitDots .dot');
 const orbitEye = $('#orbitEye');
-
-// ------------------------------------------------------------------ the pinned card
-const card = $('#card');
-let cardFor = -1;
-const ANCHORS = CHAPTERS.map(() => new THREE.Vector3(2.5, 6, 0));
-function setCard(i) {
-  cardFor = i;
-  const e = i >= 0 ? CHAPTERS[i].entries.find((x) => x.primary && x.href) : null;
-  if (!e) { card.classList.remove('show'); card.hidden = true; return; }
-  card.hidden = false;
-  card.href = e.href;
-  card.toggleAttribute('data-dark', !!e.dark);
-  card.querySelector('.card-idx').textContent = CHAPTERS[i].index;
-  card.querySelector('.card-title').textContent = e.title;
-  card.querySelector('.card-note').textContent = e.note;
-  requestAnimationFrame(() => card.classList.add('show'));
+function updateNav(p, grow) {
+  const k = Math.round((Math.max(0, Math.min(N - 1, p)) / (N - 1)) * 250);
+  $('#orbitDone').setAttribute('d', 'M' + NAV.samples.slice(0, k + 1).map((q) => navXY(q.ex, q.ez).join(',')).join(' L'));
+  const [ex, ey] = navXY(world.camera.position.x, world.camera.position.z);
+  orbitEye.setAttribute('cx', ex); orbitEye.setAttribute('cy', ey);
+  orbitDots.forEach((d, i) => d.classList.toggle('on', i === active));
+  $('#railDot').style.top = ((p / (N - 1)) * 100).toFixed(2) + '%';
+  // growth line: the dot rides the curve; the stage reached lights up
+  const curve = $('#growthCurve');
+  if (curve.getTotalLength) {
+    const L = curve.getTotalLength();
+    const pt = curve.getPointAtLength(L * grow);
+    const dot = $('#growthDot');
+    dot.setAttribute('cx', pt.x.toFixed(1)); dot.setAttribute('cy', pt.y.toFixed(1));
+  }
+  stageEls.forEach((el, i) => el.classList.toggle('on', grow >= STAGES[i].at - 0.02 && (i === STAGES.length - 1 || grow < STAGES[i + 1].at - 0.02)));
 }
+const stageEls = $$('#growth li');
+
+// ------------------------------------------------------------------ the glass slab, pinned into the scene
+const ANCHORS = CHAPTERS.map((c) => new THREE.Vector3(...(Array.isArray(c.ui.anchor) ? c.ui.anchor : [0.2, 6, 0])));
 const svg = $('#leaders');
 const leader = document.createElementNS(SVGNS, 'g');
-leader.append(document.createElementNS(SVGNS, 'path'), document.createElementNS(SVGNS, 'circle'));
+const leadPath = document.createElementNS(SVGNS, 'path');
+const leadHalo = document.createElementNS(SVGNS, 'circle'); leadHalo.setAttribute('class', 'halo'); leadHalo.setAttribute('r', '7');
+const leadPin = document.createElementNS(SVGNS, 'circle'); leadPin.setAttribute('class', 'pin'); leadPin.setAttribute('r', '2.6');
+leader.append(leadPath, leadHalo, leadPin);
 svg.append(leader);
-const cardPos = { x: 0, y: 0, init: false };
-function placeCard(settle) {
-  if (cardFor < 0 || card.hidden || innerWidth < 760) { leader.style.opacity = '0'; return; }
-  const v = ANCHORS[cardFor].clone().project(world.camera);
-  const ax = (v.x * 0.5 + 0.5) * innerWidth, ay = (-v.y * 0.5 + 0.5) * innerHeight;
-  const tx = Math.min(innerWidth - 400, Math.max(innerWidth * 0.52, ax + 60)), ty = Math.max(90, Math.min(innerHeight - 330, ay - 190));
-  if (!cardPos.init) { cardPos.x = tx; cardPos.y = ty; cardPos.init = true; }
-  cardPos.x += (tx - cardPos.x) * 0.12; cardPos.y += (ty - cardPos.y) * 0.12;
-  card.style.transform = `translate(${cardPos.x.toFixed(1)}px, ${cardPos.y.toFixed(1)}px)`;
-  const ok = v.z < 1 && ax > 0 && ax < innerWidth && ay > 0 && ay < innerHeight;
-  leader.style.opacity = ok ? String(settle * 0.9) : '0';
-  const sx = cardPos.x, sy = cardPos.y + 150;
-  leader.children[0].setAttribute('d', `M${sx.toFixed(1)},${sy.toFixed(1)} C${(sx - 40).toFixed(1)},${sy.toFixed(1)} ${(ax + 30).toFixed(1)},${ay.toFixed(1)} ${ax.toFixed(1)},${ay.toFixed(1)}`);
-  leader.children[1].setAttribute('cx', ax.toFixed(1)); leader.children[1].setAttribute('cy', ay.toFixed(1)); leader.children[1].setAttribute('r', '3.5');
+const slabPos = { x: 0, y: 0, ry: -6, init: false };
+const tmpV = new THREE.Vector3();
+function placeSlab(settle) {
+  const panel = active >= 0 ? panels[active] : null;
+  const slab = panel?.querySelector('.slab');
+  if (!slab || innerWidth <= 760) { leader.style.opacity = '0'; return; }
+  const mode = CHAPTERS[active].ui.slab;
+  const W = innerWidth, H = innerHeight;
+  const sw = slab.offsetWidth, sh = slab.offsetHeight;
+  const v = tmpV.copy(ANCHORS[active]).project(world.camera);
+  const ax = (v.x * 0.5 + 0.5) * W, ay = (-v.y * 0.5 + 0.5) * H;
+  const visible = v.z < 1 && ax > -20 && ax < W + 20 && ay > -20 && ay < H + 20;
+  let tx, ty;
+  if (mode === 'dock') {
+    tx = Math.max(W * 0.36, W - sw - 190); ty = H - sh - 30;
+  } else if (mode === 'grid') {
+    tx = W - sw - Math.max(64, W * 0.06); ty = Math.min(H - sh - 180, Math.max(110, H * 0.5 - sh * 0.5));
+  } else {
+    // right column, beside the anchor's height, clear of the bar and the navigator
+    tx = W - sw - Math.max(64, W * 0.06);
+    ty = Math.min(H - sh - 190, Math.max(92, (visible ? ay : H * 0.45) - sh * 0.45));
+  }
+  if (!slabPos.init) { slabPos.x = tx; slabPos.y = ty; slabPos.init = true; }
+  // a little lag so the slab feels carried by the scene
+  if (Math.abs(tx - slabPos.x) > 0.6) slabPos.x += (tx - slabPos.x) * 0.14;
+  if (Math.abs(ty - slabPos.y) > 0.6) slabPos.y += (ty - slabPos.y) * 0.14;
+  const ry = mode === 'dock' ? 0 : -4 - 6 * ((slabPos.x + sw / 2) / W - 0.5) + (visible ? (ax - slabPos.x) / W * 6 : 0);
+  if (Math.abs(ry - slabPos.ry) > 0.08) slabPos.ry += (ry - slabPos.ry) * 0.1;
+  // write whole pixels and tenths of a degree only when they change, so the
+  // slab settles completely once the camera rests (links must hold still)
+  const sxS = Math.round(slabPos.x) + 'px', syS = Math.round(slabPos.y) + 'px', ryS = slabPos.ry.toFixed(1) + 'deg';
+  if (slab.dataset.at !== sxS + syS + ryS) {
+    slab.dataset.at = sxS + syS + ryS;
+    slab.style.setProperty('--sx', sxS);
+    slab.style.setProperty('--sy', syS);
+    slab.style.setProperty('--ry', ryS);
+    slab.style.setProperty('--rx', mode === 'dock' ? '0deg' : '2deg');
+  }
+  leader.style.opacity = visible ? String(settle * 0.95) : '0';
+  if (!visible) return;
+  const sx = mode === 'dock' ? slabPos.x + sw * 0.2 : slabPos.x, sy = mode === 'dock' ? slabPos.y : slabPos.y + Math.min(sh * 0.3, 80);
+  const mx = (sx + ax) / 2;
+  leadPath.setAttribute('d', mode === 'dock'
+    ? `M${sx.toFixed(1)},${sy.toFixed(1)} C${sx.toFixed(1)},${(sy - 60).toFixed(1)} ${ax.toFixed(1)},${(ay + 60).toFixed(1)} ${ax.toFixed(1)},${ay.toFixed(1)}`
+    : `M${sx.toFixed(1)},${sy.toFixed(1)} C${(mx).toFixed(1)},${sy.toFixed(1)} ${(mx).toFixed(1)},${ay.toFixed(1)} ${ax.toFixed(1)},${ay.toFixed(1)}`);
+  for (const c of [leadHalo, leadPin]) { c.setAttribute('cx', ax.toFixed(1)); c.setAttribute('cy', ay.toFixed(1)); }
 }
 
 // ------------------------------------------------------------------ leaving: dolly + veil
@@ -174,7 +243,7 @@ function leave(href, dark, x, y, anchor) {
   } else location.href = href;
 }
 addEventListener('pageshow', (e) => { if (e.persisted) { $('#veil').style.clipPath = ''; if (cam) cam.push = null; } });
-for (const a of [...$$('.panel .entries a'), card]) {
+for (const a of $$('.panel .entries a')) {
   a.addEventListener('click', (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || !body.classList.contains('spatial')) return;
     e.preventDefault();
@@ -198,7 +267,6 @@ async function start3D() {
     return goStatic();
   }
   aimStudy();
-  computeAnchors();
   world.resize();
   addEventListener('resize', () => world.resize());
   cam = new DwellCamera(world.camera, $('#world'));
@@ -221,50 +289,38 @@ function goStatic() {
   panels.forEach((p) => { p.classList.add('is-active'); p.removeAttribute('inert'); });
 }
 
-// The "between classes" view looks closely at a real cluster of new leaves.
+// The details shot looks closely at a real cluster of new leaves, half open,
+// from just below and outside the crown: the sun stands high behind them, so
+// the light comes through the blades and the deeper crown melts into bokeh.
+const STUDY = 2;
 function aimStudy() {
   const ros = world.rosettes, st = world.stride;
   let best = -1, score = -1e9;
   for (let i = 0; i < ros.length; i += st) {
     const x = ros[i], y = ros[i + 1], z = ros[i + 2], tE = ros[i + 9];
-    const th = Math.atan2(x - AXIS.x, z - AXIS.z), r = Math.hypot(x - AXIS.x, z - AXIS.z);
-    if (y < 3.6 || y > 6.5 || r < 6 || r > 11 || tE < 0.15 || tE > 0.45) continue;
-    const s = -Math.abs(Math.atan2(Math.sin(th - 3.32), Math.cos(th - 3.32))) * 2 - Math.abs(y - 4.8) - Math.abs(tE - 0.3) * 6;
+    const r = Math.hypot(x - AXIS.x, z - AXIS.z);
+    if (y < 4.6 || y > 7.4 || r < 8.5 || r > 12.5 || tE < 0.29 || tE > 0.37) continue;
+    // a quiet side of the tree (away from the long limb), real foliage behind
+    const th = Math.atan2(x - AXIS.x, z - AXIS.z);
+    const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.5 - Math.abs(y - 5.8) * 0.5
+      - Math.abs(tE - 0.33) * 10 - ros[i + 8] * 2.5 + r * 0.2;
     if (s > score) { score = s; best = i; }
   }
   if (best < 0) return;
-  const P = new THREE.Vector3(ros[best], ros[best + 1], ros[best + 2]);
+  const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.05, ros[best + 2]);
   const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
   const side = new THREE.Vector3(-out.z, 0, out.x);
-  const eye = P.clone().addScaledVector(out, 3.0).addScaledVector(side, 1.3).add(new THREE.Vector3(0, -0.7, 0));
-  retarget(3, { eye: eye.toArray(), look: P.clone().addScaledVector(out, -0.6).add(new THREE.Vector3(0, 0.15, 0)).toArray() });
-  ANCHORS[3].copy(P);
+  const eye = P.clone().addScaledVector(out, 1.15).addScaledVector(side, 0.32).add(new THREE.Vector3(0, -0.55, 0));
+  const look = P.clone().addScaledVector(out, -0.05);
+  const view = look.clone().sub(eye).normalize();
+  retarget(STUDY, eye.toArray(), look.toArray(), 27);
+  // the sun high over the outside of the crown: it lights the blades from above,
+  // and from below we see that light come through them
+  LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(Math.atan2(out.x, out.z)) + 50, 56];
+  ANCHORS[STUDY].copy(P);
   buildOrbitRefresh();
 }
-function buildOrbitRefresh() { $('#orbitDots').replaceChildren(); buildOrbit(); orbitDots.splice(0, orbitDots.length, ...$$('#orbitDots .dot')); }
-
-// pin each section's card on what is in the picture at its viewpoint
-function computeAnchors() {
-  const probe = world.camera.clone();
-  probe.aspect = innerWidth / innerHeight; probe.updateProjectionMatrix();
-  const rc = new THREE.Raycaster();
-  const solids = [world.bark, world.island];
-  const ros = world.rosettes, st = world.stride;
-  const v = new THREE.Vector3();
-  CHAPTERS.forEach((c, i) => {
-    if (i === 3) return;
-    DwellCamera.place(probe, i);
-    rc.setFromCamera(new THREE.Vector2(0.18, 0.1), probe);
-    const hits = rc.intersectObjects(solids, false);
-    let best = hits.length ? hits[0].distance : 40;
-    let point = hits.length ? hits[0].point.clone() : rc.ray.at(best, new THREE.Vector3());
-    for (let k = 0; k < ros.length; k += st) {
-      v.set(ros[k], ros[k + 1], ros[k + 2]);
-      if (rc.ray.distanceSqToPoint(v) < 0.25) { const d = v.distanceTo(rc.ray.origin); if (d < best) { best = d; point = v.clone(); } }
-    }
-    ANCHORS[i].copy(point);
-  });
-}
+function buildOrbitRefresh() { buildOrbit(); orbitDots = $$('#orbitDots .dot'); }
 
 // ------------------------------------------------------------------ touching the tree
 const ray = new THREE.Raycaster();
@@ -281,7 +337,7 @@ function rosetteHits(r, radius = 0.45) {
   let n = 0, nearest = null, nd = 1e9;
   const p = new THREE.Vector3();
   for (let i = 0; i < ros.length; i += st) {
-    if (0.04 + (ros[i + 9] - 0.04) * 0.75 > g && !(ros[i + 10] > g)) continue;   // nothing there yet
+    if (!leafVisible(ros[i + 9], ros[i + 10], g)) continue;   // nothing there yet
     p.set(ros[i], ros[i + 1], ros[i + 2]);
     if (r.distanceSqToPoint(p) < radius * radius) {
       n++;
@@ -354,13 +410,12 @@ function step(dt, wallDt = dt) {
   const grow = growAt(p);
   const L = lightAt(p);
   const rail = override || poseAt(p);
-  fwd.set(rail.lx - rail.ex, 0, rail.lz - rail.ez).normalize();
-  const yaw = Math.atan2(fwd.x, fwd.z) + L.rel;
-  const el = THREE.MathUtils.degToRad(L.elev);
+  const yaw = THREE.MathUtils.degToRad(L.sunAz);
+  const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
-  world.setStage({ grow, sunDir, sunCol: C(L.sun), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
-    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure, warm: L.warm, cloud: L.cloud,
-    aperture: L.aperture, focus: L.focus > 0.1 ? L.focus : Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez) });
+  world.setStage({ grow, sunDir, sunCol: C(L.sunCol), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
+    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
+    aperture: L.aperture, focus: L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez)) });
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
@@ -369,12 +424,8 @@ function step(dt, wallDt = dt) {
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
   world.litter.update(dt, grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, active === N - 1);
   sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
-  // navigator: the eye's real azimuth around the tree
-  const th = Math.atan2(world.camera.position.x - AXIS.x, world.camera.position.z - AXIS.z);
-  orbitEye.setAttribute('transform', `rotate(${(180 - th * 180 / Math.PI).toFixed(2)})`);
-  orbitDots.forEach((d, i) => d.classList.toggle('on', i === active));
-  $('#growthBar').style.transform = `scaleX(${grow.toFixed(3)})`;
-  placeCard(1 - Math.min(1, Math.abs(p - near) * 4));
+  updateNav(p, grow);
+  placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
   world.render(t);
   frames++;
 }
@@ -399,10 +450,11 @@ function adapt(dt) {
 
 window.__haizHome = {
   get world() { return world; }, chapters: CHAPTERS, state,
-  go: (i) => { goTo(i, true); state.p = i; cam?.snap(); setActive(i); },
+  go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
+  seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
-  lookdev: (eye, look, p) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2] }; state.p = p; cam.snap(); },
-  info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count,
+  lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
+  info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +world.camera.aspect.toFixed(3)],
     falling: world?.litter.falling.length, settled: world?.litter.settled.length, tier: document.documentElement.dataset.tier })
 };
 

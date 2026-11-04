@@ -9,13 +9,13 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { installPCSS } from './pcss.js';
 import { createCanopy, createLooseLeaves, UNIFORMS } from './foliage.js';
-import { createSky, makeBarkMaterial, makeIslandMaterial, createWater, createGrass } from './environment.js';
+import { createSky, makeBarkMaterial, makeIslandMaterial, createWater, createGrass, createDistance } from './environment.js';
 import { Litter } from './litter.js';
 
 export const TIERS = {
-  high: { shadow: 4096, blocker: 14, pcf: 24, density: 0.72, geo: [2, 2], ratio: 2, msaa: 4, reflect: 'full', bloom: true, grass: 16000 },
-  medium: { shadow: 2048, blocker: 10, pcf: 16, density: 0.5, geo: [2, 1], ratio: 1.5, msaa: 4, reflect: 'half', bloom: true, grass: 9000 },
-  low: { shadow: 2048, blocker: 8, pcf: 10, density: 0.34, geo: [2, 1], ratio: 1.25, msaa: 0, reflect: false, bloom: false, grass: 4000 }
+  high: { shadow: 4096, blocker: 14, pcf: 24, density: 1.0, leafTex: 'full', geo: [2, 2], ratio: 2, msaa: 4, reflect: 'full', bloom: true, grass: 16000, shadowEvery: 1 },
+  medium: { shadow: 2048, blocker: 10, pcf: 16, density: 0.7, leafTex: 'full', geo: [2, 1], ratio: 1.5, msaa: 4, reflect: 'half', bloom: true, grass: 9000, shadowEvery: 2 },
+  low: { shadow: 2048, blocker: 8, pcf: 10, density: 0.45, leafTex: 'lo', geo: [2, 1], ratio: 1.25, msaa: 0, reflect: false, bloom: false, grass: 4000, shadowEvery: 3 }
 };
 
 export function pickTier() {
@@ -42,7 +42,7 @@ const AtmosphereShader = {
     uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uSunScreen: { value: new THREE.Vector3(0.5, 0.5, 0) },
     uSunCol: { value: new THREE.Color() }, uFogCol: { value: new THREE.Color() },
     uDensity: { value: 0.02 }, uFalloff: { value: 0.12 }, uMist: { value: 0.5 }, uRays: { value: 0.5 },
-    uTime: { value: 0 }, uWater: { value: -0.85 }
+    uTime: { value: 0 }, uWater: { value: -0.85 }, uAspect: { value: 1.78 }
   },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
@@ -50,7 +50,7 @@ const AtmosphereShader = {
 uniform sampler2D tDiffuse; uniform sampler2D tDepth;
 uniform mat4 uProjInv; uniform mat4 uViewInv; uniform vec3 uCamPos;
 uniform vec3 uSunDir; uniform vec3 uSunScreen; uniform vec3 uSunCol; uniform vec3 uFogCol;
-uniform float uDensity; uniform float uFalloff; uniform float uMist; uniform float uRays; uniform float uTime; uniform float uWater;
+uniform float uDensity; uniform float uFalloff; uniform float uMist; uniform float uRays; uniform float uTime; uniform float uWater; uniform float uAspect;
 varying vec2 vUv;
 float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -83,23 +83,29 @@ void main(){
   float mie = pow(max(dot(rd, uSunDir), 0.0), 7.0);
   vec3 fogC = uFogCol + uSunCol * mie * 0.55;
   vec3 c = mix(col.rgb, fogC, clamp(fogAmt, 0.0, 1.0));
-  // light shafts: march towards the sun on screen, collecting open sky
+  // light shafts (volumetric light scattering): march towards the sun on
+  // screen, collecting only the bright sky right around the sun, so the
+  // streaks appear where branches and leaves break it up
   if (uRays > 0.001 && uSunScreen.z > 0.0) {
-    vec2 delta = (uSunScreen.xy - vUv) / 28.0;
+    vec2 delta = (uSunScreen.xy - vUv) / 32.0;
     vec2 uv = vUv;
     float illum = 0.0, decay = 1.0;
     float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
     uv += delta * jitter;
-    for (int i = 0; i < 28; i++) {
+    vec2 asp = vec2(uAspect, 1.0);
+    for (int i = 0; i < 32; i++) {
       uv += delta;
       float sd = texture2D(tDepth, uv).x;
-      illum += step(0.99999, sd) * decay;
-      decay *= 0.965;
+      float near = exp(-length((uv - uSunScreen.xy) * asp) * 9.0);
+      illum += step(0.99999, sd) * near * decay;
+      decay *= 0.96;
     }
-    illum /= 28.0;
-    float near = smoothstep(0.9, 0.0, length((vUv - uSunScreen.xy) * vec2(1.6, 1.0)));
-    c += uSunCol * illum * near * uRays * 0.9;
+    illum /= 32.0;
+    c += uSunCol * illum * uRays * 2.2 * uSunScreen.z;
   }
+  // keep the HDR chain finite: one stray NaN would bloom into a black hole
+  c = clamp(c, 0.0, 64.0);
+  if (!(c.r == c.r && c.g == c.g && c.b == c.b)) c = uFogCol;
   gl_FragColor = vec4(c, col.a);
 }`
 };
@@ -122,28 +128,31 @@ class AtmospherePass extends ShaderPass {
 // circle of confusion from the depth buffer (off when aperture is 0)
 const FocusShader = {
   uniforms: { tDiffuse: { value: null }, tDepth: { value: null }, uFocus: { value: 4 }, uAperture: { value: 0 },
-    uNear: { value: 0.08 }, uFar: { value: 1200 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) } },
+    uNear: { value: 0.08 }, uFar: { value: 1200 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) }, uMaxR: { value: 14 } },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
 #include <packing>
 uniform sampler2D tDiffuse; uniform sampler2D tDepth;
-uniform float uFocus; uniform float uAperture; uniform float uNear; uniform float uFar; uniform vec2 uTexel;
+uniform float uFocus; uniform float uAperture; uniform float uNear; uniform float uFar; uniform vec2 uTexel; uniform float uMaxR;
 varying vec2 vUv;
 float viewDist(vec2 uv){ return -perspectiveDepthToViewZ(texture2D(tDepth, uv).x, uNear, uFar); }
-float coc(float z){ return clamp(abs(z - uFocus) / max(z, 0.1) * uAperture * 26.0, 0.0, 14.0); }
+float coc(float z){ return clamp(abs(z - uFocus) / max(z, 0.1) * uAperture * 26.0, 0.0, uMaxR); }
+float ign(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 void main(){
   vec4 c = texture2D(tDiffuse, vUv);
   if (uAperture < 0.01) { gl_FragColor = c; return; }
   float r0 = coc(viewDist(vUv));
   vec3 acc = c.rgb; float wsum = 1.0;
-  for (int i = 0; i < 20; i++) {
-    float rr = sqrt((float(i) + 0.5) / 20.0);
-    float th = float(i) * 2.39996;
-    vec2 o = vec2(cos(th), sin(th)) * rr;
-    vec2 uv = vUv + o * 14.0 * uTexel;
+  float rot = ign(gl_FragCoord.xy) * 6.2831;
+  for (int i = 0; i < 36; i++) {
+    float rr = sqrt((float(i) + 0.5) / 36.0);
+    float th = float(i) * 2.39996 + rot;
+    vec2 o = vec2(cos(th), sin(th)) * rr * uMaxR;
+    vec2 uv = vUv + o * uTexel;
     float ri = coc(viewDist(uv));
-    float w = smoothstep(rr * 14.0 - 1.0, rr * 14.0 + 1.0, max(min(ri, r0 + 2.0), 0.0));
-    acc += texture2D(tDiffuse, uv).rgb * w; wsum += w;
+    // a sample counts if its own blur reaches here (background never bleeds over a sharp foreground)
+    float w = smoothstep(rr * uMaxR - 1.5, rr * uMaxR + 1.5, min(ri, r0 + 3.0));
+    acc += min(texture2D(tDiffuse, uv).rgb, vec3(8.0)) * w; wsum += w;
   }
   gl_FragColor = vec4(acc / wsum, c.a);
 }`
@@ -151,14 +160,17 @@ void main(){
 
 // vignette, grain and a gentle split-tone grade, after tone mapping
 const FinishShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarm: { value: 0.5 }, uVig: { value: 0.32 } },
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarm: { value: 0.5 }, uVig: { value: 0.32 }, uSat: { value: 1.0 }, uContrast: { value: 1.0 } },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-uniform sampler2D tDiffuse; uniform float uTime; uniform float uWarm; uniform float uVig;
+uniform sampler2D tDiffuse; uniform float uTime; uniform float uWarm; uniform float uVig; uniform float uSat; uniform float uContrast;
 varying vec2 vUv;
 void main(){
   vec3 c = texture2D(tDiffuse, vUv).rgb;
   float l = dot(c, vec3(0.299, 0.587, 0.114));
+  c = mix(vec3(l), c, uSat);
+  c = clamp((c - 0.5) * uContrast + 0.5, 0.0, 1.0);
+  l = dot(c, vec3(0.299, 0.587, 0.114));
   vec3 shadowT = mix(vec3(0.94, 0.98, 1.06), vec3(0.97, 0.98, 1.03), uWarm);
   vec3 highT = mix(vec3(1.0, 0.99, 0.97), vec3(1.05, 1.0, 0.92), uWarm);
   c *= mix(shadowT, highT, smoothstep(0.15, 0.85, l));
@@ -178,6 +190,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   renderer.setPixelRatio(ratio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
+  // the leaves sway, so shadows move; weaker tiers refresh them every 2nd/3rd frame
+  renderer.shadowMap.autoUpdate = false;
+  let frameNo = 0;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -203,7 +218,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     gltf.loadAsync(new URL('island.glb', base).href).then(tick),
     bin('rosettes.bin'),
     fetch(new URL('tree.json', base)).then((r) => r.json()).then(tick),
-    tex('leaf-atlas-web.png', false), tex('leaf-normal-web.png', false),
+    tex(tier.leafTex === 'full' ? 'leaf-atlas-web.png' : 'leaf-atlas-lo.png', false), tex(tier.leafTex === 'full' ? 'leaf-normal-web.png' : 'leaf-normal-lo.png', false),
     tex('bark-color.jpg', true), tex('bark-normal.jpg', false)
   ]);
   for (const t of [barkColor, barkNormal]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -252,8 +267,10 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   // heightfield of the island, rasterised from its triangles (for grass and litter)
   const HF = 96, HR = 8.6;
   const hf = new Float32Array(HF * HF).fill(WATER - 1);
+  const rockF = new Float32Array(HF * HF);
   {
     const p = island.geometry.attributes.position, idx = island.geometry.index;
+    const col = island.geometry.attributes.color;
     const n = idx ? idx.count : p.count;
     const get = (i) => (idx ? idx.getX(i) : i);
     for (let t = 0; t < n; t += 3) {
@@ -261,7 +278,10 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
         const v = get(t + k);
         const x = p.getX(v), y = p.getY(v), z = p.getZ(v);
         const gx = Math.round((x + HR) / (2 * HR) * (HF - 1)), gz = Math.round((z + HR) / (2 * HR) * (HF - 1));
-        if (gx >= 0 && gz >= 0 && gx < HF && gz < HF) hf[gz * HF + gx] = Math.max(hf[gz * HF + gx], y);
+        if (gx >= 0 && gz >= 0 && gx < HF && gz < HF) {
+          hf[gz * HF + gx] = Math.max(hf[gz * HF + gx], y);
+          if (col) rockF[gz * HF + gx] = Math.max(rockF[gz * HF + gx], col.getY(v));
+        }
       }
     }
   }
@@ -273,14 +293,20 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     return Math.max(WATER, (a * (1 - tx) + b * tx) * (1 - tz) + (c * (1 - tx) + d * tx) * tz);
   };
   const inIsland = (x, z) => heightAt(x, z) > WATER + 0.25;
+  const rockAt = (x, z) => {
+    const ix = Math.round((x + HR) / (2 * HR) * (HF - 1)), iz = Math.round((z + HR) / (2 * HR) * (HF - 1));
+    return ix < 0 || iz < 0 || ix >= HF || iz >= HF ? 1 : rockF[iz * HF + ix];
+  };
 
   const rosettes = new Float32Array(rosBuf);
   const stride = meta.rosetteStride;
   const canopy = createCanopy(rosettes, stride, atlas, leafN, tier.density, tier.geo);
   scene.add(canopy.mesh);
-  const grass = createGrass(heightAt, tier.grass, inIsland);
+  const grass = createGrass(heightAt, tier.grass, (x, z) => inIsland(x, z) && rockAt(x, z) < 0.35);
   scene.add(grass);
 
+  const distance = createDistance(WATER);
+  scene.add(distance);
   const water = createWater(WATER, tier.reflect, ratio);
   scene.add(water);
   const wu = water.material.uniforms;
@@ -324,6 +350,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     u.uSun.value.copy(state.sunDir);
     u.uZenith.value.copy(s.zenith); u.uHorizon.value.copy(s.horizon); u.uGlow.value.copy(s.glow); u.uSunCol.value.copy(s.sunCol);
     u.uCloud.value = s.cloud;
+    distance.material.uniforms.uSun.value.copy(state.sunDir);
+    distance.material.uniforms.uHorizon.value.copy(s.horizon);
+    distance.material.uniforms.uGlow.value.copy(s.glow);
     wu.uHorizon.value.copy(s.horizon); wu.uZenith.value.copy(s.zenith); wu.uGlow.value.copy(s.glow); wu.uSun.value.copy(state.sunDir);
     hemi.color.copy(s.zenith).multiplyScalar(2.2);
     hemi.groundColor.setRGB(0.05, 0.05, 0.04);
@@ -334,7 +363,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     focus.uniforms.uFocus.value = s.focus || 4;
     focus.uniforms.uAperture.value = s.aperture || 0;
     finish.uniforms.uWarm.value = s.warm;
-    if (bloom) bloom.strength = 0.22 + 0.25 * s.rays;
+    finish.uniforms.uSat.value = s.sat ?? 1;
+    finish.uniforms.uContrast.value = s.contrast ?? 1;
+    if (bloom) bloom.strength = 0.12 + 0.14 * s.rays;
     // image-based light follows the sky, re-baked when it changed enough
     const key = [s.horizon.r, s.zenith.b, state.sunDir.x, state.sunDir.y].map((v) => v.toFixed(2)).join();
     if (key !== state.envKey) {
@@ -352,8 +383,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     const pr = renderer.getPixelRatio();
     sceneRT.setSize(Math.round(w * pr), Math.round(h * pr));
     camera.aspect = w / h;
-    camera.fov = w / h < 0.8 ? 58 : 42;
     camera.updateProjectionMatrix();
+    atmo.uniforms.uAspect.value = w / h;
   }
 
   function render(t) {
@@ -368,10 +399,12 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     a.uNear.value = camera.near; a.uFar.value = camera.far;
     focus.uniforms.uNear.value = camera.near; focus.uniforms.uFar.value = camera.far;
     focus.uniforms.uTexel.value.set(1 / sceneRT.width, 1 / sceneRT.height);
+    focus.uniforms.uMaxR.value = Math.max(8, sceneRT.height / 52);
     tmp.copy(camera.position).addScaledVector(state.sunDir, 500).project(camera);
     const facing = camera.getWorldDirection(new THREE.Vector3()).dot(state.sunDir);
     a.uSunScreen.value.set(tmp.x * 0.5 + 0.5, tmp.y * 0.5 + 0.5, facing > 0.05 ? facing : 0);
     finish.uniforms.uTime.value = t % 100;
+    if (frameNo++ % tier.shadowEvery === 0) renderer.shadowMap.needsUpdate = true;
     composer.render();
   }
 

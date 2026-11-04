@@ -4,29 +4,37 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const { CHAPTERS } = await import(pathToFileURL(path.join(root, 'lanren/js/chapters.js')).href);
+const { CHAPTERS, STAGES } = await import(pathToFileURL(path.join(root, 'lanren/js/chapters.js')).href);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const N = CHAPTERS.length - 1;
-const lines = (en) => {
-  const w = en.split(' ');
-  const cut = w.length <= 2 ? 1 : Math.ceil(w.length / 2);
-  return [w.slice(0, cut).join(' '), w.slice(cut).join(' ')].filter(Boolean)
-    .map((l) => `<span class="line"><span>${esc(l)}</span></span>`).join('');
+const lines = (en) => en.map((l) => `<span class="line"><span>${esc(l)}</span></span>`).join('');
+const two = (n) => String(n).padStart(2, '0');
+const entry = (e, k) => {
+  const inner = `<i>${two(k + 1)}</i><span class="t">${esc(e.title)}</span><small class="en">${esc(e.en || '')}</small><small class="n">${esc(e.note)}</small>`;
+  return e.href
+    ? `<li><a href="${esc(e.href)}" data-k="${k}"${e.dark ? ' data-dark' : ''}${e.primary ? ' data-primary' : ''}>${inner}</a></li>`
+    : `<li><button type="button" data-action="${e.action}" data-k="${k}"${e.primary ? ' data-primary' : ''}>${inner}</button></li>`;
 };
-const entry = (e, k) => e.href
-  ? `<li><a href="${esc(e.href)}" data-k="${k}"${e.dark ? ' data-dark' : ''}${e.primary ? ' data-primary' : ''}><span>${esc(e.title)}</span><small>${esc(e.note)}</small></a></li>`
-  : `<li><button type="button" data-action="${e.action}" data-k="${k}"${e.primary ? ' data-primary' : ''}><span>${esc(e.title)}</span><small>${esc(e.note)}</small></button></li>`;
 const panels = CHAPTERS.map((c, i) => `
-  <section class="panel${i === 0 ? ' panel-intro' : ''}" id="p-${c.id}" data-i="${i}" aria-labelledby="t-${c.id}">
-    <p class="idx"><b>${c.index}</b><span>/ 0${N}</span></p>
-    ${i === 0 ? `<h1 class="display" id="t-${c.id}">${lines(c.en)}</h1>` : `<h2 class="display" id="t-${c.id}">${lines(c.en)}</h2>`}
-    <p class="zh">${esc(c.zh)}</p>
-    <p class="lede">${esc(c.lede)}</p>
-    ${c.entries.length ? `<ul class="entries">${c.entries.map(entry).join('')}</ul>` : `<p class="begin"><a href="#campus">绕树而行 <i aria-hidden="true">↓</i></a><small>滚动、下滑或按空格键</small></p>`}
-    <p class="note">${esc(c.note)}</p>
+  <section class="panel${i === 0 ? ' panel-intro' : ''}" id="p-${c.id}" data-i="${i}" data-slab="${c.ui.slab}" aria-labelledby="t-${c.id}">
+    <header class="chap">
+      <p class="chap-label"><b>${c.index}</b><span>${esc(c.label)}</span></p>
+      <p class="lede">${esc(c.lede)}</p>
+    </header>
+    <div class="titling">
+      ${i === 0 ? `<h1 class="display" id="t-${c.id}">${lines(c.en)}</h1>` : `<h2 class="display" id="t-${c.id}">${lines(c.en)}</h2>`}
+      <p class="zh">${esc(c.zh)}</p>
+      ${i === 0 ? '<p class="begin"><a href="#campus">Scroll <i aria-hidden="true">↓</i></a><small>绕树而行：滚动、下滑或按空格键</small></p>' : ''}
+    </div>
+    ${c.entries.length ? `<div class="slab">
+      <p class="slab-head"><b>${c.index}</b><span>${esc(c.zh)}</span></p>
+      <ul class="entries">${c.entries.map(entry).join('')}</ul>
+      <p class="note">${esc(c.note)}</p>
+    </div>` : `<p class="note note-intro">${esc(c.note)}</p>`}
   </section>`).join('');
 const stops = CHAPTERS.map((c) => `<div class="stop" id="${c.id}"></div>`).join('');
 const orbit = CHAPTERS.map((c, i) => `<li><a href="#${c.id}" data-go="${i}"><b>${c.index}</b>${esc(c.zh.split(' · ')[0])}</a></li>`).join('');
+const stages = STAGES.map((g, i) => `<li data-at="${g.at}"><b>${two(i + 1)}</b><span>${esc(g.label)}</span></li>`).join('');
 const html = `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -62,26 +70,26 @@ const html = `<!doctype html>
 <div id="veil" class="veil" aria-hidden="true"></div>
 
 <header class="bar">
-  <a class="brand" href="index.html" aria-label="HAIZ 主页"><b>HAIZ</b><small>Digital Campus<br>海南中学 · 府城</small></a>
   <nav class="tools" aria-label="工具">
     <button id="searchButton" class="tool">全部入口 <kbd>⌘K</kbd></button>
     <button id="bookButton" class="tool">书页 <b id="bookCount">0</b></button>
     <button id="soundButton" class="tool" aria-pressed="false"><i class="dot" aria-hidden="true"></i><span>声音</span></button>
   </nav>
+  <a class="brand" href="index.html" aria-label="HAIZ 主页"><b>HAIZ</b><small>Digital Campus · 海南中学府城</small></a>
 </header>
 
 <div class="panels">${panels}
 </div>
 
-<a id="card" class="card" href="#" hidden><span class="card-idx"></span><b class="card-title"></b><small class="card-note"></small><i aria-hidden="true">↗</i></a>
-
-<nav id="orbit" class="orbit" aria-label="绕树导航：每个视角是一个板块">
-  <svg viewBox="-60 -60 120 120" aria-hidden="true"><circle class="ring" r="44"/><g id="orbitDots"></g><g id="orbitEye"><line x1="0" y1="0" x2="0" y2="-44"/><circle r="4.5" cy="-44"/></g><circle class="core" r="7"/></svg>
+<nav id="orbit" class="orbit" aria-label="绕树导航：每个板块是镜头路径上的一站">
+  <svg viewBox="-60 -60 120 120" aria-hidden="true"><path id="orbitPath" class="path"/><path id="orbitDone" class="done"/><g id="orbitDots"></g><circle class="core" r="5.5"/><circle id="orbitEye" class="eye" r="3.2"/></svg>
   <ol>${orbit}</ol>
-  <p class="where"><b id="whereIdx">00</b><span id="whereName">一棵树</span></p>
+  <p class="where"><b id="whereIdx">01</b><span>/ ${two(CHAPTERS.length)}</span><em id="whereName">一棵树</em></p>
 </nav>
 
-<div id="growth" class="growth" aria-hidden="true"><span>冬末</span><i><b id="growthBar"></b></i><span>繁茂</span></div>
+<div class="rail" aria-hidden="true"><i id="railDot"></i></div>
+
+<div id="growth" class="growth" aria-hidden="true"><svg viewBox="0 0 300 40" preserveAspectRatio="none"><path class="base" d="M0,36 L300,36"/><path id="growthCurve" class="curve" d="M0,36 C90,35 150,30 200,18 S270,4 300,2"/><circle id="growthDot" r="3"/></svg><ol>${stages}</ol></div>
 
 <main id="track" class="track">${stops}</main>
 

@@ -200,13 +200,13 @@ def leaf_variant(idx, seed):
     f21 = worley_f21(cellx, celly, seed + 99)
     retic = np.exp(-(f21 / 0.07) ** 2)
 
-    veins = np.clip(np.maximum(midrib, lateral) + 0.22 * retic * (1 - midrib), 0, 1)
+    veins = np.clip(np.maximum(midrib, lateral * 0.85) + 0.3 * retic * (1 - midrib), 0, 1)
 
     # ---- lamina tone
     n1 = fbm(xx / W, yy / H, seed, 6, 4)
     n2 = fbm(xx / W, yy / H, seed + 7, 22, 3)
     tone = 0.70 + 0.16 * (n1 - 0.5) + 0.06 * (n2 - 0.5)
-    tone += 0.10 * veins                       # veins are paler on the upper side
+    tone += 0.045 * veins + 0.03 * midrib      # veins only slightly paler on the upper side
     tone -= 0.05 * np.exp(-(edge_px / (6 * SS)) ** 2)   # darker rim
     # interveinal bulge (light between veins, slightly darker beside them)
     tone += 0.035 * (lat_axis - lateral)
@@ -298,16 +298,18 @@ def build_leaf_atlas():
         known = known | grow
     atlas[..., :3] = col
     out = (atlas * 255).round().clip(0, 255).astype(np.uint8)
-    Image.fromarray(out, 'RGBA').save(os.path.join(OUT, 'leaf-atlas.png'), optimize=True)
-    print('wrote lanren/assets/leaf-atlas.png', out.shape)
+    os.makedirs(os.path.join(ROOT, 'build', 'lanren'), exist_ok=True)
+    Image.fromarray(out, 'RGBA').save(os.path.join(ROOT, 'build', 'lanren', 'leaf-atlas-full.png'), optimize=True)  # source only
     nrm = np.concatenate(normals, axis=1)
     Image.fromarray(nrm).save(os.path.join(ROOT, 'build', 'lanren', 'leaf-normal-full.png'))  # source only
     # runtime sizes: 256x512 per leaf is ample for blades on screen; the full
     # 512x1024 atlas is only fetched for the close-up specimen card
+    Image.fromarray(out, 'RGBA').save(os.path.join(OUT, 'leaf-atlas-web.png'), optimize=True)
+    Image.fromarray(nrm).save(os.path.join(OUT, 'leaf-normal-web.png'), optimize=True)
     Image.fromarray(out, 'RGBA').resize((1024, 512), Image.LANCZOS).save(
-        os.path.join(OUT, 'leaf-atlas-web.png'), optimize=True)
+        os.path.join(OUT, 'leaf-atlas-lo.png'), optimize=True)
     Image.fromarray(nrm).resize((1024, 512), Image.LANCZOS).save(
-        os.path.join(OUT, 'leaf-normal-web.png'), optimize=True)
+        os.path.join(OUT, 'leaf-normal-lo.png'), optimize=True)
     print('wrote web leaf atlases')
     # a coloured preview for docs (not used at runtime)
     preview_leaf_colours(out)
@@ -342,41 +344,66 @@ def preview_leaf_colours(atlas):
 
 
 # ---------------------------------------------------------------- bark
+def worley_periodic(x, y, nx, ny, seed):
+    """F1, F2 cellular distances on a jittered grid that wraps every (nx, ny) cells."""
+    rng = np.random.default_rng(seed)
+    jit = rng.random((ny, nx, 2)) * 0.8 + 0.1
+    ix, iy = np.floor(x).astype(int), np.floor(y).astype(int)
+    f1 = np.full(x.shape, 9.0)
+    f2 = np.full(x.shape, 9.0)
+    for oy in (-1, 0, 1):
+        for ox in (-1, 0, 1):
+            cx, cy = ix + ox, iy + oy
+            j = jit[cy % ny, cx % nx]
+            d = np.sqrt((cx + j[..., 0] - x) ** 2 + (cy + j[..., 1] - y) ** 2)
+            f2 = np.where(d < f1, f1, np.minimum(f2, d))
+            f1 = np.minimum(f1, d)
+    return f1, f2
+
+
 def build_bark(size=1024):
-    """Old Terminalia bark: grey-brown, shallow longitudinal fissures broken
-    into flakes, with pale lichen and a little moss on the humid side."""
+    """Old Terminalia bark: grey-brown, broken by long, shallow-to-deep
+    longitudinal fissures into fibrous plates; pale lichen, a little moss.
+    U runs round the branch, V along it (fissures follow the grain)."""
     S = size
-    # long vertical plates: noise stretched strongly along V (rows)
-    plates = periodic_noise((S, S), beta=2.6, aniso=(0.22, 1.0), seed=3)
-    cross = periodic_noise((S, S), beta=2.2, aniso=(1.0, 0.6), seed=5)
-    fine = periodic_noise((S, S), beta=1.6, aniso=(0.5, 1.0), seed=7)
-    ridged = 1 - np.abs(np.tanh(plates * 0.9))           # fissure lines near zero crossings
-    fissure = np.power(np.clip(1 - ridged, 0, 1), 2.4)
-    flakes = np.clip(cross * 0.5 + 0.5, 0, 1)
-    hgt = 0.65 * (1 - np.power(ridged, 6)) + 0.18 * flakes + 0.06 * fine
-    hgt = hgt - 0.55 * np.power(ridged, 14)              # deep crack floor
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float64)
+    u, v = xx / S, yy / S
+    # warp the lattice so plates meander and merge like real bark
+    wx = periodic_noise((S, S), beta=3.0, aniso=(1.0, 0.45), seed=3) * 0.55
+    wy = periodic_noise((S, S), beta=3.0, aniso=(1.0, 1.0), seed=4) * 0.9
+    NX, NY = 11, 3
+    f1, f2 = worley_periodic(u * NX + wx * 0.6, v * NY + wy * 0.35, NX, NY, 7)
+    crack = np.clip((f2 - f1) / 0.42, 0, 1)                    # 0 in fissures, 1 on plates
+    crack = crack ** 0.75
+    # fine fibres along the grain, and flakes peeling off the plates
+    fib = periodic_noise((S, S), beta=1.7, aniso=(1.0, 0.07), seed=9)
+    flake_f1, flake_f2 = worley_periodic(u * 26 + wx, v * 9 + wy * 0.5, 26, 9, 11)
+    flake = np.clip((flake_f2 - flake_f1) / 0.12, 0, 1)
+    broad = periodic_noise((S, S), beta=2.8, seed=13)
+    hgt = 0.78 * crack + 0.08 * flake * crack + 0.05 * fib + 0.05 * broad
+    hgt = hgt - 0.25 * (1 - crack) ** 3
     hgt -= hgt.min()
     hgt /= hgt.max()
-    lichen_mask = periodic_noise((S, S), beta=3.0, seed=13)
-    lichen = np.clip((lichen_mask - 1.25) * 1.2, 0, 1) * 0.7 * np.clip(hgt * 1.4 - 0.2, 0, 1)
-    speck = np.clip(periodic_noise((S, S), beta=0.6, seed=17) - 2.4, 0, 1) * 0.5
-    moss = np.clip((periodic_noise((S, S), beta=2.8, seed=19) - 1.0) * 1.2, 0, 1) * (1 - hgt)
 
-    crack_col = np.array([0.030, 0.022, 0.017])
-    plate_col = np.array([0.150, 0.125, 0.100])
-    plate_col2 = np.array([0.105, 0.085, 0.068])
-    lichen_col = np.array([0.30, 0.31, 0.25])
-    moss_col = np.array([0.20, 0.25, 0.10])
+    lichen_n = periodic_noise((S, S), beta=3.2, seed=17)
+    lichen = np.clip((lichen_n - 1.3) * 0.9, 0, 0.7) * np.clip(crack * 1.6 - 0.4, 0, 1) * np.clip(fib * 0.5 + 0.7, 0, 1)
+    lich_dots = np.clip(periodic_noise((S, S), beta=0.9, seed=19) - 1.7, 0, 1) * 0.8 * crack
+    moss_n = periodic_noise((S, S), beta=2.9, seed=23)
+    moss = np.clip((moss_n - 0.7) * 1.3, 0, 1) * (0.35 + 0.65 * (1 - crack))
+
+    tone = periodic_noise((S, S), beta=2.2, seed=29)
+    plate = np.array([0.205, 0.180, 0.150]) * (1 + 0.10 * tone[..., None]) * (0.92 + 0.08 * fib[..., None].clip(-1.5, 1.5))
+    plate2 = np.array([0.150, 0.118, 0.090])
+    fissure = np.array([0.040, 0.030, 0.023])
     k = hgt[..., None]
-    col = crack_col * (1 - k) + (plate_col * flakes[..., None] + plate_col2 * (1 - flakes[..., None])) * k
-    col = col * (0.88 + 0.12 * fine[..., None].clip(-1, 1))
-    col = col * (1 - lichen[..., None] * 0.85) + lichen_col * lichen[..., None] * 0.85
-    col = col * (1 - speck[..., None]) + np.array([0.40, 0.40, 0.36]) * speck[..., None]
-    col = col * (1 - moss[..., None] * 0.7) + moss_col * moss[..., None] * 0.7
+    col = fissure + (plate2 * (1 - flake[..., None]) * 0.6 + plate * (0.4 + 0.6 * flake[..., None]) - fissure) * np.clip(k * 1.25, 0, 1)
+    col = col * (1 - lichen[..., None] * 0.8) + np.array([0.36, 0.37, 0.31]) * lichen[..., None] * 0.8
+    col = col * (1 - lich_dots[..., None]) + np.array([0.44, 0.43, 0.38]) * lich_dots[..., None]
+    col = col * (1 - moss[..., None] * 0.75) + np.array([0.075, 0.105, 0.035]) * moss[..., None] * 0.75
     srgb = np.power(np.clip(col, 0, 1), 1 / 2.2)
-    save_rgb((srgb * 255).astype(np.uint8), 'bark-color.jpg', 86)
-    # roughness in R? keep normal pure; roughness is nearly constant on bark
-    save_rgb(normal_from_height(hgt * 3.5, 4.0), 'bark-normal.jpg', 90)
+    save_rgb((srgb * 255).astype(np.uint8), 'bark-color.jpg', 88)
+    # normal from height; the alpha-free roughness hint lives in the shader
+    save_rgb(normal_from_height(hgt * 5.0, 4.0), 'bark-normal.jpg', 90)
 
 
 # ---------------------------------------------------------------- paving

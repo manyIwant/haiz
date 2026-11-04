@@ -16,7 +16,7 @@ for(const [file,doc]of docs){
 const journal=JSON.parse(fs.readFileSync('data/campus-journal.json'));assert(journal.clubs.length===6&&journal.radio.length===4);assert(journal.clubs.every(c=>c.sample===true));assert(journal.radio.every(c=>c.sample===true));assert.equal(fs.readFileSync('CNAME','utf8').trim(),'haiz.space');
 // The root is the tree homepage; the former cinematic home stays reachable at descent.html.
 {const home=docs.get('index.html');assert(home.querySelector('script[type="module"][src^="lanren/js/home.js"]'),'root must serve the tree homepage');
- for(const target of ['descent.html','campus-3d.html?focus=lanshu','journal.html','about.html','news.html','alumni.html','memory-walk.html','architecture.html','director.html','clubs.html','life.html','admissions.html','windowsill/index.html','darkroom.html','physics-lab.html','pocket/index.html','login/index.html','contact.html'])assert(home.querySelector(`a[href="${target}"]`),'homepage must link '+target);
+ for(const target of ['descent.html','campus-3d.html?focus=lanshu','journal.html','about.html','news.html','alumni.html','memory-walk.html','architecture.html','director.html','clubs.html','life.html','admissions.html','windowsill/index.html','darkroom.html','physics-lab.html','pocket/index.html','login/index.html','contact.html'])assert(home.querySelector(`a[href="${target}"], a[href^="${target}#"]`),'homepage must link '+target);
  assert.equal(home.querySelectorAll('section.panel').length,6,'six viewpoints around the tree');
  assert(docs.get('descent.html').querySelector('#journey'),'cinematic descent preserved');}
 for(const file of ['journal.html','about.html','news.html','clubs.html','life.html','alumni.html','admissions.html','contact.html']){

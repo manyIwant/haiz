@@ -7,13 +7,13 @@ import { poseAt } from './chapters.js';
 
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const damp = (cur, target, lambda, dt) => target + (cur - target) * Math.exp(-lambda * dt);
-const KEYS = ['ex', 'ey', 'ez', 'lx', 'ly', 'lz'];
+const KEYS = ['ex', 'ey', 'ez', 'lx', 'ly', 'lz', 'fov'];
 
 export class DwellCamera {
   constructor(camera, dom) {
     this.camera = camera;
     this.dom = dom;
-    this.s = { ex: 6, ey: 1, ez: 33, lx: 2.5, ly: 5.6, lz: 0.4 };
+    this.s = { ex: 6, ey: 1, ez: 33, lx: 2.5, ly: 5.6, lz: 0.4, fov: 40 };
     this.rail = null;             // () => frame
     this.off = { az: 0, pitch: 0 };
     this.offTarget = { az: 0, pitch: 0 };
@@ -72,7 +72,27 @@ export class DwellCamera {
     const f = poseAt(i);
     camera.position.set(f.ex, f.ey, f.ez);
     camera.lookAt(f.lx, f.ly, f.lz);
+    camera.fov = DwellCamera.fovFor(f.fov, camera.aspect);
+    DwellCamera.applyShift(camera);
+    camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
+  }
+
+  /** Shots are composed for a 16:9 frame; narrower screens widen the lens to keep the subject. */
+  static fovFor(fov, aspect) {
+    const ref = 16 / 9;
+    if (aspect >= ref) return fov;
+    const t = Math.tan((fov * Math.PI) / 360) * Math.min(2.1, Math.pow(ref / aspect, 0.72)) * DwellCamera.shiftFor(aspect);
+    return Math.min(110, (Math.atan(t) * 360) / Math.PI);
+  }
+
+  /** Portrait screens keep their lower part for words and links: a lens shift
+   *  (not a tilt) lifts the subject into the upper part of the frame. */
+  static shiftFor(aspect) { return aspect < 0.85 ? 1.32 : 1; }
+  static applyShift(camera) {
+    const k = DwellCamera.shiftFor(camera.aspect);
+    if (k > 1) camera.setViewOffset(1, k, 0, k - 1, 1, 1);
+    else if (camera.view && camera.view.enabled) camera.clearViewOffset();
   }
 
   update(dt, wallDt = dt) {
@@ -89,18 +109,26 @@ export class DwellCamera {
     const look = new THREE.Vector3(s.lx - s.ex, s.ly - s.ey, s.lz - s.ez);
     const len = look.length() || 1;
     let yaw = Math.atan2(look.x, look.z) - this.off.az;
-    let pitch = clamp(Math.asin(clamp(look.y / len, -1, 1)) + this.off.pitch, -0.95, 1.45);
+    let pitch = clamp(Math.asin(clamp(look.y / len, -1, 1)) + this.off.pitch, -1.52, 1.52);
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     // portrait screens see less sideways: step back along the view so the subject still fits
-    if (this.camera.aspect < 0.8) pos.addScaledVector(dir, -Math.min(8, len * 0.3) * (0.8 - this.camera.aspect) / 0.35);
+    const fov = DwellCamera.fovFor(s.fov, this.camera.aspect);
+    const shifted = DwellCamera.shiftFor(this.camera.aspect) > 1;
+    if (Math.abs(fov - this.camera.fov) > 0.01 || shifted !== !!this.camera.view?.enabled) {
+      this.camera.fov = fov;
+      DwellCamera.applyShift(this.camera);
+      this.camera.updateProjectionMatrix();
+    }
     if (this.push) {
       // a short dolly towards a chosen anchor before leaving the page
       const pp = this.push;
       pp.t = Math.min(1, pp.t + dt / pp.d);
       const e = pp.t * pp.t * (3 - 2 * pp.t);
       const toward = pp.point.clone().sub(pos);
-      pos.addScaledVector(toward, e * 0.5);
-      dir.lerp(toward.normalize(), e).normalize();
+      const dist = toward.length();
+      toward.normalize();
+      pos.addScaledVector(toward, e * Math.min(dist * 0.5, 3));   // a short push, never a flight
+      dir.lerp(toward, e * 0.6).normalize();
     }
     this.camera.position.copy(pos);
     this.camera.lookAt(pos.clone().add(dir));

@@ -19,23 +19,34 @@ varying vec3 vDir;
 float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
-float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * vn(p); p = p * 2.03 + 3.1; a *= 0.5; } return s; }
+float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * vn(p); p = mat2(1.6, 1.2, -1.2, 1.6) * p + 3.1; a *= 0.5; } return s; }
+float cloudField(vec2 uv){ return fbm(uv * 0.5) * 0.72 + fbm(uv * 2.1 + 7.0) * 0.34; }
 void main(){
   vec3 d = normalize(vDir);
   float h = max(d.y, 0.0);
-  vec3 col = mix(uHorizon, uZenith, pow(h, 0.5));
+  vec3 col = mix(uHorizon, uZenith, pow(h, 0.55));
   float cs = max(dot(d, uSun), 0.0);
-  col += uGlow * (pow(cs, 6.0) * 0.45 + pow(cs, 48.0) * 0.8);
-  col += uSunCol * smoothstep(0.99955, 0.9999, cs) * 14.0;
+  // a luminous band of haze along the horizon, warmer towards the sun
+  col = mix(col, uHorizon * 1.04 + uGlow * 0.10 * pow(cs, 2.0), exp(-h * 16.0) * 0.5);
+  col += uGlow * (pow(cs, 5.0) * 0.32 + pow(cs, 40.0) * 0.55 + pow(cs, 600.0) * 1.6);
+  col += uSunCol * smoothstep(0.99962, 0.99985, cs) * 22.0;
   if (d.y > 0.0) {
-    vec2 uv = d.xz / (d.y + 0.15) * 1.1 + vec2(uTimeS * 0.003, uTimeS * 0.001);
-    float c = fbm(uv * 1.3);
-    float m = smoothstep(0.58 - uCloud * 0.25, 0.9, c) * smoothstep(0.0, 0.22, d.y);
-    vec3 cl = mix(uHorizon * 1.08, uZenith * 0.6 + uHorizon * 0.7, 0.4) + uGlow * pow(cs, 3.0) * 0.9;
-    col = mix(col, cl, m * 0.55);
+    vec2 uv = d.xz / (d.y + 0.11) + vec2(uTimeS * 0.004, uTimeS * 0.0015);
+    float c = cloudField(uv);
+    float cov = mix(0.62, 0.36, uCloud);
+    float dens = smoothstep(cov, cov + 0.2, c);
+    // self-shadowing: denser cloud between this point and the sun darkens it
+    vec2 toSun = normalize(uSun.xz + vec2(1e-4)) * 0.16;
+    float c2 = cloudField(uv + toSun);
+    float lit = clamp(1.15 - (c2 - c) * 3.2, 0.42, 1.25);
+    vec3 cTop = mix(vec3(0.96, 0.95, 0.93), uGlow * 0.9 + uHorizon * 0.3, 0.35);
+    vec3 cBase = mix(uZenith * 0.75 + uHorizon * 0.45, uHorizon * 0.7, 0.4);
+    vec3 cc = mix(cBase, cTop, lit * 0.8) + uGlow * pow(cs, 7.0) * 0.9 * (1.3 - lit);
+    float fade = smoothstep(0.0, 0.16, d.y) * (1.0 - 0.35 * exp(-h * 6.0));
+    col = mix(col, cc, dens * fade * 0.88);
   }
-  // below the horizon the sky turns to the colour of distant water and haze
-  col = mix(col, uHorizon * 0.78, smoothstep(0.0, -0.05, d.y));
+  // below the horizon: the colour of distant water and haze
+  col = mix(col, uHorizon * 0.8, smoothstep(0.0, -0.06, d.y));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -51,6 +62,65 @@ export function createSky() {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(600, 48, 24), mat);
   mesh.frustumCulled = false;
   mesh.renderOrder = -10;
+  return mesh;
+}
+
+// ------------------------------------------------------------------ distance
+// Low island ranges and headlands far across the water: natural layers of
+// depth (no buildings). The atmosphere pass hazes them by distance.
+export function createDistance(water) {
+  const rand = mulberry(77);
+  const pos = [], col = [], idx = [];
+  const ranges = [
+    // centre azimuth (deg), half-width (deg), radius (m), height (m), roughness
+    [175, 34, 520, 26, 0.5], [146, 14, 330, 12, 0.7], [212, 16, 400, 15, 0.6],
+    [300, 30, 560, 34, 0.45], [335, 12, 360, 10, 0.8], [270, 10, 300, 8, 0.7],
+    [95, 24, 600, 30, 0.4], [40, 18, 460, 18, 0.6], [128, 10, 760, 44, 0.35]
+  ];
+  for (const [c, hw, R, H, rough] of ranges) {
+    const seg = Math.max(24, Math.round(hw * 3));
+    const base = pos.length / 3;
+    const ph = rand() * 100;
+    for (let i = 0; i <= seg; i++) {
+      const u = i / seg;
+      const az = ((c - hw + 2 * hw * u) * Math.PI) / 180;
+      const env = Math.pow(Math.sin(Math.PI * u), 0.6);
+      let h = 0, a = 1, f = 1;
+      for (let o = 0; o < 4; o++) { h += a * (0.5 + 0.5 * Math.sin(u * f * 9.0 + ph * (o + 1) + Math.sin(u * f * 23.0 + o) * rough)); a *= 0.5; f *= 2.1; }
+      h = H * env * (0.45 + 0.55 * h / 1.9);
+      const r = R * (1 + 0.04 * Math.sin(u * 7 + ph));
+      const x = Math.sin(az) * r, z = Math.cos(az) * r;
+      pos.push(x, water - 2, z, x, water + h, z);
+      const shade = 0.75 + 0.25 * rand();
+      col.push(shade, 0, shade, 1);
+    }
+    for (let i = 0; i < seg; i++) { const k = base + i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('aRidge', new THREE.Float32BufferAttribute(col, 2));
+  g.setIndex(idx);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uSun: { value: new THREE.Vector3(0, 1, 0) }, uHorizon: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() } },
+    vertexShader: /* glsl */`
+      attribute vec2 aRidge; varying float vTop; varying float vShade; varying vec3 vW;
+      void main(){ vTop = aRidge.y; vShade = aRidge.x; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uSun; uniform vec3 uHorizon; uniform vec3 uGlow;
+      varying float vTop; varying float vShade; varying vec3 vW;
+      void main(){
+        vec3 d = normalize(vW - cameraPosition);
+        float toward = pow(max(dot(normalize(vec3(d.x, 0.0, d.z)), normalize(vec3(uSun.x, 0.0, uSun.z))), 0.0), 3.0);
+        // silhouettes against the light, a hint of colour when the sun is behind the viewer
+        vec3 land = mix(vec3(0.06, 0.075, 0.07), vec3(0.10, 0.12, 0.09), 1.0 - toward) * vShade;
+        vec3 c = mix(land, uHorizon * 0.9, 0.18 + 0.2 * toward);
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  });
+  mat.side = THREE.DoubleSide;
+  const mesh = new THREE.Mesh(g, mat);
+  mesh.frustumCulled = false;
+  mesh.name = 'distance';
   return mesh;
 }
 
@@ -126,14 +196,34 @@ float inn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
              mix(mix(ih(i + vec3(0,0,1)), ih(i + vec3(1,0,1)), f.x), mix(ih(i + vec3(0,1,1)), ih(i + vec3(1,1,1)), f.x), f.y), f.z); }`)
       .replace('#include <color_fragment>', `
   float g1 = inn(vIP * 3.0) * 0.5 + inn(vIP * 11.0) * 0.3 + inn(vIP * 0.9) * 0.2;
-  vec3 rock = mix(vec3(0.075, 0.072, 0.065), vec3(0.15, 0.14, 0.12), g1) * (0.85 + 0.3 * inn(vIP * 23.0));
-  vec3 soil = mix(vec3(0.07, 0.055, 0.04), vec3(0.11, 0.09, 0.06), g1);
-  vec3 moss = mix(vec3(0.09, 0.08, 0.04), vec3(0.06, 0.12, 0.03), smoothstep(0.1, 0.8, uGrow));
+  // weathered granite: pale grey with dark mica and light feldspar specks,
+  // streaks where rain runs off, lichen on the tops, algae at the waterline
+  float speck = inn(vIP * 61.0);
+  vec3 rock = mix(vec3(0.20, 0.19, 0.175), vec3(0.34, 0.325, 0.30), g1);
+  rock *= 0.9 + 0.2 * inn(vIP * 23.0);
+  rock = mix(rock, vec3(0.06, 0.055, 0.05), smoothstep(0.78, 0.9, speck) * 0.7);
+  rock = mix(rock, vec3(0.42, 0.40, 0.37), smoothstep(0.1, 0.0, speck) * 0.5);
+  float streak = inn(vec3(vIP.x * 3.0, vIP.y * 0.9, vIP.z * 3.0) + inn(vIP * 5.0) * 0.8);
+  rock *= 1.0 - 0.16 * smoothstep(0.6, 0.9, streak) * (1.0 - normalize(vIN).y);
+  float lich = smoothstep(0.58, 0.78, inn(vIP * 2.3 + 9.0)) * smoothstep(0.2, 0.8, normalize(vIN).y);
+  rock = mix(rock, mix(vec3(0.36, 0.35, 0.26), vec3(0.42, 0.30, 0.14), inn(vIP * 9.0)), lich * 0.6);
+  vec3 soil = mix(vec3(0.07, 0.055, 0.04), vec3(0.12, 0.095, 0.065), g1);
+  vec3 moss = mix(vec3(0.10, 0.085, 0.04), vec3(0.055, 0.11, 0.028), smoothstep(0.1, 0.8, uGrow));
   float mossy = smoothstep(0.35, 0.75, inn(vIP * 1.6)) * smoothstep(0.4, 0.9, normalize(vIN).y);
   vec3 c = mix(soil, moss, mossy * 0.8);
-  c = mix(c, rock, smoothstep(0.35, 0.7, vI.g));
-  c *= mix(1.0, 0.55, vI.b);
+  c = mix(c, rock, smoothstep(0.3, 0.6, vI.g));
+  vec3 algae = vec3(0.04, 0.05, 0.03);
+  c = mix(c, algae, vI.b * 0.75);
   diffuseColor.rgb = c;`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  {
+    float hh = inn(vIP * 4.0) * 0.55 + inn(vIP * 13.0) * 0.3 + inn(vIP * 37.0) * 0.15;
+    vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition);
+    vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
+    float det = dot(sx, r1);
+    vec2 dh = vec2(dFdx(hh), dFdy(hh)) * mix(0.004, 0.022, smoothstep(0.3, 0.6, vI.g));
+    normal = normalize(abs(det) * normal - sign(det) * (dh.x * r1 + dh.y * r2));
+  }`)
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = mix(0.92, 0.35, vI.b);')
       .replace('#include <aomap_fragment>', `
   float iao = mix(0.3, 1.0, vI.r);
@@ -170,8 +260,14 @@ void main(){
     vec4 r = texture2DProj(tDiffuse, uv);
     refl = mix(sky, r.rgb, 0.92);
   }
-  vec3 deep = vec3(0.012, 0.02, 0.022);
-  vec3 c = mix(deep, refl, clamp(fres * 1.25 + 0.25, 0.0, 1.0));
+  // the water body: a shallow lagoon over pale sand round the islet, deep green-blue beyond
+  float rr = length(p * vec2(1.0, 1.12)) + (wn(p * 0.35) - 0.5) * 2.4;
+  float shallow = smoothstep(26.0, 10.0, rr);
+  float caust = pow(wn(p * 2.2 + vec2(t * 0.3, -t * 0.2)) * wn(p * 3.1 - vec2(t * 0.25, t * 0.15)), 1.5);
+  vec3 deep = vec3(0.010, 0.030, 0.036);
+  vec3 lagoon = mix(vec3(0.07, 0.15, 0.13), vec3(0.20, 0.21, 0.15), smoothstep(14.0, 5.0, rr)) * (0.85 + 0.5 * caust);
+  vec3 body = mix(deep, lagoon, shallow);
+  vec3 c = mix(body, refl, clamp(fres * 1.1 + 0.06, 0.0, 1.0));
   gl_FragColor = vec4(c, 1.0);
 }`;
 const WATER_VERT = /* glsl */`

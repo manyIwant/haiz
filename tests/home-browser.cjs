@@ -41,17 +41,17 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   const g2 = await page.evaluate(() => window.__haizHome.info().grow);
   assert(g2 > 0.4 && g2 < 0.6, 'growth follows the walk: ' + g2);
   assert.match(await page.evaluate(() => location.hash), /#archive/);
-  results.push(`native scroll to 来处 · 档案 activates viewpoint 02 (#archive), growth ${g2.toFixed(2)}`);
+  results.push(`native scroll to 03 档案 · 来处 activates the details shot (#archive), growth ${g2.toFixed(2)}`);
   // the orbit navigator jumps to a viewpoint
   await page.click('#orbitDots .dot:nth-of-type(5)');
   await page.waitForFunction(() => window.__haizHome.info().active === 4, null, { timeout: 180000 });
-  results.push('orbit navigator dot walks to 日子 · 创作 (04)');
+  results.push('path navigator station walks to 05 日子 · 创作 (looking forward)');
   // keyboard: End reaches the last viewpoint
   await page.keyboard.press('End');
   await page.waitForFunction(() => window.__haizHome.info().active === 5, null, { timeout: 180000 });
   const g5 = await page.evaluate(() => window.__haizHome.info().grow);
   assert(g5 > 0.97, 'full leaf at the end: ' + g5);
-  results.push('End key walks to 繁茂 · 全部 (05) in full leaf');
+  results.push('End key walks to 06 工具 · 全部 in full leaf');
   // a falling leaf can be caught and kept
   const pos = await page.evaluate(() => {
     const w = window.__haizHome.world, cam = w.camera;
@@ -77,7 +77,7 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   await ready(page);
   await page.waitForFunction(() => window.__haizHome.info().active === 2, null, { timeout: 180000 });
   assert.strictEqual(await page.textContent('#bookCount'), '1');
-  results.push('returning restores viewpoint 02 and the book (1 leaf)');
+  results.push('returning restores the details shot (03) and the book (1 leaf)');
   assert.deepStrictEqual(errors, [], 'page errors: ' + errors.join(' | '));
   await ctx.close();
 

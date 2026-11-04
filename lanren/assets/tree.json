@@ -1,15 +1,18 @@
 {
- "generator": "scripts/lanren/build_tree.py (v2: growing species concept model)",
+ "generator": "scripts/lanren/build_tree.py (v3: scaffold + space colonisation, clumped dome crown)",
  "blender": "5.2.3 LTS",
- "seed": 1923,
+ "seed": 2611,
  "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
  "water": -0.85,
  "counts": {
-  "branches": 15893,
-  "rosettes": 14687,
-  "barkVertices": 219785
+  "nodes": 34518,
+  "clumps": 204,
+  "rosettes": 10990,
+  "oldRosettes": 2785,
+  "barkVertices": 242257,
+  "islandVertices": 24649
  },
- "rosetteStride": 15,
+ "rosetteStride": 16,
  "rosetteLayout": [
   "px",
   "py",
@@ -23,17 +26,43 @@
   "tEmerge",
   "tOldDrop",
   "rand",
-  "padX",
-  "padY",
-  "padZ"
+  "clumpX",
+  "clumpY",
+  "clumpZ",
+  "shell"
  ],
- "pads": 37,
  "growth": {
   "emergeRange": [
-   0.04,
-   0.676
+   0.198,
+   0.406
   ],
-  "emergeMedian": 0.362
+  "emergeMedian": 0.292,
+  "oldDropRange": [
+   0.03,
+   0.34
+  ]
+ },
+ "crown": {
+  "centre": [
+   0.6,
+   9.9,
+   -0.2
+  ],
+  "radius": 12.2,
+  "top": 15.2,
+  "rim": 4.6,
+  "bounds": {
+   "min": [
+    -16.147,
+    -0.75,
+    12.485
+   ],
+   "max": [
+    13.016,
+    16.115,
+    -12.734
+   ]
+  }
  },
  "anchors": {
   "trunk": [
@@ -41,11 +70,91 @@
    1.6,
    -0.0
   ],
+  "fork": [
+   0.23,
+   3.062,
+   -0.077
+  ],
   "limbDip": [
-   8.7,
-   1.85,
-   -0.9
+   -6.878,
+   2.47,
+   0.98
+  ],
+  "limbEnd": [
+   -10.877,
+   2.683,
+   2.284
   ]
  },
- "note": "Species concept model of Terminalia catappa (tiered Aubréville architecture). Not a survey of the campus tree."
+ "params": {
+  "crown": {
+   "R": 12.2,
+   "asym": [
+    0.13,
+    3.141592653589793
+   ],
+   "wobble": 0.07,
+   "top": 15.2,
+   "rim": 4.6,
+   "under_centre": 7.2,
+   "shell": 2.6,
+   "spacing": 2.05,
+   "tier": 2.9,
+   "clump_r": [
+    1.0,
+    1.7
+   ],
+   "clump_h": [
+    0.45,
+    0.8
+   ],
+   "pts_per_m3": 14.0,
+   "mass_r": [
+    2.8,
+    4.4
+   ],
+   "mass_h": [
+    1.5,
+    2.3
+   ],
+   "top_masses": 5
+  },
+  "sc": {
+   "step": 0.24,
+   "influence": 6.5,
+   "kill": 0.36,
+   "momentum": 0.85,
+   "jitter": 0.16,
+   "up": 0.05,
+   "level": 0.8,
+   "min_z": -0.4,
+   "max_z": 0.72,
+   "max_iter": 320
+  },
+  "pipe": {
+   "tip": 0.0085,
+   "exp": 2.3
+  },
+  "growth": {
+   "L_new": [
+    0.32,
+    0.95
+   ],
+   "start": [
+    0.02,
+    0.26
+   ],
+   "shoot": 0.12,
+   "leaf_delay": [
+    0.015,
+    0.06
+   ],
+   "old_fraction": 0.72,
+   "old_drop": [
+    0.03,
+    0.34
+   ]
+  }
+ },
+ "note": "Species concept model of Terminalia catappa (open-grown, tiered). Not a survey of the campus tree."
 }

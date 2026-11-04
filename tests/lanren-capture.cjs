@@ -35,18 +35,20 @@ function serve() {
   try {
     await page.waitForFunction(() => window.__haizHome && window.__haizHome.world && document.body.classList.contains('ready'), null, { timeout: 180000 });
   } catch (e) { console.log(logs.join('\n')); throw e; }
+  if (process.env.EVAL) await page.evaluate(process.env.EVAL);
   if (process.env.HIDEUI) await page.addStyleTag({ content: '.bar,.panels,.orbit,.growth,.card,.colophon,.leaders,#experienceDock{display:none!important}.stage::after{display:none}' });
   for (const spec of shots) {
     const [view, time] = spec.split('@');
     await page.evaluate(([v, t]) => {
-      if (v.startsWith('L')) { const [, ex, ey, ez, lx, ly, lz, p] = v.split(',').map(Number); window.__haizHome.lookdev([ex, ey, ez], [lx, ly, lz], p); }
+      if (v.startsWith('L')) { const [, ex, ey, ez, lx, ly, lz, p, fov] = v.split(',').map(Number); window.__haizHome.lookdev([ex, ey, ez], [lx, ly, lz], p, fov || 40); }
+      else if (v.startsWith('P')) window.__haizHome.seek(+v.slice(1));
       else window.__haizHome.go(+v);
       window.__haizHome.still(+(window.STILL || 0.05), 20);
     }, [view, time]);
     await page.waitForTimeout(+(process.env.WAIT || 1300));
-    const f = path.join(out, `${view.startsWith('L') ? 'look' + shots.indexOf(spec) : view}.png`);
+    const f = path.join(out, `${view.startsWith('L') ? 'look' + shots.indexOf(spec) : view.replace('.', '_')}.png`);
     await page.screenshot({ path: f });
-    console.log('shot', f, JSON.stringify(await page.evaluate(() => { const i = window.__haizHome.info(); return { grow: i.grow.toFixed(2), leaves: i.leaves, falling: i.falling, active: i.active, tier: i.tier }; })));
+    console.log('shot', f, JSON.stringify(await page.evaluate(() => { const i = window.__haizHome.info(); return { cam: i.cam, p: i.p, grow: i.grow.toFixed(2), leaves: i.leaves, falling: i.falling, active: i.active, tier: i.tier }; })));
   }
   console.log(logs.filter((l) => !/GPU stall|swiftshader|Automatic fallback/i.test(l)).slice(0, 30).join('\n'));
   await browser.close();
