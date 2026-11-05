@@ -3,10 +3,10 @@
 // the six viewpoints) drives the camera, the tree's growth, the light of the
 // day and which part of HAIZ is open.
 import * as THREE from 'three';
-import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, isPortrait, AXIS } from './chapters.js';
+import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
 import { sunPosition, haikouParts } from './sun.js';
-import { UNIFORMS, leafVisible, createHeroLeaves, clearZone } from './foliage.js';
+import { UNIFORMS, leafVisible, createHeroLeaves } from './foliage.js';
 import { Specimens } from './specimen.js';
 import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
@@ -387,63 +387,37 @@ function goStatic() {
 // the lit, glossy blades stand out. The sun rakes in from the outer side to
 // draw out their relief. Those leaves get finely tessellated hero blades.
 const STUDY = 2;
-const STUDY_RANK = 0;   // art-directed for the locked tree (seed 2611); preview others with ?study=k
+const STUDY_RANK = 1;   // art-directed for the locked tree (seed 2611); preview others with ?study=k
 function aimStudy() {
-  // the details shot is a canopy macro: from beneath, looking up at a rosette that
-  // a high sun lights from behind through a gap in the tiers above, so its blades
-  // glow against the dark undersides of the upper shelves and the sky gaps blur
-  // into soft highlights
   const ros = world.rosettes, st = world.stride;
-  const SUN_EL = THREE.MathUtils.degToRad(64), PITCH = 0.9;   // the lens looks ~50° up
-  const p = new THREE.Vector3(), q = new THREE.Vector3(), sun = new THREE.Vector3(), view = new THREE.Vector3();
   const ranked = [];
   for (let i = 0; i < ros.length; i += st) {
-    const y = ros[i + 1], tE = ros[i + 9];
-    const r = Math.hypot(ros[i] - AXIS.x, ros[i + 2] - AXIS.z);
-    if (y < 3.6 || y > 7.6 || r < 4 || r > 12.5 || tE < 0.26 || tE > 0.34) continue;
-    p.set(ros[i], y, ros[i + 2]);
-    const near = [];
-    for (let j = 0; j < ros.length; j += st) {
-      if (j === i || ros[j + 9] < 0) continue;
-      const dx = ros[j] - p.x, dy = ros[j + 1] - p.y, dz = ros[j + 2] - p.z;
-      if (dx * dx + dy * dy + dz * dz < 90) near.push(dx, dy, dz);
-    }
-    for (let k = 0; k < 12; k++) {
-      const a = (k / 12) * Math.PI * 2;
-      sun.set(Math.sin(a) * Math.cos(SUN_EL), Math.sin(SUN_EL), Math.cos(a) * Math.cos(SUN_EL));
-      view.set(Math.sin(a), PITCH, Math.cos(a)).normalize();
-      let block = 0, around = 0, lens = 0;
-      for (let n = 0; n < near.length; n += 3) {
-        q.set(near[n], near[n + 1], near[n + 2]);
-        const ts = q.dot(sun);
-        if (ts > 0.3 && q.clone().addScaledVector(sun, -ts).length() < 0.5 + 0.05 * ts) block++;
-        const tv = q.dot(view);
-        if (tv > 1.2) { const l = q.clone().addScaledVector(view, -tv).length(); if (l > 0.6 && l < 0.25 + 0.45 * tv) around++; }
-        else if (tv < -0.25 && tv > -1.1 && q.clone().addScaledVector(view, -tv).length() < 0.45) lens++;
-      }
-      const sc = -block * 2 + Math.min(around, 40) * 0.08 - lens * 0.6 - Math.abs(tE - 0.3) * 10 - Math.abs(y - 5.5) * 0.2;
-      ranked.push([sc, i, a]);
-    }
+    const x = ros[i], y = ros[i + 1], z = ros[i + 2], tE = ros[i + 9];
+    const r = Math.hypot(x - AXIS.x, z - AXIS.z);
+    if (y < 4.4 || y > 7.0 || r < 7.5 || r > 12.5 || tE < 0.28 || tE > 0.36) continue;
+    // a quiet side of the tree (away from the long limb), real foliage behind,
+    // the rosette sitting on the outer shell of its clump
+    const th = Math.atan2(x - AXIS.x, z - AXIS.z);
+    const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.2 - Math.abs(y - 5.5) * 0.5
+      - Math.abs(tE - 0.31) * 8 - ros[i + 8] * 1.6 + ros[i + 15] * 1.2 + r * 0.12;
+    ranked.push([s, i]);
   }
   if (!ranked.length) return;
-  ranked.sort((x, y) => y[0] - x[0]);
-  const [, best, az] = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? STUDY_RANK))];
-  const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.04, ros[best + 2]);
-  view.set(Math.sin(az), PITCH, Math.cos(az)).normalize();
-  const side = new THREE.Vector3(Math.cos(az), 0, -Math.sin(az));
-  const eye = P.clone().addScaledVector(view, -0.72).addScaledVector(side, 0.1);
-  // the cluster left of centre, clear of the panel on the right
-  retarget(STUDY, eye.toArray(), P.clone().addScaledVector(side, isPortrait() ? 0 : -0.17).toArray(), 30);
-
-  // the sun a little above the top of the frame, behind the cluster
-  LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(az), THREE.MathUtils.radToDeg(SUN_EL)];
+  ranked.sort((a, b) => b[0] - a[0]);
+  const best = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? STUDY_RANK))][1];
+  const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.06, ros[best + 2]);
+  const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
+  const side = new THREE.Vector3(-out.z, 0, out.x);
+  // a little above the cluster, looking in and slightly down into the shaded tier
+  const eye = P.clone().addScaledVector(out, 0.85).addScaledVector(side, 0.28).add(new THREE.Vector3(0, 0.36, 0));
+  const look = P.clone().addScaledVector(out, -0.1).add(new THREE.Vector3(0, -0.06, 0));
+  retarget(STUDY, eye.toArray(), look.toArray(), 23);
+  // the sun from the far side, over the cluster: grazing light that glints on
+  // the glossy blades and glows through their edges
+  LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(Math.atan2(-out.x, -out.z)) + 28, 34];
   ANCHORS[STUDY].copy(P);
-  const hero = createHeroLeaves(world.canopy, P, 1.3, world.rosettes, world.stride);
+  const hero = createHeroLeaves(world.canopy, P, 2.4);
   if (hero) world.scene.add(hero);
-  // nothing between the lens and the cluster but air (blurred blades at the edges stay)
-  const za = eye.clone().addScaledVector(view, -0.3), zb = P.clone().addScaledVector(view, -0.42);
-  clearZone(world.canopy.mesh, za, zb, 0.28);
-  if (hero) clearZone(hero, za, zb, 0.28);
   buildOrbitRefresh();
 }
 function buildOrbitRefresh() { buildOrbit(); orbitDots = $$('#orbitDots .dot'); }

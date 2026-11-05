@@ -31,7 +31,7 @@ export const CHAPTERS = [
   },
   {
     id: 'archive', index: '03', label: '叶片特写 · 细节', en: ['Details', 'Matter'], zh: '档案 · 来处',
-    lede: '站到一层枝叶下面抬头看：新叶在枝梢平展成一圈，太阳从背后照透它们，每一条叶脉都看得见。来处也是这样一点点展开的：1923 年创办的私立琼海中学、百年校庆时以这棵树开篇的报道、从这里走出去的人。',
+    lede: '新叶对折着展开，逆光里能看见每一条叶脉。来处也是这样一点点展开的：1923 年创办的私立琼海中学、百年校庆时以这棵树开篇的报道、从这里走出去的人。',
     note: '学校简介（本站「学校」页）；《海南日报》2023-10-30。树龄未经年轮测定',
     ui: { slab: 'right', anchor: 'study', exit: 'leaf' },
     entries: [
@@ -42,9 +42,9 @@ export const CHAPTERS = [
   },
   {
     id: 'map', index: '04', label: '俯瞰树冠 · 地图', en: ['Campus', 'Map'], zh: '地图 · 空间',
-    lede: '升到树冠外的高处：枝叶一层层平展开，像等高线，树影斜落在浅水上。校园也有它的平面：手绘的校园图、三处可以慢慢走的地点，和写给来访者的指引。',
+    lede: '升到树冠上方，树影落在浅水上，像一张摊开的地图。校园也有它的平面：手绘的校园图、三处可以慢慢走的地点，和写给来访者的指引。',
     note: '校园手图沿用项目既有平面数据，为近似表达',
-    ui: { slab: 'right', anchor: [4.0, 10.6, 1.0], exit: 'map' },
+    ui: { slab: 'right', anchor: [5.5, 13.2, 1.5], exit: 'map' },
     entries: [
       { href: 'about.html#campusAtlas', title: '学校与校园手图', en: 'Campus atlas', note: '历史、地标与手绘平面', primary: true },
       { href: 'memory-walk.html', title: '树荫下的三次停留', en: 'Three stops', note: '北门 · 榄仁树 · 砚池，无需三维' },
@@ -98,17 +98,17 @@ export const STAGES = [
  * `study` is re-aimed at load time on a real cluster of new leaves.
  */
 export const KEYS = [
-  { t: 0, eye: [8.5, 0.95, 38], look: [-6.0, 6.4, 1.5], fov: 36, portrait: { eye: [9.7, 1.0, 41.0], look: [-1.5, 9.0, 0.5], fov: 70 } },                    // 01 first encounter
+  { t: 0, eye: [8.5, 0.95, 38], look: [-8.6, 6.9, 1.5], fov: 33, portrait: { eye: [9.7, 1.0, 41.0], look: [-1.5, 9.0, 0.5], fov: 70 } },                    // 01 first encounter
   { t: 0.55, eye: [5.6, 1.4, 19], look: [0.6, 6.0, -1], fov: 42 },
   { t: 1, eye: [3.1, 0.75, 5.0], look: [-0.9, 8.6, -2.2], fov: 64 },                // 02 awakening: up the trunk
   { t: 1.5, eye: [6.0, 2.4, 8.0], look: [3.0, 6.8, 1.0], fov: 50 },
   { t: 2, eye: [9.0, 5.1, 5.6], look: [9.6, 5.5, 4.6], fov: 26, study: true },      // 03 details: new leaves
-  { t: 2.45, eye: [-8, 13, 23], look: [0, 7, 0], fov: 42 },
-  { t: 3, eye: [-34, 17, 12], look: [4, 5.2, -2.5], fov: 44, portrait: { eye: [-46, 24, 18], look: [1, 5.0, -1.5], fov: 70 } },                   // 04 map: above the crown
+  { t: 2.45, eye: [19, 15, 17], look: [2, 8, 0], fov: 40 },
+  { t: 3, eye: [3.0, 40, 12], look: [2.4, 4.5, 1.5], fov: 50, portrait: { eye: [-1.6, 70, 10.5], look: [-2.2, 4.5, 2.5], fov: 64 } },                   // 04 map: above the crown
   { t: 3.5, eye: [-14, 18.5, 16], look: [-4, 7, 3], fov: 44 },
-  { t: 4, eye: [-3.0, 5.2, 1.5], look: [-37.7, 4.6, 23.6], fov: 62 },                   // 05 looking forward
+  { t: 4, eye: [-5.5, 5.0, 5.0], look: [-45, 5.5, 14], fov: 58 },                   // 05 looking forward
   { t: 4.5, eye: [-13, 3.4, 17.5], yaw: 172, pitch: 6, fov: 48 },
-  { t: 5, eye: [-21.5, 1.1, 29.5], look: [8.5, 6.2, 3.3], fov: 40, portrait: { eye: [-25.5, 1.1, 33.3], look: [-0.8, 9.0, -0.6], fov: 70 } }                   // 06 full bloom
+  { t: 5, eye: [-21.5, 1.1, 29.5], look: [5.0, 6.6, 3.3], fov: 38, portrait: { eye: [-25.5, 1.1, 33.3], look: [-0.8, 9.0, -0.6], fov: 70 } }                   // 06 full bloom
 ];
 
 /** Light and atmosphere per shot. sun: world azimuth (deg, atan2(x, z)) and elevation. */
@@ -119,11 +119,11 @@ export const LIGHT = [
   // 02 morning: light breaking through the limbs above
   { sun: [205, 34], sunCol: [1.0, 0.78, 0.52], I: 4.6, zenith: [0.10, 0.18, 0.40], horizon: [0.78, 0.66, 0.54], glow: [1.4, 0.85, 0.45],
     fog: [0.62, 0.56, 0.50], density: 0.0011, mist: 0.03, rays: 1.0, exposure: 0.9, warm: 0.75, cloud: 0.5, aperture: 0.1, focus: 6.5, sat: 1.1, contrast: 1.1 },
-  // 03 near midday under the crown: a high sun behind the new leaves, clear sky in the gaps
-  { sun: [62, 64], sunCol: [1.0, 0.92, 0.76], I: 4.2, zenith: [0.04, 0.15, 0.48], horizon: [0.40, 0.56, 0.74], glow: [0.9, 0.8, 0.58],
-    fog: [0.52, 0.62, 0.70], density: 0.0008, mist: 0.0, rays: 0.15, exposure: 0.8, warm: 0.45, cloud: 0.12, aperture: 1.0, focus: 0, sat: 1.06, contrast: 1.12 },
+  // 03 late morning, the sun behind the new leaves
+  { sun: [62, 26], sunCol: [1.0, 0.9, 0.72], I: 4.0, zenith: [0.07, 0.20, 0.52], horizon: [0.52, 0.64, 0.76], glow: [1.0, 0.82, 0.55],
+    fog: [0.52, 0.62, 0.70], density: 0.0010, mist: 0.02, rays: 0.4, exposure: 0.82, warm: 0.5, cloud: 0.45, aperture: 1.0, focus: 0, sat: 1.1, contrast: 1.06 },
   // 04 from above: a low side sun lays the tree's shadow across the shallow lagoon
-  { sun: [200, 22], sunCol: [1.0, 0.88, 0.70], I: 4.6, zenith: [0.05, 0.17, 0.50], horizon: [0.44, 0.58, 0.74], glow: [0.8, 0.72, 0.56],
+  { sun: [135, 28], sunCol: [1.0, 0.88, 0.70], I: 4.6, zenith: [0.05, 0.17, 0.50], horizon: [0.44, 0.58, 0.74], glow: [0.8, 0.72, 0.56],
     fog: [0.34, 0.42, 0.42], density: 0.0025, mist: 0.12, rays: 0.0, exposure: 0.86, warm: 0.45, cloud: 0.45, aperture: 0, focus: 0, sat: 1.0, contrast: 1.12 },
   // 05 golden hour seen from inside the crown
   { sun: [302, 12], sunCol: [1.0, 0.68, 0.40], I: 3.4, zenith: [0.14, 0.18, 0.32], horizon: [0.95, 0.62, 0.40], glow: [1.5, 0.74, 0.34],
