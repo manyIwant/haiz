@@ -1,7 +1,7 @@
 {
   "pages": 17,
-  "localLinks": 585,
-  "images": 64,
+  "localLinks": 727,
+  "images": 63,
   "checks": [
     "All original page routes preserved plus life.html",
     "No broken local links or anchor references",

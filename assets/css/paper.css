@@ -1,0 +1,322 @@
+/* HAIZ · 树下的纸页 — type, layout and colour for the reading pages
+   (校园手记, 学校, 新闻档案, 社团提案, 课间电台, 来访与招生, 校友, 关于).
+   Loaded after journal / experience / atelier-ui and scoped to body[data-page].
+   Direction and reasons: docs/haiz-art-direction-20261105.md. */
+
+body[data-page] {
+  /* paper and ink; the accent is the season of the content (set per page below) */
+  --paper: #f4f1e8;
+  --paper-2: #ebe6d8;
+  --paper-3: #ded7c3;
+  --ink: #1f3a30;
+  --ink-2: #3d5449;
+  --ink-3: #5a6d62;
+  --night: #13201b;
+  --red-leaf: #a8482c;
+  --bronze: #8a6420;
+  --new-leaf: #c9cf8f;
+  --forest: #2a4a3c;
+  --accent: var(--forest);
+  --rule: rgba(31, 58, 48, .16);
+  --muted: var(--ink-3);
+  --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "SimSun", serif;
+  --sans: Sora, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --ease: cubic-bezier(.23, 1, .32, 1);
+  --gutter: clamp(20px, 4.4vw, 64px);
+  --nav-h: 68px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.85 var(--sans);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+/* memory: archive, history, people — the red of last year's leaves */
+body[data-page="news"], body[data-page="alumni"], body[data-page="about"] { --accent: var(--red-leaf); }
+/* new things being made — bronze of the new flush */
+body[data-page="clubs"], body[data-page="life"], body[data-page="home"] { --accent: var(--bronze); }
+
+body[data-page] ::selection { background: var(--new-leaf); color: var(--ink); }
+body[data-page] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+body[data-page] a { text-underline-offset: .22em; }
+body[data-page] p { line-height: 1.85; }
+body[data-page] main :is(h1, h2, h3) { font-family: var(--serif); color: var(--ink); text-wrap: balance; }
+body[data-page] main h1 { font-size: clamp(40px, 5vw, 70px); font-weight: 400; line-height: 1.22; letter-spacing: .01em; }
+body[data-page] main h2 { font-size: clamp(27px, 2.6vw, 36px); font-weight: 400; line-height: 1.38; }
+body[data-page] main h3 { font-size: 21px; font-weight: 600; line-height: 1.5; }
+body[data-page] main :is(h1, h2, h3) em { font-style: normal; color: inherit; font-family: inherit; }
+body[data-page] .wrap { width: auto; max-width: 1440px; margin-inline: auto; padding-inline: var(--gutter); }
+body[data-page] .section { padding-block: clamp(72px, 9vw, 128px); }
+body[data-page] .section-tight { padding-top: 8px; }
+body[data-page] .muted-copy, body[data-page] .section-side, body[data-page] .section-footnote { color: var(--ink-2); }
+body[data-page] .section-footnote { font-size: 14px; line-height: 1.75; max-width: 46em; margin-top: 36px; }
+body[data-page] .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ornaments that said nothing */
+body[data-page] .eyebrow, body[data-page] .section-kicker, body[data-page] .cursor-label,
+body[data-page] .scroll-progress, body[data-page] .vertical-note, body[data-page] .type-ribbon { display: none !important; }
+body[data-page] .reveal { opacity: 1 !important; transform: none !important; }
+
+/* ---------------------------------------------------------------- links and actions */
+body[data-page] .text-link { display: inline-flex; gap: .35em; align-items: baseline; font-size: 16px; color: var(--ink); border-bottom: 1px solid currentColor; padding-bottom: 2px; transition: color .2s var(--ease); }
+body[data-page] .text-link:hover { color: var(--accent); }
+body[data-page] .solid-link { display: inline-flex; align-items: center; gap: .5em; font-size: 15px; padding: 11px 20px; border-radius: 999px; background: var(--forest); color: var(--paper); transition: background-color .2s var(--ease), transform .12s var(--ease); }
+body[data-page] .solid-link:hover { background: var(--ink); }
+body[data-page] :is(.solid-link, .nav-walk, .filter-tabs button, .poll-options button, .note-save):active { transform: scale(.97); }
+body[data-page] .sample-badge { display: inline-block; font: 500 13px/1.4 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink-2); background: var(--paper-2); border: 0; border-radius: 3px; padding: 3px 8px; }
+
+/* ---------------------------------------------------------------- the top bar */
+body[data-page] .site-nav { position: fixed; inset: 0 0 auto; z-index: 80; height: var(--nav-h); display: flex; align-items: center; gap: 28px; padding: 0 var(--gutter) !important; background: rgba(244, 241, 232, .95) !important; color: var(--ink) !important; backdrop-filter: none; border-bottom: 1px solid transparent; transition: border-color .25s var(--ease); }
+body[data-page] .site-nav.scrolled { border-bottom-color: var(--rule); }
+body[data-page] .brand { display: flex; align-items: center; gap: 10px; font: 600 16px/1.2 var(--sans); white-space: nowrap; }
+body[data-page] .brand small { display: block; font: 400 12px/1.4 var(--sans); color: var(--ink-3); letter-spacing: 0; margin-top: 2px; }
+body[data-page] .desktop-nav { display: flex; gap: 22px; margin-left: auto; }
+body[data-page] .desktop-nav a { font-size: 14px; line-height: 1.4; padding-block: 8px; color: var(--ink-2); }
+body[data-page] .desktop-nav a:hover { color: var(--ink); }
+body[data-page] .desktop-nav a[aria-current] { color: var(--ink); }
+body[data-page] .desktop-nav a::after { height: 2px; background: var(--accent); }
+body[data-page] .nav-actions { display: flex; align-items: center; gap: 10px; }
+body[data-page] .nav-walk { font-size: 14px; padding: 8px 16px; border-radius: 999px; background: var(--forest) !important; color: var(--paper) !important; white-space: nowrap; transition: background-color .2s var(--ease), transform .12s var(--ease); }
+body[data-page] .nav-walk:hover { background: var(--ink) !important; }
+body[data-page] .menu-toggle span { background: currentColor; }
+/* the shared explore / soundscape desk lives in the bar, not over the text */
+body[data-page] .dock-slot { display: flex; }
+body[data-page] .experience-dock.docked { position: static; display: flex; gap: 2px; box-shadow: none; border: 0; border-radius: 0; overflow: visible; }
+body[data-page] .experience-dock.docked > button { min-height: 36px; padding: 6px 12px; border-radius: 999px; background: transparent; color: var(--ink-2); font: 400 14px/1.4 var(--sans); transition: background-color .2s var(--ease), color .2s var(--ease); }
+body[data-page] .experience-dock.docked > button:first-child { background: transparent; color: var(--ink-2); }
+body[data-page] .experience-dock.docked > button:hover, body[data-page] .experience-dock.docked > button[aria-pressed="true"] { background: var(--paper-2); color: var(--ink); }
+body[data-page] .experience-dock.docked kbd { font: 12px var(--sans); opacity: .6; margin-left: 8px; }
+body[data-page] .experience-dock.docked > button > span[aria-hidden] { display: none; }
+
+/* the full menu: every page, sorted by what you do there */
+body[data-page] .site-menu { position: fixed; inset: var(--nav-h) 0 0; z-index: 79; background: var(--paper) !important; color: var(--ink) !important; padding: clamp(32px, 5vw, 72px) var(--gutter); overflow-y: auto; display: flex; flex-direction: column; gap: 48px; }
+body[data-page] .site-menu[hidden] { display: none; }
+body[data-page] :is(.menu-groups, .footer-groups, .sitemap-groups) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px clamp(24px, 3vw, 48px); max-width: 1440px; margin: 0 auto; width: 100%; }
+body[data-page] :is(.menu-groups, .footer-groups, .sitemap-groups) h2 { font: 500 13px/1.6 var(--sans); color: var(--ink-3); margin: 0 0 12px; letter-spacing: .04em; }
+body[data-page] :is(.menu-groups, .footer-groups, .sitemap-groups) ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+body[data-page] :is(.menu-groups, .sitemap-groups) a { font: 400 clamp(20px, 2vw, 26px)/1.5 var(--serif); color: var(--ink); }
+body[data-page] :is(.menu-groups, .sitemap-groups) a:hover { color: var(--accent); }
+body[data-page] .site-menu .menu-bottom { display: flex; gap: 24px; max-width: 1440px; margin: 0 auto; width: 100%; font-size: 15px; color: var(--ink-2); border: 0; }
+
+/* ---------------------------------------------------------------- how a page opens */
+body[data-page] .page-head { padding: calc(var(--nav-h) + clamp(56px, 8vw, 112px)) var(--gutter) clamp(40px, 5vw, 72px); max-width: 1440px; margin: 0 auto; }
+body[data-page] .page-head .head-copy { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px clamp(32px, 6vw, 112px); align-items: end; }
+body[data-page] .page-head h1 { margin: 0; }
+body[data-page] .page-head .lede { font-size: 18px; line-height: 1.9; color: var(--ink-2); margin: 0; max-width: 30em; }
+body[data-page] .page-head-photo { padding: var(--nav-h) 0 clamp(40px, 5vw, 72px); max-width: none; }
+body[data-page] .head-photo { position: relative; margin: 0; height: min(62vh, 640px); background: var(--paper-3); }
+body[data-page] .head-photo img { width: 100%; height: 100%; object-fit: cover; }
+body[data-page] .head-photo figcaption { position: absolute; right: var(--gutter); bottom: 14px; font-size: 13px; color: #f4f1e8; text-shadow: 0 1px 10px rgba(0, 0, 0, .5); }
+body[data-page] .page-head-photo .head-copy { max-width: 1440px; margin: 0 auto; padding: clamp(36px, 4.5vw, 64px) var(--gutter) 0; }
+
+/* section headings: the heading carries itself; a side note may answer it */
+body[data-page] .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px 48px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.5vw, 48px); }
+body[data-page] .section-heading h2 { margin: 0; max-width: 22em; }
+body[data-page] .section-side { font-size: 15px; line-height: 1.8; max-width: 26em; margin: 0; }
+body[data-page] .section-side p { margin: 8px 0 0; }
+body[data-page] .section-tail { display: flex; gap: 12px 28px; flex-wrap: wrap; align-items: baseline; margin-top: 36px; font-size: 15px; color: var(--ink-2); }
+body[data-page] .section-tail p { margin: 0; }
+
+/* ---------------------------------------------------------------- filters and search */
+body[data-page] .filter-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; flex-wrap: wrap; padding: 0 0 20px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+body[data-page] .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+body[data-page] .filter-tabs button { font-size: 15px; line-height: 1.4; padding: 8px 15px; border-radius: 999px; border: 0; background: var(--paper-2); color: var(--ink-2); transition: background-color .2s var(--ease), color .2s var(--ease), transform .12s var(--ease); }
+body[data-page] .filter-tabs button:hover { color: var(--ink); background: var(--paper-3); }
+body[data-page] .filter-tabs button.active, body[data-page] .filter-tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+body[data-page] .search-field { display: flex; align-items: center; min-width: min(320px, 100%); border-bottom: 1px solid var(--ink-3); }
+body[data-page] .search-field input { width: 100%; font-size: 16px; padding: 8px 0; border: 0; background: transparent; color: var(--ink); outline: 0; }
+body[data-page] .search-field input::placeholder { color: var(--ink-3); }
+body[data-page] .search-field:focus-within { border-color: var(--accent); }
+body[data-page] .results-count { font-size: 14px; color: var(--ink-3); margin: 16px 0 0; }
+body[data-page] .empty-state { font-size: 17px; color: var(--ink-2); padding: 48px 0; }
+
+/* ---------------------------------------------------------------- 新闻档案: a dated catalogue */
+body[data-page] .news-catalogue { display: block; }
+body[data-page] .news-catalogue .news-card { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) clamp(140px, 16vw, 220px); gap: 8px clamp(20px, 3vw, 48px); padding: 28px 0; border-top: 1px solid var(--rule); align-items: start; }
+body[data-page] .news-catalogue .news-card:first-child { border-top: 0; }
+body[data-page] .news-card time { font: 500 15px/1.6 var(--sans); font-variant-numeric: tabular-nums; color: var(--accent); padding-top: 3px; }
+body[data-page] .news-card .news-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 14px; color: var(--ink-3); margin: 0 0 6px; }
+body[data-page] .news-card h3 { font-size: clamp(20px, 1.7vw, 24px); line-height: 1.5; margin: 0 0 10px; font-weight: 600; }
+body[data-page] .news-card h3 button { font: inherit; text-align: left; padding: 0; color: inherit; }
+body[data-page] .news-card h3 button:hover { color: var(--accent); }
+body[data-page] .news-card .news-main > p:not(.news-meta) { font-size: 16px; line-height: 1.8; color: var(--ink-2); margin: 0 0 10px; max-width: 40em; }
+body[data-page] .news-card .image-button { display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-2); padding: 0; }
+body[data-page] .news-card .image-button img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--ease); }
+body[data-page] .news-card .image-button:hover img { transform: scale(1.03); }
+body[data-page] .news-card .image-arrow { display: none; }
+/* the front page's three pieces from the archive: picture first */
+body[data-page] .news-editorial .news-card { display: flex; flex-direction: column; gap: 8px; }
+body[data-page] .news-editorial .news-card .image-button { order: -1; margin-bottom: 12px; }
+body[data-page] .news-editorial .feature-news .image-button { aspect-ratio: 3 / 2; }
+body[data-page] .news-editorial .news-side .news-card .image-button { aspect-ratio: 16 / 9; }
+
+/* ---------------------------------------------------------------- 校友: a name index */
+body[data-page] .alumni-filters { margin-bottom: 8px; }
+body[data-page] .alumni-index { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); column-gap: clamp(24px, 4vw, 64px); }
+body[data-page] .alumni-index .alumni-card { position: static; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 16px; min-height: 0; padding: 22px 0 24px; border-top: 1px solid var(--rule); }
+body[data-page] .alumni-index .alumni-card h2 { font-size: clamp(26px, 2.3vw, 32px); margin: 0; }
+body[data-page] .alumni-index .alumni-card small { position: static; font-size: 14px; color: var(--accent); }
+body[data-page] .alumni-index .alumni-card p { grid-column: 1 / -1; font-size: 16px; line-height: 1.7; color: var(--ink-2); margin: 0; max-width: none; }
+body[data-page] .alumni-card .alumni-line, body[data-page] .alumni-card .alumni-no { display: none; }
+body[data-page] .alumni-end { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: end; gap: 24px clamp(32px, 5vw, 80px); max-width: 1440px; margin: 0 auto; padding-inline: var(--gutter); text-align: left; background: none; }
+body[data-page] .alumni-end figure { margin: 0; grid-row: span 2; }
+body[data-page] .alumni-end img { width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; }
+body[data-page] .alumni-end figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+body[data-page] .alumni-end p { font: 400 clamp(24px, 2.4vw, 32px)/1.6 var(--serif); margin: 0; color: var(--ink); }
+
+/* ---------------------------------------------------------------- 学校 */
+body[data-page] .about-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px clamp(32px, 6vw, 112px); align-items: start; }
+body[data-page] .about-intro .large-prose { font: 400 clamp(24px, 2.4vw, 32px)/1.65 var(--serif); margin: 0; color: var(--ink); }
+body[data-page] .about-intro p { font-size: 17px; color: var(--ink-2); }
+body[data-page] .big-dropcap { display: none; }
+body[data-page] .history-line { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+body[data-page] .history-item { border-top: 2px solid var(--ink); padding-top: 18px; }
+body[data-page] .history-item > span { display: block; font: 600 clamp(30px, 3vw, 44px)/1 var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--accent); margin-bottom: 14px; }
+body[data-page] .history-item h3 { font-size: 19px; margin: 0 0 6px; }
+body[data-page] .history-item p { font-size: 15px; line-height: 1.75; color: var(--ink-2); margin: 0; }
+body[data-page] .place-film h3 { font-size: 18px; margin-top: 12px; }
+
+/* ---------------------------------------------------------------- 社团, 电台, 来访 */
+body[data-page] .club-row { display: grid; grid-template-columns: minmax(9em, 1fr) minmax(0, 2.2fr) 4.5em 1.5em; align-items: baseline; gap: 8px clamp(20px, 3vw, 48px); padding: 26px 0; font-size: 16px; text-align: left; width: 100%; }
+body[data-page] .club-row .club-name { font: 400 clamp(22px, 2vw, 28px)/1.4 var(--serif); }
+body[data-page] .club-row .club-row-intro { font-size: 16px; color: var(--ink-2); line-height: 1.75; }
+body[data-page] .club-row .club-category { font-size: 14px; color: var(--accent); }
+body[data-page] .club-no, body[data-page] .club-name small { display: none; }
+body[data-page] .notice-card .notice-cat { font-size: 14px; color: var(--accent); margin: 0 0 8px; }
+body[data-page] .notice-card h3 { font-size: 22px; }
+body[data-page] .notice-card p { font-size: 15px; color: var(--ink-2); margin: 0 0 4px; }
+body[data-page] .notice-card button { font-size: 15px; margin-top: 14px; }
+body[data-page] .radio-note h3 { font-size: clamp(21px, 1.8vw, 25px); line-height: 1.6; }
+body[data-page] .radio-note p { font-size: 16px; line-height: 1.8; }
+body[data-page] .radio-note .note-top span:first-child { font: 600 13px/1.4 var(--sans); letter-spacing: .06em; color: var(--accent); }
+body[data-page] .note-tag { font-size: 14px; color: var(--ink-3); }
+body[data-page] .note-save { font-size: 15px; }
+body[data-page] .poll-section h2 { max-width: 18em; }
+body[data-page] .poll-options button span { font: 400 22px/1.4 var(--serif); }
+body[data-page] .poll-options button small { font-size: 15px; color: var(--ink-2); }
+body[data-page] .poll-result, body[data-page] .memo-layout p, body[data-page] .memo-layout label { font-size: 16px; }
+body[data-page] .memo-layout textarea { font-size: 17px; line-height: 1.8; }
+body[data-page] .visit-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 0; }
+body[data-page] .visit-step { counter-increment: step; display: grid; grid-template-columns: 3.2em minmax(0, 1fr); column-gap: 20px; padding: 28px 0; border-top: 1px solid var(--rule); }
+body[data-page] .visit-step::before { content: counter(step); grid-row: span 3; font: 600 40px/1 var(--sans); color: var(--accent); }
+body[data-page] .visit-step h2 { font-size: clamp(24px, 2.2vw, 30px); margin: 0 0 8px; }
+body[data-page] .visit-step p { font-size: 16px; color: var(--ink-2); margin: 0 0 10px; max-width: 34em; }
+body[data-page] .visit-note h3 { font-size: 24px; }
+body[data-page] .visit-note p { font-size: 16px; color: var(--ink-2); }
+body[data-page] .faq-list summary { font: 400 clamp(19px, 1.7vw, 22px)/1.6 var(--serif); padding-block: 20px; }
+body[data-page] .faq-list p { font-size: 16px; color: var(--ink-2); max-width: 40em; }
+body[data-page] .discipline h3 { font-size: 26px; }
+body[data-page] .discipline p { font-size: 16px; color: var(--ink-2); }
+body[data-page] .discipline > span, body[data-page] .discipline h3 em { display: none; }
+body[data-page] .gallery-frame figcaption { font-size: 14px; color: var(--ink-2); margin-top: 10px; display: block; }
+body[data-page] .strip-hint { display: none; }
+body[data-page] .darkroom-invite h2 { font-size: clamp(30px, 3vw, 42px); }
+body[data-page] .darkroom-invite p, body[data-page] .darkroom-invite small { font-size: 16px; }
+body[data-page] .darkroom-invite-photo span { font: 500 14px/1.4 var(--sans); letter-spacing: .08em; }
+body[data-page] .walk-portal h2 { font-size: clamp(34px, 4vw, 56px); color: #f4f1e8; }
+body[data-page] .walk-portal p, body[data-page] .portal-facts span { font-size: 16px; }
+
+/* ---------------------------------------------------------------- 关于 */
+body[data-page] .creator-layout { display: block; }
+body[data-page] .creator-layout h2 { max-width: 16em; }
+body[data-page] .creator-layout p { font-size: 17px; color: var(--ink-2); max-width: 34em; }
+body[data-page] .creator-monogram { display: none; }
+body[data-page] .info-columns h2 { font-size: 28px; }
+body[data-page] .info-columns p { font-size: 16px; line-height: 1.85; color: var(--ink-2); }
+body[data-page] .official-note { margin-top: 56px; }
+body[data-page] .official-note p { font-size: 16px; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- 校园手记 (front page) */
+body[data-page="home"] .site-nav:not(.scrolled) { background: transparent !important; color: #f4f1e8 !important; }
+body[data-page="home"] .site-nav:not(.scrolled) .desktop-nav a { color: rgba(244, 241, 232, .82); }
+body[data-page="home"] .site-nav:not(.scrolled) .desktop-nav a:hover { color: #f4f1e8; }
+body[data-page="home"] .site-nav:not(.scrolled) .brand small { color: rgba(244, 241, 232, .7); }
+body[data-page="home"] .site-nav:not(.scrolled) .experience-dock.docked > button { color: rgba(244, 241, 232, .86); }
+body[data-page="home"] .site-nav:not(.scrolled) .experience-dock.docked > button:hover { background: rgba(244, 241, 232, .14); color: #f4f1e8; }
+body[data-page="home"] .hero-title { max-width: 760px; }
+body[data-page="home"] .hero-title h1 { font-size: clamp(52px, 7vw, 104px); line-height: 1.12; color: #f4f1e8; margin: 0 0 24px; }
+body[data-page="home"] .hero-issue { font-size: 15px; color: rgba(244, 241, 232, .82); margin: 0 0 18px; }
+body[data-page="home"] .hero-lede { font-size: 18px; line-height: 1.85; color: rgba(244, 241, 232, .9); max-width: 26em; margin: 0 0 28px; }
+body[data-page="home"] .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
+body[data-page="home"] .hero-actions .solid-link { background: #f4f1e8; color: var(--ink); }
+body[data-page="home"] .hero-actions .text-link { color: #f4f1e8; }
+body[data-page="home"] .hero-place { position: absolute; right: var(--gutter); bottom: 28px; margin: 0; font-size: 14px; color: rgba(244, 241, 232, .75); }
+body[data-page="home"] :is(.hero-word, .hero-stamp, .hero-bottom, .hero-eyebrow) { display: none; }
+body[data-page="home"] .intro-editorial { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px 64px; align-items: end; }
+body[data-page="home"] .intro-main { max-width: 40em; }
+body[data-page="home"] .intro-main p { font-size: 18px; color: var(--ink-2); }
+body[data-page="home"] .school-motto { font: 400 clamp(20px, 2vw, 26px)/1.6 var(--serif); letter-spacing: .12em; color: var(--accent); margin: 0; writing-mode: vertical-rl; }
+body[data-page="home"] .intro-small { display: none; }
+
+/* ---------------------------------------------------------------- the close */
+body[data-page] .site-footer { background: var(--night); color: #e9e5d8; padding: clamp(64px, 8vw, 120px) var(--gutter) 36px; }
+body[data-page] .site-footer .footer-groups { max-width: 1440px; }
+body[data-page] .site-footer .footer-groups h2 { color: #93a69a; }
+body[data-page] .site-footer .footer-groups a { font: 400 18px/1.7 var(--serif); color: #e9e5d8; }
+body[data-page] .site-footer .footer-groups a:hover { color: var(--new-leaf); }
+body[data-page] .footer-close { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 24px clamp(32px, 5vw, 80px); max-width: 1440px; margin: clamp(56px, 7vw, 104px) auto 0; padding-top: 28px; border-top: 1px solid rgba(233, 229, 216, .16); }
+body[data-page] .footer-word { font: 600 clamp(88px, 15vw, 220px)/.78 Sora, sans-serif; letter-spacing: -.055em; margin: 0; color: #e9e5d8; }
+body[data-page] .footer-note p { font-size: 15px; line-height: 1.8; color: #c3cbc2; margin: 0 0 10px; max-width: 34em; }
+body[data-page] .footer-links { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+body[data-page] .footer-links a, body[data-page] .footer-links button { font-size: 14px; color: #e9e5d8; border-bottom: 1px solid rgba(233, 229, 216, .35); padding: 0 0 1px; background: none; }
+body[data-page] .footer-links :is(a, button):hover { border-color: currentColor; }
+body[data-page] :is(.footer-top, .footer-phrase, .footer-bottom, .footer-flower) { display: none; }
+
+/* ---------------------------------------------------------------- dialogs and toasts keep the paper */
+body[data-page] .story-dialog { font-size: 17px; }
+body[data-page] .story-dialog :is(p, li) { font-size: 17px; line-height: 1.85; }
+body[data-page] .site-toast { font-size: 15px; }
+
+/* ---------------------------------------------------------------- narrower screens */
+@media (max-width: 1180px) {
+  body[data-page] .desktop-nav { display: none; }
+  body[data-page] .history-line { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  body[data-page] .club-row { grid-template-columns: minmax(0, 1fr) auto; }
+  body[data-page] .club-row .club-row-intro { display: block; grid-column: 1 / -1; grid-row: 2; }
+  body[data-page] .club-row .club-arrow { display: none; }
+  body[data-page] { --nav-h: 60px; font-size: 16px; }
+  body[data-page] .page-head .head-copy, body[data-page] .about-intro, body[data-page] .alumni-end, body[data-page] .footer-close { grid-template-columns: minmax(0, 1fr); }
+  body[data-page] :is(.menu-groups, .footer-groups, .sitemap-groups) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body[data-page] .news-catalogue .news-card { grid-template-columns: minmax(0, 1fr) 96px; }
+  body[data-page] .news-catalogue .news-card time { grid-column: 1 / -1; padding: 0; }
+  body[data-page] .news-catalogue .news-card .image-button { grid-column: 2; grid-row: 2; }
+  body[data-page] .history-line { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  body[data-page] .history-item { display: grid; grid-template-columns: 4.2em minmax(0, 1fr); column-gap: 16px; border-top-width: 1px; padding: 18px 0; }
+  body[data-page] .history-item > span { grid-row: span 2; font-size: 26px; margin: 0; }
+  body[data-page] .head-photo { height: 44vh; }
+  body[data-page="home"] .school-motto { writing-mode: horizontal-tb; }
+  body[data-page="home"] .intro-editorial { grid-template-columns: minmax(0, 1fr); }
+  body[data-page="home"] .hero-place { left: var(--gutter); right: auto; }
+}
+@media (max-width: 560px) {
+  body[data-page] .site-nav { gap: 12px; }
+  body[data-page] .brand small { display: none; }
+  body[data-page] .nav-walk { display: none; }
+  body[data-page] .experience-dock.docked > button { padding: 6px 9px; font-size: 13px; }
+  body[data-page] .experience-dock.docked kbd { display: none; }
+  body[data-page] main h1 { font-size: clamp(34px, 9vw, 42px); }
+  body[data-page] .page-head .lede { font-size: 16px; }
+  body[data-page] .filter-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; max-width: 100%; flex: 1 1 100%; }
+  body[data-page] .search-field { flex: 1 1 100%; min-width: 0; }
+  body[data-page] .filter-tabs button { flex: none; }
+  body[data-page] .footer-word { font-size: 30vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-page] * { transition-duration: .01ms !important; }
+}
+body[data-page] .club-row .club-row-intro { max-width: none; }
+body[data-page] .club-row:hover { color: var(--accent); }
+
+/* history: five years side by side, each a column of its own */
+body[data-page] .history-item { display: block; padding: 18px 0 0; border-bottom: 0; }
+body[data-page] .history-item > span { font-family: var(--sans); }
+@media (max-width: 860px) {
+  body[data-page] .history-item { display: grid; grid-template-columns: 4.2em minmax(0, 1fr); column-gap: 16px; padding: 18px 0; }
+  body[data-page] .history-item p { grid-column: 2; }
+}
+/* photographs fill their frames: no black bars */
+body[data-page] .gallery-frame button { display: block; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: var(--paper-2); padding: 0; }
+body[data-page] .gallery-frame img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--ease); }
+body[data-page] .gallery-frame button:hover img { transform: scale(1.03); }
