@@ -140,8 +140,9 @@ ${WIND_GLSL}
 uniform float uGrow;
 attribute vec4 color;
 attribute vec2 uv1;
-varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;`)
+varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew; varying float vRad;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
+  vRad = uv1.y;
   float since = uGrow - uv1.x;
   float tip = smoothstep(0.0, 0.035, since);
   float thick = uv1.x > -0.5 ? mix(0.45, 1.0, smoothstep(0.0, 0.3, since)) : 1.0;
@@ -153,12 +154,18 @@ varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;`)
     if (!depth) {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
-varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;
+varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew; varying float vRad;
 float bh(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
 float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(bh(i), bh(i + vec3(1,0,0)), f.x), mix(bh(i + vec3(0,1,0)), bh(i + vec3(1,1,0)), f.x), f.y),
              mix(mix(bh(i + vec3(0,0,1)), bh(i + vec3(1,0,1)), f.x), mix(bh(i + vec3(0,1,1)), bh(i + vec3(1,1,1)), f.x), f.y), f.z); }`)
-        .replace('#include <map_fragment>', `#include <map_fragment>
+        .replace('#include <map_fragment>', `
+  // bark follows the wood's age (its ring radius): young wood is smooth grey-brown;
+  // with age the plates grow larger and draw out along the branch into fissures
+  float bAge = smoothstep(0.05, 0.55, vRad);
+  vec4 bc = texture2D(map, vMapUv * vec2(mix(1.0, 0.7, bAge), mix(1.0, 0.42, bAge)));
+  bc.rgb = mix(vec3(0.2, 0.172, 0.142), bc.rgb, mix(0.3, 1.0, bAge));
+  diffuseColor *= bc;
   float youth = vBark.b;
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.19, 0.155, 0.12), smoothstep(0.3, 1.0, youth) * 0.7);
   // this season's shoots: smooth, reddish green
@@ -167,7 +174,13 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   float mossN = bn(vWP * 2.3) * 0.6 + bn(vWP * 7.0) * 0.4;
   float moss = smoothstep(0.35, 0.85, up) * (1.0 - youth) * smoothstep(0.45, 0.7, mossN);
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.05, 0.075, 0.02), moss * 0.85);
+  // lichen: pale grey-green patches on old wood, never underneath
+  float lichN = bn(vWP * 3.1 + 7.0) * 0.65 + bn(vWP * 11.0) * 0.35;
+  float lichen = smoothstep(0.6, 0.78, lichN) * bAge * smoothstep(-0.3, 0.4, up) * (1.0 - youth) * (1.0 - moss);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.34, 0.36, 0.3), lichen * 0.5);
   diffuseColor.rgb *= mix(0.75, 1.0, smoothstep(-0.5, 1.2, vWP.y));`)
+        .replace('#include <normal_fragment_maps>', 'float nAge = smoothstep(0.05, 0.55, vRad);\nvec2 bNUv = vNormalMapUv * vec2(mix(1.0, 0.7, nAge), mix(1.0, 0.42, nAge));\n' +
+          THREE.ShaderChunk.normal_fragment_maps.replace(/vNormalMapUv/g, 'bNUv').replace('mapN.xy *= normalScale;', 'mapN.xy *= normalScale * mix(0.3, 1.15, nAge);'))
         .replace('#include <aomap_fragment>', `
   float bao = mix(mix(0.25, 0.6, vBark.b), 1.0, vBark.r);
   // under the crown the ambient light has passed through leaves: warmer, greener, not sky-blue
@@ -175,7 +188,7 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;`);
     }
   };
-  mat.customProgramCacheKey = () => 'bark2-' + depth;
+  mat.customProgramCacheKey = () => 'bark3-' + depth;
   return mat;
 }
 

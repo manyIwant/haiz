@@ -1,15 +1,15 @@
 {
- "generator": "scripts/lanren/build_tree.py (v3: scaffold + space colonisation, clumped dome crown)",
+ "generator": "scripts/lanren/build_tree.py (v5: sprawling limbs + space colonisation, foliage shelves)",
  "blender": "5.2.3 LTS",
  "seed": 2611,
  "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
  "water": -0.85,
  "counts": {
-  "nodes": 33774,
-  "clumps": 192,
-  "rosettes": 10947,
-  "oldRosettes": 2789,
-  "barkVertices": 250390,
+  "nodes": 30481,
+  "clumps": 379,
+  "rosettes": 10028,
+  "oldRosettes": 2550,
+  "barkVertices": 227611,
   "islandVertices": 36025
  },
  "rosetteStride": 16,
@@ -33,10 +33,10 @@
  ],
  "growth": {
   "emergeRange": [
-   0.199,
-   0.408
+   0.185,
+   0.374
   ],
-  "emergeMedian": 0.291,
+  "emergeMedian": 0.286,
   "oldDropRange": [
    0.03,
    0.34
@@ -45,22 +45,22 @@
  "crown": {
   "centre": [
    0.6,
-   9.9,
+   8.55,
    -0.2
   ],
-  "radius": 12.2,
-  "top": 15.2,
-  "rim": 4.6,
+  "radius": 13.5,
+  "top": 13.5,
+  "rim": 3.6,
   "bounds": {
    "min": [
-    -17.516,
+    -18.85,
     -0.75,
-    11.557
+    15.43
    ],
    "max": [
-    13.251,
-    16.003,
-    -12.477
+    17.458,
+    10.943,
+    -14.956
    ]
   }
  },
@@ -71,9 +71,9 @@
    -0.0
   ],
   "fork": [
-   0.213,
-   3.059,
-   -0.072
+   0.541,
+   2.759,
+   -0.162
   ],
   "taihu": [
    -3.6,
@@ -94,48 +94,49 @@
    ]
   },
   "limbDip": [
-   -6.857,
-   2.41,
-   0.772
+   -7.335,
+   2.034,
+   0.77
   ],
   "limbEnd": [
-   -10.706,
-   3.261,
-   0.834
+   -11.78,
+   2.939,
+   0.958
   ]
  },
  "params": {
   "crown": {
-   "R": 12.2,
+   "R": 13.5,
    "asym": [
     0.13,
     3.141592653589793
    ],
    "wobble": 0.07,
-   "top": 15.2,
-   "rim": 4.6,
-   "under_centre": 7.2,
-   "shell": 2.6,
-   "spacing": 2.05,
-   "tier": 2.9,
+   "top": 13.5,
+   "rim": 3.6,
+   "spacing": 1.38,
    "clump_r": [
-    1.0,
-    1.7
+    0.95,
+    1.5
    ],
    "clump_h": [
-    0.45,
-    0.8
+    0.32,
+    0.5
    ],
-   "pts_per_m3": 14.0,
-   "mass_r": [
-    2.8,
-    4.4
+   "pts_per_m3": 22.0,
+   "shelf_along": [
+    3.0,
+    4.6
    ],
-   "mass_h": [
-    1.5,
-    2.3
+   "shelf_across": [
+    2.4,
+    3.7
    ],
-   "top_masses": 5
+   "shelf_h": [
+    0.5,
+    0.78
+   ],
+   "window": 0.42
   },
   "sc": {
    "step": 0.24,

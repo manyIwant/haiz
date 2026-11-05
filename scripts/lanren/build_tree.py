@@ -1,13 +1,18 @@
-"""HAIZ · 榄仁树 v3 — a mature, open-grown Terminalia catappa on a granite islet.
+"""HAIZ · 榄仁树 v5 — an old, open-grown Terminalia catappa on a granite islet.
 
-Species concept model (not a survey of the campus tree). v3 rebuilds the tree
-for volume and silhouette:
+Species concept model (not a survey of the campus tree), drawn after the
+campus photograph (assets/images/web/lanshu-1600.jpg) and the species' habit:
 
-1. **Scaffold** — an art-directed short, buttressed trunk that forks into a
-   few sinuous limbs (rising, then running out nearly level: Terminalia's
-   plagiotropic, tiered habit), with one long, low limb.
-2. **Crown envelope** — a broad, slightly asymmetric dome made of loose tiers
-   of flattened leaf clumps with sky between them (Poisson-disk spaced).
+1. **Scaffold** — a short, leaning, buttressed trunk forks low into a few
+   massive limbs that run out nearly level for 9–13 m, turning at sympodial
+   elbows; one long limb dips towards the scholar's rock and rises again; a
+   leader carries the upper tiers. (Terminalia grows in Aubréville's model:
+   pseudo-whorls of plagiotropic branches; on an old open-grown tree these
+   become a few huge horizontal limbs.)
+2. **Foliage shelves** — leaves sit in flat, slightly domed plates at the ends
+   of each limb system, at different heights, with sky between them: the
+   tiered, layered crown of the species, not a dome. Inside each shelf, leaf
+   clumps are Poisson-disk spaced and broken by open windows.
 3. **Space colonisation** (Runions et al. 2007) grows every finer branch from
    the scaffold towards those clumps, so the branching is irregular, never
    repeats and always fills real 3D volume. Radii follow the pipe model.
@@ -47,12 +52,13 @@ T0 = time.time()
 P = {
     'seed': int(os.environ.get('TREE_SEED', 2611)),
     'water': -0.85,
-    'trunk': {'base': -0.75, 'fork': 3.05, 'r_base': 0.98, 'r_fork': 0.68, 'lean': (0.22, 0.06)},
-    # crown: a dome with a flattened top, wider towards the long limb (−x)
-    'crown': {'R': 12.2, 'asym': (0.13, math.radians(180)), 'wobble': 0.07, 'top': 15.2, 'rim': 4.6,
-              'under_centre': 7.2, 'shell': 2.6, 'spacing': 2.05, 'tier': 2.9,
-              'clump_r': (1.0, 1.7), 'clump_h': (0.45, 0.8), 'pts_per_m3': 14.0,
-              'mass_r': (2.8, 4.4), 'mass_h': (1.5, 2.3), 'top_masses': 5},
+    'trunk': {'base': -0.75, 'fork': 2.75, 'r_base': 1.05, 'r_fork': 0.74, 'lean': (0.55, 0.14)},
+    # crown: flat foliage shelves at the ends of the limb systems (R, top, rim
+    # describe the overall extent for the shaders and the camera)
+    'crown': {'R': 13.5, 'asym': (0.13, math.radians(180)), 'wobble': 0.07, 'top': 13.5, 'rim': 3.6,
+              'spacing': 1.38, 'clump_r': (0.95, 1.5), 'clump_h': (0.32, 0.5), 'pts_per_m3': 22.0,
+              'shelf_along': (3.0, 4.6), 'shelf_across': (2.4, 3.7), 'shelf_h': (0.5, 0.78),
+              'window': 0.42},
     'sc': {'step': 0.24, 'influence': 6.5, 'kill': 0.36, 'momentum': 0.85, 'jitter': 0.16,
            'up': 0.05, 'level': 0.8, 'min_z': -0.4, 'max_z': 0.72, 'max_iter': 320},
     'pipe': {'tip': 0.009, 'exp': 2.12},
@@ -252,19 +258,21 @@ FORK = trunk_nodes[-1]
 FORK_LOW = trunk_nodes[int(0.80 * (len(trunk_nodes) - 1))]
 FORK_MID = trunk_nodes[int(0.90 * (len(trunk_nodes) - 1))]
 
-# the long, low limb (west, −x): reaches out, dips, rises again
-dragon = limb(FORK_LOW, 196, 14, -9, 11.6, 0.44, 0.08, upturn=34, drift=10, seed=3, grow_from=0.35)
-for f, az, e0, e1, L, r in ((0.45, 150, 30, 12, 4.6, 0.14), (0.58, 240, 32, 10, 4.8, 0.14),
-                            (0.74, 160, 38, 16, 3.8, 0.11), (0.86, 225, 40, 14, 3.4, 0.10)):
-    limb(at(dragon, f), az, e0, e1, L, r, 0.04, upturn=12, drift=8, seed=f * 7)
+# the long, low limb (west, −x): reaches out, dips towards the rock, rises again
+dragon = limb(FORK_LOW, 196, 12, -13, 13.0, 0.5, 0.09, upturn=46, drift=10, seed=3, grow_from=0.35)
+for f, az, e0, e1, L, r in ((0.3, 148, 44, 6, 4.4, 0.15), (0.5, 240, 40, 4, 4.6, 0.15),
+                            (0.7, 162, 48, 8, 3.8, 0.12), (0.88, 222, 52, 10, 3.2, 0.1)):
+    limb(at(dragon, f), az, e0, e1, L, r, 0.04, upturn=14, drift=8, seed=f * 7)
 
-# codominant stems from the fork, each splitting again
+# massive limbs from the low fork, running out nearly level; their side limbs
+# rise a little and flatten again, so every limb system ends in a shelf.
+# The last is the leader, carrying the upper tiers.
 STEMS = [  # az, e0, e1, L, r0, r1, children: (frac, daz, e0, e1, L, r)
-    (28, 52, 20, 6.6, 0.52, 0.18, [(0.55, -34, 30, 10, 5.6, 0.2), (0.82, 30, 36, 16, 4.6, 0.15), (0.35, 70, 44, 20, 4.4, 0.14)]),
-    (122, 56, 24, 6.2, 0.5, 0.17, [(0.6, -28, 34, 12, 5.2, 0.18), (0.85, 34, 40, 18, 4.4, 0.14), (0.38, 75, 46, 16, 3.8, 0.12)]),
-    (250, 50, 20, 6.8, 0.5, 0.17, [(0.58, -32, 30, 10, 5.4, 0.18), (0.84, 30, 34, 14, 4.6, 0.15), (0.4, -80, 42, 14, 4.0, 0.13)]),
-    (330, 38, 8, 7.4, 0.42, 0.14, [(0.5, -40, 26, 6, 4.8, 0.15), (0.78, 36, 30, 10, 4.2, 0.13)]),
-    (84, 76, 52, 6.0, 0.42, 0.15, [(0.65, -60, 50, 30, 4.4, 0.15), (0.72, 80, 48, 26, 4.2, 0.14), (0.9, 170, 52, 34, 3.6, 0.12)]),
+    (22, 36, 4, 10.4, 0.52, 0.16, [(0.3, 40, 58, 18, 4.6, 0.17), (0.55, -38, 40, 6, 5.0, 0.16), (0.8, 34, 42, 8, 4.2, 0.13), (0.96, -12, 30, 4, 3.0, 0.1)]),
+    (118, 40, 6, 9.4, 0.5, 0.15, [(0.32, -45, 60, 20, 4.4, 0.16), (0.6, 36, 42, 8, 4.6, 0.15), (0.84, -30, 44, 10, 3.8, 0.12)]),
+    (262, 32, 0, 9.0, 0.48, 0.15, [(0.35, 50, 56, 18, 4.2, 0.15), (0.62, -34, 38, 4, 4.4, 0.14), (0.86, 30, 40, 8, 3.6, 0.12)]),
+    (322, 26, -6, 9.6, 0.46, 0.14, [(0.42, -40, 48, 12, 4.4, 0.14), (0.7, 38, 40, 6, 4.0, 0.13), (0.93, 0, 34, 6, 3.0, 0.1)]),
+    (70, 70, 42, 7.0, 0.48, 0.16, [(0.35, -75, 38, 4, 5.8, 0.15), (0.55, 105, 36, 6, 5.6, 0.15), (0.75, -165, 38, 6, 5.2, 0.14), (0.95, 15, 26, 2, 4.8, 0.13)]),
 ]
 stems = []
 for k, (az, e0, e1, L, r0, r1, children) in enumerate(STEMS):
@@ -274,7 +282,7 @@ for k, (az, e0, e1, L, r0, r1, children) in enumerate(STEMS):
     stems.append(st)
     for (f, daz, ce0, ce1, cL, cr) in children:
         limb(at(st, f), az + daz + rng.uniform(-8, 8), ce0, ce1, cL * rng.uniform(0.9, 1.1), cr, 0.035,
-             upturn=rng.uniform(8, 20), drift=10, seed=k * 11 + f * 13)
+             upturn=rng.uniform(8, 18), drift=10, seed=k * 11 + f * 13)
 
 n_scaffold = len(pos)
 print('scaffold nodes', n_scaffold, '%.1fs' % (time.time() - T0))
@@ -318,57 +326,49 @@ def far_enough(p, dmin):
     return True
 
 
-# foliage masses: every major limb system carries its own cloud of leaves,
-# so the crown reads as lobes with sky between them, not one smooth dome
+# foliage shelves: every limb system ends in a flat, slightly domed plate of
+# leaves, lying along the limb's last direction, at the limb's own height.
+# Different limbs end at different heights, so the crown reads in tiers with
+# sky between them.
 limb_ends = [i for i in range(n_scaffold) if kind[i] == K_LIMB and not any(kind[k] == K_LIMB for k in kids[i])]
-masses = []
+shelves = []
 for i in limb_ends:
     e = pos[i]
-    out = horiz(e - Vector((CX, CY, 0)))
-    c = e + out * rng.uniform(0.6, 1.6) + UP * rng.uniform(0.4, 1.4)
-    masses.append(dict(c=c, rx=rng.uniform(*C['mass_r']), rz=rng.uniform(*C['mass_h'])))
-for k in range(C['top_masses']):
-    th = k / C['top_masses'] * 2 * math.pi + rng.uniform(-0.3, 0.3)
-    rn = rng.uniform(0.15, 0.55)
-    z = crown_top(rn) - rng.uniform(0.6, 1.4)
-    masses.append(dict(c=Vector((CX + math.cos(th) * rn * C['R'], CY + math.sin(th) * rn * C['R'], z)),
-                       rx=rng.uniform(*C['mass_r']), rz=rng.uniform(*C['mass_h'])))
-print('masses', len(masses))
+    out = horiz(dirs[i]) if horiz(dirs[i]).length > 1e-3 else horiz(e - Vector((CX, CY, 0)))
+    out = out.normalized()
+    shelves.append(dict(c=e + out * rng.uniform(0.6, 1.3) + UP * rng.uniform(0.15, 0.45), u=out,
+                        a=rng.uniform(*C['shelf_along']), b=rng.uniform(*C['shelf_across']), h=rng.uniform(*C['shelf_h'])))
+print('shelves', len(shelves))
 
 
-def in_masses(p):
-    best = 9.0
-    for m in masses:
-        d = m['c'] - p
-        q = (d.x / m['rx']) ** 2 + (d.y / m['rx']) ** 2 + (d.z / m['rz']) ** 2
-        best = min(best, q)
-    return best
+def shelf_at(p):
+    """(0 at a shelf's heart … 1 at its edge, top height there) for the nearest shelf containing p"""
+    best, top = 9.0, None
+    for sh in shelves:
+        d = p - sh['c']
+        v = Vector((-sh['u'].y, sh['u'].x, 0))
+        q = (d.dot(sh['u']) / sh['a']) ** 2 + (d.dot(v) / sh['b']) ** 2
+        if q < best:
+            best, top = q, sh['c'].z + sh['h'] * (1.2 - 0.9 * q)
+    return best, top
 
 
 tries = 0
-while tries < 90000:
+while tries < 60000:
     tries += 1
+    sh = shelves[rng.randrange(len(shelves))]
     th = rng.uniform(0, 2 * math.pi)
-    R = crown_R(th)
-    rn = math.sqrt(rng.random()) * (1.06 if rng.random() > 0.08 else 1.16)
-    z = rng.uniform(crown_under(min(rn, 1)), crown_top(min(rn, 1)) + 0.4)
-    p = Vector((CX + math.cos(th) * rn * R, CY + math.sin(th) * rn * R, z))
-    depth = min(crown_top(min(rn, 1)) - z, (1.06 - rn) * R)
-    if depth > C['shell'] and rng.random() > 0.1:
+    rr = math.sqrt(rng.random())
+    v = Vector((-sh['u'].y, sh['u'].x, 0))
+    p = sh['c'] + sh['u'] * (math.cos(th) * rr * sh['a']) + v * (math.sin(th) * rr * sh['b'])
+    p.z += sh['h'] * (0.9 * (1 - rr * rr) + rng.uniform(-0.5, 0.5))      # slightly domed plate
+    if noise.noise(p * 0.32 + Vector((4.0, 7.0, 1.0))) > C['window']:     # light gaps inside a shelf
         continue
-    if noise.noise(p * 0.21 + Vector((4.0, 7.0, 1.0))) > 0.38:     # open windows in the crown
+    if math.hypot(p.x, p.y) < 2.0 and p.z < 8:
         continue
-    q = in_masses(p) + 0.35 * noise.noise(p * 0.45)
-    if q > 1.0:
+    if not far_enough(p, C['spacing'] * rng.uniform(0.85, 1.2)):
         continue
-    tier = 0.5 + 0.5 * math.cos(2 * math.pi * (z - C['rim']) / C['tier'])
-    if rng.random() > 0.5 + 0.5 * tier ** (0.5 + rn):
-        continue
-    if math.hypot(p.x, p.y) < 2.2 and p.z < 9:
-        continue
-    if not far_enough(p, C['spacing'] * rng.uniform(0.85, 1.15)):
-        continue
-    clumps.append(dict(c=p, rx=rng.uniform(*C['clump_r']) * (1 + 0.2 * rn), rz=rng.uniform(*C['clump_h'])))
+    clumps.append(dict(c=p, rx=rng.uniform(*C['clump_r']), rz=rng.uniform(*C['clump_h'])))
 print('clumps', len(clumps))
 
 attr = []
@@ -1162,8 +1162,7 @@ for r, o in zip(rosettes, occ):
     p, d = r['pos'], r['dir']
     flex = flex_of(r['node'])
     c = clumps[r['clump']]['c']
-    rn = math.hypot(p.x - CX, p.y - CY) / crown_R(math.atan2(p.y - CY, p.x - CX))
-    shell = max(0.0, min(1.0, 1 - ((crown_top(min(rn, 1)) - p.z) / 3.0)))
+    shell = max(0.0, min(1.0, 0.55 + (p.z - c.z) / 0.8))      # top of its shelf: 1, underneath: 0
     buf += struct.pack('<16f', p.x, p.z, -p.y, d.x, d.z, -d.y, r['size'], flex, float(o), r['t'], r['old'],
                        rng.random(), c.x, c.z, -c.y, shell)
 with open(os.path.join(ASSETS, 'rosettes.bin'), 'wb') as fh:
@@ -1178,7 +1177,7 @@ new_ts = sorted(r['t'] for r in rosettes if r['t'] >= 0)
 old_ts = sorted(r['old'] for r in rosettes if r['old'] > 0)
 bx = [pos[i] for i in alive_nodes]
 meta = {
-    'generator': 'scripts/lanren/build_tree.py (v3: scaffold + space colonisation, clumped dome crown)',
+    'generator': 'scripts/lanren/build_tree.py (v5: sprawling limbs + space colonisation, foliage shelves)',
     'blender': bpy.app.version_string, 'seed': P['seed'],
     'frame': 'three.js Y-up; tree base at origin; water plane at y = %.2f' % WATER,
     'water': WATER,
