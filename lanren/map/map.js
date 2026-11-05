@@ -88,6 +88,15 @@ export function attach(ctx, geo) {
     return v;
   };
 
+  // ---------------------------------------------------------------- history, one step at a time
+  // history.back() lands later (a popstate); anything written to history before it lands would
+  // go onto the entry being left. Our own steps back are counted and later writes wait for them.
+  let pendingPops = 0;
+  const queued = [];
+  const hist = (fn) => { if (pendingPops > 0) queued.push(fn); else fn(); };
+  const goBack = () => { pendingPops++; history.back(); };
+  const landed = () => { pendingPops = Math.max(0, pendingPops - 1); while (pendingPops === 0 && queued.length) queued.shift()(); };
+
   // ---------------------------------------------------------------- tokens (reload / return from the walk)
   function readToken() {
     try {
@@ -143,7 +152,7 @@ export function attach(ctx, geo) {
     S.lockY = scrollY;
     body.classList.remove('map-reveal');
     body.classList.add('map-mode');
-    if (!fromHistory) history.pushState({ cmap: 'map' }, '', hashFor());
+    if (!fromHistory) hist(() => history.pushState({ cmap: 'map' }, '', hashFor()));
     say('校园平面已就绪。拖动平移，滚轮或双指缩放，点选地点；Esc 返回树冠。');
     saveToken();
   }
@@ -189,10 +198,7 @@ export function attach(ctx, geo) {
     const h = home();
     const far = Math.hypot(cur.tx - h.tx, cur.tz - h.tz) / h.s + Math.abs(Math.log(cur.s / h.s)) + Math.abs(cur.pitch - h.pitch) / 20;
     tweenTo(h, far < 0.02 ? 0 : Math.min(1.8, 0.8 + far * 0.35), { fly: far > 2, done: () => { S.leaveCam = false; } });
-    if (!fromHistory) {
-      if (history.state?.cmap === 'map') history.back();
-      else history.replaceState({ cmap: 'shot' }, '', '#map');
-    }
+    if (!fromHistory) hist(() => { if (history.state?.cmap === 'map') goBack(); else history.replaceState({ cmap: 'shot' }, '', '#map'); });
     S.armed = false;
     say('回到第四幕：水面正在合拢。');
     try { sessionStorage.removeItem(TOKEN); } catch { /* storage blocked */ }
@@ -218,7 +224,8 @@ export function attach(ctx, geo) {
     const b = View.withLook(goal, lookOf(view));
     tweenTo(constrain(b), 1.5);
     syncControls();
-    history[push ? 'pushState' : 'replaceState'](history.state, '', hashFor());
+    const h = hashFor();
+    hist(() => history[push ? 'pushState' : 'replaceState'](history.state, '', h));
     say(view === 'top' ? '正俯视：校园平面，北（校园坐标）朝上。' : '斜俯视：第四幕原来的视角。');
     saveToken();
   }
@@ -257,8 +264,8 @@ export function attach(ctx, geo) {
     void panel.offsetWidth;   // start the slide-in now, not after the next (possibly heavy) WebGL frame
     panel.classList.add('open');
     if (fly) tweenTo(constrain(focusView(p)), 1.35, { fly: true });
-    if (push) history[wasDetail ? 'replaceState' : 'pushState']({ cmap: 'detail', id }, '', hashFor());
-    else history.replaceState({ cmap: 'detail', id }, '', hashFor());
+    const h = hashFor();
+    hist(() => history[push && !wasDetail ? 'pushState' : 'replaceState']({ cmap: 'detail', id }, '', h));
     panel.focus({ preventScroll: true });
     say(p.name + '：详情已打开。Esc 返回地图。');
     saveToken();
@@ -272,10 +279,7 @@ export function attach(ctx, geo) {
     setTimeout(() => { if (!S.detail) panel.hidden = true; }, reduce ? 0 : 420);
     // back to where the visitor was looking before; the place stays marked
     if (!keepCamera && before) tweenTo(constrain({ ...before, pitch: goal.pitch, yaw: goal.yaw, fov: goal.fov }), 1.1);
-    if (!fromHistory) {
-      if (history.state?.cmap === 'detail') history.back();
-      else history.replaceState({ cmap: 'map' }, '', hashFor());
-    }
+    if (!fromHistory) { const h = hashFor(); hist(() => { if (history.state?.cmap === 'detail') goBack(); else history.replaceState({ cmap: 'map' }, '', h); }); }
     if (document.activeElement && panel.contains(document.activeElement)) canvas.focus?.({ preventScroll: true });
     say('已返回地图。');
     saveToken();
@@ -493,6 +497,7 @@ export function attach(ctx, geo) {
     li.querySelector('button').addEventListener('click', () => startReveal(S.mode === 'reveal' ? 4 : 1.3));
   }
   addEventListener('popstate', () => {
+    if (pendingPops > 0) { landed(); return; }   // our own step back: the state already matches
     const h = parseHash(location.hash);
     if (!h) { if (S.mode === 'map') exitMap({ fromHistory: true }); return; }
     if (S.mode === 'tree' || S.mode === 'cancel') {
