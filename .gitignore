@@ -29,3 +29,14 @@ production-acceptance-output/
 
 # Self-hosted OCR vendor binaries are generated from pinned packages during CI.
 app/web/ocr/
+
+# HAIZ private runtime state and local credentials
+/.haiz-data/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+operator-invite-*.txt
+bootstrap-invite.txt

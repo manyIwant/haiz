@@ -17,7 +17,14 @@
     "test:forecourt": "node tests/forecourt-browser.cjs",
     "test:map": "node tests/map.cjs && node tests/sports-browser.cjs",
     "test:rain-performance": "node tests/rain-index.cjs && node tests/rain-performance-browser.cjs",
-    "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview"
+    "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview",
+    "backend:dev": "node backend/server.mjs --dev",
+    "backend:start": "node backend/server.mjs",
+    "test:backend": "node --test backend/tests/*.test.mjs",
+    "backend:invite": "node backend/manage.mjs invite",
+    "backend:recover": "node backend/manage.mjs recover-admin",
+    "backend:backup": "node backend/manage.mjs backup",
+    "backend:bench": "node backend/benchmark.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

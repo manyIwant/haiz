@@ -1,0 +1,27 @@
+name: HAIZ authenticated backend
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', 'src/account/**', '.github/workflows/haiz-backend.yml']
+  pull_request:
+    paths: ['backend/**', 'src/account/**', '.github/workflows/haiz-backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  accounts-and-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax
+        run: |
+          node --check backend/server.mjs
+          node --check backend/repository.mjs
+          node --check src/account/app.js
+          node --check src/account/session-guard.js
+      - name: Real HTTP, SQLite, account isolation, sessions and recovery
+        run: node --test backend/tests/*.test.mjs

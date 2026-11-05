@@ -1,0 +1,13 @@
+# Replace the domain, then run Caddy on the same host as HAIZ.
+haiz.example.org {
+    encode zstd gzip
+    request_body {
+        max_size 64KB
+    }
+    reverse_proxy 127.0.0.1:8790 {
+        # Overwrite incoming values. HAIZ only trusts this header on loopback.
+        header_up X-HAIZ-Client-IP {remote_host}
+        flush_interval -1
+    }
+    header -Server
+}

@@ -1,5 +1,11 @@
 # haiz.space · 校园正在发生
 
+## 网站账号与独立后端
+
+新增 Node 24 后端与 `/account/` 账号中心：普通用户注册登录、便签/收藏/偏好管理与导出、密码及设备会话管理。Node 服务对网站 HTML 执行登录门禁，个人数据按服务端账号隔离，旧页面也有跨标签账号与本地存储隔离保护。运行 `npm run backend:dev` 可本机验收，生产部署见 [后端说明](backend/README.md)；测试使用 `npm run test:backend`。
+
+本次是代码发布：GitHub Pages 不运行 Node+SQLite，公网登录门禁须部署 Node+Caddy 后生效。原 Flutter Pocket 的 Supabase、Academic 服务和已发行安装包保持独立，不能把此提交视为这些产品已完成公网部署或升级。
+
 海南中学府城校区的非官方校园杂志与第一人称校园原型，由 manyIwant 创作。
 
 **Still learning. Still making.**
