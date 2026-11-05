@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f0eee8">
+<title>HAIZ — Material Study 01</title>
+<style>
+:root{--paper:#f2f0e9;--ink:#1e2927;--muted:#707b75;--copper:#a87853;--line:rgba(31,44,40,.17)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#d8dfd6;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC",sans-serif}
+#campus{position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:linear-gradient(165deg,#dce7e3,#b2c5b4)}
+.gradient{position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(245,244,236,.82),rgba(245,244,236,.24) 46%,transparent 72%),linear-gradient(0deg,rgba(15,24,20,.52),transparent 35%)}
+header{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:27px max(28px,4.1vw);z-index:2;gap:20px}
+.logo{font-size:17px;letter-spacing:.14em;font-weight:720;text-decoration:none;color:var(--ink)}.header-right{display:flex;align-items:center;gap:17px;font-size:11px;letter-spacing:.11em;color:#3f5550}.header-right a{color:inherit;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:3px}
+.tag{padding:7px 10px;border:1px solid var(--line);border-radius:3px;background:rgba(248,246,239,.65)}
+aside{position:fixed;z-index:2;left:max(28px,4.1vw);top:24%;width:min(365px,42vw)}
+.overline{color:#6e665a;letter-spacing:.25em;font-size:11px;font-weight:650}h1{font-size:clamp(35px,4.2vw,67px);font-weight:420;letter-spacing:-.057em;line-height:1.19;margin:18px 0 18px;font-family:Georgia,"Songti SC","STSong",serif}
+.intro{max-width:320px;color:#445651;font-size:13px;line-height:2;margin:0}.rule{height:1px;width:58px;background:#a67a5b;margin:27px 0}
+.status{display:flex;align-items:center;gap:10px;color:#53665e;font-size:11px;letter-spacing:.06em}.dot{width:6px;height:6px;border-radius:50%;background:#a57957;box-shadow:0 0 0 4px rgba(165,121,87,.11)}.dot.ready{background:#648776}
+.viewport-label{position:fixed;right:max(28px,4.1vw);top:33%;z-index:1;text-align:right;color:rgba(27,40,39,.5);font:10px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.12em;pointer-events:none}
+.panel{position:fixed;left:max(28px,4.1vw);bottom:max(28px,4.5vh);right:max(28px,4.1vw);z-index:3;display:grid;grid-template-columns:minmax(160px,1.15fr) minmax(250px,2.4fr) auto;gap:22px;align-items:center;padding:22px 24px;border:1px solid rgba(248,248,239,.7);background:rgba(246,245,239,.88);backdrop-filter:blur(23px);-webkit-backdrop-filter:blur(23px);box-shadow:0 22px 70px rgba(12,28,21,.18);border-radius:5px}
+.cell-name{font:600 10px ui-monospace,monospace;letter-spacing:.19em;color:#8b7b6b;margin-bottom:11px}.selection{display:flex;gap:12px;flex-wrap:wrap}
+.selection button,.play{background:none;border:0;padding:0;font:500 13px inherit;cursor:pointer;color:#7c867e;transition:color .2s}.selection button[aria-pressed="true"]{color:#263932;font-weight:650;border-bottom:1px solid #a87853;padding-bottom:4px}
+input[type=range]{width:100%;accent-color:#a17656;cursor:pointer;height:20px}.ends{display:flex;justify-content:space-between;font-size:11px;color:#68756d}.ends b{font-weight:500;color:#35463f}
+.play{border:1px solid rgba(41,60,52,.35);padding:13px 20px;min-width:104px;font-family:inherit;font-size:12px;color:#263932;background:rgba(255,255,255,.48)}.play:disabled,.selection button:disabled,input:disabled{opacity:.4;cursor:wait}
+.note{position:fixed;z-index:2;right:max(28px,4.1vw);bottom:calc(max(28px,4.5vh) + 118px);font:11px/1.6 ui-monospace,monospace;color:#e7e9e0;letter-spacing:.035em;text-shadow:0 1px 4px #123;max-width:285px;text-align:right}
+@media(max-width:740px){.gradient{background:linear-gradient(180deg,rgba(244,244,236,.91),rgba(244,244,236,.28) 40%,transparent 62%),linear-gradient(0deg,rgba(13,22,17,.45),transparent 38%)}header{padding:19px}.header-right .tag{display:none}aside{left:22px;top:14%;width:calc(100% - 44px)}h1{font-size:41px;margin:8px 0 10px}.intro{font-size:12px;max-width:285px;line-height:1.8}.rule{margin:12px 0}.viewport-label{display:none}.panel{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:15px;grid-template-columns:1fr auto;gap:14px 10px}.panel .scan{grid-column:1 / -1;grid-row:2}.cell-name{margin-bottom:8px}.selection{gap:10px}.selection button{font-size:12px}.play{min-width:85px;padding:11px 8px}.note{right:21px;bottom:195px;font-size:9px}.status{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.selection button,.play{transition:none}}
+</style>
+</head>
+<body>
+<iframe id="campus" title="海南中学府城校区真实 Three.js 校园模型" src="../../campus-3d.html?arrival=descent&material-study=1"></iframe>
+<div class="gradient" aria-hidden="true"></div>
+<header>
+ <a class="logo" href="../../index.html" aria-label="返回 HAIZ">HAIZ<span style="color:#9e7453">.</span></a>
+ <div class="header-right"><span class="tag">EXPERIMENT / 01</span><a href="../../campus-3d.html">返回校园漫游</a></div>
+</header>
+<aside>
+ <div class="overline">MATERIAL / ARCHITECTURE</div>
+ <h1>建筑材质<br>显现实验</h1>
+ <p class="intro">同一座建筑，同一套几何。沿立面移动扫描前沿，观察图纸墨色与原有 PBR 纹理、阳光和阴影如何接续。</p>
+ <div class="rule"></div>
+ <div class="status"><span id="dot" class="dot"></span><span id="status" role="status">正在载入 HAIZ 原有校园模型…</span></div>
+</aside>
+<div class="viewport-label">HAIZ CAMPUS / LIVE GEOMETRY<br>INK → PBR / WORLD SPACE<br>THREE.JS MATERIAL STUDY</div>
+<div class="note">仅实验页临时修改材质，不更改校园数据、碰撞或原有文件。</div>
+<section class="panel" aria-label="实验控制台">
+ <div>
+  <div class="cell-name">01 / OBSERVE</div>
+  <div class="selection">
+   <button id="yihao" data-target="yihao" aria-pressed="true" disabled>一号楼</button>
+   <button id="fengqitang" data-target="fengqitang" aria-pressed="false" disabled>凤栖堂</button>
+   <button id="kexue" data-target="kexue" aria-pressed="false" disabled>科学馆</button>
+  </div>
+ </div>
+ <div class="scan">
+  <div class="cell-name">02 / REVEAL <span id="pct" style="float:right;font-variant-numeric:tabular-nums;color:#3e5a4f">42%</span></div>
+  <input id="scan" type="range" min="0" max="100" step="1" value="42" aria-label="材质扫描进度" disabled>
+  <div class="ends"><span>纸面 · INK</span><b>世界坐标扫描</b><span>PBR · 真实材质</span></div>
+ </div>
+ <div><div class="cell-name">03 / MOTION</div><button class="play" id="play" disabled>播放扫描 ↗</button></div>
+</section>
+<script>
+(function(){
+'use strict';
+var iframe=document.getElementById('campus');
+var status=document.getElementById('status');
+var dot=document.getElementById('dot');
+var scan=document.getElementById('scan');
+var pct=document.getElementById('pct');
+var play=document.getElementById('play');
+var buttons=Array.from(document.querySelectorAll('[data-target]'));
+var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var child=null,api=null,THREE=null,active=null,target='yihao',front=0,playing=false,playBegin=0,timer=0,ready=false;
+function report(text){status.textContent=text;}
+function paint(){if(!ready||!api)return;try{api.renderer.render(api.scene,api.camera);}catch(e){report('渲染出现问题：'+e.message);}}
+function setScan(value){
+ scan.value=String(Math.round(Math.max(0,Math.min(100,value))));pct.textContent=scan.value+'%';
+ if(!active)return;
+ var t=Number(scan.value)/100;
+ front=active.min-1.7+(active.max-active.min+3.4)*t;
+ active.uniform.value=front;
+ active.clip.constant=-front;
+ if(active.beam){active.beam.position.x=front;active.beam.visible=t>.015&&t<.985;}
+ active.lines.forEach(function(line){line.visible=t<.996;});
+ paint();
+}
+function view(building){
+ var b=building.data,c=building.center,depth=b.size[2],width=b.size[0],height=b.size[1];
+ var phone=innerWidth<740;
+ var dist=Math.max(24,width*(phone?1.9:1.28),depth*1.5,height*2.1);
+ api.camera.position.set(c.x+dist*(phone?.20:.29),Math.max(13,height*.57+dist*.19),c.z+dist);
+ api.camera.lookAt(c.x,height*.5,c.z);
+ api.camera.near=.1;api.camera.far=850;
+ api.camera.fov=phone?49:46;api.camera.aspect=innerWidth/innerHeight;api.camera.updateProjectionMatrix();
+ api.renderer.setSize(innerWidth,innerHeight,false);
+}
+function clear(){
+ if(!active)return;
+ active.pairs.forEach(function(v){v.mesh.material=v.original;});
+ active.clones.forEach(function(m){m.dispose();});
+ active.lines.forEach(function(l){l.parent.remove(l);l.geometry.dispose();l.material.dispose();});
+ if(active.beam){active.beam.parent.remove(active.beam);active.beam.geometry.dispose();active.beam.material.dispose();}
+ active=null;
+}
+function setTarget(id){
+ if(!ready||!api)return;
+ playing=false;play.textContent='播放扫描 ↗';clear();target=id;
+ buttons.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.target===id));});
+ var building=api.world.buildings.find(function(b){return b.data.id===id;});
+ if(!building){report('未找到建筑 '+id);return;}
+ var group=building.group;
+ var min=building.center.x-building.data.size[0]/2,max=building.center.x+building.data.size[0]/2;
+ var uniform={value:0};var clip=new THREE.Plane(new THREE.Vector3(-1,0,0),0);
+ var pairs=[],clones=[],lines=[],materials=new Map(),lineCount=0;
+ group.traverse(function(mesh){
+  if(!mesh.isMesh||!mesh.material||Array.isArray(mesh.material))return;
+  var original=mesh.material;
+  if(!original.isMeshStandardMaterial||original.transparent||original.alphaTest>0)return;
+  var material=materials.get(original);
+  if(!material){
+   material=original.clone();
+   var prior=original.onBeforeCompile;
+   var priorKey=original.customProgramCacheKey;
+   material.onBeforeCompile=function(shader,renderer){
+    if(prior)prior.call(this,shader,renderer);
+    shader.uniforms.uHaizFront=uniform;
+    shader.uniforms.uHaizFeather={value:.67};
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vHaizWorld;');
+    shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>','#include <worldpos_vertex>\n{vec4 vHaizPos=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\nvHaizPos=instanceMatrix*vHaizPos;\n#endif\nvHaizWorld=(modelMatrix*vHaizPos).xyz;}');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vHaizWorld;uniform float uHaizFront;uniform float uHaizFeather;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>\n{float k=1.0-smoothstep(uHaizFront-uHaizFeather,uHaizFront+uHaizFeather,vHaizWorld.x);float paperLine=1.0-smoothstep(.0,.045,abs(fract(vHaizWorld.y*.54)-.5));vec3 paper=vec3(.931,.919,.883)-paperLine*.019;gl_FragColor.rgb=mix(paper,gl_FragColor.rgb,k);}');
+   };
+   material.customProgramCacheKey=function(){return (priorKey?priorKey.call(original):'')+'|haiz-study-ink-pbr-v1';};
+   material.needsUpdate=true;
+   materials.set(original,material);clones.push(material);
+  }
+  pairs.push({mesh:mesh,original:original});mesh.material=material;
+  if(!mesh.isInstancedMesh&&lineCount<35&&mesh.geometry&&mesh.geometry.attributes.position.count<34000){
+   try{
+    var edgeGeo=new THREE.EdgesGeometry(mesh.geometry,34);
+    if(edgeGeo.attributes.position.count>0&&edgeGeo.attributes.position.count<90000){
+     var ink=new THREE.LineBasicMaterial({color:0x465950,transparent:true,opacity:.55,depthTest:true,depthWrite:false,clippingPlanes:[clip]});
+     var outline=new THREE.LineSegments(edgeGeo,ink);
+     outline.position.copy(mesh.position);outline.rotation.copy(mesh.rotation);outline.scale.copy(mesh.scale);
+     outline.frustumCulled=false;outline.renderOrder=5;
+     mesh.parent.add(outline);lines.push(outline);lineCount++;
+    }else edgeGeo.dispose();
+   }catch(e){console.warn('Outline skipped',e);}
+  }
+ });
+ api.renderer.localClippingEnabled=true;
+ var beamGeo=new THREE.PlaneGeometry(.045,Math.max(5,building.data.size[1]*1.04));
+ var beamMat=new THREE.MeshBasicMaterial({color:0xc6a080,transparent:true,opacity:.77,depthWrite:false,side:THREE.DoubleSide});
+ var beam=new THREE.Mesh(beamGeo,beamMat);
+ beam.position.set(min,building.data.size[1]*.5,building.center.z+building.data.size[2]/2+1.0);
+ beam.renderOrder=7;api.scene.add(beam);
+ active={pairs:pairs,clones:clones,lines:lines,beam:beam,min:min,max:max,uniform:uniform,clip:clip};
+ view(building);setScan(Number(scan.value));
+ report('实时校园已就绪 · '+building.data.name+' · '+pairs.length+' 个材质对象');
+}
+function animate(now){
+ if(!playing)return;
+ if(!playBegin)playBegin=now;
+ var p=Math.min(1,(now-playBegin)/4600);
+ setScan(p*100);
+ if(p<1)requestAnimationFrame(animate);
+ else{playing=false;playBegin=0;play.textContent='重新播放 ↗';}
+}
+function boot(){
+ try{
+  child=iframe.contentWindow;api=child.haizWalk;THREE=child.THREE;
+  if(!api||!api.world||!api.renderer||!THREE)return false;
+  var el=child.document.createElement('style');
+  el.textContent='body{overflow:hidden!important}#intro,#hud,#touchControls,.tour-stop,.observation-hud,.climate-note,.top-nav,.control-help{display:none!important}#viewport,#viewport canvas{width:100vw!important;height:100vh!important}';
+  child.document.head.appendChild(el);
+  ready=true;buttons.forEach(function(b){b.disabled=false;});scan.disabled=false;play.disabled=false;
+  dot.classList.add('ready');
+  setTarget(target);return true;
+ }catch(e){return false;}
+}
+buttons.forEach(function(b){b.addEventListener('click',function(){setTarget(b.dataset.target);});});
+scan.addEventListener('input',function(){playing=false;playBegin=0;play.textContent='播放扫描 ↗';setScan(Number(scan.value));});
+play.addEventListener('click',function(){
+ if(!ready)return;
+ if(playing){playing=false;playBegin=0;play.textContent='继续扫描 ↗';return;}
+ if(Number(scan.value)>=97)setScan(0);
+ playing=true;playBegin=0;var start=Number(scan.value);
+ var t0=performance.now();
+ function go(now){if(!playing)return;var p=Math.min(1,(now-t0)/4600),v=start+(100-start)*p;setScan(v);if(p<1)requestAnimationFrame(go);else{playing=false;play.textContent='重新播放 ↗';}}
+ if(reduced){setScan(100);playing=false;play.textContent='重新播放 ↗';}
+ else requestAnimationFrame(go);
+});
+window.addEventListener('resize',function(){if(!ready)return;var b=api.world.buildings.find(function(b){return b.data.id===target;});if(b)view(b);paint();});
+var attempts=0;timer=window.setInterval(function(){
+ if(ready){clearInterval(timer);return;}
+ attempts++;if(boot()){clearInterval(timer);return;}
+ if(attempts>220){clearInterval(timer);report('3D 场景未能载入，请检查浏览器 WebGL 与网络。');}
+},250);
+iframe.addEventListener('error',function(){report('校园场景加载失败，请重新打开页面。');});
+})();
+</script>
+</body>
+</html>

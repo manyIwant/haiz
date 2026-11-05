@@ -5,7 +5,7 @@
   "description": "Buildless Hainan Middle School campus journal and first-person exploration prototype",
   "scripts": {
     "build": "node scripts/build-pages.mjs && node scripts/build-memory.cjs && node scripts/build-campus-data.cjs && node windowsill/scene/build.mjs && node scripts/build-experience.cjs",
-    "test": "node tests/open-assets.cjs && node tests/journey.cjs && node tests/darkroom.cjs && node tests/windowsill.cjs && node tests/climate.cjs && node tests/site.cjs && node tests/journal.cjs && node tests/descent.cjs && node tests/cinematic-runtime.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs && node tests/lanren.cjs",
+    "test": "node tests/open-assets.cjs && node tests/journey.cjs && node tests/darkroom.cjs && node tests/windowsill.cjs && node tests/climate.cjs && node tests/site.cjs && node tests/journal.cjs && node tests/descent.cjs && node tests/cinematic-runtime.cjs && node tests/walk/verify.cjs && node tests/walk/runtime.cjs",
     "test:browser": "node tests/browser.cjs",
     "test:atelier": "node tests/atelier-browser.cjs",
     "test:darkroom": "node tests/darkroom.cjs && node tests/darkroom-browser.cjs",
@@ -18,6 +18,13 @@
     "test:map": "node tests/map.cjs && node tests/sports-browser.cjs",
     "test:rain-performance": "node tests/rain-index.cjs && node tests/rain-performance-browser.cjs",
     "capture:windowsill": "node tests/windowsill-browser.cjs --capture-preview",
+    "backend:dev": "node backend/server.mjs --dev",
+    "backend:start": "node backend/server.mjs",
+    "test:backend": "node --test backend/tests/*.test.mjs",
+    "backend:invite": "node backend/manage.mjs invite",
+    "backend:recover": "node backend/manage.mjs recover-admin",
+    "backend:backup": "node backend/manage.mjs backup",
+    "backend:bench": "node backend/benchmark.mjs",
     "test:home": "node tests/lanren.cjs && node tests/home-browser.cjs",
     "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh && node scripts/lanren/build-home.mjs"
   },

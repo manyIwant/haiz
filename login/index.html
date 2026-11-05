@@ -130,149 +130,20 @@ label.field-label{display:block;font-size:11px;color:#f6e7d2;letter-spacing:.02e
 
 
 .service-notice{font-size:10px;line-height:1.6;text-align:center;color:#e2cfae;margin:12px 0 0;opacity:.93}.service-notice a{color:#ffe9be;text-underline-offset:3px}
-</style>
+[hidden]{display:none!important}</style>
 </head>
 <body><main class="scene" id="scene" data-phase="idle"><div class="wall" aria-hidden="true"></div><div class="illumination" aria-hidden="true"></div><div class="lens" aria-hidden="true"></div><div class="haze" aria-hidden="true"></div>
 <section class="panel" id="panel" aria-labelledby="login-title">
 <div class="brand"><i aria-hidden="true"></i> HAIZ · POCKET</div><h1 id="login-title">登录</h1>
-<form id="login-form" novalidate>
-<label class="field-label" for="username">账号</label><div class="field"><input type="text" name="username" id="username" placeholder="用户名或邮箱" autocomplete="username" maxlength="254" required aria-required="true" /><span class="right" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M4.5 20c.5-4.1 3.4-6.1 7.5-6.1s7 2 7.5 6.1"/></svg></span></div>
-<label class="field-label" for="password">密码</label><div class="field"><input type="password" name="password" id="password" placeholder="输入你的密码" autocomplete="current-password" required aria-required="true" minlength="1" /><button class="right" id="toggle-password" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.8-6 9.5-6 9.5 6 9.5 6-3.8 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>
-<div class="meta"><label class="remember"><input type="checkbox" id="remember" /> 记住我</label><button type="button" class="reset" id="forgot">忘记密码？</button></div>
+<form id="login-form" novalidate><div id="username-group">
+<label class="field-label" for="username">账号</label><div class="field"><input type="text" name="username" id="username" placeholder="输入你的账号名" autocomplete="username" maxlength="254" required aria-required="true" /><span class="right" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M4.5 20c.5-4.1 3.4-6.1 7.5-6.1s7 2 7.5 6.1"/></svg></span></div>
+</div><div id="password-group"><label class="field-label" for="password">密码</label><div class="field"><input type="password" name="password" id="password" placeholder="输入你的密码" autocomplete="current-password" required aria-required="true" minlength="1" /><button class="right" id="toggle-password" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.8-6 9.5-6 9.5 6 9.5 6-3.8 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>
+</div><div id="confirm-group" hidden><label class="field-label" for="confirm-password">确认密码</label><div class="field"><input type="password" id="confirm-password" autocomplete="new-password" placeholder="再次输入密码" /></div></div><div id="invite-group" hidden><label class="field-label" for="invite">一次性邀请码</label><div class="field"><input type="password" id="invite" autocomplete="off" placeholder="粘贴管理员提供的邀请码" /></div></div><div class="meta"><label class="remember"><input type="checkbox" id="remember" /> 保持登录（最长 8 小时）</label><button type="button" class="reset" id="forgot">忘记密码？</button></div>
 <button class="action" type="submit" id="submit"><span id="submit-text">登 录</span></button>
 <p class="status" id="status" role="status" aria-live="polite"></p>
 <div class="auth-progress" id="auth-progress" aria-hidden="true"><span></span></div>
-<p class="bottom">还没有可用账号？ <a id="guest-link" href="/lamp-preview/app/?fromLamp=1">进入本机访客空间</a></p><p class="service-notice">正式账号服务尚未上线，密码登录暂不可用。测试灯光请访问 <a href="/lamp-preview/demo/">演示页面</a>。</p>
+<p class="bottom"><span id="mode-copy">还没有账号？</span> <button type="button" id="mode-toggle" class="reset">注册账号</button></p><p class="bottom"><button type="button" class="reset" id="invite-toggle">使用管理员提供的邀请</button></p><p class="service-notice" id="auth-description">每个账号只访问自己的个人记录。</p>
 </form>
 </section><div class="foot">HAIZ · POCKET · SECURE SIGN-IN</div>
 <div class="preview-tools"><button type="button" class="replay" id="replay" aria-label="重置登录灯光效果">↺ 重播灯光</button></div></main>
-<script>
-(() => {
-  const $ = id => document.getElementById(id);
-  const scene = $('scene'), panel = $('panel'), form = $('login-form');
-  const username = $('username'), password = $('password');
-  const login = $('submit'), loginText = $('submit-text'), status = $('status');
-  const motionOff = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let submitting = false, authenticated = false, preview = false, errorLatched = false;
-  let redirection = null;
-  const guestURL = $('guest-link').href;
-
-  function phase(value) { scene.dataset.phase = value; }
-  function message(content, type='info') {
-    status.textContent = content;
-    status.className = 'status visible ' + type;
-  }
-  function clearMessage() { status.textContent = ''; status.className = 'status'; }
-  function updateFocusState() {
-    if (authenticated || preview || submitting || errorLatched) return;
-    const focus = document.activeElement;
-    if (focus === password) phase('password');
-    else if (focus === username) phase('username');
-    else if (username.value.trim() && password.value) phase('ready');
-    else if (username.value.trim()) phase('username');
-    else phase('idle');
-  }
-  function deny(content) {
-    errorLatched = true; phase('error'); message(content, 'error');
-    if (!motionOff) {
-      panel.classList.remove('shake');
-      void panel.offsetWidth;
-      panel.classList.add('shake');
-    }
-  }
-  username.addEventListener('focus', updateFocusState);
-  password.addEventListener('focus', updateFocusState);
-  username.addEventListener('input', () => { errorLatched = false; clearMessage(); updateFocusState(); });
-  password.addEventListener('input', () => { errorLatched = false; clearMessage(); updateFocusState(); });
-  username.addEventListener('blur', () => requestAnimationFrame(updateFocusState));
-  password.addEventListener('blur', () => requestAnimationFrame(updateFocusState));
-
-  $('toggle-password').addEventListener('click', () => {
-    const show = password.type === 'password';
-    password.type = show ? 'text' : 'password';
-    $('toggle-password').setAttribute('aria-pressed', String(show));
-    $('toggle-password').setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
-    password.focus({ preventScroll: true });
-  });
-  $('forgot').addEventListener('click', () => message('找回密码需接入 HAIZ 的正式身份服务，目前尚未开放。'));
-
-  function resetLight() {
-    if (redirection) clearTimeout(redirection);
-    authenticated = false; preview = false; errorLatched = false;
-    submitting = false; login.disabled = false; loginText.textContent = '登 录';
-    scene.classList.remove('success'); panel.classList.remove('shake');
-    clearMessage(); phase('idle');
-    document.activeElement?.blur?.();
-    // Deliberately do not clear typed input, but never persist the password.
-    if (username.value.trim() || password.value) updateFocusState();
-  }
-  $('replay').addEventListener('click', resetLight);
-
-  function illuminate({ demo = false, guest = false } = {}) {
-    if (!demo && !guest && !authenticated) return;
-    preview = demo; phase('success');
-    scene.classList.add('success');
-    login.disabled = demo || guest;
-    loginText.textContent = demo ? '动效预览完成' : guest ? '正在进入本机空间' : '验证成功';
-    message(demo ? '成功点灯动画预览 · 未建立登录会话。' : guest ? '已选择本机访客模式，正在进入…' : '身份已验证，正在进入 HAIZ Pocket。');
-    if (!demo) redirection = setTimeout(() => window.location.assign(guestURL), motionOff ? 150 : 1450);
-  }
-  $('guest-link').addEventListener('click', event => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-    event.preventDefault();
-    if (submitting) return;
-    illuminate({ guest: true });
-  });
-
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    if (submitting) return;
-    const account = username.value.trim(), secret = password.value;
-    if (!account) { deny('请输入账号。'); username.focus(); return; }
-    if (!secret) { deny('请输入密码。'); password.focus(); return; }
-    // The public page accepts no hardcoded demo credentials. Only the
-    // first-party service may verify real accounts.
-    if (location.origin !== 'https://haiz.space') {
-      deny('请仅在 HAIZ 正式网站使用账号登录。');
-      return;
-    }
-    preview = false; errorLatched = false; submitting = true; phase('checking');
-    login.disabled = true;
-    loginText.innerHTML = '<span class="busy" aria-label="正在验证"></span>';
-    message('正在安全验证身份…');
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-    try {
-      // Login and session must both be verified by a real server; never compare secrets in JavaScript.
-      const resp = await fetch('/api/auth/login', {
-        method:'POST', credentials:'include', cache:'no-store',
-        headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ username:account, password:secret, remember:$('remember').checked }),
-        signal:controller.signal
-      });
-      if (!resp.ok) {
-        deny(resp.status === 404 ? '账号认证服务尚未上线，无法使用密码登录。'
-          : resp.status === 401 ? '账号或密码不正确，请检查后重试。'
-          : resp.status === 429 ? '尝试过于频繁，请稍后重试。'
-          : '认证暂未完成，请稍后重试。');
-        return;
-      }
-      const body = await resp.json().catch(() => null);
-      if (body?.authenticated !== true) { deny('未获得有效的身份认证结果。'); return; }
-      const sessionResp = await fetch('/api/auth/session', {
-        credentials:'include', cache:'no-store', signal:controller.signal
-      });
-      const session = sessionResp.ok ? await sessionResp.json().catch(() => null) : null;
-      if (session?.authenticated !== true) { deny('会话验证未通过，请重新登录。'); return; }
-      authenticated = true;
-      illuminate();
-    } catch (err) {
-      deny(err?.name === 'AbortError' ? '验证超时，请检查网络后重试。' : '无法连接账号认证服务，仍可进入本机访客空间。');
-    } finally {
-      clearTimeout(timer);
-      submitting = false;
-      if (!authenticated) { login.disabled = false; loginText.textContent = '登 录'; }
-    }
-  });
-})();
-</script></body></html>
+<script src="/src/account/lamp-auth.js" defer></script></body></html>

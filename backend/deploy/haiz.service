@@ -1,0 +1,24 @@
+[Unit]
+Description=HAIZ backend
+After=network.target
+
+[Service]
+Type=simple
+User=haiz
+Group=haiz
+WorkingDirectory=/opt/haiz
+EnvironmentFile=/etc/haiz.env
+ExecStart=/usr/bin/node /opt/haiz/backend/server.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=haiz
+ReadWritePaths=/var/lib/haiz
+
+[Install]
+WantedBy=multi-user.target
