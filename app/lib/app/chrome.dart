@@ -501,6 +501,7 @@ class _DeliveryTokenState extends State<DeliveryToken> with SingleTickerProvider
 /// Text on clear glass: a soft halo of the page colour lifts labels off
 /// whatever the glass is refracting, so the glass itself can stay clear.
 List<Shadow> glassHalo(HaizColors c) => [
-  Shadow(color: c.canvas.withValues(alpha: 0.85), blurRadius: 6),
-  Shadow(color: c.canvas.withValues(alpha: 0.6), blurRadius: 2),
+  Shadow(color: c.canvas, blurRadius: 2),
+  Shadow(color: c.canvas.withValues(alpha: 0.9), blurRadius: 7),
+  Shadow(color: c.canvas.withValues(alpha: 0.7), blurRadius: 14),
 ];

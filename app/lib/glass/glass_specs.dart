@@ -7,7 +7,7 @@ abstract final class GlassSpecs {
   /// refracting edge (bevel 22, depth 30, n 1.46), a light diagonal glaze,
   /// and a ~2 px soft kernel so dense text behind the labels does not turn
   /// to noise. Dispersion is kept faint (0.4 of the 1.4 lens's split).
-  static const bar = GlassSpec(radius: 31, bevel: 22, depth: 30, dispersion: 0.4, frost: 0.45, veil: 0.18,
+  static const bar = GlassSpec(radius: 31, bevel: 18, depth: 28, dispersion: 0.3, frost: 0.45, veil: 0.18,
       magnify: 0.042);
 
   /// The selected-tab lens inside the bar: clearer and more curved, with
