@@ -151,7 +151,8 @@ const T = 240000;
   await dp.waitForFunction(() => { const i = window.__haizHome.map.info(); return i.cam && i.cam.pitch > 89.9 && !i.moving; }, null, { timeout: T });
   d0 = await info(dp);
   assert(Math.abs(d0.cam.tx - 60) < 40 && d0.cam.s > 30, 'the camera framed 图书馆: ' + JSON.stringify(d0.cam));
-  await Promise.all([dp.waitForURL(/campus-3d\.html\?focus=library&from=map$/, { timeout: T }), dp.click('.cmap-walk')]);
+  // the link leaves through a short veil, then the walk page commits (heavy on SwiftShader), as in home-browser.cjs
+  await Promise.all([dp.waitForURL(/campus-3d\.html\?focus=library&from=map$/, { timeout: T }), dp.click('.cmap-walk', { noWaitAfter: true, timeout: T })]);
   results.push('「从这里步入校园」 leaves for the existing first-person walk at campus-3d.html?focus=library (a separate page: no shared renderer is claimed)');
   await dp.goBack({ timeout: T });
   await ready(dp);
