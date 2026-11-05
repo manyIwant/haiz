@@ -226,8 +226,9 @@ if (run('phone')) {
   assert(layout.head.top >= layout.bar.bottom - 2, 'the heading sits below the tools');
   // bring 图书馆 into the narrow frame (a one-finger drag would do the same), then tap it where it is drawn
   await mp.evaluate(() => { const l = window.__haizHome.map.places.find((q) => q.id === 'library'); window.__haizHome.map.setView({ tx: l.x - 20, tz: l.z - 10 }); });
-  await mp.waitForFunction(() => !window.__haizHome.map.info().moving, null, { timeout: T });
-  await mp.waitForTimeout(1500);
+  // a frame has to draw the moved camera before it can be tapped (seconds on SwiftShader)
+  await mp.waitForFunction(() => { const l = window.__haizHome.map.places.find((q) => q.id === 'library'); const p = window.__haizHome.map.project(l.x, l.z); return p[0] > 10 && p[0] < 380 && p[1] > 150 && p[1] < 650; }, null, { timeout: T });
+  await mp.waitForTimeout(1000);
   const ml = await mp.evaluate(() => { const l = window.__haizHome.map.places.find((q) => q.id === 'library'); return window.__haizHome.map.project(l.x, l.z); });
   assert(ml[0] > 10 && ml[0] < 380 && ml[1] > 150 && ml[1] < 650, '图书馆 on the phone screen: ' + ml);
   assert.strictEqual(await mp.evaluate(([x, y]) => document.elementFromPoint(x, y)?.id, ml), 'world', 'nothing covers the place');
