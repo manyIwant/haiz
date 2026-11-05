@@ -902,6 +902,11 @@ void showToast(BuildContext context, String message, {String? action, VoidCallba
     margin: EdgeInsets.fromLTRB(12, 0, 12, ChromeLift.value),
     content: Text(message),
     duration: duration ?? Duration(seconds: action == null ? 3 : 5),
+    // Flutter keeps any toast with an action on screen until dismissed. An
+    // undo is a convenience here (deleted tasks also go to 最近删除), so it
+    // times out like any toast; with a screen reader it stays, so there is
+    // time to reach the action.
+    persist: MediaQuery.maybeAccessibleNavigationOf(context) ?? false,
     action: action == null ? null : SnackBarAction(label: action, onPressed: onAction ?? () {}),
   ));
 }

@@ -115,6 +115,51 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a repaint inside a nested boundary reaches the glass, and an idle scope stops', (tester) async {
+    await tester.runAsync(GlassProgram.ensureLoaded);
+    if (GlassProgram.program.value == null) {
+      markTestSkipped('fragment programs are unavailable in this test renderer');
+      return;
+    }
+    final tick = ValueNotifier(0);
+    addTearDown(tick.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: GlassScope(
+        mode: GlassMode.optical,
+        dark: false,
+        // A list row: its own repaint boundary, repainting on its own.
+        content: RepaintBoundary(child: CustomPaint(painter: _Ticker(tick), size: const Size(400, 800))),
+        overlay: const Stack(children: [
+          Positioned(left: 20, top: 300, width: 200, height: 60,
+              child: GlassSurface(spec: GlassSpecs.bar, child: SizedBox.expand())),
+        ]),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump();
+    final scope = _scope(tester);
+    final before = scope.debugSnapshots;
+    tick.value++;
+    await tester.pump(); // the row repaints alone
+    await tester.pump(); // the glass re-samples
+    expect(scope.debugSnapshots, greaterThan(before), reason: 'glass must not keep showing the old row');
+    final settled = scope.debugSnapshots;
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isFalse, reason: 'no frame loop when nothing changes');
+    expect(scope.debugSnapshots, settled);
+
+    // The row changes in the same frame the scope repaints for another
+    // reason (labels relaid out when a font arrives): no stale reuse.
+    tick.value++;
+    scope.markNeedsPaint();
+    await tester.pump();
+    expect(scope.debugSnapshots, settled + 1);
+    // Overlay-only repaint: the page is unchanged, the snapshot is reused.
+    scope.markNeedsPaint();
+    await tester.pump();
+    expect(scope.debugSnapshots, settled + 1);
+  });
+
   testWidgets('sustained raster cost downgrades glass to solid; fast frames do not', (tester) async {
     await tester.pumpWidget(const _Harness(mode: GlassMode.solid));
     GlassBudget.debugReport(List.filled(80, 6.0));
@@ -135,4 +180,14 @@ void main() {
     expect(GlassPreference.resolve(ctx, 'auto'), GlassMode.optical);
     expect(GlassPreference.resolve(ctx, 'solid'), GlassMode.solid);
   });
+}
+
+class _Ticker extends CustomPainter {
+  _Ticker(this.tick) : super(repaint: tick);
+  final ValueNotifier<int> tick;
+  @override
+  void paint(Canvas canvas, Size size) =>
+      canvas.drawRect(Offset.zero & size, Paint()..color = tick.value.isEven ? Colors.black : Colors.white);
+  @override
+  bool shouldRepaint(_Ticker old) => false;
 }

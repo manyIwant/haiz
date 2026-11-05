@@ -147,6 +147,26 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets('an undo toast times out, and never covers the focus screen', (tester) async {
+    final store = await _boot(tester);
+    store.addTask('练习册 P36', '数学', due: _today());
+    store.addTask('背 Unit 4 单词', '英语', due: _today());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('task-check-${store.tasks.first.id}')));
+    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pumpAndSettle();
+    expect(find.text('撤销').hitTestable(), findsOneWidget);
+    await tester.tap(find.byTooltip('专注'));
+    await tester.pumpAndSettle();
+    expect(find.text('撤销').hitTestable(), findsNothing, reason: 'shell toasts stay on the shell');
+    await tester.tap(find.byKey(const Key('focus-close')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.text('撤销'), findsNothing, reason: 'a toast with an action still times out');
+    await _end(tester);
+  });
+
   testWidgets('reduced motion completes immediately without a hold', (tester) async {
     final store = await _boot(tester, reduceMotion: true);
     store.addTask('尽快完成', '数学', due: _today());

@@ -23,13 +23,13 @@ enum GlassMode {
 class GlassSpec {
   const GlassSpec({
     this.radius = 999,
-    this.bevel = 14,
-    this.depth = 22,
-    this.dispersion = 0.5,
-    this.frost = 0.35,
-    this.veil = 0.42,
+    this.bevel = 22,
+    this.depth = 30,
+    this.dispersion = 1.0,
+    this.frost = 0.25,
+    this.veil = 0.30,
     this.absorption = 0.08,
-    this.magnify = 2.0,
+    this.magnify = 0.042,
     this.smoked = false,
     this.shadow = 1.0,
     this.opacity = 1.0,
@@ -255,7 +255,38 @@ class _GlassContent extends SingleChildRenderObjectWidget {
 /// refreshed in the same frame.
 class RenderGlassContent extends RenderProxyBox {
   RenderGlassScope? _scope;
-  int generation = 0;
+
+  /// A fingerprint of what the page currently shows: the identity of every
+  /// recorded picture plus the offsets, transforms, clips and effects that
+  /// place it. A nested repaint boundary (a list row, a paragraph relaid
+  /// out when a font arrives) re-records its pictures without repainting
+  /// this boundary, so a repaint counter here would miss it; the layer
+  /// tree does not. Walking it costs microseconds; a stale snapshot under
+  /// the glass is visible.
+  int get signature {
+    var h = 17;
+    void visit(Layer l) {
+      h = Object.hash(h, l.runtimeType);
+      if (l is PictureLayer) h = Object.hash(h, identityHashCode(l.picture));
+      if (l is OffsetLayer) h = Object.hash(h, l.offset);
+      if (l is TransformLayer) h = Object.hash(h, l.transform);
+      if (l is OpacityLayer) h = Object.hash(h, l.alpha);
+      if (l is ClipRectLayer) h = Object.hash(h, l.clipRect);
+      if (l is ClipRRectLayer) h = Object.hash(h, l.clipRRect);
+      if (l is ClipRSuperellipseLayer) h = Object.hash(h, l.clipRSuperellipse);
+      if (l is ClipPathLayer) h = Object.hash(h, identityHashCode(l.clipPath));
+      if (l is ColorFilterLayer) h = Object.hash(h, l.colorFilter);
+      if (l is ImageFilterLayer) h = Object.hash(h, l.imageFilter);
+      if (l is ContainerLayer) {
+        for (var c = l.firstChild; c != null; c = c.nextSibling) {
+          visit(c);
+        }
+      }
+    }
+    final root = layer;
+    if (root != null) visit(root);
+    return h;
+  }
 
   @override
   bool get isRepaintBoundary => true;
@@ -274,11 +305,6 @@ class RenderGlassContent extends RenderProxyBox {
     _scope?.markNeedsPaint();
   }
 
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    generation++;
-    super.paint(context, offset);
-  }
 
   ui.Image? snapshot(Rect bounds, double pixelRatio) {
     final l = layer;
@@ -390,8 +416,52 @@ class RenderGlassScope extends RenderBox
 
   void notePainted(RenderGlassSurface s) => _painted.add(s);
 
+  // Nested repaint boundaries inside the page (every list row, a paragraph
+  // relaid out when a fallback font arrives) repaint without dirtying the
+  // content boundary or this scope, so the glass would keep showing the old
+  // page. After any frame in which this scope did not paint, it compares
+  // the page's layer fingerprint with the one last sampled and repaints if
+  // it changed. If that request is not honoured (the scope is offstage
+  // under another route) it stops until the scope paints again, so an idle
+  // or hidden scope never keeps frames running.
+  int? _sampledSignature;
+  bool _paintedThisFrame = false;
+  bool _requested = false;
+  bool _watching = false;
+
+  void _watch() {
+    if (_watching || !attached) return;
+    _watching = true;
+    SchedulerBinding.instance.addPostFrameCallback(_afterFrame);
+  }
+
+  void _afterFrame(Duration _) {
+    _watching = false;
+    if (!attached || _mode != GlassMode.optical) return;
+    if (_paintedThisFrame) {
+      _paintedThisFrame = false;
+      _requested = false;
+      _watch();
+      return;
+    }
+    if (_requested) {
+      _requested = false;
+      return;
+    }
+    final content = firstChild;
+    if (content is! RenderGlassContent || _snaps.isEmpty || content.signature == _sampledSignature) {
+      _watch();
+      return;
+    }
+    _requested = true;
+    markNeedsPaint();
+    _watch();
+  }
+
   @override
   void paint(PaintingContext context, Offset offset) {
+    _paintedThisFrame = true;
+    _watch();
     for (final i in _retired) {
       i.dispose();
     }
@@ -400,6 +470,9 @@ class RenderGlassScope extends RenderBox
     final overlay = lastChild;
     if (content == null || overlay == null) return;
     context.paintChild(content, offset);
+    // The page as it is now (its own and its nested boundaries' layers are
+    // already recorded for this frame).
+    _sampledSignature = content.signature;
 
     // Reserve the slot beneath the overlay; fill it after the overlay paints.
     final slot = _glassSlot.layer ??= ContainerLayer();
@@ -433,32 +506,96 @@ class RenderGlassScope extends RenderBox
   void _paintShadow(Canvas canvas, GlassSpec spec, RRect rr) {
     if (spec.shadow <= 0) return;
     final a = spec.opacity * spec.shadow;
+    // The 1.4 dock's float: a deep, pulled-in shadow well below the slab
+    // (blur 26, spread -5, offset 16 there), plus a tight contact shadow.
     canvas.drawRRect(
-      rr.shift(const Offset(0, 6)),
+      rr.deflate(5).shift(const Offset(0, 12)),
       Paint()
-        ..color = const Color(0xFF000000).withValues(alpha: (_dark ? 0.42 : 0.13) * a)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 13),
+        ..color = const Color(0xFF000000).withValues(alpha: (_dark ? 0.34 : 0.17) * a)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
     );
     canvas.drawRRect(
       rr.shift(const Offset(0, 1)),
       Paint()
-        ..color = const Color(0xFF000000).withValues(alpha: (_dark ? 0.30 : 0.07) * a)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+        ..color = const Color(0xFF000000).withValues(alpha: (_dark ? 0.26 : 0.06) * a)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
     );
-    if (_mode == GlassMode.optical && !spec.smoked) {
-      // Caustic: light focused by the slab lands on the page beyond the edge
-      // that faces away from the light. Faint, warm, and only on paper.
-      final away = Offset(-_light.dx, -_light.dy);
-      canvas.drawRRect(
-        rr.shift(away * 5).deflate(3),
-        Paint()
-          ..color = const Color(0xFFFFF6E0).withValues(alpha: (_dark ? 0.05 : 0.30) * a)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..blendMode = BlendMode.plus
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-      );
-    }
+  }
+
+  /// Surface reflections painted over the transmitted image — the 1.4
+  /// dock's lens sheen: a grazing reflection across the upper-left, a rim
+  /// that is bright towards the light and dark on the turn, a thinner inner
+  /// edge that implies thickness, and a caustic streak along the top. Also
+  /// painted over the blur fallback, so every glass mode keeps a rim.
+  void _paintSheen(Canvas canvas, GlassSpec spec, RRect rr) {
+    final bounds = rr.outerRect;
+    if (bounds.width < 4 || bounds.height < 4) return;
+    final selected = spec.z > 0;
+    final dark = _dark || spec.smoked;
+    final o = spec.opacity;
+    // Smoked glass keeps its ink: a quieter wash, the same rim.
+    final wash = spec.smoked ? 0.45 : 1.0;
+    final white = const Color(0xFFFFFFFF);
+    canvas.save();
+    canvas.clipRRect(rr);
+    canvas.drawRect(bounds, Paint()
+      ..shader = RadialGradient(
+        center: selected ? const Alignment(-0.4, -1.2) : const Alignment(-0.63, -1.25),
+        radius: selected ? 1.1 : 1.36,
+        colors: [
+          // On paper the 1.4 wash (0.43 / 0.13) whited out what the glass
+          // transmits; it is halved there. Dark keeps the 1.4 values.
+          white.withValues(alpha: (dark ? 0.27 : 0.22) * o * wash),
+          white.withValues(alpha: (dark ? 0.085 : 0.06) * o * wash),
+          white.withValues(alpha: 0),
+        ],
+        stops: const [0.0, 0.46, 1.0],
+      ).createShader(bounds));
+    canvas.drawRect(bounds, Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomLeft,
+        end: Alignment.topRight,
+        colors: [
+          white.withValues(alpha: (dark ? 0.10 : 0.10) * o),
+          white.withValues(alpha: 0),
+          const Color(0xFF000000).withValues(alpha: (dark ? 0.08 : 0.04) * o),
+        ],
+        stops: const [0, 0.55, 1],
+      ).createShader(bounds));
+    canvas.restore();
+
+    canvas.drawRRect(rr.deflate(0.9), Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          white.withValues(alpha: (dark ? 0.68 : 0.98) * o),
+          white.withValues(alpha: (dark ? 0.24 : 0.60) * o),
+          const Color(0xFF000000).withValues(alpha: (dark ? 0.20 : 0.12) * o),
+          white.withValues(alpha: (dark ? 0.33 : 0.82) * o),
+        ],
+        stops: const [0.0, 0.28, 0.75, 1.0],
+      ).createShader(bounds)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.25 : 1.7);
+    canvas.drawRRect(rr.deflate(3.0), Paint()
+      ..color = white.withValues(alpha: (selected ? (dark ? 0.21 : 0.37) : (dark ? 0.15 : 0.21)) * o)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.65);
+
+    final r = rr.tlRadiusX;
+    final streak = Path()
+      ..moveTo(bounds.left + r * 1.1, bounds.top + 3.0)
+      ..quadraticBezierTo(bounds.left + bounds.width * 0.34, bounds.top + 1.8,
+          bounds.left + bounds.width * (selected ? 0.66 : 0.56), bounds.top + 3.4);
+    canvas.drawPath(streak, Paint()
+      ..shader = LinearGradient(
+        colors: [white.withValues(alpha: o), white.withValues(alpha: 0.74 * o), white.withValues(alpha: 0)],
+        stops: const [0.0, 0.34, 1.0],
+      ).createShader(bounds)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.5 : 1.7
+      ..strokeCap = StrokeCap.round);
   }
 
   void _paintOptical(ContainerLayer slot, RenderGlassContent content, RenderGlassSurface s, Rect rect, Offset offset) {
@@ -471,7 +608,8 @@ class RenderGlassScope extends RenderBox
     final cached = _snaps[s];
     ui.Image? image;
     Rect texRect;
-    if (cached != null && cached.generation == content.generation && cached.rect == want) {
+    final signature = _sampledSignature ?? content.signature;
+    if (cached != null && cached.signature == signature && cached.rect == want) {
       image = cached.image;
       texRect = cached.rect;
     } else {
@@ -480,7 +618,7 @@ class RenderGlassScope extends RenderBox
       texRect = want;
       if (image == null) return _paintSolid(slot, s, rect);
       if (cached != null) _retired.add(cached.image);
-      _snaps[s] = _Snap(image, want, content.generation);
+      _snaps[s] = _Snap(image, want, signature);
     }
     final shader = _shaders[s] ??= program.fragmentShader();
     final veil = spec.smoked ? ink : paper;
@@ -492,7 +630,9 @@ class RenderGlassScope extends RenderBox
     f(texRect.width); f(texRect.height);
     f(spec.radius); f(spec.bevel); f(spec.depth);
     f(spec.dispersion); f(spec.frost);
-    f(spec.smoked ? 0.78 : spec.veil);
+    // Dark theme: a denser graphite film, as the 1.4 dock (0.16 / 0.48
+    // there against 0.10 / 0.29 on paper); paper stays clear.
+    f(spec.smoked ? 0.84 : (spec.veil * (_dark ? 2.4 : 1.0)).clamp(0.0, 1.0));
     f(veil.r); f(veil.g); f(veil.b); f(spec.absorption);
     f(_light.dx); f(_light.dy);
     f(_dark || spec.smoked ? 1 : 0);
@@ -505,6 +645,7 @@ class RenderGlassScope extends RenderBox
     final rr = _rrect(spec, rect);
     _paintShadow(canvas, spec, rr);
     canvas.drawRect(rect.inflate(1), Paint()..shader = shader);
+    _paintSheen(canvas, spec, rr);
     slot.append(PictureLayer(rect.inflate(40))..picture = recorder.endRecording());
   }
 
@@ -517,13 +658,18 @@ class RenderGlassScope extends RenderBox
     final tint = ui.PictureRecorder();
     final c = Canvas(tint);
     final base = spec.smoked ? ink : paper;
-    c.drawRRect(rr, Paint()..color = base.withValues(alpha: (spec.smoked ? 0.82 : 0.55) * spec.opacity));
-    c.drawRRect(rr.deflate(0.5), Paint()
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: (_dark ? 0.12 : 0.55) * spec.opacity)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1);
-    final clip = ClipRRectLayer(clipRRect: rr, clipBehavior: Clip.antiAlias);
-    final backdrop = BackdropFilterLayer(filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16, tileMode: TileMode.clamp));
+    // The 1.4 dock's fallback: blur, a diagonal glaze, then the same sheen
+    // as the optical path, so the rim and reflections survive without
+    // refraction.
+    final o = spec.opacity;
+    c.drawRRect(rr, Paint()
+      ..shader = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: spec.smoked
+          ? [base.withValues(alpha: 0.86 * o), base.withValues(alpha: 0.78 * o)]
+          : [base.withValues(alpha: (_dark ? 0.48 : 0.36) * o), base.withValues(alpha: (_dark ? 0.30 : 0.22) * o)])
+          .createShader(rr.outerRect));
+    _paintSheen(c, spec, rr);
+    final clip = ClipRRectLayer(clipRRect: rr.inflate(2), clipBehavior: Clip.antiAlias);
+    final backdrop = BackdropFilterLayer(filter: ui.ImageFilter.blur(sigmaX: 13, sigmaY: 13, tileMode: TileMode.clamp));
     backdrop.append(PictureLayer(rect)..picture = tint.endRecording());
     clip.append(backdrop);
     slot.append(clip);
@@ -551,10 +697,10 @@ class RenderGlassScope extends RenderBox
 }
 
 class _Snap {
-  _Snap(this.image, this.rect, this.generation);
+  _Snap(this.image, this.rect, this.signature);
   final ui.Image image;
   final Rect rect;
-  final int generation;
+  final int signature;
 }
 
 /// A region of the overlay rendered as glass. Its child (icons, labels) is

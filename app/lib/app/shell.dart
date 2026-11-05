@@ -121,14 +121,19 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
   /// Shows where something went: a token travels from [from] into the tab
   /// that now holds it, which bumps once on arrival.
   @override
-  void deliver(HaizTab tab, Rect from, String label) {
+  void deliver(HaizTab tab, Rect from, String label, {VoidCallback? onArrived}) {
     final overlay = Overlay.maybeOf(context);
     final target = _tabKeys[tab]?.currentContext?.findRenderObject() as RenderBox?;
-    void bump() => _pulse.value = (tab, ++_pulses);
+    void bump() {
+      _pulse.value = (tab, ++_pulses);
+      if (mounted) onArrived?.call();
+    }
     if (overlay == null || target == null || !target.attached || HaizTheme.of(context).reduceMotion) {
       bump();
       return;
     }
+    // Nothing may sit over the token's path into the tab bar.
+    ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
     final to = target.localToGlobal(target.size.center(Offset.zero));
     late OverlayEntry entry;
     entry = OverlayEntry(builder: (_) => DeliveryToken(
@@ -247,8 +252,10 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
           session: widget.auth.authenticated ? null : widget.session,
           onSaved: () {},
           onCommitted: (from, count) {
-            deliver(HaizTab.tasks, from, '+$count');
-            showToast(context, '已加入待办 $count 项', action: '查看', onAction: () => goTab(HaizTab.tasks));
+            // The confirmation appears once the token has landed in 待办,
+            // so the destination is never hidden behind the toast.
+            deliver(HaizTab.tasks, from, '+$count', onArrived: () =>
+                showToast(context, '已加入待办 $count 项', action: '查看', onAction: () => goTab(HaizTab.tasks)));
           },
         ),
       HaizTab.me => MeScreen(key: key),

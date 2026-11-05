@@ -175,9 +175,9 @@ class _GlassLabScreenState extends State<GlassLabScreen> with SingleTickerProvid
         Wrap(spacing: 6, runSpacing: 6, children: [
           for (final (i, l) in _backgrounds.indexed) _chip(c, l, _bg == i, () => setState(() => _bg = i)),
         ]),
-        _slider(c, '斜面', _spec.bevel, 40, (v) => setState(() => _spec = _spec.copyWith(bevel: v))),
+        _slider(c, '斜面', _spec.bevel, 70, (v) => setState(() => _spec = _spec.copyWith(bevel: v))),
         _slider(c, '折射', _spec.depth, 60, (v) => setState(() => _spec = _spec.copyWith(depth: v))),
-        _slider(c, '色散', _spec.dispersion, 1, (v) => setState(() => _spec = _spec.copyWith(dispersion: v))),
+        _slider(c, '色散', _spec.dispersion, 1.6, (v) => setState(() => _spec = _spec.copyWith(dispersion: v))),
         _slider(c, '磨砂', _spec.frost, 1, (v) => setState(() => _spec = _spec.copyWith(frost: v))),
         _slider(c, '遮罩', _spec.veil, 1, (v) => setState(() => _spec = _spec.copyWith(veil: v))),
         Text(

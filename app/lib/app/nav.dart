@@ -43,7 +43,7 @@ abstract class HaizActions {
   void goTab(HaizTab tab);
 
   /// Shows that something landed in [tab] (a token flies there from [from]).
-  void deliver(HaizTab tab, Rect from, String label);
+  void deliver(HaizTab tab, Rect from, String label, {VoidCallback? onArrived});
   Future<void> capture({bool memo = false, String? initialText});
   Future<void> openFocus({String? taskId});
   Future<void> openTask(String taskId);

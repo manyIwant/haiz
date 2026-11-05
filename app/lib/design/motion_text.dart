@@ -38,18 +38,34 @@ class HeroText extends StatelessWidget {
         final to = (toContext.widget as Hero).child;
         final a = from is _HeroLabel ? from.style : style;
         final b = to is _HeroLabel ? to.style : style;
-        final start = direction == HeroFlightDirection.push ? a : b;
-        final end = direction == HeroFlightDirection.push ? b : a;
+        // In both directions the flight starts at the `from` hero (on pop:
+        // the route being closed) and ends at `to`. The route animation runs
+        // 0→1 on push and 1→0 on pop, so progress is flipped for pop.
+        // Line count and alignment are the destination's, so the text
+        // settles without re-wrapping on the last frame.
+        final lines = to is _HeroLabel ? to.maxLines : maxLines;
+        final align = to is _HeroLabel ? to.textAlign : textAlign;
         return AnimatedBuilder(
           animation: animation,
           builder: (context, _) {
             final t = direction == HeroFlightDirection.push ? animation.value : 1 - animation.value;
-            return Material(
-              type: MaterialType.transparency,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(text, maxLines: 1, style: TextStyle.lerp(start, end, Curves.easeInOutCubic.transform(t))),
+            // Truncate to the flight rect's width (never spill into a
+            // neighbour such as the capsule clock); scale only if the
+            // interpolated line height would overflow the rect.
+            return LayoutBuilder(
+              builder: (context, box) => Material(
+                type: MaterialType.transparency,
+                child: ClipRect(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: align == TextAlign.center ? Alignment.center : Alignment.centerLeft,
+                    child: SizedBox(
+                      width: box.maxWidth,
+                      child: Text(text, maxLines: lines, softWrap: lines > 1, overflow: TextOverflow.ellipsis,
+                          textAlign: align, style: TextStyle.lerp(a, b, Curves.easeInOutCubic.transform(t))),
+                    ),
+                  ),
+                ),
               ),
             );
           },

@@ -171,7 +171,8 @@ class _GlassTabBarState extends State<GlassTabBar> with SingleTickerProviderStat
                                   ]),
                                   const SizedBox(height: 2),
                                   Text(item.$2, style: TypeScale.micro(item.$1 == widget.tab ? c.ink : c.ink2)
-                                      .copyWith(fontWeight: item.$1 == widget.tab ? FontWeight.w700 : FontWeight.w500)),
+                                      .copyWith(fontWeight: item.$1 == widget.tab ? FontWeight.w700 : FontWeight.w500,
+                                          shadows: glassHalo(c))),
                                 ],
                               ),
                             ),
@@ -273,7 +274,7 @@ class FocusCapsule extends StatelessWidget {
                 child: HeroText(
                   tag: 'focus-title',
                   text: title,
-                  style: TypeScale.footnote(c.ink).copyWith(fontWeight: FontWeight.w600),
+                  style: TypeScale.footnote(c.ink).copyWith(fontWeight: FontWeight.w600, shadows: glassHalo(c)),
                 ),
               ),
               ValueListenableBuilder<int>(
@@ -281,7 +282,8 @@ class FocusCapsule extends StatelessWidget {
                 builder: (context, _, _) => HeroText(
                   tag: 'focus-clock',
                   text: clockText(store.focusRemaining),
-                  style: TypeScale.label(c.ink).copyWith(fontSize: 16, fontFeatures: TypeScale.tabular),
+                  style: TypeScale.label(c.ink).copyWith(fontSize: 16, fontFeatures: TypeScale.tabular,
+                      shadows: glassHalo(c)),
                 ),
               ),
               IconButton(
@@ -495,3 +497,10 @@ class _DeliveryTokenState extends State<DeliveryToken> with SingleTickerProvider
     );
   }
 }
+
+/// Text on clear glass: a soft halo of the page colour lifts labels off
+/// whatever the glass is refracting, so the glass itself can stay clear.
+List<Shadow> glassHalo(HaizColors c) => [
+  Shadow(color: c.canvas.withValues(alpha: 0.85), blurRadius: 6),
+  Shadow(color: c.canvas.withValues(alpha: 0.6), blurRadius: 2),
+];

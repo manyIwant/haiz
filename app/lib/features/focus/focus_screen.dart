@@ -101,7 +101,9 @@ class FocusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    return Scaffold(
+    // Its own messenger: toasts raised on the pages underneath (an undo in
+    // 待办) stay there instead of covering the timer.
+    return ScaffoldMessenger(child: Scaffold(
       backgroundColor: c.canvas,
       body: SafeArea(
         child: ListenableBuilder(
@@ -305,7 +307,7 @@ class FocusScreen extends StatelessWidget {
           },
         ),
       ),
-    );
+    ));
   }
 
   String _statusLine(FocusSession? session, int remaining) {
