@@ -31,8 +31,15 @@ class PersonalSnapshot {
     legacyImported: legacyImported, ext: ext ?? this.ext,
   );
 
+  /// Protective versioning. While the record holds only 1.5.5-shaped data
+  /// it stays `version: 1` (byte-compatible). Once it holds content a 1.5.5
+  /// client would silently drop on its next save — memos or recently
+  /// deleted tasks — it is written as `version: 2`, which 1.5.5 refuses to
+  /// open (read-only, original kept) instead of overwriting.
+  bool get protectsExtension => ext.notes.isNotEmpty || ext.trash.isNotEmpty;
+
   String encode() => jsonEncode({
-    'version': 1,
+    'version': protectsExtension ? 2 : 1,
     'tasks': tasks.map((x) => x.toJson()).toList(),
     'courses': courses.map((x) => x.toJson()).toList(),
     'focusLogs': focusLogs.map((x) => x.toJson()).toList(),
@@ -43,7 +50,7 @@ class PersonalSnapshot {
 
   factory PersonalSnapshot.decode(String raw) {
     final value = jsonDecode(raw);
-    if (value is! Map<String, dynamic> || value['version'] != 1) {
+    if (value is! Map<String, dynamic> || (value['version'] != 1 && value['version'] != 2)) {
       throw const FormatException('个人存储版本无效');
     }
     return PersonalSnapshot.fromFields(value);

@@ -31,7 +31,7 @@ void main() {
       expect(PersonalSnapshot.decode(_v1).encode(), _v1);
     });
 
-    test('2.0 data stays version 1 and survives a 1.5.5 rewrite of core fields', () async {
+    test('records holding memos are protected as version 2; 1.5.5 cannot silently drop them', () async {
       final store = await _guest();
       addTearDown(store.dispose);
       store.addTask('实验报告', '物理');
@@ -40,13 +40,28 @@ void main() {
       final raw = (await SharedPreferencesAsync()
           .getString('${store.namespace}/personal.v1'))!;
       final json = jsonDecode(raw) as Map<String, dynamic>;
-      expect(json['version'], 1);
+      // 1.5.5 only opens version 1: it shows the record as unreadable
+      // (read-only, original kept) instead of saving it without the memo.
+      expect(json['version'], 2);
       expect(json['haiz2']['schema'], 2);
+      expect(PersonalSnapshot.decode(raw).ext.notes.single.text, '周五带校服');
+    });
+
+    test('2.x data without memos stays version 1 and survives a 1.5.5 rewrite of core fields', () async {
+      final store = await _guest();
+      addTearDown(store.dispose);
+      final id = store.addTask('实验报告', '物理')!;
+      store.setTaskCompleted(id, true);
+      await store.flush();
+      final raw = (await SharedPreferencesAsync()
+          .getString('${store.namespace}/personal.v1'))!;
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      expect(json['version'], 1);
       // What a 1.5.5 client writes back: every core key, no extension.
       final oldClientWrite = Map.of(json)..remove('haiz2');
       final reread = PersonalSnapshot.decode(jsonEncode(oldClientWrite));
-      expect(reread.tasks.single.title, '实验报告');
-      expect(reread.ext.notes, isEmpty);
+      expect(reread.tasks.single.completed, isTrue);
+      expect(reread.ext.taskMeta, isEmpty);
     });
 
     test('opening a 1.5.5 record keeps a one-time rollback copy', () async {

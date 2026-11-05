@@ -37,7 +37,8 @@ class _SyncBannerState extends State<SyncBanner> {
         title: const Text('云端有更新的版本'),
         content: const Text(
           '另一台设备在你编辑期间保存了这个账号的记录。为了不覆盖它，本机暂停了保存。\n\n'
-          '合并：保留两边所有的任务、课程、备忘和专注记录（同一条记录以本机为准），再保存为新版本。被另一台设备删除的记录会重新出现。\n\n'
+          '合并：以两台设备上次一致的版本为准，分别保留两边的新增、修改和删除。同一项在两边都改过时，采用较新的修改；'
+          '两边都改过的笔记会两段都保留，备忘的另一版本会另存一条。合并后会列出这些项目。\n\n'
           '使用云端版本：放弃本机尚未保存的修改。'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('稍后')),
@@ -48,7 +49,34 @@ class _SyncBannerState extends State<SyncBanner> {
     );
     if (!mounted || choice == null) return;
     if (choice == 'merge') {
-      await _run(store.mergeWithCloud, '已合并并保存到云端');
+      setState(() => _busy = true);
+      final done = await store.mergeWithCloud();
+      if (!mounted) return;
+      setState(() => _busy = false);
+      final report = store.lastMerge;
+      if (!done || report == null) {
+        showToast(context, '仍未成功，记录保持不变。请检查网络后重试。');
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('已合并并保存到云端'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(report.summary),
+              for (final c in report.conflicts.take(8))
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text('· ${c.label}：${c.resolution}', style: TypeScale.footnote(context.c.ink2)),
+                ),
+              if (report.conflicts.length > 8)
+                Padding(padding: const EdgeInsets.only(top: 8), child: Text('另有 ${report.conflicts.length - 8} 项')),
+            ]),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('知道了'))],
+        ),
+      );
     } else {
       await _run(store.reloadFromCloud, '已载入云端版本');
     }

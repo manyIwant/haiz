@@ -16,6 +16,8 @@ class _Harness extends StatefulWidget {
 class _HarnessState extends State<_Harness> {
   double shift = 0;
   bool wide = false;
+
+  void update(VoidCallback fn) => setState(fn);
   @override
   Widget build(BuildContext context) => MaterialApp(
     home: Scaffold(
@@ -97,7 +99,7 @@ void main() {
     // cached snapshot is reused only if the sampled rect is unchanged; a
     // wider surface needs a wider sample.
     final state = tester.state<_HarnessState>(find.byType(_Harness));
-    state.setState(() => state.wide = true);
+    state.update(() => state.wide = true);
     await tester.pump();
     final afterResize = scope.debugSnapshots;
     expect(afterResize, first + 1);
@@ -107,7 +109,7 @@ void main() {
     expect(scope.debugSnapshots, afterResize);
 
     // The page moves under the glass: a fresh snapshot in the same frame.
-    state.setState(() => state.shift = 12);
+    state.update(() => state.shift = 12);
     await tester.pump();
     expect(scope.debugSnapshots, afterResize + 1);
     expect(tester.takeException(), isNull);

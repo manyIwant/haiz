@@ -10,10 +10,12 @@ import 'haiz_extension.dart';
 import 'legacy_archive.dart';
 import 'personal_snapshot.dart';
 import 'personal_backup.dart';
+import 'snapshot_merge.dart';
 import 'storage_scope.dart';
 
 export 'haiz_extension.dart'
     show NoteItem, TrashEntry, TaskMeta, FocusSession, FocusPhase;
+export 'snapshot_merge.dart' show MergeResult, MergeConflict, threeWayMerge, mergeSnapshots;
 
 /// Thrown by a cloud writer when another device saved a newer revision.
 /// Unlike transient failures it is not retried automatically.
@@ -53,6 +55,13 @@ class PocketStore extends ChangeNotifier {
   String? namespace;
   Future<void> Function(String json)? _remoteWrite;
   Future<String?> Function()? _remoteRead;
+
+  /// The last revision this device confirmed with the cloud (read, or
+  /// written and acknowledged): the common ancestor for conflict merges.
+  PersonalSnapshot? _cloudBase;
+
+  /// What the last conflict merge did, for the person to review.
+  MergeResult? lastMerge;
   bool get isCloudAccount => namespace?.startsWith('haiz/cloud/v1/') ?? false;
   String? storageError;
   _Fault _fault = _Fault.none;
@@ -97,6 +106,8 @@ class PocketStore extends ChangeNotifier {
     namespace = null;
     _remoteWrite = null;
     _remoteRead = null;
+    _cloudBase = null;
+    lastMerge = null;
     legacyArchiveAvailable = false;
     semanticExtractionConsent = false;
     ready = false;
@@ -177,6 +188,7 @@ class PocketStore extends ChangeNotifier {
           : PersonalSnapshot.decode(raw);
       _remoteWrite = write;
       _remoteRead = read;
+      _cloudBase = data;
       namespace = 'haiz/cloud/v1/$userId';
       _apply(data);
       _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: true));
@@ -336,7 +348,8 @@ class PocketStore extends ChangeNotifier {
     if (!_writable || scope == null) return;
     final ticket = generation;
     final remoteWrite = _remoteWrite;
-    final raw = _snapshot().encode();
+    final snap = _snapshot();
+    final raw = snap.encode();
     _setSync(SyncStatus(SyncPhase.saving, cloud: remoteWrite != null));
     _pending = _pending.then((_) async {
       // Preserve queued legacy/guest writes in their original captured scope.
@@ -347,6 +360,7 @@ class PocketStore extends ChangeNotifier {
       }
       try {
         await _write(scope, raw, remoteWrite);
+        if (remoteWrite != null && ticket == generation) _cloudBase = snap;
         if (ticket == generation && !_disposed && _fault == _Fault.none) {
           _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: remoteWrite != null));
         }
@@ -397,12 +411,14 @@ class PocketStore extends ChangeNotifier {
     if (!canRetrySave || scope == null || !ready) return false;
     final ticket = generation;
     final remoteWrite = _remoteWrite;
-    final raw = _snapshot().encode();
+    final snap = _snapshot();
+    final raw = snap.encode();
     _setSync(SyncStatus(SyncPhase.saving, cloud: remoteWrite != null));
     try {
       await _pending;
       await _write(scope, raw, remoteWrite);
       if (ticket != generation || _disposed) return false;
+      if (remoteWrite != null) _cloudBase = snap;
       storageError = null;
       _fault = _Fault.none;
       _setSync(SyncStatus(SyncPhase.saved, at: now(), cloud: remoteWrite != null));
@@ -420,8 +436,9 @@ class PocketStore extends ChangeNotifier {
   /// Conflict option A: discard this device's unsaved state, load the cloud.
   Future<bool> reloadFromCloud() => _resolveConflict(merge: false);
 
-  /// Conflict option B: keep every record from both sides (by id; this
-  /// device's version wins for the same id), then save as a new revision.
+  /// Conflict option B: three-way merge against the last confirmed revision
+  /// (see [threeWayMerge]); additions, edits and deletions from both
+  /// devices are kept, then saved as a new revision. [lastMerge] reports it.
   Future<bool> mergeWithCloud() => _resolveConflict(merge: true);
 
   Future<bool> _resolveConflict({required bool merge}) async {
@@ -435,9 +452,12 @@ class PocketStore extends ChangeNotifier {
       final raw = await read(); // Also refreshes the expected revision.
       if (ticket != generation || _disposed) return false;
       final remote = raw == null ? const PersonalSnapshot() : PersonalSnapshot.decode(raw);
-      final next = merge ? mergeSnapshots(local: local, remote: remote) : remote;
+      final result = merge ? threeWayMerge(base: _cloudBase, local: local, remote: remote) : null;
+      final next = result?.snapshot ?? remote;
       if (merge) await write(next.encode());
       if (ticket != generation || _disposed) return false;
+      _cloudBase = next;
+      lastMerge = result;
       _apply(next);
       storageError = null;
       _fault = _Fault.none;
@@ -1038,51 +1058,4 @@ class PocketStore extends ChangeNotifier {
     focusClock.dispose();
     super.dispose();
   }
-}
-
-/// Union by id; for the same id this device's record wins. Nothing present
-/// on either side is dropped, so a conflict never silently loses a record.
-PersonalSnapshot mergeSnapshots({
-  required PersonalSnapshot local,
-  required PersonalSnapshot remote,
-}) {
-  List<T> union<T>(List<T> mine, List<T> theirs, String Function(T) id) {
-    final seen = mine.map(id).toSet();
-    return [...mine, ...theirs.where((x) => seen.add(id(x)))];
-  }
-
-  final tasks = union(local.tasks, remote.tasks, (t) => t.id);
-  final logs = union(local.focusLogs, remote.focusLogs,
-      (l) => jsonEncode(l.toJson()));
-  final taskIds = tasks.map((t) => t.id).toSet();
-  final notes = {...remote.taskNotes, ...local.taskNotes}
-    ..removeWhere((key, _) => !taskIds.contains(key));
-  final localNotes = {for (final n in local.ext.notes) n.id: n};
-  for (final note in remote.ext.notes) {
-    final mine = localNotes[note.id];
-    if (mine == null || note.updatedAt.isAfter(mine.updatedAt)) {
-      localNotes[note.id] = note;
-    }
-  }
-  final trashIds = local.ext.trash.map((e) => e.task.id).toSet();
-  return PersonalSnapshot(
-    tasks: tasks,
-    courses: union(local.courses, remote.courses, (c) => c.id),
-    focusLogs: logs,
-    taskNotes: notes,
-    activeTaskId: local.activeTaskId,
-    appearance: local.appearance,
-    legacyImported: local.legacyImported || remote.legacyImported,
-    ext: local.ext.copyWith(
-      notes: localNotes.values.toList(),
-      taskMeta: {...remote.ext.taskMeta, ...local.ext.taskMeta},
-      trash: [
-        ...local.ext.trash,
-        ...remote.ext.trash.where((e) => trashIds.add(e.task.id)),
-      ].where((e) => !taskIds.contains(e.task.id)).take(HaizExtension.maxTrash).toList(),
-      completedSessions: {
-        ...local.ext.completedSessions, ...remote.ext.completedSessions,
-      }.take(20).toList(),
-    ),
-  );
 }
