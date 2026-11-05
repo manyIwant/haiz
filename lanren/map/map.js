@@ -97,7 +97,9 @@ export function attach(ctx, geo) {
   }
   function saveToken() {
     if (!goal) return;
-    try { sessionStorage.setItem(TOKEN, JSON.stringify({ t: Date.now(), view: S.view, cur: goal, selected: S.selected, detail: S.detail, before, pan: S.pan })); } catch { /* storage blocked */ }
+    // mid-flight, the view being flown to is the one to come back to
+    const at = tween ? tween.b : goal;
+    try { sessionStorage.setItem(TOKEN, JSON.stringify({ t: Date.now(), view: S.view, cur: at, selected: S.selected, detail: S.detail, before, pan: S.pan })); } catch { /* storage blocked */ }
   }
 
   // ---------------------------------------------------------------- entering and leaving
@@ -612,7 +614,7 @@ export function attach(ctx, geo) {
   const api = {
     get mode() { return S.mode; },
     get reveal() { return S.T; },
-    info: () => ({ mode: S.mode, T: +S.T.toFixed(3), view: S.view, selected: S.selected, detail: S.detail, owns: S.owns, pan: S.pan,
+    info: () => ({ mode: S.mode, T: +S.T.toFixed(3), view: S.view, selected: S.selected, detail: S.detail, owns: S.owns, pan: S.pan, moving: !!tween || !!vel,
       cam: cur && { tx: +cur.tx.toFixed(2), tz: +cur.tz.toFixed(2), s: +cur.s.toFixed(2), pitch: +cur.pitch.toFixed(2), yaw: +cur.yaw.toFixed(2), fov: +cur.fov.toFixed(2) }, hash: location.hash }),
     geo, layer, places,
     start: (speed = 1) => startReveal(speed),

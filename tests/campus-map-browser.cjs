@@ -147,9 +147,10 @@ const T = 240000;
   assert(d0.view === 'top' && d0.selected === 'library' && d0.detail && d0.p === 3);
   results.push('a deep link (#map/top/library) opens straight into the plan from above with 图书馆 open, no six-shot replay');
   // into the walk (its own page) and back again: the same view is restored
-  await dp.waitForFunction(() => { const c = window.__haizHome.map.info().cam; return c && c.pitch > 89.9; }, null, { timeout: T });
-  await dp.waitForTimeout(1500);
+  // the flight to the place has landed (on SwiftShader a frame can take seconds)
+  await dp.waitForFunction(() => { const i = window.__haizHome.map.info(); return i.cam && i.cam.pitch > 89.9 && !i.moving; }, null, { timeout: T });
   d0 = await info(dp);
+  assert(Math.abs(d0.cam.tx - 60) < 40 && d0.cam.s > 30, 'the camera framed 图书馆: ' + JSON.stringify(d0.cam));
   await Promise.all([dp.waitForURL(/campus-3d\.html\?focus=library&from=map$/, { timeout: T }), dp.click('.cmap-walk')]);
   results.push('「从这里步入校园」 leaves for the existing first-person walk at campus-3d.html?focus=library (a separate page: no shared renderer is claimed)');
   await dp.goBack({ timeout: T });
