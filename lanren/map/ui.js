@@ -129,7 +129,7 @@ export function createOverlay(dom, places, V3) {
       lastKey = key;
       const tierMax = view.s < 26 ? 3 : view.s < 60 ? 2 : view.s < 140 ? 1 : 0.5;
       // the free part of the screen (chrome at the top and bottom)
-      const L = 24, R = W - 24, T = W > 760 ? 64 : 110, B = H - (W > 760 ? 72 : 120);
+      const L = 24, R = W - 24, T = W > 760 ? 64 : 110, B = H - (W > 760 ? 72 : 172);   // phones: two rows of controls and the scale
       const placed = [];
       places.forEach((p, i) => {
         const el = dom.labelEls.get(p.id);
