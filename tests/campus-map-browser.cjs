@@ -22,6 +22,9 @@ const server = http.createServer((req, res) => {
 });
 const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 const T = 240000;
+// ONLY=route,deep,reduced,static,phone runs a part (development); the results file is written only for a full run
+const only = (process.env.ONLY || '').split(',').filter(Boolean);
+const run = (k) => !only.length || only.includes(k);
 
 (async () => {
   await new Promise((r) => server.listen(0, r));
@@ -38,7 +41,8 @@ const T = 240000;
   const mode = (page, m) => page.waitForFunction((x) => window.__haizHome.map.mode === x, m, { timeout: T })
     .catch(async (e) => { console.error('waiting for', m, JSON.stringify(await info(page).catch(() => null))); throw e; });
 
-  // ---------------------------------------------------------------- desktop: the route
+if (run('route')) {
+    // ---------------------------------------------------------------- desktop: the route
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
   watch(page);
@@ -134,8 +138,10 @@ const T = 240000;
   results.push('the chapter slab\'s own entry opens the plan without waiting; 「继续 · 05」 closes it and walks on to 05');
   assert.deepStrictEqual(errors, [], 'page errors: ' + errors.join(' | '));
   await ctx.close();
+  }
 
-  // ---------------------------------------------------------------- a deep link, and the walk and back
+if (run('deep')) {
+    // ---------------------------------------------------------------- a deep link, and the walk and back
   const dctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const dp = await dctx.newPage();
   watch(dp);
@@ -170,8 +176,10 @@ const T = 240000;
   results.push('Back then closes the place (#map/top), and Back again returns to the tree (#map)');
   assert.deepStrictEqual(errors, [], 'page errors: ' + errors.join(' | '));
   await dctx.close();
+  }
 
-  // ---------------------------------------------------------------- reduced motion
+if (run('reduced')) {
+    // ---------------------------------------------------------------- reduced motion
   const rctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
   const rp = await rctx.newPage();
   watch(rp);
@@ -185,8 +193,10 @@ const T = 240000;
   assert(took < 20, 'reduced motion reveal is short: ' + took);
   results.push(`reduced motion: the plan appears without the long reveal (${took.toFixed(1)} s wall on SwiftShader, 0.6 s of reveal time)`);
   await rctx.close();
+  }
 
-  // ---------------------------------------------------------------- without WebGL
+if (run('static')) {
+    // ---------------------------------------------------------------- without WebGL
   const sp = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await sp.goto(base + '/index.html?static=1');
   await sp.waitForSelector('#p-map .cmap-static svg rect', { timeout: T });
@@ -194,8 +204,10 @@ const T = 240000;
   assert(st.rects >= 47 && st.places >= 26 && /^campus-3d\.html\?focus=/.test(st.walk));
   results.push(`without WebGL (?static) chapter 04 still holds the plan: ${st.rects - 1} drawn footprints, ${st.places} places with words, photos and walk links`);
   await sp.close();
+  }
 
-  // ---------------------------------------------------------------- phone
+if (run('phone')) {
+    // ---------------------------------------------------------------- phone
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const mp = await mctx.newPage();
   watch(mp);
@@ -212,20 +224,29 @@ const T = 240000;
   assert(layout.overflow <= 0, 'no horizontal overflow');
   for (const k of ['dock', 'exit']) assert(layout[k].left >= 0 && layout[k].right <= layout.W && layout[k].bottom <= layout.H, k + ' within the screen');
   assert(layout.head.top >= layout.bar.bottom - 2, 'the heading sits below the tools');
+  // bring 图书馆 into the narrow frame (a one-finger drag would do the same), then tap it where it is drawn
+  await mp.evaluate(() => { const l = window.__haizHome.map.places.find((q) => q.id === 'library'); window.__haizHome.map.setView({ tx: l.x - 20, tz: l.z - 10 }); });
+  await mp.waitForFunction(() => !window.__haizHome.map.info().moving, null, { timeout: T });
+  await mp.waitForTimeout(1500);
   const ml = await mp.evaluate(() => { const l = window.__haizHome.map.places.find((q) => q.id === 'library'); return window.__haizHome.map.project(l.x, l.z); });
+  assert(ml[0] > 10 && ml[0] < 380 && ml[1] > 150 && ml[1] < 650, '图书馆 on the phone screen: ' + ml);
+  assert.strictEqual(await mp.evaluate(([x, y]) => document.elementFromPoint(x, y)?.id, ml), 'world', 'nothing covers the place');
   await mp.touchscreen.tap(ml[0], ml[1]);
   await mp.waitForSelector('.cmap-detail.open', { timeout: T });
+  // the sheet slides up (0.5 s); measure it at rest
+  await mp.waitForFunction(() => getComputedStyle(document.querySelector('.cmap-detail')).transform === 'none' && document.querySelector('.cmap-detail').getBoundingClientRect().bottom <= innerHeight + 1, null, { timeout: T });
   const sheet = await mp.evaluate(() => { const r = document.querySelector('.cmap-detail').getBoundingClientRect(); return { bottom: r.bottom, top: r.top, H: innerHeight, title: document.querySelector('#cmapTitle').textContent }; });
-  assert(sheet.title === '图书馆' && sheet.bottom <= sheet.H + 1 && sheet.top > sheet.H * 0.35, 'the place opens as a bottom sheet');
+  assert(sheet.title === '图书馆' && sheet.bottom <= sheet.H + 1 && sheet.top > sheet.H * 0.35, 'the place opens as a bottom sheet: ' + JSON.stringify(sheet));
   fs.mkdirSync(path.join(root, 'tests/artifacts/campus-map'), { recursive: true });
   await mp.waitForTimeout(1200);
   await mp.screenshot({ path: path.join(root, 'tests/artifacts/campus-map/phone-library.png') });
   results.push(`phone 390×844: no horizontal overflow, controls inside the screen and clear of the tools, a tap on 图书馆 opens it as a bottom sheet (top at ${Math.round(sheet.top)} px)`);
   assert.deepStrictEqual(errors, [], 'page errors: ' + errors.join(' | '));
   await mctx.close();
+  }
 
   await browser.close();
   server.close();
-  fs.writeFileSync(path.join(root, 'tests/campus-map-browser-results.json'), JSON.stringify({ results, renderer: 'Chromium + SwiftShader (software); proves the flow and input ownership, not a hardware frame rate' }, null, 2));
+  if (!only.length) fs.writeFileSync(path.join(root, 'tests/campus-map-browser-results.json'), JSON.stringify({ results, renderer: 'Chromium + SwiftShader (software); proves the flow and input ownership, not a hardware frame rate' }, null, 2));
   console.log('PASS campus-map-browser:\n- ' + results.join('\n- '));
 })().catch((e) => { console.error(e); server.close(); process.exit(1); });

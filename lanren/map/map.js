@@ -327,13 +327,13 @@ export function attach(ctx, geo) {
 
   // ---------------------------------------------------------------- input (only while the plan is up)
   const pts = new Map();
-  let downAt = 0, moved = 0, pinch = null, hoverQueued = null;
+  let downAt = 0, lastMove = 0, moved = 0, pinch = null, hoverQueued = null;
   const owns = () => S.mode === 'map';
   canvas.addEventListener('pointerdown', (e) => {
     if (!owns()) return;
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (e.pointerType !== 'touch') canvas.setPointerCapture?.(e.pointerId);
-    downAt = performance.now(); moved = 0; vel = null;
+    downAt = e.timeStamp; moved = 0; vel = null;   // the events' own times: a busy frame must not turn a tap into a press
     if (tween) { Object.assign(goal, cur); tween = null; }
     if (pts.size === 2) {
       const [a, b] = [...pts.values()];
@@ -362,8 +362,8 @@ export function attach(ctx, geo) {
     if (moved < 4) return;
     const g0 = groundUnder(prev), g1 = groundUnder(e);
     if (!g0 || !g1) return;
-    const dt = Math.max(0.008, (performance.now() - (p.t || downAt)) / 1000);
-    p.t = performance.now();
+    const dt = Math.max(0.008, (e.timeStamp - (p.t || downAt)) / 1000);
+    p.t = lastMove = e.timeStamp;
     const dx = g0.x - g1.x, dz = g0.z - g1.z;
     goal.tx += dx; goal.tz += dz;
     constrain(goal);
@@ -376,8 +376,9 @@ export function attach(ctx, geo) {
     if (!owns() || !had) return;
     if (pts.size < 2) pinch = null;
     canvas.style.cursor = '';
-    if (vel?.live) { vel.live = false; if (performance.now() - (downAt) > 900 || Math.hypot(vel.x, vel.z) < 4) vel = null; }
-    if (moved <= 6 && performance.now() - downAt < 600 && e.type === 'pointerup' && pts.size === 0) {
+    // a flick glides on; a drag that came to rest before release stays put
+    if (vel?.live) { vel.live = false; if (e.timeStamp - lastMove > 80 || Math.hypot(vel.x, vel.z) < 4) vel = null; }
+    if (moved <= 6 && e.timeStamp - downAt < 600 && e.type === 'pointerup' && pts.size === 0) {
       vel = null;
       const hit = pick(e);
       // act after this tap's click has been dispatched: a panel opening under the finger
