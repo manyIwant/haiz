@@ -41,6 +41,9 @@ class HaizScope extends InheritedWidget {
 /// to know where another screen lives.
 abstract class HaizActions {
   void goTab(HaizTab tab);
+
+  /// Shows that something landed in [tab] (a token flies there from [from]).
+  void deliver(HaizTab tab, Rect from, String label);
   Future<void> capture({bool memo = false, String? initialText});
   Future<void> openFocus({String? taskId});
   Future<void> openTask(String taskId);

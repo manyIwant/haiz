@@ -49,7 +49,7 @@ ThemeData buildHaizThemeData(HaizColors c) {
     onPrimary: c.onInverse,
     secondary: c.signal,
     onSecondary: Colors.white,
-    error: c.signal,
+    error: c.late,
     onError: Colors.white,
     surface: c.surface,
     onSurface: c.ink,
@@ -91,9 +91,9 @@ ThemeData buildHaizThemeData(HaizColors c) {
     iconTheme: IconThemeData(color: c.ink2, size: 22),
     dividerTheme: DividerThemeData(color: c.rule, thickness: .6, space: .6),
     textSelectionTheme: TextSelectionThemeData(
-      cursorColor: c.signal,
-      selectionColor: c.signal.withValues(alpha: .22),
-      selectionHandleColor: c.signal,
+      cursorColor: c.now,
+      selectionColor: c.now.withValues(alpha: .22),
+      selectionHandleColor: c.now,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -102,7 +102,7 @@ ThemeData buildHaizThemeData(HaizColors c) {
       labelStyle: TypeScale.footnote(c.ink2),
       floatingLabelStyle: TypeScale.footnote(c.ink),
       helperStyle: TypeScale.caption(c.ink3),
-      errorStyle: TypeScale.caption(c.signal),
+      errorStyle: TypeScale.caption(c.late),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(Radii.control),
@@ -119,11 +119,11 @@ ThemeData buildHaizThemeData(HaizColors c) {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(Radii.control),
-        borderSide: BorderSide(color: c.signal, width: 1.2),
+        borderSide: BorderSide(color: c.late, width: 1.2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(Radii.control),
-        borderSide: BorderSide(color: c.signal, width: 1.4),
+        borderSide: BorderSide(color: c.late, width: 1.4),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -233,8 +233,8 @@ ThemeData buildHaizThemeData(HaizColors c) {
       headerBackgroundColor: c.surface,
       headerForegroundColor: c.ink,
       todayForegroundColor: WidgetStateProperty.resolveWith((s) =>
-          s.contains(WidgetState.selected) ? c.onInverse : c.signal),
-      todayBorder: BorderSide(color: c.signal),
+          s.contains(WidgetState.selected) ? c.onInverse : c.now),
+      todayBorder: BorderSide(color: c.now),
       dayForegroundColor: WidgetStateProperty.resolveWith((s) =>
           s.contains(WidgetState.selected) ? c.onInverse : c.ink),
       dayBackgroundColor: WidgetStateProperty.resolveWith((s) =>

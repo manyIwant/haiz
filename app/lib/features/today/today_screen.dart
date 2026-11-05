@@ -144,7 +144,7 @@ class _Summary extends StatelessWidget {
     if (today > 0) parts.add(TextSpan(text: '今天到期 $today 项'));
     if (overdue > 0) {
       if (parts.isNotEmpty) parts.add(const TextSpan(text: '  ·  '));
-      parts.add(TextSpan(text: '逾期 $overdue 项', style: TextStyle(color: c.signal, fontWeight: FontWeight.w600)));
+      parts.add(TextSpan(text: '逾期 $overdue 项', style: TextStyle(color: c.late, fontWeight: FontWeight.w600)));
     }
     if (parts.isEmpty) return const SizedBox.shrink();
     return Text.rich(TextSpan(children: parts), style: TypeScale.footnote(c.ink2));
@@ -216,12 +216,12 @@ class NowBlock extends StatelessWidget {
           child: IntrinsicHeight(
             child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Container(width: 2, decoration: BoxDecoration(
-                  color: live ? c.signal : c.ruleStrong, borderRadius: BorderRadius.circular(1))),
+                  color: live ? c.now : c.ruleStrong, borderRadius: BorderRadius.circular(1))),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Text(kicker, style: TypeScale.label(live ? c.signal : c.ink2)),
+                    Text(kicker, style: TypeScale.label(live ? c.now : c.ink2)),
                     const Spacer(),
                     if (trailing != null) Text(trailing, style: TypeScale.footnote(c.ink2)),
                   ]),
@@ -244,7 +244,7 @@ class NowBlock extends StatelessWidget {
                               widthFactor: progress.clamp(0, 1).toDouble(),
                               heightFactor: 1,
                               child: DecoratedBox(decoration: BoxDecoration(
-                                  color: c.signal, borderRadius: BorderRadius.circular(1))),
+                                  color: c.now, borderRadius: BorderRadius.circular(1))),
                             ),
                           ),
                         ),
@@ -414,7 +414,7 @@ class _ClassList extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: Space.gutter, vertical: 7),
             child: Row(children: [
-              SizedBox(width: 22, child: Text('${i + 1}', style: TypeScale.footnote(live ? c.signal : c.ink3)
+              SizedBox(width: 22, child: Text('${i + 1}', style: TypeScale.footnote(live ? c.now : c.ink3)
                   .copyWith(fontWeight: FontWeight.w600))),
               SizedBox(width: 46, child: Text(minutesText(course.startMinute), style: TypeScale.footnote(past ? c.ink3 : c.ink2))),
               Container(width: 3, height: 16, margin: const EdgeInsets.only(right: 10),
@@ -427,7 +427,7 @@ class _ClassList extends StatelessWidget {
                 Text(course.location, style: TypeScale.caption(past ? c.ink3 : c.ink2)),
               if (live) ...[
                 const SizedBox(width: 8),
-                Container(width: 6, height: 6, decoration: BoxDecoration(color: c.signal, shape: BoxShape.circle)),
+                Container(width: 6, height: 6, decoration: BoxDecoration(color: c.now, shape: BoxShape.circle)),
               ],
             ]),
           );

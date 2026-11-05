@@ -153,7 +153,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         padding: const EdgeInsets.fromLTRB(14, 4, Space.gutter, 0),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: LinkAction('清空最近删除', color: c.signal, onTap: () async {
+                          child: LinkAction('清空最近删除', color: c.late, onTap: () async {
                             final yes = await showDialog<bool>(
                               context: context,
                               builder: (d) => AlertDialog(
@@ -162,7 +162,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                 actions: [
                                   TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('取消')),
                                   TextButton(onPressed: () => Navigator.pop(d, true),
-                                      child: Text('清空', style: TextStyle(color: c.signal))),
+                                      child: Text('清空', style: TextStyle(color: c.late))),
                                 ],
                               ),
                             );

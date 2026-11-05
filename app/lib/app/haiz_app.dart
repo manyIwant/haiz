@@ -12,6 +12,9 @@ import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../domain/message_intake_bridge.dart';
 import '../features/welcome/welcome_screen.dart';
+import '../glass/glass.dart';
+import '../glass/glass_lab.dart';
+import '../glass/glass_prefs.dart';
 import '../ui/kit.dart' show PocketSkin;
 import '../ui/pocket_account_sheet.dart';
 import 'nav.dart';
@@ -50,9 +53,15 @@ class _HaizAppState extends State<HaizApp> with WidgetsBindingObserver {
   // The Lamp web gateway already showed a welcome before linking here.
   final bool _fromLamp = kIsWeb && Uri.base.queryParameters['fromLamp'] == '1';
 
+  // Development: `?lab=glass` opens the Glass Lab directly (web preview).
+  final String? _lab = kIsWeb ? Uri.base.queryParameters['lab'] : null;
+
   @override
   void initState() {
     super.initState();
+    if (kIsWeb && Uri.base.queryParameters['budget'] == 'off') GlassBudget.enabled = false;
+    GlassProgram.ensureLoaded();
+    GlassPreference.load();
     WidgetsBinding.instance.addObserver(this);
     store.addListener(_onStore);
     auth.addListener(_updateGate);
@@ -190,7 +199,14 @@ class _HaizAppState extends State<HaizApp> with WidgetsBindingObserver {
             ),
           );
         },
-        home: ValueListenableBuilder<_Gate>(
+        home: _lab == 'glass'
+            ? GlassLabScreen(
+                initialBackground: int.tryParse(Uri.base.queryParameters['bg'] ?? '') ?? 0,
+                initialDark: Uri.base.queryParameters['dark'] == '1' ? true : null,
+                initialMode: GlassMode.values.firstWhere((m) => m.name == Uri.base.queryParameters['mode'],
+                    orElse: () => GlassMode.optical),
+                showControls: Uri.base.queryParameters['panel'] != '0')
+            : ValueListenableBuilder<_Gate>(
           valueListenable: _gate,
           builder: (context, gate, _) => AnimatedSwitcher(
             duration: HaizTheme.of(context).motion(Motion.base),

@@ -10,13 +10,15 @@ import '../../domain/haiz_app_updates.dart';
 import '../../domain/calendar_export.dart';
 import '../../domain/planning.dart';
 import '../../ui/haiz_update_sheet.dart';
+import '../../glass/glass_lab.dart';
+import '../../glass/glass_prefs.dart';
 import '../../ui/pocket_backup_sheet.dart';
 import '../sync/sync_banner.dart';
 import 'campus_screen.dart';
 
 /// Shown in 关于; the Android versionName/versionCode stay those of the
 /// signed 1.5.5 line until a 2.0 release is authorised.
-const haizBuildLabel = '2.0 预览版 · 数据格式兼容 1.5.5';
+const haizBuildLabel = '2.1 预览版 · 数据格式兼容 1.5.5';
 
 /// 我的: account and sync, the learning record, campus, settings.
 class MeScreen extends StatelessWidget {
@@ -80,7 +82,27 @@ class MeScreen extends StatelessWidget {
                   detail: scope.actions.hasAppUpdate ? '有新版本' : '检查签名正式版',
                   badge: scope.actions.hasAppUpdate,
                   onTap: () => showHaizUpdateSheet(context)),
+            _Row(
+              icon: Icons.blur_on_rounded,
+              title: '玻璃材质',
+              detail: '导航和悬浮按钮的光学玻璃；「不透明」更省电、对比更高',
+              trailing: SizedBox(
+                width: 150,
+                child: ValueListenableBuilder<String>(
+                  valueListenable: GlassPreference.value,
+                  builder: (context, v, _) => Segmented<String>(
+                    key: const Key('glass-mode'),
+                    value: v,
+                    items: const [('auto', '玻璃'), ('solid', '不透明')],
+                    onChanged: GlassPreference.set,
+                  ),
+                ),
+              ),
+            ),
             _Row(icon: Icons.info_outline_rounded, title: '关于 HAIZ', detail: haizBuildLabel,
+                // Developers: long-press opens the Glass Lab.
+                onLongPress: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => const GlassLabScreen())),
                 onTap: () => _about(context)),
           ])),
           if (scope.auth.authenticated)
@@ -89,7 +111,7 @@ class MeScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(Space.gutter - 6, 18, Space.gutter, 0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: LinkAction('退出登录', key: const Key('account-signout'), color: context.c.signal,
+                  child: LinkAction('退出登录', key: const Key('account-signout'), color: context.c.late,
                       onTap: scope.actions.confirmSignOut),
                 ),
               ),
@@ -173,7 +195,7 @@ class _AccountBlock extends StatelessWidget {
                   style: TypeScale.footnote(c.ink2)),
             if (auth.error != null) ...[
               const SizedBox(height: 4),
-              Text(auth.error!, style: TypeScale.caption(c.signal)),
+              Text(auth.error!, style: TypeScale.caption(c.late)),
             ],
             if (!signedIn) ...[
               const SizedBox(height: 10),
@@ -270,7 +292,8 @@ class _Group extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.title, this.detail, this.onTap, this.trailing, this.badge = false});
+  const _Row({required this.icon, required this.title, this.detail, this.onTap, this.trailing, this.badge = false, this.onLongPress});
+  final VoidCallback? onLongPress;
   final IconData icon;
   final String title;
   final String? detail;
@@ -282,6 +305,7 @@ class _Row extends StatelessWidget {
     final c = context.c;
     return Pressable(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(Space.gutter, 12, 12, 12),
         child: Row(children: [
@@ -293,7 +317,7 @@ class _Row extends StatelessWidget {
                 Text(title, style: TypeScale.callout(c.ink)),
                 if (badge) ...[
                   const SizedBox(width: 6),
-                  Container(width: 7, height: 7, decoration: BoxDecoration(color: c.signal, shape: BoxShape.circle)),
+                  Container(width: 7, height: 7, decoration: BoxDecoration(color: c.now, shape: BoxShape.circle)),
                 ],
               ]),
               if (detail != null) Text(detail!, style: TypeScale.caption(c.ink3)),

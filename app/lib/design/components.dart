@@ -131,7 +131,7 @@ class _HaizButtonState extends State<HaizButton> {
       HaizButtonKind.primary => (c.inverse, c.onInverse, Colors.transparent),
       HaizButtonKind.secondary => (Colors.transparent, c.ink, c.ruleStrong),
       HaizButtonKind.quiet => (c.raised.withValues(alpha: .7), c.ink, Colors.transparent),
-      HaizButtonKind.danger => (Colors.transparent, c.signal, c.signal.withValues(alpha: .4)),
+      HaizButtonKind.danger => (Colors.transparent, c.late, c.late.withValues(alpha: .4)),
     };
     final height = widget.dense ? 36.0 : 46.0;
     final content = Row(
@@ -359,11 +359,11 @@ class SectionHeader extends StatelessWidget {
         children: [
           Semantics(
             header: true,
-            child: Text(label, style: TypeScale.label(emphasis ? c.signal : c.ink2)),
+            child: Text(label, style: TypeScale.label(emphasis ? c.late : c.ink2)),
           ),
           if (count != null) ...[
             const SizedBox(width: 6),
-            Text('$count', style: TypeScale.label(emphasis ? c.signal : c.ink3)),
+            Text('$count', style: TypeScale.label(emphasis ? c.late : c.ink3)),
           ],
           const Spacer(),
           ?trailing,
@@ -591,7 +591,7 @@ class HaizBanner extends StatelessWidget {
     final color = switch (tone) {
       BannerTone.neutral => c.ink2,
       BannerTone.warning => c.amber,
-      BannerTone.danger => c.signal,
+      BannerTone.danger => c.late,
       BannerTone.ok => c.green,
     };
     return Container(
@@ -887,12 +887,19 @@ Future<T?> showHaizSheet<T>(
   );
 }
 
+/// Height of the floating chrome the toast must clear (set by the shell).
+abstract final class ChromeLift {
+  static double value = 10;
+}
+
 /// Toast with an optional undo. Always says exactly where data went.
 void showToast(BuildContext context, String message, {String? action, VoidCallback? onAction, Duration? duration}) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
   messenger.hideCurrentSnackBar();
   messenger.showSnackBar(SnackBar(
+    // Floats above whatever glass chrome is currently on screen.
+    margin: EdgeInsets.fromLTRB(12, 0, 12, ChromeLift.value),
     content: Text(message),
     duration: duration ?? Duration(seconds: action == null ? 3 : 5),
     action: action == null ? null : SnackBarAction(label: action, onPressed: onAction ?? () {}),

@@ -19,6 +19,8 @@ class HaizColors {
     required this.rule,
     required this.ruleStrong,
     required this.signal,
+    required this.now,
+    required this.late,
     required this.amber,
     required this.green,
     required this.inverse,
@@ -49,13 +51,18 @@ class HaizColors {
   final Color rule;
   final Color ruleStrong;
 
-  /// 朱 — now, overdue, completion tick. Never decoration.
+  /// Semantic pigments. Each state has its own hue AND its own form, so no
+  /// colour carries two meanings:
+  ///   朱砂 signal — the completion tick (批改) and nothing else.
+  ///   群青 now    — the present: current class, time line, running focus,
+  ///                 things due today.
+  ///   胭脂 late   — overdue, always with a "逾期" label and a notch mark.
+  ///   藤黄 amber  — needs confirmation (unclear dates, pending review).
+  ///   松绿 green  — saved / synced.
   final Color signal;
-
-  /// Needs confirmation (unclear OCR date, pending review).
+  final Color now;
+  final Color late;
   final Color amber;
-
-  /// Confirmed / saved.
   final Color green;
 
   /// Filled primary buttons and toasts.
@@ -63,6 +70,8 @@ class HaizColors {
   final Color onInverse;
 
   Color get signalSoft => signal.withValues(alpha: dark ? .16 : .09);
+  Color get nowSoft => now.withValues(alpha: dark ? .20 : .10);
+  Color get lateSoft => late.withValues(alpha: dark ? .20 : .09);
   Color get amberSoft => amber.withValues(alpha: dark ? .18 : .11);
 
   static const light = HaizColors(
@@ -76,6 +85,8 @@ class HaizColors {
     rule: Color(0xFFE2DED3),
     ruleStrong: Color(0xFFCBC5B8),
     signal: Color(0xFFD13C20),
+    now: Color(0xFF2F4FB8),
+    late: Color(0xFFB0244E),
     amber: Color(0xFF9C6410),
     green: Color(0xFF2E7653),
     inverse: Color(0xFF17181A),
@@ -94,6 +105,8 @@ class HaizColors {
     rule: Color(0xFF2B2D30),
     ruleStrong: Color(0xFF3B3E42),
     signal: Color(0xFFFF6B4F),
+    now: Color(0xFF8EA6FF),
+    late: Color(0xFFFF6F95),
     amber: Color(0xFFE2A445),
     green: Color(0xFF6DBB8E),
     inverse: Color(0xFFECEAE5),

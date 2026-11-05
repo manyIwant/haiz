@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/pocket_store.dart';
 import '../../design/components.dart';
+import '../../design/motion_text.dart';
 import '../../design/theme.dart';
 import '../../design/tokens.dart';
 import '../../domain/planning.dart';
@@ -22,12 +23,18 @@ Route<void> focusRoute(PocketStore store) => PageRouteBuilder<void>(
   pageBuilder: (context, animation, secondary) => FocusScreen(store: store),
   transitionsBuilder: (context, animation, secondary, child) {
     if (HaizTheme.of(context).reduceMotion) return child;
+    // Rises from the bottom chrome; on close it sinks back towards the
+    // focus capsule while the title and clock fly into it.
     final curved = CurvedAnimation(parent: animation, curve: Motion.enter, reverseCurve: Motion.exit);
     return FadeTransition(
       opacity: curved,
       child: SlideTransition(
-        position: Tween(begin: const Offset(0, .08), end: Offset.zero).animate(curved),
-        child: child,
+        position: Tween(begin: const Offset(0, .14), end: Offset.zero).animate(curved),
+        child: ScaleTransition(
+          alignment: Alignment.bottomCenter,
+          scale: Tween(begin: 0.94, end: 1.0).animate(curved),
+          child: child,
+        ),
       ),
     );
   },
@@ -129,7 +136,7 @@ class FocusScreen extends StatelessWidget {
                     if (store.storageError != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(store.storageError!, style: TypeScale.footnote(c.signal)),
+                        child: Text(store.storageError!, style: TypeScale.footnote(c.late)),
                       ),
                     Pressable(
                       onTap: idle ? () => _chooseTask(context) : null,
@@ -138,8 +145,14 @@ class FocusScreen extends StatelessWidget {
                       child: Row(children: [
                         if (task != null) ...[SubjectMark(task.subject, showLabel: false), const SizedBox(width: 8)],
                         Expanded(
-                          child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis,
-                              style: TypeScale.headline(c.ink)),
+                          // Shared with the task row it came from, and with
+                          // the focus capsule it collapses into.
+                          child: HeroText(
+                            tag: idle && task != null ? 'task-title-${task.id}' : 'focus-title',
+                            text: label,
+                            maxLines: 2,
+                            style: TypeScale.headline(c.ink),
+                          ),
                         ),
                         if (idle) Text(task == null ? '选择任务' : '更换', style: TypeScale.footnote(c.ink2)),
                         if (idle) Icon(Icons.chevron_right_rounded, color: c.ink3, size: 20),
@@ -156,14 +169,18 @@ class FocusScreen extends StatelessWidget {
                             liveRegion: false,
                             label: '剩余 ${remaining ~/ 60} 分 ${remaining % 60} 秒',
                             excludeSemantics: true,
-                            child: Text(
-                              clockText(remaining),
-                              key: const Key('focus-clock'),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 76, height: 1, fontWeight: FontWeight.w300,
-                                letterSpacing: -2, color: store.focusPaused ? c.ink2 : c.ink,
-                                fontFeatures: TypeScale.tabular,
+                            child: Center(
+                              child: HeroText(
+                                key: const Key('focus-clock'),
+                                tag: 'focus-clock',
+                                enabled: !idle,
+                                text: clockText(remaining),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 76, height: 1, fontWeight: FontWeight.w300,
+                                  letterSpacing: -2, color: store.focusPaused ? c.ink2 : c.ink,
+                                  fontFeatures: TypeScale.tabular,
+                                ),
                               ),
                             ),
                           ),
@@ -177,7 +194,7 @@ class FocusScreen extends StatelessWidget {
                                 elapsed: total - remaining,
                                 ink: c.ink,
                                 rule: c.ruleStrong,
-                                needle: c.signal,
+                                needle: c.now,
                               ),
                             ),
                           ),
@@ -250,7 +267,7 @@ class FocusScreen extends StatelessWidget {
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('继续专注')),
                                 TextButton(onPressed: () => Navigator.pop(d, true),
-                                    child: Text('放弃', style: TextStyle(color: c.signal))),
+                                    child: Text('放弃', style: TextStyle(color: c.late))),
                               ],
                             ),
                           );
@@ -335,59 +352,4 @@ class _RulerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RulerPainter old) => old.elapsed != elapsed || old.total != total || old.ink != ink;
-}
-
-/// Mini player for an active session, pinned above the tab bar.
-class FocusBar extends StatelessWidget {
-  const FocusBar({super.key, required this.store, required this.onOpen});
-  final PocketStore store;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    return ListenableBuilder(
-      listenable: store,
-      builder: (context, _) {
-        final session = store.focusSession;
-        return AnimatedSize(
-          duration: context.haiz.motion(Motion.base),
-          curve: Motion.enter,
-          alignment: Alignment.bottomCenter,
-          child: session == null ? const SizedBox(width: double.infinity) : Pressable(
-            key: const Key('focus-bar'),
-            onTap: onOpen,
-            color: c.surface,
-            semanticLabel: '打开专注',
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(border: Border(top: BorderSide(color: c.rule, width: .6))),
-              padding: const EdgeInsets.only(left: Space.gutter, right: 6),
-              child: Row(children: [
-                Container(width: 6, height: 6, decoration: BoxDecoration(
-                    color: store.focusRunning ? c.signal : c.ink3, shape: BoxShape.circle)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '${store.focusRunning ? '专注中' : '已暂停'} · ${store.taskById(session.taskId)?.title ?? session.label}',
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: TypeScale.footnote(c.ink),
-                  ),
-                ),
-                ValueListenableBuilder<int>(
-                  valueListenable: store.focusClock,
-                  builder: (context, _, _) => Text(clockText(store.focusRemaining),
-                      style: TypeScale.label(c.ink).copyWith(fontSize: 15)),
-                ),
-                IconButton(
-                  tooltip: store.focusRunning ? '暂停' : '继续',
-                  onPressed: store.focusRunning ? store.pauseFocus : store.startFocus,
-                  icon: Icon(store.focusRunning ? Icons.pause_rounded : Icons.play_arrow_rounded, color: c.ink),
-                ),
-              ]),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }

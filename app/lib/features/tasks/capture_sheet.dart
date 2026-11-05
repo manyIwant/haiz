@@ -141,7 +141,7 @@ class _CaptureSheetState extends State<CaptureSheet> {
                   HaizChip(
                     key: const Key('capture-date-suggestion'),
                     label: '识别到「${suggestion.label.split(' · ').first}」· ${suggestion.date.month}月${suggestion.date.day}日',
-                    tone: c.signal,
+                    tone: c.now,
                     leading: const Icon(Icons.auto_awesome_outlined),
                     selected: false,
                     onTap: () => setState(() => _due = suggestion.date),

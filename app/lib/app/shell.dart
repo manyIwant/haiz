@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,7 +19,11 @@ import '../features/tasks/tasks_screen.dart';
 import '../features/today/today_screen.dart';
 import '../ui/academic_page.dart';
 import '../ui/pocket_account_sheet.dart';
+import '../design/morph_route.dart';
+import '../glass/glass.dart';
+import '../glass/glass_prefs.dart';
 import '../ui/ticker_lab_page.dart';
+import 'chrome.dart';
 import 'nav.dart';
 
 /// Five destinations by frequency of use. Focus is a mode reached from a
@@ -52,6 +55,10 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
   bool _hasUpdate = false;
   late final AnimationController _fade = AnimationController(
     vsync: this, duration: Motion.base, value: 1);
+  final GlobalKey _captureAnchor = GlobalKey();
+  final Map<HaizTab, GlobalKey> _tabKeys = {for (final t in HaizTab.values) t: GlobalKey()};
+  final ValueNotifier<(HaizTab, int)?> _pulse = ValueNotifier(null);
+  int _pulses = 0;
 
   PocketStore get store => widget.store;
 
@@ -93,6 +100,7 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
   void dispose() {
     store.removeListener(_onStore);
     _fade.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
@@ -110,10 +118,42 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
     if (!HaizTheme.of(context).reduceMotion) _fade.forward(from: 0);
   }
 
+  /// Shows where something went: a token travels from [from] into the tab
+  /// that now holds it, which bumps once on arrival.
+  @override
+  void deliver(HaizTab tab, Rect from, String label) {
+    final overlay = Overlay.maybeOf(context);
+    final target = _tabKeys[tab]?.currentContext?.findRenderObject() as RenderBox?;
+    void bump() => _pulse.value = (tab, ++_pulses);
+    if (overlay == null || target == null || !target.attached || HaizTheme.of(context).reduceMotion) {
+      bump();
+      return;
+    }
+    final to = target.localToGlobal(target.size.center(Offset.zero));
+    late OverlayEntry entry;
+    entry = OverlayEntry(builder: (_) => DeliveryToken(
+      from: from.center,
+      to: to,
+      label: label,
+      colors: context.c,
+      onArrive: bump,
+      onDone: () => entry.remove(),
+    ));
+    overlay.insert(entry);
+  }
+
   @override
   Future<void> capture({bool memo = false, String? initialText}) async {
-    final result = await showHaizSheet<CaptureResult>(
+    // The sheet grows out of the "+" it came from (or, from the keyboard
+    // shortcut or an empty state, out of the bottom edge).
+    final anchor = _captureAnchor.currentContext?.findRenderObject() as RenderBox?;
+    final size = MediaQuery.sizeOf(context);
+    final origin = anchor != null && anchor.hasSize && anchor.attached
+        ? anchor.localToGlobal(Offset.zero) & anchor.size
+        : Rect.fromLTWH(size.width / 2 - 28, size.height - 80, 56, 56);
+    final result = await showMorphSheet<CaptureResult>(
       context,
+      origin: origin,
       builder: (_) => CaptureSheet(store: store, memo: memo, initialText: initialText),
     );
     if (!mounted || result == null) return;
@@ -205,7 +245,11 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
           key: key,
           store: store,
           session: widget.auth.authenticated ? null : widget.session,
-          onSaved: () => goTab(HaizTab.tasks),
+          onSaved: () {},
+          onCommitted: (from, count) {
+            deliver(HaizTab.tasks, from, '+$count');
+            showToast(context, '已加入待办 $count 项', action: '查看', onAction: () => goTab(HaizTab.tasks));
+          },
         ),
       HaizTab.me => MeScreen(key: key),
     };
@@ -214,8 +258,10 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    const tabBarHeight = 56.0;
-    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    final media = MediaQuery.of(context);
+    final bottomSafe = media.padding.bottom;
+    final barBottom = bottomSafe + ChromeMetrics.gap;
+    final rowBottom = barBottom + ChromeMetrics.barHeight + 12;
     return HaizScope(
       store: store,
       auth: widget.auth,
@@ -238,52 +284,82 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
             child: Scaffold(
               backgroundColor: c.canvas,
               resizeToAvoidBottomInset: false,
-              // Real Scaffold slots, so toasts and the capture button sit
-              // above the tab bar and focus bar instead of covering them.
-              floatingActionButton: ListenableBuilder(
-                listenable: store,
-                builder: (context, _) => _CaptureButton(
-                  visible: (_tab == HaizTab.today || _tab == HaizTab.tasks) &&
-                      store.ready && store.writable,
-                  onTap: () => capture(memo: false),
-                ),
-              ),
-              bottomNavigationBar: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FocusBar(store: store, onOpen: () => openFocus()),
-                  _TabBar(
-                    tab: _tab,
-                    onSelect: goTab,
-                    bottomSafe: bottomSafe,
-                    height: tabBarHeight,
-                    inboxBadge: InboxScreen.pendingBadge,
-                    meBadge: _hasUpdate,
+              body: ValueListenableBuilder<String>(
+                valueListenable: GlassPreference.value,
+                builder: (context, pref, _) => GlassScope(
+                  mode: GlassPreference.resolve(context, pref),
+                  dark: c.dark,
+                  paper: c.canvas,
+                  ink: c.inverse,
+                  ground: c.canvas,
+                  // Pages run under the floating chrome; their scroll content
+                  // is padded so the last row can always rise above it.
+                  content: MediaQuery(
+                    data: media.copyWith(padding: media.padding.copyWith(bottom: barBottom + ChromeMetrics.barHeight)),
+                    child: Stack(children: [
+                      for (final tab in HaizTab.values)
+                        if (_visited.contains(tab))
+                          Positioned.fill(
+                            child: Offstage(
+                              offstage: tab != _tab,
+                              child: TickerMode(
+                                enabled: tab == _tab,
+                                // Same structure for every tab, so a tab keeps
+                                // its state when not visible; shared-element
+                                // transitions only consider the visible tab.
+                                child: HeroMode(
+                                  enabled: tab == _tab,
+                                  child: FadeTransition(
+                                    opacity: tab == _tab
+                                        ? CurvedAnimation(parent: _fade, curve: Motion.standard)
+                                        : kAlwaysCompleteAnimation,
+                                    child: _page(tab),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                    ]),
                   ),
-                ],
-              ),
-              body: Stack(
-                children: [
-                  for (final tab in HaizTab.values)
-                    if (_visited.contains(tab))
-                      Positioned.fill(
-                        child: Offstage(
-                          offstage: tab != _tab,
-                          child: TickerMode(
-                            enabled: tab == _tab,
-                            // Same widget structure for every tab, so a
-                            // tab keeps its state (scroll, drafts) when
-                            // it is not the visible one.
-                            child: FadeTransition(
-                              opacity: tab == _tab
-                                  ? CurvedAnimation(parent: _fade, curve: Motion.standard)
-                                  : kAlwaysCompleteAnimation,
-                              child: _page(tab),
+                  overlay: ListenableBuilder(
+                    listenable: store,
+                    builder: (context, _) {
+                      final capture = (_tab == HaizTab.today || _tab == HaizTab.tasks) && store.ready && store.writable;
+                      final focus = store.focusSession != null;
+                      ChromeMetrics.lift = (focus || capture ? rowBottom + ChromeMetrics.rowHeight : barBottom + ChromeMetrics.barHeight) + 8;
+                      return Stack(children: [
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: rowBottom,
+                          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                            Expanded(child: focus ? FocusCapsule(store: store, onOpen: () => openFocus()) : const SizedBox.shrink()),
+                            if (focus && capture) const SizedBox(width: 10),
+                            GlassCaptureButton(anchor: _captureAnchor, visible: capture, onTap: () => this.capture()),
+                          ]),
+                        ),
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: barBottom,
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 520),
+                              child: GlassTabBar(
+                                tab: _tab,
+                                onSelect: goTab,
+                                inboxBadge: InboxScreen.pendingBadge,
+                                meBadge: _hasUpdate,
+                                pulse: _pulse,
+                                itemKeys: _tabKeys,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                ],
+                      ]);
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -295,207 +371,3 @@ class HaizShellState extends State<HaizShell> with TickerProviderStateMixin impl
 
 class _SearchIntent extends Intent { const _SearchIntent(); }
 class _CaptureIntent extends Intent { const _CaptureIntent(); }
-
-class _CaptureButton extends StatelessWidget {
-  const _CaptureButton({required this.visible, required this.onTap});
-  final bool visible;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    final motion = context.haiz.motion(Motion.base);
-    return AnimatedSlide(
-      duration: motion,
-      curve: Motion.enter,
-      offset: Offset(0, visible ? 0 : .4),
-      child: AnimatedOpacity(
-        duration: motion,
-        opacity: visible ? 1 : 0,
-        child: IgnorePointer(
-          ignoring: !visible,
-          child: Tooltip(
-            message: '新建（Ctrl/⌘ N）',
-            excludeFromSemantics: true,
-            child: Semantics(
-              button: true,
-              label: '新建任务或备忘',
-              excludeSemantics: true,
-              child: _Press(
-                onTap: onTap,
-                child: Container(
-                  key: const Key('capture-button'),
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: c.inverse,
-                    borderRadius: BorderRadius.circular(17),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: c.dark ? .5 : .16),
-                          blurRadius: 14, offset: const Offset(0, 6)),
-                    ],
-                  ),
-                  child: Icon(Icons.add_rounded, color: c.onInverse, size: 28),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Press extends StatefulWidget {
-  const _Press({required this.child, required this.onTap});
-  final Widget child;
-  final VoidCallback onTap;
-  @override
-  State<_Press> createState() => _PressState();
-}
-
-class _PressState extends State<_Press> {
-  bool _down = false;
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTapDown: (_) => setState(() => _down = true),
-    onTapUp: (_) => setState(() => _down = false),
-    onTapCancel: () => setState(() => _down = false),
-    onTap: widget.onTap,
-    child: MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: AnimatedScale(
-        scale: _down && !context.haiz.reduceMotion ? .93 : 1,
-        duration: Motion.press,
-        child: widget.child,
-      ),
-    ),
-  );
-}
-
-/// Solid tab bar on paper. The selected tab is marked by ink weight and a
-/// short vermilion stroke at the top edge that travels with spring physics.
-class _TabBar extends StatelessWidget {
-  const _TabBar({
-    required this.tab,
-    required this.onSelect,
-    required this.bottomSafe,
-    required this.height,
-    required this.inboxBadge,
-    required this.meBadge,
-  });
-
-  final HaizTab tab;
-  final ValueChanged<HaizTab> onSelect;
-  final double bottomSafe;
-  final double height;
-  final ValueListenable<int> inboxBadge;
-  final bool meBadge;
-
-  static const _items = [
-    (HaizTab.today, '今天', Icons.wb_sunny_outlined, Icons.wb_sunny_rounded),
-    (HaizTab.tasks, '待办', Icons.check_circle_outline_rounded, Icons.check_circle_rounded),
-    (HaizTab.schedule, '课表', Icons.grid_view_outlined, Icons.grid_view_rounded),
-    (HaizTab.inbox, '收件', Icons.move_to_inbox_outlined, Icons.move_to_inbox_rounded),
-    (HaizTab.me, '我的', Icons.person_outline_rounded, Icons.person_rounded),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    final index = _items.indexWhere((e) => e.$1 == tab);
-    return Container(
-      decoration: BoxDecoration(
-        color: c.canvas,
-        border: Border(top: BorderSide(color: c.rule, width: .6)),
-      ),
-      padding: EdgeInsets.only(bottom: bottomSafe),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: SizedBox(
-            height: height,
-            child: LayoutBuilder(builder: (context, box) {
-              final cell = box.maxWidth / _items.length;
-              return Stack(children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(end: index.toDouble()),
-                  duration: context.haiz.motion(Motion.slow),
-                  curve: Curves.easeOutBack,
-                  builder: (context, v, _) => Positioned(
-                    top: 0,
-                    left: v * cell + cell / 2 - 10,
-                    child: Container(width: 20, height: 2,
-                        decoration: BoxDecoration(color: c.signal, borderRadius: BorderRadius.circular(1))),
-                  ),
-                ),
-                Row(children: [
-                  for (final (i, item) in _items.indexed)
-                    Expanded(
-                      child: Semantics(
-                        selected: i == index,
-                        button: true,
-                        label: item.$2,
-                        excludeSemantics: true,
-                        child: GestureDetector(
-                          key: Key('tab-${item.$1.name}'),
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            if (i != index) HapticFeedback.selectionClick();
-                            onSelect(item.$1);
-                          },
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Stack(clipBehavior: Clip.none, children: [
-                                  Icon(i == index ? item.$4 : item.$3, size: 23,
-                                      color: i == index ? c.ink : c.ink3),
-                                  if (item.$1 == HaizTab.inbox)
-                                    ValueListenableBuilder<int>(
-                                      valueListenable: inboxBadge,
-                                      builder: (context, n, _) => n == 0
-                                          ? const SizedBox.shrink()
-                                          : Positioned(right: -9, top: -4, child: _Badge('$n')),
-                                    ),
-                                  if (item.$1 == HaizTab.me && meBadge)
-                                    Positioned(right: -2, top: -1, child: Container(width: 7, height: 7,
-                                        decoration: BoxDecoration(color: c.signal, shape: BoxShape.circle))),
-                                ]),
-                                const SizedBox(height: 3),
-                                Text(item.$2, style: TypeScale.micro(i == index ? c.ink : c.ink3)
-                                    .copyWith(fontWeight: i == index ? FontWeight.w700 : FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ]),
-              ]);
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 16),
-      height: 16,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(color: c.signal, borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: c.canvas, width: 1.5)),
-      alignment: Alignment.center,
-      child: Text(text, style: const TextStyle(fontSize: 9.5, height: 1, color: Colors.white, fontWeight: FontWeight.w700)),
-    );
-  }
-}

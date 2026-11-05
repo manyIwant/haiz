@@ -46,7 +46,12 @@ class InboxScreen extends StatefulWidget {
   final PocketStore store;
   final VoidCallback onSaved;
   final AcademicSession? session;
-  const InboxScreen({super.key, required this.store, required this.onSaved, this.session});
+  const InboxScreen({super.key, required this.store, required this.onSaved, this.session, this.onCommitted});
+
+  /// Called after confirmed candidates are saved, with where the confirm
+  /// button is (global) and how many tasks were added, so the shell can show
+  /// where they went.
+  final void Function(Rect from, int count)? onCommitted;
 
   /// Device messages waiting for review, for the tab badge and 今天.
   /// Zero whenever the current principal has not unlocked the device queue.
@@ -58,6 +63,7 @@ class InboxScreen extends StatefulWidget {
 
 class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
   late final _input = TextEditingController(text: widget.store.draft('inbox'));
+  final _commitKey = GlobalKey();
   bool _showOriginal = false;
   final List<_Draft> _drafts = [];
   String? _notice;
@@ -609,7 +615,13 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
           ? '已加入 $added 项任务。'
           : '已加入 $added 项任务；${selected.length - added} 项与现有任务相同，已跳过。';
     });
-    if (added > 0) widget.onSaved();
+    if (added > 0) {
+      final box = _commitKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box != null && box.attached && box.hasSize) {
+        widget.onCommitted?.call(box.localToGlobal(Offset.zero) & box.size, added);
+      }
+      widget.onSaved();
+    }
   }
 
   void _saveAsMemo() {
@@ -914,12 +926,15 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
         ),
       Padding(
         padding: const EdgeInsets.fromLTRB(Space.gutter, 10, Space.gutter, 0),
-        child: HaizButton(
+        child: KeyedSubtree(
+          key: _commitKey,
+          child: HaizButton(
           key: const Key('inbox-commit'),
           label: selected == 0 ? '加入待办' : '加入待办（$selected 项）',
           icon: Icons.playlist_add_check_rounded,
           expand: true,
           onPressed: selected == 0 ? null : _commit,
+        ),
         ),
       ),
       if (classMember) ...[
@@ -1067,7 +1082,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
                   if (mounted) setState(() => _notice = '清零诊断计数失败，请重试。');
                 }
               }),
-              LinkAction('清空本机待审核消息', color: c.signal, onTap: () async {
+              LinkAction('清空本机待审核消息', color: c.late, onTap: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (dialog) => AlertDialog(

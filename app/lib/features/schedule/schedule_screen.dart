@@ -111,10 +111,10 @@ class WeekGrid extends StatelessWidget {
                 width: cell,
                 child: Column(children: [
                   Text(weekdayName(d).substring(1),
-                      style: TypeScale.label(d == now.weekday ? c.signal : c.ink2)),
+                      style: TypeScale.label(d == now.weekday ? c.now : c.ink2)),
                   const SizedBox(height: 1),
                   Text('${monday.add(Duration(days: d - 1)).day}',
-                      style: TypeScale.micro(d == now.weekday ? c.signal : c.ink3)),
+                      style: TypeScale.micro(d == now.weekday ? c.now : c.ink3)),
                 ]),
               ),
           ]),
@@ -225,7 +225,7 @@ class _Cell extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(5, 5, 3, 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Radii.block),
-            border: live ? Border.all(color: c.signal, width: 1.6) : null,
+            border: live ? Border.all(color: c.now, width: 1.6) : null,
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(course.name, maxLines: 1, overflow: TextOverflow.clip,
@@ -278,7 +278,7 @@ class _DayStrip extends StatelessWidget {
                     opacity: d == selected || coursesForDay(courses, d).isNotEmpty ? 1 : .45,
                     child: Column(children: [
                       Text(weekdayName(d).substring(1), style: TypeScale.label(
-                          d == selected ? c.onInverse : (d == now.weekday ? c.signal : c.ink2))),
+                          d == selected ? c.onInverse : (d == now.weekday ? c.now : c.ink2))),
                       const SizedBox(height: 2),
                       Text('${monday.add(Duration(days: d - 1)).day}', style: TypeScale.micro(
                           d == selected ? c.onInverse.withValues(alpha: .7) : c.ink3)),
@@ -334,7 +334,7 @@ class _DayList extends StatelessWidget {
               ]),
             ),
             Container(width: 3, height: 38, margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(color: live ? c.signal : subjectColor(course.name, dark: c.dark)
+                decoration: BoxDecoration(color: live ? c.now : subjectColor(course.name, dark: c.dark)
                     .withValues(alpha: past ? .35 : 1), borderRadius: BorderRadius.circular(1.5))),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -343,7 +343,7 @@ class _DayList extends StatelessWidget {
                     style: TypeScale.footnote(c.ink2)),
               ]),
             ),
-            if (live) Text('进行中', style: TypeScale.caption(c.signal).copyWith(fontWeight: FontWeight.w600)),
+            if (live) Text('进行中', style: TypeScale.caption(c.now).copyWith(fontWeight: FontWeight.w600)),
           ]),
         ),
       ));
@@ -363,10 +363,10 @@ class _NowLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Space.gutter - 4),
       child: Row(children: [
-        Text(minutesText(minute), style: TypeScale.micro(c.signal).copyWith(fontWeight: FontWeight.w700)),
+        Text(minutesText(minute), style: TypeScale.micro(c.now).copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(width: 6),
-        Container(width: 5, height: 5, decoration: BoxDecoration(color: c.signal, shape: BoxShape.circle)),
-        Expanded(child: Container(height: 1.2, color: c.signal)),
+        Container(width: 5, height: 5, decoration: BoxDecoration(color: c.now, shape: BoxShape.circle)),
+        Expanded(child: Container(height: 1.2, color: c.now)),
       ]),
     );
   }
@@ -402,7 +402,7 @@ Future<void> showCourseDetail(BuildContext context, {required PocketStore store,
             showCourseEditor(context, store: store, course: course, weekday: course.weekday);
           }),
           const Spacer(),
-          LinkAction('删除这节课', color: c.signal, onTap: () {
+          LinkAction('删除这节课', color: c.late, onTap: () {
             final ticket = store.generation;
             store.deleteCourse(course.id);
             Navigator.pop(sheet);

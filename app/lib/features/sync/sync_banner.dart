@@ -101,7 +101,7 @@ class SyncLine extends StatelessWidget {
           SyncPhase.idle => ('', c.ink3),
           SyncPhase.saving => (s.cloud ? '正在保存到云端…' : '正在保存…', c.ink3),
           SyncPhase.saved => (s.cloud ? '已同步到云端$at' : '已保存在这台设备$at', c.ink3),
-          SyncPhase.failed => (s.cloud ? '云端保存失败' : '本机保存失败', c.signal),
+          SyncPhase.failed => (s.cloud ? '云端保存失败' : '本机保存失败', c.late),
           SyncPhase.conflict => ('云端有更新的版本', c.amber),
         };
         return Text(text, style: TypeScale.caption(color));

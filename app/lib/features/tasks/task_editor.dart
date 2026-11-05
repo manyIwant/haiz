@@ -143,7 +143,7 @@ class _TaskEditorState extends State<TaskEditor> {
           TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('继续编辑')),
           TextButton(
             onPressed: () => Navigator.pop(dialog, true),
-            child: Text('放弃', style: TextStyle(color: context.c.signal)),
+            child: Text('放弃', style: TextStyle(color: context.c.late)),
           ),
         ],
       ),
@@ -262,7 +262,7 @@ class _TaskEditorState extends State<TaskEditor> {
                     widget.actions!.openFocus(taskId: task.id);
                   }),
                 const Spacer(),
-                LinkAction('删除', color: c.signal, icon: Icons.delete_outline_rounded, onTap: () {
+                LinkAction('删除', color: c.late, icon: Icons.delete_outline_rounded, onTap: () {
                   final ticket = store.generation;
                   final noteText = store.noteFor(task.id);
                   store.deleteTask(task.id);

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/nav.dart';
 import '../../core/pocket_store.dart';
 import '../../design/components.dart';
+import '../../design/motion_text.dart';
 import '../../design/theme.dart';
 import '../../design/tokens.dart';
 import '../../domain/planning.dart';
@@ -44,7 +45,8 @@ class TaskRow extends StatelessWidget {
     final done = task.completed || completing;
     final bucket = bucketOf(task, now);
     final due = showDue ? dueLabel(task, now) : '';
-    final urgent = !done && (bucket == DueBucket.overdue || bucket == DueBucket.today);
+    final late = !done && bucket == DueBucket.overdue;
+    final today = !done && bucket == DueBucket.today;
     final row = Pressable(
       onTap: onOpen,
       onLongPress: () => _menu(context),
@@ -65,14 +67,16 @@ class TaskRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnimatedDefaultTextStyle(
-                      duration: context.haiz.motion(Motion.base),
+                    HeroText(
+                      tag: 'task-title-${task.id}',
+                      enabled: !done,
+                      text: task.title,
+                      maxLines: 3,
                       style: TypeScale.body(done ? c.ink3 : c.ink).copyWith(
                         decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
                         decorationColor: c.ink3,
                         decorationThickness: 1.2,
                       ),
-                      child: Text(task.title, maxLines: 3, overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(height: 3),
                     Wrap(
@@ -81,9 +85,7 @@ class TaskRow extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         SubjectMark(task.subject),
-                        if (due.isNotEmpty)
-                          Text(due, style: TypeScale.caption(urgent ? c.signal : c.ink2)
-                              .copyWith(fontWeight: urgent ? FontWeight.w600 : FontWeight.w400)),
+                        if (due.isNotEmpty) DueTag(due, late: late, today: today),
                         if (task.source.isNotEmpty)
                           Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(task.source == '来自备忘' ? Icons.sticky_note_2_outlined : Icons.move_to_inbox_outlined,
@@ -109,7 +111,7 @@ class TaskRow extends StatelessWidget {
       direction: DismissDirection.endToStart,
       dismissThresholds: const {DismissDirection.endToStart: .35},
       background: Container(
-        color: c.signal,
+        color: c.late,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         child: const Text('删除', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -139,6 +141,50 @@ class TaskRow extends StatelessWidget {
       case 'delete': onDelete?.call();
     }
   }
+}
+
+/// Due label. Overdue is a distinct form — a notch mark beside the label —
+/// not only a colour; due today is the "now" pigment.
+class DueTag extends StatelessWidget {
+  const DueTag(this.text, {super.key, this.late = false, this.today = false});
+  final String text;
+  final bool late;
+  final bool today;
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final color = late ? c.late : today ? c.now : c.ink2;
+    final label = Text(text, style: TypeScale.caption(color)
+        .copyWith(fontWeight: late || today ? FontWeight.w600 : FontWeight.w400));
+    if (!late) return label;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      CustomPaint(size: const Size(8, 10), painter: _Notch(c.late)),
+      const SizedBox(width: 3),
+      label,
+    ]);
+  }
+}
+
+class _Notch extends CustomPainter {
+  _Notch(this.color);
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size size) {
+    // A small pennant: reads as "flagged", unlike the round tick.
+    final p = Path()
+      ..moveTo(1, 0.5)
+      ..lineTo(size.width, size.height * .32)
+      ..lineTo(1, size.height * .64)
+      ..close();
+    canvas.drawPath(p, Paint()..color = color);
+    canvas.drawLine(const Offset(1, 0.5), Offset(1, size.height), Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(_Notch old) => old.color != color;
 }
 
 /// A grouped task list that handles completion the way people expect:
