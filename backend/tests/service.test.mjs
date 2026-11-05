@@ -374,11 +374,13 @@ test('every application page requires login while registration and account asset
     for (const path of ['/', '/index.html', '/world/flow/', '/haiz/world/atlas-engine.html']) {
       const response = await fetch(f.origin + path, { redirect: 'manual' });
       assert.equal(response.status, 302, path);
-      assert.ok(response.headers.get('location').startsWith('/account/?next='));
+      assert.ok(response.headers.get('location').startsWith('/login/?next='));
     }
-    const account = await f.call('/account/');
-    assert.equal(account.status, 200);
-    assert.match(account.data, /我的数据/);
+    const account = await fetch(f.origin + '/account/', { redirect: 'manual' });
+    assert.equal(account.status, 302);
+    assert.ok(account.headers.get('location').startsWith('/login/'));
+    const lamp = await f.call('/login/');
+    assert.equal(lamp.status, 200); assert.match(lamp.data, /class="wall"/); assert.match(lamp.data, /lamp-auth\.js/);
     assert.equal((await f.call('/account/app.js')).status, 200);
     assert.equal((await f.call('/api/v1/auth/config')).data.registration, true);
     const u = await f.register();
@@ -438,7 +440,7 @@ test('main-branch static layout requires login and never serves private files or
     const page = await fetch(service.origin + '/', { headers: { Cookie: registered.headers.get('set-cookie').split(';')[0] } });
     assert.equal(page.status, 200); assert.match(await page.text(), /current-main-campus/);
     assert.equal((await fetch(service.origin + '/assets/style.css')).status, 200);
-    assert.equal((await fetch(service.origin + '/login/', { redirect: 'manual' })).headers.get('location'), '/account/');
+    assert.equal((await fetch(service.origin + '/login/', { redirect: 'manual' })).status, 200);
   } finally { await service?.close(); await rm(root, { recursive: true, force: true }); }
 });
 
@@ -458,5 +460,41 @@ test('SDK and legacy-page requests remain bound to their verified identity acros
     assert.equal(legacy.status, 409); assert.equal(legacy.data.identityChanged, true);
     const html = (await f.call('/world/flow/', { cookie: a.cookie })).data;
     assert.match(html, /session-guard\.js/); assert.ok(html.includes(a.data.identity.id));
+  } finally { await f.close(); }
+});
+
+test('existing lamp authentication endpoints establish and verify real server sessions', async () => {
+  const f = await fixture();
+  try {
+    assert.equal((await f.call('/api/auth/session')).status, 401);
+    const registered = await f.call('/api/auth/register', { body: { username: 'lamp-user', password, remember: false } });
+    assert.equal(registered.status, 201); assert.equal(registered.data.authenticated, true);
+    assert.ok(!registered.headers.get('set-cookie').includes('Max-Age'));
+    const session = await f.call('/api/auth/session', { cookie: registered.cookie });
+    assert.equal(session.data.authenticated, true); assert.equal(session.data.identity.name, 'lamp-user');
+    await f.call('/api/auth/logout', { cookie: registered.cookie, body: {} });
+    assert.equal((await f.call('/api/auth/session', { cookie: registered.cookie })).status, 401);
+    assert.equal((await f.call('/api/auth/login', { body: { username: 'lamp-user', password: 'not-the-password' } })).status, 401);
+    assert.equal((await f.call('/api/auth/login', { body: { username: 'lamp-user', password, remember: true } })).data.authenticated, true);
+    const teacher = await f.provision();
+    const invitation = await f.call('/api/flow/admin/invite', { cookie: f.admin.cookie, body: { account: teacher.data.identity.name } });
+    const invited = await f.call('/api/flow/login', { body: { invite: invitation.data.invite, remember: false } });
+    assert.equal(invited.status, 200); assert.ok(!invited.headers.get('set-cookie').includes('Max-Age'));
+  } finally { await f.close(); }
+});
+
+test('formal lamp login retains its visual source and account center is only a signed-in management page', async () => {
+  const f = await fixture();
+  try {
+    for (const route of ['/', '/account/']) {
+      const response = await fetch(f.origin + route, { redirect: 'manual' });
+      assert.equal(response.status, 302); assert.ok(response.headers.get('location').startsWith('/login/?next='));
+    }
+    const lamp = await f.call('/login/');
+    assert.equal(lamp.status, 200); assert.match(lamp.data, /class="wall"/); assert.match(lamp.data, /wall-photo\.webp/); assert.match(lamp.data, /lamp-auth\.js/);
+    assert.ok(!lamp.data.includes('进入本机访客空间'));
+    const user = await f.register();
+    assert.match((await f.call('/account/', { cookie: user.cookie })).data, /我的数据/);
+    assert.equal((await f.call('/src/account/lamp-auth.js')).status, 200);
   } finally { await f.close(); }
 });

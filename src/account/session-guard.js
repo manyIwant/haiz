@@ -3,7 +3,7 @@
   const owner = document.currentScript?.dataset.haizUser;
   if (!owner) return;
   const original = window.fetch.bind(window); let locked = false;
-  const target = '/account/?next=' + encodeURIComponent(location.pathname + location.search);
+  const target = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
   const lock = () => {
     if (locked) return; locked = true;
     document.documentElement.style.visibility = 'hidden';

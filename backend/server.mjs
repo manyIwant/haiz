@@ -41,7 +41,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
   const counters = { requests: 0, errors: 0, active: 0 }; const started = Date.now();
   let closing = false, closePromise;
   const cookieName = development ? 'haiz_session' : '__Host-haiz_session';
-  const cookie = (value, seconds) => `${cookieName}=${value}; Path=/; HttpOnly; SameSite=Strict${development ? '' : '; Secure'}; Max-Age=${seconds}`;
+  const cookie = (value, seconds, persistent = true) => `${cookieName}=${value}; Path=/; HttpOnly; SameSite=Strict${development ? '' : '; Secure'}${persistent ? '; Max-Age=' + seconds : ''}`;
   const getToken = req => String(req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith(cookieName + '='))?.slice(cookieName.length + 1) || '';
   const json = async req => {
     check(/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || ''), 415, '只接受 application/json');
@@ -84,7 +84,8 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
       check(!req.headers['sec-fetch-site'] || req.headers['sec-fetch-site'] !== 'cross-site', 403, '拒绝跨站请求');
       const url = new URL(req.url, origin);
       check(url.origin === origin.origin, 403, '请求来源无效');
-      const route = url.pathname;
+      const authAliases = { '/api/auth/login': '/api/v1/auth/login', '/api/auth/register': '/api/v1/auth/register', '/api/auth/session': '/api/v1/auth/me', '/api/auth/logout': '/api/v1/auth/logout' };
+      const route = authAliases[url.pathname] || url.pathname;
       let address = req.socket.remoteAddress;
       if (!development && behindProxy) {
         // Caddy must overwrite this dedicated header; never trust public X-Forwarded-For.
@@ -94,9 +95,16 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
       }
       if (['GET', 'HEAD'].includes(req.method) && !route.startsWith('/api/')) {
         category = 'static';
+        if (['/account/', '/account/index.html'].includes(route)) {
+          try { await database.call('authenticate', { tokenHash: hash(getToken(req)) }); }
+          catch (error) {
+            if (error.status !== 401) throw error;
+            res.writeHead(302, { Location: '/login/?next=' + encodeURIComponent('/account/'), 'Cache-Control': 'no-store' }); res.end(); return;
+          }
+        }
         if (await serveAccount(req, res, route)) return;
-        if (['/login', '/login/', '/login/index.html', '/account'].includes(route)) {
-          res.writeHead(302, { Location: '/account/', 'Cache-Control': 'no-store' }); res.end(); return;
+        if (['/login', '/account'].includes(route)) {
+          res.writeHead(302, { Location: route === '/login' ? '/login/' : '/account/', 'Cache-Control': 'no-store' }); res.end(); return;
         }
         if (route.endsWith('/sw.js') || route.endsWith('/flutter_service_worker.js')) {
           res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -107,7 +115,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
           try { req.haizIdentity = (await database.call('authenticate', { tokenHash: hash(getToken(req)) })).identity.id; }
           catch (error) {
             if (error.status !== 401) throw error;
-            res.writeHead(302, { Location: '/account/?next=' + encodeURIComponent(route + url.search), 'Cache-Control': 'no-store' }); res.end(); return;
+            res.writeHead(302, { Location: '/login/?next=' + encodeURIComponent(route + url.search), 'Cache-Control': 'no-store' }); res.end(); return;
           }
         }
         if (route === '/haiz-client.js') {
@@ -142,9 +150,9 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
           }
         }
         if (result.identity.role === 'admin') await unlink(bootstrapFile).catch(() => {});
-        res.setHeader('Set-Cookie', cookie(token, Math.ceil(sessionMs / 1000)));
+        res.setHeader('Set-Cookie', cookie(token, Math.ceil(sessionMs / 1000), input.remember !== false));
         const { sessionId, ...publicResult } = result;
-        return reply(res, route.endsWith('/register') ? 201 : 200, publicResult);
+        return reply(res, route.endsWith('/register') ? 201 : 200, { ...publicResult, authenticated: true });
       }
       check(route.startsWith('/api/'), 404, '接口不存在');
       const token = getToken(req); check(/^[\w-]{43}$/.test(token), 401, '请先登录');
@@ -155,7 +163,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
       limits.take('session:' + auth.sessionId, 600);
       if (['/api/v1/auth/me', '/api/flow/me'].includes(route) && req.method === 'GET') {
         category = 'me'; const credential = await database.call('credentials', { name: who.name });
-        return reply(res, 200, { identity: who, hasPassword: Boolean(credential?.passwordHash), expiresAt: auth.expiresAt, demo: false, serverTime: new Date().toISOString() });
+        return reply(res, 200, { identity: who, authenticated: true, hasPassword: Boolean(credential?.passwordHash), expiresAt: auth.expiresAt, demo: false, serverTime: new Date().toISOString() });
       }
       if (route === '/api/v1/auth/sessions' && req.method === 'GET') { category = 'sessions'; return reply(res, 200, await authorizedCall('sessions')); }
       if (route === '/api/v1/auth/revoke' && req.method === 'POST') {

@@ -39,40 +39,10 @@ async function signedIn(result, announce = false) {
   renderDashboard(); await load();
 }
 function renderAuth() {
-  main.replaceChildren(); const shell = node('div', undefined, 'login-shell'), intro = node('section', undefined, 'intro');
-  intro.append(node('span', 'haiz', 'brand'), node('h1', '你的校园，\n从自己的账号开始。'), node('p', '便签、收藏与偏好，留在自己的空间里。换一台设备，登录后接着用。'));
-  const mark = node('div', undefined, 'account-mark'); mark.append(node('span'), node('p', '个人账号 · 独立保存')); intro.append(mark);
-  const panel = node('section', undefined, 'auth-panel'); panel.append(node('h2', mode === 'register' ? '创建你的账号' : mode === 'invite' ? '接受账号邀请' : '登录 HAIZ'), node('p', '只有登录后，才能进入校园和个人空间。', 'muted'));
-  const tabs = node('div', undefined, 'mode-tabs');
-  for (const [value, label] of [['login', '登录'], ['register', '注册']]) {
-    const b = button(label, () => { mode = value; renderAuth(); }); b.setAttribute('aria-pressed', String(mode === value)); if (value === 'register' && !registration) b.disabled = true; tabs.append(b);
-  }
-  panel.append(tabs); const form = node('form', undefined, 'form-stack'), error = errorNode();
-  if (mode === 'invite') form.append(field('一次性邀请码', 'invite', { type: 'password', maxLength: 100, autocomplete: 'off' }));
-  else {
-    const username = field('账号名', 'username', { maxLength: 40, autocomplete: 'username' });
-    username.querySelector('input').pattern = '[A-Za-z0-9][A-Za-z0-9_-]{2,39}';
-    username.append(node('small', '3 至 40 位字母、数字、下划线或短横线。'));
-    const password = field('密码', 'password', { type: 'password', maxLength: 256, autocomplete: mode === 'register' ? 'new-password' : 'current-password' });
-    if (mode === 'register') { password.querySelector('input').minLength = 12; password.append(node('small', '至少 12 个字符。请勿使用其他网站的密码。')); }
-    form.append(username, password);
-    if (mode === 'register') form.append(field('再次输入密码', 'confirmPassword', { type: 'password', maxLength: 256, autocomplete: 'new-password' }));
-  }
-  const submit = node('button', mode === 'register' ? '注册并进入' : mode === 'invite' ? '验证邀请' : '登录并进入', 'primary'); submit.type = 'submit';
-  form.append(error, submit); form.onsubmit = event => {
-    event.preventDefault(); error.textContent = ''; const data = Object.fromEntries(new FormData(form));
-    if (mode === 'register' && data.password !== data.confirmPassword) { error.textContent = '两次密码不一致，请重新核对。'; return; }
-    void safe(async () => {
-    if (mode === 'invite') await api.inviteLogin(data.invite);
-      else if (mode === 'register') await api.register(data.username, data.password);
-      else await api.login(data.username, data.password);
-      announceIdentity(); form.reset(); await signedIn(await api.me());
-    }, e => { error.textContent = e.message; });
-  };
-  panel.append(form); const foot = node('div', undefined, 'auth-foot');
-  foot.append(node('small', registration ? '每个账号只访问自己的个人记录。教师与管理权限由管理员单独授予。' : '当前暂不开放新账号注册，请使用已有账号或邀请。'), button(mode === 'invite' ? '返回密码登录' : '使用管理员提供的邀请', () => { mode = mode === 'invite' ? 'login' : 'invite'; renderAuth(); }, 'text-button'));
-  panel.append(foot); shell.append(intro, panel); main.append(shell);
+  main.replaceChildren(node('div', '正在返回灯光登录页…', 'boot'));
+  location.replace('/login/?next=' + encodeURIComponent(nextPage() || '/account/'));
 }
+
 function renderDashboard() {
   main.replaceChildren(); const header = node('header', undefined, 'site-header'), logo = node('a', 'haiz', 'brand'); logo.href = '/';
   const actions = node('div', undefined, 'actions'), campus = node('a', '进入校园 ↗', 'campus-link'); campus.href = '/';
@@ -192,7 +162,6 @@ async function verify() {
   try { const result = await api.me(); if (ticket !== epoch) return; if (!account) await signedIn(result); else if (account.identity.id !== result.identity.id) { lock(); await signedIn(result); } }
   catch (e) { if (ticket !== epoch) return; if (e.status === 401) lock(); else { main.replaceChildren(node('div', '暂时无法验证账号，请检查网络后刷新。', 'boot')); } }
 }
-registration = (await api.config().catch(() => ({ registration: false }))).registration;
 await verify();
 setInterval(() => { if (account && !document.hidden && !busy) void verify(); }, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !busy) void verify(); });
