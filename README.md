@@ -27,6 +27,10 @@
 此处为开发预览版，并非学校官方 App；Android 自动收件必须由本人启用且授权，完整 QA 和实机性能测试尚未通过，不宣称稳定商用。
 
 
+## 主页：会生长的榄仁树
+
+`index.html` 是一棵会生长的大叶榄仁，按九宫格视觉参考重构为六个连续的电影镜头：远景初遇、贴近树干仰望、逆光新叶微距、树冠上方俯瞰、透过树冠远眺、全盛远景。每个镜头打开 HAIZ 的一个真实板块（校园探索、档案、地图与来访、杂志与创作、工具与全部入口）。滚动推动同一个相机，同时树从冬末满树红叶到红叶飘落、抽梢、展叶，直到枝繁叶茂。树在 Blender 中程序化生成（主枝美术设定 + 空间殖民细枝），是依物种特征创作的概念模型（非测绘）；生长是逐顶点、逐叶片的结构变化；滚动由 GSAP ScrollTrigger 驱动。原降落镜头保留在 `descent.html`，杂志首页在 `journal.html`。设计、技术、参考对照截图与验证见 [主页 v3](docs/lanren-homepage-v3-20261104.md)；之后的视觉深化（叶片、树形、依实拍重建的太湖石、各板块从树出发的转场、手机构图）见 [主页 V4](docs/lanren-homepage-v4-20261104.md)。
+
 ## 本轮升级
 
 - 第二轮航拍核对补两排球场之间的树荫带、六处解释性树池及通道，三处地图共享田径场轮廓，修正足球场禁区和起跑线方向。阵雨改为屋顶空间索引与雨线列缓存，保留全部雨丝、阴影与分辨率；原算法雨线逐字节及实际画面一致性通过检查。详见 [运动区补全与阵雨性能](docs/aerial-median-rain-20261020.md)。
@@ -66,7 +70,8 @@
 
 | 页面 | 内容 |
 | --- | --- |
-| `index.html` | 默认首页：地球到校园降落体验，与 `descent.html` 同源 |
+| `index.html` | 默认首页：会生长的榄仁树，绕树一圈进入全站（由 `scripts/lanren/build-home.mjs` 生成） |
+| `descent.html` | 原首页：从地球到校园的降落镜头 |
 | `journal.html` | 原校园杂志首页 |
 | `architecture.html` | 实拍观察手册与互动 3D 材质实验室 |
 | `director.html` | 自选路线、校园平面图及本机取景集 |
@@ -104,7 +109,8 @@ python3 -m http.server 8000
 - 漫游数据：`assets/walk/campus.json`，保留原空间骨架及两个坐标锚点
 - 航拍核对与运动区配置：`data/campus-sports.json`；场地几何和地图缓存在 `assets/walk/sports.js`、`assets/walk/map.js`
 - 全站交互与样式：`assets/js/journal.js`、`assets/css/journal.css`，探索台与转场在 `assets/js/experience.js`、`assets/css/experience.css`
-- 默认首页生成与共享资源注入：`scripts/build-experience.cjs`；编辑 `descent.html` 后执行完整构建
+- 主页（榄仁树）：`index.html`、`lanren/`；树与纹理的生成脚本在 `scripts/lanren/`
+- 共享资源注入：`scripts/build-experience.cjs`（不再改写 `index.html`）
 - 第一人称交互、空间与室内：`assets/walk/`
 - 路线与机位：`assets/walk/journey-core.js`、`assets/walk/view-store.js`；导演台界面 `assets/js/director.js`
 - 云雨与湿润：`assets/walk/climate.js`；保持原有 Three r128 与晨光/雨后/薄暮标识
