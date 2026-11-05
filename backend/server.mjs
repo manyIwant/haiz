@@ -11,12 +11,14 @@ import { hash, secret, passwords, rateLimiter } from './auth.mjs';
 import { createRooms } from './rooms.mjs';
 import { staticHandler } from './static.mjs';
 import { serveAccount } from './web.mjs';
+import { createBackupScheduler } from './maintenance.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
 export async function createService({ directory = path.join(ROOT, '.haiz-data'), development = false,
   publicOrigin, behindProxy = false, port = 8790, sessionMs = 8 * 3600000, inviteMs = 30 * 60000,
-  authLimit = 30, registration = true, logger = entry => console.log(JSON.stringify(entry)), root = ROOT } = {}) {
+  authLimit = 30, registration = true, backupIntervalMs = development ? 0 : 86400000,
+  logger = entry => console.log(JSON.stringify(entry)), root = ROOT } = {}) {
   const dataPath = path.resolve(directory);
   check(![path.join(root, 'public'), path.join(root, 'dist')].some(p => dataPath === p || dataPath.startsWith(p + path.sep)), 500, '数据目录必须位于静态目录之外');
   let origin = publicOrigin ? new URL(publicOrigin) : null;
@@ -24,6 +26,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
   check(!origin || (origin.pathname === '/' && !origin.search && !origin.hash && !origin.username && !origin.password), 500, '服务来源须为独立来源');
   check(!development || !origin || (origin.protocol === 'http:' && LOOPBACK.has(origin.hostname)), 500, '开发模式仅允许本机 HTTP 来源');
   check(Number.isInteger(port) && port >= 0 && port <= 65535 && sessionMs > 0 && inviteMs > 0, 500, '服务配置无效');
+  check(Number.isSafeInteger(backupIntervalMs) && (backupIntervalMs === 0 || (backupIntervalMs >= 3600000 && backupIntervalMs <= 168 * 3600000)), 500, '备份间隔配置无效');
   const database = await openDatabase(dataPath);
   const bootstrapFile = path.join(dataPath, 'bootstrap-invite.txt');
   let bootstrap;
@@ -37,6 +40,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
   const initialized = await database.call('bootstrap', { tokenHash: hash(bootstrap), inviteMs });
   if (!initialized.created) await unlink(bootstrapFile).catch(() => {});
   const authPasswords = passwords(), limits = rateLimiter(), rooms = createRooms(database), serveStatic = staticHandler(root, await realpath(dataPath));
+  const scheduler = createBackupScheduler({ database, directory: dataPath, intervalMs: backupIntervalMs, logger });
   const histogram = monitorEventLoopDelay({ resolution: 20 }); histogram.enable();
   const counters = { requests: 0, errors: 0, active: 0 }; const started = Date.now();
   let closing = false, closePromise;
@@ -131,7 +135,10 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
       if (route === '/api/health' && req.method === 'GET') { category = 'health'; return reply(res, 200, { ok: true, service: 'haiz', version: '1.0.0' }); }
       if (route === '/api/ready' && req.method === 'GET') { category = 'ready'; return reply(res, 200, await database.call('ready')); }
       if (route === '/api/v1/auth/config' && req.method === 'GET') return reply(res, 200, { registration, loginRequired: true });
-      check(/^\/api\/(?:flow\/(?:login|logout|me|drafts|workspace|feed|publish|revoke|admin(?:\/(?:invite|revoke))?)|v1\/(?:auth\/(?:register|login|logout|logout-all|me|password|sessions|revoke|account)|admin\/metrics|data\/[^/]+(?:\/[^/]+)?|rooms(?:\/[^/]+\/(?:events|position|messages))?))$/.test(route), 404, '接口不存在');
+      const recoveryRoute = /^\/api\/v1\/data\/([^/]+)\/([^/]+)\/(history|restore)$/.exec(route);
+      const trashRoute = /^\/api\/v1\/trash\/([^/]+)$/.exec(route);
+      const personalQuery = ['/api/v1/search', '/api/v1/usage', '/api/v1/activity'].includes(route);
+      check(recoveryRoute || trashRoute || personalQuery || /^\/api\/(?:flow\/(?:login|logout|me|drafts|workspace|feed|publish|revoke|admin(?:\/(?:invite|revoke))?)|v1\/(?:auth\/(?:register|login|logout|logout-all|me|password|sessions|revoke|account)|admin\/metrics|data\/[^/]+(?:\/[^/]+)?|rooms(?:\/[^/]+\/(?:events|position|messages))?))$/.test(route), 404, '接口不存在');
       const isInviteLogin = route === '/api/flow/login';
       if (['/api/v1/auth/register', '/api/v1/auth/login'].includes(route) || isInviteLogin) {
         category = 'auth'; check(req.method === 'POST', 405, '方法不支持');
@@ -196,7 +203,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
       }
       if (route === '/api/v1/admin/metrics' && req.method === 'GET') {
         category = 'metrics'; check(who.role === 'admin', 403, '需要管理员权限');
-        return reply(res, 200, { ...await authorizedCall('metrics'), ...rooms.metrics, ...counters, uptimeSeconds: Math.floor((Date.now() - started) / 1000), databaseQueue: database.pending, eventLoopP99Ms: Number((histogram.percentile(99) / 1e6).toFixed(2)), memoryBytes: process.memoryUsage().rss });
+        return reply(res, 200, { ...await authorizedCall('metrics'), ...rooms.metrics, ...counters, uptimeSeconds: Math.floor((Date.now() - started) / 1000), databaseQueue: database.pending, eventLoopP99Ms: Number((histogram.percentile(99) / 1e6).toFixed(2)), memoryBytes: process.memoryUsage().rss, backup: scheduler.status });
       }
       if (route === '/api/flow/admin' || route.startsWith('/api/flow/admin/')) {
         category = 'admin'; check(who.role === 'admin', 403, '需要管理员权限');
@@ -211,6 +218,28 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
           const result = await authorizedCall('revoke', { id: input.id }); rooms.closeSession(input.id); return reply(res, 200, result);
         }
         throw fail(404, '管理接口不存在');
+      }
+      if (recoveryRoute) {
+        category = 'personal-' + recoveryRoute[3];
+        const restoring = recoveryRoute[3] === 'restore';
+        check(req.method === (restoring ? 'POST' : 'GET'), 405, '方法不支持');
+        const args = { collection: recoveryRoute[1], id: recoveryRoute[2] };
+        if (restoring) args.input = (await json(req)).input;
+        return reply(res, 200, await authorizedCall(restoring ? 'personalRestore' : 'personalHistory', args));
+      }
+      if (trashRoute) {
+        category = 'personal-trash'; check(req.method === 'GET', 405, '方法不支持');
+        return reply(res, 200, await authorizedCall('personalTrash', { collection: trashRoute[1], limit: Number(url.searchParams.get('limit') ?? 100), cursor: url.searchParams.get('cursor') ?? '' }));
+      }
+      if (personalQuery) {
+        check(req.method === 'GET', 405, '方法不支持');
+        if (route === '/api/v1/usage') { category = 'personal-usage'; return reply(res, 200, await authorizedCall('personalUsage')); }
+        if (route === '/api/v1/activity') {
+          category = 'personal-activity';
+          return reply(res, 200, await authorizedCall('personalActivity', { limit: Number(url.searchParams.get('limit') ?? 50), cursor: url.searchParams.get('cursor') ?? '' }));
+        }
+        category = 'personal-search';
+        return reply(res, 200, await authorizedCall('personalSearch', { q: url.searchParams.get('q'), collection: url.searchParams.get('collection') ?? undefined, limit: Number(url.searchParams.get('limit') ?? 100), cursor: url.searchParams.get('cursor') ?? '' }));
       }
       const dataRoute = /^\/api\/v1\/data\/([^/]+)(?:\/([^/]+))?$/.exec(route);
       if (dataRoute) {
@@ -263,6 +292,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
         await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.off('error', reject); resolve(); }); });
       } catch (error) { await service.close(); throw error; }
       if (!origin) origin = new URL(`http://127.0.0.1:${server.address().port}`);
+      scheduler.start();
       return origin.origin;
     },
     backup: destination => database.call('backup', { destination: path.resolve(destination) }),
@@ -271,6 +301,7 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
         closing = true; clearInterval(cleanup); rooms.close(); histogram.disable();
         const force = setTimeout(() => server.closeAllConnections(), 10000); force.unref();
         await new Promise(resolve => server.close(resolve)); clearTimeout(force);
+        await scheduler.stop();
         await database.close();
       })(); return closePromise;
     },
@@ -281,8 +312,10 @@ export async function createService({ directory = path.join(ROOT, '.haiz-data'),
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.umask(0o077);
   const development = process.argv.includes('--dev');
+  const backupHours = process.env.HAIZ_BACKUP_INTERVAL_HOURS;
+  check(backupHours === undefined || (/^\d+$/.test(backupHours) && Number(backupHours) <= 168), 500, '备份间隔配置无效');
   const service = await createService({ development, publicOrigin: process.env.HAIZ_PUBLIC_ORIGIN, behindProxy: process.env.HAIZ_BEHIND_PROXY === '1', directory: process.env.HAIZ_DATA_DIR,
-    port: Number(process.env.PORT || 8790), registration: process.env.HAIZ_REGISTRATION !== '0' });
+    port: Number(process.env.PORT || 8790), registration: process.env.HAIZ_REGISTRATION !== '0', ...(backupHours === undefined ? {} : { backupIntervalMs: Number(backupHours) * 3600000 }) });
   await service.listen();
   console.log(JSON.stringify({ event: 'ready', origin: service.origin, bootstrapFile: service.bootstrapFile }));
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { void service.close().then(() => process.exit(0)); });

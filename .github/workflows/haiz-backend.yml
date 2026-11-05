@@ -21,6 +21,7 @@ jobs:
         run: |
           node --check backend/server.mjs
           node --check backend/repository.mjs
+          node --check backend/maintenance.mjs
           node --check src/account/app.js
           node --check src/account/lamp-auth.js
           node --check src/account/session-guard.js

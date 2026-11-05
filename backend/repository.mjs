@@ -6,13 +6,24 @@ import { check, fail, text, revision, date, username } from './errors.mjs';
 
 const identity = row => ({ id: row.id, name: row.name, role: row.role, scope: row.scope, scopes: JSON.parse(row.scopes) });
 const parse = row => row ? JSON.parse(row.data) : null;
+const collections = ['notes', 'bookmarks', 'preferences'];
+const retention = { days: 30, perItem: 20, perUser: 2000 };
+const historyCutoff = () => Date.now() - retention.days * 86400000;
+const personalCollection = collection => check(collections.includes(collection), 404, '数据集合不存在');
+const personalId = id => check(typeof id === 'string' && /^[\w-]{1,100}$/.test(id), 400, '数据 ID 无效');
+const pageLimit = limit => check(Number.isInteger(limit) && limit > 0 && limit <= 200, 400, '分页参数无效');
+const itemCursor = cursor => check(typeof cursor === 'string' && /^[\w-]{0,100}$/.test(cursor), 400, '分页参数无效');
+const numberCursor = cursor => {
+  check(typeof cursor === 'string' && (cursor === '' || (/^[1-9]\d{0,15}$/.test(cursor) && Number.isSafeInteger(Number(cursor)))), 400, '分页参数无效');
+};
 export function createRepository(directory) {
   mkdirSync(directory, { recursive: true, mode: 0o700 }); chmodSync(directory, 0o700);
   const file = join(directory, 'haiz.sqlite');
   const db = new DatabaseSync(file); chmodSync(file, 0o600);
   const schemaVersion = db.prepare('PRAGMA user_version').get().user_version;
-  if (schemaVersion > 2) { db.close(); throw Error('数据库版本高于当前服务，请使用匹配版本'); }
-  db.exec(`PRAGMA busy_timeout=3000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON;
+  if (schemaVersion > 3) { db.close(); throw Error('数据库版本高于当前服务，请使用匹配版本'); }
+  try {
+    db.exec(`PRAGMA busy_timeout=3000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON;
     BEGIN IMMEDIATE;
     CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, password_hash TEXT,
       role TEXT NOT NULL CHECK(role IN ('student','teacher','display','admin')), scope TEXT NOT NULL, scopes TEXT NOT NULL, created_at INTEGER NOT NULL);
@@ -27,9 +38,18 @@ export function createRepository(directory) {
     CREATE TABLE IF NOT EXISTS personal_data(owner TEXT NOT NULL REFERENCES users(id), collection TEXT NOT NULL, id TEXT NOT NULL, revision INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, data TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(owner,collection,id));
     CREATE TABLE IF NOT EXISTS requests(owner TEXT NOT NULL REFERENCES users(id), key TEXT NOT NULL, hash TEXT NOT NULL, result TEXT NOT NULL, expires_at INTEGER NOT NULL, PRIMARY KEY(owner,key));
     CREATE INDEX IF NOT EXISTS requests_expiry ON requests(expires_at);
-    CREATE TABLE IF NOT EXISTS audit(sequence INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT NOT NULL, action TEXT NOT NULL, target TEXT NOT NULL, at TEXT NOT NULL);
-    COMMIT;`);
-  if (schemaVersion < 2) db.exec('BEGIN IMMEDIATE; ALTER TABLE audit ADD COLUMN revision INTEGER; PRAGMA user_version=2; COMMIT;');
+    CREATE TABLE IF NOT EXISTS audit(sequence INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT NOT NULL, action TEXT NOT NULL, target TEXT NOT NULL, at TEXT NOT NULL);`);
+    if (schemaVersion < 2) db.exec('ALTER TABLE audit ADD COLUMN revision INTEGER;');
+    db.exec(`CREATE TABLE IF NOT EXISTS personal_versions(owner TEXT NOT NULL REFERENCES users(id), collection TEXT NOT NULL, id TEXT NOT NULL,
+      revision INTEGER NOT NULL, deleted INTEGER NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL, stored_at INTEGER NOT NULL, PRIMARY KEY(owner,collection,id,revision));
+      CREATE INDEX IF NOT EXISTS personal_data_active ON personal_data(owner,deleted,collection,id);
+      CREATE INDEX IF NOT EXISTS personal_versions_retention ON personal_versions(owner,stored_at,collection,id,revision);
+      CREATE INDEX IF NOT EXISTS audit_actor_sequence ON audit(actor,sequence DESC);
+      PRAGMA user_version=3; COMMIT;`);
+  } catch (error) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    db.close(); throw error;
+  }
   const statements = new Map();
   const stmt = sql => { if (!statements.has(sql)) statements.set(sql, db.prepare(sql)); return statements.get(sql); };
   const get = (sql, ...values) => stmt(sql).get(...values);
@@ -57,6 +77,26 @@ export function createRepository(directory) {
     return { identity: identity(user), expiresAt, sessionId: id };
   };
   const item = row => ({ id: row.id, revision: row.revision, data: JSON.parse(row.data), updatedAt: row.updated_at, deleted: Boolean(row.deleted) });
+  const personalRow = (who, collection, id) => get('SELECT * FROM personal_data WHERE owner=? AND collection=? AND id=?', who.id, collection, id);
+  const pruneHistory = (owner, collection, id) => {
+    exec('DELETE FROM personal_versions WHERE owner=? AND stored_at<=?', owner, historyCutoff());
+    exec(`DELETE FROM personal_versions WHERE owner=? AND collection=? AND id=? AND revision IN
+      (SELECT revision FROM personal_versions WHERE owner=? AND collection=? AND id=? ORDER BY revision DESC LIMIT -1 OFFSET ?)`, owner, collection, id, owner, collection, id, retention.perItem);
+    exec(`DELETE FROM personal_versions WHERE owner=? AND (collection,id,revision) IN
+      (SELECT collection,id,revision FROM personal_versions WHERE owner=? ORDER BY stored_at DESC,collection,id,revision DESC LIMIT -1 OFFSET ?)`, owner, owner, retention.perUser);
+  };
+  const archivePersonal = row => {
+    if (!row) return;
+    exec('INSERT INTO personal_versions VALUES(?,?,?,?,?,?,?,?)', row.owner, row.collection, row.id, row.revision, row.deleted, row.data, row.updated_at, Date.now());
+    pruneHistory(row.owner, row.collection, row.id);
+  };
+  const writePersonal = (who, collection, id, old, data, deleted, action) => {
+    archivePersonal(old);
+    exec('INSERT INTO personal_data VALUES(?,?,?,?,?,?,?) ON CONFLICT(owner,collection,id) DO UPDATE SET revision=excluded.revision,deleted=excluded.deleted,data=excluded.data,updated_at=excluded.updated_at', who.id, collection, id, (old?.revision || 0) + 1, deleted ? 1 : 0, JSON.stringify(data), new Date().toISOString());
+    const row = personalRow(who, collection, id);
+    audit(who.id, action, collection + ':' + id, row.revision);
+    return { item: item(row) };
+  };
   const record = id => parse(get('SELECT data FROM records WHERE id=?', id));
   const putRecord = (kind, owner, data) => exec(`INSERT INTO records VALUES(?,?,?,?,?,?,?,?,?)
     ON CONFLICT(id) DO UPDATE SET scope=excluded.scope,revision=excluded.revision,state=excluded.state,starts_at=excluded.starts_at,expires_at=excluded.expires_at,data=excluded.data`,
@@ -108,7 +148,10 @@ export function createRepository(directory) {
       return transaction(() => { const user = addUser({ name, passwordHash }); audit(user.id, 'registered', user.id); return session(user, tokenHash, sessionMs); });
     },
     login({ userId, credentialHash, tokenHash, sessionMs }) {
-      return transaction(() => { const user = get('SELECT * FROM users WHERE id=? AND password_hash=?', userId, credentialHash); check(user, 401, '账号或密码无效'); return session(user, tokenHash, sessionMs); });
+      return transaction(() => {
+        const user = get('SELECT * FROM users WHERE id=? AND password_hash=?', userId, credentialHash); check(user, 401, '账号或密码无效');
+        const result = session(user, tokenHash, sessionMs); audit(user.id, 'login', result.sessionId); return result;
+      });
     },
     claimInvite({ inviteHash, tokenHash, sessionMs }) {
       return transaction(() => {
@@ -116,7 +159,7 @@ export function createRepository(directory) {
         check(invitation, 401, '邀请码无效、已使用或已过期');
         const user = get('SELECT * FROM users WHERE id=?', invitation.user_id);
         exec('DELETE FROM invites WHERE token_hash=?', inviteHash); audit(user.id, 'invite_claimed', user.id);
-        return session(user, tokenHash, sessionMs);
+        const result = session(user, tokenHash, sessionMs); audit(user.id, 'login', result.sessionId); return result;
       });
     },
     authenticate({ tokenHash }) {
@@ -124,15 +167,25 @@ export function createRepository(directory) {
       check(row, 401, '会话已失效，请重新登录');
       return { identity: identity(row), sessionId: row.session_id, expiresAt: row.expires_at };
     },
-    logout({ sessionId }) { exec('DELETE FROM sessions WHERE id=?', sessionId); return { ok: true }; },
+    logout({ sessionId }) {
+      return transaction(() => {
+        const existing = get('SELECT user_id FROM sessions WHERE id=?', sessionId);
+        exec('DELETE FROM sessions WHERE id=?', sessionId);
+        if (existing) audit(existing.user_id, 'logout', sessionId);
+        return { ok: true };
+      });
+    },
     sessions({ who, sessionId }) {
       return { sessions: all('SELECT id,created_at AS createdAt,expires_at AS expiresAt FROM sessions WHERE user_id=? AND expires_at>? ORDER BY created_at DESC', who.id, Date.now()).map(s => ({ ...s, current: s.id === sessionId })) };
     },
     revokeOwn({ who, id }) {
-      check(exec('DELETE FROM sessions WHERE user_id=? AND id=?', who.id, text(id, 80, true)).changes > 0, 404, '会话不存在');
-      return { ok: true };
+      return transaction(() => {
+        id = text(id, 80, true);
+        check(exec('DELETE FROM sessions WHERE user_id=? AND id=?', who.id, id).changes > 0, 404, '会话不存在');
+        audit(who.id, 'session_revoked', id); return { ok: true };
+      });
     },
-    logoutAll({ who }) { exec('DELETE FROM sessions WHERE user_id=?', who.id); return { ok: true }; },
+    logoutAll({ who }) { return transaction(() => { exec('DELETE FROM sessions WHERE user_id=?', who.id); audit(who.id, 'logout_all', who.id); return { ok: true }; }); },
     deleteAccount({ who, expectedHash, confirm }) {
       return transaction(() => {
         check(confirm === who.name, 400, '请输入当前账号名确认注销');
@@ -140,7 +193,7 @@ export function createRepository(directory) {
         check(current && current.password_hash && current.password_hash === expectedHash, 409, '密码已变化，请重新验证');
         check(who.role !== 'admin' || get("SELECT count(*) AS n FROM users WHERE role='admin'").n > 1, 403, '最后一个管理员不能注销');
         for (const table of ['sessions', 'invites']) exec(`DELETE FROM ${table} WHERE user_id=?`, who.id);
-        for (const table of ['records', 'personal_data', 'requests']) exec(`DELETE FROM ${table} WHERE owner=?`, who.id);
+        for (const table of ['records', 'personal_data', 'personal_versions', 'requests']) exec(`DELETE FROM ${table} WHERE owner=?`, who.id);
         exec('DELETE FROM audit WHERE actor=?', who.id); exec('DELETE FROM users WHERE id=?', who.id);
         return { ok: true };
       });
@@ -182,32 +235,88 @@ export function createRepository(directory) {
         events: all('SELECT * FROM audit ORDER BY sequence DESC LIMIT 50'), limits: { sessions: 20, drafts: 500, notices: 1000 }, dataPolicy: '用户隔离；仅公开经教师确认的摘要' };
     },
     revoke({ who, id }) {
-      check(who.role === 'admin', 403, '需要管理员权限');
-      check(exec('DELETE FROM sessions WHERE id=?', text(id, 80, true)).changes > 0, 404, '会话不存在');
-      audit(who.id, 'session_revoked', id); return { ok: true };
+      return transaction(() => {
+        check(who.role === 'admin', 403, '需要管理员权限'); id = text(id, 80, true);
+        check(exec('DELETE FROM sessions WHERE id=?', id).changes > 0, 404, '会话不存在');
+        audit(who.id, 'session_revoked', id); return { ok: true };
+      });
     },
     personal({ who, method, collection, id, input, limit = 100, cursor = '' }) {
-      check(['notes', 'bookmarks', 'preferences'].includes(collection), 404, '数据集合不存在');
-      if (id !== undefined) check(/^[\w-]{1,100}$/.test(id), 400, '数据 ID 无效');
+      personalCollection(collection);
+      if (id !== undefined) personalId(id);
       if (method === 'GET') {
         if (id !== undefined) { const row = get('SELECT * FROM personal_data WHERE owner=? AND collection=? AND id=? AND deleted=0', who.id, collection, id); check(row, 404, '内容不存在'); return { item: item(row) }; }
-        check(Number.isInteger(limit) && limit > 0 && limit <= 200 && /^[\w-]{0,100}$/.test(cursor), 400, '分页参数无效');
+        pageLimit(limit); itemCursor(cursor);
         const rows = all('SELECT * FROM personal_data WHERE owner=? AND collection=? AND deleted=0 AND id>? ORDER BY id LIMIT ?', who.id, collection, cursor, limit + 1);
         return { items: rows.slice(0, limit).map(item), nextCursor: rows.length > limit ? rows[limit - 1].id : null };
       }
       check(id !== undefined && ['PUT', 'DELETE'].includes(method), 405, '方法不支持');
+      check(input && typeof input === 'object' && !Array.isArray(input), 400, '需要 JSON 对象');
       return transaction(() => {
-        const old = get('SELECT * FROM personal_data WHERE owner=? AND collection=? AND id=?', who.id, collection, id);
+        const old = personalRow(who, collection, id);
         check((old?.revision || 0) === revision(input.expectedRevision), 409, '另一台设备已更新，请刷新', { remote: old ? item(old) : null });
         check(method !== 'DELETE' || (old && !old.deleted), 404, '内容不存在');
         if (!old) check(get('SELECT count(*) AS n FROM personal_data WHERE owner=?', who.id).n < 5000, 429, '个人数据配额已满');
         const data = method === 'DELETE' ? null : input.data;
         check(method === 'DELETE' || (data && typeof data === 'object' && !Array.isArray(data)), 400, 'data 必须是对象');
         const raw = JSON.stringify(data); check(Buffer.byteLength(raw) <= 16000, 413, '个人数据过大');
-        const updatedAt = new Date().toISOString();
-        exec('INSERT INTO personal_data VALUES(?,?,?,?,?,?,?) ON CONFLICT(owner,collection,id) DO UPDATE SET revision=excluded.revision,deleted=excluded.deleted,data=excluded.data,updated_at=excluded.updated_at', who.id, collection, id, (old?.revision || 0) + 1, method === 'DELETE' ? 1 : 0, raw, updatedAt);
-        return { item: item(get('SELECT * FROM personal_data WHERE owner=? AND collection=? AND id=?', who.id, collection, id)) };
+        return writePersonal(who, collection, id, old, data, method === 'DELETE', method === 'DELETE' ? 'personal_deleted' : old ? 'personal_updated' : 'personal_created');
       });
+    },
+    personalHistory({ who, collection, id, limit = 100, cursor = '' }) {
+      personalCollection(collection); personalId(id); pageLimit(limit); numberCursor(cursor);
+      const current = personalRow(who, collection, id); check(current, 404, '内容不存在');
+      const rows = [current, ...all('SELECT * FROM personal_versions WHERE owner=? AND collection=? AND id=? AND stored_at>? ORDER BY revision DESC', who.id, collection, id, historyCutoff())];
+      return { items: rows.filter(row => !cursor || row.revision < Number(cursor)).slice(0, limit).map(item), retention: { ...retention } };
+    },
+    personalTrash({ who, collection, limit = 100, cursor = '' }) {
+      personalCollection(collection); pageLimit(limit); itemCursor(cursor);
+      const rows = all(`SELECT current.*,previous.data AS recoverable_data FROM personal_data AS current JOIN personal_versions AS previous
+        ON previous.owner=current.owner AND previous.collection=current.collection AND previous.id=current.id
+        AND previous.revision=(SELECT max(revision) FROM personal_versions WHERE owner=current.owner AND collection=current.collection AND id=current.id AND deleted=0 AND stored_at>?)
+        WHERE current.owner=? AND current.collection=? AND current.deleted=1 AND current.id>? ORDER BY current.id LIMIT ?`, historyCutoff(), who.id, collection, cursor, limit + 1);
+      return { items: rows.slice(0, limit).map(row => item({ ...row, data: row.recoverable_data })), nextCursor: rows.length > limit ? rows[limit - 1].id : null };
+    },
+    personalRestore({ who, collection, id, input }) {
+      personalCollection(collection); personalId(id);
+      check(input && typeof input === 'object' && !Array.isArray(input), 400, '需要 JSON 对象');
+      const expectedRevision = revision(input.expectedRevision);
+      if (input.revision !== undefined) check(revision(input.revision) > 0, 400, '需要有效版本号');
+      return transaction(() => {
+        const old = personalRow(who, collection, id); check(old, 404, '内容不存在');
+        check(old.revision === expectedRevision, 409, '另一台设备已更新，请刷新', { remote: item(old) });
+        check(input.revision !== undefined || old.deleted, 400, '请选择要恢复的历史版本');
+        const previous = input.revision === undefined
+          ? get('SELECT * FROM personal_versions WHERE owner=? AND collection=? AND id=? AND deleted=0 AND stored_at>? ORDER BY revision DESC LIMIT 1', who.id, collection, id, historyCutoff())
+          : get('SELECT * FROM personal_versions WHERE owner=? AND collection=? AND id=? AND revision=? AND deleted=0 AND stored_at>?', who.id, collection, id, input.revision, historyCutoff());
+        check(previous, 404, '可恢复版本不存在或已过期');
+        check(Buffer.byteLength(previous.data) <= 16000, 413, '个人数据过大');
+        return writePersonal(who, collection, id, old, JSON.parse(previous.data), false, 'personal_restored');
+      });
+    },
+    personalSearch({ who, q, collection, limit = 100, cursor = '' }) {
+      check(typeof q === 'string' && q.length > 0 && q.length <= 100, 400, '搜索文字须为 1 至 100 个字符');
+      if (collection !== undefined) personalCollection(collection);
+      pageLimit(limit);
+      check(typeof cursor === 'string' && (cursor === '' || /^(notes|bookmarks|preferences):[\w-]{1,100}$/.test(cursor)), 400, '分页参数无效');
+      const [afterCollection, afterId] = cursor ? cursor.split(':') : ['', ''];
+      const rows = all(`SELECT * FROM personal_data WHERE owner=? AND deleted=0 AND (? IS NULL OR collection=?)
+        AND (collection>? OR (collection=? AND id>?)) AND instr(lower(data),lower(?))>0 ORDER BY collection,id LIMIT ?`, who.id, collection ?? null, collection ?? null, afterCollection, afterCollection, afterId, q, limit + 1);
+      return { items: rows.slice(0, limit).map(row => ({ collection: row.collection, ...item(row) })), nextCursor: rows.length > limit ? rows[limit - 1].collection + ':' + rows[limit - 1].id : null };
+    },
+    personalUsage({ who }) {
+      const usage = Object.fromEntries(collections.map(name => [name, { active: 0, deleted: 0, bytes: 0 }]));
+      for (const row of all('SELECT collection,sum(deleted=0) AS active,sum(deleted=1) AS deleted,sum(length(CAST(data AS BLOB))) AS bytes FROM personal_data WHERE owner=? GROUP BY collection', who.id)) {
+        if (Object.hasOwn(usage, row.collection)) usage[row.collection] = { active: row.active, deleted: row.deleted, bytes: row.bytes };
+      }
+      const totals = Object.values(usage).reduce((sum, row) => ({ active: sum.active + row.active, deleted: sum.deleted + row.deleted, bytes: sum.bytes + row.bytes }), { active: 0, deleted: 0, bytes: 0 });
+      Object.assign(totals, get('SELECT coalesce(sum(length(CAST(data AS BLOB))),0) AS historyBytes,count(*) AS historyVersions FROM personal_versions WHERE owner=? AND stored_at>?', who.id, historyCutoff()));
+      return { collections: usage, totals, limits: { items: 5000, itemBytes: 16000, historyPerItem: retention.perItem, historyPerUser: retention.perUser, historyDays: retention.days } };
+    },
+    personalActivity({ who, limit = 50, cursor = '' }) {
+      pageLimit(limit); numberCursor(cursor);
+      const rows = all('SELECT sequence AS id,action,target,revision,at FROM audit WHERE actor=? AND sequence<? ORDER BY sequence DESC LIMIT ?', who.id, cursor ? Number(cursor) : Number.MAX_SAFE_INTEGER, limit + 1);
+      return { events: rows.slice(0, limit), nextCursor: rows.length > limit ? String(rows[limit - 1].id) : null };
     },
     flowRead({ who, route }) {
       if (route === 'me') return { identity: who, demo: false, serverTime: new Date().toISOString() };
@@ -218,7 +327,7 @@ export function createRepository(directory) {
       }
       check(who.role === 'teacher', 403, '仅教师可读自己的工作区');
       if (route === 'workspace') return { courses: all("SELECT data FROM records WHERE owner=? AND kind='course' ORDER BY id", who.id).map(parse), tasks: all("SELECT data FROM records WHERE owner=? AND kind='task' ORDER BY id", who.id).map(parse) };
-      if (route === 'drafts') return { drafts: all("SELECT data FROM records WHERE owner=? AND kind='draft' ORDER BY id", who.id).map(parse), notices: all("SELECT data FROM records WHERE owner=? AND kind='notice' ORDER BY id", who.id).map(parse), audit: all('SELECT sequence AS id,action,target AS objectId,revision,at FROM audit WHERE actor=? AND revision IS NOT NULL ORDER BY sequence DESC LIMIT 500', who.id).map(event => ({ ...event, actorId: who.name })), serverTime: new Date().toISOString() };
+      if (route === 'drafts') return { drafts: all("SELECT data FROM records WHERE owner=? AND kind='draft' ORDER BY id", who.id).map(parse), notices: all("SELECT data FROM records WHERE owner=? AND kind='notice' ORDER BY id", who.id).map(parse), audit: all("SELECT sequence AS id,action,target AS objectId,revision,at FROM audit WHERE actor=? AND revision IS NOT NULL AND action IN ('draft_saved','notice_published','notice_revoked','course_saved','task_saved') ORDER BY sequence DESC LIMIT 500", who.id).map(event => ({ ...event, actorId: who.name })), serverTime: new Date().toISOString() };
       throw fail(404, '接口不存在');
     },
     flowWrite({ who, route, input, key, hash, sessionId }) {
@@ -270,7 +379,7 @@ export function createRepository(directory) {
     },
     metrics() { return { users: get('SELECT count(*) AS n FROM users').n, sessions: get('SELECT count(*) AS n FROM sessions WHERE expires_at>?', Date.now()).n, records: get('SELECT count(*) AS n FROM records').n, personalItems: get('SELECT count(*) AS n FROM personal_data WHERE deleted=0').n }; },
     ready() { return { ok: get('SELECT 1 AS ok').ok === 1, schemaVersion: get('PRAGMA user_version').user_version }; },
-    cleanup() { return transaction(() => { for (const table of ['sessions', 'invites', 'requests']) exec(`DELETE FROM ${table} WHERE expires_at<=?`, Date.now()); exec('DELETE FROM audit WHERE sequence < (SELECT coalesce(max(sequence),0)-10000 FROM audit)'); return { ok: true }; }); },
+    cleanup() { return transaction(() => { for (const table of ['sessions', 'invites', 'requests']) exec(`DELETE FROM ${table} WHERE expires_at<=?`, Date.now()); exec('DELETE FROM personal_versions WHERE stored_at<=?', historyCutoff()); exec('DELETE FROM audit WHERE sequence < (SELECT coalesce(max(sequence),0)-10000 FROM audit)'); return { ok: true }; }); },
     async backup({ destination }) { check(resolve(destination) !== resolve(file), 400, '备份不能覆盖正在使用的数据库'); await backup(db, destination); chmodSync(destination, 0o600); return { ok: true }; },
     close() { db.exec('PRAGMA wal_checkpoint(TRUNCATE)'); db.close(); return { ok: true }; },
   };

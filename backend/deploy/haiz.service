@@ -11,7 +11,10 @@ EnvironmentFile=/etc/haiz.env
 ExecStart=/usr/bin/node /opt/haiz/backend/server.mjs
 Restart=on-failure
 RestartSec=3
-TimeoutStopSec=15
+# Allow HTTP drain and the backup verifier (up to 120s) to finish.
+# A forced stop after five minutes may leave an unpublished .tmp snapshot;
+# previously completed backups remain available.
+TimeoutStopSec=300
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true

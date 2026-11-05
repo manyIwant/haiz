@@ -2,13 +2,15 @@
 
 新增的独立服务支持三条真实数据链路：账号与安全会话；教师草稿、工作区、公开通知与跨设备同步；个人便签/收藏/偏好与多人校园房间。原 `public/haiz/world/pilot` 和本地演示服务保留，新增业务不再写入试用 JSON。
 
+个人数据现有回收站、历史版本恢复、搜索、用量统计和本人操作记录；生产服务增加带完整性检查与轮换的自动备份。接口、保留期限与恢复边界见 [数据安全说明](../docs/backend-data-safety.md)。
+
 ## 运行与入口
 
 运行时：**Node >= 24.22.1**，无新增生产 npm 依赖。开发使用根目录的 `npm run backend:dev`，默认只监听 `127.0.0.1:8790`。当前实现由代理承接公网 HTTPS；Node 端口不对公网开放。
 
 - `/`：主仓库直接提供现有网站根页面；在本地 React 原型副本中读取 `npm run build` 的产物。
 - `/login/`：沿用既有深蓝暖光玻璃卡片的正式登录界面，提供真实登录、注册和邀请验证；只有服务端会话验证成功才点灯进入。
-- `/account/`：登录后的“我的数据”；便签/收藏/偏好可查看、编辑、删除、分页与导出，账号安全页管理密码、设备会话和账号注销。未登录时返回灯光登录页。
+- `/account/`：登录后的“我的数据”；便签/收藏/偏好可查看、搜索、编辑、删除、恢复、查历史、分页与导出，并提供数据用量和本人操作记录。账号安全页管理密码、设备会话和账号注销。未登录时返回灯光登录页。
 - `/world/flow/`：现有教师工作台，已接入新后端的邀请/草稿/发布/工作区接口。
 - `/world/stillroom/`：现有自习页。
 - `/api/health`：存活；`/api/ready`：数据库可用性。
@@ -62,6 +64,12 @@ npm run backend:recover
 | GET | `/api/v1/data/:collection/:id` | 当前用户的一条记录 |
 | PUT | `/api/v1/data/:collection/:id` | `{expectedRevision,data:{...}}`，新建版本为 0 |
 | DELETE | `/api/v1/data/:collection/:id` | `{expectedRevision}`，保留版本墓碑防止旧设备覆盖 |
+| GET | `/api/v1/data/:collection/:id/history` | 本人的当前与保留中历史版本 |
+| POST | `/api/v1/data/:collection/:id/restore` | `{expectedRevision,revision?}`，恢复为一个新版本 |
+| GET | `/api/v1/trash/:collection` | 本人可恢复的已删除记录，支持limit/cursor分页 |
+| GET | `/api/v1/search` | `q`字面搜索，集合可选，limit/cursor分页 |
+| GET | `/api/v1/usage` | 本人条数、JSON内容及历史用量 |
+| GET | `/api/v1/activity` | 本人近期账号与数据操作，不含正文或凭据 |
 | GET | `/api/flow/me` | Flow 当前身份 |
 | GET/POST | `/api/flow/drafts` | 读取自己的草稿 / 按版本保存 |
 | GET/POST | `/api/flow/workspace` | 私人课程与待办，字段兼容旧 Flow |
@@ -131,6 +139,8 @@ HAIZ_DATA_DIR=/var/lib/haiz npm run backend:backup -- /private/backup/haiz-2026-
 ```
 
 备份目录预先建立并限制访问；命令使用 SQLite 在线 backup API，包含已提交的 WAL 数据，不是直接复制主文件。输出文件 0600。恢复：停止服务，保留原数据目录作为回退；在新的私有数据目录放置备份并命名 `haiz.sqlite`，设置 0600，修改 `HAIZ_DATA_DIR`，重新启动并验证登录与业务记录。不要把旧 `-wal/-shm` 文件拷进恢复目录。恢复后的会话按原到期时间继续生效；如备份曾泄露，应通过管理接口撤销会话/修改密码。
+
+生产服务默认每日自动备份，开发默认关闭。`HAIZ_BACKUP_INTERVAL_HOURS` 可设1至168小时，0关闭；最多保留最新7个已完成备份，放在私有数据目录的 `backups/`，完成独立SQLite完整性检查后才轮换。管理员metrics可看最后成功/失败时间。备份仍在本机，异地副本需正式部署时配置。
 
 ## 验证
 
