@@ -1,0 +1,169 @@
+/* Chapter 04 · the campus beneath the water.
+   The plan itself is drawn in WebGL; this is only what must be read or pressed.
+   Same type and glass as the walk round the tree; the place card is paper, like
+   the specimen sheet. */
+.cmap { position: fixed; inset: 0; z-index: 7; pointer-events: none; color: var(--ink); }
+.cmap > * { opacity: 0; visibility: hidden; transition: opacity .7s var(--ease), visibility 0s linear .7s, transform .7s var(--ease); }
+body.map-mode:not(.map-leaving) .cmap > :is(.cmap-labels, .cmap-head, .cmap-dock, .cmap-exit, .cmap-scale, .cmap-locator),
+body.map-reveal .cmap > .cmap-reveal { opacity: 1; visibility: visible; transition: opacity .7s var(--ease) .15s, visibility 0s, transform .7s var(--ease); }
+.cmap > .cmap-places:not([hidden]), .cmap > .cmap-detail:not([hidden]) { visibility: visible; }
+.cmap button, .cmap a { pointer-events: auto; }
+.cmap-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); opacity: 1 !important; }
+
+/* V4's chapter furniture steps aside while the plan is up */
+body.map-mode #p-map :is(.chap, .titling, .slab), body.map-mode :is(.orbit, .rail, .growth, .leaders, .colophon) { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transition: opacity .5s var(--ease), visibility 0s linear .5s; }
+/* while the water clears, the chapter's slab recedes (GSAP writes its opacity inline) */
+body.map-reveal #p-map .slab { opacity: .3 !important; transition: opacity 1.4s var(--ease) !important; }
+body.map-reveal #p-map .slab:hover, body.map-reveal #p-map .slab:focus-within { opacity: 1 !important; }
+/* on the pale plan the film's dark reading shades would only smudge it; type turns to ink instead */
+.stage::after { transition: opacity 1.2s var(--ease); }
+body.map-mode:not(.map-leaving) .stage::after { opacity: 0; }
+body.map-mode:not(.map-leaving) .brand { color: #1f2b24; }
+body.map-mode:not(.map-leaving) .brand small { color: #4c5a50; }
+body.map-mode:not(.map-leaving) .tool { background: rgba(18, 25, 21, .62); border-color: rgba(246, 241, 231, .3); }
+.brand, .brand small { transition: color .8s var(--ease); }
+
+/* ------------------------------------------------------------ labels pinned to the ground */
+.cmap-labels { position: absolute; inset: 0; overflow: hidden; }
+.cmap-label { position: absolute; left: 0; top: 0; display: grid; justify-items: center; white-space: nowrap; pointer-events: none;
+  font: 500 12.5px/1.25 var(--serif); letter-spacing: .1em; color: #22302a; opacity: 0; transition: opacity .35s var(--ease);
+  text-shadow: 0 0 2px #efe9dc, 0 0 3px #efe9dc, 0 0 6px rgba(239, 233, 220, .9), 0 0 10px rgba(239, 233, 220, .6); }
+.cmap-label.on { opacity: 1; }
+.cmap-label.p0, .cmap-label.p1 { font-size: 13.5px; font-weight: 600; letter-spacing: .14em; }
+.cmap-label.p3 { font-size: 11px; color: #3c4a41; font-weight: 400; }
+.cmap-label small { font: 400 9.5px/1.3 var(--sans); letter-spacing: .12em; color: #4c5a50; }
+.cmap-label.emph b { color: #13201a; }
+.cmap-label.emph::after { content: ""; display: block; width: 18px; height: 1px; margin-top: 3px; background: #3c4a41; }
+/* the tree's own label sits on its crown: light ink on the leaves */
+.cmap-label.is-tree { color: var(--ink); text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 0 12px rgba(0, 0, 0, .45); }
+.cmap-label.is-tree small { color: var(--ink-2); }
+
+/* the tree's root, when its crown is small or out of frame */
+.cmap-locator { position: absolute; left: 0; top: 0; display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 7px; padding: 0; border: 0; background: none; color: #1d2a23;
+  font: 600 11.5px/1.2 var(--serif); letter-spacing: .1em; text-shadow: 0 0 3px #efe9dc, 0 0 6px #efe9dc; cursor: pointer; margin: -9px 0 0 -9px; }
+.cmap-locator i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #2b3d33; background: rgba(239, 233, 220, .7); box-shadow: 0 0 0 4px rgba(43, 61, 51, .14); grid-row: 1 / 3; position: relative; }
+.cmap-locator i::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #2b3d33; }
+.cmap-locator small { font: 400 10px var(--sans); letter-spacing: .08em; color: #4c5a50; }
+.cmap-locator.edge i { border-radius: 50% 50% 50% 0; }
+.cmap-locator.edge i::after { inset: 4px; }
+.cmap > .cmap-locator:not(.on) { opacity: 0 !important; visibility: hidden !important; }
+
+/* ------------------------------------------------------------ the reveal's quiet caption */
+.cmap-reveal { position: absolute; left: 50%; bottom: calc(var(--bottom) + 58px); transform: translate(-50%, 8px); display: grid; justify-items: center; gap: 8px; text-align: center; }
+body.map-reveal .cmap-reveal { transform: translate(-50%, 0); }
+.cmap-reveal p { margin: 0; display: flex; gap: 12px; align-items: baseline; font: 400 15px/1.4 var(--serif); letter-spacing: .3em; text-shadow: 0 1px 14px rgba(0, 0, 0, .45); }
+.cmap-reveal p b { font-weight: 500; }
+.cmap-reveal p span { color: var(--ink-2); }
+.cmap-progress { display: block; width: 120px; height: 1px; background: rgba(246, 241, 231, .25); overflow: hidden; }
+.cmap-progress > i { display: block; height: 100%; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
+.cmap-reveal small { font-size: 10.5px; letter-spacing: .14em; color: var(--ink-3); }
+.cmap-reveal small button { border: 0; background: none; padding: 2px 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; font-size: inherit; letter-spacing: inherit; }
+
+/* ------------------------------------------------------------ heading (where V4's chapter words sit) */
+.cmap-head { position: absolute; top: var(--top); left: var(--pad); max-width: min(380px, 40vw); color: #1f2b24;
+  text-shadow: 0 0 2px rgba(239, 233, 220, .9), 0 0 8px rgba(239, 233, 220, .8), 0 0 18px rgba(239, 233, 220, .6); }
+.cmap-eyebrow { margin: 0 0 10px; display: flex; gap: 12px; align-items: baseline; font: 400 15px/1.4 var(--serif); letter-spacing: .14em; }
+.cmap-eyebrow b { font: 400 22px/1 var(--display); letter-spacing: .02em; }
+.cmap-lede { margin: 0; font: 400 13px/1.9 var(--serif); color: #2c3a31; }
+.cmap-note { margin: 10px 0 0; font-size: 10px; line-height: 1.6; color: #5a6559; max-width: 30em; }
+
+/* ------------------------------------------------------------ controls */
+.cmap-dock, .cmap-exit { position: absolute; bottom: var(--bottom); display: flex; gap: 8px; align-items: center; }
+.cmap-dock { left: var(--pad); }
+.cmap-exit { right: var(--pad); }
+.cmap-dock button, .cmap-exit button { border: 1px solid rgba(246, 241, 231, .34); background: rgba(16, 22, 19, .52); backdrop-filter: blur(14px) saturate(1.15); -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  border-radius: 999px; padding: 8px 15px; font: 400 12.5px/1 var(--serif); letter-spacing: .14em; color: var(--ink); transition: background .3s, border-color .3s; box-shadow: 0 8px 24px rgba(0, 0, 0, .16); }
+.cmap-dock button:hover, .cmap-exit button:hover { background: rgba(16, 22, 19, .72); border-color: rgba(246, 241, 231, .6); }
+.cmap-dock .cmap-round { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; font: 300 18px/1 var(--sans); letter-spacing: 0; }
+.cmap-seg { display: flex; padding: 3px; border-radius: 999px; border: 1px solid rgba(246, 241, 231, .34); background: rgba(16, 22, 19, .52); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 24px rgba(0, 0, 0, .16); }
+.cmap-dock .cmap-seg button { border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 6px 13px; color: var(--ink-2); }
+.cmap-dock .cmap-seg button[aria-checked="true"] { background: var(--ink); color: #1b2620; }
+.cmap-exit .cmap-next { background: rgba(246, 241, 231, .92); color: #1b2620; border-color: transparent; }
+.cmap-exit .cmap-next:hover { background: #fff; }
+.cmap-exit .cmap-next i { font-style: normal; margin-left: 6px; display: inline-block; transition: transform .45s var(--ease); }
+.cmap-exit .cmap-next:hover i { transform: translateX(3px); }
+
+.cmap-scale { position: absolute; left: 50%; bottom: calc(var(--bottom) + 6px); transform: translateX(-50%); display: flex; gap: 18px; align-items: flex-end; font: 400 10px var(--sans); letter-spacing: .1em; color: #24302a; text-shadow: 0 0 3px #efe9dc, 0 0 6px #efe9dc; }
+.cmap-bar { display: grid; gap: 4px; justify-items: start; }
+.cmap-bar i { display: block; height: 5px; border: 1.2px solid #2b3d33; border-top: 0; min-width: 20px; transition: width .2s; }
+.cmap-bar b { font-weight: 400; }
+.cmap-north { display: grid; justify-items: center; gap: 2px; font: 500 11px var(--serif); }
+.cmap-north i { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 11px solid #2b3d33; transition: transform .2s; }
+.cmap-north small { font: 400 8.5px var(--sans); letter-spacing: .06em; color: #4c5a50; }
+
+/* ------------------------------------------------------------ the place list */
+.cmap-places { position: absolute; left: var(--pad); bottom: calc(var(--bottom) + 52px); width: min(320px, 86vw); max-height: min(58vh, 520px); overflow: auto; overscroll-behavior: contain;
+  background: var(--paper); color: var(--charcoal); border-radius: 16px; padding: 14px 8px 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, .28); opacity: 1 !important; pointer-events: auto; }
+.cmap-places header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px 8px; }
+.cmap-places h3 { margin: 0; font: 500 16px var(--serif); letter-spacing: .2em; color: var(--green); }
+.cmap-places header button { border: 1px solid #c9c1b0; background: none; border-radius: 999px; padding: 4px 10px; font-size: 11px; color: #4a554c; }
+.cmap-places ul { list-style: none; margin: 0; padding: 0; }
+.cmap-places li button { width: 100%; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border: 0; background: none; padding: 8px 10px; border-radius: 9px; text-align: left; color: var(--charcoal); }
+.cmap-places li button:hover, .cmap-places li button:focus-visible { background: #ebe4d4; }
+.cmap-places li span { font: 500 14px var(--serif); letter-spacing: .1em; }
+.cmap-places li small { font-size: 10.5px; color: #7a6f5c; letter-spacing: .04em; }
+.cmap-pan { margin: 10px 10px 2px; padding-top: 10px; border-top: 1px solid #ddd5c4; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 10.5px; color: #7a6f5c; }
+.cmap-pan span { flex: 1 0 100%; }
+.cmap-pan button { border: 1px solid #c9c1b0; background: none; border-radius: 999px; padding: 4px 10px; font-size: 11px; color: #4a554c; }
+.cmap-pan button[aria-pressed="true"] { background: var(--green); color: var(--paper); border-color: var(--green); }
+
+/* ------------------------------------------------------------ a place: a sheet of paper beside the map */
+.cmap-detail { position: absolute; top: calc(var(--top) + 52px); right: var(--pad); bottom: calc(var(--bottom) + 52px); width: min(380px, 32vw); pointer-events: auto;
+  transform: translateX(24px); opacity: 0 !important; transition: transform .5s var(--ease), opacity .4s var(--ease) !important; outline: none; }
+.cmap-detail.open { transform: none; opacity: 1 !important; }
+.cmap-detail:not(.open) { pointer-events: none; }
+.cmap-detail-in { max-height: 100%; overflow: auto; overscroll-behavior: contain; background: var(--paper); color: var(--charcoal); border-radius: 18px; padding: 18px 22px 20px; box-shadow: 0 30px 70px rgba(0, 0, 0, .3); }
+.cmap-close { border: 1px solid #c9c1b0; background: none; border-radius: 999px; padding: 5px 12px; font: 400 11.5px var(--serif); letter-spacing: .12em; color: #3e4a41; }
+.cmap-close:hover { background: #ebe4d4; }
+.cmap-cat { margin: 16px 0 4px; font-size: 10.5px; letter-spacing: .2em; color: #7a6f5c; }
+.cmap-detail h3 { margin: 0; font: 500 30px/1.25 var(--serif); letter-spacing: .14em; color: var(--green); }
+.cmap-en { margin: 4px 0 0; font: italic 400 15px var(--display); color: #6b6253; }
+.cmap-en:empty { display: none; }
+.cmap-photo { margin: 14px -4px 0; }
+.cmap-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: #e2dbcb; }
+.cmap-photo figcaption { margin-top: 6px; font-size: 10px; color: #8a806e; line-height: 1.5; }
+.cmap-desc { margin: 14px 0 0; font: 400 13.5px/1.95 var(--serif); color: #2f352f; }
+.cmap-facts { margin: 14px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 12px; padding-top: 12px; border-top: 1px solid #ddd5c4; }
+.cmap-facts dt { color: #7a6f5c; }
+.cmap-facts dd { margin: 0; font-family: var(--serif); color: #2f352f; }
+.cmap-src { margin: 12px 0 0; font-size: 10px; line-height: 1.6; color: #8a806e; }
+.cmap-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.cmap-walk { background: var(--green); color: var(--paper); border-radius: 999px; padding: 10px 18px; text-decoration: none; font: 500 13px var(--serif); letter-spacing: .12em; }
+.cmap-walk i { font-style: normal; margin-left: 4px; }
+.cmap-actions button { border: 1px solid #b9b2a3; background: none; border-radius: 999px; padding: 9px 16px; font: 400 12.5px var(--serif); letter-spacing: .1em; color: var(--charcoal); }
+.cmap-walk-note { margin: 10px 0 0; font-size: 10px; line-height: 1.6; color: #8a806e; }
+.cmap :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.cmap-detail-in :focus-visible, .cmap-places :focus-visible { outline-color: var(--green); }
+/* the sheet itself takes focus only so Tab starts inside it; the ring belongs to its controls */
+.cmap .cmap-detail:focus, .cmap .cmap-detail:focus-visible { outline: none; }
+
+/* the chapter slab's way in */
+.entries .cmap-entry i { color: var(--gold); }
+
+/* ------------------------------------------------------------ phones */
+@media (max-width: 760px) {
+  .cmap-head { top: calc(var(--top) + 40px); left: 14px; max-width: calc(100vw - 28px); }
+  .cmap-eyebrow { font-size: 13px; margin-bottom: 4px; }
+  .cmap-eyebrow b { font-size: 19px; }
+  .cmap-lede { display: none; }
+  .cmap-note { font-size: 9.5px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .cmap-dock { left: 12px; right: 12px; gap: 6px; }
+  .cmap-dock button { padding: 8px 11px; font-size: 12px; letter-spacing: .08em; }
+  .cmap-dock [data-act="tree"] { display: none; }
+  .cmap-dock .cmap-round { width: 32px; height: 32px; }
+  .cmap-dock [data-act="places"] { margin-left: auto; }
+  .cmap-exit { right: 12px; left: 12px; bottom: calc(var(--bottom) + 46px); justify-content: space-between; }
+  .cmap-exit button { padding: 8px 13px; font-size: 12px; letter-spacing: .08em; }
+  .cmap-scale { left: auto; right: 14px; transform: none; bottom: calc(var(--bottom) + 92px); }
+  .cmap-reveal { bottom: calc(var(--bottom) + 210px); width: 86vw; }
+  .cmap-reveal p { font-size: 14px; letter-spacing: .2em; }
+  .cmap-places { left: 12px; right: 12px; width: auto; bottom: calc(var(--bottom) + 46px); max-height: 52vh; }
+  .cmap-detail { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 56vh; transform: translateY(30px); }
+  .cmap-detail-in { border-radius: 18px 18px 0 0; padding: 14px 18px calc(var(--bottom) + 8px); max-height: 56vh; }
+  .cmap-detail h3 { font-size: 24px; }
+  .cmap-photo img { aspect-ratio: 16 / 9; }
+  body.map-detail .cmap > :is(.cmap-exit, .cmap-dock, .cmap-scale) { opacity: 0; visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cmap > *, .cmap-detail { transition-duration: .01ms !important; }
+}

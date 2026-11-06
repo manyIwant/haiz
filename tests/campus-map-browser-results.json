@@ -1,0 +1,22 @@
+{
+  "results": [
+    "resting at 04 the reveal begins by itself and ends in the plan (#map/oblique) at chapter 04's own frame: pitch 73.5°, lens 50°",
+    "wheel zooms the plan (half-height 19.9 → 69.2 m) while the walk stays at 04 (p = 3, scrollY 2160)",
+    "drag pans the plan",
+    "T switches to the top view (pitch 90°, lens 20°, #map/top) with the same target and ground scale (104.9 → 104.9 m)",
+    "clicking 图书馆 on the plan opens its place: the project photo, the data's words, distance from the tree, and a walk link (#map/top/library)",
+    "Esc closes the place and returns the camera to the plan view it was opened from (target and zoom to 5 cm); the place stays marked",
+    "browser Back leaves the plan: the water closes, the islet returns, the camera is at chapter 04 (3.00, 40.00, 12.00), growth 0.7, the same renderer and tree objects (#map)",
+    "PageDown then walks on to 05 (#days)",
+    "scrolling on during a reveal cancels it: the water closes and the walk reaches 05",
+    "the chapter slab's own entry opens the plan without waiting; 「继续 · 05」 closes it and walks on to 05",
+    "a deep link (#map/top/library) opens straight into the plan from above with 图书馆 open, no six-shot replay",
+    "「从这里步入校园」 leaves for the existing first-person walk at campus-3d.html?focus=library (a separate page: no shared renderer is claimed)",
+    "coming back from the walk restores the plan, the top view, 图书馆 and the camera (half-height 46.7 → 46.7 m)",
+    "Back then closes the place (#map/top), and Back again returns to the tree (#map)",
+    "reduced motion: the plan appears without the long reveal (5.2 s wall on SwiftShader, 0.6 s of reveal time)",
+    "without WebGL (?static) chapter 04 still holds the plan: 47 drawn footprints, 26 places with words, photos and walk links",
+    "phone 390×844: no horizontal overflow, controls inside the screen and clear of the tools, a tap on 图书馆 opens it as a bottom sheet (top at 371 px)"
+  ],
+  "renderer": "Chromium + SwiftShader (software); proves the flow and input ownership, not a hardware frame rate"
+}

@@ -14,6 +14,9 @@ import { Visits } from './visits.js';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const params = new URLSearchParams(location.search);
+// the address this page was opened at, read before setActive(0) below rewrites it:
+// a #map/<view>/<place> link (or a reload of one) opens chapter 04's campus plan
+const entry = { hash: location.hash, state: history.state };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const N = CHAPTERS.length;
 const body = document.body;
@@ -21,6 +24,7 @@ const panels = $$('.panel');
 const stops = $$('.stop');
 const state = { p: 0 };
 let world = null, cam = null, active = -1;
+let map = null;   // chapter 04's campus beneath the water (lanren/map), when it has loaded
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -348,6 +352,9 @@ async function start3D() {
   const ok = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
   if (!ok || navigator.connection?.saveData || params.has('static')) return goStatic();
   body.classList.add('spatial');
+  // the campus data loads alongside the tree; the map attaches before the first frame
+  const mapData = params.has('nomap') ? Promise.resolve(null)
+    : import('../map/map.js').then((m) => m.preload().then((geo) => ({ m, geo }))).catch((err) => { console.warn('campus map unavailable', err); return null; });
   const { buildScene, pickTier } = await import('./scene.js');
   const tierName = pickTier();
   document.documentElement.dataset.tier = tierName;
@@ -363,8 +370,14 @@ async function start3D() {
   addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
   cam.rail = () => override || poseAt(state.p);
+  const attachMap = (md) => {
+    if (!md || map) return;
+    try { map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]') }, md.geo); } catch (err) { console.warn('campus map unavailable', err); }
+  };
+  const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
+  if (md === 'late') mapData.then(attachMap); else attachMap(md);
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
-  const fromHash = CHAPTERS.findIndex((c) => c.id === location.hash.slice(1));
+  const fromHash = CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : location.hash.slice(1)));
   const startAt = fromHash >= 0 ? fromHash : saved && Date.now() - saved.t < 30 * 60000 ? saved.c : 0;
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
@@ -379,6 +392,8 @@ function goStatic() {
   body.classList.remove('spatial');
   body.classList.add('static');
   panels.forEach((p) => { p.classList.add('is-active'); p.removeAttribute('inert'); });
+  // without WebGL the campus plan is still there, as a drawing with the same places
+  import('../map/static.js').then((m) => m.renderStatic()).catch((err) => console.warn('campus plan unavailable', err));
 }
 
 // The details shot is a portrait of one real cluster of new leaves on the rim
@@ -506,9 +521,11 @@ function step(dt, wallDt = dt) {
   const p = state.p;
   const near = Math.round(p);
   setActive(Math.abs(p - near) < 0.3 ? near : -1);
+  map?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
   const grow = growAt(p);
   const L = lightAt(p);
+  map?.light(L);
   const rail = override || poseAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
@@ -516,10 +533,11 @@ function step(dt, wallDt = dt) {
   world.setStage({ grow, sunDir, sunCol: C(L.sunCol), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
     fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure * exitLight.boost, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
     aperture: L.aperture, focus: L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez)) });
+  map?.post();
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  cam.update(dt, wallDt);
+  if (!map?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
   if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
@@ -534,6 +552,7 @@ function step(dt, wallDt = dt) {
   sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
   updateNav(p, grow);
   placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
+  map?.overlay();
   world.render(t);
   frames++;
 }
@@ -557,7 +576,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, chapters: CHAPTERS, state,
+  get world() { return world; }, get map() { return map?.api; }, chapters: CHAPTERS, state,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
