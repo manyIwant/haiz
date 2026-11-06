@@ -31,13 +31,25 @@ export const PAL_INDEX = Object.fromEntries(PALETTE.map(([k], i) => [k, i]));
 export const MAP_GRADE = { exposure: LIGHT[3].exposure, sat: 1.0, contrast: 1.04, warm: LIGHT[3].warm };
 
 // ---------------------------------------------------------------- GLSL
-const MAP_PARS = /* glsl */`
-uniform float uReveal; uniform float uInkFront; uniform float uSurfFront; uniform float uInkFeather; uniform float uSurfFeather;
+// The plan's drawing of the campus is one function of the data. The water reads
+// it in the plan's palette; the campus ground of the 3D model (section.js) reads
+// the very same function in a palette of real materials.
+export const CAMPUS_UNIFORMS = /* glsl */`
 uniform sampler2D uFeat; uniform int uFeatN; uniform int uFeatSplit;
-uniform sampler2D uArrival; uniform vec4 uArrA; uniform vec2 uArrB;
-uniform sampler2D uCanopy; uniform vec4 uSheet;
+uniform sampler2D uCanopy; uniform vec4 uSheet; uniform float uCanopyK; uniform float uBldShadowK; uniform float uContactK;
 uniform vec2 uShadowDir; uniform float uSelect; uniform float uHover; uniform float uHoverFeat; uniform float uDim;
+`;
+export const PAL_SIZE = PALETTE.length;
+/** hzCampus() and its helpers, reading the palette uniform `pal` (needs wn() from the host shader) */
+export function campusGLSL(pal) {
+  return CAMPUS_FN.replaceAll('uPal[', pal + '[');
+}
+const MAP_PARS_HEAD = /* glsl */`
+uniform float uReveal; uniform float uInkFront; uniform float uSurfFront; uniform float uInkFeather; uniform float uSurfFeather;
+uniform sampler2D uArrival; uniform vec4 uArrA; uniform vec2 uArrB;
 uniform vec3 uPal[${PALETTE.length}];
+`;
+const CAMPUS_FN = /* glsl */`
 float hzBox(vec2 p, vec2 b){ vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
 float hzRBox(vec2 p, vec2 b, float r){ return hzBox(p, b - r) - r; }
 float hzFill(float sd, float aa){ return 1.0 - smoothstep(-aa, aa, sd); }
@@ -50,7 +62,7 @@ vec3 hzCampus(vec2 q, float aa, float px, vec3 water, out float lines){
   float selD = 1e5;
   for (int i = 0; i < 64; i++) {
     if (i >= uFeatN) break;
-    if (i == uFeatSplit) {
+    if (i == uFeatSplit && uCanopyK > 0.0) {
       // the campus's trees: soft canopies with their shade, under the roofs
       vec4 cn = texture2D(uCanopy, (q - uSheet.xy) / (uSheet.zw - uSheet.xy));
       col *= 1.0 - 0.12 * cn.g;
@@ -111,7 +123,8 @@ vec3 hzCampus(vec2 q, float aa, float px, vec3 water, out float lines){
     } else if (kind == 7 || kind == 8) {   // buildings and gates, with a short shadow from chapter 04's sun
       vec2 ds = d - uShadowDir * B.z * 0.13;
       float sh = hzFill(hzBox(vec2(ds.x * cs - ds.y * sn, ds.x * sn + ds.y * cs), A.zw), aa + 0.7) * (1.0 - hzFill(sd, aa));
-      col *= 1.0 - 0.2 * sh;
+      col *= 1.0 - 0.2 * sh * uBldShadowK;
+      col *= 1.0 - uContactK * 0.42 * exp(-max(sd, 0.0) / 1.6) * step(0.0, sd);   // where a wall meets the ground
       vec3 fc = kind == 8 ? uPal[${PAL_INDEX.gate}] : mix(uPal[${PAL_INDEX.bld}], uPal[${PAL_INDEX.bldTall}], clamp(B.z / 26.0, 0.0, 1.0));
       if (sel) fc = mix(fc, uPal[${PAL_INDEX.sel}], 0.85); else if (hov) fc = fc * 1.045;
       col = mix(col, fc, hzFill(sd, aa));
@@ -139,7 +152,8 @@ vec3 hzCampus(vec2 q, float aa, float px, vec3 water, out float lines){
   if (uSelect > -0.5) col = mix(col, col * 0.86 + uPal[${PAL_INDEX.paper}] * 0.07, uDim * smoothstep(8.0, 70.0, selD));
   return col;
 }
-
+`;
+const MAP_PARS = MAP_PARS_HEAD + CAMPUS_UNIFORMS + CAMPUS_FN + /* glsl */`
 vec3 hzSurface(vec3 water, vec2 p, vec2 n, vec3 refl, float caust, float fres){
   float px = length(fwidth(p));   // derivatives before any branch
   // how far the reveal has come here: arrival along the paths, a little irregular at its edge
@@ -270,6 +284,7 @@ export function createMapLayer(world, geo) {
     uSheet: { value: new THREE.Vector4(sheet.x0, sheet.z0, sheet.x1, sheet.z1) },
     uShadowDir: { value: new THREE.Vector2(...shadowDir) },
     uSelect: { value: -1 }, uHover: { value: -1 }, uHoverFeat: { value: -1 }, uDim: { value: 0 },
+    uCanopyK: { value: 1 }, uBldShadowK: { value: 1 }, uContactK: { value: 0 },
     uPal: { value: pal }
   };
   patchWater(water.material, U);
@@ -296,7 +311,7 @@ export function createMapLayer(world, geo) {
 
   let T = 0;
   const layer = {
-    field, uniforms: U, shadowDir, ground: GROUND_Y,
+    field, uniforms: U, shadowDir, ground: GROUND_Y, sheet,
     get reveal() { return T; },
     /** set the reveal clock (0 water … 1 campus) */
     setReveal(t) {

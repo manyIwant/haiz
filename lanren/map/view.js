@@ -41,10 +41,10 @@ export function poseFromView(v) {
   return { ex: e.x, ey: e.y, ez: e.z, lx: v.tx, ly: GROUND_Y, lz: v.tz, fov: v.fov, auth: v.auth, dist: d };
 }
 /** the closest a view may come: the eye stays well above the crown */
-export function minScale(v) {
-  return Math.max(LIMITS.sMinAbs, (LIMITS.eyeMin * Math.tan((v.fov * D2R) / 2)) / Math.max(0.2, Math.sin(v.pitch * D2R)));
+export function minScale(v, eyeMin = LIMITS.eyeMin) {
+  return Math.max(LIMITS.sMinAbs, (eyeMin * Math.tan((v.fov * D2R) / 2)) / Math.max(0.2, Math.sin(v.pitch * D2R)));
 }
-export function clampScale(v) { v.s = Math.min(LIMITS.sMax, Math.max(minScale(v), v.s)); return v; }
+export function clampScale(v, eyeMin) { v.s = Math.min(LIMITS.sMax, Math.max(minScale(v, eyeMin), v.s)); return v; }
 /** keep the target on the campus sheet (open mode) */
 export function clampToSheet(v, sheet, margin = 0) {
   v.tx = Math.min(sheet.x1 - margin, Math.max(sheet.x0 + margin, v.tx));

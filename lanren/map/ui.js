@@ -35,11 +35,13 @@ export function buildDom(places) {
     <button type="button" data-act="tree" aria-label="回到榄仁树（地图原点）">回到榄仁树</button>
     <button type="button" data-act="places" aria-expanded="false" aria-controls="cmapPlaces">地点</button>
   </div>
+  <div class="cmap-turn"><button type="button" class="cmap-unfold" data-act="unfold" aria-pressed="false" hidden><i aria-hidden="true"></i><span>展开为三维</span><small>整座校园</small></button></div>
   <div class="cmap-exit">
     <button type="button" data-act="exit">返回树冠</button>
     <button type="button" class="cmap-next" data-act="next">继续 · 05 远眺 <i aria-hidden="true">→</i></button>
   </div>
-  <div class="cmap-scale" aria-hidden="true"><span class="cmap-north"><i></i>北<small>校园坐标</small></span><span class="cmap-bar"><i></i><b>20 m</b></span></div>
+  <div class="cmap-scale" aria-hidden="true"><button type="button" class="cmap-north" data-act="north" tabindex="-1"><i></i>北<small>校园坐标</small></button><span class="cmap-bar"><i></i><b>20 m</b></span><span class="cmap-cut">校园总平面</span></div>
+  <p class="cmap-hint" aria-hidden="true"><span><b>拖动</b>旋转</span><span><b>右键 / 双指</b>平移</span><span><b>滚轮 / 捏合</b>缩放</span><span><b>点选</b>建筑</span><span><b>U</b>收回总平面</span></p>
   <p class="cmap-live" role="status" aria-live="polite"></p>
   <nav id="cmapPlaces" class="cmap-places" aria-label="校园地点" hidden>
     <header><h3>地点</h3><button type="button" data-act="places-close" aria-label="收起地点列表">收起</button></header>
@@ -55,6 +57,11 @@ export function buildDom(places) {
       <figure class="cmap-photo"><img alt="" loading="lazy" decoding="async"><figcaption></figcaption></figure>
       <p class="cmap-desc"></p>
       <dl class="cmap-facts"></dl>
+      <section class="cmap-floors" hidden>
+        <h4>楼层剖切 <small>室内为推演</small></h4>
+        <div class="cmap-floor-row" role="group" aria-label="剖切楼层"></div>
+        <p></p>
+      </section>
       <p class="cmap-src"></p>
       <div class="cmap-actions"><a class="cmap-walk" href="#">从这里步入校园 <i aria-hidden="true">↗</i></a><button type="button" data-act="center">在地图上居中</button></div>
       <p class="cmap-walk-note">第一人称漫游是另一个独立页面（campus-3d），从这个地点附近的校道开始；返回时回到这里的地图状态。</p>
@@ -76,7 +83,7 @@ export function buildDom(places) {
 }
 
 /** Fill the detail panel for a place (real words, project photo, sources). */
-export function fillDetail(dom, p, geo) {
+export function fillDetail(dom, p, geo, building = null, d3 = false) {
   const $ = dom.$;
   $('.cmap-cat').textContent = [p.category, p.en].filter(Boolean).join(' · ');
   $('#cmapTitle').textContent = p.name;
@@ -102,6 +109,23 @@ export function fillDetail(dom, p, geo) {
   const text = (p.note.match(/文字依据[^。]*/) || [''])[0];
   $('.cmap-src').textContent = [text && text + '。', '坐标来自项目既有平面数据（' + (geo.verification === 'legacy-derived-unverified' ? '继承 KML 转换，未独立复核' : geo.verification) + '）。'].filter(Boolean).join(' ');
   $('.cmap-walk').href = p.walk + '&from=map';
+  fillFloors(dom, building, d3);
+}
+
+/** the model behind the plan: what is data, what is inferred; and its storeys, to cut through */
+export function fillFloors(dom, building, d3) {
+  const $ = dom.$;
+  const fl = $('.cmap-floors');
+  const storeys = building && building.floors > 0 ? building.floors : 0;
+  fl.hidden = !building;
+  if (building) {
+    const btn = (k, label) => `<button type="button" data-floor="${k}" aria-pressed="false">${label}</button>`;
+    $('.cmap-floor-row').innerHTML = storeys ? btn('all', d3 ? '整栋' : '总平面') + Array.from({ length: storeys }, (_, k) => btn(k, (k + 1) + 'F')).join('') : '';
+    fl.querySelector('h4').hidden = !storeys;
+    fl.querySelector('p').textContent = storeys
+      ? `单栋探索：在所选楼层楼面上 1.2 m 处水平剖切这一栋（建筑平面图的画法），其余校园不受影响。外轮廓、${storeys} 层与 ${Math.round(building.height)} m 高度沿用项目数据；墙厚、门窗、走廊、房间分隔与楼梯位置为推演，不是测绘，也不代表可以进入。`
+      : '三维体量：轮廓与高度沿用项目数据，构件比例参照漫游模型的实拍推演，不是测绘。';
+  }
 }
 
 // ---------------------------------------------------------------- the overlay, every frame
@@ -124,10 +148,12 @@ export function createOverlay(dom, places, V3) {
     /** project, cull and declutter labels; returns metres-per-pixel at the screen centre */
     update(cam, rect, view, state) {
       const W = rect.width, H = rect.height;
-      const key = cam.matrixWorld.elements.map((v) => v.toFixed(3)).join() + W + 'x' + H + state.hover + state.selected + state.on;
+      const key = cam.matrixWorld.elements.map((v) => v.toFixed(3)).join() + W + 'x' + H + state.hover + state.selected + state.on + state.d3;
       if (key === lastKey && !state.force) return;
       lastKey = key;
-      const tierMax = view.s < 26 ? 3 : view.s < 60 ? 2 : view.s < 140 ? 1 : 0.5;
+      // in 3D the buildings stand up and the view is wider for the same size on screen
+      const tierMax = state.d3 ? (view.s < 70 ? 3 : view.s < 190 ? 2 : 1) : view.s < 26 ? 3 : view.s < 60 ? 2 : view.s < 140 ? 1 : 0.5;
+      const yOf = (p) => { const y = state.yOf ? state.yOf(p) : null; return y == null || !Number.isFinite(y) ? GROUND_Y : Math.max(GROUND_Y, y) + (state.d3 ? 1.2 : 0); };
       // the free part of the screen (chrome at the top and bottom)
       const L = 24, R = W - 24, T = W > 760 ? 64 : 110, B = H - (W > 760 ? 72 : 172);   // phones: two rows of controls and the scale
       const placed = [];
@@ -142,8 +168,9 @@ export function createOverlay(dom, places, V3) {
         } else if (show) {
           // the footprint on screen; a big building's label sits in the part that is in view
           let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, behind = false;
+          const py = yOf(p);
           for (const [cx, cz] of [[p.box.x0, p.box.z0], [p.box.x1, p.box.z0], [p.box.x1, p.box.z1], [p.box.x0, p.box.z1]]) {
-            tmp.set(cx, GROUND_Y, cz).project(cam);
+            tmp.set(cx, py, cz).project(cam);
             if (tmp.z >= 1) behind = true;
             const sx = (tmp.x * 0.5 + 0.5) * W, sy = (-tmp.y * 0.5 + 0.5) * H;
             x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
@@ -155,11 +182,13 @@ export function createOverlay(dom, places, V3) {
           if (!w) { w = [el.offsetWidth || 60, el.offsetHeight || 18]; sizes.set(p.id, w); }
           show = !behind && vx1 - vx0 > Math.min(w[0] * 0.7, size) && vy1 - vy0 > Math.min(16, size);
           // small places wait for the zoom; the most important ones show earlier
-          if (show && !emph && (p.priority > tierMax || size < (p.priority <= 1 ? 8 : 22))) show = false;
+          if (show && !emph && (p.priority > tierMax || size < (state.d3 ? 14 : p.priority <= 1 ? 8 : 22))) show = false;
           if (show) {
             const g = new V3(((x / W) * 2 - 1), -((y / H) * 2 - 1), 0.5).unproject(cam).sub(cam.position);
-            const t = (GROUND_Y - cam.position.y) / g.y;
+            const t = (py - cam.position.y) / g.y;
             if (t > 0 && occludedByCrown(cam, g.multiplyScalar(t).add(cam.position))) show = emph;
+            // in 3D, a place hidden behind a standing building keeps its name to itself
+            else if (show && state.occluded && t > 0 && state.occluded(p, g)) show = emph;
           }
         }
         if (show) {

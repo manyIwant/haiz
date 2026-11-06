@@ -4,7 +4,7 @@
    the specimen sheet. */
 .cmap { position: fixed; inset: 0; z-index: 7; pointer-events: none; color: var(--ink); }
 .cmap > * { opacity: 0; visibility: hidden; transition: opacity .7s var(--ease), visibility 0s linear .7s, transform .7s var(--ease); }
-body.map-mode:not(.map-leaving) .cmap > :is(.cmap-labels, .cmap-head, .cmap-dock, .cmap-exit, .cmap-scale, .cmap-locator),
+body.map-mode:not(.map-leaving) .cmap > :is(.cmap-labels, .cmap-head, .cmap-dock, .cmap-exit, .cmap-scale, .cmap-locator, .cmap-turn),
 body.map-reveal .cmap > .cmap-reveal { opacity: 1; visibility: visible; transition: opacity .7s var(--ease) .15s, visibility 0s, transform .7s var(--ease); }
 .cmap > .cmap-places:not([hidden]), .cmap > .cmap-detail:not([hidden]) { visibility: visible; }
 .cmap button, .cmap a { pointer-events: auto; }
@@ -60,7 +60,8 @@ body.map-reveal .cmap-reveal { transform: translate(-50%, 0); }
 .cmap-reveal small button { border: 0; background: none; padding: 2px 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; font-size: inherit; letter-spacing: inherit; }
 
 /* ------------------------------------------------------------ heading (where V4's chapter words sit) */
-.cmap-head { position: absolute; top: var(--top); left: var(--pad); max-width: min(380px, 40vw); color: #1f2b24;
+.cmap-head { position: absolute; top: var(--top); left: var(--pad); max-width: min(380px, 40vw); color: #1f2b24; padding: 12px 16px 13px; margin: -12px 0 0 -16px; border-radius: 14px;
+  background: rgba(239, 233, 220, .7); backdrop-filter: blur(12px) saturate(1.1); -webkit-backdrop-filter: blur(12px) saturate(1.1); box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
   text-shadow: 0 0 2px rgba(239, 233, 220, .9), 0 0 8px rgba(239, 233, 220, .8), 0 0 18px rgba(239, 233, 220, .6); }
 .cmap-eyebrow { margin: 0 0 10px; display: flex; gap: 12px; align-items: baseline; font: 400 15px/1.4 var(--serif); letter-spacing: .14em; }
 .cmap-eyebrow b { font: 400 22px/1 var(--display); letter-spacing: .02em; }
@@ -83,7 +84,7 @@ body.map-reveal .cmap-reveal { transform: translate(-50%, 0); }
 .cmap-exit .cmap-next i { font-style: normal; margin-left: 6px; display: inline-block; transition: transform .45s var(--ease); }
 .cmap-exit .cmap-next:hover i { transform: translateX(3px); }
 
-.cmap-scale { position: absolute; left: 50%; bottom: calc(var(--bottom) + 6px); transform: translateX(-50%); display: flex; gap: 18px; align-items: flex-end; font: 400 10px var(--sans); letter-spacing: .1em; color: #24302a; text-shadow: 0 0 3px #efe9dc, 0 0 6px #efe9dc; }
+.cmap-scale { position: absolute; left: 50%; bottom: calc(var(--bottom) + 58px); transform: translateX(-50%); display: flex; gap: 18px; align-items: flex-end; font: 400 10px var(--sans); letter-spacing: .1em; color: #24302a; text-shadow: 0 0 3px #efe9dc, 0 0 6px #efe9dc; }
 .cmap-bar { display: grid; gap: 4px; justify-items: start; }
 .cmap-bar i { display: block; height: 5px; border: 1.2px solid #2b3d33; border-top: 0; min-width: 20px; transition: width .2s; }
 .cmap-bar b { font-weight: 400; }
@@ -140,6 +141,43 @@ body.map-reveal .cmap-reveal { transform: translate(-50%, 0); }
 /* the chapter slab's way in */
 .entries .cmap-entry i { color: var(--gold); }
 
+
+/* ------------------------------------------------------------ the plan becomes the campus */
+/* the chapter's one primary action sits at the centre; the scale moves above it */
+.cmap-turn { position: absolute; left: 50%; bottom: var(--bottom); transform: translateX(-50%); }
+.cmap-unfold { display: inline-grid; grid-template-columns: auto auto; column-gap: 10px; align-items: center; padding: 8px 18px 8px 13px; text-align: left; border-radius: 999px;
+  border: 1px solid transparent; background: rgba(246, 241, 231, .94); color: #1b2620; box-shadow: 0 10px 30px rgba(0, 0, 0, .22); transition: background .3s, box-shadow .3s; }
+.cmap-unfold:hover { background: #fff; box-shadow: 0 12px 34px rgba(0, 0, 0, .28); }
+.cmap-unfold[hidden] { display: none; }
+.cmap-unfold span { font: 500 12.5px/1.15 var(--serif); letter-spacing: .14em; }
+.cmap-unfold small { grid-column: 2; font: 400 9.5px/1.2 var(--sans); letter-spacing: .1em; color: #5b665d; }
+/* the icon: a plan (a square in ink) that, pressed, is drawn as a block in three-quarter view */
+.cmap-unfold i { grid-row: 1 / 3; position: relative; width: 16px; height: 16px; border: 1.5px solid #2b3d33; border-radius: 1px; transition: transform .5s var(--ease); }
+.cmap-unfold i::after { content: ""; position: absolute; inset: 3px; background: #2b3d33; opacity: .85; transition: transform .5s var(--ease), opacity .5s; }
+.cmap-unfold[aria-pressed="true"] i { transform: rotate(45deg) scaleY(.62); }
+.cmap-unfold[aria-pressed="true"] i::after { transform: translate(-4px, -4px); opacity: .35; }
+body.map-turning .cmap-dock button, body.map-turning .cmap-dock .cmap-seg { opacity: .45; pointer-events: none; }
+/* labels rest while the campus changes form; in 3D the scale bar has no single meaning */
+body.map-turning .cmap > .cmap-labels { opacity: 0 !important; transition-duration: .25s; }
+body.map-3d .cmap-bar, body.map-3d .cmap-cut, body.map-turning .cmap-cut { display: none; }
+.cmap-cut { align-self: center; padding: 3px 8px; border: 1px solid rgba(43, 61, 51, .45); border-radius: 999px; font: 400 9.5px var(--sans); letter-spacing: .12em; color: #2b3d33; background: rgba(239, 233, 220, .5); }
+.cmap-north { border: 0; background: none; padding: 0; color: inherit; cursor: pointer; pointer-events: auto; }
+/* the 3D controls, said once */
+.cmap-hint { position: absolute; left: 50%; bottom: calc(var(--bottom) + 104px); transform: translate(-50%, 6px); margin: 0; display: flex; gap: 16px; padding: 9px 16px; border-radius: 999px;
+  background: rgba(16, 22, 19, .62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: var(--ink-2); font: 400 11px var(--sans); letter-spacing: .08em; white-space: nowrap; }
+.cmap-hint b { font-weight: 500; color: var(--ink); margin-right: 5px; }
+body.map-mode .cmap > .cmap-hint.on { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+/* a building's storeys, to cut through */
+.cmap-floors { margin-top: 14px; padding-top: 12px; border-top: 1px solid #ddd5c4; }
+.cmap-floors h4 { margin: 0 0 8px; font: 500 13px var(--serif); letter-spacing: .14em; color: var(--green); }
+.cmap-floors h4 small { margin-left: 6px; font: 400 10px var(--sans); letter-spacing: .08em; color: #8a806e; }
+.cmap-floor-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cmap-floor-row:empty { display: none; }
+.cmap-floor-row button { min-width: 40px; border: 1px solid #c9c1b0; background: none; border-radius: 999px; padding: 5px 11px; font: 500 11.5px var(--sans); letter-spacing: .04em; color: #3e4a41; }
+.cmap-floor-row button:hover { background: #ebe4d4; }
+.cmap-floor-row button[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--paper); }
+.cmap-floors p { margin: 8px 0 0; font-size: 10px; line-height: 1.6; color: #8a806e; }
+
 /* ------------------------------------------------------------ phones */
 @media (max-width: 760px) {
   .cmap-head { top: calc(var(--top) + 40px); left: 14px; max-width: calc(100vw - 28px); }
@@ -162,7 +200,12 @@ body.map-reveal .cmap-reveal { transform: translate(-50%, 0); }
   .cmap-detail-in { border-radius: 18px 18px 0 0; padding: 14px 18px calc(var(--bottom) + 8px); max-height: 56vh; }
   .cmap-detail h3 { font-size: 24px; }
   .cmap-photo img { aspect-ratio: 16 / 9; }
-  body.map-detail .cmap > :is(.cmap-exit, .cmap-dock, .cmap-scale) { opacity: 0; visibility: hidden; }
+  .cmap-turn { left: 12px; transform: none; bottom: calc(var(--bottom) + 92px); }
+  .cmap-unfold { padding: 7px 14px 7px 11px; }
+  .cmap-unfold small { display: none; }
+  .cmap-hint { bottom: calc(var(--bottom) + 140px); gap: 10px; font-size: 10px; flex-wrap: wrap; justify-content: center; white-space: normal; width: max-content; max-width: 92vw; }
+  .cmap-cut { display: none; }
+  body.map-detail .cmap > :is(.cmap-exit, .cmap-dock, .cmap-scale, .cmap-turn) { opacity: 0; visibility: hidden; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cmap > *, .cmap-detail { transition-duration: .01ms !important; }
