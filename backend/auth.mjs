@@ -7,10 +7,11 @@ const dummy = 'scrypt$' + '00'.repeat(16) + '$' + '00'.repeat(64);
 export const hash = value => createHash('sha256').update(value).digest('hex');
 export const secret = () => randomBytes(32).toString('base64url');
 export function validPassword(password) { check(typeof password === 'string' && password.length >= 12 && Buffer.byteLength(password) <= 256, 400, '密码须为至少 12 个字符，且不超过 256 字节'); }
-export function passwords() {
+export function passwords({ maxConcurrent = 4 } = {}) {
+  check(Number.isInteger(maxConcurrent) && maxConcurrent >= 1 && maxConcurrent <= 4, 500, '登录服务配置无效');
   let active = 0;
   const work = async callback => {
-    check(active < 4, 503, '登录服务繁忙，请稍后重试');
+    check(active < maxConcurrent, 503, '登录服务繁忙，请稍后重试');
     active++;
     try { return await callback(); } finally { active--; }
   };

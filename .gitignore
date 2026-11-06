@@ -40,3 +40,8 @@ app/web/ocr/
 *.sqlite-shm
 operator-invite-*.txt
 bootstrap-invite.txt
+.wrangler/
+.build/
+backend/cloudflare/.generated/
+.dev.vars
+.dev.vars.*

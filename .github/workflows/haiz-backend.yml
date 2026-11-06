@@ -27,3 +27,21 @@ jobs:
           node --check src/account/session-guard.js
       - name: Real HTTP, SQLite, account isolation, sessions and recovery
         run: node --test backend/tests/*.test.mjs
+  free-cloud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    defaults:
+      run:
+        working-directory: backend/cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/cloudflare/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

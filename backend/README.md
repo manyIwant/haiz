@@ -1,5 +1,7 @@
 # HAIZ 后端
 
+现已提供不依赖本机的[免费云端入口](https://haiz-backend.haiz-world-prototype.workers.dev/login/)，使用 Workers + SQLite Durable Object，沿用正式灯光登录页。云端部署、免费额度与恢复策略见 [Cloudflare说明](cloudflare/README.md)。下述 Node+Caddy 方案继续保留；两种运行设施的备份策略不同，不能混为一谈。
+
 新增的独立服务支持三条真实数据链路：账号与安全会话；教师草稿、工作区、公开通知与跨设备同步；个人便签/收藏/偏好与多人校园房间。原 `public/haiz/world/pilot` 和本地演示服务保留，新增业务不再写入试用 JSON。
 
 个人数据现有回收站、历史版本恢复、搜索、用量统计和本人操作记录；生产服务增加带完整性检查与轮换的自动备份。接口、保留期限与恢复边界见 [数据安全说明](../docs/backend-data-safety.md)。
