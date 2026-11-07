@@ -204,7 +204,8 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await until(page, () => window.__haizHome.W.owner === 'hold');
     s = await info(page);
     assert(Math.abs(s.p - 5) < 1e-3, 'back at 06');
-    assert(await visible(page, '.wd-resume'), 'a way back to where the walker stood');
+    // (the hold's bar is refreshed on the frame after the flight lands)
+    await until(page, () => { const el = document.querySelector('.wd-resume'); return el && !el.closest('[hidden]') && el.getBoundingClientRect().width > 0; });
     ok('menu: hiding the interface leaves a handle; B hides the body on its own; back to 06 flies there and offers the way back to the spot');
     // from 06 the film scrolls back: owner scroll, the page scrolls again
     await page.mouse.wheel(0, -300);
@@ -270,7 +271,7 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await page.reload();
     await ready(page);
     await until(page, () => window.__haizHome.W.owner === 'hold');
-    assert(await visible(page, '.wd-resume'), 'after a reload in the walk, 06 offers the way back to the spot');
+    await until(page, () => { const el = document.querySelector('.wd-resume'); return el && !el.closest('[hidden]') && el.getBoundingClientRect().width > 0; });
     ok('a reload in the walk lands at 06 with “回到上次站的地方”');
     await ctx.close();
   }
