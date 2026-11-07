@@ -98,7 +98,7 @@ export function attachWorld(ctx) {
   ui.className = 'wd';
   ui.innerHTML = `
     <div class="wd-hold" hidden>
-      <p class="wd-hold-t"><b>06 · 回望</b><span>你已站在校园里。再向前一步，由你自己走</span></p>
+      <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，由你自己走' : '你已站在校园里。再向前一步，由你自己走'}</span></p>
       <button type="button" class="wd-go" data-w="go">走进校园 <i aria-hidden="true">→</i></button>
       <button type="button" class="wd-resume" data-w="resume" hidden>回到上次站的地方</button>
       <p class="wd-hold-dest" hidden></p>
@@ -637,6 +637,7 @@ export function attachWorld(ctx) {
     else if (W.owner === 'hold' && p < 4.99) W.claim('scroll');
     const holding = W.owner === 'hold' && !ceremonyThen;
     $('.wd-hold').hidden = !holding;
+    body.classList.toggle('wd-holding', holding);
     $('.wd-resume').hidden = !pendingResume;
     // phones: the hint to turn sideways rides the landing
     const q = p - 4;

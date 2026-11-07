@@ -40,7 +40,8 @@ body.wd-touch .wd kbd { display: none; }
 @media (prefers-reduced-motion: reduce) { .wd-rotate-chip i, .wd-phone { animation: none; transform: rotate(-90deg); } .wd-hold { animation: none; } .wd-rotate-chip { animation: none; } }
 
 /* ------------------------------------------------------------ the walk */
-body.wd-walking .panels, body.wd-walking .orbit, body.wd-walking .rail, body.wd-walking .growth, body.wd-walking .leaders, body.wd-walking .bar, body.wd-walking .colophon { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s; }
+/* (V4 sets visibility and pointer events on the active panel's own children, so they are hidden one by one) */
+body.wd-walking :is(.panels, .orbit, .rail, .growth, .leaders, .bar, .colophon), body.wd-walking :is(.panels, .orbit, .rail, .growth, .leaders, .bar, .colophon) * { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transition: opacity .25s; }
 body.wd-walking #world { cursor: grab; }
 .wd-hud { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
 .wd-hud > * { pointer-events: auto; }
@@ -134,11 +135,14 @@ body.map-mode:not(.map-leaving) .cmap > .cmap-you.on { opacity: 1; visibility: v
 
 /* phones: in the walk, the safe areas and the browser's own bars are respected; landscape keeps the thumbs free */
 @media (max-width: 760px) {
-  /* phones: V4's words and links sit at the bottom; the step on waits under the bar, over the sky */
-  .wd-hold { bottom: auto; top: calc(var(--st) + 64px); border-radius: 16px; padding: 12px; }
-  .wd-hold-h { top: auto; bottom: calc(100% + 6px); }
-  .wd-hold-dest { bottom: auto; top: calc(100% + 6px); }
-  .wd-hold-t { flex-direction: column; gap: 4px; text-align: center; align-items: center; white-space: normal; }
+  /* phones: V4's links sit at the bottom; the step on is one row under the chapter's label, over the sky
+     (06's lede steps aside while it is offered) */
+  .wd-hold { bottom: auto; top: calc(var(--st) + 88px); flex-wrap: nowrap; padding: 5px 5px 5px 14px; }
+  .wd-hold-t b { display: none; }
+  .wd-hold-t span { white-space: nowrap; font-size: 13px; }
+  .wd-hold-h { top: calc(100% + 6px); }
+  .wd-hold-dest { bottom: calc(100% + 6px); }
+  body.wd-holding #p-whole .lede { visibility: hidden; }
   .wd-menu-card { padding: 14px; }
   .wd-chapters { grid-template-columns: repeat(2, 1fr); }
 }
