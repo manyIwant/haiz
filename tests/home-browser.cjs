@@ -36,12 +36,12 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   assert.strictEqual(await active(), 0);
   assert.strictEqual(await page.locator('.panel.is-active').getAttribute('id'), 'p-tree');
   // native scroll drives the walk (GSAP ScrollTrigger scrub + snap)
-  await page.evaluate(() => window.scrollTo(0, document.getElementById('archive').offsetTop));
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('leaves').offsetTop));
   await page.waitForFunction(() => window.__haizHome.info().active === 2, null, { timeout: 180000 });
   const g2 = await page.evaluate(() => window.__haizHome.info().grow);
   assert(g2 > 0.4 && g2 < 0.6, 'growth follows the walk: ' + g2);
-  assert.match(await page.evaluate(() => location.hash), /#archive/);
-  results.push(`native scroll to 03 档案 · 来处 activates the details shot (#archive), growth ${g2.toFixed(2)}`);
+  assert.match(await page.evaluate(() => location.hash), /#leaves/);
+  results.push(`native scroll to 03 青春 · 生长 activates the details shot (#leaves), growth ${g2.toFixed(2)}`);
   // the orbit navigator jumps to a viewpoint
   await page.click('#orbitDots .dot:nth-of-type(5)');
   await page.waitForFunction(() => window.__haizHome.info().active === 4, null, { timeout: 180000 });
@@ -68,12 +68,12 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   assert.strictEqual(await page.textContent('#bookCount'), '1');
   results.push('a falling leaf is caught, annotated and kept in the book');
   // an entry leaves through the veil; coming back returns to that viewpoint
-  await page.evaluate(() => window.scrollTo(0, document.getElementById('archive').offsetTop));
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('leaves').offsetTop));
   await page.waitForFunction(() => window.__haizHome.info().active === 2, null, { timeout: 180000 });
   // the camera has arrived (not just entered the section) before the slab is clicked
   await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 2) < 1e-3, null, { timeout: 180000 });
   await page.waitForTimeout(2500);
-  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-archive a[href="news.html"]', { noWaitAfter: true, timeout: 90000 })]);
+  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 })]);
   results.push('entry click draws the veil and navigates to news.html');
   await page.goto(base + '/index.html?quality=low&test=1');
   await ready(page);

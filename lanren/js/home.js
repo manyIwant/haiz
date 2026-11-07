@@ -25,6 +25,7 @@ const stops = $$('.stop');
 const state = { p: 0 };
 let world = null, cam = null, active = -1;
 let map = null;   // chapter 04's campus beneath the water (lanren/map), when it has loaded
+let canopy = null; // chapter 03's works canopy (lanren/canopy), when it has loaded
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -376,11 +377,17 @@ async function start3D() {
   };
   const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
   if (md === 'late') mapData.then(attachMap); else attachMap(md);
+  // chapter 03: the works canopy grows on the same crown (?nocanopy compares against plain V4)
+  if (!params.has('nocanopy')) {
+    try { canopy = (await import('../canopy/canopy.js')).attach({ world, cam, state, goTo, DwellCamera, reduceMotion, entry }); } catch (err) { console.warn('chapter 03 canopy unavailable', err); canopy = null; }
+  }
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
-  const fromHash = CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : location.hash.slice(1)));
+  // (#leaves, #leaves/<direction>, #leaves/w/<work> and the former #archive open chapter 03)
+  const fromHash = CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : /^#(leaves|archive)(\/|$)/.test(entry.hash) ? 'leaves' : location.hash.slice(1)));
   const startAt = fromHash >= 0 ? fromHash : saved && Date.now() - saved.t < 30 * 60000 ? saved.c : 0;
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
+  canopy?.arrive(entry);
   cam.snap();
   wireTree();
   loop();
@@ -394,6 +401,7 @@ function goStatic() {
   panels.forEach((p) => { p.classList.add('is-active'); p.removeAttribute('inert'); });
   // without WebGL the campus plan is still there, as a drawing with the same places
   import('../map/static.js').then((m) => m.renderStatic()).catch((err) => console.warn('campus plan unavailable', err));
+  import('../canopy/static.js').then((m) => m.renderStatic(entry)).catch((err) => console.warn('works list unavailable', err));
 }
 
 // The details shot is a portrait of one real cluster of new leaves on the rim
@@ -481,6 +489,7 @@ function wireTree() {
     canvas.style.cursor = world.litter.pick(r) ? 'pointer' : hit.n ? 'grab' : '';
   };
   cam.onTap = (e) => {
+    if (canopy?.tap(e)) return;
     const r = pointerRay(e);
     const fl = world.litter.pick(r, e.pointerType === 'touch' ? 0.9 : 0.6);
     const now = haikouParts(Date.now());
@@ -522,10 +531,12 @@ function step(dt, wallDt = dt) {
   const near = Math.round(p);
   setActive(Math.abs(p - near) < 0.3 ? near : -1);
   map?.tick(dt, wallDt);
+  canopy?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
-  const grow = growAt(p);
+  const grow = canopy ? canopy.grow(growAt(p)) : growAt(p);
   const L = lightAt(p);
   map?.light(L);
+  canopy?.light(L);
   const rail = override || poseAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
@@ -537,7 +548,7 @@ function step(dt, wallDt = dt) {
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  if (!map?.camera(dt, wallDt)) cam.update(dt, wallDt);
+  if (!map?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
   if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
@@ -553,6 +564,7 @@ function step(dt, wallDt = dt) {
   updateNav(p, grow);
   placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
   map?.overlay();
+  canopy?.overlay();
   world.render(t);
   frames++;
 }
@@ -576,7 +588,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, chapters: CHAPTERS, state,
+  get world() { return world; }, get map() { return map?.api; }, get canopy() { return canopy?.api; }, chapters: CHAPTERS, state,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },

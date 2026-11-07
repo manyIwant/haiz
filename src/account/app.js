@@ -190,7 +190,7 @@ function renderUsage(result) {
   const table = document.createElement('table'), head = document.createElement('thead'), titles = document.createElement('tr');
   for (const label of ['分类', '有效记录', '删除标记', '记录内容']) { const cell = node('th', label); cell.scope = 'col'; titles.append(cell); } head.append(titles); table.append(head);
   const body = document.createElement('tbody'); for (const [type, usage] of Object.entries(result.collections)) {
-    const row = document.createElement('tr'), title = node('th', names[type]); title.scope = 'row'; row.append(title, node('td', String(usage.active)), node('td', String(usage.deleted)), node('td', formatBytes(usage.bytes))); body.append(row);
+    const row = document.createElement('tr'), title = node('th', names[type] || ({ works: '作品草稿' })[type] || type); title.scope = 'row'; row.append(title, node('td', String(usage.active)), node('td', String(usage.deleted)), node('td', formatBytes(usage.bytes))); body.append(row);
   }
   table.append(body); section.append(table, node('p', '历史版本 ' + result.totals.historyVersions + ' 个，占用 ' + formatBytes(result.totals.historyBytes) + '。每条内容最多 ' + formatBytes(result.limits.itemBytes) + '。统计为保存的 JSON 内容大小，不包含数据库索引与备份。', 'muted'), button('导出当前有效数据', exportData)); content.append(section);
 }

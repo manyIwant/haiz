@@ -3,7 +3,8 @@ import { check, fail, text, revision, date, username } from './errors.mjs';
 
 const identity = row => ({ id: row.id, name: row.name, role: row.role, scope: row.scope, scopes: JSON.parse(row.scopes) });
 const parse = row => row ? JSON.parse(row.data) : null;
-const collections = ['notes', 'bookmarks', 'preferences'];
+// works: chapter 03's private drafts (lanren/canopy). Owner-only like the others; nothing here publishes.
+const collections = ['notes', 'bookmarks', 'preferences', 'works'];
 const retention = { days: 30, perItem: 20, perUser: 2000 };
 const historyCutoff = () => Date.now() - retention.days * 86400000;
 const personalCollection = collection => check(collections.includes(collection), 404, '数据集合不存在');
@@ -293,7 +294,7 @@ export function createRepositoryCore(db, {
       check(typeof q === 'string' && q.length > 0 && q.length <= 100, 400, '搜索文字须为 1 至 100 个字符');
       if (collection !== undefined) personalCollection(collection);
       pageLimit(limit);
-      check(typeof cursor === 'string' && (cursor === '' || /^(notes|bookmarks|preferences):[\w-]{1,100}$/.test(cursor)), 400, '分页参数无效');
+      check(typeof cursor === 'string' && (cursor === '' || /^(notes|bookmarks|preferences|works):[\w-]{1,100}$/.test(cursor)), 400, '分页参数无效');
       const [afterCollection, afterId] = cursor ? cursor.split(':') : ['', ''];
       const rows = all(`SELECT * FROM personal_data WHERE owner=? AND deleted=0 AND (? IS NULL OR collection=?)
         AND (collection>? OR (collection=? AND id>?)) AND instr(lower(data),lower(?))>0 ORDER BY collection,id LIMIT ?`, who.id, collection ?? null, collection ?? null, afterCollection, afterCollection, afterId, q, limit + 1);
