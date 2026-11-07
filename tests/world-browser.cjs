@@ -152,10 +152,10 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     assert(wall.clear > 0.3, 'walking at 一号教学楼 stops at its wall (clearance ' + wall.clear.toFixed(2) + ')');
     ok(`walk: W moved the walker ${walked.toFixed(2)} m; the wheel moved nothing and the page stayed put; walking 6 s at 一号教学楼 stops ${wall.clear.toFixed(2)} m from its wall`);
     // look down: the body is there
-    await page.evaluate(() => { const L = window.__haizHome.life; L.place(-24, 26, 200); L.look(0, -60); });
+    await page.evaluate(() => { const L = window.__haizHome.life; L.place(-24, 26, 200); L.look(0, -200); });   // to the limit (−78°): as for a person, the body shows when looking well down
     await frames(page, 3);
     await shot(page, 'walk-1-lookdown');
-    await page.evaluate(() => window.__haizHome.life.look(0, 60));
+    await page.evaluate(() => window.__haizHome.life.look(0, 82));
     // M: the pocket map, instantly; Esc closes it
     await page.keyboard.press('KeyM');
     await until(page, () => window.__haizHome.W.owner === 'pocket');

@@ -66,6 +66,19 @@ export function attach(ctx, geo) {
   View.setNorth(geo.frame.northYaw);
   const NORTH = geo.frame.northYaw - 180;   // a turned campus turns every campus-relative heading with it
   const layer = createMapLayer(world, geo);
+  // V4's lagoon and the disc that catches the tree's shadow lie 2 cm under the campus ground. Seen from a
+  // person's height (05, 06, the walk) the two huge planes' depths cross at grazing angles and the water
+  // shows through the paving; while the campus stands whole they go a little deeper (back to V4's level
+  // whenever the plan or the water is to be seen)
+  const catcher = world.scene.children.find((o) => o.material?.isShadowMaterial);
+  const waterY0 = world.water.position.y, catcherY0 = catcher ? catcher.position.y : 0;
+  let lagoonDown = false;
+  function lagoon(down) {
+    if (down === lagoonDown) return;
+    lagoonDown = down;
+    world.water.position.y = waterY0 - (down ? 0.25 : 0); world.water.updateMatrixWorld();
+    if (catcher) { catcher.position.y = catcherY0 - (down ? 0.25 : 0); catcher.updateMatrixWorld(); }
+  }
   const { places, features } = geo;
   // the campus model the plan is a cut of (if it fails, the plan stays the drawn plan of before)
   let section = null;
@@ -921,6 +934,7 @@ export function attach(ctx, geo) {
       // advance the change first, so the cuts, the front and the camera of this frame share one u
       if (S.trans) stepTrans();
       cutsNow(wall);
+      lagoon(S.u >= 0.999 && !S.trans);
       section.setDim(S.dim);
       section.update(S.owns && cur ? { x: cur.tx, z: cur.tz, r: cur.s * 2.8 } : ctx.focus?.() || null);
     }
@@ -1023,7 +1037,7 @@ export function attach(ctx, geo) {
     geo, layer, places, section,
     unfold: () => unfold(), fold: (then) => fold({ then }),
     enterFromWalk: (o) => enterFromWalk(o), toWalk: (o) => toWalk(o || {}),
-    get fromWalk() { return !!S.fromWalk; }, get u() { return S.u; },
+    get fromWalk() { return !!S.fromWalk; }, get u() { return S.u; }, get lagoonDown() { return lagoonDown; },
     /** review frames: hold the change at u (0…1) along the path from the current view */
     holdUnfold(u) {
       if (!section || S.mode !== 'map') return;

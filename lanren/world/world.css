@@ -40,7 +40,7 @@ body.wd-touch .wd kbd { display: none; }
 @media (prefers-reduced-motion: reduce) { .wd-rotate-chip i, .wd-phone { animation: none; transform: rotate(-90deg); } .wd-hold { animation: none; } .wd-rotate-chip { animation: none; } }
 
 /* ------------------------------------------------------------ the walk */
-body.wd-walking .panels, body.wd-walking .orbit, body.wd-walking .rail, body.wd-walking .growth, body.wd-walking .leaders, body.wd-walking .bar { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s; }
+body.wd-walking .panels, body.wd-walking .orbit, body.wd-walking .rail, body.wd-walking .growth, body.wd-walking .leaders, body.wd-walking .bar, body.wd-walking .colophon { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s; }
 body.wd-walking #world { cursor: grab; }
 .wd-hud { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
 .wd-hud > * { pointer-events: auto; }
@@ -120,6 +120,8 @@ body.wd-touch .wd-pocket kbd { display: none; }
 /* ------------------------------------------------------------ chapter 04 opened from the walk */
 .cmap-you { position: fixed; left: 0; top: 0; z-index: 9; margin: 0; display: none; pointer-events: none; transform-origin: 0 0; }
 .cmap-you.on { display: flex; align-items: center; gap: 6px; }
+/* (the map's overlay children start hidden: map.css .cmap > *) */
+body.map-mode:not(.map-leaving) .cmap > .cmap-you.on { opacity: 1; visibility: visible; transition: opacity .7s cubic-bezier(.22, 1, .36, 1), visibility 0s; }
 .cmap-you i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #d9b56a; box-shadow: 0 0 0 4px rgba(217, 181, 106, .35), 0 0 0 1px #fff inset; }
 .cmap-you span { font: 500 12px/1 "Songti SC", "Noto Serif SC", serif; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); margin-top: -7px; }
 .cmap-dest { background: #293f36; color: #f7f3eb; border: 0; border-radius: 999px; padding: 10px 16px; font: 500 13px var(--serif, serif); letter-spacing: .08em; cursor: pointer; }
