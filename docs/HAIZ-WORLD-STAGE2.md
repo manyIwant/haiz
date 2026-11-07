@@ -25,6 +25,8 @@
 
 真实浏览器截图（Chromium + SwiftShader，800×450 @2x，隐藏了 V4 的章节文字以便比较构图）：`docs/lanren/world/compose.jpg`（n = 第一阶段校园原样留到 05/06 的冲突本身；B；A；C），电影 `film.jpg`，漫游与地图 `walk.jpg`，手机 `phone.jpg`；单张原图在 `docs/lanren/world/raw/`。
 
+决策页（截图对比 + 建议，私有链接，需作者本人打开或分享）：https://claude.ai/artifact/7CmRNfYxve2oPgPr4fJiwi
+
 **我的建议是 B**，理由：它是唯一同时满足 DESIGN.md 里「保留 V4 第五幕机位与傍晚光影」「已经展开的校园保持立体」「第五幕看见可以亲自走入的校园」「第六幕回望完整榄仁树」「榄仁树处在校园正确的相对位置」的方案；代价只是一个此前就未经证实的朝向约定。**选择权在你**：三个方案都已实现，可以随时切换比较：
 
 - `index.html?compose=b`（默认）、`?compose=a`、`?compose=c`；`?compose=n` 是冲突基线（只供对比）。选择会在当前标签页里记住。
@@ -80,6 +82,15 @@
   - 直接转动手机：检测到横屏后自动继续；
   - 「竖屏继续」：竖屏也能完整漫游。
 - 不用 CSS 假旋转；控件位置使用 `env(safe-area-inset-*)`；离开漫游时退出全屏、解除方向锁。
+
+## 2.9 本地预览
+
+```
+git fetch origin claude/wonderful-maxwell-ggk0pi
+git checkout claude/wonderful-maxwell-ggk0pi
+python3 -m http.server 8000
+```
+打开 `http://localhost:8000/index.html?compose=b`（或 `a` / `c`），滚到第五幕继续向下；`#walk` 刷新后回到第六幕。测试与截图钩子：页面里 `window.__haizHome`（`.life`、`.W`、`.map`、`freeze()`、`seek(p)`）。
 
 ## 3. 关键源码
 
