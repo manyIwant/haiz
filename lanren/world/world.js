@@ -279,7 +279,8 @@ export function attachWorld(ctx) {
       P.yaw = s.yaw; P.pitch = s.pitch; P.bodyYaw = fx.y6;
     }
     const c = colliders(), free = freeSpot(c, P.x, P.z);
-    if (free.moved > 0) { P.x = free.x; P.z = free.z; say(`原来的位置在建筑体量里，已移到最近的空地（${free.moved.toFixed(1)} m）。`); }
+    let moved = '';
+    if (free.moved > 0) { P.x = free.x; P.z = free.z; moved = `原来的位置在建筑体量里，已移到最近的空地（${free.moved.toFixed(1)} m）。`; }
     P.vx = P.vz = P.vy = 0; P.air = false; P.crouch = 0; P.amp = 0;
     P.fov = from ? FOV_WALK : (s.fov || FOV_WALK);
     P.fovT = FOV_WALK;
@@ -288,7 +289,7 @@ export function attachWorld(ctx) {
     if (history.state?.walk !== 1) history.pushState({ walk: 1 }, '', '#walk');
     $('.wd-hold').hidden = true;
     if (!guided) { $('.wd-guide').hidden = false; guideTimer = setTimeout(() => dismissGuide(), 9000); }
-    say('现在由你来走。' + (coarse ? '左手拖动移动，右手拖动环顾。' : 'WASD 移动，拖动环顾，M 地图，Esc 菜单。'));
+    say(moved + '现在由你来走。' + (coarse ? '左手拖动移动，右手拖动环顾。' : 'WASD 移动，拖动环顾，M 地图，Esc 菜单。'));
     savePlayer();
     canvas.focus?.({ preventScroll: true });
   }
