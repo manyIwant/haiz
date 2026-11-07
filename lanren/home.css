@@ -55,6 +55,8 @@ body.ready .poster { opacity: 0; }
 
 .track { position: relative; z-index: -1; pointer-events: none; }
 .stop { height: 100vh; height: 100svh; }
+/* 05 → 06 is the walker's film: a longer stretch of page, so each scroll lands on one beat of it */
+.js body.spatial .stop.film { height: 300vh; height: 300svh; }
 
 /* ------------------------------------------------------------ bar: tools, then the mark (top right) */
 .bar { position: fixed; z-index: 10; top: var(--top); right: var(--pad); display: flex; align-items: flex-start; gap: 22px; pointer-events: none; }

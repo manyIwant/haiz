@@ -22,7 +22,12 @@
 
 export const GROUND_Y = -0.85;            // V4 water level: the map is drawn on this plane
 export const TREE_ID = 'lanshu';
-export const ROTATION = 0;                // campus → world rotation about Y (radians); see above
+export const ROTATION = 0;                // default campus → world rotation about Y (radians); see above
+// A composition (lanren/world/compose.js) may turn the whole campus about the tree's root:
+// every reading (plan, model, labels, picking, collision) goes through the same frame, so the
+// tree keeps its place on the campus; only the campus's bearing in V4's world changes.
+// The angle is three.js rotation.y: campus +Z (the teaching blocks' porches) faces world
+// (sin R, cos R), campus north (-Z) faces world (-sin R, -cos R), i.e. heading 180° + R.
 
 // ---------------------------------------------------------------- plan ↔ campus
 export function planToCampus(px, py, tf) {
@@ -37,16 +42,20 @@ export function rectCampus(r, tf) {
 
 // ---------------------------------------------------------------- campus ↔ world
 /** The frame: campus metres ↔ V4 world, pivoting on the tree. */
-export function makeFrame(campus) {
+export function makeFrame(campus, { rotation = ROTATION } = {}) {
   const tf = campus.meta.transform;
   const tree = campus.buildings.find((b) => b.id === TREE_ID);
   if (!tree) throw new Error('campus data has no ' + TREE_ID);
   const pivot = rectCampus(tree.rect, tf);
-  const c = Math.cos(ROTATION), s = Math.sin(ROTATION);
+  const c = Math.cos(rotation), s = Math.sin(rotation);
   const frame = {
     transform: tf,
     pivot: { x: pivot.x, z: pivot.z },
     ground: GROUND_Y,
+    /** campus → world rotation about Y (radians, three.js rotation.y) */
+    rotation,
+    /** the view heading (degrees) that looks towards campus north (the North Gate) */
+    northYaw: 180 + (rotation * 180) / Math.PI,
     /** campus metres → world x/z */
     toWorld(x, z) { const dx = x - pivot.x, dz = z - pivot.z; return { x: dx * c + dz * s, z: -dx * s + dz * c }; },
     /** world x/z → campus metres */
@@ -56,8 +65,8 @@ export function makeFrame(campus) {
     sheet: null
   };
   const g = campus.meta.ground;
-  const a = frame.toWorld(-g.width / 2, -g.depth / 2), b = frame.toWorld(g.width / 2, g.depth / 2);
-  frame.sheet = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) };
+  const cs = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, j]) => frame.toWorld((i * g.width) / 2, (j * g.depth) / 2));
+  frame.sheet = { x0: Math.min(...cs.map((p) => p.x)), x1: Math.max(...cs.map((p) => p.x)), z0: Math.min(...cs.map((p) => p.z)), z1: Math.max(...cs.map((p) => p.z)) };
   return frame;
 }
 
@@ -76,7 +85,7 @@ export function buildFeatures(campus, frame) {
     const r = rectCampus(src.rect, tf);
     const w = frame.toWorld(r.x, r.z);
     out.push({ id: src.id, group: GROUPS[src.id] || src.id, name: src.name || '', kind, code: KIND[kind], layer: LAYER[kind],
-      cx: w.x, cz: w.z, hw: r.w / 2, hd: r.d / 2, rot: (src.rot || 0) - ROTATION, h: src.size ? src.size[1] : 0, ...extra });
+      cx: w.x, cz: w.z, hw: r.w / 2, hd: r.d / 2, rot: (src.rot || 0) + frame.rotation, h: src.size ? src.size[1] : 0, ...extra });
   };
   for (const b of campus.buildings) {
     const kind = FORM_KIND[b.form];
@@ -121,10 +130,16 @@ export function buildPlaces(campus, frame, features, extras = null) {
     if (!parts.length) continue;
     // the place's extent covers all of its parts (the boys' dormitory is four wings)
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
-    for (const f of parts) { x0 = Math.min(x0, f.cx - f.hw); x1 = Math.max(x1, f.cx + f.hw); z0 = Math.min(z0, f.cz - f.hd); z1 = Math.max(z1, f.cz + f.hd); }
+    // (a turned campus turns each footprint's extents with it; with no turn this is the footprint itself)
+    const cR = Math.abs(Math.cos(frame.rotation || 0)), sR = Math.abs(Math.sin(frame.rotation || 0));
+    for (const f of parts) {
+      const ex = f.hw * cR + f.hd * sR, ez = f.hw * sR + f.hd * cR;
+      x0 = Math.min(x0, f.cx - ex); x1 = Math.max(x1, f.cx + ex); z0 = Math.min(z0, f.cz - ez); z1 = Math.max(z1, f.cz + ez);
+    }
     const main = parts.find((f) => f.id === b.id) || parts[0];
     const p = photo.get(b.id) || {};
     const dist = Math.hypot(main.cx, main.cz);
+    const local = frame.toCampus(main.cx, main.cz);
     places.push({
       id: b.id, name: b.name, en: b.en || '', category: b.category || '', form: b.form, kind: main.kind,
       desc: b.desc || '', note: b.note || '', inscription: b.inscription || null,
@@ -132,7 +147,7 @@ export function buildPlaces(campus, frame, features, extras = null) {
       size: b.size || null, floors: b.floors || null,
       x: main.cx, z: main.cz, w: x1 - x0, d: z1 - z0, box: { x0, x1, z0, z1 },
       priority: PRIORITY[b.id], features: parts.map((f) => f.index),
-      fromTree: { distance: dist, bearing: bearingName(main.cx, main.cz) },
+      fromTree: { distance: dist, bearing: bearingName(local.x - frame.pivot.x, local.z - frame.pivot.z) },
       walk: walkFocus(b.id)
     });
   }
@@ -247,8 +262,8 @@ export function buildTrees(campus, frame, features) {
 }
 
 /** Everything the map needs, from the project's own data. */
-export function buildGeo(campus, extras = null) {
-  const frame = makeFrame(campus);
+export function buildGeo(campus, extras = null, opts = {}) {
+  const frame = makeFrame(campus, opts);
   const features = buildFeatures(campus, frame);
   const places = buildPlaces(campus, frame, features, extras);
   const trees = buildTrees(campus, frame, features);

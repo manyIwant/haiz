@@ -658,17 +658,20 @@ export function buildCampus(campus, frame) {
   const tf = campus.meta.transform;
   const list = campus.buildings.filter((b) => BUILT.includes(b.form)).map((b) => {
     const rc = rectCampus(b.rect, tf);
-    const w = frame.toWorld(rc.x, rc.z);
-    return { id: b.id, form: b.form, b, r: { x: w.x, z: w.z, w: rc.w, d: rc.d } };
+    // bridges are trimmed against their neighbours in the campus's own axes, then placed
+    return { id: b.id, form: b.form, b, r: { x: rc.x, z: rc.z, w: rc.w, d: rc.d } };
   });
+  const R = frame.rotation || 0;
   const P = new Packer();
   const buildings = [];
   list.forEach((it) => {
-    const r = trimmed(it.b, it.r, list);
+    const rl = trimmed(it.b, it.r, list);
     const b = it.b;
-    if (r.w < 1 || r.d < 1) return;
+    if (rl.w < 1 || rl.d < 1) return;
+    const wc = frame.toWorld(rl.x, rl.z);
+    const r = { x: wc.x, z: wc.z, w: rl.w, d: rl.d };
     const index = buildings.length;
-    let rot = b.rot || 0, w = r.w, d = r.d;
+    let rot = (b.rot || 0) + R, w = r.w, d = r.d;
     // the spine of the boys' dormitory runs north–south: build it lengthwise, balconies to the west
     if (b.form === 'living' && d > w * 1.6) { rot -= Math.PI / 2; [w, d] = [d, w]; }
     P.frame(r.x, r.z, rot, frame.ground, index);
@@ -681,7 +684,7 @@ export function buildCampus(campus, frame) {
     const bands = L ? [[0, out.base], ...L.at.map((y) => [y + L.fh - slabT, y + L.fh])] : [[0, out.base]];
     buildings.push({
       id: b.id, group: GROUPS[b.id] || b.id, name: b.name, form: b.form, index,
-      cx: r.x, cz: r.z, w: r.w, d: r.d, rot: b.rot || 0,
+      cx: r.x, cz: r.z, w: r.w, d: r.d, rot: (b.rot || 0) + R,
       base: out.base, top: P.top, height: b.size[1], floors: L ? L.f : 0, floorH: L ? L.fh : 0,
       levels: L ? L.at : [], bands,
       verts: [v0, P.n], tris: [i0 / 3, P.idx.length / 3]

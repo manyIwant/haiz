@@ -1,0 +1,138 @@
+/* The walk's interface: as little as possible over the campus, always a way to the menu.
+   World tools: translucent charcoal, warm light text, 1px edges (DESIGN.md). */
+.wd { --ink: #172b24; --glass: rgba(16, 30, 25, .62); --edge: rgba(246, 241, 231, .22); --text: #f3eee3; --muted: rgba(243, 238, 227, .66); --gold: #d9b56a;
+  --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+  font: 400 13px/1.5 "Sora", "PingFang SC", "Noto Sans SC", system-ui, sans-serif; color: var(--text); }
+.wd [hidden] { display: none !important; }
+.wd button { font: inherit; color: inherit; cursor: pointer; }
+.wd kbd { font: 500 10px/1 "Sora", system-ui, sans-serif; padding: 2px 5px; border: 1px solid var(--edge); border-radius: 4px; color: var(--muted); margin-left: 6px; }
+body.wd-touch .wd kbd { display: none; }
+.wd-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ------------------------------------------------------------ 06: the hold, and the one step on */
+.wd-hold { position: fixed; z-index: 12; left: 50%; bottom: calc(var(--sb) + 96px); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  width: max-content; max-width: calc(100vw - 32px); padding: 6px 6px 6px 18px; background: var(--glass); border: 1px solid var(--edge); border-radius: 999px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  animation: wd-hold-in .7s cubic-bezier(.22, 1, .36, 1) both; }
+.wd-hold-t { margin: 0; display: flex; gap: 10px; align-items: baseline; font: 400 13px/1.4 "Songti SC", "Noto Serif SC", serif; white-space: nowrap; }
+.wd-hold-t b { font: 500 11px/1 "Sora", sans-serif; letter-spacing: .18em; color: var(--gold); white-space: nowrap; }
+.wd-go { padding: 8px 18px; border-radius: 999px; border: 0; background: #f3eee3; color: #172b24 !important; font: 600 13px/1.2 "Songti SC", "Noto Serif SC", serif !important; letter-spacing: .12em; min-height: 40px; }
+.wd-go i { font-style: normal; margin-left: 4px; }
+.wd-resume { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; min-height: 42px; }
+.wd-hold-dest { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); margin: 0; text-align: center; font-size: 12px; color: var(--text); text-shadow: 0 1px 6px rgba(0, 0, 0, .55); }
+.wd-hold-dest button { margin-left: 8px; background: none; border: 0; text-decoration: underline; color: inherit; padding: 0; }
+.wd-hold-h { position: absolute; left: 0; right: 0; top: calc(100% + 8px); margin: 0; text-align: center; font-size: 11px; color: var(--text); opacity: .78; text-shadow: 0 1px 6px rgba(0, 0, 0, .55); }
+@keyframes wd-hold-in { from { opacity: 0; transform: translate(-50%, 15px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes wd-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: none; } }
+
+/* ------------------------------------------------------------ phones: turning sideways */
+.wd-rotate-chip { position: fixed; z-index: 12; left: 50%; top: calc(var(--st) + 70px); transform: translateX(-50%); margin: 0; padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+  background: var(--glass); border: 1px solid var(--edge); border-radius: 999px; font-size: 12px; white-space: nowrap; animation: wd-in .7s cubic-bezier(.22, 1, .36, 1) both; }
+.wd-rotate-chip i, .wd-phone { display: inline-block; width: 12px; height: 20px; border: 1.5px solid currentColor; border-radius: 3px; animation: wd-turn 2.4s cubic-bezier(.22, 1, .36, 1) infinite; }
+.wd-rotate { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; background: rgba(8, 14, 12, .42); padding: calc(var(--st) + 20px) 20px calc(var(--sb) + 20px); }
+.wd-rotate-card { max-width: 340px; text-align: center; padding: 26px 22px 20px; background: var(--glass); border: 1px solid var(--edge); border-radius: 16px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.wd-rotate-card .wd-phone { width: 30px; height: 50px; border-width: 2px; border-radius: 7px; margin-bottom: 12px; }
+.wd-rotate-card h3 { margin: 0 0 8px; font: 500 18px/1.4 "Songti SC", "Noto Serif SC", serif; letter-spacing: .1em; }
+.wd-rotate-card p { margin: 0 0 16px; font-size: 12px; color: var(--muted); }
+.wd-rotate-b { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.wd-rotate-b button { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; min-height: 44px; }
+.wd-rotate-b button:first-child { background: #f3eee3; color: #172b24; border: 0; }
+@keyframes wd-turn { 0%, 30% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .wd-rotate-chip i, .wd-phone { animation: none; transform: rotate(-90deg); } .wd-hold { animation: none; } .wd-rotate-chip { animation: none; } }
+
+/* ------------------------------------------------------------ the walk */
+body.wd-walking .panels, body.wd-walking .orbit, body.wd-walking .rail, body.wd-walking .growth, body.wd-walking .leaders, body.wd-walking .bar { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s; }
+body.wd-walking #world { cursor: grab; }
+.wd-hud { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
+.wd-hud > * { pointer-events: auto; }
+.wd-where { position: absolute; left: calc(var(--sl) + 18px); top: calc(var(--st) + 16px); margin: 0; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.wd-where b { font: 500 11px/1 "Sora", sans-serif; letter-spacing: .22em; padding: 7px 10px; border-radius: 999px; background: var(--glass); border: 1px solid var(--edge); }
+.wd-dest { font-size: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(217, 181, 106, .18); border: 1px solid rgba(217, 181, 106, .45); }
+.wd-top { position: absolute; right: calc(var(--sr) + 16px); top: calc(var(--st) + 14px); display: flex; gap: 8px; }
+.wd-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.wd-arrive { position: absolute; left: 50%; top: calc(var(--st) + 70px); transform: translateX(-50%); margin: 0; font: 500 15px/1.4 "Songti SC", "Noto Serif SC", serif; letter-spacing: .12em; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); pointer-events: none; }
+.wd-stick { position: fixed; left: 0; top: 0; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 50%; border: 1px solid var(--edge); background: rgba(16, 30, 25, .28); opacity: 0; transition: opacity .2s; pointer-events: none; }
+.wd-stick.on { opacity: 1; }
+.wd-stick i { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(243, 238, 227, .78); }
+.wd-jump { display: none; position: absolute; right: calc(var(--sr) + 22px); bottom: calc(var(--sb) + 26px); width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--edge); background: var(--glass); font: 500 14px/1 "Songti SC", serif; }
+body.wd-touch .wd-jump { display: block; }
+/* controls rest when nothing is touched (B: shown when needed, fading when idle) */
+.wd.wd-idle .wd-top, .wd.wd-idle .wd-jump, .wd.wd-idle .wd-where { opacity: .32; transition: opacity .8s; }
+.wd .wd-top, .wd .wd-jump, .wd .wd-where { transition: opacity .25s; }
+/* no interface: photography. The handle stays (faint) so the menu can always be found */
+body.wd-noui .wd-hud { display: none; }
+.wd-handle { position: fixed; z-index: 13; right: calc(var(--sr) + 14px); top: calc(var(--st) + 12px); width: 44px; height: 32px; border-radius: 999px; border: 1px solid rgba(246, 241, 231, .16);
+  background: rgba(16, 30, 25, .25); color: rgba(243, 238, 227, .55); letter-spacing: .1em; opacity: .45; transition: opacity .2s; }
+.wd-handle:hover, .wd-handle:focus-visible { opacity: 1; }
+
+.wd-guide { position: fixed; z-index: 14; left: 50%; bottom: calc(var(--sb) + 28px); transform: translateX(-50%); width: min(440px, calc(100vw - 32px)); padding: 16px 18px 14px;
+  background: var(--glass); border: 1px solid var(--edge); border-radius: 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: wd-in .7s cubic-bezier(.22, 1, .36, 1) both; }
+.wd-guide h3 { margin: 0 0 6px; font: 500 16px/1.4 "Songti SC", "Noto Serif SC", serif; letter-spacing: .1em; }
+.wd-guide ul { margin: 0 0 8px; padding-left: 18px; }
+.wd-guide li { margin: 2px 0; }
+.wd-guide p { margin: 0 0 10px; font-size: 11px; color: var(--muted); }
+.wd-guide button { padding: 8px 16px; border-radius: 999px; border: 0; background: #f3eee3; color: #172b24; }
+
+/* ------------------------------------------------------------ the menu */
+.wd-menu { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; background: rgba(8, 14, 12, .38); padding: calc(var(--st) + 16px) calc(var(--sr) + 16px) calc(var(--sb) + 16px) calc(var(--sl) + 16px); overflow: auto; }
+.wd-menu-card { width: min(760px, 100%); max-height: 100%; overflow: auto; padding: 18px 20px 14px; background: rgba(16, 30, 25, .82); border: 1px solid var(--edge); border-radius: 16px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: wd-in .25s ease-out both; }
+.wd-menu-card header, .wd-pocket-card header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.wd-menu-card header p, .wd-pocket-card header p { margin: 0; display: flex; gap: 10px; align-items: baseline; }
+.wd-menu-card header b, .wd-pocket-card header b { font: 600 14px/1 "Sora", sans-serif; letter-spacing: .2em; }
+.wd-menu-card header span, .wd-pocket-card header span { color: var(--muted); font-size: 12px; }
+.wd-x { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; min-height: 40px; }
+.wd-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 18px; }
+.wd-menu-grid section { display: flex; flex-direction: column; gap: 6px; }
+.wd-menu-grid h4 { margin: 0 0 2px; font: 500 11px/1 "Sora", sans-serif; letter-spacing: .2em; color: var(--gold); }
+.wd-menu-grid button, .wd-links a { text-align: left; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--edge); background: rgba(255, 255, 255, .03); color: var(--text); text-decoration: none; min-height: 40px; }
+.wd-menu-grid button:hover, .wd-links a:hover { background: rgba(255, 255, 255, .08); }
+.wd-menu-grid button[aria-pressed="true"] { border-color: rgba(217, 181, 106, .6); }
+.wd-chapters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.wd-chapters button { padding: 7px 8px; font-size: 12px; }
+.wd-chapters b { display: block; font: 500 10px/1.2 "Sora", sans-serif; color: var(--muted); }
+.wd-links { display: flex; flex-direction: column; gap: 6px; }
+.wd-old { font-size: 12px; color: var(--muted) !important; }
+.wd-menu-dest { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.wd-menu-note { margin: 12px 0 0; font-size: 11px; color: var(--muted); }
+
+/* ------------------------------------------------------------ the pocket map */
+.wd-pocket { position: fixed; z-index: 21; inset: 0; display: grid; place-items: center; background: rgba(8, 14, 12, .3); padding: calc(var(--st, 0px) + 14px) 14px calc(var(--sb, 0px) + 14px); touch-action: none;
+  font: 400 13px/1.5 "Sora", "PingFang SC", "Noto Sans SC", system-ui, sans-serif; color: #f3eee3; }
+.wd-pocket[hidden] { display: none; }
+.wd-pocket-card { width: min(760px, 100%); height: min(620px, 100%); display: flex; flex-direction: column; padding: 14px 16px 12px; background: rgba(16, 30, 25, .86); border: 1px solid rgba(246, 241, 231, .22); border-radius: 16px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: wd-in .25s ease-out both; }
+.wd-pocket-card button { font: inherit; color: inherit; cursor: pointer; }
+.wd-pocket-map { position: relative; flex: 1; min-height: 160px; border-radius: 10px; overflow: hidden; }
+.wd-pocket-map canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.wd-pocket-scale { position: absolute; left: 10px; bottom: 8px; margin: 0; display: flex; align-items: center; gap: 6px; color: #2b3a32; font-size: 11px; }
+.wd-pocket-scale i { display: block; height: 4px; border: 1.5px solid #2b3a32; border-top: 0; }
+.wd-pocket-dest { margin: 8px 0 6px; font-size: 12px; color: rgba(243, 238, 227, .8); }
+.wd-pocket-card footer { display: flex; gap: 8px; flex-wrap: wrap; }
+.wd-pocket-card footer button { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(246, 241, 231, .22); background: transparent; min-height: 40px; }
+.wd-pocket-card footer button:first-child { background: #f3eee3; color: #172b24; border: 0; }
+.wd-pocket-note { margin: 8px 0 0; font-size: 11px; color: rgba(243, 238, 227, .6); }
+.wd-pocket kbd { font: 500 10px/1 "Sora", sans-serif; padding: 2px 5px; border: 1px solid rgba(246, 241, 231, .22); border-radius: 4px; margin-left: 6px; color: rgba(243, 238, 227, .66); }
+body.wd-touch .wd-pocket kbd { display: none; }
+
+/* ------------------------------------------------------------ chapter 04 opened from the walk */
+.cmap-you { position: fixed; left: 0; top: 0; z-index: 9; margin: 0; display: none; pointer-events: none; transform-origin: 0 0; }
+.cmap-you.on { display: flex; align-items: center; gap: 6px; }
+.cmap-you i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #d9b56a; box-shadow: 0 0 0 4px rgba(217, 181, 106, .35), 0 0 0 1px #fff inset; }
+.cmap-you span { font: 500 12px/1 "Songti SC", "Noto Serif SC", serif; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); margin-top: -7px; }
+.cmap-dest { background: #293f36; color: #f7f3eb; border: 0; border-radius: 999px; padding: 10px 16px; font: 500 13px var(--serif, serif); letter-spacing: .08em; cursor: pointer; }
+.cmap-dest[aria-pressed="true"] { background: #c8902f; }
+.cmap-walk-note .cmap-walk { background: none; color: inherit; padding: 0; border-radius: 0; text-decoration: underline; font: inherit; letter-spacing: 0; }
+
+/* phones: in the walk, the safe areas and the browser's own bars are respected; landscape keeps the thumbs free */
+@media (max-width: 760px) {
+  /* phones: V4's words and links sit at the bottom; the step on waits under the bar, over the sky */
+  .wd-hold { bottom: auto; top: calc(var(--st) + 64px); border-radius: 16px; padding: 12px; }
+  .wd-hold-h { top: auto; bottom: calc(100% + 6px); }
+  .wd-hold-dest { bottom: auto; top: calc(100% + 6px); }
+  .wd-hold-t { flex-direction: column; gap: 4px; text-align: center; align-items: center; white-space: normal; }
+  .wd-menu-card { padding: 14px; }
+  .wd-chapters { grid-template-columns: repeat(2, 1fr); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .wd-hold { bottom: calc(var(--sb) + 40px); }
+  .wd-guide { bottom: calc(var(--sb) + 12px); }
+  .wd-pocket-card { height: 100%; }
+}

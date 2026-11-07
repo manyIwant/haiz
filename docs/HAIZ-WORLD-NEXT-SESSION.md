@@ -1,5 +1,7 @@
 # HAIZ · 下一次对话快速读取（第五幕 · 第六幕 · 第一人称漫游）
 
+> **2026-11-07 更新：第二阶段已实现第五、六幕电影、交接与漫游，见 `docs/HAIZ-WORLD-STAGE2.md`（分支 `claude/wonderful-maxwell-ggk0pi`）。** 构图冲突已用数据与截图对比，三种方案都可用 `?compose=a|b|c` 切换，默认 B（校园绕树转 90°，V4 两个机位原样）——**等待作者最终确认**。下文是第一阶段结束时写的，保留作背景。
+
 完整交接见 `docs/HAIZ-WORLD-STAGE1-HANDOFF.md`（必读 §0、§7、§9、§11）。设计权威：仓库 `DESIGN.md`（「四至六幕连续空间与手机漫游」一节）。86 个 Skill 在用户提供的 MASTER 包里，入口 `/haiz-studio-director`，只按需读 2–4 个：`haiz-scroll-cinematic`、`haiz-blocky-character`、`haiz-firstperson-camera`、`haiz-locomotion-animation`、`haiz-foot-ik`、`haiz-mobile-controls`；动画研究 `references/HAIZ_FirstPerson_Animation_Research_2026-11-06.md`。不要重复做资料搜索。
 
 ## 项目与六幕

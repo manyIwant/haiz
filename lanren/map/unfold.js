@@ -44,16 +44,20 @@ export function cameraAt(path, u) {
  * Key views for the change, from where the visitor is.
  * extent: the campus's built extent in world x/z; aspect: screen width / height.
  */
-export function unfoldPath(A, extent, aspect) {
+export function unfoldPath(A, extent, aspect, northYaw = 180) {
   const cx = (extent.x0 + extent.x1) / 2, cz = (extent.z0 + extent.z1) / 2;
   const hw = (extent.x1 - extent.x0) / 2, hd = (extent.z1 - extent.z0) / 2;
+  // the campus's own axes (a composition may turn the campus about the tree; see geo.js)
+  const R = ((northYaw - 180) * Math.PI) / 180, c = Math.cos(R), sn = Math.sin(R);
+  const hwC = hw * Math.abs(c) + hd * Math.abs(sn), hdC = hd * Math.abs(c) + hw * Math.abs(sn);
+  const ox = hwC * 0.3, oz = hdC * 0.02;
   // the whole drawing: nearly straight down, a long lens, the campus filling the frame
   const M = { tx: cx, tz: cz, s: Math.max(hd * 1.08, (hw * 1.08) / aspect), pitch: 86, yaw: A.yaw, fov: 26, auth: A.auth };
   // the campus: from the north-west, over the tree towards the teaching blocks; the low sun of
   // chapter 04 comes from the left, north fronts lit and west fronts in shade
   // (framed on the buildings: the sports field stays at the edge of the picture)
   // (a portrait screen crops the campus's sides rather than shrinking it to a strip)
-  const B = { tx: cx + hw * 0.3, tz: cz + hd * 0.02, s: Math.max(hd * 0.6, (hw * 0.66) / Math.max(aspect, 0.8)), pitch: 37, yaw: 34, fov: 36, auth: A.auth };
+  const B = { tx: cx + ox * c + oz * sn, tz: cz - ox * sn + oz * c, s: Math.max(hdC * 0.6, (hwC * 0.66) / Math.max(aspect, 0.8)), pitch: 37, yaw: 34 + (northYaw - 180), fov: 36, auth: A.auth };
   return { A: { ...A }, M, B };
 }
 /** folding back from wherever the visitor stands in 3D: to the plan straight below that view */

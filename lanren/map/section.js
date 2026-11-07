@@ -242,7 +242,9 @@ function buildingDepth(U, NB) {
 
 // ---------------------------------------------------------------- the ground in material
 function groundMaterial(U, layerU) {
-  const m = new THREE.MeshStandardMaterial({ roughness: 0.93, metalness: 0 });
+  // (seen from a person's height, ground in a building's shade lit by the sky alone read as water:
+  // with no bounce light in the scene, the sky's share is kept lower so shaded paving stays paving)
+  const m = new THREE.MeshStandardMaterial({ roughness: 0.93, metalness: 0, envMapIntensity: 0.55 });
   m.onBeforeCompile = (sh) => {
     // the plan's own feature data, canopies off, no drawn shadows: the light does that here
     Object.assign(sh.uniforms, U, {

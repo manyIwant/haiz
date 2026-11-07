@@ -15,6 +15,8 @@ import { GROUND_Y } from './geo.js';
 
 const D2R = Math.PI / 180;
 export const TOP = { pitch: 90, yaw: 180, fov: 20 };
+/** the heading that puts campus north (the North Gate) at the top of the screen (geo frame.northYaw) */
+export function setNorth(yaw) { TOP.yaw = yaw; return TOP; }
 export const LIMITS = { sMax: 330, eyeMin: 21, sMinAbs: 6 };
 
 /** V4 rail frame {ex,ey,ez,lx,ly,lz,fov,auth} → map view (the ground point it looks at, same picture) */

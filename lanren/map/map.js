@@ -33,16 +33,17 @@ import * as Unfold from './unfold.js';
 import * as View from './view.js';
 import { buildDom, fillDetail, fillFloors, createOverlay, niceScale } from './ui.js';
 import { parseHash, hashFor as hashOf } from './hash.js';
+import { campusAt } from '../world/compose.js';
 
 const TOKEN = 'haiz.map';
 const CSS = new URL('./map.css?v=2', import.meta.url).href;
 const EYE_3D = 7;            // in 3D the camera may come down to look at a facade
 
-/** Start loading the campus data (in parallel with the tree). */
-export function preload() {
+/** Start loading the campus data (in parallel with the tree). opts.rotation: the composition's turn of the campus (compose.js). */
+export function preload(opts = {}) {
   const base = new URL('../../', import.meta.url);
   const get = (p, optional) => fetch(new URL(p, base)).then((r) => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); }).catch((e) => { if (optional) return null; throw e; });
-  return Promise.all([get('assets/walk/campus.json'), get('data/buildings.json', true)]).then(([campus, extras]) => buildGeo(campus, extras));
+  return Promise.all([get('assets/walk/campus.json'), get('data/buildings.json', true)]).then(([campus, extras]) => buildGeo(campus, extras, { rotation: opts.rotation || 0 }));
 }
 
 export { parseHash };
@@ -53,6 +54,8 @@ export { parseHash };
  */
 export function attach(ctx, geo) {
   const { world, cam, state, poseAt, goTo, DwellCamera } = ctx;
+  // the world shared with 05, 06 and the walk (lanren/world/state.js); a bare stand-in when absent
+  const W = ctx.worldState || { compose: { rise: null }, campus: { pinned: false }, owner: 'scroll', claim() {}, release() {}, setDestination() {}, destination: null, on() {} };
   const reduce = !!ctx.reduceMotion;
   const body = document.body;
   const canvas = world.renderer.domElement;
@@ -60,6 +63,8 @@ export function attach(ctx, geo) {
   const near0 = camera.near, far0 = camera.far;
   if (!document.querySelector(`link[href="${CSS}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = CSS; document.head.append(l); }
 
+  View.setNorth(geo.frame.northYaw);
+  const NORTH = geo.frame.northYaw - 180;   // a turned campus turns every campus-relative heading with it
   const layer = createMapLayer(world, geo);
   const { places, features } = geo;
   // the campus model the plan is a cut of (if it fails, the plan stays the drawn plan of before)
@@ -179,6 +184,7 @@ export function attach(ctx, geo) {
     cur = { ...from };
     goal = { ...from };
     S.owns = true;
+    W.claim('map');
     shelve(true);
     cam.enabled = false;
     cam.releaseLook();
@@ -189,13 +195,18 @@ export function attach(ctx, geo) {
     S.T = 1;
     S.frozen = false;
     const h = home();
+    // the campus left standing in 04 (or risen on the way to 05) is entered as it stands
+    const standing = !!section && S.u >= 0.999;
+    S.u = standing ? 1 : 0;
     takeCamera(viewFromCamera() || h);
     if (Math.abs(cur.tx - h.tx) + Math.abs(cur.tz - h.tz) + Math.abs(cur.pitch - h.pitch) > 0.05) tweenTo(h, 0.9);
     S.view = 'oblique';
     S.lockY = scrollY;
     body.classList.remove('map-reveal');
     body.classList.add('map-mode');
-    if (!fromHistory) hist(() => history.pushState({ cmap: 'map' }, '', hashFor()));
+    body.classList.toggle('map-3d', standing);
+    if (!fromHistory) hist(() => { history.pushState({ cmap: 'map' }, '', '#map/' + S.view); if (standing) history.pushState({ cmap: 'map3d' }, '', '#map/3d'); });
+    if (standing) syncControls();
     say('校园平面已就绪。拖动平移，滚轮或双指缩放，点选地点；Esc 返回树冠。');
     saveToken();
     section?.warm(camera);
@@ -213,7 +224,7 @@ export function attach(ctx, geo) {
     let base = tokOk ? tok.cur : plan;
     if (want3d) {
       S.u = 1;
-      if (!tokOk) base = Unfold.unfoldPath(plan, extent, canvas.clientWidth / Math.max(1, canvas.clientHeight)).B;
+      if (!tokOk) base = Unfold.unfoldPath(plan, extent, canvas.clientWidth / Math.max(1, canvas.clientHeight), geo.frame.northYaw).B;
     }
     takeCamera(base);
     S.pan = tok?.pan || S.pan;
@@ -243,12 +254,16 @@ export function attach(ctx, geo) {
   }
   function exitMap({ fromHistory = false, then = null } = {}) {
     if (S.mode !== 'map') { if (then && S.mode === 'tree') then(); return; }
-    // from the campus in 3D, fold back into the plan first (one film), then leave as before
-    if (S.u > 0 || S.trans) {
+    // opened from the walk: leaving the map goes back to the walk, where the walker stood
+    if (S.fromWalk && !then) { toWalk({ fromHistory }); return; }
+    // half-way through a change: finish folding to the plan first (one film), then leave as before.
+    // A campus standing whole stays standing (04 → 05 keeps it: DESIGN.md), only the camera leaves
+    if (S.trans) {
       if (S.detail) closeDetail({ fromHistory: true, keepCamera: true });
       fold({ fast: true, history: false, then: () => exitMap({ fromHistory, then }) });
       return;
     }
+    W.campus.pinned = S.u >= 1;
     if (S.detail) closeDetail({ fromHistory: true, keepCamera: true });
     togglePlaces(false);
     S.mode = 'leave';
@@ -266,6 +281,46 @@ export function attach(ctx, geo) {
     say('回到第四幕：水面正在合拢。');
     try { sessionStorage.removeItem(TOKEN); } catch { /* storage blocked */ }
   }
+  // ---------------------------------------------------------------- the walk and the full map (DESIGN.md: one two-way system)
+  /**
+   * From the walk: the camera rises from the walker's eye while the campus folds back into the
+   * plan, centred on where the walker stood. No trip back to the tree, no film run backwards.
+   * view: the walker's eye as a map view; player: {x, z, yaw}
+   */
+  function enterFromWalk({ view, player }) {
+    if (S.mode === 'map') return;
+    S.T = 1; layer.setReveal(1);
+    S.mode = 'map'; S.frozen = false;
+    S.fromWalk = { player: { ...player } };
+    S.view = 'oblique';
+    takeCamera(view);
+    S.lockY = scrollY;
+    body.classList.add('map-mode', 'map-3d', 'map-from-walk');
+    const h = home();
+    const plan = constrain({ ...h, tx: player.x, tz: player.z, s: h.s * 0.85 });
+    S.u = section ? 1 : 0;
+    hist(() => history.pushState({ cmap: 'map', fromWalk: 1 }, '', '#map/oblique'));
+    if (section) startTrans(-1, { A: plan, M: { ...plan, s: plan.s * 1.2 }, B: { ...view } }, reduce ? Unfold.DURATION.reduced : 3.0);
+    else tweenTo(plan, 1.2, { fly: true });
+    syncControls();
+    say('从漫游升到第四幕的完整地图：校园收回为总平面，金色标记是你刚才站的地方。');
+    saveToken();
+  }
+  /** back to the walk: the campus stands again and the camera comes down to the walker's eye (or the tree's foot) */
+  function toWalk({ fromHistory = false, restart = false } = {}) {
+    if (!S.fromWalk || S.mode !== 'map') return;
+    if (S.trans?.dir > 0) return;
+    if (S.detail) closeDetail({ fromHistory: true, keepCamera: true });
+    togglePlaces(false);
+    setFloor(null);
+    const back = ctx.walkView?.({ restart }) || null;
+    if (!back) { S.fromWalk = null; exitMap({ fromHistory, then: () => {} }); return; }
+    const finish = () => { S.mode = 'tree'; S.T = 0; layer.setReveal(0); handBack(); back.then(); };
+    if (section) startTrans(1, { A: { ...goal }, M: { ...goal }, B: { ...back.view } }, reduce ? Unfold.DURATION.reduced : 3.0, finish);
+    else tweenTo(back.view, 1.0, { done: finish });
+    if (!fromHistory) hist(() => { if (history.state?.cmap) goBack(); });
+    say(restart ? '回到榄仁树下，重新出发。' : '回到刚才站的地方，继续漫游。');
+  }
   function handBack() {
     if (!S.owns) return;
     S.owns = false;
@@ -276,8 +331,10 @@ export function attach(ctx, geo) {
     camera.updateProjectionMatrix();
     cam.enabled = true;
     shelve(false);
-    body.classList.remove('map-mode', 'map-leaving', 'map-3d', 'map-turning');
+    body.classList.remove('map-mode', 'map-leaving', 'map-3d', 'map-turning', 'map-from-walk');
     canvas.style.cursor = '';
+    S.fromWalk = null;
+    W.release('map');
   }
 
   // ---------------------------------------------------------------- the plan becomes the campus (and back)
@@ -287,7 +344,7 @@ export function attach(ctx, geo) {
     if (S.trans?.dir > 0 || (S.u >= 1 && !S.trans)) return;
     if (S.detail) closeDetail({ keepCamera: true });
     togglePlaces(false);
-    const path = S.trans ? S.trans.path : Unfold.unfoldPath({ ...goal }, extent, aspect());
+    const path = S.trans ? S.trans.path : Unfold.unfoldPath({ ...goal }, extent, aspect(), geo.frame.northYaw);
     startTrans(1, path, reduce || instant ? Unfold.DURATION.reduced : Unfold.DURATION.unfold);
     if (writeHistory) hist(() => history.pushState({ cmap: 'map3d' }, '', '#map/3d'));
     say('总平面正在成为校园：建筑从各自的占地轮廓升起，材质从榄仁树向外展开。');
@@ -360,11 +417,12 @@ export function attach(ctx, geo) {
    */
   function cutsNow(wall) {
     if (!section) return;
-    const gate = S.T > 0 && S.mode === 'map';
+    const gate = S.mode === 'map' ? S.T > 0 : S.u > 0;
     const k = 1 - Math.exp(-wall * 6);
     const live = !S.trans && S.mode === 'map';
     section.setLifts((b) => {
       if (!gate) return -(b.top + 1);
+      if (S.mode !== 'map') { const e = Unfold.riseAt(S.u, order.get(b.index)); S.floorK.set(b.index, e); return -(1 - e * e * (3 - 2 * e)) * (b.top + 1); }
       const asked = S.floor && S.floor.group === b.group;
       // the chosen building rises on its own on the plan; everything follows u exactly while the campus changes form
       const want = Math.max(Unfold.riseAt(S.u, order.get(b.index)), asked ? 1 : 0);
@@ -378,7 +436,7 @@ export function attach(ctx, geo) {
     section.setCuts((b) => {
       const whole = GROUND_Y + b.top + 1;
       let y = whole;
-      if (S.floor && S.floor.group === b.group && b.levels.length) {
+      if (S.mode === 'map' && S.floor && S.floor.group === b.group && b.levels.length) {
         const kk = Math.min(b.levels.length - 1, S.floor.k);
         y = GROUND_Y + b.levels[kk] + CUT_HEIGHT;
       }
@@ -453,7 +511,7 @@ export function attach(ctx, geo) {
   function clearYaw(p, v, tall) {
     const mine = section.byGroup.get(p.id);
     const norm = (y) => ((y % 360) + 540) % 360 - 180;
-    const pref = [210, 180, 240, 150, 270, 120, 300, 90, 330, 60, 0, 30];
+    const pref = [210, 180, 240, 150, 270, 120, 300, 90, 330, 60, 0, 30].map((y) => y + NORTH);
     let yaw0 = norm(v.yaw);
     if (!mine) return yaw0;
     const pts = [[p.x, Math.max(2, tall * 0.5), p.z], [p.x, tall, p.z]];
@@ -473,7 +531,7 @@ export function attach(ctx, geo) {
       return n;
     };
     // stay where the visitor already looks from when that view is clear and shows the front half
-    const d0 = Math.abs(norm(yaw0 - 195));
+    const d0 = Math.abs(norm(yaw0 - 195 - NORTH));
     if (d0 < 70 && blocked(yaw0) === 0) return yaw0;
     let best = pref[0], score = Infinity;
     pref.forEach((y, i) => { const sc = blocked(y) * 10 + i * 0.5; if (sc < score) { score = sc; best = y; } });
@@ -496,6 +554,7 @@ export function attach(ctx, geo) {
     highlight(id);
     S.detail = true;
     fillDetail(dom, p, geo, section?.byGroup.get(id)?.[0] || null, in3d());
+    syncDest();
     syncFloors();
     const panel = $('.cmap-detail');
     panel.hidden = false;
@@ -510,6 +569,14 @@ export function attach(ctx, geo) {
     say(p.name + '：详情已打开。Esc 返回地图。');
     saveToken();
   }
+  function syncDest() {
+    const b = $('.cmap-dest');
+    if (!b) return;
+    const on = !!S.selected && W.destination === S.selected;
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? '已设为漫游目的地 · 取消' : '设为漫游目的地';
+  }
+  W.on('destination', syncDest);
   function closeDetail({ fromHistory = false, keepCamera = false } = {}) {
     if (!S.detail) return;
     S.detail = false;
@@ -544,6 +611,9 @@ export function attach(ctx, geo) {
     if (on) nav.querySelector('button[data-place]')?.focus({ preventScroll: true });
   }
   function syncControls() {
+    const fw = !!S.fromWalk;
+    $('[data-act="walk-back"]').hidden = !fw; $('[data-act="walk-restart"]').hidden = !fw;
+    $('[data-act="exit"]').hidden = fw; $('[data-act="next"]').hidden = fw;
     $$('[data-view]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.view === S.view)));
     $$('[data-pan]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pan === S.pan)));
     const u = $('[data-act="unfold"]');
@@ -775,8 +845,11 @@ export function attach(ctx, geo) {
       case 'close': return closeDetail();
       case 'center': { const p = byId(S.selected); if (p) tweenTo(constrain(focusView(p)), 1.0, { fly: true }); return undefined; }
       case 'exit': return exitMap();
+      case 'walk-back': return toWalk();
+      case 'walk-restart': return toWalk({ restart: true });
+      case 'dest': { if (!S.selected) return undefined; W.setDestination(W.destination === S.selected ? null : S.selected); say(W.destination ? `${byId(S.selected)?.name || ''} 已设为漫游目的地。` : '已清除漫游目的地。'); return undefined; }
       case 'unfold': return in3d() ? fold() : unfold();
-      case 'north': return S.mode === 'map' && !S.trans ? tweenTo(constrain({ ...goal, yaw: lookOf(S.view).yaw }), 0.8) : undefined;
+      case 'north': return S.mode === 'map' && !S.trans ? tweenTo(constrain({ ...goal, yaw: S.u >= 1 || S.view === 'top' ? View.TOP.yaw : lookOf(S.view).yaw }), 0.8) : undefined;
       case 'next': return exitMap({ then: () => goTo(4) });
       default: return undefined;
     }
@@ -817,7 +890,7 @@ export function attach(ctx, geo) {
     switch (S.mode) {
       case 'tree':
         if (off > 0.05) { S.dwell = 0; S.armed = true; }
-        else if (off < 0.008 && S.armed && !document.hidden && !ctx.busy?.()) { S.dwell += wall; if (S.dwell > (reduce ? 2.5 : DURATION.dwell)) startReveal(1); }
+        else if (off < 0.008 && S.armed && !document.hidden && !ctx.busy?.()) { S.dwell += wall; if (S.dwell > (reduce ? 2.5 : DURATION.dwell)) startReveal(W.campus.pinned && S.u >= 0.999 ? 4 : 1); }
         break;
       case 'reveal':
         if (off > 0.02) { S.mode = 'cancel'; body.classList.remove('map-reveal'); say(''); break; }
@@ -843,12 +916,13 @@ export function attach(ctx, geo) {
     S.dim += ((S.detail ? 1 : 0) - S.dim) * (1 - Math.exp(-wall * 5));
     layer.setDim(S.dim);
     if (section) {
-      if (S.mode !== 'map' && S.u > 0) { S.u = 0; S.trans = null; }   // left by any other way: the plan again
+      // outside the map, the campus follows the film (and stands for the walk): one function of p
+      if (S.mode !== 'map') { S.trans = null; S.u = campusAt(W.compose, state.p, { pinned: W.campus.pinned, walking: ['play', 'pocket', 'menu', 'transit'].includes(W.owner) || !!ctx.walking?.() }); }
       // advance the change first, so the cuts, the front and the camera of this frame share one u
       if (S.trans) stepTrans();
       cutsNow(wall);
       section.setDim(S.dim);
-      section.update(S.owns && cur ? { x: cur.tx, z: cur.tz, r: cur.s * 2.8 } : null);
+      section.update(S.owns && cur ? { x: cur.tx, z: cur.tz, r: cur.s * 2.8 } : ctx.focus?.() || null);
     }
     if (S.mode === 'reveal') $('.cmap-progress > i').style.transform = `scaleX(${S.T.toFixed(3)})`;
   }
@@ -911,8 +985,17 @@ export function attach(ctx, geo) {
       const bar = $('.cmap-bar');
       bar.querySelector('i').style.width = n.px.toFixed(1) + 'px';
       bar.querySelector('b').textContent = n.metres + ' m';
-      $('.cmap-north i').style.transform = `rotate(${(180 - cur.yaw).toFixed(1)}deg)`;
+      $('.cmap-north i').style.transform = `rotate(${(View.TOP.yaw - cur.yaw).toFixed(1)}deg)`;
     }
+    // opened from the walk: where the walker stood
+    const you = $('.cmap-you');
+    if (S.fromWalk && on) {
+      const pv = new THREE.Vector3(S.fromWalk.player.x, GROUND_Y, S.fromWalk.player.z).project(camera);
+      const px = (pv.x * 0.5 + 0.5) * rect.width, py = (-pv.y * 0.5 + 0.5) * rect.height;
+      const vis = pv.z < 1 && px > 0 && px < rect.width && py > 0 && py < rect.height;
+      you.classList.toggle('on', vis);
+      if (vis) you.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0)`;
+    } else you.classList.remove('on');
     // the tree's locator: when the crown is small or out of frame, its root is still marked
     const loc = $('.cmap-locator');
     const v = new THREE.Vector3(0, GROUND_Y, 0).project(camera);
@@ -939,10 +1022,12 @@ export function attach(ctx, geo) {
       cam: cur && { tx: +cur.tx.toFixed(2), tz: +cur.tz.toFixed(2), s: +cur.s.toFixed(2), pitch: +cur.pitch.toFixed(2), yaw: +cur.yaw.toFixed(2), fov: +cur.fov.toFixed(2) }, hash: location.hash }),
     geo, layer, places, section,
     unfold: () => unfold(), fold: (then) => fold({ then }),
+    enterFromWalk: (o) => enterFromWalk(o), toWalk: (o) => toWalk(o || {}),
+    get fromWalk() { return !!S.fromWalk; }, get u() { return S.u; },
     /** review frames: hold the change at u (0…1) along the path from the current view */
     holdUnfold(u) {
       if (!section || S.mode !== 'map') return;
-      const path = S.trans?.path || S.holdPath || Unfold.unfoldPath({ ...goal }, extent, aspect());
+      const path = S.trans?.path || S.holdPath || Unfold.unfoldPath({ ...goal }, extent, aspect(), geo.frame.northYaw);
       S.holdPath = path; S.trans = null; S.u = u;
       body.classList.toggle('map-3d', u > 0.5); body.classList.toggle('map-turning', u > 0 && u < 1);
       const v = Unfold.cameraAt(path, u); Object.assign(cur, v); Object.assign(goal, v);
@@ -971,6 +1056,6 @@ export function attach(ctx, geo) {
     project: (x, z) => { const v = new THREE.Vector3(x, GROUND_Y, z).project(camera); const r = canvas.getBoundingClientRect(); return [(v.x * 0.5 + 0.5) * r.width + r.left, (-v.y * 0.5 + 0.5) * r.height + r.top]; }
   };
   // in 3D the air clears further: the far side of the campus should read, with a little aerial depth kept
-  const light = (L) => { layer.stage(L); if (S.u > 0) { const k = Unfold.sweepAt(S.u).f; L.density *= 1 - 0.55 * k; L.mist *= 1 - k; } return L; };
+  const light = (L) => { layer.stage(L); if (S.u > 0 && S.mode === 'map') { const k = Unfold.sweepAt(S.u).f; L.density *= 1 - 0.55 * k; L.mist *= 1 - k; } return L; };
   return { tick, light, post: () => layer.post(), camera: cameraHook, overlay: overlayHook, api };
 }

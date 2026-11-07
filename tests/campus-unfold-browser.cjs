@@ -5,7 +5,7 @@
 // footprint as a whole volume, the camera travels without a jump, material spreads
 // from the tree → turn, pan, zoom → tap 图书馆 → cut that one building at 2F → back →
 // fold back to the site plan → on the plan, one building's storey on request → history
-// back/forward → from 3D straight on to 05. Plus: a 3D deep link, reduced motion, a
+// back/forward → from 3D straight on to 05 (composition c: stage 1's orientation, V4's 05 kept). Plus: a 3D deep link, reduced motion, a
 // phone, and V4 untouched outside chapter 04.
 const assert = require('node:assert');
 const { chromium } = require('playwright');
@@ -61,7 +61,7 @@ if (run('route')) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
   watch(page);
-  await page.goto(base + '/index.html?quality=low&test=1#map/oblique');
+  await page.goto(base + '/index.html?quality=low&test=1&compose=c#map/oblique');
   await ready(page);
   await until(page, () => window.__haizHome.map.mode === 'map');
   await page.evaluate(() => window.__haizHome.map.settle());
@@ -196,7 +196,7 @@ if (run('route')) {
   await until(page, () => window.__haizHome.map.mode === 'tree' && Math.abs(window.__haizHome.state.p - 4) < 0.01);
   const g7 = await page.evaluate(() => ({ vis: window.__haizHome.map.section.group.visible, reveal: window.__haizHome.world.water.material.uniforms.uReveal.value, hash: location.hash }));
   assert(!g7.vis && g7.reveal === 0, 'after 05 the campus model is put away and the water is V4\'s');
-  results.push('from the campus in 3D, 继续 · 05 folds it back, the water closes and the walk continues to 05; the model is hidden and V4\'s water untouched (' + g7.hash + ')');
+  results.push('from the campus in 3D, 继续 · 05 leaves it standing (DESIGN.md: a campus already in 3D is not flattened again); composition c keeps V4\'s 05, so the standing campus goes down on the way and at 05 the model is hidden and V4\'s water untouched (' + g7.hash + ')');
   await page.evaluate(() => window.__haizHome.go(0));
   await frames(page);
   assert(!(await page.evaluate(() => window.__haizHome.map.section.group.visible)), 'chapter 01 renders without the campus model');
@@ -207,7 +207,7 @@ if (run('deep')) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
   watch(page);
-  await page.goto(base + '/index.html?quality=low&test=1#map/3d/library');
+  await page.goto(base + '/index.html?quality=low&test=1&compose=c#map/3d/library');
   await ready(page);
   await until(page, () => { const i = window.__haizHome.map.info(); return i.mode === 'map' && i.u >= 1 && i.detail; });
   const i = await info(page);
@@ -225,7 +225,7 @@ if (run('reduced')) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   watch(page);
-  await page.goto(base + '/index.html?quality=low&test=1#map/oblique');
+  await page.goto(base + '/index.html?quality=low&test=1&compose=c#map/oblique');
   await ready(page);
   await until(page, () => window.__haizHome.map.mode === 'map');
   const t0 = Date.now();
@@ -240,7 +240,7 @@ if (run('phone')) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   watch(page);
-  await page.goto(base + '/index.html?quality=low&test=1#map/oblique');
+  await page.goto(base + '/index.html?quality=low&test=1&compose=c#map/oblique');
   await ready(page);
   await until(page, () => window.__haizHome.map.mode === 'map');
   assert(await visible(page, '.cmap-unfold'), 'the way to 3D is in view on a phone');

@@ -337,6 +337,8 @@ export function createMapLayer(world, geo) {
       L.mist *= 1 - k; L.rays *= 1 - k; L.density *= 1 - 0.6 * k;
       L.contrast += (MAP_GRADE.contrast - L.contrast) * k;
       L.sat += (MAP_GRADE.sat - L.sat) * k;
+      // opened from the walk (06's light): the plan is still read in 04's exposure (a no-op at 04)
+      L.exposure += (MAP_GRADE.exposure - L.exposure) * k;
       return L;
     },
     /** after setStage: post-processing that would bloom or vignette the paper */

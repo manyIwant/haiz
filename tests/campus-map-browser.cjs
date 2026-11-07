@@ -46,7 +46,7 @@ if (run('route')) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
   watch(page);
-  await page.goto(base + '/index.html?quality=low&test=1');
+  await page.goto(base + '/index.html?quality=low&test=1&compose=c');
   await ready(page);
   await page.evaluate(() => { const w = window.__haizHome.world; window.__same = { renderer: w.renderer, canopy: w.canopy.mesh, bark: w.bark, island: w.island.position.y }; });
   // arrive at 04 by scrolling and rest: the reveal begins on its own, V4 untouched until then
@@ -145,7 +145,7 @@ if (run('deep')) {
   const dctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const dp = await dctx.newPage();
   watch(dp);
-  await dp.goto(base + '/index.html?quality=low&test=1#map/top/library');
+  await dp.goto(base + '/index.html?quality=low&test=1&compose=c#map/top/library');
   await ready(dp);
   await mode(dp, 'map');
   await dp.waitForSelector('.cmap-detail.open', { timeout: T });
@@ -183,7 +183,7 @@ if (run('reduced')) {
   const rctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
   const rp = await rctx.newPage();
   watch(rp);
-  await rp.goto(base + '/index.html?quality=low&test=1');
+  await rp.goto(base + '/index.html?quality=low&test=1&compose=c');
   await ready(rp);
   await rp.evaluate(() => window.__haizHome.go(3));
   await mode(rp, 'reveal');
@@ -211,7 +211,7 @@ if (run('phone')) {
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const mp = await mctx.newPage();
   watch(mp);
-  await mp.goto(base + '/index.html?test=1');
+  await mp.goto(base + '/index.html?test=1&compose=c');
   await ready(mp);
   await mp.evaluate(() => { window.__haizHome.go(3); window.__haizHome.map.start(4); });
   await mode(mp, 'map');

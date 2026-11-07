@@ -15,6 +15,7 @@ export function buildDom(places) {
   root.innerHTML = `
   <div class="cmap-labels" aria-hidden="true"></div>
   <button type="button" class="cmap-locator" data-act="tree" tabindex="-1" aria-hidden="true"><i></i><span>百年榄仁树</span><small></small></button>
+  <p class="cmap-you" aria-hidden="true"><i></i><span>刚才你在这里</span></p>
   <div class="cmap-reveal" role="status" aria-live="polite">
     <p><b>水面之下</b><span>是整座校园</span></p>
     <i class="cmap-progress"><i></i></i>
@@ -39,6 +40,8 @@ export function buildDom(places) {
   <div class="cmap-exit">
     <button type="button" data-act="exit">返回树冠</button>
     <button type="button" class="cmap-next" data-act="next">继续 · 05 远眺 <i aria-hidden="true">→</i></button>
+    <button type="button" class="cmap-next" data-act="walk-back" hidden>回到漫游 <i aria-hidden="true">→</i></button>
+    <button type="button" data-act="walk-restart" hidden>从榄仁树重新出发</button>
   </div>
   <div class="cmap-scale" aria-hidden="true"><button type="button" class="cmap-north" data-act="north" tabindex="-1"><i></i>北<small>校园坐标</small></button><span class="cmap-bar"><i></i><b>20 m</b></span><span class="cmap-cut">校园总平面</span></div>
   <p class="cmap-hint" aria-hidden="true"><span><b>拖动</b>旋转</span><span><b>右键 / 双指</b>平移</span><span><b>滚轮 / 捏合</b>缩放</span><span><b>点选</b>建筑</span><span><b>U</b>收回总平面</span></p>
@@ -63,8 +66,8 @@ export function buildDom(places) {
         <p></p>
       </section>
       <p class="cmap-src"></p>
-      <div class="cmap-actions"><a class="cmap-walk" href="#">从这里步入校园 <i aria-hidden="true">↗</i></a><button type="button" data-act="center">在地图上居中</button></div>
-      <p class="cmap-walk-note">第一人称漫游是另一个独立页面（campus-3d），从这个地点附近的校道开始；返回时回到这里的地图状态。</p>
+      <div class="cmap-actions"><button type="button" class="cmap-dest" data-act="dest" aria-pressed="false">设为漫游目的地</button><button type="button" data-act="center">在地图上居中</button></div>
+      <p class="cmap-walk-note">目的地会带进第六幕之后的第一人称漫游（从榄仁树出发，不会把你直接传送过去）；建筑为近似体量，不能进入。另有旧版独立漫游页（含想象教室）：<a class="cmap-walk" href="#">campus-3d ↗</a></p>
     </div>
   </aside>`;
   document.body.append(root);

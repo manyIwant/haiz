@@ -10,6 +10,8 @@ import { UNIFORMS, leafVisible, createHeroLeaves } from './foliage.js';
 import { Specimens } from './specimen.js';
 import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
+import { pickComposition } from '../world/compose.js';
+import { createWorldState } from '../world/state.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -25,6 +27,10 @@ const stops = $$('.stop');
 const state = { p: 0 };
 let world = null, cam = null, active = -1;
 let map = null;   // chapter 04's campus beneath the water (lanren/map), when it has loaded
+// how 05 and 06 meet the campus (?compose=a|b|c, lanren/world/compose.js) and the world they share
+const compose = pickComposition(location.search, (() => { try { return sessionStorage; } catch { return null; } })());
+let W = null;     // lanren/world/state.js: owner of camera and input, the campus left standing, the destination
+let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -38,6 +44,22 @@ function goTo(i, instant = false) {
   if (instant || reduceMotion) { scrollTo(0, y); state.p = i; return; }
   scrollTo({ top: y, behavior: 'smooth' });
 }
+// Scroll → p is piecewise linear through the stops (each stop's top is p = i). The stretch
+// from 05 to 06 is longer (.stop.film): it carries the walker's film, which rests on beats.
+const FILM_BEATS = [0.2, 0.55, 0.82];   // q = p - 4 where the film holds a stable pose (lanren/world/film.js BEATS)
+// (ScrollTrigger's range is the track's: top top → bottom bottom; the colophon below it is not part of the film)
+const track = document.getElementById('track');
+function stopTops() { const m = Math.max(1, track.offsetHeight - innerHeight); return stops.map((s) => Math.min(1, s.offsetTop / m)); }
+function pOfProgress(t) {
+  const tops = stopTops();
+  for (let i = 0; i < N - 1; i++) if (t <= tops[i + 1] || i === N - 2) return i + Math.min(1, Math.max(0, (t - tops[i]) / Math.max(1e-6, tops[i + 1] - tops[i])));
+  return N - 1;
+}
+function progressOfP(p) {
+  const tops = stopTops(), i = Math.max(0, Math.min(N - 2, Math.floor(p)));
+  return tops[i] + (tops[i + 1] - tops[i]) * (p - i);
+}
+const snapPoints = () => [...stopTops(), ...FILM_BEATS.map((q) => progressOfP(4 + q))].sort((a, b) => a - b);
 function wireScroll() {
   const gsap = window.gsap, ST = window.ScrollTrigger;
   if (gsap && ST) {
@@ -46,18 +68,19 @@ function wireScroll() {
     mm.add({ calm: '(prefers-reduced-motion: reduce)', full: '(prefers-reduced-motion: no-preference)' }, (ctx) => {
       const calm = ctx.conditions.calm;
       gsap.to(state, {
-        p: N - 1, ease: 'none',
+        p: N - 1, ease: (t) => pOfProgress(t) / (N - 1),
         scrollTrigger: {
           trigger: '#track', start: 'top top', end: 'bottom bottom',
           scrub: calm ? true : 1.15,
-          snap: { snapTo: 1 / (N - 1), inertia: false, directional: true, duration: calm ? 0 : { min: 0.55, max: 1.5 }, delay: 0.1, ease: 'power2.inOut' }
+          // nothing moves the film while the walk, the pocket map or the menu has the input
+          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : ST.snapDirectional(snapPoints())(v, self.direction)), inertia: false, directional: true, duration: calm ? 0 : { min: 0.55, max: 1.5 }, delay: 0.1, ease: 'power2.inOut' }
         }
       });
     });
   } else {
     // GSAP unavailable: a plain, eased mapping of the native scroll
     let target = 0;
-    addEventListener('scroll', () => { target = (scrollY / Math.max(1, maxScroll())) * (N - 1); }, { passive: true });
+    addEventListener('scroll', () => { target = pOfProgress(Math.min(1, scrollY / Math.max(1, track.offsetHeight - innerHeight))); }, { passive: true });
     (function follow() { state.p += (target - state.p) * 0.12; requestAnimationFrame(follow); })();
   }
 }
@@ -354,7 +377,7 @@ async function start3D() {
   body.classList.add('spatial');
   // the campus data loads alongside the tree; the map attaches before the first frame
   const mapData = params.has('nomap') ? Promise.resolve(null)
-    : import('../map/map.js').then((m) => m.preload().then((geo) => ({ m, geo }))).catch((err) => { console.warn('campus map unavailable', err); return null; });
+    : import('../map/map.js').then((m) => m.preload({ rotation: compose.rotation }).then((geo) => ({ m, geo }))).catch((err) => { console.warn('campus map unavailable', err); return null; });
   const { buildScene, pickTier } = await import('./scene.js');
   const tierName = pickTier();
   document.documentElement.dataset.tier = tierName;
@@ -369,15 +392,26 @@ async function start3D() {
   world.resize();
   addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
-  cam.rail = () => override || poseAt(state.p);
+  W = createWorldState({ compose, canvas: world.renderer.domElement, cam });
+  cam.rail = () => override || life?.rail(state.p) || poseAt(state.p);
   const attachMap = (md) => {
     if (!md || map) return;
-    try { map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]') }, md.geo); } catch (err) { console.warn('campus map unavailable', err); }
+    try {
+      map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]'),
+        worldState: W, focus: () => life?.focus() || null, walking: () => !!life?.walking(), walkView: (o) => life?.walkView(o) || null }, md.geo);
+    } catch (err) { console.warn('campus map unavailable', err); }
+    // the film, the walker, the pocket map and the menu share the map's campus (same frame, same model)
+    if (map && !life) {
+      import('../world/world.js').then((m) => {
+        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params });
+      }).catch((err) => console.warn('walk unavailable', err));
+    }
   };
   const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
   if (md === 'late') mapData.then(attachMap); else attachMap(md);
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
-  const fromHash = CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : location.hash.slice(1)));
+  // (#walk: a reload in the walk comes back to 06, where the walk can be taken up again)
+  const fromHash = entry.hash === '#walk' ? N - 1 : CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : location.hash.slice(1)));
   const startAt = fromHash >= 0 ? fromHash : saved && Date.now() - saved.t < 30 * 60000 ? saved.c : 0;
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
@@ -520,11 +554,14 @@ function step(dt, wallDt = dt) {
   const t = UNIFORMS.uTime.value;
   const p = state.p;
   const near = Math.round(p);
-  setActive(Math.abs(p - near) < 0.3 ? near : -1);
+  // (05 → 06 is the walker's film: 05's words stay while the eye is still in the crown, 06's come with the turn)
+  setActive(p > 4 && p < 5 ? (p < 4.1 ? 4 : p > 4.95 ? 5 : -1) : Math.abs(p - near) < 0.3 ? near : -1);
   map?.tick(dt, wallDt);
+  life?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
   const grow = growAt(p);
   const L = lightAt(p);
+  life?.light(L, p);
   map?.light(L);
   const rail = override || poseAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
@@ -537,8 +574,9 @@ function step(dt, wallDt = dt) {
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  if (!map?.camera(dt, wallDt)) cam.update(dt, wallDt);
+  if (!map?.camera(dt, wallDt) && !life?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
+  life?.after(dt, wallDt);
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
   if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
     openingFall = 1.6 + Math.random() * 2.4;
@@ -553,6 +591,7 @@ function step(dt, wallDt = dt) {
   updateNav(p, grow);
   placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
   map?.overlay();
+  life?.overlay();
   world.render(t);
   frames++;
 }
@@ -576,9 +615,11 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, chapters: CHAPTERS, state,
+  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
+  /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */
+  freeze: (on = true) => { const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
   lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
   info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +(world.camera.userData.screen || world.camera.aspect).toFixed(3)],
