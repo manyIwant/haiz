@@ -71,6 +71,10 @@ body.wd-noui .wd-hud { display: none; }
 .wd-guide li { margin: 2px 0; }
 .wd-guide p { margin: 0 0 10px; font-size: 11px; color: var(--muted); }
 .wd-guide button { padding: 8px 16px; border-radius: 999px; border: 0; background: #f3eee3; color: #172b24; }
+/* the guide never takes a touch meant for the joystick or the look (only its button answers); on phones it sits up top */
+.wd-guide { pointer-events: none; }
+.wd-guide button { pointer-events: auto; }
+body.wd-touch .wd-guide { top: calc(var(--st) + 64px); bottom: auto; }
 
 /* ------------------------------------------------------------ the menu */
 .wd-menu { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; background: rgba(8, 14, 12, .38); padding: calc(var(--st) + 16px) calc(var(--sr) + 16px) calc(var(--sb) + 16px) calc(var(--sl) + 16px); overflow: auto; }

@@ -240,7 +240,8 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
     await touch('touchStart', 90, 640);
     for (let i = 1; i <= 6; i++) await touch('touchMove', 90, 640 - i * 12);
-    await page.waitForTimeout(1500);
+    // hold the thumb until the walker has covered some ground (a software-rendered frame can take seconds)
+    await page.waitForFunction((x0) => { const p = window.__haizHome.life.player; return Math.hypot(p.x - x0.x, p.z - x0.z) > 0.2; }, p0, { timeout: T }).catch(() => {});
     await touch('touchEnd', 90, 568);
     await frames(page, 2);
     const p1 = (await info(page)).player;
