@@ -98,7 +98,11 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
       }
     }
     ok(`05 → 06 film: at ${samples.length} points the camera is exactly the walker's eye and the drawn body the film's body; scrolling back gives the same frames (Δ < 1e-6 m)`);
-    for (const [p, name] of [[4.2, 'film-1-limb'], [4.4, 'film-2-leap'], [4.55, 'film-3-landed'], [4.82, 'film-4-away'], [4.91, 'film-5-turn']]) { await page.evaluate((pp) => window.__haizHome.seek(pp), p); await frames(page, 3); await shot(page, name); }
+    for (const [p, name] of [[4.2, 'film-1-limb'], [4.4, 'film-2-leap'], [4.55, 'film-3-landed'], [4.82, 'film-4-away'], [4.91, 'film-5-turn']]) {
+      await page.evaluate((pp) => window.__haizHome.seek(pp), p); await frames(page, 3); await shot(page, name);
+      const g = await page.evaluate(() => { const h = window.__haizHome, s = h.map.section, w = h.world; return { ground: s.ground.visible, sweep: Math.round(s.sweepR), water: w.water.visible, near: w.camera.near, shadowAuto: w.renderer.shadowMap.autoUpdate }; });
+      assert(g.ground && g.sweep > 400, name + ': the campus ground is drawn ' + JSON.stringify(g));
+    }
     // 06 holds; scrolling on hands over (a real wheel, after a pause)
     await page.evaluate(() => { const h = window.__haizHome; h.freeze(false); h.go(5); });
     await until(page, () => window.__haizHome.W.owner === 'hold');
@@ -125,6 +129,8 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await page.keyboard.down('KeyW');
     await page.waitForFunction((x0) => { const p = window.__haizHome.life.player; return Math.hypot(p.x - x0.x, p.z - x0.z) > 0.3; }, p0, { timeout: T }).catch(() => {});
     await page.keyboard.up('KeyW');
+    // let the walker come to a stop before testing the wheel (it decelerates over a few frames)
+    await until(page, () => { const p = window.__haizHome.life.player; return Math.hypot(p.vx, p.vz) === 0; });
     await frames(page, 2);
     s = await info(page);
     const walked = Math.hypot(s.player.x - p0.x, s.player.z - p0.z);
@@ -132,7 +138,7 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await page.mouse.wheel(0, 600);
     await frames(page, 3);
     const s2 = await info(page);
-    assert(s2.scrollY === y0 && Math.abs(s2.player.x - s.player.x) < 0.01 && s2.owner === 'play', 'the wheel neither scrolls the page nor moves the walker');
+    assert(s2.scrollY === y0 && Math.abs(s2.player.x - s.player.x) < 0.01 && Math.abs(s2.player.z - s.player.z) < 0.01 && s2.owner === 'play', 'the wheel neither scrolls the page nor moves the walker ' + JSON.stringify({ y0, y: s2.scrollY, a: [s.player.x, s.player.z], b: [s2.player.x, s2.player.z] }));
     // simulated time (no rendering) for longer distances: a wall stops the walker
     const wall = await page.evaluate(() => {
       const L = window.__haizHome.life, b = window.__haizHome.map.section.buildings.find((x) => x.id === 'yihao');

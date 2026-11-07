@@ -77,7 +77,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y }) {
       const m = smooth(seg(q, 0.04, 0.16)), e = eyeAt(b);
       eye = [lerp(e5.ex, e[0], m), lerp(e5.ey, e[1], m), lerp(e5.ez, e[2], m)];
       yaw = lerpYaw(e5.yaw, yLimb, smooth(seg(q, 0.04, 0.17)));
-      pitch = lerp(e5.pitch, -74, smoother(seg(q, 0.09, 0.20)));   // far enough down to see one's own chest and feet
+      pitch = lerp(e5.pitch, -80, smoother(seg(q, 0.09, 0.20)));   // far enough down to see one's own chest and feet
       fov = lerp(e5.fov, FOV_WALK, smooth(seg(q, 0.04, 0.18)));
       auth = lerp(e5.auth || 0, 0, smooth(seg(q, 0.04, 0.12)));
     } else if (q < 0.355) {
@@ -92,7 +92,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y }) {
       b.lean = 0.2 * smooth(seg(q, 0.31, 0.355));
       b.yaw = lerpYaw(yLimb, yLeap, smooth(seg(q, 0.26, 0.34)));
       yaw = b.yaw;
-      pitch = lerp(-74, -40, smooth(seg(q, 0.20, 0.33)));
+      pitch = lerp(-80, -40, smooth(seg(q, 0.20, 0.33)));
       eye = eyeAt(b);
     } else if (q < 0.47) {
       // the leap: a thrown arc, up a little off the limb, then falling faster

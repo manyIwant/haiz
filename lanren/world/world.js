@@ -149,6 +149,8 @@ export function attachWorld(ctx) {
           <section><h4>观看</h4>
             <button type="button" data-w="noui" aria-pressed="false">隐藏界面（摄影） <kbd>H</kbd></button>
             <button type="button" data-w="body" aria-pressed="true">显示身体 <kbd>B</kbd></button>
+            <button type="button" data-w="spot-save">保存此处取景</button>
+            <div class="wd-spots" aria-label="保存的取景点（只在这台设备上）"></div>
           </section>
           <section><h4>去往</h4>
             <div class="wd-links">${CHAPTERS[5].entries.map((e) => e.href ? `<a href="${e.href}">${e.title}</a>` : `<button type="button" data-w="entry" data-action="${e.action}">${e.title}</button>`).join('')}<a class="wd-old" href="campus-3d.html">旧版第一人称校园（含想象教室）</a><a class="wd-old" href="director.html">探索导演台（路线与取景点）</a><a class="wd-old" href="descent.html">从星球到树荫（下降镜头）</a></div>
@@ -424,6 +426,32 @@ export function attachWorld(ctx) {
     const view = { tx: eye[0] + Math.sin(to.yaw * D2R) * flat, tz: eye[2] + Math.cos(to.yaw * D2R) * flat, s: d * Math.tan((FOV_WALK * D2R) / 2), pitch: pitchDown, yaw: to.yaw, fov: FOV_WALK, auth: 0 };
     return { view, then: () => startPlay({ ...to, pitch: -pitchDown, bodyYaw: to.yaw }) };
   }
+  // ---------------------------------------------------------------- viewpoints (a photographer's spots, kept on this device only)
+  const SPOTS = 'haiz.walk.spots';
+  const readSpots = () => { try { const v = JSON.parse(localStorage.getItem(SPOTS) || '[]'); return Array.isArray(v) ? v.slice(0, 6) : []; } catch { return []; } };
+  const writeSpots = (v) => { try { localStorage.setItem(SPOTS, JSON.stringify(v.slice(0, 6))); } catch { /* storage blocked */ } renderSpots(); };
+  function renderSpots() {
+    const list = readSpots();
+    $('.wd-spots').innerHTML = list.map((sp, i) => `<span class="wd-spot"><button type="button" data-w="spot-go" data-i="${i}">${sp.name}</button><button type="button" class="wd-spot-x" data-w="spot-del" data-i="${i}" aria-label="删除取景点 ${sp.name}">×</button></span>`).join('');
+  }
+  function saveSpot() {
+    const near = geo.places.map((pl) => ({ pl, d: Math.hypot(pl.x - P.x, pl.z - P.z) })).sort((a, b) => a.d - b.d)[0];
+    const list = readSpots();
+    const name = (near ? `${near.pl.name}旁` : '取景点') + ' ' + (list.length + 1);
+    list.unshift({ name, x: P.x, z: P.z, yaw: P.yaw, pitch: P.pitch, t: Date.now() });
+    writeSpots(list);
+    say(`已保存取景点「${name}」（只存在这台设备上）。`);
+  }
+  function goSpot(i) {
+    const sp = readSpots()[i];
+    if (!sp) return;
+    closeMenu(true);
+    const to = { x: sp.x, z: sp.z, y: ground(sp.x, sp.z), yaw: sp.yaw, pitch: sp.pitch, bodyYaw: sp.yaw };
+    W.claim('transit');
+    fly({ eye: eyeOfPlayer({ ...P, ...to, amp: 0, crouch: 0, air: false }), yaw: sp.yaw, pitch: sp.pitch, fov: FOV_WALK }, 1.8, () => startPlay(to));
+  }
+  function delSpot(i) { const list = readSpots(); list.splice(i, 1); writeSpots(list); }
+  renderSpots();
   function openMenu() {
     if (W.owner !== 'play' && W.owner !== 'pocket') return;
     closePocket(true);
@@ -456,6 +484,9 @@ export function attachWorld(ctx) {
       case 'body': return W.setHud({ body: !W.hud.body });
       case 'clear': return W.setDestination(null);
       case 'guide-ok': return dismissGuide();
+      case 'spot-save': return saveSpot();
+      case 'spot-go': return goSpot(+b.dataset.i);
+      case 'spot-del': return delSpot(+b.dataset.i);
       case 'jump': input.jump = true; return undefined;
       case 'entry': closeMenu(); return document.querySelector(`.panel [data-action="${b.dataset.action}"]`)?.click();
       default: return undefined;

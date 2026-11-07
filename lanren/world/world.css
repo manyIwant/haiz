@@ -90,6 +90,11 @@ body.wd-noui .wd-hud { display: none; }
 .wd-chapters button { padding: 7px 8px; font-size: 12px; }
 .wd-chapters b { display: block; font: 500 10px/1.2 "Sora", sans-serif; color: var(--muted); }
 .wd-links { display: flex; flex-direction: column; gap: 6px; }
+.wd-spots { display: flex; flex-wrap: wrap; gap: 6px; }
+.wd-spot { display: inline-flex; }
+.wd-spot button { min-height: 34px !important; padding: 6px 10px !important; font-size: 12px; }
+.wd-spot button:first-child { border-radius: 8px 0 0 8px !important; }
+.wd-spot .wd-spot-x { border-left: 0 !important; border-radius: 0 8px 8px 0 !important; color: var(--muted) !important; }
 .wd-old { font-size: 12px; color: var(--muted) !important; }
 .wd-menu-dest { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
 .wd-menu-note { margin: 12px 0 0; font-size: 11px; color: var(--muted); }
