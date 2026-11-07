@@ -184,6 +184,8 @@ draft ─提交─▶ submitted ─通过─▶ approved ─作者公开─▶ p
 
 ## 10. 清单
 
+**截图**（Chromium 真实渲染，SwiftShader，桌面 1280×720 与手机 390×844，均 2×）：`docs/lanren/canopy/` —— 01 V4 原第三幕 · 02 展开中 · 03 摄影枝 · 04 全部方向 · 05 文学 · 06 数字蓝调 · 07 阅读 · 08 双叶与接力 · 09 安静阅读 · 10 找到我的叶子 · 11 私人草稿 · 12 回到原镜头 · 13/14 真实空状态 · p1–p5 手机 · probe-inside-outside 树冠内外对比。
+
 **已实现并在 Chromium 中验证**（`tests/canopy-browser.cjs`，SwiftShader）：见 `tests/canopy-browser-results.json`。
 
 **未实现**：见 §9.4 的「未实现」行；视频作品（数据结构与阅读组件支持 `video`，演示没有视频）；作品搜索框（目录与地址可达，未做全文搜索）；声音模式下作品叶的声音反馈。

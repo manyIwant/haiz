@@ -175,12 +175,12 @@ body.cnp-reading .cnp-head { max-width: calc(100vw - min(46vw, 640px) - 2 * var(
   .cnp-where { margin-top: 14px; }
   .cnp-where b { font-size: 26px; }
   .cnp-dirname { font-size: 19px; }
-  .cnp-mood { font-size: 12.5px; }
+  .cnp-mood { display: none; }   /* phones: the title row is enough; the notice takes this place */
   .cnp-actions { top: auto; bottom: calc(var(--bottom) + 108px); right: auto; left: var(--pad); flex-wrap: wrap; }
   .cnp-lenses { right: var(--pad); left: var(--pad); bottom: calc(var(--bottom) + 62px); overflow-x: auto; scrollbar-width: none; }
   .cnp-lenses button { white-space: nowrap; padding: 5px 10px; }
   .cnp-dirs { overflow-x: auto; scrollbar-width: none; gap: 18px; padding-bottom: 2px; }
-  .cnp-notice { bottom: auto; top: calc(var(--top) + 128px); right: var(--pad); font-size: 11px; }
+  .cnp-notice { bottom: auto; top: calc(var(--top) + 98px); right: var(--pad); font-size: 11px; }
   .cnp-mark .t { max-width: 10em; }
   .cnp-mark .t b { font-size: 13px; }
   .cnp-index { top: auto; bottom: calc(var(--bottom) + 150px); max-height: 52vh; }
