@@ -265,3 +265,20 @@ html:not(.js) .track, html:not(.js) .orbit, html:not(.js) .growth, html:not(.js)
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ------------------------------------------------------------ chapter 02 · 根脉 */
+.entries li.group { padding: 12px 0 2px; font-size: 10.5px; letter-spacing: .24em; color: var(--ink-3); }
+.entries li.group + li { border-top: 0; }
+/* the walk-out links under 02 stay compact so the climb leads */
+.entries li.group ~ li .n { display: none; }
+.entries li.group ~ li a { padding-top: 6px; padding-bottom: 6px; }
+/* the history without the film: shown when there is no 3D (or no script); the film has its own reading sheet */
+.roots-static { list-style: none; margin: 22px 0 0; padding: 0; max-width: 44em; }
+.js body.spatial .roots-static { display: none; }
+.roots-static li { padding: 18px 0; border-top: 1px solid var(--edge); }
+.roots-static .y { margin: 0; font: 400 34px/1 var(--display); }
+.roots-static h3 { margin: 6px 0 8px; font: 500 18px/1.4 var(--serif); letter-spacing: .08em; }
+.roots-static p { margin: 0 0 8px; color: var(--ink-2); line-height: 1.8; }
+.roots-static img { display: block; width: 100%; max-width: 520px; height: auto; border-radius: 12px; margin: 6px 0 4px; }
+.roots-static small, .roots-static .g { display: block; font-size: 12px; color: var(--ink-3); }
+.roots-static .g a { color: inherit; }

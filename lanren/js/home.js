@@ -25,6 +25,7 @@ const stops = $$('.stop');
 const state = { p: 0 };
 let world = null, cam = null, active = -1;
 let map = null;   // chapter 04's campus beneath the water (lanren/map), when it has loaded
+let roots = null; // chapter 02's climb through the school's history (lanren/roots), when it has loaded
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -32,11 +33,64 @@ try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch
 // ------------------------------------------------------------------ scroll → progress
 const maxScroll = () => document.documentElement.scrollHeight - innerHeight;
 const scrollForStop = (i) => (stops[i] ? stops[i].offsetTop : 0);
+// scroll ⇄ p: p = i at stop i, linear in between. With every stop one screen tall this is
+// the plain linear mapping; chapter 02 makes its own stop taller to slow the walk there.
+// Progress u is ScrollTrigger's own: #track from its top at the top of the screen to its
+// bottom at the bottom (the page's footer and panels below do not count).
+let knots = null;
+const track = document.getElementById('track');
+const trackRange = () => Math.max(1, track.offsetHeight - innerHeight);
+function measureKnots() {
+  const range = trackRange(), top = track.offsetTop;
+  knots = stops.map((el, i) => [Math.max(0, Math.min(1, (el.offsetTop - top) / range)), i]);
+  knots[0][0] = 0; knots[knots.length - 1][0] = 1;
+  return knots;
+}
+function pFromU(u) {
+  const k = knots || measureKnots();
+  if (u <= k[0][0]) return 0;
+  for (let i = 1; i < k.length; i++) if (u <= k[i][0]) return k[i - 1][1] + (u - k[i - 1][0]) / Math.max(1e-6, k[i][0] - k[i - 1][0]);
+  return N - 1;
+}
+function uFromP(p) {
+  const k = knots || measureKnots();
+  const i = Math.max(0, Math.min(N - 2, Math.floor(p)));
+  return k[i][0] + (p - i) * (k[i + 1][0] - k[i][0]);
+}
+/** directional snapping that stays put when the scroll already rests on a target
+ *  (GSAP's own moves on to the next one, which skips 02's opening at its first station) */
+function snapDirectional(pts) {
+  return (v, dir) => {
+    let i = 0;
+    while (i < pts.length - 1 && pts[i + 1] <= v) i++;
+    const a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)];
+    if (v - a <= (b - a) * 0.1) return a;
+    if (b - v <= (b - a) * 0.1) return b;
+    return dir > 0 ? b : a;
+  };
+}
+/** snap targets in scroll progress: the six shots and, inside 02, its stations */
+function snapPoints() {
+  const ps = new Set(CHAPTERS.map((_, i) => i));
+  for (const p of roots?.stations() || []) ps.add(p);
+  return [...ps].sort((a, b) => a - b).map(uFromP);
+}
 function goTo(i, instant = false) {
   i = Math.max(0, Math.min(N - 1, i));
   const y = scrollForStop(i);
-  if (instant || reduceMotion) { scrollTo(0, y); state.p = i; return; }
+  if (instant || reduceMotion) { scrollTo(0, y); state.p = i; landWalk(); return; }
   scrollTo({ top: y, behavior: 'smooth' });
+}
+// an instant jump (or a re-measure) lands at once: the scrub must not sweep the camera
+// across every chapter in between, nor leave p short of where the page now is
+let walkTween = null;
+function landWalk() {
+  const st = walkTween?.scrollTrigger;
+  if (!st) return;
+  window.ScrollTrigger.update();   // the static update re-reads the scroll (an instance's uses this frame's cache)
+  const scrub = st.getTween?.();   // with scrub: true (reduced motion) there is no scrub tween to finish
+  if (scrub && typeof scrub.progress === 'function') scrub.progress(1);
+  walkTween.progress(st.progress);
 }
 function wireScroll() {
   const gsap = window.gsap, ST = window.ScrollTrigger;
@@ -45,19 +99,44 @@ function wireScroll() {
     const mm = gsap.matchMedia();
     mm.add({ calm: '(prefers-reduced-motion: reduce)', full: '(prefers-reduced-motion: no-preference)' }, (ctx) => {
       const calm = ctx.conditions.calm;
-      gsap.to(state, {
-        p: N - 1, ease: 'none',
+      const walk = { u: 0 };
+      let snapTo = snapDirectional(snapPoints());
+      const settle = () => { const p = pFromU(walk.u), r = Math.round(p); state.p = Math.abs(p - r) < 1e-5 ? r : p; };
+      // measure the stops before ScrollTrigger re-measures itself, and map again once it has
+      ST.addEventListener('refreshInit', measureKnots);
+      ST.addEventListener('refresh', () => {
+        measureKnots(); snapTo = snapDirectional(snapPoints());
+        // a re-measure is a correction, not a move: land at once instead of scrubbing across chapters
+        landWalk();
+        settle();
+      });
+      // the track can change height after this (02's stop is lengthened by a stylesheet that may
+      // still be loading, fonts, a phone's toolbar): measure again whenever it really does
+      if (window.ResizeObserver) {
+        let h = track.offsetHeight, queued = false;
+        new ResizeObserver(() => {
+          if (queued || track.offsetHeight === h) return;
+          queued = true;
+          requestAnimationFrame(() => { queued = false; h = track.offsetHeight; ST.refresh(); });
+        }).observe(track);
+      }
+      walkTween = gsap.to(walk, {
+        u: 1, ease: 'none',
+        // resting on a shot is exactly that shot (float noise from the mapping must not move V4's frames)
+        onUpdate: () => settle(),
         scrollTrigger: {
           trigger: '#track', start: 'top top', end: 'bottom bottom',
           scrub: calm ? true : 1.15,
-          snap: { snapTo: 1 / (N - 1), inertia: false, directional: true, duration: calm ? 0 : { min: 0.55, max: 1.5 }, delay: 0.1, ease: 'power2.inOut' }
+          snap: { snapTo: (v, self) => snapTo(v, self?.direction || 1), inertia: false, duration: calm ? 0 : { min: 0.55, max: 1.5 }, delay: 0.1, ease: 'power2.inOut' }
         }
       });
     });
   } else {
     // GSAP unavailable: a plain, eased mapping of the native scroll
     let target = 0;
-    addEventListener('scroll', () => { target = (scrollY / Math.max(1, maxScroll())) * (N - 1); }, { passive: true });
+    addEventListener('scroll', () => { target = pFromU((scrollY - track.offsetTop) / trackRange()); }, { passive: true });
+    addEventListener('resize', measureKnots);
+    if (window.ResizeObserver) new ResizeObserver(() => measureKnots()).observe(track);
     (function follow() { state.p += (target - state.p) * 0.12; requestAnimationFrame(follow); })();
   }
 }
@@ -110,6 +189,9 @@ function setActive(i) {
   }
 }
 
+/** where the walk puts the camera at p: V4's six shots, and chapter 02's own climb between 02 and 03 */
+function railAt(p) { return roots?.pose(p) || poseAt(p); }
+
 // ------------------------------------------------------------------ helpers & static UI
 const visits = new Visits();
 const specimens = new Specimens(visits, (n) => { $('#bookCount').textContent = String(n); });
@@ -118,6 +200,9 @@ $('#bookButton').addEventListener('click', () => specimens.openBook());
 $('#searchButton').addEventListener('click', () => $('#exploreOpen')?.click());
 for (const b of $$('[data-action="book"]')) b.addEventListener('click', () => specimens.openBook());
 for (const b of $$('[data-action="search"]')) b.addEventListener('click', () => $('#exploreOpen')?.click());
+// chapter 02: climb to the first year, or read every year without the film (static: the list in the panel)
+for (const b of $$('[data-action="roots-climb"]')) b.addEventListener('click', () => (roots ? roots.api.goStation(1) : $('.roots-static')?.scrollIntoView({ behavior: 'smooth' })));
+for (const b of $$('[data-action="roots-read"]')) b.addEventListener('click', () => (roots ? roots.api.open(null) : $('.roots-static')?.scrollIntoView({ behavior: 'smooth' })));
 $('#soundButton').addEventListener('click', async () => $('#soundButton').setAttribute('aria-pressed', String(await sound.toggle())));
 
 // navigator: the camera's real path, seen from above (reference 09). Stations
@@ -136,7 +221,7 @@ function buildOrbit() {
   NAV.samples = [];
   let far = 1;
   for (let k = 0; k <= 250; k++) {
-    const q = poseAt((k / 250) * (N - 1));
+    const q = railAt((k / 250) * (N - 1));
     NAV.samples.push(q);
     far = Math.max(far, Math.hypot(q.ex - AXIS.x, q.ez - AXIS.z));
   }
@@ -369,18 +454,28 @@ async function start3D() {
   world.resize();
   addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
-  cam.rail = () => override || poseAt(state.p);
+  cam.rail = () => override || railAt(state.p);
   const attachMap = (md) => {
     if (!md || map) return;
     try { map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]') }, md.geo); } catch (err) { console.warn('campus map unavailable', err); }
   };
+  if (!params.has('noroots')) {
+    try {
+      const R = await import('../roots/roots.js');
+      roots = R.attach({ world, cam, state, goTo, shot, reduceMotion, entry, stops });
+      buildOrbitRefresh();
+    } catch (err) { console.warn('chapter 02 history unavailable', err); roots = null; stops[1].style.height = ''; }
+  }
   const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
   if (md === 'late') mapData.then(attachMap); else attachMap(md);
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
-  const fromHash = CHAPTERS.findIndex((c) => c.id === (entry.hash.startsWith('#map/') ? 'map' : location.hash.slice(1)));
+  // #map/<view>/<place> opens 04's plan; #roots, #roots/<year> (and 02's former #campus) open 02
+  const hid = entry.hash.startsWith('#map/') ? 'map' : /^#(roots|campus)(\/|$)/.test(entry.hash) ? 'roots' : location.hash.slice(1);
+  const fromHash = CHAPTERS.findIndex((c) => c.id === hid);
   const startAt = fromHash >= 0 ? fromHash : saved && Date.now() - saved.t < 30 * 60000 ? saved.c : 0;
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
+  roots?.arrive(entry);
   cam.snap();
   wireTree();
   loop();
@@ -481,6 +576,7 @@ function wireTree() {
     canvas.style.cursor = world.litter.pick(r) ? 'pointer' : hit.n ? 'grab' : '';
   };
   cam.onTap = (e) => {
+    if (roots?.tap(e)) return;
     const r = pointerRay(e);
     const fl = world.litter.pick(r, e.pointerType === 'touch' ? 0.9 : 0.6);
     const now = haikouParts(Date.now());
@@ -520,19 +616,21 @@ function step(dt, wallDt = dt) {
   const t = UNIFORMS.uTime.value;
   const p = state.p;
   const near = Math.round(p);
-  setActive(Math.abs(p - near) < 0.3 ? near : -1);
+  setActive(roots?.owns(p) ? -1 : Math.abs(p - near) < 0.3 ? near : -1);
+  roots?.tick(dt);
   map?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
   const grow = growAt(p);
   const L = lightAt(p);
   map?.light(L);
-  const rail = override || poseAt(p);
+  roots?.light(L, p);
+  const rail = override || railAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
   world.setStage({ grow, sunDir, sunCol: C(L.sunCol), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
     fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure * exitLight.boost, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
-    aperture: L.aperture, focus: L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez)) });
+    aperture: L.aperture, focus: rail.focus || (L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez))) });
   map?.post();
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
@@ -576,7 +674,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, chapters: CHAPTERS, state,
+  get world() { return world; }, get map() { return map?.api; }, get roots() { return roots?.api; }, chapters: CHAPTERS, state,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },

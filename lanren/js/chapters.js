@@ -19,12 +19,14 @@ export const CHAPTERS = [
     entries: []
   },
   {
-    id: 'campus', index: '02', label: '缓慢靠近 · 苏醒', en: ['Explore', 'the Campus'], zh: '校园 · 探索',
-    lede: '走近树干，沿着主枝向上看：芽从枝梢醒来，光从枝杈间落下。从这里走进校园——第一人称漫游、从一颗星球降落到树下，或者编排你自己的路线。',
-    note: '三维校园沿用项目既有空间数据，建筑为近似模型',
+    id: 'roots', index: '02', label: '沿树干向上 · 根脉', en: ['Roots', '1923 — Today'], zh: '根脉 · 来处',
+    lede: '走到树下，贴着树干往上看。从 1923 年的树根开始，一百年的校史沿着树干、越过分杈、顺着长枝一节节亮起来；走到枝梢，就是今天正在长出的新叶。每一条都写明出处；找不到史料的年份，就空着。',
+    note: '树皮上的光影是镜头的表达，不是年轮也不是史料；出处与可信度在每一条里注明',
     ui: { slab: 'right', anchor: [0.15, 2.6, 0.2], exit: 'shade' },
     entries: [
-      { href: 'campus-3d.html?focus=lanshu', title: '第一人称校园', en: 'Walk the campus', note: '从榄仁树出发，16 间可步入的想象教室', dark: true, primary: true },
+      { action: 'roots-climb', title: '沿树干向上', en: 'Climb the years', note: '继续滚动，或在右侧选一个年代', primary: true },
+      { action: 'roots-read', title: '按年代阅读', en: 'Read by year', note: '不看镜头，逐条读史料、照片与出处' },
+      { href: 'campus-3d.html?focus=lanshu', title: '第一人称校园', en: 'Walk the campus', note: '从树下出发：16 间可步入的想象教室', dark: true, group: '从树下出发' },
       { href: 'descent.html', title: '从星球到树荫', en: 'The descent', note: '一段保持地理焦点的下降镜头', dark: true },
       { href: 'director.html', title: '探索导演台', en: 'Director', note: '编排你自己的步行路线' }
     ]

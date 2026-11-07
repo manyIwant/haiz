@@ -5,16 +5,25 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const { CHAPTERS, STAGES } = await import(pathToFileURL(path.join(root, 'lanren/js/chapters.js')).href);
+const ROOTS = await import(pathToFileURL(path.join(root, 'lanren/roots/history.js')).href);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const N = CHAPTERS.length - 1;
 const lines = (en) => en.map((l) => `<span class="line"><span>${esc(l)}</span></span>`).join('');
 const two = (n) => String(n).padStart(2, '0');
 const entry = (e, k) => {
   const inner = `<i>${two(k + 1)}</i><span class="t">${esc(e.title)}</span><small class="en">${esc(e.en || '')}</small><small class="n">${esc(e.note)}</small>`;
-  return e.href
+  const group = e.group ? `<li class="group" aria-hidden="true">${esc(e.group)}</li>` : '';
+  return group + (e.href
     ? `<li><a href="${esc(e.href)}" data-k="${k}"${e.dark ? ' data-dark' : ''}${e.primary ? ' data-primary' : ''}>${inner}</a></li>`
-    : `<li><button type="button" data-action="${e.action}" data-k="${k}"${e.primary ? ' data-primary' : ''}>${inner}</button></li>`;
+    : `<li><button type="button" data-action="${e.action}" data-k="${k}"${e.primary ? ' data-primary' : ''}>${inner}</button></li>`);
 };
+// chapter 02 without the film: every node, its grade and its sources, as plain reading
+const rootsList = () => `<ol class="roots-static" aria-label="第二幕 · 校史（按年代）">${ROOTS.NODES.map((n) => {
+  const g = ROOTS.GRADES[n.grade];
+  const ph = n.photo ? ROOTS.PHOTOS[n.photo] : null;
+  const src = n.sources.map((k) => ROOTS.SOURCES[k]).map((s) => s.url ? `<a href="${esc(s.url)}" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join('；');
+  return `<li><p class="y">${esc(n.year)}</p><h3>${esc(n.title)}</h3>${ph ? `<img src="${esc(ph.src)}" width="${ph.w}" height="${ph.h}" alt="${esc(ph.alt)}" loading="lazy" decoding="async"><small>${esc(ph.credit)}</small>` : ''}${n.body.map((t) => `<p>${esc(t)}</p>`).join('')}<p class="g">${esc(g.label)} · ${esc(g.note)}${src ? `｜出处：${src}` : ''}</p></li>`;
+}).join('')}</ol>`;
 const panels = CHAPTERS.map((c, i) => `
   <section class="panel${i === 0 ? ' panel-intro' : ''}" id="p-${c.id}" data-i="${i}" data-slab="${c.ui.slab}" aria-labelledby="t-${c.id}">
     <header class="chap">
@@ -25,13 +34,13 @@ const panels = CHAPTERS.map((c, i) => `
       ${i === 0 ? `<h1 class="display" id="t-${c.id}">${lines(c.en)}</h1>` : `<h2 class="display" id="t-${c.id}">${lines(c.en)}</h2>`}
       <p class="zh">${esc(c.zh)}</p>
       ${c.specimen ? `<p class="specimen-label"><i>${esc(c.specimen[0])}</i><span>${esc(c.specimen[1])}</span><span>${esc(c.specimen[2])}</span></p>` : ''}
-      ${i === 0 ? '<p class="begin"><a href="#campus">Scroll <i aria-hidden="true">↓</i></a><small>绕树而行：滚动、下滑或按空格键</small></p>' : ''}
+      ${i === 0 ? '<p class="begin"><a href="#' + CHAPTERS[1].id + '">Scroll <i aria-hidden="true">↓</i></a><small>绕树而行：滚动、下滑或按空格键</small></p>' : ''}
     </div>
     ${c.entries.length ? `<div class="slab">
       <p class="slab-head"><b>${c.index}</b><span>${esc(c.zh)}</span></p>
       <ul class="entries">${c.entries.map(entry).join('')}</ul>
       <p class="note">${esc(c.note)}</p>
-    </div>` : `<p class="note note-intro">${esc(c.note)}</p>`}
+    </div>` : `<p class="note note-intro">${esc(c.note)}</p>`}${c.id === 'roots' ? rootsList() : ''}
   </section>`).join('');
 const stops = CHAPTERS.map((c) => `<div class="stop" id="${c.id}"></div>`).join('');
 const orbit = CHAPTERS.map((c, i) => `<li><a href="#${c.id}" data-go="${i}"><b>${c.index}</b>${esc(c.zh.split(' · ')[0])}</a></li>`).join('');
