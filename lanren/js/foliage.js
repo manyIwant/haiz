@@ -352,7 +352,7 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   float la = (lt.a - 0.5) / max(fwidth(lt.a), 1e-4) + 0.5;
   diffuseColor.a = clamp(la, 0.0, 1.0);`)
       .replace('#include <alphatest_fragment>', `if (diffuseColor.a < 0.5) discard;
-  if (uNearCut > 0.0) { float nk = length(vViewPosition) / uNearCut; if (nk < 1.0 && nk < fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard; }`);
+${depth ? '' : '  if (uNearCut > 0.0) { float nk = length(vViewPosition) / uNearCut; if (nk < 1.0 && nk < fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard; }'}`);
     if (!depth) {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
