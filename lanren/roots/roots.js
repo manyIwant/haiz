@@ -391,11 +391,13 @@ export function attach(ctx) {
     const projFov = (n.at.fov || 44) * (n.at.frame || (LL.photo ? 0.66 : n.light?.void ? 0.72 : 0.6));
     const frameK = Math.tan((projFov * Math.PI) / 360) / Math.tan((Math.max(10, camera.fov) * Math.PI) / 360);
     const aspect = LL.aspect;
+    // the band it may use: below the bar at the top, above the words at the bottom, left of the year finder
+    const top = portrait ? 0.62 : 0.74, bot = portrait ? -0.22 : -0.34;
     let h = vh * clamp(frameK, 0.3, 0.7);
-    h = Math.min(h, (vw * (portrait ? 0.9 : 0.62)) / aspect);
+    h = Math.min(h, (vw * (portrait ? 0.9 : 0.62)) / aspect, vh * (top - bot) * 0.5 * 0.98);
     const hy = h / vh, hx = (h * aspect) / vw;            // half sizes in NDC are hy and hx (full height 2)
     const nx = clamp(tmpV.x, -0.92 + hx, (portrait ? 0.92 : 0.78) - hx);
-    const ny = clamp(tmpV.y, (portrait ? -0.25 : -0.42) + hy, 0.86 - hy);
+    const ny = clamp(tmpV.y, bot + hy, top - hy);
     tmpV.set(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize();
     const fwd = camera.getWorldDirection(new THREE.Vector3());
     printMesh.position.copy(camera.position).addScaledVector(tmpV, D / Math.max(0.3, tmpV.dot(fwd)));
