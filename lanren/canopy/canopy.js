@@ -185,33 +185,35 @@ export function attach(ctx) {
   const clearView = new Map();
   const viewRay = new THREE.Raycaster();
   function leafPose(id) {
-    // V4's details shot, re-aimed at this leaf: a little above, just outside its clump, looking in.
-    // "Outside" is the clump's own outward side (rosette − clump centre), blended with the crown's,
-    // so the lens never ends up inside the foliage pad.
-    const i = leafOf.get(id), o = i * st;
-    const P = posOf.get(id);
-    const pad = new THREE.Vector3(ros[o] - ros[o + 12], (ros[o + 1] - ros[o + 13]) * 0.5, ros[o + 2] - ros[o + 14]);
-    const n = pad.lengthSq() > 1e-4 ? pad.normalize() : new THREE.Vector3();
-    n.addScaledVector(outOf(P), 0.8).normalize();
-    const nh = new THREE.Vector3(n.x, 0, n.z).normalize();
-    const Q = P.clone().addScaledVector(nh, READ.reach * 0.7);
-    const look = Q.clone().addScaledVector(n, -0.08).add(new THREE.Vector3(0, -0.03, 0));
+    // V4's details shot, re-aimed at this leaf: its blade seen across its face (a work leaf grows
+    // outward and a little up from its rosette, as leaves.js lays it), from a little above and
+    // outside, with no limb or twig across the view and as few leaves in the way as possible.
+    const P = posOf.get(id), w = byWork.get(id);
+    const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
+    const elev = 0.32 + (w?.kind === 'project' ? 0.35 : 0);
+    const bl = out.clone().multiplyScalar(Math.cos(elev)).addScaledVector(UP, Math.sin(elev)).normalize();
+    const side = new THREE.Vector3().crossVectors(UP, bl).normalize();
+    const face = new THREE.Vector3().crossVectors(bl, side).normalize();   // the blade's upper face
+    if (face.y < 0) face.negate();
+    const len = w?.kind === 'project' ? 0.62 : 0.36;
+    const mid0 = P.clone().addScaledVector(bl, len * 0.45);
     if (!clearView.has(id)) {
       let best = null;
-      for (const sideK of [0.32, -0.32, 0.62, -0.62, 0]) for (const up of [0.3, 0.12, 0.55]) {
-        const dir = n.clone().applyAxisAngle(UP, sideK).add(new THREE.Vector3(0, up, 0)).normalize();
-        const eye = Q.clone().addScaledVector(dir, 1.3);
-        const seg = look.clone().sub(eye), len = seg.length();
-        viewRay.set(eye, seg.clone().normalize());
-        viewRay.far = len - 0.12;
-        let score = Math.abs(sideK - 0.32) * 0.6 + Math.abs(up - 0.3) * 0.8;
+      const base = face.clone().multiplyScalar(0.62).addScaledVector(out, 0.78).normalize();
+      for (const turn of [0, 0.38, -0.38, 0.72, -0.72]) for (const tilt of [0, 0.22, -0.18]) {
+        const dir = base.clone().applyAxisAngle(UP, turn).applyAxisAngle(side, tilt).normalize();
+        const shift = new THREE.Vector3(dir.x, 0, dir.z).normalize().multiplyScalar(READ.reach * 0.7);
+        const mid = mid0.clone().add(shift);
+        const eye = mid.clone().addScaledVector(dir, 1.15);
+        const seg = mid.clone().sub(eye), len2 = seg.lengthSq(), segL = Math.sqrt(len2);
+        viewRay.set(eye, seg.clone().divideScalar(segL));
+        viewRay.far = segL - 0.1;
+        let score = Math.abs(turn) * 0.5 + Math.abs(tilt) * 0.6 + Math.max(0, 0.2 - dir.y) * 2;
         if (world.bark && viewRay.intersectObject(world.bark, false).length) score += 10;
-        // leaves in the way: rosettes close to the line of sight (not the leaf's own)
-        const L2 = len * len;
         for (let k = 0; k < ros.length; k += st) {
           const qx = ros[k], qy = ros[k + 1], qz = ros[k + 2];
           if ((qx - P.x) ** 2 + (qy - P.y) ** 2 + (qz - P.z) ** 2 < 0.16) continue;
-          const t = ((qx - eye.x) * seg.x + (qy - eye.y) * seg.y + (qz - eye.z) * seg.z) / L2;
+          const t = ((qx - eye.x) * seg.x + (qy - eye.y) * seg.y + (qz - eye.z) * seg.z) / len2;
           if (t <= 0.04 || t >= 0.9) continue;
           if ((eye.x + seg.x * t - qx) ** 2 + (eye.y + seg.y * t - qy) ** 2 + (eye.z + seg.z * t - qz) ** 2 < 0.09) score += 0.35;
         }
@@ -219,8 +221,9 @@ export function attach(ctx) {
       }
       clearView.set(id, best.dir);
     }
-    const eye = Q.clone().addScaledVector(clearView.get(id), 1.3);
-    return poseOf(eye, look, 28);
+    const dir = clearView.get(id);
+    const mid = mid0.clone().add(new THREE.Vector3(dir.x, 0, dir.z).normalize().multiplyScalar(READ.reach * 0.7));
+    return poseOf(mid.clone().addScaledVector(dir, 1.15), mid, 30);
   }
   function snapshot() {
     const dir = camera.getWorldDirection(new THREE.Vector3());
@@ -340,8 +343,9 @@ export function attach(ctx) {
     body.classList.add('cnp-leaving');
     flyTo(from, { kind: 'leave', done: () => { S.mode = 'shot'; handBack(); then?.(); } });
     if (!fromHistory) {
-      const st = history.state?.cnp;
-      hist(() => { if (st === 'work') goBack(2); else if (st === 'canopy') goBack(1); else history.replaceState(null, '', '#leaves'); });
+      // read the step we are on only once earlier steps back have landed (a close then an exit in
+      // quick succession must walk back two entries in all, never past the page's own first one)
+      hist(() => { const st = history.state?.cnp; if (st === 'work') goBack(2); else if (st === 'canopy') goBack(1); else history.replaceState(null, '', '#leaves'); });
     }
     say('回到第三幕：新叶特写。继续滚动可前往第四幕。');
   }
