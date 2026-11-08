@@ -682,6 +682,14 @@ export function attachWorld(ctx) {
     fig.group.visible = false;
   }
   function light(L, p) {
+    // with the campus standing round the tree in 05 and 06, the air gives it depth: the far blocks
+    // sink into the evening haze in 05, and in 06's clear day the buildings behind the tree recede a little
+    const stand = (W.compose.rise && p > 3.6) || WALKING.has(W.owner) ? (WALKING.has(W.owner) ? 1 : smooth((p - 3.6) / 0.4)) : 0;
+    if (stand > 0) {
+      const at5 = WALKING.has(W.owner) ? 1 : clamp(p - 4, 0, 1);
+      L.density *= 1 + stand * (0.85 - 0.4 * at5);
+      L.mist *= 1 + stand * (0.6 - 0.3 * at5);
+    }
     // 05's depth of field belongs to the view out of the crown: once the camera is a person the near world is sharp
     if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) L.aperture *= 1 - smooth((p - 4.03) / 0.1);
     if (WALKING.has(W.owner)) L.aperture = 0;

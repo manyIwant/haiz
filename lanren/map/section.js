@@ -298,6 +298,22 @@ float hzSunK = 1.0;`)
   // grain: lawns mottle, paving speckles (both fade where a pixel covers metres)
   float fine = 1.0 - smoothstep(0.08, 0.6, hzPx);
   g *= 0.93 + 0.12 * wn(hzQ * 0.21) + (wn(hzQ * 2.3) - 0.5) * 0.1 * fine + (wh(floor(hzQ * 6.0)) - 0.5) * 0.06 * fine;
+  // close by, paving is laid stone: 0.8 × 0.4 m slabs in running bond, each its own tone, the joints
+  // darker; lawns are left as lawn (seen from 1.6 m, a flat colour reads as plastic, not granite)
+  {
+    float lawn = smoothstep(0.0, 0.035, g.g - max(g.r, g.b) * 1.02);
+    float near = 1.0 - smoothstep(0.012, 0.09, hzPx);
+    if (near > 0.0) {
+      vec2 sl = hzQ / vec2(0.8, 0.4);
+      sl.x += mod(floor(sl.y), 2.0) * 0.5;
+      vec2 id = floor(sl), f = fract(sl);
+      vec2 jw = vec2(0.012 / 0.8, 0.012 / 0.4) + fwidth(sl) * 0.8;
+      float joint = max(1.0 - smoothstep(0.0, jw.x, min(f.x, 1.0 - f.x)), 1.0 - smoothstep(0.0, jw.y, min(f.y, 1.0 - f.y)));
+      float k = near * (1.0 - lawn);
+      g *= 1.0 + (wh(id + 7.0) - 0.5) * 0.11 * k;
+      g *= 1.0 - 0.2 * joint * k;
+    }
+  }
   diffuseColor.rgb = g;
 }`)
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
@@ -308,7 +324,7 @@ float hzSunK = 1.0;`)
   reflectedLight.indirectDiffuse += diffuseColor.rgb * uBounce * (0.6 + 0.4 * (1.0 - hzSunK));`)
       .replace('#include <opaque_fragment>', 'outgoingLight += uSweepCol * hzSeam(vHW);\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey = () => 'haiz-campus-ground2';
+  m.customProgramCacheKey = () => 'haiz-campus-ground3';
   return m;
 }
 

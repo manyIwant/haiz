@@ -43,23 +43,23 @@ body.cnp-on .stage::after { background: radial-gradient(40% 30% at 0% 0%, rgba(6
 
 /* ---------------------------------------------------------------- leaves' labels (pinned to the real leaf) */
 .cnp-marks, .cnp-dirlabels { position: absolute; inset: 0; }
-.cnp-mark { position: absolute; left: 0; top: 0; width: 0; height: 0; padding: 0; border: 0; background: none; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .5s var(--ease); text-align: left; }
-.cnp-mark.on { opacity: 1; }
+.cnp-mark { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; padding: 0; border: 0; background: none; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .5s var(--ease); text-align: left; }
+.cnp-mark.on { opacity: 1; pointer-events: auto; cursor: pointer; }
 .cnp-mark.on > i, .cnp-mark.on > .t, .cnp-mark.on > .n { pointer-events: auto; cursor: pointer; }
 /* the mark on the leaf: a hairline ring, a point of light at its centre */
-.cnp-mark i { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(246, 241, 231, .9); box-shadow: 0 0 0 1px rgba(8, 12, 10, .28), 0 0 12px rgba(8, 12, 10, .35); }
+.cnp-mark i { position: absolute; left: 0; top: 0; width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(246, 241, 231, .9); box-shadow: 0 0 0 1px rgba(8, 12, 10, .28), 0 0 12px rgba(8, 12, 10, .35); }
 .cnp-mark i::after { content: ""; position: absolute; left: 4.5px; top: 4.5px; width: 3px; height: 3px; border-radius: 50%; background: var(--ink); }
-.cnp-mark .n { position: absolute; left: 10px; top: -19px; font: 400 12px/1 var(--display); letter-spacing: .04em; color: var(--ink-2); text-shadow: 0 1px 6px rgba(0, 0, 0, .7); white-space: nowrap; }
+.cnp-mark .n { position: absolute; left: 17px; top: -12px; font: 400 12px/1 var(--display); letter-spacing: .04em; color: var(--ink-2); text-shadow: 0 1px 6px rgba(0, 0, 0, .7); white-space: nowrap; }
 .cnp-mark:not(.bare) .n { opacity: 0; }
 /* the caption sits where there is room, joined to its leaf by a hairline; a soft shade of air behind
    the words (not a card) keeps them readable over lit leaves */
-.cnp-mark .t { position: absolute; left: var(--cx, 20px); top: var(--cy, -18px); display: grid; gap: 1px; padding: 7px 12px 8px; white-space: nowrap; max-width: 17em;
+.cnp-mark .t { position: absolute; left: calc(var(--cx, 20px) + 7px); top: calc(var(--cy, -18px) + 7px); display: grid; gap: 1px; padding: 7px 12px 8px; white-space: nowrap; max-width: 17em;
   background: radial-gradient(closest-side, rgba(7, 11, 9, .62), rgba(7, 11, 9, .42) 55%, rgba(7, 11, 9, 0)); border-radius: 40%;
   text-shadow: 0 1px 8px rgba(0, 0, 0, .75); transition: left .45s var(--ease), top .45s var(--ease), opacity .35s var(--ease); }
 .cnp-mark.left .t { text-align: right; }
 .cnp-mark .t b { font: 500 14.5px/1.35 var(--serif); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; }
 .cnp-mark .t small { font-size: 11px; color: var(--ink-2); letter-spacing: .04em; }
-.cnp-mark .ln { position: absolute; left: 0; top: 0; width: var(--ll, 0px); height: 1px; transform-origin: 0 50%; transform: rotate(var(--la, 0rad)) translateX(9px); background: linear-gradient(90deg, rgba(246, 241, 231, .75), rgba(246, 241, 231, .4)); transition: width .45s var(--ease); }
+.cnp-mark .ln { position: absolute; left: 7px; top: 7px; width: var(--ll, 0px); height: 1px; transform-origin: 0 50%; transform: rotate(var(--la, 0rad)) translateX(9px); background: linear-gradient(90deg, rgba(246, 241, 231, .75), rgba(246, 241, 231, .4)); transition: width .45s var(--ease); }
 .cnp-mark.bare .t, .cnp-mark.bare .ln { opacity: 0; pointer-events: none !important; }
 .cnp-mark.project i { border-style: dashed; }
 .cnp-mark.sel i { border-color: var(--gold); background: rgba(236, 217, 174, .18); box-shadow: 0 0 0 4px rgba(236, 217, 174, .16), 0 0 16px rgba(8, 12, 10, .4); }

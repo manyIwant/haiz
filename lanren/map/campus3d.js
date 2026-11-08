@@ -34,7 +34,7 @@ export const MATERIALS = [
   /* 3 */ { key: 'plaster', albedo: '#ddd6c8', rough: 0.95, metal: 0, ink: 'wall' },       // inside walls (inferred)
   /* 4 */ { key: 'concrete', albedo: '#aca69d', rough: 0.95, metal: 0, ink: 'wall' },      // slabs, canopies
   /* 5 */ { key: 'column', albedo: '#bdb8ad', rough: 0.92, metal: 0, ink: 'wall' },
-  /* 6 */ { key: 'glass', albedo: '#45646b', rough: 0.07, metal: 0.55, ink: 'glass' },
+  /* 6 */ { key: 'glass', albedo: '#2e4145', rough: 0.1, metal: 0.38, ink: 'glass' },   // a dark room behind the pane; the sky only at a slant
   /* 7 */ { key: 'roofRed', albedo: '#9d4a3a', rough: 0.88, metal: 0, ink: 'roof' },
   /* 8 */ { key: 'roofHerit', albedo: '#3f6051', rough: 0.6, metal: 0.05, ink: 'roof' },  // green glazed tile
   /* 9 */ { key: 'roofFlat', albedo: '#87827a', rough: 0.95, metal: 0, ink: 'roof' },
