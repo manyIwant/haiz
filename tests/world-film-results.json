@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-08T08:50:58.902Z",
+  "date": "2026-11-08T15:03:17.210Z",
   "checks": [
     "pure: 2001 samples forwards, backwards and by direct jump give identical eye, gaze, lens and body",
     "ends: q = 0 is V4's 05 frame exactly; q = 1 stands at V4's 06 eye (x, z), a person's eye height 1.62 m above the ground (V4: 1.95 m), looking at the same point with the same lens",

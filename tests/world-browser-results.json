@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-08T05:55:48.309Z",
-  "runs": "ONLY=film then ONLY=phone,history (compose not re-run in this pass)",
+  "date": "2026-11-08T15:02:11.662Z",
+  "runs": "ONLY=film then ONLY=phone,history (compose not re-run)",
   "results": [
     {
       "name": "04 → 05: the campus rises with the scroll (u 0.54 half-way) and stands whole at 05; nothing of it before 04",
@@ -35,7 +35,7 @@
       "ok": true
     },
     {
-      "name": "phone 390×844: no overflow; the step at 06 offers turning sideways (declinable); a real touch drag on the left walks 1.15 m; map and menu are buttons",
+      "name": "phone 390×844: no overflow; the step at 06 offers turning sideways (declinable); a real touch drag on the left walks 1.16 m; map and menu are buttons",
       "ok": true
     },
     {
