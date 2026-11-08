@@ -99,7 +99,9 @@ Node（秒级，均通过）：`tests/lanren.cjs`、`tests/roots.cjs`、`tests/c
 
 浏览器（Chromium + SwiftShader）：
 - `tests/roots-browser.cjs` 14 项全部通过（含整条第二幕轨道离树皮 ≥ 0.45 m、阅读、年代查找、跳过、深链接、减少动态、手机、无 WebGL）。
-- `tests/canopy-browser.cjs`、`tests/home-browser.cjs`：结果见第 7 节「验证记录」。
+- `tests/canopy-browser.cjs` 18 项全部通过（`tests/canopy-browser-results.json` 已更新；离开作品树冠后镜头回到第三幕原位误差 0.000 m）。改动过程中它两次失败：一次是新标签没有可点的尺寸（已给 14 px 的点击框），一次是开场后标签仍随树冠的打开缓动（已改为与镜头同一时钟）；第三次失败（↓ 键被吸附弹回）在未改动的 `main` 上同样复现，已修复。
+- `tests/home-browser.cjs` 8 项全部通过（滚动到 03、导航站点到 05、End 到 06、接住落叶、离场转场与返回、静态版 18 个入口、手机比例）。与其他浏览器任务并行运行时，最后一张手机截图曾因软件渲染超时；单独运行通过。
+- 未在本轮重跑：`tests/world-browser.cjs`（第五、六幕全流程，单次需分三段、数小时）与 `tests/campus-map-browser.cjs`。本轮对这两部分的改动只有材质、空气、飞行挂点与校园升起的进度来源。
 
 性能取向（未做真机测量）：
 - 新增着色器工作只在第三幕作品树冠内生效（打开场、光的衰减），其余时间各是一次统一变量判断；铺地石材只在像素覆盖小于约 9 cm 的近处计算；反弹光是每像素两次乘加。
@@ -124,4 +126,6 @@ Node（秒级，均通过）：`tests/lanren.cjs`、`tests/roots.cjs`、`tests/c
 
 ## 7. 验证记录
 
-见本次会话交付说明；截图原图在会话的 scratchpad 里，挑选后的对比图在 `docs/lanren/art/`。
+- 全部浏览器测试与截图在 Chromium 1.62 自带浏览器 + SwiftShader 软件渲染下完成；未做任何真机测量。
+- 对比图中「改动前」来自 `155845e` 的独立工作树，「改动后」来自本分支最终提交；同一机位、同一分辨率（桌面 1280×720，手机 390×844 @2x）。
+- 截图在 `?capture` 下逐帧推进（只渲染保留的那一帧），界面过渡等真实时间走完再拍；第二幕截图调用 `roots.api.settle()` 让显影完成，第三幕用 `canopy.api.hold(u)` 定格进入过程，快速飞行用新加的 `__haizHome.transitAt(i, u)` 定格。
