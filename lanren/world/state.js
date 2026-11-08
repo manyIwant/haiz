@@ -24,6 +24,7 @@
 export const POLICY = {
   scroll: { scroll: true, touch: '', v4cam: true, wheel: 'film' },
   hold: { scroll: true, touch: '', v4cam: true, wheel: 'film' },
+  canopy: { scroll: false, touch: 'none', v4cam: false, wheel: 'canopy' },
   map: { scroll: false, touch: 'none', v4cam: false, wheel: 'map' },
   play: { scroll: false, touch: 'none', v4cam: false, wheel: 'none' },
   pocket: { scroll: false, touch: 'none', v4cam: false, wheel: 'pocket' },

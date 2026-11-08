@@ -32,6 +32,7 @@ const compose = pickComposition(location.search, (() => { try { return sessionSt
 let W = null;     // lanren/world/state.js: owner of camera and input, the campus left standing, the destination
 let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let roots = null; // 02's history on the same tree; shares the camera and scroll rail
+let canopy = null; // 03's student works tree, enters only on request
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -495,17 +496,23 @@ async function start3D() {
   }
   const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
   if (md === 'late') mapData.then(attachMap); else attachMap(md);
+  // chapter 03: the works canopy grows on the same crown (?nocanopy compares against plain V4)
+  if (!params.has('nocanopy')) {
+    try { canopy = (await import('../canopy/canopy.js')).attach({ world, cam, state, goTo, DwellCamera, reduceMotion, entry, worldState: W }); } catch (err) { console.warn('chapter 03 canopy unavailable', err); canopy = null; }
+  }
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
   // Restore the chapter family before the homepage normalizes the URL.
   const hid = entry.hash === '#walk' ? 'recall'
     : entry.hash.startsWith('#map/') ? 'map'
     : /^#(roots|campus)(\/|$)/.test(entry.hash) ? 'roots'
+    : /^#(leaves|archive)(\/|$)/.test(entry.hash) ? 'leaves'
     : location.hash.slice(1);
   const fromHash = entry.hash === '#walk' ? N - 1 : CHAPTERS.findIndex((c) => c.id === hid);
   const startAt = fromHash >= 0 ? fromHash : saved && Date.now() - saved.t < 30 * 60000 ? saved.c : 0;
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
   roots?.arrive(entry);
+  canopy?.arrive(entry);
   cam.snap();
   wireTree();
   loop();
@@ -519,6 +526,7 @@ function goStatic() {
   panels.forEach((p) => { p.classList.add('is-active'); p.removeAttribute('inert'); });
   // without WebGL the campus plan is still there, as a drawing with the same places
   import('../map/static.js').then((m) => m.renderStatic()).catch((err) => console.warn('campus plan unavailable', err));
+  import('../canopy/static.js').then((m) => m.renderStatic(entry)).catch((err) => console.warn('works list unavailable', err));
 }
 
 // The details shot is a portrait of one real cluster of new leaves on the rim
@@ -606,7 +614,7 @@ function wireTree() {
     canvas.style.cursor = world.litter.pick(r) ? 'pointer' : hit.n ? 'grab' : '';
   };
   cam.onTap = (e) => {
-    if (roots?.tap(e)) return;
+    if (canopy?.tap(e) || roots?.tap(e)) return;
     const r = pointerRay(e);
     const fl = world.litter.pick(r, e.pointerType === 'touch' ? 0.9 : 0.6);
     const now = haikouParts(Date.now());
@@ -653,12 +661,14 @@ function step(dt, wallDt = dt) {
   roots?.tick(dt);
   map?.tick(dt, wallDt);
   life?.tick(dt, wallDt);
+  canopy?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
-  const grow = growAt(p);
+  const grow = canopy ? canopy.grow(growAt(p)) : growAt(p);
   const L = lightAt(p);
   life?.light(L, p);
   map?.light(L);
   roots?.light(L, p);
+  canopy?.light(L);
   const rail = override || railAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
@@ -670,7 +680,7 @@ function step(dt, wallDt = dt) {
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  if (!map?.camera(dt, wallDt) && !life?.camera(dt, wallDt)) cam.update(dt, wallDt);
+  if (!map?.camera(dt, wallDt) && !life?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   life?.after(dt, wallDt);
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
@@ -688,6 +698,7 @@ function step(dt, wallDt = dt) {
   placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
   map?.overlay();
   life?.overlay();
+  canopy?.overlay();
   world.render(t);
   frames++;
 }
@@ -711,7 +722,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
+  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */

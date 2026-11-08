@@ -32,14 +32,18 @@ export const CHAPTERS = [
     ]
   },
   {
-    id: 'archive', index: '03', label: '叶片特写 · 细节', en: ['Details', 'Matter'], zh: '档案 · 来处',
-    lede: '新叶对折着展开，逆光里能看见每一条叶脉。来处也是这样一点点展开的：1923 年创办的私立琼海中学、百年校庆时以这棵树开篇的报道、从这里走出去的人。',
-    note: '学校简介（本站「学校」页）；《海南日报》2023-10-30。树龄未经年轮测定',
+    // chapter 03 · 青春 · 生长 (DESIGN.md, confirmed): the works canopy lives in lanren/canopy.
+    // Shot, light and growth are V4's own and unchanged; former id 'archive' still opens it.
+    id: 'leaves', index: '03', label: '新叶 · 青春生长', en: ['Growing', 'in the Light'], zh: '青春 · 生长',
+    lede: '新叶对折着展开，逆光里能看见每一条叶脉。第二幕走过的是来处；这里是正在长出来的东西：同学们的照片、文字、声音，和还在找伙伴的计划。愿意的话，走进树冠去找——每一件公开的作品，都是这棵树上的一片叶子。',
+    note: '作品树冠正在开发：尚未接入投稿与审核，树上暂无公开作品；开发预览中的示例均标注为虚构。来处三项在第二幕整合前暂留此处',
     ui: { slab: 'right', anchor: 'study', exit: 'leaf' },
     entries: [
-      { href: 'news.html', title: '新闻档案', en: 'News archive', note: '原仓库报道，分类与检索', primary: true },
-      { href: 'alumni.html', title: '校友', en: 'Alumni', note: '公开资料中的海中人' },
-      { href: 'architecture.html', title: '建筑观察手册', en: 'Architecture', note: '实拍、材质与光影' }
+      { action: 'canopy-enter', title: '走进作品树冠', en: 'Into the canopy', note: '同学们的作品，长在这棵树的新叶上', primary: true },
+      { action: 'canopy-find', title: '找到我的叶子', en: 'Find my leaf', note: '每一件公开作品都有自己的位置' },
+      { href: 'news.html', title: '新闻档案', en: 'News archive', note: '来处 · 原仓库报道，分类与检索' },
+      { href: 'alumni.html', title: '校友', en: 'Alumni', note: '来处 · 公开资料中的海中人' },
+      { href: 'architecture.html', title: '建筑观察手册', en: 'Architecture', note: '来处 · 实拍、材质与光影' }
     ]
   },
   {

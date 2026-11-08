@@ -39,7 +39,7 @@ const shots = process.env.ROOTS_SHOTS;   // optional folder for review captures
   let page = await open(ctx);
   await page.goto(base + '/index.html?quality=low&test=1');
   await ready(page);
-  const geo = await R(page, () => ({ stop: document.getElementById('roots').offsetHeight, ih: innerHeight, next: document.getElementById('archive').offsetTop - document.getElementById('roots').offsetTop,
+  const geo = await R(page, () => ({ stop: document.getElementById('roots').offsetHeight, ih: innerHeight, next: document.getElementById('leaves').offsetTop - document.getElementById('roots').offsetTop,
     found: window.__haizHome.roots.found.filter((f) => f && f.missed).length }));
   assert(geo.stop > geo.ih * 6, 'chapter 02 has its own long stretch of scroll: ' + geo.stop);
   assert(geo.found <= 1, 'stations find the bark or ground they light: ' + geo.found + ' missed');
@@ -130,7 +130,7 @@ const shots = process.env.ROOTS_SHOTS;   // optional folder for review captures
   await page.click('.roots-skip');
   await page.waitForFunction(() => window.__haizHome.info().active === 2, null, T);
   await page.waitForFunction(() => !document.body.classList.contains('roots-on'), null, T);
-  assert.match(await R(page, () => location.hash), /#archive/);
+  assert.match(await R(page, () => location.hash), /#leaves/);
   const film = await R(page, () => window.__haizHome.world.composer.passes.filter((p) => p.enabled).length);
   results.push('「跳过」 goes straight on to 03 (the leaves); the film grade is off outside 02 (' + film + ' passes)');
 

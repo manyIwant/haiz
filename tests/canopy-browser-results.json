@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-07T18:30:18.891Z",
+  "browser": "chromium (swiftshader)",
+  "results": [
+    "normal scroll reaches 03 (#leaves); the canopy stays closed until asked",
+    "the walk continues past 03 to 06 without entering the community",
+    "“走进作品树冠” enters from the V4 details shot onto 摄影 · 影像 (#leaves/photo); page scroll held; demo notice shown",
+    "→ moves to 文学 (#leaves/words) with 3 work leaves labelled",
+    "a leaf label opens the work to read (#leaves/w/demo-leaf-gap)",
+    "relations: 叶间低音 shows 衍生自 叶隙; following it flies across the crown to 文学 and frames that leaf beside the sheet",
+    "Back closes the work; Esc leaves the canopy and the camera returns to the 03 frame (0.017 m)",
+    "after leaving, the scroll walk continues to 04",
+    "a private draft is saved (no account here: on this device, and the sheet says so); 申请审核 is disabled, not faked",
+    "a leaf link (#leaves/w/demo-leaf-gap) opens that work on its leaf from a cold start",
+    "Back from a leaf link: the canopy, then the 03 shot",
+    "找到我的叶子: a (demo) author lists their two works, including the co-authored one, and flies to it",
+    "a link to a work that is not public says so (withdrawn or wrong link), without revealing anything",
+    "without samples the tree is honestly empty: notice explains why; the limb shows where its first leaf will grow",
+    "reduced motion: entering and changing limb arrive at once (no camera flights)",
+    "static fallback: all works listed by direction; a leaf link opens the work as text",
+    "phone (390×844): directions by touch; the reading sheet rises from the bottom (78% high), no sideways overflow",
+    "no page errors"
+  ]
+}

@@ -126,7 +126,7 @@ test('usage counts UTF-8 current payloads and retained archives across all colle
     f.put(u, 'a', 0, { text: '一' }); f.put(u, 'a', 1, { text: '海' });
     f.put(u, 'b', 0, { url: 'a' }, 'bookmarks'); f.remove(u, 'b', 1, 'bookmarks');
     assert.deepEqual(f.run(u, 'personalUsage'), {
-      collections: { notes: { active: 1, deleted: 0, bytes: 14 }, bookmarks: { active: 0, deleted: 1, bytes: 4 }, preferences: { active: 0, deleted: 0, bytes: 0 } },
+      collections: { notes: { active: 1, deleted: 0, bytes: 14 }, bookmarks: { active: 0, deleted: 1, bytes: 4 }, preferences: { active: 0, deleted: 0, bytes: 0 }, works: { active: 0, deleted: 0, bytes: 0 } },
       totals: { active: 1, deleted: 1, bytes: 18, historyBytes: 25, historyVersions: 2 },
       limits: { items: 5000, itemBytes: 16000, historyPerItem: 20, historyPerUser: 2000, historyDays: 30 },
     });
