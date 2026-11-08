@@ -333,10 +333,10 @@ export function attach(ctx) {
   // dissolves it back into the tree. (Reduced motion: it simply appears and goes.)
   const printMat = new THREE.ShaderMaterial({
     transparent: true, depthTest: false, depthWrite: false, toneMapped: true,
-    uniforms: { uTex: { value: blank }, uK: { value: 0 }, uAspect: { value: 1.5 }, uPad: { value: 0.16 }, uPhoto: { value: 1 }, uComp: { value: 1 }, uTint: { value: new THREE.Color(1.0, 0.95, 0.88) } },
+    uniforms: { uTex: { value: blank }, uK: { value: 0 }, uAspect: { value: 1.5 }, uPad: { value: 0.16 }, uPhoto: { value: 1 }, uComp: { value: 1 }, uTint: { value: new THREE.Color(1.0, 0.95, 0.88) }, uBW: { value: 0 }, uTone: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: /* glsl */`
-      uniform sampler2D uTex; uniform float uK; uniform float uAspect; uniform float uPad; uniform float uPhoto; uniform float uComp; uniform vec3 uTint;
+      uniform sampler2D uTex; uniform float uK; uniform float uAspect; uniform float uPad; uniform float uPhoto; uniform float uComp; uniform vec3 uTint; uniform float uBW; uniform float uTone;
       varying vec2 vUv;
       float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
       float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
@@ -352,7 +352,12 @@ export function attach(ctx) {
         vec4 t = texture2D(uTex, clamp(uv, 0.0, 1.0));
         vec3 c = t.rgb;
         float a;
-        if (uPhoto > 0.5) { c = mix(c, c * uTint, 0.12) * (0.96 + 0.08 * (1.0 - length(uv - 0.5))); a = inside; }
+        if (uPhoto > 0.5) {
+          // the era's own grade (the film pass runs before the print is drawn): silver, then sepia
+          float lum = dot(c, vec3(0.299, 0.587, 0.114));
+          c = mix(c, mix(vec3(lum), lum * vec3(1.08, 0.97, 0.8), uTone), uBW);
+          c = mix(c, c * uTint, 0.12) * (0.96 + 0.08 * (1.0 - length(uv - 0.5))); a = inside;
+        }
         else { float l = max(c.r, max(c.g, c.b)); c = uTint * 1.15; a = inside * smoothstep(0.08, 0.55, l); }
         // the shade it rests on: dark behind the print, soft beyond its edge
         float shade = (inside > 0.5 ? 0.55 : 0.0) + 0.5 * exp(-dOut * dOut / (uPad * uPad * 0.35)) * (1.0 - inside);
@@ -362,8 +367,20 @@ export function attach(ctx) {
       }`
   });
   const printMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), printMat);
-  printMesh.renderOrder = 30; printMesh.frustumCulled = false; printMesh.visible = false;
-  world.scene.add(printMesh);
+  printMesh.frustumCulled = false; printMesh.visible = false;
+  // drawn after the frame's post-processing, over it: the depth of field and the air are the tree's,
+  // not the print's (a leaf at the lens must not blur across a photograph that is being read)
+  const printScene = new THREE.Scene();
+  printScene.add(printMesh);
+  const renderFrame = world.render;
+  world.render = (t) => {
+    renderFrame(t);
+    if (!printMesh.visible) return;
+    const r = world.renderer, keep = r.autoClear;
+    r.autoClear = false; r.setRenderTarget(null);
+    r.render(printScene, world.camera);
+    r.autoClear = keep;
+  };
   const PRINT = { k: 0, node: null, rest: 0 };
   const tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
   function stepPrint(dt, node, settle) {
@@ -410,6 +427,8 @@ export function attach(ctx) {
     printMat.uniforms.uK.value = PRINT.k;
     // the print is lit by its own light: the era's darkness (1938's exposure) does not swallow it
     printMat.uniforms.uComp.value = 1 / Math.max(0.3, world.renderer.toneMappingExposure);
+    const lk = lookAt(sOf(state.p));
+    printMat.uniforms.uBW.value = lk.bw; printMat.uniforms.uTone.value = lk.tone;
   }
 
   // ---------------------------------------------------------------- DOM
