@@ -481,6 +481,14 @@ export function attach(ctx) {
     const notice = $('.cnp-notice');
     notice.textContent = S.status === 'demo' ? '开发演示：树上的作品、作者、推荐与精选均为虚构，用来检验空间与流程，不是真实学生作品。' : S.notice;
     notice.classList.toggle('demo', S.status === 'demo');
+    // phones: the notice folds to its chip (tap to read it): the top of a small screen stays the canopy's
+    if (!notice.dataset.fold) {
+      notice.dataset.fold = '1';
+      notice.tabIndex = 0; notice.setAttribute('aria-expanded', 'false');
+      const flip = () => { const open = !notice.classList.contains('open'); notice.classList.toggle('open', open); notice.setAttribute('aria-expanded', String(open)); };
+      notice.addEventListener('click', flip);
+      notice.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+    }
     renderIndex();
   }
   function lensList() {
@@ -856,7 +864,10 @@ export function attach(ctx) {
       const cw = p.m.cw, ch = p.m.ch;
       const lead = p.key === S.sel || p.m.el === focus || p.key === S.hover;
       let best = null;
-      if (!phone || lead || captions < 2) {
+      // one caption leads (the chosen, hovered or focused leaf, else the one nearest the middle); a few others
+      // stay as quiet names; the rest are their rings until looked at (phones: the lead and one other)
+      const isLead = lead || (k === 0 && !placed.some((q) => q.key === S.sel || q.m.el === focus || q.key === S.hover));
+      if (isLead || captions < (phone ? 2 : 4)) {
         const leftFirst = p.x > W * 0.58;
         const sides = leftFirst ? [-1, 1] : [1, -1];
         for (const lift of [1, 0, 2, -1, 3]) {
@@ -872,6 +883,8 @@ export function attach(ctx) {
       }
       const el = p.m.el;
       el.classList.toggle('bare', !best || (S.reading && p.key === S.sel));
+      el.classList.toggle('lead', !!best && isLead);
+      el.classList.toggle('minor', !!best && !isLead);
       if (best) {
         captions++;
         const ex = best.dx > 0 ? best.dx : best.dx + cw, ey = best.dy + ch / 2;

@@ -224,3 +224,18 @@ body.cnp-reading .cnp-head { max-width: calc(100vw - min(46vw, 640px) - 2 * var(
 .cnp-static .cnp-small { color: var(--ink-2); }
 .cnp-static-read { margin-top: 18px; padding: 22px 26px; border-radius: 12px; background: var(--paper); color: #232824; flex: none; overflow: visible; }
 .cnp-static-read .cnp-small { color: #626e62; }
+
+/* one leading caption, a few quiet names, the rest rings: the leaves are the world, not a wall of tags */
+.cnp-mark.lead .t { padding: 8px 13px 9px; }
+.cnp-mark.lead .t b { font-size: 16px; }
+.cnp-mark.minor .t { padding: 3px 8px 4px; background: rgba(8, 13, 10, .4); box-shadow: none; -webkit-backdrop-filter: blur(4px) brightness(.85); backdrop-filter: blur(4px) brightness(.85); }
+.cnp-mark.minor .t b { font-size: 12.5px; font-weight: 400; color: rgba(251, 247, 238, .9); }
+.cnp-mark.minor .t small { display: none; }
+.cnp-mark.minor .ln { opacity: .5; }
+.cnp-mark.minor:hover .t small, .cnp-mark.minor:focus-visible .t small { display: block; }
+@media (max-width: 760px) {
+  .cnp-notice.demo:not(.open) { font-size: 0; line-height: 0; cursor: pointer; }
+  .cnp-notice.demo:not(.open)::before { font-size: 10px; line-height: 1.6; margin-right: 0; }
+  .cnp-notice.demo:not(.open)::after { content: "说明"; font-size: 10px; line-height: 1.6; margin-left: 6px; color: var(--ink-3); text-decoration: underline; }
+  .cnp-notice.demo.open { background: rgba(8, 13, 10, .72); padding: 8px 10px; border-radius: 10px; }
+}

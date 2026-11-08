@@ -357,7 +357,7 @@ export function attach(ctx) {
         // the shade it rests on: dark behind the print, soft beyond its edge
         float shade = (inside > 0.5 ? 0.55 : 0.0) + 0.5 * exp(-dOut * dOut / (uPad * uPad * 0.35)) * (1.0 - inside);
         vec3 col = mix(vec3(0.02, 0.018, 0.015), c * uComp, a);
-        float alpha = max(a * 0.97, shade * (uPhoto > 0.5 ? 1.0 : 0.85));
+        float alpha = max(a * 0.97, shade * (uPhoto > 0.5 ? 1.0 : 0.35));
         gl_FragColor = vec4(col, alpha * g * smoothstep(0.0, 0.25, uK));
       }`
   });
@@ -372,7 +372,8 @@ export function attach(ctx) {
     PRINT.rest = still ? PRINT.rest + dt : 0;
     const want = still && PRINT.rest > (reduce ? 0 : 0.9) ? 1 : 0;
     if (node && node !== PRINT.node && PRINT.k < 0.02) PRINT.node = node;
-    const rate = want ? 1.6 : 5.5;
+    // gathering is slow (a print developing); breaking up is quick, and at once when the station changed
+    const rate = want ? 1.6 : node !== PRINT.node ? 16 : 5.5;
     PRINT.k = reduce ? want : PRINT.k + (want - PRINT.k) * (1 - Math.exp(-rate * dt));
     printMesh.visible = PRINT.k > 0.004 && !!PRINT.node;
     if (!printMesh.visible) return;
@@ -381,14 +382,20 @@ export function attach(ctx) {
     const camera = world.camera;
     // where: the picture's own place on the bark, drawn a little towards the middle of the frame, never
     // over the words (bottom left) or the year finder (the right edge)
-    tmpV.copy(ff.point).project(camera);
+    // in place: the print is the same picture, at the same place and size the projector draws it from the
+    // station, only flattened and evenly lit (kept clear of the words at the bottom and the finder at the right)
+    tmpV.set(...lookOf(n.at)).project(camera);              // the projector aims at the station's look point
     const portrait = innerWidth < innerHeight;
-    const nx = portrait ? 0 : clamp(tmpV.x * 0.5 + 0.12, -0.05, 0.36), ny = portrait ? clamp(tmpV.y * 0.4 + 0.2, 0.08, 0.32) : clamp(tmpV.y * 0.5 + 0.12, -0.02, 0.28);
     const D = clamp(camera.position.distanceTo(ff.point) * 0.6, 1.0, 3.6);
     const vh = 2 * D * Math.tan((camera.fov * Math.PI) / 360), vw = vh * camera.aspect;
-    let h = vh * (LL.photo ? (portrait ? 0.36 : 0.56) : (portrait ? 0.3 : 0.44));
+    const projFov = (n.at.fov || 44) * (n.at.frame || (LL.photo ? 0.66 : n.light?.void ? 0.72 : 0.6));
+    const frameK = Math.tan((projFov * Math.PI) / 360) / Math.tan((Math.max(10, camera.fov) * Math.PI) / 360);
     const aspect = LL.aspect;
-    h = Math.min(h, (vw * (portrait ? 0.86 : 0.5)) / aspect);
+    let h = vh * clamp(frameK, 0.3, 0.7);
+    h = Math.min(h, (vw * (portrait ? 0.9 : 0.62)) / aspect);
+    const hy = h / vh, hx = (h * aspect) / vw;            // half sizes in NDC are hy and hx (full height 2)
+    const nx = clamp(tmpV.x, -0.92 + hx, (portrait ? 0.92 : 0.78) - hx);
+    const ny = clamp(tmpV.y, (portrait ? -0.25 : -0.42) + hy, 0.86 - hy);
     tmpV.set(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize();
     const fwd = camera.getWorldDirection(new THREE.Vector3());
     printMesh.position.copy(camera.position).addScaledVector(tmpV, D / Math.max(0.3, tmpV.dot(fwd)));
@@ -568,7 +575,7 @@ export function attach(ctx) {
       const L = texCache.get(n.id);
       const target = (L?.ready ? (n.light?.photo ? 3.2 : 2.4) * (n.at.glow || 1) : 0) * Math.max(near, reading && n === readNode ? 1 : 0);
       // (while the print is held up, the light on the bark steps back)
-      sl.I += (target * (n === PRINT.node ? 1 - 0.8 * PRINT.k : 1) - sl.I) * (1 - Math.exp(-4 * dt));
+      sl.I += (target * (n === PRINT.node ? 1 - PRINT.k : 1) - sl.I) * (1 - Math.exp(-4 * dt));
       if (near > 0.6) sl.dev = Math.min(1, sl.dev + dt / (reduce ? 0.01 : 2.2));
       sl.V.value.y = sl.I; sl.V.value.z = sl.dev;
     }

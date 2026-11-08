@@ -635,7 +635,7 @@ export function attachWorld(ctx) {
     }
   }
   let saveAcc = 0, leafGiven = false;
-  const QUIET_MS = 2800;
+  const QUIET_MS = 4200;   // the last look lasts: words and the way on come after (any step hands over at once all the same)
   function tick(dt, wall) {
     const p = state.p;
     // the end of the film: 06 holds; the scroll's owner becomes the hold's (and back)
