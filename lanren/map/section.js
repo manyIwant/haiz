@@ -386,39 +386,138 @@ float hzSunK = 1.0;`)
 
 // ---------------------------------------------------------------- the campus's trees
 function mulberry(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function treeGeometry(kind) {
+// Campus trees by their real form (assets/walk/campus.json gives each tree its species): a few
+// canonical shapes, three variants each, instanced. Canonical size: crown radius ~3.6 m (banyan wider),
+// the instance scales it by the data's own radius and height. Leaves are clusters of displaced, low-poly
+// lumps around real limbs, so the light finds gaps and the silhouette is ragged, not a ball.
+export const TREE_FORM = { terminalia: 'tiered', kapok: 'kapok', banyan: 'dome', chongyang: 'oval', hongdou: 'oval', huoyan: 'oval',
+  mixed: 'oval', botanic: 'oval', fengling: 'vase', shrub: 'shrub', palm: 'palm' };
+function treeGeometry(form, variant = 0) {
   const parts = [];
-  const add = (g, leaf) => { if (g.index) g = g.toNonIndexed(); g.setAttribute('aLeaf', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count).fill(leaf), 1)); parts.push(g); };
-  const r = mulberry(kind === 'palm' ? 7 : 3);
-  if (kind === 'palm') {
-    // canonical palm: 12 m, fronds ~2.4 m out
-    add(new THREE.CylinderGeometry(0.15, 0.24, 11.2, 7, 4).translate(0, 5.6, 0), 0);
-    for (let i = 0; i < 9; i++) {
-      const a = (i / 9) * Math.PI * 2 + r() * 0.3, len = 2.6 + r() * 0.7;
-      const g = new THREE.PlaneGeometry(len, 0.55, 4, 1);
-      const p = g.attributes.position;
-      for (let k = 0; k < p.count; k++) { const x = p.getX(k) + len / 2; p.setXYZ(k, x, -0.12 * x * x + 0.25 * x, p.getY(k) * (1 - x / (len * 1.15))); }
-      g.rotateY(-a).translate(0, 11.2, 0);
-      add(g, 1);
-    }
-  } else {
-    // canonical broadleaf: 8 m, crown radius ~3.6 m (the walk's sizes); lumpy clusters, not a ball
-    add(new THREE.CylinderGeometry(0.14, 0.26, 5.0, 7, 2).translate(0, 2.5, 0), 0);
-    const blobs = [[0, 5.7, 0, 2.6], [1.5, 5.1, 0.7, 1.9], [-1.4, 5.3, -0.8, 2.0], [0.4, 6.7, -0.4, 1.8], [-0.6, 4.8, 1.4, 1.6], [1.0, 4.9, -1.5, 1.5]];
-    for (const [x, y, z, s] of blobs) {
-      const g = new THREE.IcosahedronGeometry(s, 2);
-      const p = g.attributes.position;
-      for (let k = 0; k < p.count; k++) {
-        const vx = p.getX(k), vy = p.getY(k), vz = p.getZ(k), n = 1 + 0.16 * Math.sin(vx * 2.1 + vz * 1.7) * Math.cos(vy * 2.3 - vx);
-        p.setXYZ(k, vx * n, vy * n * 0.82, vz * n);
+  const r = mulberry(31 + variant * 101 + form.length * 7);
+  const add = (g, leaf, up = 0) => {
+    if (g.index) g = g.toNonIndexed();
+    const n = g.attributes.position.count;
+    g.setAttribute('aLeaf', new THREE.Float32BufferAttribute(new Float32Array(n).fill(leaf), 1));
+    g.setAttribute('aUp', new THREE.Float32BufferAttribute(new Float32Array(n).fill(up), 1));
+    parts.push(g);
+  };
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  // a limb from a to b (radii ra → rb)
+  const limb = (a, b, ra, rb, seg = 5) => {
+    const d = b.clone().sub(a), L = d.length();
+    const g = new THREE.CylinderGeometry(rb, ra, L, seg, 1, true).translate(0, L / 2, 0);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), d.normalize()));
+    add(g.translate(a.x, a.y, a.z), 0);
+  };
+  // a cluster of leaves: one displaced lump (squashed by sq) and a fringe of small ones on its upper surface
+  let yLo = Infinity, yHi = -Infinity;
+  const clusters = [];
+  const cluster = (c, s, sq = 0.8, fringe = 5) => { clusters.push([c, s, sq, fringe]); yLo = Math.min(yLo, c.y - s * sq); yHi = Math.max(yHi, c.y + s * sq); };
+  const emitClusters = () => {
+    const span = Math.max(0.5, yHi - yLo);
+    for (const [c, s, sq, fringe] of clusters) {
+      const lump = (cc, ss, sqq, detail, amp) => {
+        const g = new THREE.IcosahedronGeometry(ss, detail);
+        const p = g.attributes.position, ph = r() * 10;
+        for (let k = 0; k < p.count; k++) {
+          const vx = p.getX(k), vy = p.getY(k), vz = p.getZ(k);
+          const n = 1 + amp * (Math.sin(vx * 2.7 + ph) * Math.cos(vz * 2.3 - ph) + 0.6 * Math.sin(vy * 3.9 + vx * 1.3 + ph * 2));
+          p.setXYZ(k, vx * n, vy * n * sqq - ss * 0.08 * (1 - sqq), vz * n);
+        }
+        g.computeVertexNormals();
+        add(g.translate(cc.x, cc.y, cc.z), 1, Math.min(1, Math.max(0, (cc.y - yLo) / span)));
+      };
+      lump(c, s, sq, 1, 0.22);
+      for (let i = 0; i < fringe; i++) {
+        const a = r() * Math.PI * 2, e = 0.15 + r() * 0.75;
+        const o = V(Math.cos(a) * Math.cos(e), Math.sin(e) * sq, Math.sin(a) * Math.cos(e)).multiplyScalar(s * 0.92);
+        lump(c.clone().add(o), s * (0.28 + r() * 0.2), 0.85, 0, 0.14);
       }
-      g.computeVertexNormals();
-      add(g.translate(x, y, z), 1);
     }
+  };
+  const jit = (v, k) => v + (r() - 0.5) * k;
+
+  if (form === 'palm') {
+    // a coconut palm: a slender, slightly bowed, ringed trunk; arching fronds, the old ones hanging
+    const H = 11.4, bow = (r() - 0.5) * 1.6, segs = 6;
+    let prev = V(0, 0, 0);
+    for (let i = 1; i <= segs; i++) { const t = i / segs, q = V(bow * t * t, H * t, bow * 0.4 * t * t); limb(prev, q, 0.25 - 0.1 * (t - 1 / segs), 0.25 - 0.1 * t, 7); prev = q; }
+    const top = prev;
+    const n = 18;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + r() * 0.35, len = 3.0 + r() * 1.1, old = i % 5 === 4;
+      // a frond: a broad blade folded along its rib (a shallow V), arching up then hanging, narrowing to its tip
+      const g = new THREE.PlaneGeometry(len, 1.5, 8, 2);
+      const p = g.attributes.position, lift = old ? -0.7 : 0.36 + r() * 0.25, droop = old ? 0.08 : 0.17;
+      for (let k = 0; k < p.count; k++) { const x = p.getX(k) + len / 2, w = p.getY(k) * Math.sin(Math.PI * Math.min(1, x / len * 0.9 + 0.1)); p.setXYZ(k, x, lift * x - droop * x * x - Math.abs(w) * 0.35, w); }
+      g.rotateY(-a).translate(top.x, top.y, top.z);
+      add(g, old ? 0.6 : 1, old ? 0 : 1);
+    }
+  } else if (form === 'shrub') {
+    yLo = 0;
+    for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + r(), d = i ? 1.9 + r() * 0.9 : 0; cluster(V(Math.cos(a) * d, 0.9 + r() * 0.5, Math.sin(a) * d), 1.5 + r() * 0.5, 0.6, 3); }
+    emitClusters();
+  } else {
+    let trunkTop;
+    const T = (h, rad, lean = 0.3) => { trunkTop = V(jit(0, lean), h, jit(0, lean)); limb(V(0, 0, 0), trunkTop, rad, rad * 0.62, 7); return trunkTop; };
+    if (form === 'tiered' || form === 'kapok') {
+      // whorls of horizontal limbs, the tiers stepping in as they rise (Terminalia, kapok)
+      const kap = form === 'kapok';
+      const top = T(kap ? 11 : 8.0, kap ? 0.34 : 0.26, 0.15);
+      const tiers = kap ? [[5.8, 3.0], [7.8, 2.5], [9.6, 1.8], [11.0, 0.9]] : [[3.3, 3.6], [4.8, 3.1], [6.2, 2.3], [7.5, 1.3]];
+      tiers.forEach(([h, R], ti) => {
+        const n = kap ? 3 + (ti < 2 ? 1 : 0) : 5 + (ti < 2 ? 1 : 0), a0 = r() * Math.PI * 2;
+        for (let i = 0; i < n; i++) {
+          const a = a0 + (i / n) * Math.PI * 2 + (r() - 0.5) * 0.5, RR = R * (0.8 + r() * 0.3);
+          const at = V(Math.cos(a) * RR, h + 0.35 + r() * 0.3, Math.sin(a) * RR);
+          limb(V(0, h - 0.2, 0).lerp(top, 0.0), at, 0.09 * (1 - ti * 0.15), 0.04);
+          cluster(at.clone().add(V(0, 0.2, 0)), (kap ? 0.75 : 1.05) + R * 0.14, kap ? 0.55 : 0.42, kap ? 2 : 4);
+          if (!kap && R > 2) cluster(V(Math.cos(a) * RR * 0.55, h + 0.25, Math.sin(a) * RR * 0.55), 0.85, 0.42, 2);
+        }
+      });
+      cluster(top.clone().add(V(0, 0.4, 0)), kap ? 0.8 : 1.0, 0.6, 3);
+    } else if (form === 'dome') {
+      // a banyan: short thick trunk, limbs spreading wide, a broad low dome, a few aerial roots
+      const top = T(3.0, 0.55, 0.2);
+      const n = 5;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + r() * 0.6, R = 3.2 + r() * 1.2;
+        const end = V(Math.cos(a) * R, 4.6 + r() * 0.9, Math.sin(a) * R);
+        limb(top, end, 0.26, 0.1);
+        cluster(end.clone().add(V(0, 0.6, 0)), 1.9 + r() * 0.4, 0.62, 5);
+        if (i % 2 === 0) limb(V(end.x * 0.8, end.y - 0.3, end.z * 0.8), V(end.x * 0.82, 0.05, end.z * 0.82), 0.05, 0.04, 4);
+      }
+      cluster(V(0, 6.2, 0), 2.6, 0.62, 6);
+      for (let i = 0; i < 4; i++) { const a = r() * Math.PI * 2; cluster(V(Math.cos(a) * 1.8, 6.4 + r() * 0.5, Math.sin(a) * 1.8), 1.7, 0.6, 3); }
+    } else if (form === 'vase') {
+      // 风铃木: the trunk forks low, three limbs reach up and out, an open crown in separate heads
+      const top = T(2.4, 0.22, 0.2);
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2 + r() * 0.8, R = 2.4 + r() * 0.8, h = 5.4 + r() * 1.4;
+        const end = V(Math.cos(a) * R, h, Math.sin(a) * R);
+        limb(top, end, 0.15, 0.07);
+        cluster(end, 1.35 + r() * 0.3, 0.7, 4);
+        cluster(end.clone().add(V(Math.cos(a + 1) * 1.1, -0.6, Math.sin(a + 1) * 1.1)), 1.0, 0.7, 2);
+      }
+    } else {
+      // an oval crown (重阳木, 红豆, 火焰木 …): a clear trunk, limbs into a dense, uneven head
+      const top = T(3.6, 0.25, 0.3);
+      const n = 7;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + r() * 0.5, R = 1.8 + r() * 1.0, h = 4.6 + r() * 2.4;
+        const end = V(Math.cos(a) * R, h, Math.sin(a) * R);
+        limb(top, end.clone().multiplyScalar(0.8), 0.12, 0.05);
+        cluster(end, 1.35 + r() * 0.45, 0.82, 3);
+      }
+      cluster(V(0, 7.4, 0), 1.7, 0.8, 4);
+      cluster(V(jit(0, 1), 5.5, jit(0, 1)), 1.9, 0.8, 3);
+    }
+    emitClusters();
   }
   const out = new THREE.BufferGeometry();
   const merge = (name, size) => { const arr = new Float32Array(parts.reduce((s, g) => s + g.attributes[name].count * size, 0)); let o = 0; for (const g of parts) { arr.set(g.attributes[name].array, o); o += g.attributes[name].array.length; } out.setAttribute(name, new THREE.BufferAttribute(arr, size)); };
-  merge('position', 3); merge('normal', 3); merge('aLeaf', 1);
+  merge('position', 3); merge('normal', 3); merge('aLeaf', 1); merge('aUp', 1);
   out.computeBoundingSphere();
   return out;
 }
@@ -434,9 +533,9 @@ function treeMaterial(U, palm) {
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
 uniform vec3 uSweepC; uniform float uSweepR;
-attribute float aLeaf; varying float vLeaf; varying vec3 vHW; varying float vLy;`)
+attribute float aLeaf; attribute float aUp; varying float vLeaf; varying vec3 vHW; varying float vLy;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
-  vLeaf = aLeaf; vLy = position.y;
+  vLeaf = aLeaf; vLy = aUp;
 ${GROW}`)
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
   vHW = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;`);
@@ -451,13 +550,15 @@ float hzSunK = 1.0;`)
   {
     // leaf mass: darker underneath and inside, a scatter of lighter leaves on top
     float lump = wn(vHW.xz * 1.7 + vHW.y * 0.9);
-    float up = smoothstep(${palm ? '9.5, 12.5' : '3.8, 7.6'}, vLy);
-    vec3 leaf = diffuseColor.rgb * (0.5 + 0.55 * up) * (0.82 + 0.36 * lump);
-    vec3 bark = vec3(0.16, 0.12, 0.09);
-    diffuseColor.rgb = mix(bark, leaf, vLeaf);
+    float up = smoothstep(0.0, 1.0, vLy);
+    vec3 leaf = diffuseColor.rgb * (0.52 + 0.55 * up) * (0.8 + 0.4 * lump);
+    // a few leaves turning (the old palm fronds, a scatter in every crown) and bark as it is: palms grey, others brown
+    leaf = mix(leaf, vec3(0.42, 0.33, 0.16), ${palm ? 'step(vLeaf, 0.7) * 0.8' : 'step(0.86, wh(floor(vHW.xz * 3.0 + vHW.y * 2.0))) * 0.35'});
+    vec3 bark = ${palm ? 'vec3(0.34, 0.31, 0.27) * (0.85 + 0.25 * step(0.5, fract(vHW.y * 3.2)))' : 'vec3(0.17, 0.13, 0.1)'};
+    diffuseColor.rgb = mix(bark, leaf, step(0.3, vLeaf));
   }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-  if (vLeaf > 0.5) normal = normalize(normal + (vec3(wn(vHW.xz * 2.1 + 3.0), wn(vHW.zy * 2.3), wn(vHW.xy * 1.9 + 7.0)) - 0.5) * 1.1);`)
+  if (vLeaf > 0.3) normal = normalize(normal + (vec3(wn(vHW.xz * 4.1 + 3.0), wn(vHW.zy * 4.3), wn(vHW.xy * 3.9 + 7.0)) - 0.5) * 1.3);`)
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
         .replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= hzSunK;'));
   };
@@ -479,23 +580,29 @@ const TREE_TONE = { palm: '#5f7d3b', banyan: '#2f5a2c', chongyang: '#3d6532', te
   huoyan: '#4a6f30', hongdou: '#3e6634', botanic: '#43693a', shrub: '#4b7038', mixed: '#466c36' };
 function createTrees(trees, U) {
   const out = [];
-  for (const palm of [false, true]) {
-    const list = trees.filter((t) => (t.kind === 'palm') === palm);
-    if (!list.length) continue;
-    const geo = treeGeometry(palm ? 'palm' : 'leaf');
+  const groups = new Map();
+  for (const t of trees) {
+    const form = TREE_FORM[t.kind] || 'oval', v = (t.v ?? 0) % 3, key = form + v;
+    if (!groups.has(key)) groups.set(key, { form, v, list: [] });
+    groups.get(key).list.push(t);
+  }
+  for (const { form, v, list } of groups.values()) {
+    const palm = form === 'palm';
+    const geo = treeGeometry(form, v);
     const mesh = new THREE.InstancedMesh(geo, treeMaterial(U, palm), list.length);
-    const r = mulberry(palm ? 91 : 17), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Pv = new THREE.Vector3(), col = new THREE.Color();
+    const r = mulberry(17 + v * 13 + form.length), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Pv = new THREE.Vector3(), col = new THREE.Color();
     list.forEach((t, i) => {
-      const h = (t.h || 1) * (0.92 + r() * 0.16), sc = palm ? t.r / 2.4 : t.r / 3.6;
+      // the canonical crown is ~3.6 m across in radius (a palm's fronds ~3 m; a banyan reaches ~4.4 m)
+      const h = (t.h || 1) * (0.9 + r() * 0.2), sc = palm ? t.r / 2.4 : form === 'dome' ? t.r / 4.4 : t.r / 3.6;
       Q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), r() * Math.PI * 2);
-      S.set(sc, h * (palm ? 1 : Math.min(1.25, 0.75 + sc * 0.3)), sc);
+      S.set(sc, h * (palm ? 1 : Math.min(1.25, 0.8 + sc * 0.25)), sc);
       Pv.set(t.x, GROUND_Y, t.z);
       mesh.setMatrixAt(i, M4.compose(Pv, Q, S));
-      col.set(TREE_TONE[t.kind] || '#4b7038').multiplyScalar(0.92 + r() * 0.16);
+      col.set(TREE_TONE[t.kind] || '#4b7038').multiplyScalar(0.9 + r() * 0.2);
       mesh.setColorAt(i, col);
     });
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.receiveShadow = true;
+    mesh.castShadow = false; mesh.receiveShadow = true;
     mesh.frustumCulled = false;
     const depth = new THREE.InstancedMesh(geo, treeDepth(U, palm), list.length);
     depth.instanceMatrix = mesh.instanceMatrix;

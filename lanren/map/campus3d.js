@@ -47,7 +47,10 @@ export const MATERIALS = [
   /* 16 */ { key: 'wallWarm', albedo: '#c8bfa8', rough: 0.93, metal: 0, ink: 'wall' },     // canteens, dorms, arts
   /* 17 */ { key: 'door', albedo: '#6b5541', rough: 0.84, metal: 0, ink: 'wall' },
   /* 18 */ { key: 'beam', albedo: '#8a5a45', rough: 0.88, metal: 0, ink: 'wall' },
-  /* 19 */ { key: 'frame', albedo: '#54685a', rough: 0.62, metal: 0.15, ink: 'wall' }
+  /* 19 */ { key: 'frame', albedo: '#54685a', rough: 0.62, metal: 0.15, ink: 'wall' },
+  /* 20 */ { key: 'wallCool', albedo: '#cdcfca', rough: 0.9, metal: 0, ink: 'wall' },      // 一号教学楼: cool light grey paint (photograph)
+  /* 21 */ { key: 'pilaster', albedo: '#9a9c97', rough: 0.9, metal: 0, ink: 'wall' },      // its mid-grey pilasters and centre piers
+  /* 22 */ { key: 'frameGrey', albedo: '#6f7472', rough: 0.55, metal: 0.25, ink: 'wall' }  // its grey aluminium window frames
 ];
 const M = Object.fromEntries(MATERIALS.map((m, i) => [m.key, i]));
 
@@ -156,6 +159,31 @@ class Packer {
       this.tri(D, C, r1); this.tri(B, A, r0);
     }
     this.quad(A, B, C, D);   // underside
+    this.mat = keep;
+  }
+  /**
+   * A hipped roof whose four eave corners turn up by lift (the sweep of a southern Chinese roof):
+   * one closed solid; the eave line runs straight from each raised corner to its edge's low middle.
+   */
+  sweptHip(x0, x1, z0, z1, y0, h, lift, mat = this.mat) {
+    const keep = this.mat; this.mat = mat;
+    const w = x1 - x0, d = z1 - z0, y1 = y0 + h, yc = y0 + lift, xm = (x0 + x1) / 2, zm = (z0 + z1) / 2;
+    const A = [x0, yc, z0], B = [x1, yc, z0], C = [x1, yc, z1], D = [x0, yc, z1];
+    const Mab = [xm, y0, z0], Mbc = [x1, y0, zm], Mcd = [xm, y0, z1], Mda = [x0, y0, zm];
+    const r0 = w >= d ? [x0 + d / 2, y1, zm] : [xm, y1, z0 + w / 2], r1 = w >= d ? [x1 - d / 2, y1, zm] : [xm, y1, z1 - w / 2];
+    if (w >= d) {
+      this.tri(D, Mcd, r0); this.tri(Mcd, C, r1); this.tri(Mcd, r1, r0);
+      this.tri(B, Mab, r1); this.tri(Mab, A, r0); this.tri(Mab, r0, r1);
+      this.tri(C, Mbc, r1); this.tri(Mbc, B, r1);
+      this.tri(A, Mda, r0); this.tri(Mda, D, r0);
+    } else {
+      this.tri(C, Mbc, r0); this.tri(Mbc, B, r0); this.tri(C, r0, r1);
+      this.tri(A, Mda, r1); this.tri(Mda, D, r1); this.tri(A, r1, r0);
+      this.tri(D, Mcd, r1); this.tri(Mcd, C, r1);
+      this.tri(B, Mab, r0); this.tri(Mab, A, r0);
+    }
+    const E = [xm, y0 + lift * 0.5, zm], ring = [A, Mab, B, Mbc, C, Mcd, D, Mda];
+    for (let k = 0; k < 8; k++) this.tri(E, ring[k], ring[(k + 1) % 8]);   // underside
     this.mat = keep;
   }
 }
@@ -324,6 +352,117 @@ FORMS.academic = (P, b, w, d) => {
   for (const x of [-colX, colX]) { P.cbox(x, ez + 1.2, 0.9, 0.9, base, 0.5, M.plinth); P.cbox(x, ez + 1.2, 0.65, 0.65, base + 0.5, 5.4, M.column); }
   P.box(-pw / 2 - 0.75, pw / 2 + 0.75, base + 5.9, base + 6.3, d / 2, ez + 1.6, M.beam);
   P.hip(-pw / 2 - 1.0, pw / 2 + 1.0, d / 2, ez + 2.4, base + 6.3, b.id === 'yihao' ? 0.85 : 1.2, M.roofRed);
+  return { base };
+};
+// 一号教学楼 · after the front photograph (assets/images/campus/campus_yihao.jpg; docs/haiz-campus-reference-20261108.md).
+// Its entrance front faces the tree and 虎踞龙盘 (the school: "楼前大叶榄仁树…楼前太湖石"); the generic academic
+// form put the open gallery there, so buildCampus turns this one form half round inside its own rectangle
+// (the footprint, the plan, collision and every coordinate are unchanged). Seen in the photograph:
+//   wings      grey pilasters between wide windows, white sill bands, a red tile eave
+//   centre     two dark granite towers about four storeys high, three bays of large windows between them,
+//              a dark granite portal with low red canopies either side, a terrace porch above it on two
+//              white columns under a red hipped roof with turned-up corners, tall windows over the towers,
+//              a raised attic with square corner blocks and a light hipped crown with turned-up corners
+// Inferred (no photograph): the back with its gallery, the ends, the rooms inside.
+FORMS.yihao = (P, b, w, d) => {
+  const base = 0.45, L = levels(b, base), { f, fh, H } = L;
+  const C = 13.2, TW = 5.6, T0 = C - TW, face = d / 2;            // centre block half-width; towers x ∈ ±[T0, C]
+  P.box(-w / 2 - 0.2, w / 2 + 0.2, 0, base, -d / 2 - 2.2, d / 2 + 0.2, M.plinth);
+  const gal = 2.0, gz = -d / 2 - gal;
+  const wingX = [];
+  for (let k = 0; k < f; k++) {
+    const y = L.at[k], hw = fh - SLAB;
+    const inn = interior(P, { w, d, y0: y, h: hw, bay: 9, stairAt: 10, lobbyAt: k === 0 ? 0 : null });
+    const front = [], back = [];
+    for (const [a, c] of inn.bays) for (const x of rhythm(a, c, 2.4, 0.9)) {
+      back.push(win(x, 1.6, 1.5, 2.6));
+      if (Math.abs(x) < C + 0.9) continue;
+      front.push(win(x, 2.4, 0.9, 2.55));
+      if (k === 0) wingX.push(x);
+    }
+    // the centre: three large windows between the towers; over the towers, tall windows on the top storeys
+    if (k > 0) for (const x of [-4.7, 0, 4.7]) front.push(win(x, 3.3, 0.8, 2.65));
+    if (k >= f - 2) for (const x of [-(T0 + TW / 2), T0 + TW / 2]) front.push(win(x, 1.5, 0.5, hw - 0.25));
+    if (k === 0) front.push({ at: 0, w: 3.4, sill: 0, head: 3.0, leaf: true });
+    for (const [a] of inn.bays) back.push(door(a + 0.8, 1.0, 2.3));
+    wall(P, 'x', d / 2 - WALL / 2, WALL, -w / 2, w / 2, y, hw, dedupe(front), M.wallCool);
+    wall(P, 'x', -d / 2 + WALL / 2, WALL, -w / 2, w / 2, y, hw, dedupe(back), M.wallCool);
+    const ends = rhythm(-d / 2 + WALL, d / 2 - WALL, 1.7, 1.4).map((z) => win(z, 1.7, 0.9, 2.5));
+    wall(P, 'z', -w / 2 + WALL / 2, WALL, -d / 2 + WALL, d / 2 - WALL, y, hw, ends, M.wallCool);
+    wall(P, 'z', w / 2 - WALL / 2, WALL, -d / 2 + WALL, d / 2 - WALL, y, hw, ends, M.wallCool);
+    P.box(-w / 2, w / 2, y + hw, y + fh, -d / 2, d / 2, k === f - 1 ? M.concrete : M.floor);
+    P.box(-w / 2, w / 2, y + hw, y + fh, gz, -d / 2, M.concrete);
+    if (k < f - 1) P.box(-w / 2, w / 2, y + fh, y + fh + 1.0, gz, gz + 0.18, M.parapet);
+    const colN = Math.max(4, Math.round(w / 7.5));
+    for (let i = 0; i < colN; i++) { const x = -w / 2 + (i + 0.5) * (w / colN); P.box(x - 0.26, x + 0.26, y, y + hw, gz + 0.2, gz + 0.72, M.column); }
+    // the front's horizontal order: a white sill band under every storey's windows, a transom in each window
+    if (k > 0) for (const [a, c] of [[-w / 2, -C], [C, w / 2], [-T0, T0]]) P.box(a, c, y + 0.62, y + 0.8, face, face + 0.14, M.parapet);
+    else for (const [a, c] of [[-w / 2, -C], [C, w / 2]]) P.box(a, c, base, base + 0.75, face, face + 0.08, M.baseStone);   // a granite base course
+    for (const o of front) {
+      if (!o.glass || o.head - o.sill < 1.2) continue;
+      const ya = y + o.sill, yb = y + o.head, xa = o.at - o.w / 2, xb = o.at + o.w / 2;
+      P.box(xa, xb, ya + (yb - ya) * 0.68, ya + (yb - ya) * 0.68 + 0.07, face, face + 0.06, M.frameGrey);     // transom
+      if (o.w > 2) P.box(o.at - 0.035, o.at + 0.035, ya, yb, face, face + 0.06, M.frameGrey);                 // mullion
+      // the white surround the photograph shows round every window
+      P.box(xa - 0.14, xa, ya - 0.05, yb + 0.14, face, face + 0.1, M.parapet); P.box(xb, xb + 0.14, ya - 0.05, yb + 0.14, face, face + 0.1, M.parapet);
+      P.box(xa - 0.14, xb + 0.14, yb, yb + 0.14, face, face + 0.1, M.parapet);
+    }
+  }
+  // wings: pilasters at the piers between the windows, full height, with a small corbel under the eave
+  const xs = [...wingX].sort((a, c) => a - c);
+  for (let i = 0; i < xs.length - 1; i++) {
+    const gap = xs[i + 1] - xs[i];
+    if (gap > 5.5) continue;                                       // across a bay wall: keep the rhythm, no doubles
+    const x = (xs[i] + xs[i + 1]) / 2;
+    P.box(x - 0.24, x + 0.24, base, H - 0.25, face, face + 0.22, M.pilaster);
+    P.box(x - 0.34, x + 0.34, H - 0.6, H - 0.25, face, face + 0.32, M.parapet);
+  }
+  for (const s of [-1, 1]) P.box(s > 0 ? C : -w / 2 - 0.3, s > 0 ? w / 2 + 0.3 : -C, H - 0.25, H, face, face + 0.4, M.parapet);   // the eave's white edge
+  // the wings' roof: a low red tiled hip, as the photograph shows it at the eave
+  P.box(-w / 2 - 0.3, w / 2 + 0.3, H, H + 0.22, -d / 2 - 0.3, d / 2 + 0.3, M.concrete);
+  P.hip(-w / 2 - 0.3, w / 2 + 0.3, -d / 2 - 0.3, d / 2 + 0.3, H + 0.22, 0.85, M.roofRed);
+  // the towers: dark granite to the fourth storey, one narrow window per storey, a thin stone cap
+  const tTop = L.at[Math.min(f - 1, 3)] + 0.4;
+  for (const s of [-1, 1]) {
+    const x0 = s > 0 ? T0 : -C, x1 = s > 0 ? C : -T0, xc = (x0 + x1) / 2;
+    P.box(x0, x1, base, tTop, face, face + 0.9, M.baseStone);
+    P.box(x0 - 0.15, x1 + 0.15, tTop, tTop + 0.35, face - 0.1, face + 1.05, M.baseStone);
+    for (let k = 0; k < Math.min(f, 4); k++) {
+      const y = L.at[k];
+      P.box(xc - 0.62, xc + 0.62, y + 0.85, y + 2.45, face + 0.9, face + 0.93, M.glass);
+      for (const e of [-1, 1]) P.box(xc + e * 0.62 - 0.05, xc + e * 0.62 + 0.05, y + 0.8, y + 2.5, face + 0.9, face + 1.0, M.frame);
+      P.box(xc - 0.8, xc + 0.8, y + 0.7, y + 0.85, face + 0.9, face + 1.05, M.baseStone);
+    }
+  }
+  // between the towers: grey pilasters dividing the three bays
+  for (const x of [-2.35, 2.35]) P.box(x - 0.3, x + 0.3, L.at[1], H, face, face + 0.3, M.pilaster);
+  // the portal: dark granite, the doors deep inside it; low red canopies either side on thin white columns
+  const pd = 4.2, pTop = Math.min(L.at[2] - 0.2, 7.4);
+  P.box(-4.6, -3.6, base, pTop, face, face + pd, M.baseStone); P.box(3.6, 4.6, base, pTop, face, face + pd, M.baseStone);
+  P.box(-4.6, 4.6, pTop - 2.6, pTop, face, face + pd, M.baseStone);
+  P.box(-3.6, 3.6, base, base + 3.2, face + 0.3, face + 0.36, M.glass);
+  for (const s of [-1, 1]) {
+    const x0 = s > 0 ? 4.6 : -T0, x1 = s > 0 ? T0 : -4.6;
+    P.box(x0, x1, base + 5.6, base + 5.82, face, face + 2.7, M.concrete);
+    P.box(x0, x1, base + 5.82, base + 6.0, face, face + 2.8, M.roofRed);
+    P.cbox((x0 + x1) / 2, face + 2.45, 0.22, 0.22, base, 5.6, M.whiteGate);
+  }
+  // the terrace porch on the portal: two white columns, a red hipped roof turned up at the corners
+  P.box(-5.0, 5.0, pTop, pTop + 0.35, face, face + pd + 0.3, M.parapet);
+  for (const x of [-3.7, 3.7]) P.cbox(x, face + pd - 0.4, 0.55, 0.55, pTop + 0.35, 2.7, M.whiteGate);
+  P.box(-5.4, 5.4, pTop + 3.05, pTop + 3.35, face, face + pd + 0.5, M.whiteGate);
+  P.sweptHip(-6.0, 6.0, face - 0.2, face + pd + 1.3, pTop + 3.35, 1.2, 0.45, M.roofRed);
+  // the crown: the centre block's attic over the wings' eave, square corner blocks, a light swept hip
+  const az = face - 7.5;
+  P.box(-C, C, H, H + 1.8, az, face + 0.35, M.wallCool);
+  P.box(-C - 0.2, C + 0.2, H + 1.8, H + 2.05, az - 0.2, face + 0.55, M.parapet);
+  for (const s of [-1, 1]) P.cbox(s * (C - 1.0), face - 0.4, 2.0, 2.0, H + 2.05, 1.4, M.wallCool);
+  P.box(-10.2, 10.2, H + 2.05, H + 3.05, az + 0.6, face - 0.1, M.wallCool);
+  // the crown sits forward at the face, wide, its corners turned up (seen from the forecourt)
+  P.sweptHip(-11.8, 11.8, az - 0.4, face + 1.3, H + 3.05, 1.9, 0.95, M.parapet);
+  // the stair house on the roof (as the walk places it), the front steps up from the forecourt
+  P.box(7.1, 12.9, H + 0.22, H + 3.4, -6.2, 5.8, M.wallLight);
+  for (let s = 0; s < 3; s++) P.box(-C - 1.0 - s * 0.6, C + 1.0 + s * 0.6, 0, base - s * 0.15, d / 2 + 0.2, face + pd + 1.6 + s * 0.6, M.step);
   return { base };
 };
 function dedupe(ops) {
@@ -648,6 +787,8 @@ function trimmed(b, r, all) {
 // ---------------------------------------------------------------- the campus
 const BUILT = ['academic', 'lab', 'library', 'office', 'art', 'canteen', 'living', 'gate', 'pavilion', 'corr'];
 const GROUPS = { dorm_m_n: 'dorm_m', dorm_m_m: 'dorm_m', dorm_m_s: 'dorm_m' };
+// buildings with a form of their own, drawn from photographs (turn: the form's +Z front faces the other way)
+const OWN = { yihao: { form: 'yihao', turn: Math.PI } };
 
 /**
  * @param campus  assets/walk/campus.json
@@ -674,9 +815,10 @@ export function buildCampus(campus, frame) {
     let rot = (b.rot || 0) + R, w = r.w, d = r.d;
     // the spine of the boys' dormitory runs north–south: build it lengthwise, balconies to the west
     if (b.form === 'living' && d > w * 1.6) { rot -= Math.PI / 2; [w, d] = [d, w]; }
-    P.frame(r.x, r.z, rot, frame.ground, index);
+    // 一号教学楼 faces its tree: its own form is built half round inside the same rectangle (see FORMS.yihao)
+    P.frame(r.x, r.z, rot + (OWN[b.id] ? OWN[b.id].turn : 0), frame.ground, index);
     const v0 = P.n, i0 = P.idx.length;
-    const out = FORMS[b.form](P, b, w, d);
+    const out = (OWN[b.id] ? FORMS[OWN[b.id].form] : FORMS[b.form])(P, b, w, d);
     const L = b.form === 'gate' || b.form === 'pavilion' || b.form === 'corr' ? null : levels(b, out.base);
     // the solid horizontal layers that span the whole footprint (plinth, floor slabs, roof slab):
     // a cut passing through one fills the whole building with ink, so the timeline steps over them
