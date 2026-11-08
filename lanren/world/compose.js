@@ -33,8 +33,11 @@ export const COMPOSITIONS = {
     rotation: 90 * D2R,
     // the campus rises while the camera comes down from the map into the crown (04 → 05)
     rise: [3.08, 3.88],
-    shot6: null,                       // V4's own 06 eye (feet on the campus ground)
-    sun6: null
+    // 06: closer to the tree than V4's eye (21 m, on the line the evening shadow takes back to it), so the
+    // crown is the picture and 一号教学楼 is its ground; the sun a little further round (320°, from 302° in 05)
+    // rakes the facade instead of flooding it, and lays the walker's shadow straight towards the trunk
+    shot6: { eye: [-14.85, GROUND_Y + EYE_H, 14.85], look: [0.6, 7.2, -0.2], fov: 54 },
+    sun6: 320
   },
   a: {
     id: 'a', title: 'A · 落地后显现', short: '保留第四幕北朝上；第五幕无校园，跃下时校园升起；第六幕改在树北前庭回望',

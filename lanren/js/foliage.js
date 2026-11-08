@@ -230,7 +230,10 @@ export const UNIFORMS = {
   uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 },
   uOpenC: { value: new THREE.Vector4(0, 0, 0, 0) }, uOpenA: { value: new THREE.Vector4(1, 0, 2.4, 0.3) },
   // chapter 03: light falls away behind the plane in focus (x focus distance, y/z start/end beyond it, w how much)
-  uFall: { value: new THREE.Vector4(4, 1, 6, 0) }
+  uFall: { value: new THREE.Vector4(4, 1, 6, 0) },
+  // a person inside the crown (05 → 06, first person): leaves nearer than this (m) dissolve away from the lens,
+  // as the eye would look past a leaf an inch from it (0: off)
+  uNearCut: { value: 0 }
 };
 /** GLSL: the falloff of chapter 03's light into the depth of the crown (strength 0: no change) */
 export const FALL_GLSL = /* glsl */`
@@ -328,7 +331,7 @@ ${loose ? '' : `
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
 ${LEAF_COLOUR_GLSL}
-uniform float uTransmit; uniform vec4 uFall;
+uniform float uTransmit; uniform vec4 uFall; uniform float uNearCut;
 varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell; varying float vTone;`)
       .replace('#include <map_fragment>', `
   vec4 lt = texture2D(map, vMapUv);
@@ -348,7 +351,8 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   diffuseColor.rgb = base;`}
   float la = (lt.a - 0.5) / max(fwidth(lt.a), 1e-4) + 0.5;
   diffuseColor.a = clamp(la, 0.0, 1.0);`)
-      .replace('#include <alphatest_fragment>', 'if (diffuseColor.a < 0.5) discard;');
+      .replace('#include <alphatest_fragment>', `if (diffuseColor.a < 0.5) discard;
+  if (uNearCut > 0.0) { float nk = length(vViewPosition) / uNearCut; if (nk < 1.0 && nk < fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard; }`);
     if (!depth) {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>

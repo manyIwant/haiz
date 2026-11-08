@@ -14,7 +14,8 @@
 // scrolls while the walk has the input, and the wheel never moves the walker.
 import * as THREE from 'three';
 import { shot, isPortrait, poseAt, CHAPTERS, LIGHT } from '../js/chapters.js';
-import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE } from './film.js';
+import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE, PHASE } from './film.js';
+import { UNIFORMS } from '../js/foliage.js';
 import { createBody } from './body.js';
 import { eyeOffset } from './skeleton.js';
 import { buildColliders, move, nearest, freeSpot } from './collide.js';
@@ -58,9 +59,9 @@ export function attachWorld(ctx) {
   function landing(e6) {
     const ld = [limb.b[0] - limb.a[0], limb.b[2] - limb.a[2]], l1 = Math.hypot(...ld);
     const to6 = [e6.ex - limb.b[0], e6.ez - limb.b[2]], l2 = Math.hypot(...to6);
-    let dx = ld[0] / l1 + 0.6 * to6[0] / l2, dz = ld[1] / l1 + 0.6 * to6[1] / l2;
+    let dx = ld[0] / l1 + 1.6 * to6[0] / l2, dz = ld[1] / l1 + 1.6 * to6[1] / l2;
     const n = Math.hypot(dx, dz); dx /= n; dz /= n;
-    let x = limb.b[0] + dx * 3.8, z = limb.b[2] + dz * 3.8;
+    let x = limb.b[0] + dx * 4.4, z = limb.b[2] + dz * 4.4;
     const r = Math.hypot(x, z);
     if (r < 10) { x *= 10 / r; z *= 10 / r; }
     return [x, z];
@@ -676,6 +677,8 @@ export function attachWorld(ctx) {
     return W.owner === 'transit';
   }
   function after() {
+    // in the crown with the person's own eyes, a leaf at the lens is looked past (foliage.js uNearCut)
+    UNIFORMS.uNearCut.value = filmOn() && state.p - 4 > PHASE.self[0] && state.p - 4 < PHASE.land[0] ? 1.3 : WALKING.has(W.owner) ? 0.7 : 0;
     if (filmOn()) {
       const ps = getFilm().pose(state.p - 4);
       // the eye is exactly in the walker's head (the look may still be easing: V4's camera turns it)

@@ -324,6 +324,85 @@ export function attach(ctx) {
     sl.V.value.w = n.at.reach ?? 7;
   }
 
+  // ---------------------------------------------------------------- the print in the light
+  // Moving, a station's picture lives on the tree: it develops on the bark, breaks apart along the real
+  // depth of trunk, limbs and leaves, and gathers again at the next. Resting at a station, it gathers once
+  // more: the scattered light draws together into one flat, upright print, held in the light just in front of
+  // the bark, evenly lit on a soft shade of its own, so a photograph near the leaves (1953–1988's gate,
+  // 1988, 2023) or a year in the dark of 1938 can be read. The era's grade still falls on it; moving on
+  // dissolves it back into the tree. (Reduced motion: it simply appears and goes.)
+  const printMat = new THREE.ShaderMaterial({
+    transparent: true, depthTest: false, depthWrite: false, toneMapped: true,
+    uniforms: { uTex: { value: blank }, uK: { value: 0 }, uAspect: { value: 1.5 }, uPad: { value: 0.16 }, uPhoto: { value: 1 }, uComp: { value: 1 }, uTint: { value: new THREE.Color(1.0, 0.95, 0.88) } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: /* glsl */`
+      uniform sampler2D uTex; uniform float uK; uniform float uAspect; uniform float uPad; uniform float uPhoto; uniform float uComp; uniform vec3 uTint;
+      varying vec2 vUv;
+      float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
+      void main(){
+        // the plane holds the print and a margin of shade round it
+        vec2 uv = (vUv - 0.5) * (1.0 + 2.0 * uPad) + 0.5;
+        vec2 e = min(uv, 1.0 - uv);
+        float inside = smoothstep(0.0, 0.012, e.x) * smoothstep(0.0, 0.012 * uAspect, e.y);
+        float dOut = length(max(-min(uv, 1.0 - uv), 0.0) * vec2(uAspect, 1.0));
+        // gathering: fragments of light draw together (the same breaking as on the bark, run backwards)
+        float n = vn(uv * vec2(uAspect, 1.0) * 9.0) * 0.65 + vn(uv * vec2(uAspect, 1.0) * 31.0) * 0.35;
+        float g = smoothstep(n - 0.12, n + 0.02, uK * 1.25 - 0.1);
+        vec4 t = texture2D(uTex, clamp(uv, 0.0, 1.0));
+        vec3 c = t.rgb;
+        float a;
+        if (uPhoto > 0.5) { c = mix(c, c * uTint, 0.12) * (0.96 + 0.08 * (1.0 - length(uv - 0.5))); a = inside; }
+        else { float l = max(c.r, max(c.g, c.b)); c = uTint * 1.15; a = inside * smoothstep(0.08, 0.55, l); }
+        // the shade it rests on: dark behind the print, soft beyond its edge
+        float shade = (inside > 0.5 ? 0.55 : 0.0) + 0.5 * exp(-dOut * dOut / (uPad * uPad * 0.35)) * (1.0 - inside);
+        vec3 col = mix(vec3(0.02, 0.018, 0.015), c * uComp, a);
+        float alpha = max(a * 0.97, shade * (uPhoto > 0.5 ? 1.0 : 0.85));
+        gl_FragColor = vec4(col, alpha * g * smoothstep(0.0, 0.25, uK));
+      }`
+  });
+  const printMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), printMat);
+  printMesh.renderOrder = 30; printMesh.frustumCulled = false; printMesh.visible = false;
+  world.scene.add(printMesh);
+  const PRINT = { k: 0, node: null, rest: 0 };
+  const tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
+  function stepPrint(dt, node, settle) {
+    const L = node ? lightTexture(node) : null, f = node ? found[nodes.indexOf(node)] : null;
+    const still = !!node && !!L?.ready && !!f && settle > 0.985 && !reading && !document.hidden;
+    PRINT.rest = still ? PRINT.rest + dt : 0;
+    const want = still && PRINT.rest > (reduce ? 0 : 0.9) ? 1 : 0;
+    if (node && node !== PRINT.node && PRINT.k < 0.02) PRINT.node = node;
+    const rate = want ? 1.6 : 5.5;
+    PRINT.k = reduce ? want : PRINT.k + (want - PRINT.k) * (1 - Math.exp(-rate * dt));
+    printMesh.visible = PRINT.k > 0.004 && !!PRINT.node;
+    if (!printMesh.visible) return;
+    const n = PRINT.node, LL = lightTexture(n), ff = found[nodes.indexOf(n)];
+    if (!LL || !ff) { printMesh.visible = false; return; }
+    const camera = world.camera;
+    // where: the picture's own place on the bark, drawn a little towards the middle of the frame, never
+    // over the words (bottom left) or the year finder (the right edge)
+    tmpV.copy(ff.point).project(camera);
+    const portrait = innerWidth < innerHeight;
+    const nx = portrait ? 0 : clamp(tmpV.x * 0.5 + 0.12, -0.05, 0.36), ny = portrait ? clamp(tmpV.y * 0.4 + 0.2, 0.08, 0.32) : clamp(tmpV.y * 0.5 + 0.12, -0.02, 0.28);
+    const D = clamp(camera.position.distanceTo(ff.point) * 0.6, 1.0, 3.6);
+    const vh = 2 * D * Math.tan((camera.fov * Math.PI) / 360), vw = vh * camera.aspect;
+    let h = vh * (LL.photo ? (portrait ? 0.36 : 0.56) : (portrait ? 0.3 : 0.44));
+    const aspect = LL.aspect;
+    h = Math.min(h, (vw * (portrait ? 0.86 : 0.5)) / aspect);
+    tmpV.set(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize();
+    const fwd = camera.getWorldDirection(new THREE.Vector3());
+    printMesh.position.copy(camera.position).addScaledVector(tmpV, D / Math.max(0.3, tmpV.dot(fwd)));
+    printMesh.quaternion.copy(camera.getWorldQuaternion(tmpQ));
+    const pad = printMat.uniforms.uPad.value;
+    printMesh.scale.set(h * aspect * (1 + 2 * pad / aspect), h * (1 + 2 * pad), 1);
+    printMat.uniforms.uTex.value = LL.tex;
+    printMat.uniforms.uAspect.value = aspect;
+    printMat.uniforms.uPhoto.value = LL.photo ? 1 : 0;
+    printMat.uniforms.uK.value = PRINT.k;
+    // the print is lit by its own light: the era's darkness (1938's exposure) does not swallow it
+    printMat.uniforms.uComp.value = 1 / Math.max(0.3, world.renderer.toneMappingExposure);
+  }
+
   // ---------------------------------------------------------------- DOM
   const layer = document.createElement('div');
   layer.className = 'roots';
@@ -476,22 +555,24 @@ export function attach(ctx) {
     const { j, settle } = stationAt(s, K);
     const node = j >= 1 && j <= K && p > 1 && p < 2 ? nodes[j - 1] : null;
     // reading: lean in, lean back
-    leanK += ((reading && readNode ? 1 : 0) - leanK) * Math.min(1, dt * (reduce ? 30 : 2.4));
+    leanK += ((reading && readNode ? 1 : 0) - leanK) * (1 - Math.exp(-dt * (reduce ? 30 : 2.4)));
     // the bark: up to two nodes lit at once, cross-fading between stations
     const q = s * (M - 1);
     for (const sl of slots) {
       const k = nodes.findIndex((n, idx) => idx % 2 === sl.i && Math.abs(q - (idx + 1)) < 1);
       const n = k >= 0 && p > 1 && p < 2 ? nodes[k] : (reading && readNode && nodes.indexOf(readNode) % 2 === sl.i ? readNode : null);
       if (n !== sl.node) { sl.node = n; sl.dev = reduce ? 1 : 0; if (n) bindSlot(sl); }
-      if (!n) { sl.I += (0 - sl.I) * Math.min(1, dt * 6); sl.V.value.y = sl.I; continue; }
+      if (!n) { sl.I += (0 - sl.I) * (1 - Math.exp(-6 * dt)); sl.V.value.y = sl.I; continue; }
       // one year at a time: the last one has mostly gone before the next develops (they break apart in between)
       const near = 1 - smooth(0.15, 0.62, Math.abs(q - (nodes.indexOf(n) + 1)));
       const L = texCache.get(n.id);
       const target = (L?.ready ? (n.light?.photo ? 3.2 : 2.4) * (n.at.glow || 1) : 0) * Math.max(near, reading && n === readNode ? 1 : 0);
-      sl.I += (target - sl.I) * Math.min(1, dt * 4);
+      // (while the print is held up, the light on the bark steps back)
+      sl.I += (target * (n === PRINT.node ? 1 - 0.8 * PRINT.k : 1) - sl.I) * (1 - Math.exp(-4 * dt));
       if (near > 0.6) sl.dev = Math.min(1, sl.dev + dt / (reduce ? 0.01 : 2.2));
       sl.V.value.y = sl.I; sl.V.value.z = sl.dev;
     }
+    stepPrint(dt, node, settle);
     // prefetch the next photograph
     const nxt = nodes[clamp(j, 0, K - 1)];
     if (nxt) lightTexture(nxt);
@@ -564,6 +645,9 @@ export function attach(ctx) {
     api: { nodes, found, goStation,
       /** review stills: let the light on the bark finish developing now */
       settle: () => { for (const sl of slots) sl.dev = 1; },
+      /** the print in the light: how far it has gathered (0 … 1), and which station it holds */
+      get print() { return { k: +PRINT.k.toFixed(3), node: PRINT.node?.id || null, visible: printMesh.visible }; },
+      holdPrint: () => { PRINT.rest = 9; PRINT.k = 1; if (cur) PRINT.node = cur; },
       get lightsReady() { return nodes.every((n) => !n.light?.photo || texCache.get(n.id)?.ready); }, open: (id) => openSheet(nodes.find((n) => n.id === id) || null), close: closeSheet,
       get reading() { return reading; }, get current() { return cur && cur.id; }, get slots() { return slots.map((s) => ({ node: s.node?.id || null, I: +s.I.toFixed(3), dev: +s.dev.toFixed(3) })); } }
   };

@@ -44,8 +44,8 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
       : (() => { const y = (f6.yaw * Math.PI) / 180, p = (f6.pitch * Math.PI) / 180; return { ex: f6.ex, ez: f6.ez, lx: f6.ex + Math.sin(y) * Math.cos(p) * f6.dist, ly: f6.ey + Math.sin(p) * f6.dist, lz: f6.ez + Math.cos(y) * Math.cos(p) * f6.dist, fov: f6.fov, auth: f6.auth }; })();
     // the leap lands beyond the islet, turned towards 06 (as world.js computes it)
     const ld = [limb.b[0] - limb.a[0], limb.b[2] - limb.a[2]], l1 = Math.hypot(...ld), to6 = [e6.ex - limb.b[0], e6.ez - limb.b[2]], l2 = Math.hypot(...to6);
-    let dx = ld[0] / l1 + 0.6 * to6[0] / l2, dz = ld[1] / l1 + 0.6 * to6[1] / l2; const n = Math.hypot(dx, dz); dx /= n; dz /= n;
-    let lx = limb.b[0] + dx * 3.8, lz = limb.b[2] + dz * 3.8; const r = Math.hypot(lx, lz); if (r < 10) { lx *= 10 / r; lz *= 10 / r; }
+    let dx = ld[0] / l1 + 1.6 * to6[0] / l2, dz = ld[1] / l1 + 1.6 * to6[1] / l2; const n = Math.hypot(dx, dz); dx /= n; dz /= n;
+    let lx = limb.b[0] + dx * 4.4, lz = limb.b[2] + dz * 4.4; const r = Math.hypot(lx, lz); if (r < 10) { lx *= 10 / r; lz *= 10 / r; }
     const film = F.makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth }, e6, limb, land: [lx, lz], ground });
     const col = X.buildColliders(model.buildings, {}, geo.frame.sheet);
     return { compose, geo, model, film, e6, f5, col };

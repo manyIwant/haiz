@@ -12,6 +12,7 @@ import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
 import { pickComposition } from '../world/compose.js';
 import { createWorldState } from '../world/state.js';
+import { BEATS as FILM_STOPS, FILM_SECONDS } from '../world/film.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -161,8 +162,46 @@ function stepTransit() {
   if (u >= 1) { transit = null; override = null; }
 }
 // One scroll mapping for both the lengthened 02 history and the 05→06 film.
-const FILM_BEATS = [0.15, 0.215, 0.56, 0.84];   // film.js BEATS: over the shoulder, one's own feet, landed, still
+const FILM_BEATS = FILM_STOPS.slice(1, -1);   // film.js BEATS: over the shoulder, one's own feet, landed and looked round, the shadow noticed
 const pOfProgress = pFromU, progressOfP = uFromP;
+// ------------------------------------------------------------------ 05 → 06 at a person's pace
+// The scroll's progress through the film is proportional to the film's own clock (film.js DURATION). A scroll
+// snap would cross from one resting beat to the next in at most a second and a half (the whole walk in one
+// lurch); instead, once the visitor stops scrolling between two beats, the film plays on to the next beat in
+// the direction they were going, at the pace it takes to watch it (rewinding goes faster). Any wheel, touch
+// or key takes over at once; reduced motion keeps plain scrolling.
+const inFilm = (p) => p > 4.0005 && p < 4.9995;
+const filmPlay = { on: null, lastInput: 0, dir: 1, self: false, lastY: 0 };
+const scrollOfP = (p) => track.offsetTop + uFromP(p) * trackRange();
+for (const ev of ['wheel', 'touchstart', 'touchmove', 'keydown', 'pointerdown']) {
+  addEventListener(ev, (e) => {
+    filmPlay.lastInput = performance.now(); filmPlay.on = null;
+    if (ev === 'wheel' && e.deltaY) filmPlay.dir = e.deltaY > 0 ? 1 : -1;
+    if (ev === 'keydown') { if (['ArrowDown', 'PageDown', ' ', 'End'].includes(e.key)) filmPlay.dir = 1; else if (['ArrowUp', 'PageUp', 'Home'].includes(e.key)) filmPlay.dir = -1; }
+  }, { passive: true, capture: true });
+}
+addEventListener('scroll', () => {
+  if (filmPlay.self) { filmPlay.self = false; filmPlay.lastY = scrollY; return; }
+  if (Math.abs(scrollY - filmPlay.lastY) > 0.5) filmPlay.dir = scrollY > filmPlay.lastY ? 1 : -1;
+  filmPlay.lastY = scrollY; filmPlay.lastInput = performance.now();
+}, { passive: true });
+function filmOn(dt) {
+  if (reduceMotion || filmPlay.frozen || transit || !W || W.owner !== 'scroll' || !body.classList.contains('spatial') || !inFilm(state.p)) { filmPlay.on = null; return; }
+  const now = performance.now();
+  if (!filmPlay.on) {
+    if (now - filmPlay.lastInput < 300) return;
+    const q = (scrollY - scrollOfP(4)) / Math.max(1, scrollOfP(5) - scrollOfP(4));
+    if (FILM_STOPS.some((b) => Math.abs(b - q) < 0.002)) return;          // resting on a beat: the visitor decides
+    const target = filmPlay.dir > 0 ? FILM_STOPS.find((b) => b > q + 0.002) : [...FILM_STOPS].reverse().find((b) => b < q - 0.002);
+    if (target == null) return;
+    filmPlay.on = { q, target, dir: filmPlay.dir };
+  }
+  const f = filmPlay.on;
+  f.q += (f.dir * (f.dir > 0 ? 1 : 2.4) * Math.min(0.1, dt)) / FILM_SECONDS;
+  if ((f.dir > 0 && f.q >= f.target) || (f.dir < 0 && f.q <= f.target)) { f.q = f.target; filmPlay.on = null; }
+  filmPlay.self = true;
+  scrollTo(0, scrollOfP(4 + f.q));
+}
 let walkTween = null;
 function landWalk() {
   const st = walkTween?.scrollTrigger;
@@ -210,7 +249,8 @@ function wireScroll() {
         scrollTrigger: {
           trigger: '#track', start: 'top top', end: 'bottom bottom',
           scrub: calm ? true : 1.15,
-          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : snapper(v, self?.direction || 1)),
+          // (inside 05 → 06 the film is not snapped: it plays on to its next resting beat at its own pace, filmOn below)
+          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : inFilm(pFromU(v)) ? v : snapper(v, self?.direction || 1)),
             inertia: false, duration: calm ? 0 : { min: 0.55, max: 1.5 },
             delay: 0.1, ease: 'power2.inOut' }
         }
@@ -726,6 +766,7 @@ function step(dt, wallDt = dt) {
   UNIFORMS.uTime.value += dt;
   const t = UNIFORMS.uTime.value;
   stepTransit();
+  filmOn(wallDt);
   const p = state.p;
   const pl = transit ? transit.pv : (life?.lightP?.() ?? p);   // the day's light and the tree's growth (in flight, from home or from the walk: on the way)
   const near = Math.round(p);
@@ -806,7 +847,9 @@ window.__haizHome = {
   go: (i) => { override = null; transit = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */
-  freeze: (on = true) => { const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },
+  freeze: (on = true) => { filmPlay.frozen = !!on; filmPlay.on = null; const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },
+  /** the film's own playback (05 → 06 between beats): state for tests */
+  get filmPlay() { return { on: !!filmPlay.on, target: filmPlay.on?.target ?? null, dir: filmPlay.dir }; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
   lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
   info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +(world.camera.userData.screen || world.camera.aspect).toFixed(3)],

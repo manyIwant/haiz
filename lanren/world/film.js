@@ -32,11 +32,16 @@
 import { GROUND_Y } from './compose.js';
 import { eyeOffset } from './skeleton.js';
 
-export const PHASE = {
-  find: [0.03, 0.15], enter: [0.15, 0.19], self: [0.19, 0.24], limb: [0.24, 0.345], gather: [0.345, 0.38],
-  leap: [0.38, 0.475], land: [0.475, 0.56], walk: [0.56, 0.8], settle: [0.8, 0.84], turn: [0.84, 0.93], rise: [0.93, 1]
-};
-export const BEATS = [0, 0.15, 0.215, 0.56, 0.84, 1];
+// The film's own clock: how long each part takes when it is simply watched (seconds). The scroll's
+// progress is proportional to it, so scrolling at an even pace plays the film at a person's pace, and
+// home.js plays the film on at this pace between its resting beats (never the scroll snap's second and a half).
+export const DURATION = [['hold', 0.8], ['find', 4.5], ['enter', 1.6], ['self', 2.4], ['limb', 3.4], ['gather', 1.0], ['leap', 1.4],
+  ['land', 3.6], ['walk', 11.2], ['settle', 1.6], ['notice', 2.6], ['turn', 3.0], ['rise', 3.4]];
+export const FILM_SECONDS = DURATION.reduce((s, [, d]) => s + d, 0);
+export const PHASE = (() => { const o = {}; let t = 0; for (const [k, d] of DURATION) { o[k] = [t / FILM_SECONDS, (t + d) / FILM_SECONDS]; t += d; } return o; })();
+const at = (k, f) => PHASE[k][0] + (PHASE[k][1] - PHASE[k][0]) * f;   // a moment inside a part
+// resting beats: over the shoulder; one's own feet; landed and looked round; the head turned to the shadow; 06
+export const BEATS = [0, PHASE.find[1], at('self', 0.535), PHASE.land[1], at('notice', 0.8), 1];
 export const STRIDE = 0.68;               // one step (m)
 export const FOV_WALK = 66;
 const D2R = Math.PI / 180;
@@ -104,8 +109,8 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
   };
 
   // ---- the person on the limb, as first seen (standing at ease, looking out at the evening)
-  const idle = (q) => ({ x: S[0], y: S[1], z: S[2], yaw: yLimb, weight: 0.7 * (1 - smooth(seg(q, 0.15, 0.19))),
-    nod: 10 * (1 - smooth(seg(q, 0.15, 0.18))), look: -24 * bump(seg(q, 0.075, 0.135)) });
+  const idle = (q) => ({ x: S[0], y: S[1], z: S[2], yaw: yLimb, weight: 0.7 * (1 - smooth(segP(q, PHASE.enter))),
+    nod: 10 * (1 - smooth(seg(q, PHASE.enter[0], at('enter', 0.75)))), look: -24 * bump(seg(q, at('find', 0.375), at('find', 0.875))) });
   const eye0 = eyeAt({ x: S[0], y: S[1], z: S[2], yaw: yLimb });
   const fwdL = [Math.sin(yLimb * D2R), 0, Math.cos(yLimb * D2R)], leftL = [Math.cos(yLimb * D2R), 0, -Math.sin(yLimb * D2R)];
   // which shoulder: the side 05's camera already is on
@@ -120,6 +125,31 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
   const HEAD = [eye0[0] - fwdL[0] * 0.15, eye0[1] - 0.12, eye0[2] - fwdL[2] * 0.15];
   const OUT = [eye0[0] + fwdL[0] * 14, eye0[1] - 2.2, eye0[2] + fwdL[2] * 14];   // where they look: out along the limb
 
+  // ---- the walk away: a gently bending path (a person drifts), a pace that gets going, slows while
+  // something is looked at, picks up again and comes to rest over the last steps
+  const WC = (() => {
+    const mx = (L2[0] + W0[0]) / 2, mz = (L2[2] + W0[1]) / 2, dx = W0[0] - L2[0], dz = W0[1] - L2[2], len = Math.hypot(dx, dz) || 1;
+    const bend = 0.1 * len * (glance > 0 ? 1 : -1);            // drift a little towards what will be looked at
+    return [mx - (dz / len) * bend, mz + (dx / len) * bend];
+  })();
+  const pathAt = (t) => { const u = 1 - t; return [u * u * L2[0] + 2 * u * t * WC[0] + t * t * W0[0], u * u * L2[2] + 2 * u * t * WC[1] + t * t * W0[1]]; };
+  const tanAt = (t) => { const d = [2 * (1 - t) * (WC[0] - L2[0]) + 2 * t * (W0[0] - WC[0]), 2 * (1 - t) * (WC[1] - L2[2]) + 2 * t * (W0[1] - WC[1])]; return yawOf(d[0], d[1]); };
+  const NS = 240, arc = [0];
+  for (let i = 1; i <= NS; i++) { const a = pathAt((i - 1) / NS), c = pathAt(i / NS); arc.push(arc[i - 1] + Math.hypot(c[0] - a[0], c[1] - a[1])); }
+  const pathLen = arc[NS];
+  const tOfS = (sm) => { let lo = 0, hi = NS; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (arc[m] < sm) lo = m; else hi = m; } return (lo + (sm - arc[lo]) / Math.max(1e-9, arc[hi] - arc[lo])) / NS; };
+  // the pace over the walk's own time τ (1 = cruising): up, steady, slower (a look), up again, down to rest
+  const PACE = [[0, 0], [0.13, 1], [0.4, 1], [0.5, 0.32], [0.58, 0.32], [0.68, 0.9], [0.84, 0.9], [1, 0]];
+  const paceAt = (tau) => { for (let i = 1; i < PACE.length; i++) if (tau <= PACE[i][0]) { const [a, va] = PACE[i - 1], [c, vc] = PACE[i]; return va + (vc - va) * smooth((tau - a) / (c - a)); } return 0; };
+  const DN = 400, dist = [0];
+  for (let i = 1; i <= DN; i++) dist.push(dist[i - 1] + (paceAt((i - 0.5) / DN)) / DN);
+  const sOfTau = (tau) => { const x = clamp01(tau) * DN, i = Math.min(DN - 1, Math.floor(x)); return (dist[i] + (dist[i + 1] - dist[i]) * (x - i)) / dist[DN]; };
+  const steps = Math.max(4, Math.round(pathLen / STRIDE)), strideW = pathLen / steps;     // whole steps: the feet meet at the end
+  const walkSpeed = pathLen / (DURATION.find(([k]) => k === 'walk')[1] * dist[DN]);          // cruising speed (m/s)
+  const yStart = tanAt(0), yEnd = tanAt(1);
+  const turnE = wrap(y6 - yEnd);
+  const lookN = Math.sign(turnE) * Math.min(110, Math.abs(turnE) * 0.8);                     // the glance over the shoulder
+
   /** the walker at q: { body, cam, beat } */
   function pose(qIn) {
     const q = clamp01(qIn);
@@ -130,15 +160,16 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
       // ---- third person: someone out on the limb; the eye comes round behind them and in
       Object.assign(b, idle(q));
       const u = smoother(segP(q, PHASE.find));
+      const H0 = PHASE.find[0];
       let target;
       if (q < PHASE.enter[0]) {
         eye = bez(E5, lerp3(E5, M, 0.55), M, O, u);
         // the gaze leaves 05's far view for the person, then looks past them, where they look
-        const toHead = smoother(seg(q, 0.03, 0.1)), past = smooth(seg(q, 0.105, 0.15));
+        const toHead = smoother(seg(q, H0, at('find', 0.583))), past = smooth(seg(q, at('find', 0.625), PHASE.find[1]));
         target = lerp3(lerp3(L5, HEAD, toHead), OUT, past * 0.85);
-        fov = lerp(e5.fov, 48, smooth(seg(q, 0.03, 0.14)));
-        auth = lerp(e5.auth || 0, 0, smooth(seg(q, 0.03, 0.08)));
-        dist = lerp(dist5, Math.hypot(eye[0] - HEAD[0], eye[1] - HEAD[1], eye[2] - HEAD[2]), smooth(seg(q, 0.03, 0.08)));
+        fov = lerp(e5.fov, 48, smooth(seg(q, H0, at('find', 0.917))));
+        auth = lerp(e5.auth || 0, 0, smooth(seg(q, H0, at('find', 0.417))));
+        dist = lerp(dist5, Math.hypot(eye[0] - HEAD[0], eye[1] - HEAD[1], eye[2] - HEAD[2]), smooth(seg(q, H0, at('find', 0.417))));
         third = true;
       } else {
         // into the head: the camera reaches the eye as the person draws themselves up
@@ -153,18 +184,18 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
         third = k < 0.9;
       }
       const d = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]];
-      yaw = q < 0.03 ? e5.yaw : yawOf(d[0], d[2]);
-      pitch = q < 0.03 ? e5.pitch : pitchOf(d);
-      if (q < 0.03) { eye = E5.slice(); fov = e5.fov; auth = e5.auth || 0; dist = dist5; }
+      yaw = q < H0 ? e5.yaw : yawOf(d[0], d[2]);
+      pitch = q < H0 ? e5.pitch : pitchOf(d);
+      if (q < H0) { eye = E5.slice(); fov = e5.fov; auth = e5.auth || 0; dist = dist5; }
     } else if (q < PHASE.limb[0]) {
       // ---- first person, still on the spot: a look down at oneself, the drop, the arms come out
       const t = segP(q, PHASE.self);
-      b.balance = 0.75 * smooth(seg(q, 0.192, 0.232));
+      b.balance = 0.75 * smooth(seg(t, 0.04, 0.84));
       b.tilt = 0.08 * Math.sin(t * Math.PI * 2) * bump(t);
-      b.reach = 0.3 * smooth(seg(q, 0.192, 0.225)) - 0.08 * smooth(seg(q, 0.225, 0.24));   // the hands come forward into view
+      b.reach = 0.3 * smooth(seg(t, 0.04, 0.7)) - 0.08 * smooth(seg(t, 0.7, 1));   // the hands come forward into view
       yaw = yLimb;
       // far enough down to see one's own chest, hands and shoes on the bark (the eye is ahead of the feet)
-      pitch = q < 0.215 ? lerp(-12, -76, smoother(seg(q, 0.19, 0.2155))) : lerp(-76, -27, smoother(seg(q, 0.218, 0.24)));
+      pitch = t < 0.535 ? lerp(-12, -76, smoother(seg(t, 0, 0.51))) : lerp(-76, -27, smoother(seg(t, 0.56, 1)));
       fov = lerp(56, FOV_WALK, smooth(t));
       eye = eyeAt(b);
     } else if (q < PHASE.gather[0]) {
@@ -189,23 +220,24 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
       b.crouch = 0.92 * k;
       b.reach = lerp(0.22, -0.9, smoother(t));
       b.lean = 0.28 * k;
-      b.yaw = lerpYaw(yLimb, yLeap, smoother(seg(q, 0.345, 0.375)));
+      b.yaw = lerpYaw(yLimb, yLeap, smoother(seg(t, 0, 0.857)));
       yaw = b.yaw;
       pitch = lerp(-31, -44, k);
       eye = eyeAt(b);
     } else if (q < PHASE.land[0]) {
-      // ---- the leap: push off (feet still on the bark), then a thrown arc
-      const PUSH = 0.395;
+      // ---- the leap: push off (feet still on the bark), then a thrown arc; at its top the eyes lift
+      // to the open campus and the evening (home.js clears the leaves right at the lens in first person)
+      const t0 = segP(q, PHASE.leap), PUSH = 0.16;
       b.yaw = yLeap; yaw = yLeap;
-      if (q < PUSH) {
-        const k = smoother(seg(q, PHASE.leap[0], PUSH));
+      if (t0 < PUSH) {
+        const k = smoother(t0 / PUSH);
         b.x = J[0]; b.y = J[1]; b.z = J[2];
         b.crouch = 0.92 * (1 - k);
         b.reach = lerp(-0.9, 0.75, k);
         b.lean = lerp(0.28, 0.16, k);
-        pitch = lerp(-44, -34, k);
+        pitch = lerp(-44, -30, k);
       } else {
-        const t = seg(q, PUSH, PHASE.leap[1]);
+        const t = (t0 - PUSH) / (1 - PUSH);
         b.x = lerp(J[0], L[0], t); b.z = lerp(J[2], L[2], t);
         b.y = J[1] + 2.1 * t * (1 - t) + (L[1] - J[1]) * t * t;
         b.tuck = smooth(seg(t, 0.1, 0.4)) * (1 - smooth(seg(t, 0.62, 0.95)));
@@ -213,63 +245,71 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
         b.reach = lerp(0.75, 0.3, smooth(seg(t, 0.1, 0.6)));
         b.balance = 0.55 * smooth(seg(t, 0.45, 0.85));               // arms open for the landing
         b.lean = 0.16 * (1 - t) + 0.12 * smooth(seg(t, 0.7, 1));
-        // the eyes lift at the top of the arc (the campus, the evening), then find the ground
-        pitch = t < 0.42 ? lerp(-34, -17, smoother(t / 0.42)) : lerp(-17, -42, smoother((t - 0.42) / 0.58));
+        pitch = t < 0.42 ? lerp(-30, 4, smooth(t / 0.42)) : lerp(4, -38, smooth((t - 0.42) / 0.58));
       }
       eye = eyeAt(b);
     } else if (q < PHASE.walk[0]) {
-      // ---- the landing: the knees take it, the weight carries on into one step, then up
+      // ---- the landing, and the moment after it: the knees take it, a breath down there, up with a
+      // step that catches the weight, then a look round at where one has landed
       const t = segP(q, PHASE.land);
-      const absorb = t < 0.16 ? lerp(0.4, 1, smooth(t / 0.16)) : 1 - smoother((t - 0.16) / 0.66);
-      const stepK = smoother(seg(t, 0.3, 0.72));
+      const crouch = t < 0.1 ? lerp(0.4, 1, smooth(t / 0.1)) : t < 0.32 ? 1 - 0.08 * smooth((t - 0.1) / 0.22) : 0.92 * (1 - smoother((t - 0.32) / 0.3));
+      const stepK = smoother(seg(t, 0.36, 0.62));
       b.x = lerp(L[0], L2[0], stepK); b.z = lerp(L[2], L2[2], stepK); b.y = ground(b.x, b.z);
-      b.phase = ((stepK * CATCH) / STRIDE) * Math.PI;
-      b.amp = 0.5 * bump(seg(t, 0.3, 0.72));
-      b.crouch = Math.max(0, absorb);
-      b.reach = 0.3 * (1 - smooth(seg(t, 0.15, 0.8)));
-      b.balance = 0.55 * (1 - smooth(seg(t, 0.05, 0.6)));
-      b.lean = t < 0.16 ? lerp(0.28, 0.34, smooth(t / 0.16)) : 0.34 * (1 - smoother((t - 0.16) / 0.66));
-      b.roll = 0.04 * bump(seg(t, 0.12, 0.6));
-      b.yaw = lerpYaw(yLeap, yAway, smoother(seg(t, 0.45, 1)));
-      yaw = b.yaw;
-      pitch = t < 0.16 ? lerp(-42, -52, smooth(t / 0.16)) : lerp(-52, -4, smoother((t - 0.16) / 0.84));
+      b.phase = ((stepK * CATCH) / STRIDE) * Math.PI + (Math.abs(wrap(yStart - yLeap)) / 45) * Math.PI * smooth(seg(t, 0.5, 1));
+      b.amp = 0.5 * bump(seg(t, 0.36, 0.62)) + 0.24 * bump(seg(t, 0.5, 1));
+      b.crouch = Math.max(0, crouch);
+      b.reach = 0.3 * (1 - smooth(seg(t, 0.1, 0.55)));
+      b.balance = 0.55 * (1 - smooth(seg(t, 0.05, 0.5)));
+      b.lean = t < 0.1 ? lerp(0.28, 0.38, smooth(t / 0.1)) : 0.38 * (1 - smoother(seg(t, 0.3, 0.62)));
+      b.roll = 0.04 * bump(seg(t, 0.12, 0.5));
+      b.yaw = lerpYaw(yLeap, yStart, smooth(seg(t, 0.5, 1)));
+      // the look round: one way, a little up across the campus, the other way, back to the way on
+      const lr = Math.sign(wrap(yStart - yLeap)) || 1;
+      b.look = -18 * lr * bump(seg(t, 0.56, 0.84)) + 12 * lr * bump(seg(t, 0.8, 1));
+      yaw = b.yaw + b.look;
+      pitch = t < 0.3 ? lerp(-38, -52, smooth(t / 0.1)) : t < 0.75 ? lerp(-52, 3, smoother((t - 0.3) / 0.45)) : lerp(3, -2, smooth((t - 0.75) / 0.25));
       eye = eyeAt(b);
     } else if (q < PHASE.settle[0]) {
-      // ---- away from the tree, towards the low sun (a steady walk between a start and a stop)
-      const t = segP(q, PHASE.walk), d = cruise(t);
-      b.x = lerp(L2[0], W0[0], d); b.z = lerp(L2[2], W0[1], d);
-      b.y = ground(b.x, b.z);
-      b.phase = ((d * walkLen) / STRIDE) * Math.PI;
-      b.amp = Math.min(1, 7 * t * (1 - t));
-      b.yaw = yAway;
-      // a glance at the campus on the way: the head turns, the body keeps going
-      b.look = glance * smoother(seg(t, 0.32, 0.46)) * (1 - smoother(seg(t, 0.6, 0.76)));
-      yaw = yAway + b.look;
-      pitch = -4 + 4 * smoother(seg(t, 0.32, 0.46)) * (1 - smoother(seg(t, 0.6, 0.76)));
+      // ---- the walk away, towards the low sun, on the walk's own pace
+      const tau = segP(q, PHASE.walk), sm = sOfTau(tau) * pathLen, t = tOfS(sm), pos = pathAt(t);
+      b.x = pos[0]; b.z = pos[1]; b.y = ground(b.x, b.z);
+      b.yaw = tanAt(t);
+      b.phase = (sm / strideW) * Math.PI;
+      b.amp = Math.min(1, paceAt(tau) * 1.05);
+      // what is looked at on the way: a glance round early on, then a longer look while the pace slows
+      b.look = -10 * bump(seg(tau, 0.16, 0.3)) + glance * smoother(seg(tau, 0.4, 0.5)) * (1 - smoother(seg(tau, 0.58, 0.7)));
+      yaw = b.yaw + b.look;
+      pitch = -2 + 6 * smoother(seg(tau, 0.4, 0.5)) * (1 - smoother(seg(tau, 0.58, 0.7)));
       eye = eyeAt(b);
     } else {
-      // ---- the stop, the stillness, the turn, and the tree
+      // ---- standing still: the feet have stopped, the rest of the body comes to rest after them; the eyes
+      // drop from the sun to the ground, the head turns to look back at the shadow lying behind; then
+      // the shoulders and feet follow; then the gaze goes along the shadow to the tree
       b.x = G6[0]; b.y = G6[1]; b.z = G6[2];
-      const head = smoother(seg(q, 0.84, 0.912));
-      const feet = smoother(seg(q, 0.862, 0.93));
-      b.crouch = 0.1 * bump(segP(q, PHASE.settle));
-      b.weight = 0.5 * smooth(seg(q, 0.81, 0.84)) * (1 - smooth(seg(q, 0.86, 0.9))) + 0.35 * smooth(seg(q, 0.94, 1));
-      b.yaw = yAway + turn * feet;
-      b.look = turn * (head - feet);                         // how far the head leads the body
-      b.phase = ((Math.abs(turn * feet) / 45) * Math.PI);    // small steps round on the spot
-      b.amp = 0.28 * bump(seg(q, 0.862, 0.93));
-      b.roll = -Math.sign(turn) * 0.035 * bump(seg(q, 0.85, 0.93));
-      yaw = yAway + turn * head;
-      // the gaze: down a little as the walk ends, low through the turn (one's own shadow on the
-      // paving), then along it to the roots and up into the crown
-      pitch = q < 0.84 ? lerp(-4, -9, smooth(segP(q, PHASE.settle)))
-        : q < 0.93 ? lerp(-9, -15, smooth(seg(q, 0.84, 0.9)))
-          : lerp(-15, p6, smoother(segP(q, PHASE.rise)));
+      const ts = segP(q, PHASE.settle), tn = segP(q, PHASE.notice), tt = segP(q, PHASE.turn);
+      const feet = smoother(seg(tt, 0.12, 0.95));
+      b.yaw = yEnd + turnE * feet;
+      // the head: the glance over the shoulder (notice), then it leads the body round (turn)
+      const head = q < PHASE.turn[0] ? yEnd + lookN * smooth(seg(tn, 0.15, 0.75)) : lerpYaw(yEnd + lookN, y6, smoother(seg(tt, 0, 0.8)));
+      b.look = wrap(head - b.yaw);
+      b.phase = ((Math.abs(turnE * feet) / 45) * Math.PI);
+      b.amp = 0.28 * bump(seg(tt, 0.12, 0.95));
+      // the body's own after-motion: a lean carried forward, the arms still swinging a little, the weight settling
+      b.lean = 0.07 * bump(seg(ts, 0, 0.6));
+      b.reach = 0.14 * Math.sin(ts * Math.PI * 3) * Math.exp(-3.2 * ts) * (q < PHASE.notice[0] ? 1 : 0);
+      b.weight = 0.5 * smooth(seg(ts, 0.3, 0.9)) * (1 - smooth(seg(tt, 0.05, 0.4))) + 0.35 * smooth(segP(q, PHASE.rise));
+      b.roll = -Math.sign(turnE) * (0.03 * smooth(seg(tn, 0.3, 0.7)) * (1 - smooth(seg(tt, 0, 0.3))) + 0.035 * bump(seg(tt, 0.1, 0.95)));
+      b.nod = -20 * smooth(seg(tn, 0, 0.3));
+      yaw = head;
+      pitch = q < PHASE.notice[0] ? lerp(-2, -8, smooth(ts))
+        : q < PHASE.turn[0] ? lerp(-8, -40, smooth(seg(tn, 0, 0.7)))
+          : q < PHASE.rise[0] ? lerp(-40, -22, smooth(tt))
+            : lerp(-22, p6, smoother(segP(q, PHASE.rise)));
       eye = eyeAt(b);
-      if (q >= 0.93) eye = lerp3(eye, eye6, smooth(seg(q, 0.93, 0.95)));
-      fov = lerp(FOV_WALK, e6.fov, smoother(seg(q, 0.905, 1)));
-      auth = lerp(0, e6.auth || 0, smooth(seg(q, 0.9, 1)));
-      dist = lerp(9, e6.dist || 12, smooth(seg(q, 0.9, 1)));
+      if (q >= PHASE.rise[0]) eye = lerp3(eye, eye6, smooth(seg(q, PHASE.rise[0], at('rise', 0.3))));
+      fov = lerp(FOV_WALK, e6.fov, smoother(seg(q, at('turn', 0.85), 1)));
+      auth = lerp(0, e6.auth || 0, smooth(seg(q, at('turn', 0.8), 1)));
+      dist = lerp(9, e6.dist || 12, smooth(seg(q, at('turn', 0.8), 1)));
     }
     const pr = pitch * D2R, yr = yaw * D2R;
     const cam = {
@@ -283,7 +323,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
     b.firstPerson = !third && Math.hypot(eye[0] - ein[0], eye[1] - ein[1], eye[2] - ein[2]) < 0.45;
     return { q, body: b, cam, beat, third };
   }
-  return { pose, eyeAt, facts: { S, J, L, L2, G6, eye6, y6, p6, yAway, yLimb, yLeap, walkLen, turn, glance } };
+  return { pose, eyeAt, facts: { S, J, L, L2, G6, eye6, y6, p6, yAway, yLimb, yLeap, walkLen, pathLen, walkSpeed, steps, turn: turnE, lookN, glance } };
 }
 
 /** the walker's eye as V4's DwellCamera reads a frame (its 'rail') */
