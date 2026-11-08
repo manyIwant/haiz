@@ -71,8 +71,10 @@ function snapDirectional(pts) {
     let i = 0;
     while (i < pts.length - 1 && pts[i + 1] <= v) i++;
     const a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)];
-    if (v - a <= (b - a) * 0.1) return a;
-    if (b - v <= (b - a) * 0.1) return b;
+    // resting on a target stays there; any deliberate step off it (one arrow key is ~40 px,
+    // a few % of a stop) goes on to the next one in that direction
+    if (v - a <= (b - a) * 0.02) return a;
+    if (b - v <= (b - a) * 0.02) return b;
     return dir > 0 ? b : a;
   };
 }
