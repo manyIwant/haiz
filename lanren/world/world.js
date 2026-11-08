@@ -713,11 +713,11 @@ export function attachWorld(ctx) {
       L.aperture = (L.aperture + (0.55 - L.aperture) * smooth((q - 0.03) / 0.08)) * (1 - smooth((q - 0.15) / 0.035));
     }
     if (WALKING.has(W.owner)) L.aperture = 0;
-    // composition a: 06's sun turns with its new view (sun 77° to the right of the gaze, as in V4)
+    // composition a: 06's sun turns with its new view (low behind the walker's left shoulder, as in b)
     const s6 = W.compose.sun6;
     if (s6 != null && p > 4) {
       const f = clamp(p - 4, 0, 1), t = f * f * f * (f * (f * 6 - 15) + 10);
-      L.sunAz += wrap(s6 - 58) * t;
+      L.sunAz += wrap(s6 - LIGHT[5].sun[0]) * t;
     }
     return L;
   }

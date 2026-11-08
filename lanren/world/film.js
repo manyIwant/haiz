@@ -161,8 +161,10 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
       const t = segP(q, PHASE.self);
       b.balance = 0.75 * smooth(seg(q, 0.192, 0.232));
       b.tilt = 0.08 * Math.sin(t * Math.PI * 2) * bump(t);
+      b.reach = 0.3 * smooth(seg(q, 0.192, 0.225)) - 0.08 * smooth(seg(q, 0.225, 0.24));   // the hands come forward into view
       yaw = yLimb;
-      pitch = q < 0.215 ? lerp(-12, -50, smoother(seg(q, 0.19, 0.212))) : lerp(-50, -27, smoother(seg(q, 0.218, 0.24)));
+      // far enough down to see one's own chest, hands and shoes on the bark (the eye is ahead of the feet)
+      pitch = q < 0.215 ? lerp(-12, -76, smoother(seg(q, 0.19, 0.2155))) : lerp(-76, -27, smoother(seg(q, 0.218, 0.24)));
       fov = lerp(56, FOV_WALK, smooth(t));
       eye = eyeAt(b);
     } else if (q < PHASE.gather[0]) {
@@ -172,6 +174,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
       b.phase = ((d * limbLen) / STRIDE) * Math.PI;
       b.amp = 0.42 * bump(t);
       b.balance = 0.75 - 0.15 * t;
+      b.reach = 0.22;
       b.roll = 0.075 * Math.sin(t * Math.PI * 3.2) * bump(t);       // the wobble over the bark
       b.tilt = -b.roll * 3.2;                                          // the arms answer it
       b.nod = -14;
@@ -184,7 +187,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
       b.x = J[0]; b.y = J[1]; b.z = J[2];
       b.balance = 0.6 * (1 - k);
       b.crouch = 0.92 * k;
-      b.reach = -0.9 * smoother(t);
+      b.reach = lerp(0.22, -0.9, smoother(t));
       b.lean = 0.28 * k;
       b.yaw = lerpYaw(yLimb, yLeap, smoother(seg(q, 0.345, 0.375)));
       yaw = b.yaw;

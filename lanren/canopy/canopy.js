@@ -778,7 +778,9 @@ export function attach(ctx) {
     if (!tween.open0) tween.open0 = now;
     const a = tween.open0;
     const u = tween.hold ?? Math.min(1, (performance.now() - tween.t0) / tween.dur);
-    if (tween.kind === 'enter') { put({ ...goal, amt: goal.amt * smooth(clamp((u - 0.22) / 0.62, 0, 1)) }); return; }
+    // entering, the limb starts to reach while the camera is still stepping back from the first leaf and
+    // arrives as softly as the camera does: spread over the move, it never rushes the middle of the frame
+    if (tween.kind === 'enter') { const k = clamp((u - 0.06) / 0.9, 0, 1); put({ ...goal, amt: goal.amt * k * k * k * (k * (k * 6 - 15) + 10) }); return; }
     if (tween.kind === 'leave') { put({ ...a, amt: a.amt * (1 - smooth(clamp(u / 0.55, 0, 1))) }); return; }
     const e = easeInOut(u);
     if (a.amt < 0.01) { put({ ...goal, amt: goal.amt * e }); return; }

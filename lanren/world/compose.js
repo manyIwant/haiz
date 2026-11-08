@@ -41,7 +41,7 @@ export const COMPOSITIONS = {
     rotation: 0,
     rise: [4.18, 4.46],               // buildings rise while the walker stands on the limb; the ground is campus before the landing
     shot6: { eye: [7.0, GROUND_Y + EYE_H, -34.0], look: [-1.2, 6.9, 0.2], fov: 40 },
-    sun6: 269                          // V4's 06 light, turned with the new view (sun 77° to the right of the view)
+    sun6: 150                          // 06's evening sun, turned with the new view (163° from the gaze, behind the left shoulder, as in b)
   },
   c: {
     id: 'c', title: 'C · 漫游后才出现', short: '第五、六幕完全保持 V4；校园在交出控制权后才升起（06 落点在一号教学楼内，无法连续）',

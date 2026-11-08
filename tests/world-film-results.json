@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-08T04:51:54.893Z",
+  "date": "2026-11-08T05:01:41.295Z",
   "checks": [
     "pure: 2001 samples forwards, backwards and by direct jump give identical eye, gaze, lens and body",
     "ends: q = 0 is V4's 05 frame exactly; q = 1 stands at V4's 06 eye (x, z), a person's eye height 1.62 m above the ground (V4: 1.95 m), looking at the same point with the same lens",
-    "continuous: at 1/2000 steps the eye moves at most 0.179 m, the gaze 1.98°, the lens 0.28°",
+    "continuous: at 1/2000 steps the eye moves at most 0.179 m, the gaze 2.35°, the lens 0.28°",
     "the body: from q 0.19 the eye stays in the drawn head (Δ < 1e-6 m, the head turned about the neck, the upper body's balance included); feet on the limb (2.75–3.18 m) then on the ground; the leap never dips below the landing",
     "third person first: from q 0.045 to 0.15 the camera stays ≥ 2.96 m from the person on the limb and has them in the frame 148/161 samples from q 0.07 (once the pan has found them); it reaches their eye at 0.19",
     "the turn: the gaze is -15° at q 0.9 (the shadow on the ground) and rises to 8.9° at 06",
