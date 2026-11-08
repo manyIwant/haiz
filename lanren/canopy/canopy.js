@@ -761,23 +761,27 @@ export function attach(ctx) {
     if (S.dir) { const C = limbAnchor(S.dir), o = byId(S.dir)?.open || {}; return { C, toward: C.clone().add(outOf(C)), R: o.R || 1.9, deep: o.reach ?? 3, amt: 1 }; }
     return null;
   }
-  function openStep(wall) {
+  /**
+   * The opening follows the camera's own moves: from where it stood when a move began to its goal,
+   * on the same clock (so the camera and the crown arrive together, a held frame is exact, and
+   * nothing is still settling once the camera rests). Between moves it holds its goal.
+   */
+  function openStep() {
     const g = openGoal();
-    const k = 1 - Math.exp(-wall * 2.2);
-    let amt = g ? g.amt : 0;
-    const C = g ? g.C : OPEN.C, toward = g ? g.toward : OPEN.C.clone().add(new THREE.Vector3(OPEN.ax.x, 0, OPEN.ax.y));
-    if (tween?.kind === 'enter' || tween?.kind === 'leave') {
-      // tied to the move itself, so a held frame (review, reduced motion) is exact
-      const u = tween.hold ?? Math.min(1, (performance.now() - tween.t0) / tween.dur);
-      amt = tween.kind === 'enter' ? smooth(clamp((u - 0.22) / 0.62, 0, 1)) * amt : (1 - smooth(clamp(u / 0.55, 0, 1))) * OPEN.amt;
-      setOpen(C, toward, amt, g ? g.R : OPEN.R, g ? g.deep : OPEN.deep);
-      return;
-    }
-    if (reduce) { setOpen(C, toward, amt, g ? g.R : OPEN.R, g ? g.deep : OPEN.deep); return; }
-    const nC = OPEN.C.lengthSq() ? OPEN.C.clone().lerp(C, k) : C.clone();
-    const ax0 = new THREE.Vector3(OPEN.ax.x, 0, OPEN.ax.y), ax1 = toward.clone().sub(C).setY(0).normalize();
-    const ax = ax0.lerp(ax1, k).normalize();
-    setOpen(nC, nC.clone().add(ax), OPEN.amt + (amt - OPEN.amt) * k, lerp(OPEN.R, g ? g.R : OPEN.R, k), lerp(OPEN.deep, g ? g.deep : OPEN.deep, k));
+    const axOf = (C, to) => { const v = new THREE.Vector3(to.x - C.x, 0, to.z - C.z); return v.lengthSq() > 1e-8 ? v.normalize() : new THREE.Vector3(1, 0, 0); };
+    const now = { C: OPEN.C.clone(), ax: new THREE.Vector3(OPEN.ax.x, 0, OPEN.ax.y), amt: OPEN.amt, R: OPEN.R, deep: OPEN.deep };
+    const goal = g ? { C: g.C.clone(), ax: axOf(g.C, g.toward), amt: g.amt, R: g.R, deep: g.deep } : { ...now, amt: 0 };
+    const put = (o) => setOpen(o.C, o.C.clone().add(o.ax), o.amt, o.R, o.deep);
+    if (!tween) { put(goal); return; }
+    if (!tween.open0) tween.open0 = now;
+    const a = tween.open0;
+    const u = tween.hold ?? Math.min(1, (performance.now() - tween.t0) / tween.dur);
+    if (tween.kind === 'enter') { put({ ...goal, amt: goal.amt * smooth(clamp((u - 0.22) / 0.62, 0, 1)) }); return; }
+    if (tween.kind === 'leave') { put({ ...a, amt: a.amt * (1 - smooth(clamp(u / 0.55, 0, 1))) }); return; }
+    const e = easeInOut(u);
+    if (a.amt < 0.01) { put({ ...goal, amt: goal.amt * e }); return; }
+    if (goal.amt < 0.01) { put({ ...a, amt: a.amt * (1 - e) }); return; }
+    put({ C: a.C.clone().lerp(goal.C, e), ax: a.ax.clone().lerp(goal.ax, e).normalize(), amt: lerp(a.amt, goal.amt, e), R: lerp(a.R, goal.R, e), deep: lerp(a.deep, goal.deep, e) });
   }
   function cameraHook(dt, wall = dt) {
     if (!S.owns) return false;
@@ -790,7 +794,7 @@ export function attach(ctx) {
       if (u >= 1) { const done = tween.done; Object.assign(cur, { eye: tween.b.eye.clone(), look: tween.b.look.clone(), fov: tween.b.fov, auth: tween.b.auth || 0 }); tween = null; done?.(); }
     }
     if (!S.owns) { setOpen(OPEN.C, OPEN.C.clone().add(new THREE.Vector3(OPEN.ax.x, 0, OPEN.ax.y)), 0, OPEN.R, OPEN.deep); return false; }   // done() may have handed the camera back
-    openStep(wall);
+    openStep();
     off.az += (offT.az - off.az) * (1 - Math.exp(-6 * wall));
     off.pitch += (offT.pitch - off.pitch) * (1 - Math.exp(-6 * wall));
     // reading on a wide screen: the sheet covers the right, so the leaf sits in the open left part
