@@ -204,7 +204,8 @@ float hzSunK = 1.0;`)
     gl_FragColor = vec4(mix(pc, hzM == 6 ? uInkPocheGlass * 0.6 : uRealPoche, hzR), 1.0);
     return;
   }
-  hzSunK = hzCampusShadow(vHW, vHN);`)
+  // (a pane sits back in its reveal: look up its shade from just outside the wall, not at the reveal's edge)
+  hzSunK = hzCampusShadow(vHW + (hzM == 6 ? vHN * 0.34 : vec3(0.0)), vHN);`)
       .replace('#include <color_fragment>', `diffuseColor.rgb = uAlb[hzM] * hzTex(vHW, vHN, hzM);
   // no two blocks were painted or weathered alike: a small, steady difference per building
   { float b = wh(vec2(vBld * 7.13, 3.7)); diffuseColor.rgb *= (hzM == 9 || hzM == 1 || hzM == 16) ? mix(vec3(0.9, 0.9, 0.92), vec3(1.05, 1.02, 0.97), b) : vec3(1.0); }`)
@@ -224,7 +225,9 @@ float hzSunK = 1.0;`)
     // the pane: the room behind it through the glass, the sky on it at a slant (Schlick)
     float hzCos = clamp(dot(normalize(cameraPosition - vHW), normalize(vHN)), 0.0, 1.0);
     float hzFr = 0.04 + 0.96 * pow(1.0 - hzCos, 5.0);
-    lit = lit * mix(0.6, 1.0, hzFr) + hzRoom(vHW, vHN, vEdge.xy, vBld) * (1.0 - hzFr) * hzR;
+    // (glass does not scatter the sun: only what it reflects, and a glint; the reveal's soft shade is left to the room)
+    lit = (reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular + reflectedLight.directSpecular * 0.6) * mix(0.6, 1.0, hzFr)
+      + hzRoom(vHW, vHN, vEdge.xy, vBld) * (1.0 - hzFr) * hzR;
     lit = mix(lit, uAlb[19] * 0.35, hzL * 0.45);    // window frames
   }
   // contact: walls darken towards the ground they stand in

@@ -214,7 +214,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
         b.balance = 0.55 * smooth(seg(t, 0.45, 0.85));               // arms open for the landing
         b.lean = 0.16 * (1 - t) + 0.12 * smooth(seg(t, 0.7, 1));
         // the eyes lift at the top of the arc (the campus, the evening), then find the ground
-        pitch = t < 0.42 ? lerp(-34, -10, smoother(t / 0.42)) : lerp(-10, -42, smoother((t - 0.42) / 0.58));
+        pitch = t < 0.42 ? lerp(-34, -17, smoother(t / 0.42)) : lerp(-17, -42, smoother((t - 0.42) / 0.58));
       }
       eye = eyeAt(b);
     } else if (q < PHASE.walk[0]) {
