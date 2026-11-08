@@ -166,7 +166,8 @@ vec3 hzRoom(vec3 wp, vec3 n, vec2 pane, float bld){
   float tz = DR / r.z;
   float t = min(min(abs(tx), abs(ty)), tz);
   vec3 h = vec3(q + r.xy * t, r.z * t);   // hit: along, height, depth
-  float room = wh(vec2(floor(q.x / (WR * 2.0)) + bld * 17.0, floor(q.y / HR) * 3.1));
+  // (by position on the wall only: two buildings' panes that meet in one plane must agree)
+  float room = wh(vec2(floor(q.x / (WR * 2.0)) + 0.37, floor(q.y / HR) * 3.1 + floor(dot(wp, N) + 0.5) * 0.71));
   float on = step(room, uDusk * 0.62) * step(0.08, uDusk);
   vec3 lamp = room > 0.5 * uDusk * 0.62 ? vec3(0.92, 0.97, 1.05) : vec3(1.05, 0.86, 0.62);   // mostly tube lights; a few warm
   float shade;
@@ -183,10 +184,12 @@ vec3 hzRoom(vec3 wp, vec3 n, vec2 pane, float bld){
   vec3 lit = col * shade * lamp * (0.55 + 0.25 * depthK);
   vec3 c = mix(dark, lit, on);
   // a curtain on some panes, drawn from one side; glowing when the room behind is lit
-  float cp = wh(vec2(floor(q.x / 1.1) + bld, floor(q.y / HR)));
+  float cp = wh(vec2(floor(q.x / 1.1) + 5.3, floor(q.y / HR) + floor(dot(wp, N) + 0.5) * 0.53));
   if (cp < 0.32) {
-    float side = cp < 0.16 ? pane.x : 1.0 - pane.x, reach = 0.25 + 1.6 * cp;
-    float fold = 0.88 + 0.12 * near * sin(pane.x * 60.0);
+    // (placed in the wall's own coordinates, not the pane's: a window modelled twice in one plane still reads as one)
+    float u = fract(q.x / 1.1);
+    float side = cp < 0.16 ? u : 1.0 - u, reach = 0.25 + 1.6 * cp;
+    float fold = 0.88 + 0.12 * near * sin(u * 66.0);
     vec3 cloth = (cp < 0.1 ? vec3(0.78, 0.86, 0.9) : vec3(0.9, 0.86, 0.76)) * fold;
     c = mix(c, cloth * mix(0.05 * (1.0 - 0.5 * uDusk), 0.7, on), step(side, reach) * 0.92);
   }
@@ -198,14 +201,17 @@ float hzSunK = 1.0;`)
   int hzM = int(vMat + 0.5);
   float hzF = uFlag[int(vBld + 0.5)];
   float hzR = hzRealAt(vHW);
-  if (!gl_FrontFacing) {
+  // (an uncut building's glass is glass from either side: some panes are modelled twice in one plane, back to back)
+  bool hzGlassAny = hzM == 6 && vCutY > ${(GROUND_Y + 500).toFixed(1)};
+  vec3 hzNf = gl_FrontFacing ? vHN : -vHN;
+  if (!gl_FrontFacing && !hzGlassAny) {
     // the cut: ink where it is drawing, a warm charcoal where it is building
     vec3 pc = hzM == 6 ? uInkPocheGlass : uInkPoche;
     gl_FragColor = vec4(mix(pc, hzM == 6 ? uInkPocheGlass * 0.6 : uRealPoche, hzR), 1.0);
     return;
   }
   // (a pane sits back in its reveal: look up its shade from just outside the wall, not at the reveal's edge)
-  hzSunK = hzCampusShadow(vHW + (hzM == 6 ? vHN * 0.34 : vec3(0.0)), vHN);`)
+  hzSunK = hzCampusShadow(vHW + (hzM == 6 ? hzNf * 0.34 : vec3(0.0)), hzNf);`)
       .replace('#include <color_fragment>', `diffuseColor.rgb = uAlb[hzM] * hzTex(vHW, vHN, hzM);
   // no two blocks were painted or weathered alike: a small, steady difference per building
   { float b = wh(vec2(vBld * 7.13, 3.7)); diffuseColor.rgb *= (hzM == 9 || hzM == 1 || hzM == 16) ? mix(vec3(0.9, 0.9, 0.92), vec3(1.05, 1.02, 0.97), b) : vec3(1.0); }`)
@@ -223,11 +229,11 @@ float hzSunK = 1.0;`)
   vec3 lit = outgoingLight;
   if (hzM == 6) {
     // the pane: the room behind it through the glass, the sky on it at a slant (Schlick)
-    float hzCos = clamp(dot(normalize(cameraPosition - vHW), normalize(vHN)), 0.0, 1.0);
+    float hzCos = clamp(dot(normalize(cameraPosition - vHW), normalize(hzNf)), 0.0, 1.0);
     float hzFr = 0.04 + 0.96 * pow(1.0 - hzCos, 5.0);
     // (glass does not scatter the sun: only what it reflects, and a glint; the reveal's soft shade is left to the room)
     lit = (reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular + reflectedLight.directSpecular * 0.6) * mix(0.6, 1.0, hzFr)
-      + hzRoom(vHW, vHN, vEdge.xy, vBld) * (1.0 - hzFr) * hzR;
+      + hzRoom(vHW, hzNf, vEdge.xy, vBld) * (1.0 - hzFr) * hzR;
     lit = mix(lit, uAlb[19] * 0.35, hzL * 0.45);    // window frames
   }
   // contact: walls darken towards the ground they stand in

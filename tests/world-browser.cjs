@@ -92,25 +92,28 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     for (let i = 0; i < samples.length; i++) {
       const a = fwd[i], b = bwd[i];
       for (let k = 0; k < 3; k++) {
-        assert(Math.abs(a.cam[k] - a.want[k]) < 1e-4, `p ${a.p}: the camera is the walker's eye`);
+        assert(Math.abs(a.cam[k] - a.want[k]) < 1e-4, `p ${a.p}: the camera is the film's camera`);
         assert(Math.abs(a.cam[k] - b.cam[k]) < 1e-6 && Math.abs(a.feet[k] - b.feet[k]) < 1e-6, `p ${a.p}: backwards = forwards`);
         if (a.visible) assert(Math.abs(a.feet[k] - a.body[k]) < 1e-6, `p ${a.p}: the drawn feet are the film's feet`);
       }
     }
-    ok(`05 → 06 film: at ${samples.length} points the camera is exactly the walker's eye and the drawn body the film's body; scrolling back gives the same frames (Δ < 1e-6 m)`);
+    ok(`05 → 06 film: at ${samples.length} points the camera is exactly the film's camera (the walker's eye once it has entered the head) and the drawn body the film's body; scrolling back gives the same frames (Δ < 1e-6 m)`);
     for (const [p, name] of [[4.2, 'film-1-limb'], [4.4, 'film-2-leap'], [4.55, 'film-3-landed'], [4.82, 'film-4-away'], [4.91, 'film-5-turn']]) {
       await page.evaluate((pp) => window.__haizHome.seek(pp), p); await frames(page, 3); await shot(page, name);
       const g = await page.evaluate(() => { const h = window.__haizHome, s = h.map.section, w = h.world; return { ground: s.ground.visible, sweep: Math.round(s.sweepR), water: w.water.visible, near: w.camera.near, shadowAuto: w.renderer.shadowMap.autoUpdate }; });
       assert(g.ground && g.sweep > 400, name + ': the campus ground is drawn ' + JSON.stringify(g));
     }
     // 06 holds; scrolling on hands over (a real wheel, after a pause)
+    // (a software renderer can take longer than the quiet itself between two checks: record it as it happens)
+    await page.evaluate(() => { window.__quietSeen = false; const f = () => { if (document.body.classList.contains('wd-quiet') && window.__haizHome.W.owner === 'hold') window.__quietSeen = true; else requestAnimationFrame(f); }; requestAnimationFrame(f); });
     await page.evaluate(() => { const h = window.__haizHome; h.freeze(false); h.go(5); });
     await until(page, () => window.__haizHome.W.owner === 'hold');
     await frames(page, 2);
     // the last frame has a few seconds to itself: no words, no buttons; then the way on fades in by itself
-    assert(await page.evaluate(() => document.body.classList.contains('wd-quiet')), '06 arrives quiet: the turn and the tree have the screen');
+    assert(await page.evaluate(() => window.__quietSeen || document.body.classList.contains('wd-quiet')), '06 arrives quiet: the turn and the tree have the screen');
     await until(page, () => !document.body.classList.contains('wd-quiet'));
-    await page.waitForTimeout(1900);
+    // the words and the way on fade in (1.6 s of real time; a slow renderer may need longer to show it)
+    await until(page, () => ['.wd-hold', '#p-whole .slab'].every((q) => +getComputedStyle(document.querySelector(q)).opacity > 0.9));
     assert(await visible(page, '.wd-hold .wd-go'), 'the way on is offered at 06');
     assert(await visible(page, '#p-whole .slab'), '06\'s own links are still there');
     await shot(page, 'film-6-hold');
