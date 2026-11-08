@@ -44,7 +44,7 @@ float hzIGN(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.0
 `;
 // the front from the roots, and the campus's own sun shadow (shared by every material here)
 const SHARED = /* glsl */`
-uniform vec3 uSweepC; uniform float uSweepR; uniform float uSweepW; uniform float uSweepGlow; uniform vec3 uSweepCol;
+uniform vec3 uSweepC; uniform float uSweepR; uniform float uSweepW; uniform float uSweepGlow; uniform vec3 uSweepCol; uniform vec3 uBounce;
 uniform sampler2DShadow uCSMap; uniform mat4 uCSMat; uniform float uCSOn; uniform vec2 uCSTexel; uniform float uCSBias;
 float hzRealAt(vec3 p){ return 1.0 - smoothstep(uSweepR - uSweepW, uSweepR, distance(p, uSweepC)); }
 float hzSeam(vec3 p){
@@ -167,6 +167,10 @@ float hzSunK = 1.0;`)
       .replace('#include <color_fragment>', `diffuseColor.rgb = uAlb[hzM] * hzTex(vHW, vHN, hzM);
   // no two blocks were painted or weathered alike: a small, steady difference per building
   { float b = wh(vec2(vBld * 7.13, 3.7)); diffuseColor.rgb *= (hzM == 9 || hzM == 1 || hzM == 16) ? mix(vec3(0.9, 0.9, 0.92), vec3(1.05, 1.02, 0.97), b) : vec3(1.0); }`)
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+  // shade on a sunny campus is not sky-blue: light comes back off the sunlit paving and walls
+  reflectedLight.indirectDiffuse *= vec3(1.05, 1.0, 0.84);
+  reflectedLight.indirectDiffuse += diffuseColor.rgb * uBounce * (0.6 + 0.4 * (1.0 - hzSunK));`)
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = uRgh[hzM];')
       .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = uMtl[hzM];')
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
@@ -184,7 +188,7 @@ float hzSunK = 1.0;`)
 }
 #include <opaque_fragment>`);
   };
-  m.customProgramCacheKey = () => 'haiz-campus-building-' + NB;
+  m.customProgramCacheKey = () => 'haiz-campus-building2-' + NB;
   return m;
 }
 
@@ -298,9 +302,13 @@ float hzSunK = 1.0;`)
 }`)
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
         .replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= hzSunK;'))
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+  // shade on a sunny campus is not sky-blue: light comes back off the sunlit paving and walls
+  reflectedLight.indirectDiffuse *= vec3(1.05, 1.0, 0.84);
+  reflectedLight.indirectDiffuse += diffuseColor.rgb * uBounce * (0.6 + 0.4 * (1.0 - hzSunK));`)
       .replace('#include <opaque_fragment>', 'outgoingLight += uSweepCol * hzSeam(vHW);\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey = () => 'haiz-campus-ground';
+  m.customProgramCacheKey = () => 'haiz-campus-ground2';
   return m;
 }
 
@@ -460,7 +468,8 @@ export function createSection(world, geo, campus, layer) {
   const U = {
     uCut: { value: cuts }, uLift: { value: lifts }, uFlag: { value: flags }, uDimB: { value: 0 },
     uSweepC: { value: new THREE.Vector3(0, GROUND_Y, 0) }, uSweepR: { value: 0 }, uSweepW: { value: 7 }, uSweepGlow: { value: 0 },
-    uSweepCol: { value: new THREE.Vector3(...invert(hex('#f0c27a'), MAP_GRADE)).multiplyScalar(0.55) },
+    uSweepCol: { value: new THREE.Vector3(...invert(hex('#f0c27a'), MAP_GRADE)).multiplyScalar(0.3) },
+    uBounce: { value: new THREE.Vector3(0, 0, 0) },
     uCSMap: { value: depthTex }, uCSMat: { value: new THREE.Matrix4() }, uCSOn: { value: 0 }, uCSTexel: { value: new THREE.Vector2(1 / SIZE, 1 / SIZE) }, uCSBias: { value: 0.0005 },
     uAlb: { value: MATERIALS.map((m) => lin(m.albedo)) }, uRgh: { value: MATERIALS.map((m) => m.rough) }, uMtl: { value: MATERIALS.map((m) => m.metal) },
     uInkFloor: { value: screen(INK.floor) }, uInkTop: { value: screen(INK.top) }, uInkRoof: { value: screen(INK.roof) }, uInkWall: { value: screen(INK.wall) },
@@ -609,6 +618,8 @@ export function createSection(world, geo, campus, layer) {
       ground.visible = sweepR > 1;
       for (const t of trees) t.mesh.visible = sweepR > 1;
       U.uCSOn.value = Math.min(1, sweepR / 40);
+      // (the scene has no bounce light: the sunlit paving's warmth is given back to walls and ground in shade)
+      U.uBounce.value.set(world.sun.color.r, world.sun.color.g * 0.96, world.sun.color.b * 0.84).multiplyScalar(world.sun.intensity * 0.028);
       if (!group.visible || sweepR <= 1) return;
       sunDir.copy(world.sun.position).sub(world.sun.target.position).normalize();
       const fk = focus && focus.r < 260 ? [Math.round(focus.x / (focus.r * 0.25)), Math.round(focus.z / (focus.r * 0.25)), Math.round(Math.log2(focus.r) * 4)].join() : 'all';

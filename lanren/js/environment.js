@@ -2,7 +2,7 @@
 // No buildings — the tree stands alone, as a concept of the species.
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { WIND_GLSL, UNIFORMS, mulberry } from './foliage.js';
+import { WIND_GLSL, FALL_GLSL, UNIFORMS, mulberry } from './foliage.js';
 
 // ------------------------------------------------------------------ sky
 const SKY_VERT = /* glsl */`
@@ -153,6 +153,7 @@ varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;`)
     if (!depth) {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
+uniform vec4 uFall;
 varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;
 float bh(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
 float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -172,10 +173,11 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   float bao = mix(mix(0.25, 0.6, vBark.b), 1.0, vBark.r);
   // under the crown the ambient light has passed through leaves: warmer, greener, not sky-blue
   vec3 under = mix(vec3(0.72, 0.82, 0.55), vec3(1.0), smoothstep(0.35, 0.9, vBark.r));
-  reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;`);
+  reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;
+${FALL_GLSL}`);
     }
   };
-  mat.customProgramCacheKey = () => 'bark2-' + depth;
+  mat.customProgramCacheKey = () => 'bark3-' + depth;
   return mat;
 }
 

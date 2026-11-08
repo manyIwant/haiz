@@ -86,8 +86,77 @@ function snapPoints() {
 function goTo(i, instant = false) {
   i = Math.max(0, Math.min(N - 1, i));
   const y = scrollForStop(i);
-  if (instant || reduceMotion) { scrollTo(0, y); state.p = i; landWalk(); return; }
+  if (instant || reduceMotion) { transit = null; override = null; scrollTo(0, y); state.p = i; landWalk(); return; }
+  // a distant shot (or the long climb of 02 between here and there) is reached by a direct flight
+  // through the same space, not by scrubbing through every station on the way
+  const from = transit ? transit.pv : state.p;
+  const far = Math.abs(i - from) > 1.01 || Math.abs(y - scrollY) > innerHeight * 2.2;
+  const film = from >= 3.99 && i === N - 1;   // 05 → 06 is the walker's film: it plays
+  if (far && !film && world && cam && (!W || W.policy().scroll)) { startTransit(i); return; }
   scrollTo({ top: y, behavior: 'smooth' });
+}
+
+// ------------------------------------------------------------------ transit: one flight between distant shots
+// The scroll lands on the destination at once; the camera flies there on its own path: out round
+// the tree (never through the crown), rising with the distance it has to go, looking at the tree's
+// heart on the way, while the day's light and the tree's growth pass smoothly from one shot to the
+// other. Interrupting it (another choice, a scroll) starts from wherever the camera is.
+let transit = null;
+const TREE_HEART = { x: AXIS.x, y: 6.6, z: AXIS.z };
+let crownProfile = null;   // the crown's farthest reach at each height (rosettes)
+function crownReach(y) {
+  if (!crownProfile && world) {
+    crownProfile = new Float32Array(40);
+    const ros = world.rosettes, st = world.stride;
+    for (let k = 0; k < ros.length; k += st) {
+      const b = Math.max(0, Math.min(39, Math.floor(ros[k + 1] + 2)));
+      crownProfile[b] = Math.max(crownProfile[b], Math.hypot(ros[k] - AXIS.x, ros[k + 2] - AXIS.z) + 0.5);
+    }
+  }
+  if (!crownProfile) return 0;
+  const b = Math.floor(y + 2);
+  let r = 0;
+  for (let j = b - 1; j <= b + 1; j++) if (j >= 0 && j < 40) r = Math.max(r, crownProfile[j]);
+  return r;
+}
+function startTransit(i) {
+  const a = { ...cam.s };
+  const p0 = transit ? transit.pv : state.p;
+  cam.releaseLook();
+  scrollTo(0, scrollForStop(i)); state.p = i; landWalk();
+  const b = life?.rail(i) || railAt(i);
+  transit = { t0: performance.now(), dur: (1.3 + 0.2 * Math.min(5, Math.abs(i - p0))) * 1000, a, b, i, p0, pv: p0 };
+}
+const lerpN = (x, y, t) => x + (y - x) * t;
+function transitPose(T, e) {
+  const { a, b } = T;
+  const tha = Math.atan2(a.ex - AXIS.x, a.ez - AXIS.z), thb = Math.atan2(b.ex - AXIS.x, b.ez - AXIS.z);
+  const ra = Math.hypot(a.ex - AXIS.x, a.ez - AXIS.z), rb = Math.hypot(b.ex - AXIS.x, b.ez - AXIS.z);
+  let dth = thb - tha;
+  while (dth > Math.PI) dth -= 2 * Math.PI;
+  while (dth < -Math.PI) dth += 2 * Math.PI;
+  const s = Math.sin(Math.PI * e);
+  const bulge = Math.max(0, 22 - (ra + rb) / 2) + Math.abs(dth) * 2.4;
+  const lift = 2.5 + Math.abs(dth) * 2.2 + Math.max(0, 9 - Math.max(a.ey, b.ey)) * 0.6;
+  const th = tha + dth * e, y = lerpN(a.ey, b.ey, e) + lift * s;
+  let r = lerpN(ra, rb, e) + bulge * s;
+  // the middle of the flight stays outside the crown
+  const keep = Math.min(1, Math.max(0, (e - 0.06) / 0.18)) * Math.min(1, Math.max(0, (0.94 - e) / 0.18));
+  r = Math.max(r, lerpN(r, crownReach(y) + 1.8, keep));
+  const ex = AXIS.x + Math.sin(th) * r, ez = AXIS.z + Math.cos(th) * r;
+  // the gaze passes over the tree's heart between the two shots' own targets
+  const w = Math.pow(s, 0.7) * 0.82;
+  const lx = lerpN(lerpN(a.lx, b.lx, e), TREE_HEART.x, w), ly = lerpN(lerpN(a.ly, b.ly, e), TREE_HEART.y, w), lz = lerpN(lerpN(a.lz, b.lz, e), TREE_HEART.z, w);
+  const fov = Math.min(64, Math.max(28, lerpN(a.fov, b.fov, e) + 7 * s));
+  return { ex, ey: y, ez, lx, ly, lz, fov, auth: lerpN(a.auth || 0, b.auth || 0, e), dist: Math.hypot(lx - ex, ly - y, lz - ez) };
+}
+function stepTransit() {
+  if (!transit) return;
+  const u = Math.min(1, (performance.now() - transit.t0) / transit.dur);
+  const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  transit.pv = lerpN(transit.p0, transit.i, u * u * (3 - 2 * u));
+  override = transitPose(transit, e);
+  if (u >= 1) { transit = null; override = null; }
 }
 // One scroll mapping for both the lengthened 02 history and the 05→06 film.
 const FILM_BEATS = [0.2, 0.55, 0.82];
@@ -477,13 +546,13 @@ async function start3D() {
   const attachMap = (md) => {
     if (!md || map) return;
     try {
-      map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]'),
+      map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!transit || !!document.querySelector('dialog[open]'), campusP: () => (transit ? transit.pv : state.p),
         worldState: W, focus: () => life?.focus() || null, walking: () => !!life?.walking(), walkView: (o) => life?.walkView(o) || null }, md.geo);
     } catch (err) { console.warn('campus map unavailable', err); }
     // the film, the walker, the pocket map and the menu share the map's campus (same frame, same model)
     if (map && !life) {
       import('../world/world.js').then((m) => {
-        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params });
+        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params, transitOn: () => !!transit });
       }).catch((err) => console.warn('walk unavailable', err));
     }
   };
@@ -652,10 +721,12 @@ const C = (a) => new THREE.Color(a[0], a[1], a[2]);
 function step(dt, wallDt = dt) {
   UNIFORMS.uTime.value += dt;
   const t = UNIFORMS.uTime.value;
+  stepTransit();
   const p = state.p;
+  const pl = transit ? transit.pv : p;   // the day's light and the tree's growth (in flight: on the way)
   const near = Math.round(p);
   // (05 → 06 is the walker's film: 05's words stay while the eye is still in the crown, 06's come with the turn)
-  setActive(roots?.owns(p) ? -1
+  setActive(transit ? -1 : roots?.owns(p) ? -1
     : p > 4 && p < 5 ? (p < 4.1 ? 4 : p > 4.95 ? 5 : -1)
     : Math.abs(p - near) < 0.3 ? near : -1);
   roots?.tick(dt);
@@ -663,8 +734,10 @@ function step(dt, wallDt = dt) {
   life?.tick(dt, wallDt);
   canopy?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
-  const grow = canopy ? canopy.grow(growAt(p)) : growAt(p);
-  const L = lightAt(p);
+  const grow = canopy ? canopy.grow(growAt(pl)) : growAt(pl);
+  const L = lightAt(pl);
+  // in flight the lens is a wide, deep one: the macro depth of field of 03 belongs to that shot only
+  if (transit) L.aperture *= 1 - Math.sin(Math.PI * Math.min(1, (performance.now() - transit.t0) / transit.dur));
   life?.light(L, p);
   map?.light(L);
   roots?.light(L, p);
@@ -723,7 +796,10 @@ function adapt(dt) {
 
 window.__haizHome = {
   get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
-  go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
+  get transit() { return transit && { i: transit.i, p0: transit.p0, pv: +transit.pv.toFixed(3) }; },
+  /** review: hold a transit at u (0…1) between the current camera and shot i */
+  transitAt: (i, u) => { if (!transit || transit.i !== i) startTransit(i); transit.t0 = performance.now() - u * transit.dur; stepTransit(); cam.snap(); },
+  go: (i) => { override = null; transit = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */
   freeze: (on = true) => { const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },

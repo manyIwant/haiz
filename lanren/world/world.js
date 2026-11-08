@@ -32,6 +32,7 @@ const WALKING = new Set(['play', 'pocket', 'menu', 'transit']);
 export function attachWorld(ctx) {
   const { world, cam, state, goTo, DwellCamera, W, map, geo } = ctx;
   const reduce = !!ctx.reduceMotion;
+  const transitOn = ctx.transitOn || (() => false);   // home.js flying between distant shots: the film waits for it to land
   const camera = world.camera, canvas = world.renderer.domElement, body = document.body;
   const coarse = matchMedia('(pointer: coarse)').matches;
   if (!document.querySelector(`link[href="${CSS}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = CSS; document.head.append(l); }
@@ -634,7 +635,7 @@ export function attachWorld(ctx) {
   function tick(dt, wall) {
     const p = state.p;
     // the end of the film: 06 holds; the scroll's owner becomes the hold's (and back)
-    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map') { W.claim('hold'); holdSince = performance.now(); wheelAcc = 0; }
+    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map' && !transitOn()) { W.claim('hold'); holdSince = performance.now(); wheelAcc = 0; }
     else if (W.owner === 'hold' && p < 4.99) W.claim('scroll');
     const holding = W.owner === 'hold' && !ceremonyThen;
     $('.wd-hold').hidden = !holding;
@@ -652,7 +653,7 @@ export function attachWorld(ctx) {
     if (pocket.open) pocket.update({ x: P.x, z: P.z, yaw: P.yaw });
     beacon.material.uniforms.uT.value += wall * 1.6;
   }
-  function filmOn() { return (W.owner === 'scroll' || W.owner === 'hold') && state.p > 4.0001 && map.mode !== 'map' && !cam.push; }
+  function filmOn() { return (W.owner === 'scroll' || W.owner === 'hold') && state.p > 4.0001 && map.mode !== 'map' && !cam.push && !transitOn(); }
   function cameraHook() {
     if (flight) { stepFlight(); return true; }
     if (W.owner === 'play' || W.owner === 'pocket' || W.owner === 'menu') {

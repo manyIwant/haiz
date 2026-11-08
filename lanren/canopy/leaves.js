@@ -25,11 +25,14 @@ function patch(mat, depth) {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', '#include <common>\nvarying vec4 vWork;')
       .replace('reflectedLight.directSpecular *= 0.85;', `reflectedLight.directSpecular *= 0.85;
-  // a work leaf in the light: more sun passes through the blade (selected most)
-  reflectedLight.directDiffuse += tint * (0.2 + vWork.x * 2.0 + vWork.y * 2.8) * thin * vAir;
-  reflectedLight.indirectDiffuse *= 1.0 + vWork.y * 0.6;`);
+  // a work leaf in the light: a little more of the sun passes through the blade, and the chosen one
+  // gains a fine edge of light along its margin. Light through a leaf, never a lamp: it stays a leaf.
+  float wkEdge = pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.5);
+  reflectedLight.directDiffuse += (leafTransmit + leafFwd * 0.35) * tint * (vWork.x * 0.4 + vWork.y * 0.9) * thin * vAir;
+  reflectedLight.directDiffuse += tint * wkEdge * (vWork.x * 0.12 + vWork.y * 0.55);
+  reflectedLight.indirectDiffuse *= 1.0 + vWork.x * 0.12 + vWork.y * 0.22;`);
   };
-  mat.customProgramCacheKey = () => `canopy-work-${depth}`;
+  mat.customProgramCacheKey = () => `canopy-work2-${depth}`;
   return mat;
 }
 
@@ -63,7 +66,8 @@ export function createWorkLeaves(world, items) {
       const len = (it.kind === 'project' ? 0.62 : 0.36) * (n > 1 ? 0.92 : 1);
       m.compose(P.clone().addScaledVector(b, 0.025), q, s.set(len, len, len));
       // growth: finished → open fresh blade (tE 0.8 … 0.62 with age); project → still unfolding
-      const tE = it.kind === 'project' ? 0.915 : 0.8 - 0.18 * Math.min(1, Math.max(0, it.age || 0));
+      // (a finished work is this season's leaf: fresher than the crown, but already a green, not a yellow)
+      const tE = it.kind === 'project' ? 0.915 : 0.76 - 0.14 * Math.min(1, Math.max(0, it.age || 0));
       blades.push({ k, m: m.clone(), P: P.clone(), tE, variant: (k * 7 + j * 3) % 4, occ: Math.min(0.4, ros[o + 8]), clump: [ros[o + 12], ros[o + 13], ros[o + 14]] });
     }
   });

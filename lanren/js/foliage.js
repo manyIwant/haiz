@@ -13,6 +13,28 @@ uniform float uGust;      // slowly varying 0..1
 uniform vec3  uWindDir;
 uniform vec4  uTouchO[4]; // ray origin, start time
 uniform vec4  uTouchD[4]; // ray direction, strength
+uniform vec4  uOpenC;     // chapter 03: the heart of a limb (world), how far it has opened (0 … 1)
+uniform vec4  uOpenA;     // xz: from the limb towards the viewer (unit), z: radius (m), w: reach (m)
+// A limb of the crown reaching out to the viewer: round its heart, twigs and leaves come forward
+// out of the crown (the thin ones furthest: the field is weighted by flex), and the foliage in
+// the way parts for it, never crossing. Applied through windSway, so bark twigs stretch with
+// their leaves and the shadows move with both (amount 0: nothing at all).
+vec3 openField(vec3 p){
+  if (uOpenC.w < 0.001) return vec3(0.0);
+  vec3 ax = vec3(uOpenA.x, 0.0, uOpenA.y);
+  vec3 d = p - uOpenC.xyz;
+  float along = dot(d, ax);
+  vec3 perp = d - ax * along;
+  float R = uOpenA.z, L = uOpenA.w;
+  float r2 = dot(perp, perp);
+  float wr = exp(-(r2 + along * along * 0.6) / (R * R));
+  vec3 reach = ax * L * wr;
+  float r = sqrt(r2), Rt = max(R * 0.95, 1.1), q = clamp(r / Rt, 0.0, 1.0);
+  float lane = smoothstep(0.2, 1.2, along) * (1.0 - smoothstep(L + 2.0, L + 4.5, along));
+  vec3 dir = r > 1e-3 ? perp / r : vec3(0.0, 1.0, 0.0);
+  vec3 part = dir * Rt * 0.65 * (1.0 - q * q * (3.0 - 2.0 * q)) * lane * (1.0 - wr);
+  return (reach + part) * uOpenC.w;
+}
 vec3 windSway(vec3 p, float flex){
   float ph = dot(p, vec3(0.31, 0.17, 0.23));
   float g = uWind * (0.45 + 0.55 * uGust);
@@ -21,7 +43,7 @@ vec3 windSway(vec3 p, float flex){
   vec3 d = uWindDir * (g * 0.55 + w * g * 0.45);
   d.y += sin(t * 2.1 + ph * 2.0) * 0.12 * g;
   d += cross(uWindDir, vec3(0.0, 1.0, 0.0)) * sin(t * 1.13 + ph * 0.8) * 0.18 * g;
-  return d * flex * flex * 0.42;
+  return d * flex * flex * 0.42 + openField(p) * flex;
 }
 vec3 touchPush(vec3 p, out float energy){
   vec3 acc = vec3(0.0);
@@ -205,8 +227,37 @@ export const UNIFORMS = {
   uWindDir: { value: new THREE.Vector3(0.8, 0, -0.6).normalize() },
   uTouchO: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, -99, 0, -99)) },
   uTouchD: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 1, 0, 0)) },
-  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 }
+  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 },
+  uOpenC: { value: new THREE.Vector4(0, 0, 0, 0) }, uOpenA: { value: new THREE.Vector4(1, 0, 2.4, 0.3) },
+  // chapter 03: light falls away behind the plane in focus (x focus distance, y/z start/end beyond it, w how much)
+  uFall: { value: new THREE.Vector4(4, 1, 6, 0) }
 };
+/** GLSL: the falloff of chapter 03's light into the depth of the crown (strength 0: no change) */
+export const FALL_GLSL = /* glsl */`
+  if (uFall.w > 0.001) {
+    float fallK = 1.0 - uFall.w * smoothstep(uFall.x + uFall.y, uFall.x + uFall.z, length(vViewPosition));
+    reflectedLight.directDiffuse *= fallK; reflectedLight.directSpecular *= fallK;
+    reflectedLight.indirectDiffuse *= fallK; reflectedLight.indirectSpecular *= fallK;
+  }`;
+
+/** CPU mirror of openField() in WIND_GLSL, times flex (labels and picking follow the leaves that moved). */
+export function openAt(p, flex = 0.7, out = new THREE.Vector3()) {
+  const C = UNIFORMS.uOpenC.value, A = UNIFORMS.uOpenA.value;
+  out.set(0, 0, 0);
+  if (C.w < 0.001) return out;
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const dx = p.x - C.x, dy = p.y - C.y, dz = p.z - C.z;
+  const along = dx * A.x + dz * A.y;
+  const px = dx - A.x * along, py = dy, pz = dz - A.y * along;
+  const R = A.z, L = A.w, r2 = px * px + py * py + pz * pz;
+  const wr = Math.exp(-(r2 + along * along * 0.6) / (R * R));
+  const r = Math.sqrt(r2), Rt = Math.max(R * 0.95, 1.1), q = Math.min(1, r / Rt);
+  const lane = ss(0.2, 1.2, along) * (1 - ss(L + 2, L + 4.5, along));
+  const k = Rt * 0.65 * (1 - q * q * (3 - 2 * q)) * lane * (1 - wr);
+  const [ux, uy, uz] = r > 1e-3 ? [px / r, py / r, pz / r] : [0, 1, 0];
+  const s = C.w * flex;
+  return out.set((A.x * L * wr + ux * k) * s, (uy * k) * s, (A.y * L * wr + uz * k) * s);
+}
 
 /** A MeshStandardMaterial (or depth material) patched into a growing leaf. */
 export function makeLeafMaterial({ atlas, normal, depth = false, loose = false }) {
@@ -277,7 +328,7 @@ ${loose ? '' : `
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
 ${LEAF_COLOUR_GLSL}
-uniform float uTransmit;
+uniform float uTransmit; uniform vec4 uFall;
 varying float vAge; varying float vYoung; varying float vVar; varying float vOcc; varying float vAir; varying vec3 vPadN; varying float vShell; varying float vTone;`)
       .replace('#include <map_fragment>', `
   vec4 lt = texture2D(map, vMapUv);
@@ -313,7 +364,8 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
   // canopy occlusion (baked per rosette): the inside of the crown is darker
   float crownAO = mix(1.0, 0.22, vOcc) * mix(0.6, 1.0, vShell);
   reflectedLight.indirectDiffuse *= crownAO;
-  reflectedLight.indirectSpecular *= crownAO;`)
+  reflectedLight.indirectSpecular *= crownAO;
+${FALL_GLSL}`)
         .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
   // light through the blade: thin young leaves glow most
   // light through the blade: veins and the reticulum are thicker and pass less of it
@@ -335,7 +387,7 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
         'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );\n\t\tleafTransmit += directLight.color * saturate( dot( -geometryNormal, directLight.direction ) );\n\t\tleafFwd += directLight.color * pow( saturate( dot( -geometryViewDir, directLight.direction ) ), 9.0 );');
     }
   };
-  mat.customProgramCacheKey = () => `leaf2-${depth}-${loose}`;
+  mat.customProgramCacheKey = () => `leaf3-${depth}-${loose}`;
   return mat;
 }
 

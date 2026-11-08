@@ -51,20 +51,26 @@ vec3 rootsProj(mat4 M, sampler2D T, vec3 P, vec4 A, vec3 wp, vec3 wn){
   vec4 c = M * vec4(wp, 1.0);
   if (c.w <= 0.0) return vec3(0.0);
   vec2 uv = c.xy / c.w * 0.5 + 0.5;
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0);
+  // how far outside the frame (a projector's light does not stop dead at the frame's edge)
+  float outK = length(max(max(-uv, uv - 1.0), 0.0));
+  if (outK > 0.5) return vec3(0.0);
   vec3 toP = P - wp; float dist = length(toP); vec3 l = toP / dist;
   float reach = 1.0 - smoothstep(A.x + A.w * 0.55, A.x + A.w, dist);
   float nearCut = smoothstep(0.3, 0.75, dist);
   float nd = dot(wn, l);
   float facing = uRPTwo > 0.5 ? 0.45 + 0.55 * abs(nd) : smoothstep(-0.05, 0.4, nd);
   float fall = clamp(pow(A.x / dist, 0.8), 0.0, 1.5);
-  vec2 e = min(uv, 1.0 - uv);
-  float edge = smoothstep(0.0, 0.06, e.x) * smoothstep(0.0, 0.06, e.y);
+  vec2 uvc = clamp(uv, 0.0, 1.0);
+  vec2 e = min(uvc, 1.0 - uvc);
+  float edge = smoothstep(0.0, 0.06, e.x) * smoothstep(0.0, 0.06, e.y) * (1.0 - step(1e-4, outK));
   // develops upwards, grain by grain
-  float g = rpHash(floor(uv * vec2(420.0, 320.0)));
-  float shown = 1.0 - smoothstep(-0.05, 0.05, uv.y + (g - 0.5) * 0.14 - (A.z * 1.2 - 0.1));
-  vec3 col = texture2D(T, uv).rgb;
-  return col * uRPCol * A.y * reach * nearCut * facing * fall * edge * shown;
+  float g = rpHash(floor(uvc * vec2(420.0, 320.0)));
+  float shown = 1.0 - smoothstep(-0.05, 0.05, uvc.y + (g - 0.5) * 0.14 - (A.z * 1.2 - 0.1));
+  vec3 col = texture2D(T, uvc).rgb * edge * shown;
+  // the beam's own faint wash over the frame and a soft spill round it: in the low light of the
+  // early years it is what lets the bark's relief be read around the year (it develops with the image)
+  float wash = 0.075 * exp(-outK * 7.5) * smoothstep(0.0, 0.6, A.z);
+  return (col + vec3(wash)) * uRPCol * A.y * reach * nearCut * facing * fall;
 }`;
 
 function patchReceiver(mat, U, two = false) {
@@ -86,11 +92,12 @@ function patchReceiver(mat, U, two = false) {
     // light falls on the surface's own colour, with a floor so dark bark and deep leaves still carry it
     // a screen keeps the picture's colours: the surface's own tint is mostly neutralised
     vec3 rpAlb = mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.3, 0.55, 0.15))), 0.7);
-    reflectedLight.directDiffuse += max(rpAlb, vec3(0.075, 0.07, 0.062)) * rpL;
+    // (dark glossy leaves get a higher floor than bark: a photograph has to hold together on them)
+    reflectedLight.directDiffuse += max(rpAlb, uRPTwo > 0.5 ? vec3(0.115, 0.11, 0.1) : vec3(0.075, 0.07, 0.062)) * rpL;
   }`);
   };
   const key = mat.customProgramCacheKey?.bind(mat);
-  mat.customProgramCacheKey = () => (key ? key() : '') + '-roots2';
+  mat.customProgramCacheKey = () => (key ? key() : '') + '-roots3';
   mat.needsUpdate = true;
 }
 
@@ -122,7 +129,9 @@ void main(){
   vec3 silver = mix(vec3(0.93, 0.96, 1.02), vec3(1.04, 1.0, 0.92), smoothstep(0.15, 0.85, l)) * l;
   vec3 sepia = vec3(l) * vec3(1.09, 0.97, 0.80);
   vec3 mono = mix(silver, sepia, uTone);
-  mono = clamp((mono - 0.5) * (1.0 + 0.18 * uBW) + 0.5, 0.0, 1.0);
+  mono = clamp((mono - 0.5) * (1.0 + 0.12 * uBW) + 0.5, 0.0, 1.0);
+  // a print keeps detail in its shadows: the deepest tones are lifted a touch, never crushed to black
+  mono += vec3(0.032, 0.031, 0.03) * (1.0 - smoothstep(0.0, 0.32, l));
   c = mix(c, mono, uBW);
   // faded colour: lifted blacks, softer contrast, a little warm
   c = mix(c, c * vec3(0.86, 0.85, 0.80) + vec3(0.06, 0.05, 0.035), uFade);
@@ -475,7 +484,8 @@ export function attach(ctx) {
       const n = k >= 0 && p > 1 && p < 2 ? nodes[k] : (reading && readNode && nodes.indexOf(readNode) % 2 === sl.i ? readNode : null);
       if (n !== sl.node) { sl.node = n; sl.dev = reduce ? 1 : 0; if (n) bindSlot(sl); }
       if (!n) { sl.I += (0 - sl.I) * Math.min(1, dt * 6); sl.V.value.y = sl.I; continue; }
-      const near = 1 - smooth(0.22, 0.8, Math.abs(q - (nodes.indexOf(n) + 1)));
+      // one year at a time: the last one has mostly gone before the next develops (they break apart in between)
+      const near = 1 - smooth(0.15, 0.62, Math.abs(q - (nodes.indexOf(n) + 1)));
       const L = texCache.get(n.id);
       const target = (L?.ready ? (n.light?.photo ? 3.2 : 2.4) * (n.at.glow || 1) : 0) * Math.max(near, reading && n === readNode ? 1 : 0);
       sl.I += (target - sl.I) * Math.min(1, dt * 4);
@@ -525,6 +535,8 @@ export function attach(ctx) {
     L.rays *= lk.sun;
     const u = film.uniforms;
     u.uBW.value = lk.bw; u.uTone.value = lk.tone; u.uFade.value = lk.fade; u.uFilm.value = lk.film;
+    // while someone reads, the picture holds still: no gate weave, no flicker
+    u.uMove.value = reduce || reading ? 0 : 1;
     u.uTime.value = performance.now() / 1000;
     const r = world.renderer.domElement;
     u.uTexel.value.set(1 / Math.max(1, r.width), 1 / Math.max(1, r.height));
