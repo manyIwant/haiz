@@ -14,6 +14,10 @@
 <link rel="preload" href="assets/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="lanren/home.css?v=2">
 <link rel="stylesheet" href="assets/css/experience.css?v=13"><script defer src="assets/js/experience.js?v=13"></script>
+<!-- the homepage leaves and returns through its own moments of the tree (and a deep link such as #map/… hands the
+     page straight to the map); the site-wide cross-document fade would only be skipped or doubled here -->
+<style>@view-transition { navigation: none; }</style>
+<script>addEventListener('pagereveal', function (e) { var vt = e.viewTransition; if (!vt) return; if (vt.ready) vt.ready.catch(function () {}); if (vt.finished) vt.finished.catch(function () {}); if (vt.updateCallbackDone) vt.updateCallbackDone.catch(function () {}); vt.skipTransition(); });</script>
 <script defer src="lanren/vendor/gsap/gsap.min.js"></script>
 <script defer src="lanren/vendor/gsap/ScrollTrigger.min.js"></script>
 <script type="importmap">

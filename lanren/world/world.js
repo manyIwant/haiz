@@ -13,7 +13,7 @@
 // Ownership of camera and input goes through lanren/world/state.js (W.claim). The page never
 // scrolls while the walk has the input, and the wheel never moves the walker.
 import * as THREE from 'three';
-import { shot, isPortrait, poseAt, CHAPTERS } from '../js/chapters.js';
+import { shot, isPortrait, poseAt, CHAPTERS, LIGHT } from '../js/chapters.js';
 import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE } from './film.js';
 import { createBody } from './body.js';
 import { eyeOffset } from './skeleton.js';
@@ -77,7 +77,7 @@ export function attachWorld(ctx) {
     if (film && k === filmKey) return film;
     filmKey = k;
     const f5 = shot(4), e6 = frame6();
-    film = makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground });
+    film = makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground, sunAz: W.compose.sun6 ?? LIGHT[5].sun[0] });
     return film;
   }
 
@@ -210,11 +210,11 @@ export function attachWorld(ctx) {
     return { eye: camera.position.toArray(), yaw: yawOf(d.x, d.z), pitch: Math.asin(clamp(d.y, -1, 1)) / D2R, fov: WALKING.has(W.owner) ? P.fov : cam.s.fov };
   };
   /** a flight between two eyes (rises a little on the way when it is long) */
-  function fly(to, dur, then) {
+  function fly(to, dur, then, pv = null) {
     const from = camState();
     from.fov = flight?.cur?.fov ?? from.fov;
     if (reduce) dur = Math.min(dur, 0.45);
-    flight = { from, to, t0: performance.now(), dur: dur * 1000, then, arc: Math.min(18, Math.hypot(to.eye[0] - from.eye[0], to.eye[2] - from.eye[2]) * 0.18) };
+    flight = { from, to, t0: performance.now(), dur: dur * 1000, then, pv, curP: pv ? pv[0] : null, arc: Math.min(18, Math.hypot(to.eye[0] - from.eye[0], to.eye[2] - from.eye[2]) * 0.18) };
   }
   function stepFlight() {
     const f = flight, k = clamp((performance.now() - f.t0) / f.dur, 0, 1), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -223,6 +223,8 @@ export function attachWorld(ctx) {
     const yaw = f.from.yaw + wrap(f.to.yaw - f.from.yaw) * e, pitch = f.from.pitch + (f.to.pitch - f.from.pitch) * e;
     const fov = (f.from.fov || FOV_WALK) + ((f.to.fov || FOV_WALK) - (f.from.fov || FOV_WALK)) * e;
     f.cur = { eye, yaw, pitch, fov };
+    // a flight to another chapter carries the day and the season with it (home.js reads lightP)
+    if (f.pv) f.curP = f.pv[0] + (f.pv[1] - f.pv[0]) * e;
     writeCamera(eye, yaw, pitch, fov);
     if (k >= 1) { flight = null; f.then?.(); }
   }
@@ -383,7 +385,7 @@ export function attachWorld(ctx) {
       Object.assign(cam.s, f);
       cam.releaseLook();
       ctx.setActive?.(i);
-    });
+    }, [5, i]);
   }
   function restart() {
     closeMenu(); closePocket(true);
@@ -631,13 +633,23 @@ export function attachWorld(ctx) {
       if (inside && !arrived) { arrived = true; $('.wd-arrive').textContent = `已到达：${dest.name}`; say(`已到达 ${dest.name}。建筑为近似体量，不能进入。`); setTimeout(() => { $('.wd-arrive').textContent = ''; }, 4500); }
     }
   }
-  let saveAcc = 0;
+  let saveAcc = 0, leafGiven = false;
+  const QUIET_MS = 2800;
   function tick(dt, wall) {
     const p = state.p;
     // the end of the film: 06 holds; the scroll's owner becomes the hold's (and back)
-    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map' && !transitOn()) { W.claim('hold'); holdSince = performance.now(); wheelAcc = 0; }
+    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map' && !transitOn()) {
+      W.claim('hold'); holdSince = performance.now(); wheelAcc = 0;
+      // the film's last frame is given time: a leaf comes down from the crown into the evening
+      if (!reduce && !leafGiven) { leafGiven = true; setTimeout(() => { if (W.owner === 'hold') world.litter.onGift?.(); }, 900); }
+    }
     else if (W.owner === 'hold' && p < 4.99) W.claim('scroll');
+    if (p < 4.8) leafGiven = false;
     const holding = W.owner === 'hold' && !ceremonyThen;
+    // let the turn and the tree have the screen: no words, buttons or chrome while the gaze rises into
+    // the crown and for a few seconds after it arrives; then the way on fades in by itself
+    const quiet = !reduce && ((W.owner === 'scroll' && p > 4.9 && p < 4.995) || (holding && performance.now() - holdSince < QUIET_MS));
+    body.classList.toggle('wd-quiet', quiet);
     $('.wd-hold').hidden = !holding;
     body.classList.toggle('wd-holding', holding);
     $('.wd-resume').hidden = !pendingResume;
@@ -671,11 +683,15 @@ export function attachWorld(ctx) {
       camera.updateMatrixWorld();
       cam.s.ex = ps.cam.ex; cam.s.ey = ps.cam.ey; cam.s.ez = ps.cam.ez;
       fig.group.visible = ps.body.show && W.hud.body;
+      fig.setFirstPerson(ps.body.firstPerson);
+      fig.breathe = performance.now() / 1000;
       if (fig.group.visible) fig.set(ps.body, ground(ps.body.x, ps.body.z));
       return;
     }
     if (WALKING.has(W.owner) && W.owner !== 'transit') {
       fig.group.visible = W.hud.body;
+      fig.setFirstPerson(true);
+      fig.breathe = performance.now() / 1000;
       fig.set(poseOf(), ground(P.x, P.z));
       return;
     }
@@ -687,11 +703,15 @@ export function attachWorld(ctx) {
     const stand = (W.compose.rise && p > 3.6) || WALKING.has(W.owner) ? (WALKING.has(W.owner) ? 1 : smooth((p - 3.6) / 0.4)) : 0;
     if (stand > 0) {
       const at5 = WALKING.has(W.owner) ? 1 : clamp(p - 4, 0, 1);
-      L.density *= 1 + stand * (0.85 - 0.4 * at5);
-      L.mist *= 1 + stand * (0.6 - 0.3 * at5);
+      L.density *= 1 + stand * (0.5 - 0.25 * at5);
+      L.mist *= 1 + stand * (0.3 - 0.15 * at5);
     }
-    // 05's depth of field belongs to the view out of the crown: once the camera is a person the near world is sharp
-    if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) L.aperture *= 1 - smooth((p - 4.03) / 0.1);
+    // 05's depth of field stays while the eye finds the person on the limb (a portrait lens, focused
+    // on them: home.js reads the rail's distance); once the camera is the person the near world is sharp
+    if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) {
+      const q = p - 4;
+      L.aperture = (L.aperture + (0.55 - L.aperture) * smooth((q - 0.03) / 0.08)) * (1 - smooth((q - 0.15) / 0.035));
+    }
     if (WALKING.has(W.owner)) L.aperture = 0;
     // composition a: 06's sun turns with its new view (sun 77° to the right of the gaze, as in V4)
     const s6 = W.compose.sun6;
@@ -744,5 +764,5 @@ export function attachWorld(ctx) {
     endCeremony,
     pocket
   };
-  return { tick, camera: cameraHook, after, light, focus, rail: (p) => ((W.owner === 'scroll' || W.owner === 'hold') && p >= 4 && map.mode !== 'map' ? railOf(getFilm().pose(p - 4).cam) : null), overlay, walking: () => WALKING.has(W.owner) || map.fromWalk, walkView, api };
+  return { tick, camera: cameraHook, after, light, focus, lightP: () => (flight?.pv ? flight.curP : null), rail: (p) => ((W.owner === 'scroll' || W.owner === 'hold') && p >= 4 && map.mode !== 'map' ? railOf(getFilm().pose(p - 4).cam) : null), overlay, walking: () => WALKING.has(W.owner) || map.fromWalk, walkView, api };
 }

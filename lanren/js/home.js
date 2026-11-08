@@ -161,7 +161,7 @@ function stepTransit() {
   if (u >= 1) { transit = null; override = null; }
 }
 // One scroll mapping for both the lengthened 02 history and the 05→06 film.
-const FILM_BEATS = [0.2, 0.55, 0.82];
+const FILM_BEATS = [0.15, 0.215, 0.56, 0.84];   // film.js BEATS: over the shoulder, one's own feet, landed, still
 const pOfProgress = pFromU, progressOfP = uFromP;
 let walkTween = null;
 function landWalk() {
@@ -226,7 +226,8 @@ function wireScroll() {
     addEventListener('scroll', () => { target = pFromU((scrollY - track.offsetTop) / trackRange()); }, { passive: true });
     addEventListener('resize', measureKnots);
     if (window.ResizeObserver) new ResizeObserver(() => measureKnots()).observe(track);
-    (function follow() { state.p += (target - state.p) * 0.12; requestAnimationFrame(follow); })();
+    let tf = performance.now();
+    (function follow(now = performance.now()) { const dt = Math.min(0.1, (now - tf) / 1000); tf = now; state.p += (target - state.p) * (1 - Math.exp(-7.7 * dt)); requestAnimationFrame(follow); })();
   }
 }
 for (const a of $$('[data-go]')) a.addEventListener('click', (e) => { if (!body.classList.contains('spatial')) return; e.preventDefault(); goTo(+a.dataset.go); });
@@ -364,7 +365,7 @@ leader.append(leadPath, leadHalo, leadPin);
 svg.append(leader);
 const slabPos = { x: 0, y: 0, ry: -6, init: false, rest: 0 };
 const tmpV = new THREE.Vector3();
-function placeSlab(settle) {
+function placeSlab(settle, dt = 1 / 60) {
   const panel = active >= 0 ? panels[active] : null;
   const slab = panel?.querySelector('.slab');
   if (!slab || innerWidth <= 760) { leader.style.opacity = '0'; return; }
@@ -391,10 +392,11 @@ function placeSlab(settle) {
   // while moving the slab is carried by the scene; once the shot rests it holds
   // still against the camera's breathing (a close anchor would otherwise drift)
   const hold = settle > 0.98 ? 10 : 0.6;
-  if (Math.abs(tx - slabPos.x) > hold) slabPos.x += (tx - slabPos.x) * 0.14;
-  if (Math.abs(ty - slabPos.y) > hold) slabPos.y += (ty - slabPos.y) * 0.14;
+  const kp = 1 - Math.exp(-9 * Math.min(0.1, dt)), kr = 1 - Math.exp(-6.3 * Math.min(0.1, dt));   // the same lag at any frame rate
+  if (Math.abs(tx - slabPos.x) > hold) slabPos.x += (tx - slabPos.x) * kp;
+  if (Math.abs(ty - slabPos.y) > hold) slabPos.y += (ty - slabPos.y) * kp;
   const ry = mode === 'dock' ? 0 : -4 - 6 * ((slabPos.x + sw / 2) / W - 0.5) + (visible ? (ax - slabPos.x) / W * 6 : 0);
-  if (Math.abs(ry - slabPos.ry) > (settle > 0.98 ? 1.2 : 0.08)) slabPos.ry += (ry - slabPos.ry) * 0.1;
+  if (Math.abs(ry - slabPos.ry) > (settle > 0.98 ? 1.2 : 0.08)) slabPos.ry += (ry - slabPos.ry) * kr;
   // write whole pixels and tenths of a degree only when they change, so the
   // slab settles completely once the camera rests (links must hold still)
   const sxS = Math.round(slabPos.x) + 'px', syS = Math.round(slabPos.y) + 'px', ryS = slabPos.ry.toFixed(1) + 'deg';
@@ -725,7 +727,7 @@ function step(dt, wallDt = dt) {
   const t = UNIFORMS.uTime.value;
   stepTransit();
   const p = state.p;
-  const pl = transit ? transit.pv : p;   // the day's light and the tree's growth (in flight: on the way)
+  const pl = transit ? transit.pv : (life?.lightP?.() ?? p);   // the day's light and the tree's growth (in flight, from home or from the walk: on the way)
   const near = Math.round(p);
   // (05 → 06 is the walker's film: 05's words stay while the eye is still in the crown, 06's come with the turn)
   setActive(transit ? -1 : roots?.owns(p) ? -1
@@ -744,7 +746,7 @@ function step(dt, wallDt = dt) {
   map?.light(L);
   roots?.light(L, p);
   canopy?.light(L);
-  const rail = override || railAt(p);
+  const rail = override || life?.rail?.(p) || railAt(p);   // (05 → 06: the film's own lens and focus)
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
@@ -770,7 +772,7 @@ function step(dt, wallDt = dt) {
   world.litter.update(dt, grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, active === N - 1);
   sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
   updateNav(p, grow);
-  placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
+  placeSlab(1 - Math.min(1, Math.abs(p - near) * 4), wallDt);
   map?.overlay();
   life?.overlay();
   canopy?.overlay();

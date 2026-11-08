@@ -696,7 +696,9 @@ export function attach(ctx) {
     UNIFORMS.uTouchO.value[i].set(camera.position.x, camera.position.y, camera.position.z, t);
     UNIFORMS.uTouchD.value[i].set(dir.x, dir.y, dir.z, 1.5);
   }
+  let lightDt = 1 / 60;
   function tick(dt, wall = dt) {
+    lightDt = wall;
     if (restoring && Math.abs(state.p - STUDY) < 0.01 && S.status !== 'loading') {
       const r = restoring; restoring = null;
       if (r.work) found(r.work);
@@ -736,7 +738,7 @@ export function attach(ctx) {
     const behind = P ? Math.atan2(-(P.x - AXIS.x), -(P.z - AXIS.z)) / D2R : L.sunAz;
     const az = behind + (S.sel ? 28 : T.sunAz), el = S.sel ? 34 : T.sunEl;
     if (!light.ready) { light.az = L.sunAz; light.el = L.sunEl; light.ready = true; }
-    const k = 1 - Math.exp(-0.05 * 1.8);
+    const k = 1 - Math.exp(-Math.min(0.1, lightDt) * 1.8);   // the sun swings round at the same pace at any frame rate
     light.az = lerpDeg(light.az, az, k); light.el = lerp(light.el, el, k);
     L.sunAz = lerpDeg(L.sunAz, light.az, m);
     L.sunEl = lerp(L.sunEl, light.el, m);

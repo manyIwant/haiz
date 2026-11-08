@@ -121,7 +121,7 @@ ${LIFT}`)
 ${NOISE}
 ${SHARED}
 uniform vec3 uAlb[${NM}]; uniform float uRgh[${NM}]; uniform float uMtl[${NM}];
-uniform float uFlag[${NB}]; uniform float uDimB;
+uniform float uFlag[${NB}]; uniform float uDimB; uniform float uDusk;
 uniform vec3 uInkFloor, uInkTop, uInkRoof, uInkWall, uInkGlass, uInkGlassFace, uInkPoche, uInkPocheGlass, uInkLine, uInkSel, uRealPoche;
 uniform vec2 uInkLight;
 varying vec3 vHW; varying vec3 vHN; varying vec4 vEdge; varying float vMat; varying float vBld; varying float vCutY; varying float vHYo;
@@ -151,6 +151,47 @@ float hzTex(vec3 p, vec3 n, int m){
   if (abs(n.y) < 0.5) g *= 1.0 - 0.07 * smoothstep(0.55, 1.0, wn(vec2(uv.x * 2.6, p.y * 0.12))) * (0.6 + 0.4 * wn(vec2(uv.x * 0.7, 3.0)));
   return g;
 }
+// what is behind a pane: a room with depth (interior mapping), its lights on or off, sometimes a curtain.
+// rooms follow a classroom grid along the wall and per storey; no two neighbours read alike
+vec3 hzRoom(vec3 wp, vec3 n, vec2 pane, float bld){
+  vec3 N = normalize(vec3(n.x, 0.0, n.z) + vec3(1e-5, 0.0, 0.0));
+  vec3 T = vec3(-N.z, 0.0, N.x);
+  vec3 rd = normalize(wp - cameraPosition);
+  vec3 r = vec3(dot(rd, T), rd.y, max(1e-3, dot(rd, -N)));
+  const float WR = 3.3, HR = 3.4, DR = 5.5;
+  vec2 q = vec2(dot(wp, T), wp.y + 20.0);
+  vec2 c0 = floor(q / vec2(WR, HR)) * vec2(WR, HR);
+  float tx = ((r.x > 0.0 ? c0.x + WR : c0.x) - q.x) / (abs(r.x) < 1e-4 ? 1e-4 : r.x);
+  float ty = ((r.y > 0.0 ? c0.y + HR : c0.y) - q.y) / (abs(r.y) < 1e-4 ? 1e-4 : r.y);
+  float tz = DR / r.z;
+  float t = min(min(abs(tx), abs(ty)), tz);
+  vec3 h = vec3(q + r.xy * t, r.z * t);   // hit: along, height, depth
+  float room = wh(vec2(floor(q.x / (WR * 2.0)) + bld * 17.0, floor(q.y / HR) * 3.1));
+  float on = step(room, uDusk * 0.62) * step(0.08, uDusk);
+  vec3 lamp = room > 0.5 * uDusk * 0.62 ? vec3(0.92, 0.97, 1.05) : vec3(1.05, 0.86, 0.62);   // mostly tube lights; a few warm
+  float shade;
+  vec3 col;
+  float near = smoothstep(32.0, 12.0, distance(wp, cameraPosition));   // fine detail only where a pixel can hold it
+  if (t == tz) { shade = 0.42 + 0.08 * near * (wh(floor(h.xy * vec2(0.9, 2.0))) - 0.5); col = vec3(0.86, 0.84, 0.78); // back wall, a board or a shelf
+    float board = step(abs(fract(h.x / (WR * 2.0)) - 0.5), 0.22) * step(abs(fract(h.y / HR) - 0.5), 0.17);
+    col = mix(col, vec3(0.16, 0.24, 0.2), board * 0.9); }
+  else if (t == abs(ty)) { bool ceil = r.y > 0.0; shade = ceil ? 0.55 : 0.2; col = ceil ? vec3(0.9) : vec3(0.55, 0.5, 0.44);
+    if (ceil) { float tube = smoothstep(0.09, 0.0, abs(fract(h.z / 1.6) - 0.5) - 0.02) * step(0.4, fract(h.x / 1.2)); col += mix(0.55, tube * 6.0, near) * on; } }
+  else { shade = 0.32; col = vec3(0.82, 0.8, 0.74); }
+  float depthK = exp(-h.z * 0.18);
+  vec3 dark = col * shade * (0.022 + 0.03 * depthK) * (1.0 - 0.6 * uDusk);   // daylight from the window only
+  vec3 lit = col * shade * lamp * (0.55 + 0.25 * depthK);
+  vec3 c = mix(dark, lit, on);
+  // a curtain on some panes, drawn from one side; glowing when the room behind is lit
+  float cp = wh(vec2(floor(q.x / 1.1) + bld, floor(q.y / HR)));
+  if (cp < 0.32) {
+    float side = cp < 0.16 ? pane.x : 1.0 - pane.x, reach = 0.25 + 1.6 * cp;
+    float fold = 0.88 + 0.12 * near * sin(pane.x * 60.0);
+    vec3 cloth = (cp < 0.1 ? vec3(0.78, 0.86, 0.9) : vec3(0.9, 0.86, 0.76)) * fold;
+    c = mix(c, cloth * mix(0.05 * (1.0 - 0.5 * uDusk), 0.7, on), step(side, reach) * 0.92);
+  }
+  return c;
+}
 float hzSunK = 1.0;`)
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
   ${CLIP}
@@ -179,7 +220,13 @@ float hzSunK = 1.0;`)
   float hzL = hzEdgeLine(vEdge);
   vec3 ink = mix(hzInkColour(hzM, vHN, hzF), uInkLine, hzL * 0.72);
   vec3 lit = outgoingLight;
-  if (hzM == 6) lit = mix(lit, uAlb[19] * 0.35, hzL * 0.45);    // window frames
+  if (hzM == 6) {
+    // the pane: the room behind it through the glass, the sky on it at a slant (Schlick)
+    float hzCos = clamp(dot(normalize(cameraPosition - vHW), normalize(vHN)), 0.0, 1.0);
+    float hzFr = 0.04 + 0.96 * pow(1.0 - hzCos, 5.0);
+    lit = lit * mix(0.6, 1.0, hzFr) + hzRoom(vHW, vHN, vEdge.xy, vBld) * (1.0 - hzFr) * hzR;
+    lit = mix(lit, uAlb[19] * 0.35, hzL * 0.45);    // window frames
+  }
   // contact: walls darken towards the ground they stand in
   if (vHN.y < 0.5) lit *= mix(0.62, 1.0, smoothstep(0.0, 2.6, vHW.y - ${GROUND_Y.toFixed(2)}));
   lit *= 1.0 - uDimB * (hzF > 1.5 ? 0.0 : 0.16);
@@ -485,7 +532,7 @@ export function createSection(world, geo, campus, layer) {
     uCut: { value: cuts }, uLift: { value: lifts }, uFlag: { value: flags }, uDimB: { value: 0 },
     uSweepC: { value: new THREE.Vector3(0, GROUND_Y, 0) }, uSweepR: { value: 0 }, uSweepW: { value: 7 }, uSweepGlow: { value: 0 },
     uSweepCol: { value: new THREE.Vector3(...invert(hex('#f0c27a'), MAP_GRADE)).multiplyScalar(0.3) },
-    uBounce: { value: new THREE.Vector3(0, 0, 0) },
+    uBounce: { value: new THREE.Vector3(0, 0, 0) }, uDusk: { value: 0 },
     uCSMap: { value: depthTex }, uCSMat: { value: new THREE.Matrix4() }, uCSOn: { value: 0 }, uCSTexel: { value: new THREE.Vector2(1 / SIZE, 1 / SIZE) }, uCSBias: { value: 0.0005 },
     uAlb: { value: MATERIALS.map((m) => lin(m.albedo)) }, uRgh: { value: MATERIALS.map((m) => m.rough) }, uMtl: { value: MATERIALS.map((m) => m.metal) },
     uInkFloor: { value: screen(INK.floor) }, uInkTop: { value: screen(INK.top) }, uInkRoof: { value: screen(INK.roof) }, uInkWall: { value: screen(INK.wall) },
@@ -636,6 +683,8 @@ export function createSection(world, geo, campus, layer) {
       U.uCSOn.value = Math.min(1, sweepR / 40);
       // (the scene has no bounce light: the sunlit paving's warmth is given back to walls and ground in shade)
       U.uBounce.value.set(world.sun.color.r, world.sun.color.g * 0.96, world.sun.color.b * 0.84).multiplyScalar(world.sun.intensity * 0.028);
+      // dusk: the low sun's last light, and the rooms whose lights are on (lights only when the sun is low)
+      { const sy = world.sun.position.y - world.sun.target.position.y, sl = sy / Math.max(1e-6, world.sun.position.distanceTo(world.sun.target.position)); const t = Math.min(1, Math.max(0, (0.3 - sl) / 0.2)); U.uDusk.value = t * t * (3 - 2 * t); }
       if (!group.visible || sweepR <= 1) return;
       sunDir.copy(world.sun.position).sub(world.sun.target.position).normalize();
       const fk = focus && focus.r < 260 ? [Math.round(focus.x / (focus.r * 0.25)), Math.round(focus.z / (focus.r * 0.25)), Math.round(Math.log2(focus.r) * 4)].join() : 'all';

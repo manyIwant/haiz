@@ -45,6 +45,22 @@ void main(){
     float fade = smoothstep(0.0, 0.16, d.y) * (1.0 - 0.35 * exp(-h * 6.0));
     col = mix(col, cc, dens * fade * 0.88);
   }
+  // twilight opposite a low sun: the pink anti-twilight arch over the blue-grey shadow of the earth
+  float tw = smoothstep(0.30, 0.06, uSun.y);
+  if (tw > 0.0) {
+    vec3 sf = normalize(vec3(uSun.x, 0.0, uSun.z) + vec3(1e-4, 0.0, 0.0));
+    float anti = max(dot(normalize(vec3(d.x, 0.0, d.z) + vec3(1e-4, 0.0, 0.0)), -sf), 0.0);
+    float side = smoothstep(-0.15, 0.85, anti);
+    float el = asin(clamp(d.y, -1.0, 1.0)) * 57.2958;
+    float belt = smoothstep(1.5, 6.0, el) * (1.0 - smoothstep(9.0, 22.0, el));
+    float earth = 1.0 - smoothstep(0.5, 4.5, el);
+    vec3 pink = vec3(0.98, 0.64, 0.62) * (0.62 + 0.25 * dot(uHorizon, vec3(0.33)));
+    vec3 shade = vec3(0.30, 0.36, 0.52) * (0.55 + 0.4 * dot(uHorizon, vec3(0.33)));
+    col = mix(col, pink, belt * side * tw * 0.42);
+    col = mix(col, shade, earth * side * tw * 0.55 * step(-0.02, d.y));
+    // the zenith deepens towards the side away from the sun
+    col *= mix(1.0, 0.86, tw * side * smoothstep(10.0, 60.0, el));
+  }
   // below the horizon: the colour of distant water and haze
   col = mix(col, uHorizon * 0.8, smoothstep(0.0, -0.06, d.y));
   gl_FragColor = vec4(col, 1.0);

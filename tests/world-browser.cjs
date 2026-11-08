@@ -107,6 +107,10 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await page.evaluate(() => { const h = window.__haizHome; h.freeze(false); h.go(5); });
     await until(page, () => window.__haizHome.W.owner === 'hold');
     await frames(page, 2);
+    // the last frame has a few seconds to itself: no words, no buttons; then the way on fades in by itself
+    assert(await page.evaluate(() => document.body.classList.contains('wd-quiet')), '06 arrives quiet: the turn and the tree have the screen');
+    await until(page, () => !document.body.classList.contains('wd-quiet'));
+    await page.waitForTimeout(1900);
     assert(await visible(page, '.wd-hold .wd-go'), 'the way on is offered at 06');
     assert(await visible(page, '#p-whole .slab'), '06\'s own links are still there');
     await shot(page, 'film-6-hold');

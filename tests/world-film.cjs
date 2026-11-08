@@ -92,22 +92,44 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
   assert(turn < 2.5 && lens < 1, `the gaze and lens never jump (worst ${turn.toFixed(2)}°, ${lens.toFixed(2)}°)`);
   checks.push(`continuous: at 1/${N} steps the eye moves at most ${jump.toFixed(3)} m, the gaze ${turn.toFixed(2)}°, the lens ${lens.toFixed(2)}°`);
 
-  // the eye is in the head, the feet on the limb or the ground
+  // the eye is in the head (once the camera has become the person), the feet on the limb or the ground
+  const PH = F.PHASE;
   let worstEye = 0, worstFoot = 0;
   for (let i = 0; i <= N; i++) {
     const s = fwd[i], q = i / N, b = s.body;
-    if (q >= 0.2 && q < 0.82) {
-      const o = K.eyeOffset(b), r = (b.yaw * Math.PI) / 180;
-      worstEye = Math.max(worstEye, Math.hypot(s.cam.ex - (b.x + Math.sin(r) * o.fwd), s.cam.ey - (b.y + o.up), s.cam.ez - (b.z + Math.cos(r) * o.fwd)) - (q >= 0.55 && q < 0.82 ? 0.013 : 0));
+    if (q >= PH.self[0]) {
+      const e = B.film.eyeAt(b);
+      worstEye = Math.max(worstEye, Math.hypot(s.cam.ex - e[0], s.cam.ey - e[1], s.cam.ez - e[2]));
+      assert(b.firstPerson, 'first person from ' + PH.self[0]);
     }
-    if (q >= 0.47) worstFoot = Math.max(worstFoot, Math.abs(b.y - ground(b.x, b.z)));
-    else if (q < 0.355) { const lo = Math.min(limb.a[1], limb.b[1]) - 1e-9, hi = Math.max(limb.a[1], limb.b[1]) + 1e-9; assert(b.y >= lo && b.y <= hi, 'on the limb'); }
+    if (q >= PH.land[0]) worstFoot = Math.max(worstFoot, Math.abs(b.y - ground(b.x, b.z)));
+    else if (q < PH.leap[0]) { const lo = Math.min(limb.a[1], limb.b[1]) - 1e-9, hi = Math.max(limb.a[1], limb.b[1]) + 1e-9; assert(b.y >= lo && b.y <= hi, 'on the limb'); }
   }
   assert(worstEye < 1e-6, 'eye in the head ' + worstEye);
   assert(worstFoot < 1e-9, 'feet on the ground ' + worstFoot);
   // the leap comes down: the lowest point of the arc is the landing, never below it
-  for (let i = 0; i <= N; i++) { const q = i / N; if (q > 0.355 && q < 0.47) assert(fwd[i].body.y >= fx.L[1] - 1e-9, 'never below the ground in the air'); }
-  checks.push(`the body: the eye stays in the drawn head (Δ < 1e-6 m, the walking bob aside); feet on the limb (${limb.a[1].toFixed(2)}–${limb.b[1].toFixed(2)} m) then on the ground; the leap never dips below the landing`);
+  for (let i = 0; i <= N; i++) { const q = i / N; if (q > PH.leap[0] && q < PH.land[0]) assert(fwd[i].body.y >= fx.L[1] - 1e-9, 'never below the ground in the air'); }
+  checks.push(`the body: from q ${PH.self[0]} the eye stays in the drawn head (Δ < 1e-6 m, the head turned about the neck, the upper body's balance included); feet on the limb (${limb.a[1].toFixed(2)}–${limb.b[1].toFixed(2)} m) then on the ground; the leap never dips below the landing`);
+  // before that, the person is someone in the scene: the eye finds them and comes round behind them
+  {
+    let minD = Infinity, inView = 0, n = 0;
+    for (let i = Math.round(N * 0.045); i <= Math.round(N * PH.enter[0]); i++) {
+      const s = fwd[i], e = B.film.eyeAt(s.body), c = s.cam;
+      const d = [e[0] - c.ex, e[1] - c.ey, e[2] - c.ez], dl = Math.hypot(...d), g = [c.lx - c.ex, c.ly - c.ey, c.lz - c.ez], gl = Math.hypot(...g);
+      minD = Math.min(minD, dl);
+      assert(!s.body.firstPerson && s.third, 'third person while the eye finds them');
+      const cosv = (d[0] * g[0] + d[1] * g[1] + d[2] * g[2]) / dl / gl;
+      if (i >= N * 0.07) { n++; if (Math.acos(Math.min(1, cosv)) * 180 / Math.PI < c.fov * 0.5) inView++; }
+    }
+    assert(minD > 0.9, 'the camera stays outside the person until it enters (' + minD.toFixed(2) + ' m)');
+    const late = fwd[Math.round(N * 0.12)], e = B.film.eyeAt(late.body);
+    assert(inView / n > 0.7, 'the person is in the frame for most of the discovery (' + inView + '/' + n + ')');
+    checks.push(`third person first: from q 0.045 to ${PH.enter[0]} the camera stays ≥ ${minD.toFixed(2)} m from the person on the limb and has them in the frame ${inView}/${n} samples from q 0.07 (once the pan has found them); it reaches their eye at ${PH.enter[1]}`);
+    // the turn: the gaze comes round low (on the walker's own long shadow), then rises into the tree
+    const t9 = B.film.pose(0.9).cam, t1 = B.film.pose(1).cam;
+    assert(t9.pitch < -10 && t1.pitch > t9.pitch + 10, 'the gaze is low through the turn and rises to the tree');
+    checks.push(`the turn: the gaze is ${t9.pitch.toFixed(0)}° at q 0.9 (the shadow on the ground) and rises to ${t1.pitch.toFixed(1)}° at 06`);
+  }
   // beats are rests: the pose barely changes round each beat
   for (const q of F.BEATS.slice(1, -1)) {
     const a = B.film.pose(q - 0.003).cam, b = B.film.pose(q + 0.003).cam;

@@ -54,11 +54,17 @@ body.cnp-on .stage::after { background: radial-gradient(40% 30% at 0% 0%, rgba(6
 /* the caption sits where there is room, joined to its leaf by a hairline; a soft shade of air behind
    the words (not a card) keeps them readable over lit leaves */
 .cnp-mark .t { position: absolute; left: calc(var(--cx, 20px) + 7px); top: calc(var(--cy, -18px) + 7px); display: grid; gap: 1px; padding: 7px 12px 8px; white-space: nowrap; max-width: 17em;
-  background: radial-gradient(closest-side, rgba(7, 11, 9, .62), rgba(7, 11, 9, .42) 55%, rgba(7, 11, 9, 0)); border-radius: 40%;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, .75); transition: left .45s var(--ease), top .45s var(--ease), opacity .35s var(--ease); }
+  /* a small smoked tag: it frosts and darkens the lit leaves behind the words (not a white card) */
+  background: linear-gradient(170deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0) 60%), rgba(8, 13, 10, .58); border-radius: 9px;
+  box-shadow: inset 0 0 0 1px rgba(246, 241, 231, .12), 0 6px 18px rgba(0, 0, 0, .22);
+  backdrop-filter: blur(8px) saturate(.75) brightness(.72); -webkit-backdrop-filter: blur(8px) saturate(.75) brightness(.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .55); transition: left .45s var(--ease), top .45s var(--ease), opacity .35s var(--ease); }
 .cnp-mark.left .t { text-align: right; }
-.cnp-mark .t b { font: 500 14.5px/1.35 var(--serif); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; }
-.cnp-mark .t small { font-size: 11px; color: var(--ink-2); letter-spacing: .04em; }
+.cnp-mark .t b { font: 500 14.5px/1.35 var(--serif); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; color: #fbf7ee; }
+.cnp-mark .t small { font-size: 11px; color: rgba(246, 241, 231, .84); letter-spacing: .04em; }
+.cnp-mark .n { background: rgba(8, 13, 10, .5); padding: 2px 5px 3px; border-radius: 6px; }
+/* a finger needs more than the 14 px ring: an invisible 44 px target round it (and the caption is a target too) */
+@media (pointer: coarse) { .cnp-mark::before { content: ""; position: absolute; left: -15px; top: -15px; width: 44px; height: 44px; border-radius: 50%; } }
 .cnp-mark .ln { position: absolute; left: 7px; top: 7px; width: var(--ll, 0px); height: 1px; transform-origin: 0 50%; transform: rotate(var(--la, 0rad)) translateX(9px); background: linear-gradient(90deg, rgba(246, 241, 231, .75), rgba(246, 241, 231, .4)); transition: width .45s var(--ease); }
 .cnp-mark.bare .t, .cnp-mark.bare .ln { opacity: 0; pointer-events: none !important; }
 .cnp-mark.project i { border-style: dashed; }
