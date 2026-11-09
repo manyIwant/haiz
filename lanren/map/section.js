@@ -769,6 +769,7 @@ export function createSection(world, geo, campus, layer) {
     setDim(v) { U.uDimB.value = v; },
     /** the evening going on (0 … 1): more classroom lights on */
     setEvening(v) { U.uEvening.value = v; },
+    get evening() { return U.uEvening.value; },
     /** the height a building's label sits at: the top of what is standing */
     topOf(group) {
       const list = byGroup.get(group);

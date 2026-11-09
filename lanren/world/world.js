@@ -659,7 +659,7 @@ export function attachWorld(ctx) {
       if (inside && !arrived) { arrived = true; $('.wd-arrive').textContent = `已到达：${dest.name}`; say(`已到达 ${dest.name}。建筑为近似体量，不能进入。`); setTimeout(() => { $('.wd-arrive').textContent = ''; }, 4500); }
     }
   }
-  let saveAcc = 0, leafGiven = false;
+  let saveAcc = 0, leafGiven = false, evT = 0;
   const QUIET_MS = 4200;   // the last look lasts: words and the way on come after (any step hands over at once all the same)
   function tick(dt, wall) {
     const p = state.p;
@@ -677,7 +677,9 @@ export function attachWorld(ctx) {
     const quiet = !reduce && ((W.owner === 'scroll' && p > 4.9 && p < 4.995) || (holding && performance.now() - holdSince < QUIET_MS));
     body.classList.toggle('wd-quiet', quiet);
     // the evening goes on: during the long look at 06 the classrooms' lights come on, one room at a time
-    const ev = WALKING.has(W.owner) ? 1 : W.owner === 'hold' ? Math.min(1, (performance.now() - holdSince) / 9000) : 0;
+    // (on the frame clock, not the wall's: a frame-by-frame render sees the same evening)
+    evT = W.owner === 'hold' ? evT + dt : 0;
+    const ev = WALKING.has(W.owner) ? 1 : W.owner === 'hold' ? Math.min(1, evT / 9) : 0;
     map.section?.setEvening?.(reduce ? 1 : ev);
     $('.wd-hold').hidden = !holding;
     body.classList.toggle('wd-holding', holding);

@@ -109,6 +109,7 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await page.evaluate(() => { const h = window.__haizHome; h.freeze(false); h.go(5); });
     await until(page, () => window.__haizHome.W.owner === 'hold');
     await frames(page, 2);
+    const ev0 = await page.evaluate(() => window.__haizHome.map.section?.evening ?? -1);
     // the last frame has a few seconds to itself: no words, no buttons; then the way on fades in by itself
     assert(await page.evaluate(() => window.__quietSeen || document.body.classList.contains('wd-quiet')), '06 arrives quiet: the turn and the tree have the screen');
     await until(page, () => !document.body.classList.contains('wd-quiet'));
@@ -116,6 +117,9 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     await until(page, () => ['.wd-hold', '#p-whole .slab'].every((q) => +getComputedStyle(document.querySelector(q)).opacity > 0.9));
     assert(await visible(page, '.wd-hold .wd-go'), 'the way on is offered at 06');
     assert(await visible(page, '#p-whole .slab'), '06\'s own links are still there');
+    // the evening goes on while 06 is looked at: the classrooms' lights come on (on the frame clock)
+    const ev1 = await page.evaluate(() => window.__haizHome.map.section?.evening ?? -1);
+    assert(ev0 >= 0 && ev0 < 0.5 && ev1 > ev0, `the lights come on during the look at 06 (evening ${ev0.toFixed(2)} -> ${ev1.toFixed(2)})`);
     await shot(page, 'film-6-hold');
     const camBefore = await page.evaluate(() => window.__haizHome.world.camera.position.toArray());
     await page.waitForTimeout(800);
@@ -127,7 +131,7 @@ const SHOTS = process.env.SHOTS ? path.resolve(process.env.SHOTS) : null;
     const moved = Math.hypot(s.cam[0] - camBefore[0], s.cam[1] - camBefore[1], s.cam[2] - camBefore[2]);
     assert(moved < 0.05, 'handing over does not move the walker (' + moved + ' m)');
     assert(s.hash === '#walk', 'the walk is a history entry');
-    ok(`06 holds with its links; a fresh scroll past the end hands the walker over (the eye moved ${moved.toFixed(3)} m) and #walk is pushed`);
+    ok(`06 holds with its links, the classrooms' lights coming on (evening ${ev0.toFixed(2)} → ${ev1.toFixed(2)}); a fresh scroll past the end hands the walker over (the eye moved ${moved.toFixed(3)} m) and #walk is pushed`);
     await shot(page, 'walk-0-handoff');
     // the walk: real keys move, the page never scrolls, the wheel does nothing
     const y0 = s.scrollY, p0 = s.player;
