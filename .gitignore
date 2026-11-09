@@ -45,3 +45,25 @@ bootstrap-invite.txt
 backend/cloudflare/.generated/
 .dev.vars
 .dev.vars.*
+
+# Generated mobile build outputs and device-local Flutter tooling.
+# Note: ignore rules do not untrack binaries already committed to Git.
+/app/.dart_tool/
+/app/build/
+/app/coverage/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/app/android/.gradle/
+/app/ios/Pods/
+
+# Installer bundles should normally be GitHub Release assets, not new Git blobs.
+/releases/android/*.apk
+/releases/android/*.aab
+
+# Independent prototype bundler output, not its authoring source assets.
+/prototypes/haiz-world/dist/
+
+# Temporary unencoded video-frame captures (final comparison assets may still be committed).
+/docs/lanren/**/frames/
+/docs/lanren/**/raw-frames/
+
