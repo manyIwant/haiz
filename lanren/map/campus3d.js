@@ -467,7 +467,8 @@ FORMS.yihao = (P, b, w, d) => {
   }
   // the wings' roof: a red tiled hip with a white fascia (from below the fascia is what one sees: campus_yihao)
   P.box(-w / 2 - 0.6, w / 2 + 0.6, H, H + 0.5, -d / 2 - 0.6, d / 2 + 0.6, M.parapet);
-  P.hip(-w / 2 + EW - 0.5, w / 2 - EW + 0.5, -d / 2 - 0.7, d / 2 + 0.7, H + 0.5, 3.0, M.roofRed);
+  P.box(-w / 2 - 0.85, w / 2 + 0.85, H + 0.5, H + 0.72, -d / 2 - 0.85, d / 2 + 0.85, M.roofRed);   // the red tile edge seen from the ground
+  P.hip(-w / 2 + EW - 0.5, w / 2 - EW + 0.5, -d / 2 - 0.7, d / 2 + 0.7, H + 0.72, 3.0, M.roofRed);
   // the towers: dark granite to the fourth storey, one narrow window per storey, a thin stone cap
   const tTop = L.at[Math.min(f - 1, 3)] + 0.4;
   for (const sd of [-1, 1]) {

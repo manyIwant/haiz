@@ -10,7 +10,7 @@
 //      (05 looks out of the crown over the north forecourt to 北门 and 科技楼 in the sunset).
 //      06 is no longer V4's eye (since round 4): the walker stops 27 m from the tree on the
 //      line the evening shadow takes back to it, and the last frame is composed from the
-//      leaves' own point cloud so the whole tree stands in the picture (desktop: 56°, sky
+//      leaves' own point cloud so the whole tree stands in the picture (desktop: 50°, the tree centred, sky
 //      above the crown, ground and shadow below; phones: the crown's full height in a
 //      portrait lens, the limb tips allowed off the sides). 06's sun is 320° (05: 302°;
 //      it turns during the film) so the light rakes 一号教学楼's front behind the tree and
@@ -42,7 +42,7 @@ export const COMPOSITIONS = {
     // 06 (round 5): 27 m from the tree on the line the evening shadow takes back to it, framed from the leaves'
     // own point cloud so the whole tree stands in the picture (sky above the crown, the ground and the walker's
     // shadow below); phones keep the crown's full height and let the limb tips run off the sides
-    shot6: { eye: [-18.82, GROUND_Y + EYE_H, 18.56], look: [-4.04, 6.19, -0.86], fov: 56, portrait: { look: [-3.67, 1.64, -1.32], fov: 64, auth: 1 } },
+    shot6: { eye: [-18.82, GROUND_Y + EYE_H, 18.56], look: [-6.85, 5.9, -3.04], fov: 50, portrait: { look: [-3.67, 7.0, -1.32], fov: 70, auth: 1 } },
     sun6: 320
   },
   a: {

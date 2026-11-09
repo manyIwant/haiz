@@ -1,12 +1,12 @@
 {
-  "date": "2026-11-09T02:43:55.345Z",
+  "date": "2026-11-09T02:51:12.440Z",
   "checks": [
     "pure: 2001 samples forwards, backwards and by direct jump give identical eye, gaze, lens and body",
     "ends: q = 0 is V4's 05 frame exactly; q = 1 stands at the composition's own 06 eye (b: 27 m from the tree, not V4's 06), a person's eye height 1.62 m above the ground, looking at its point with its lens",
     "continuous (in the film's own 45.4 s): the eye moves at most 9.9 m/s, the gaze 116°/s, the lens 9°/s",
     "the body: from q 0.15198237885462557 the eye stays in the drawn head (Δ < 1e-6 m, the head turned about the neck, the upper body's balance included); feet on the limb (2.75–3.42 m) then on the ground; the leap never dips below the landing",
     "third person first: from q 0.045 to 0.11674008810572688 the camera stays ≥ 2.96 m from the person on the limb and has them in the frame 94/94 samples from q 0.07 (once the pan has found them); it reaches their eye at 0.15198237885462557",
-    "the turn: the gaze is -28° at q 0.9 (the shadow on the ground) and rises to 12.5° at 06",
+    "the turn: the gaze is -28° at q 0.9 (the shadow on the ground) and rises to 11.7° at 06",
     "beats 0 · 0.11674008810572688 · 0.18026431718061675 · 0.42511013215859034 · 0.8475770925110132 · 1: the scroll snaps to poses that rest (the eye moves < 0.35 m within ±0.003 of each)",
     "compositions: b clears the film's walk by 25.4 m and 06 by 29.7 m; a by 7.6 / 7.6 m; the unturned campus puts V4's 06 eye 8.6 m inside yihao (n, c)",
     "05's line of sight: as the data lies (n) yihao stands 40° above the eye 27 m away (a wall); turned (b) the highest thing on the line is keji, 18.0° above the eye at 62 m (the campus in the distance, not a wall)",

@@ -393,7 +393,7 @@ function mulberry(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = 
 // lumps around real limbs, so the light finds gaps and the silhouette is ragged, not a ball.
 export const TREE_FORM = { terminalia: 'tiered', kapok: 'kapok', banyan: 'dome', chongyang: 'oval', hongdou: 'oval', huoyan: 'oval',
   mixed: 'oval', botanic: 'oval', fengling: 'vase', shrub: 'shrub', palm: 'palm' };
-function treeGeometry(form, variant = 0) {
+function treeGeometry(form, variant = 0, lite = false) {
   const parts = [];
   const r = mulberry(31 + variant * 101 + form.length * 7);
   const add = (g, leaf, up = 0) => {
@@ -430,7 +430,7 @@ function treeGeometry(form, variant = 0) {
         add(g.translate(cc.x, cc.y, cc.z), 1, Math.min(1, Math.max(0, (cc.y - yLo) / span)));
       };
       lump(c, s, sq, 1, 0.22);
-      for (let i = 0; i < fringe; i++) {
+      for (let i = 0; i < (lite ? 0 : fringe); i++) {
         const a = r() * Math.PI * 2, e = 0.15 + r() * 0.75;
         const o = V(Math.cos(a) * Math.cos(e), Math.sin(e) * sq, Math.sin(a) * Math.cos(e)).multiplyScalar(s * 0.92);
         lump(c.clone().add(o), s * (0.28 + r() * 0.2), 0.85, 0, 0.14);
@@ -579,7 +579,8 @@ function treeDepth(U, palm) {
 }
 const TREE_TONE = { palm: '#5f7d3b', banyan: '#2f5a2c', chongyang: '#3d6532', terminalia: '#4f7a36', fengling: '#4c7a3a', kapok: '#557a3a',
   huoyan: '#4a6f30', hongdou: '#3e6634', botanic: '#43693a', shrub: '#4b7038', mixed: '#466c36' };
-function createTrees(trees, U) {
+// lite (medium and low tiers: every phone, weaker GPUs): the same crowns without the small lumps that break the outline (about half the triangles)
+function createTrees(trees, U, lite = false) {
   const out = [];
   const groups = new Map();
   for (const t of trees) {
@@ -589,7 +590,7 @@ function createTrees(trees, U) {
   }
   for (const { form, v, list } of groups.values()) {
     const palm = form === 'palm';
-    const geo = treeGeometry(form, v);
+    const geo = treeGeometry(form, v, lite);
     const mesh = new THREE.InstancedMesh(geo, treeMaterial(U, palm), list.length);
     const r = mulberry(17 + v * 13 + form.length), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Pv = new THREE.Vector3(), col = new THREE.Color();
     list.forEach((t, i) => {
@@ -673,7 +674,7 @@ export function createSection(world, geo, campus, layer) {
   ground.renderOrder = -6;   // before the water: the plan underneath is not shaded where the ground covers it
   ground.name = 'campus-ground';
   group.add(ground);
-  const trees = createTrees(geo.trees, U);
+  const trees = createTrees(geo.trees, U, (world.tier?.grass ?? 16000) <= 9000);   // medium and low tiers (every phone): lite crowns
   for (const t of trees) group.add(t.mesh);
   group.visible = false;
   scene.add(group);
