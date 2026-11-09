@@ -27,7 +27,7 @@
 
 - [打开可交互的手机网页预览](https://haiz.space/app-preview/inspect.html)（与 Flutter Android 工程共享业务 UI，网页为兼容玻璃效果）
 - [Flutter App 源码与运行说明](../app/README.md)
-- [下载 Android ARM64 光学玻璃 v2 预览 APK](../releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk)（`1.4.0-preview.4+8`）
+- [下载 Android ARM64 光学玻璃 v2 预览 APK](https://github.com/manyIwant/haiz/releases/download/haiz-pocket-v1.4-optical-v2-archive-20261109/haiz-pocket-v1.4-optical-v2-arm64.apk)（`1.4.0-preview.4+8`）
 - [消息接入的隐私和权限说明](../docs/authorized-message-intake-20261029.md)
 
 此处为开发预览版，并非学校官方 App；Android 自动收件必须由本人启用且授权，完整 QA 和实机性能测试尚未通过，不宣称稳定商用。
