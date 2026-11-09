@@ -89,7 +89,7 @@ export function attachWorld(ctx) {
     film = makeFilm(args);
     // what the walker looks at on the way, from the campus itself: a tree passed close by, 一号教学楼's
     // entrance while the pace slows, the ground ahead as the walk runs out
-    const fx = film.facts, sights = [];
+    const fx = film.facts, sights = [{ feet: true, at: [0.02, 0.17] }];   // first, a look down at one's own feet getting going
     const ax = fx.L2[0], az = fx.L2[2], bx = fx.G6[0] - ax, bz = fx.G6[2] - az, bl = Math.hypot(bx, bz) || 1;
     let best = null;
     for (const t of geo.trees || []) {

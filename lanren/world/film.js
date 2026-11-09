@@ -292,6 +292,7 @@ export function makeFilm({ e5, e6, limb, land, ground = () => GROUND_Y, sunAz = 
         for (const sg of sights) {
           const w = smoother(seg(tau, sg.at[0], sg.at[0] + 0.07)) * (1 - smoother(seg(tau, sg.at[1] - 0.07, sg.at[1])));
           if (w <= 0) continue;
+          if (sg.feet) { pt += (-80 + 2) * w; b.lean = 0.04 * w; continue; }   // one's own feet, stepping: head down, a little forward
           const dx = sg.p[0] - e0[0], dz = sg.p[2] - e0[2];
           const rel = wrap(yawOf(dx, dz) - b.yaw);
           const reach = 1 - smooth((Math.abs(rel) - 80) / 25);   // past a person's turn of the head: let it go

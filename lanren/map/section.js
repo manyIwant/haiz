@@ -584,7 +584,7 @@ function createTrees(trees, U, lite = false) {
   const out = [];
   const groups = new Map();
   for (const t of trees) {
-    const form = TREE_FORM[t.kind] || 'oval', v = (t.v ?? 0) % 3, key = form + v;
+    const form = TREE_FORM[t.kind] || 'oval', v = lite ? 0 : (t.v ?? 0) % 3, key = form + v;   // lite: one variant per form (7 batches, not 21)
     if (!groups.has(key)) groups.set(key, { form, v, list: [] });
     groups.get(key).list.push(t);
   }
