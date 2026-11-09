@@ -1,36 +1,24 @@
 {
-  "date": "2026-11-09T03:36:36.713Z",
+  "date": "2026-11-09T04:38:16.554Z",
   "results": [
     {
-      "name": "04 → 05: the campus rises with the scroll (u 0.54 half-way) and stands whole at 05; nothing of it before 04",
+      "name": "phone 390×844: no overflow; the step at 06 offers turning sideways (declinable); a real touch drag on the left walks 1.19 m; map and menu are buttons",
       "ok": true
     },
     {
-      "name": "05 → 06 film: at 10 points the camera is exactly the film's camera (the walker's eye once it has entered the head) and the drawn body the film's body; scrolling back gives the same frames (Δ < 1e-6 m)",
+      "name": "Back from the walk returns to 06",
       "ok": true
     },
     {
-      "name": "06 holds with its links, the classrooms' lights coming on (evening 0.02 → 0.03); a fresh scroll past the end hands the walker over (the eye moved 0.000 m) and #walk is pushed",
+      "name": "a reload in the walk lands at 06 with “回到上次站的地方”",
       "ok": true
     },
     {
-      "name": "walk: W moved the walker 0.41 m; the wheel moved nothing and the page stayed put; walking 6 s at 一号教学楼 stops 0.32 m from its wall",
+      "name": "composition a: campus at 05 0, at 06 1; the walk starts where the film ends",
       "ok": true
     },
     {
-      "name": "M opens the pocket map at once (no camera move) and Esc closes it",
-      "ok": true
-    },
-    {
-      "name": "the full 04 opens from the walker's spot (the campus folds to the plan, the spot is marked) and returns to the same spot with the campus standing",
-      "ok": true
-    },
-    {
-      "name": "menu: hiding the interface leaves a handle; B hides the body on its own; back to 06 flies there and offers the way back to the spot",
-      "ok": true
-    },
-    {
-      "name": "from 06 the scroll goes back into the film (the walk no longer has the input)",
+      "name": "composition c: campus at 05 0, at 06 0; the walk had to move the walker out of 一号教学楼 (原来的位置在建筑体量里，已移到最近的空地（9.0 m）。现在由你来走。WASD 移动，拖动环顾，M 地图，Esc 菜单。)",
       "ok": true
     }
   ],
