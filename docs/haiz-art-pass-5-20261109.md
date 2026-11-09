@@ -188,6 +188,7 @@ python3 -m http.server 8080
   - 构图 B 的行走路线离建筑 25.4 m，06 离建筑 29.7 m。
 - `campus-model`：一号楼按 `ownData` 的 6 层检查占地、高度、闭合实体、剖切与碰撞。
 - `campus-map`、`lanren`、`roots`、`canopy`。
+- 没有运行：`map.cjs`（旧漫游页的小地图）依赖 `@napi-rs/canvas`，容器里没有安装，测试无法启动；本轮没有改动它测试的文件。
 
 **浏览器（Chromium + SwiftShader）**：
 - `world-browser` 构图段（第四轮未跑）**通过**：
