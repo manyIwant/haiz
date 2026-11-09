@@ -1,35 +1,53 @@
-# haiz.space · 树荫与气候评审版
+# HAIZ · 快速开始
 
-本版本尚未部署到 haiz.space，原站未修改。
+欢迎来到 HAIZ：一个从榄仁树出发的海南中学府城校区**非官方**数字校园创作项目。
 
-## 在电脑查看
+**无需安装应用：[打开 haiz.space](https://haiz.space)**。网站包含交互式校园杂志、六幕三维树与地图，以及独立的数字创作工具。
 
-解压完整 ZIP，在此文件所在文件夹运行：
+## 第一次来，建议这样看
+
+1. 打开 [首页](https://haiz.space)；滚动进入 01–06 幕。六幕共用同一棵树和连续空间，并非独立视频。
+2. 在 02 幕观看树干上的校史；在 03 幕探索树冠中的作品叶位。演示作品属于**明确标注的虚构开发样本**，不代表真实学生投稿。
+3. 04 幕可以查看校园总平面与三维建筑；05–06 幕进入人物电影，再通过交互进入校园漫游。
+4. 继续浏览 [校园杂志](journal.html)、[共感暗房](darkroom.html) 和 [独立课间窗台](windowsill/)。
+
+**版本提醒：** 2026-11-09 的 `main` 有六幕基础整合；正在精修的美术分支可能包含还没有进入主分支、也没有发布上线的画面。网站的建筑为近似创作模型，不是官方测绘或校园实景替代。
+
+## 在本机运行静态网站
 
 ```bash
-python3 -m http.server 8080
+git clone https://github.com/manyIwant/haiz.git
+cd haiz
+python3 -m http.server 8000
 ```
 
-浏览器打开 http://localhost:8080/campus-3d.html 。当前版本也可以直接双击 `campus-3d.html` 打开；页面会使用内置校园空间快照，避免浏览器拦截本地 JSON。用本地服务器仍然更适合完整资源加载。先点击“开始漫游”，再点右上角“暂停”，可以：
+打开 <http://localhost:8000/>。建议使用支持 WebGL 的现代桌面浏览器；省电设备、软件渲染和手机实际表现可能不同。第一次打开 3D 时可能需要加载本地模型与纹理。
 
-- 开始“树荫下的三次停留”：北门 → 一号楼前榄仁树 → 砚池。
-- 选择“晨光 / 雨后 / 薄暮”。这些是模拟环境，不是当前天气。
-- 行走中按 WASD 或环顾可接管；Esc 暂停。
+站点无需强制编译步骤；但 `lanren/` 的部分静态输出由脚本生成，修改源码时按相关设计文档和 `package.json` 的命令构建、验证。
 
-无需三维的阅读入口：http://localhost:8080/memory-walk.html 。直接双击三维页面时使用内置空间数据与生成材质；HTTP 模式可加载完整扫描材质和环境光照，建议使用以上本地服务器方式。
-
-本轮新增：暂停面板中的“建筑观察镜头”；靠近一号楼、二号楼、科学馆、凤栖堂后按 E 可查看照片对照；砚池附近在精细或均衡模式可显示建筑倒影，轻量模式自动关闭。
-
-## 开发与回退
-
-基于 main 提交 c8ca4aa9621cb55fce130aa1fda4a741e9a9b8a7。新增实现独立于线上版本；可将本目录作为评审分支，验证后再合并，不能直接覆盖稳定站点。
+## 运行开发测试
 
 ```bash
 npm ci
-npm run build
 npm test
+npm run test:browser
 ```
 
-实际变更与测试边界：docs/memory-climate-review.md。
+浏览器测试需要 Playwright/Chromium 环境。构建和测试通过不等于硬件设备、Safari、真实账号生产环境都已经验收。
 
-现有照片沿用原项目，来源和授权状态见地点档案。模型仍有近似尺寸，路线只经模型验证。浏览器画面、真机性能与现场空间关系尚待核对。
+## 不同子项目的入口
+
+| 项目 | 文档 / 页面 | 注意事项 |
+| --- | --- | --- |
+| 六幕树与校园 | [README](README.md) · [lanren/](lanren/) | 共享空间与相机；主分支和美术分支版本不同 |
+| 独立 Node 后端 | [backend/README](backend/README.md) | GitHub Pages **不能运行** Node + SQLite 登录服务；公开站点不等于服务端已经上线 |
+| Flutter Pocket | [app/README](app/README.md) | 安卓安装包见 [GitHub Releases](https://github.com/manyIwant/haiz/releases)，不要误装过时预览版 |
+| 课间窗台 | [windowsill/SOURCE](windowsill/SOURCE.md) | 独立 AGPL-3.0 应用，与其他页面不同许可范围 |
+| 技术与美术记录 | [docs/](docs/) · [DESIGN.md](DESIGN.md) | 先阅读当前设计，旧实施进度可能过时 |
+
+## 权利、真实性与安全边界
+
+HAIZ 不是学校的官方平台；学校照片、历史资料、外部模型、字体和原创代码有不同的权利声明，详见 [LICENSING.md](LICENSING.md)。创建真实学生作品时，应先满足作者授权、审核与隐私保护要求。
+
+如果只是来体验校园，请从 [网站首页](https://haiz.space) 开始；如果准备协作开发，请先检查 `main`、目前的开发分支和 [仓库治理记录](docs/REPOSITORY-GOVERNANCE-20261109.md)，不要覆盖正在精修的六幕。
+
