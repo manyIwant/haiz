@@ -121,7 +121,7 @@ ${LIFT}`)
 ${NOISE}
 ${SHARED}
 uniform vec3 uAlb[${NM}]; uniform float uRgh[${NM}]; uniform float uMtl[${NM}];
-uniform float uFlag[${NB}]; uniform float uDimB; uniform float uDusk;
+uniform float uFlag[${NB}]; uniform float uDimB; uniform float uDusk; uniform float uEvening;
 uniform vec3 uInkFloor, uInkTop, uInkRoof, uInkWall, uInkGlass, uInkGlassFace, uInkPoche, uInkPocheGlass, uInkLine, uInkSel, uRealPoche;
 uniform vec2 uInkLight;
 varying vec3 vHW; varying vec3 vHN; varying vec4 vEdge; varying float vMat; varying float vBld; varying float vCutY; varying float vHYo;
@@ -168,7 +168,8 @@ vec3 hzRoom(vec3 wp, vec3 n, vec2 pane, float bld){
   vec3 h = vec3(q + r.xy * t, r.z * t);   // hit: along, height, depth
   // (by position on the wall only: two buildings' panes that meet in one plane must agree)
   float room = wh(vec2(floor(q.x / (WR * 2.0)) + 0.37, floor(q.y / HR) * 3.1 + floor(dot(wp, N) + 0.5) * 0.71));
-  float on = step(room, uDusk * 0.62) * step(0.08, uDusk);
+  // how many rooms are lit: the dusk, and how far the evening has gone on (lights come on one room at a time)
+  float on = step(room, uDusk * 0.62 * (0.4 + 0.6 * uEvening)) * step(0.08, uDusk);
   vec3 lamp = room > 0.5 * uDusk * 0.62 ? vec3(0.92, 0.97, 1.05) : vec3(1.05, 0.86, 0.62);   // mostly tube lights; a few warm
   float shade;
   vec3 col;
@@ -648,7 +649,7 @@ export function createSection(world, geo, campus, layer) {
     uCut: { value: cuts }, uLift: { value: lifts }, uFlag: { value: flags }, uDimB: { value: 0 },
     uSweepC: { value: new THREE.Vector3(0, GROUND_Y, 0) }, uSweepR: { value: 0 }, uSweepW: { value: 7 }, uSweepGlow: { value: 0 },
     uSweepCol: { value: new THREE.Vector3(...invert(hex('#f0c27a'), MAP_GRADE)).multiplyScalar(0.3) },
-    uBounce: { value: new THREE.Vector3(0, 0, 0) }, uDusk: { value: 0 },
+    uBounce: { value: new THREE.Vector3(0, 0, 0) }, uDusk: { value: 0 }, uEvening: { value: 1 },
     uCSMap: { value: depthTex }, uCSMat: { value: new THREE.Matrix4() }, uCSOn: { value: 0 }, uCSTexel: { value: new THREE.Vector2(1 / SIZE, 1 / SIZE) }, uCSBias: { value: 0.0005 },
     uAlb: { value: MATERIALS.map((m) => lin(m.albedo)) }, uRgh: { value: MATERIALS.map((m) => m.rough) }, uMtl: { value: MATERIALS.map((m) => m.metal) },
     uInkFloor: { value: screen(INK.floor) }, uInkTop: { value: screen(INK.top) }, uInkRoof: { value: screen(INK.roof) }, uInkWall: { value: screen(INK.wall) },
@@ -765,6 +766,8 @@ export function createSection(world, geo, campus, layer) {
     get sweepR() { return sweepR; },
     setFlags(hover, selected) { for (const b of model.buildings) flags[b.index] = b.group === selected ? 2 : b.group === hover ? 1 : 0; },
     setDim(v) { U.uDimB.value = v; },
+    /** the evening going on (0 … 1): more classroom lights on */
+    setEvening(v) { U.uEvening.value = v; },
     /** the height a building's label sits at: the top of what is standing */
     topOf(group) {
       const list = byGroup.get(group);

@@ -596,7 +596,7 @@ async function start3D() {
     // the film, the walker, the pocket map and the menu share the map's campus (same frame, same model)
     if (map && !life) {
       import('../world/world.js').then((m) => {
-        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params, transitOn: () => !!transit });
+        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params, transitOn: () => !!transit, sound });
       }).catch((err) => console.warn('walk unavailable', err));
     }
   };

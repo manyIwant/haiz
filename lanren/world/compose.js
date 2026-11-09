@@ -6,12 +6,18 @@
 // round the tree (a building stands within 40 m in every direction), so no composition
 // keeps both V4 shots *and* an open horizon; each gives something up:
 //
-//   b  (default) the campus turned 90° about the tree's root. Both V4 cameras are kept
-//      exactly; 05 looks out of the crown over the north forecourt to 北门 and 科技楼 in
-//      the sunset, 06 stands in the garden lane and looks back at the tree with 一号教学楼
-//      behind it. What changes: the campus's bearing in V4's world (V4 had none: its
-//      suns are art-directed per shot, campus "north" is unverified), so chapter 04's plan
-//      is drawn with north to the left. The tree keeps its exact place on the campus.
+//   b  (default) the campus turned 90° about the tree's root. V4's 05 camera is kept exactly
+//      (05 looks out of the crown over the north forecourt to 北门 and 科技楼 in the sunset).
+//      06 is no longer V4's eye (since round 4): the walker stops 27 m from the tree on the
+//      line the evening shadow takes back to it, and the last frame is composed from the
+//      leaves' own point cloud so the whole tree stands in the picture (desktop: 56°, sky
+//      above the crown, ground and shadow below; phones: the crown's full height in a
+//      portrait lens, the limb tips allowed off the sides). 06's sun is 320° (05: 302°;
+//      it turns during the film) so the light rakes 一号教学楼's front behind the tree and
+//      lays the walker's shadow on the trunk. What changes besides: the campus's bearing in
+//      V4's world (V4 had none: its suns are art-directed per shot, campus "north" is
+//      unverified), so chapter 04's plan is drawn with north to the left. The tree keeps
+//      its exact place on the campus.
 //   a  the campus as the data lays it (north up in 04). 05 is V4 exactly with the campus
 //      still beneath the water; it rises while the body drops to the ground; 06 is a new
 //      eye in the north forecourt (V4's 06 eye is inside 一号教学楼), the sun moved with it.
@@ -29,14 +35,14 @@ export const GROUND_Y = -0.85;
 
 export const COMPOSITIONS = {
   b: {
-    id: 'b', title: 'B · 校园绕树转 90°', short: '保留 V4 第五、六幕两个机位；校园在第五幕已是立体',
+    id: 'b', title: 'B · 校园绕树转 90°', short: '保留 V4 第五幕机位；第六幕为距树 27 m 的新回望（整棵树入画）；校园在第五幕已是立体',
     rotation: 90 * D2R,
     // the campus rises while the camera comes down from the map into the crown (04 → 05)
     rise: [3.08, 3.88],
-    // 06: closer to the tree than V4's eye (21 m, on the line the evening shadow takes back to it), so the
-    // crown is the picture and 一号教学楼 is its ground; the sun a little further round (320°, from 302° in 05)
-    // rakes the facade instead of flooding it, and lays the walker's shadow straight towards the trunk
-    shot6: { eye: [-14.85, GROUND_Y + EYE_H, 14.85], look: [0.6, 7.2, -0.2], fov: 54 },
+    // 06 (round 5): 27 m from the tree on the line the evening shadow takes back to it, framed from the leaves'
+    // own point cloud so the whole tree stands in the picture (sky above the crown, the ground and the walker's
+    // shadow below); phones keep the crown's full height and let the limb tips run off the sides
+    shot6: { eye: [-18.82, GROUND_Y + EYE_H, 18.56], look: [-4.04, 6.19, -0.86], fov: 56, portrait: { look: [-3.67, 1.64, -1.32], fov: 64, auth: 1 } },
     sun6: 320
   },
   a: {

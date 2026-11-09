@@ -100,6 +100,19 @@ export class Soundscape {
     this._burst(0.05 * k, 1500, 0.35 + 0.2 * k, 3600 + Math.random() * 1200);
   }
   land() { this._burst(0.012, 900, 0.07, 2500); }
+  /** a footstep: a soft thump and a scuff (bark is lower and woodier than stone paving) */
+  step(surface = 'stone', k = 1) {
+    if (!this.on || !this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime, bark = surface === 'bark';
+    const s = ctx.createBufferSource(); s.buffer = this.white;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = bark ? 260 : 420;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.09 * k, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + (bark ? 0.13 : 0.09));
+    s.connect(lp).connect(g).connect(this.master); s.start(t, Math.random() * 2, 0.16);
+    this._burst((bark ? 0.006 : 0.012) * k, bark ? 600 : 1400, bark ? 0.08 : 0.11, bark ? 1500 : 2800 + Math.random() * 600);
+  }
+  /** the body arriving on the ground after a jump */
+  thud(k = 1) { this.step('stone', 2.4 * k); this._burst(0.02 * k, 300, 0.25, 900); }
   catch() {
     if (!this.on || !this.ctx) return;
     const ctx = this.ctx, t = ctx.currentTime;

@@ -32,7 +32,7 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
   const ground = (x, z) => (Math.abs(x) < 8.5 && Math.abs(z) < 8.5 ? -0.2 : G + 0.02);
   const anchors = tree.anchors;
   const onLimb = (t) => { const a = anchors.limbDip, b = anchors.limbEnd; return a.map((v, i) => v + (b[i] - v) * t + (i === 1 ? 0.24 : 0)); };
-  const limb = { a: onLimb(0.12), b: onLimb(0.62) };
+  const limb = { a: onLimb(0.12), b: onLimb(0.9) };   // as world.js (LEAP.t)
 
   function build(id) {
     const compose = CO.COMPOSITIONS[id];
@@ -77,7 +77,7 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
   near(wrap(p1.yaw - fx.y6), 0, 1e-6, '06 yaw'); near(p1.pitch, fx.p6, 1e-6, '06 pitch'); near(p1.fov, B.e6.fov, 1e-9, '06 lens');
   const look6 = [p1.lx - p1.ex, p1.ly - p1.ey, p1.lz - p1.ez], want6 = [B.e6.lx - p1.ex, B.e6.ly - p1.ey, B.e6.lz - p1.ez];
   assert((look6[0] * want6[0] + look6[1] * want6[1] + look6[2] * want6[2]) / Math.hypot(...look6) / Math.hypot(...want6) > 1 - 1e-9, '06 looks at what V4 06 looks at');
-  checks.push(`ends: q = 0 is V4's 05 frame exactly; q = 1 stands at V4's 06 eye (x, z), a person's eye height ${K.EYE.toFixed(2)} m above the ground (V4: ${(B.f5 && CH.shot(5).ey - G).toFixed(2)} m), looking at the same point with the same lens`);
+  checks.push(`ends: q = 0 is V4's 05 frame exactly; q = 1 stands at the composition's own 06 eye (b: 27 m from the tree, not V4's 06), a person's eye height ${K.EYE.toFixed(2)} m above the ground, looking at its point with its lens`);
 
   // continuity
   let jump = 0, turn = 0, lens = 0, at = 0;
@@ -88,9 +88,11 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
     turn = Math.max(turn, Math.abs(wrap(b.yaw - a.yaw)), Math.abs(b.pitch - a.pitch));
     lens = Math.max(lens, Math.abs(b.fov - a.fov));
   }
-  assert(jump < 0.25, `the eye never jumps (worst ${jump.toFixed(3)} m per 1/${N} at q ${at})`);
-  assert(turn < 2.5 && lens < 1, `the gaze and lens never jump (worst ${turn.toFixed(2)}°, ${lens.toFixed(2)}°)`);
-  checks.push(`continuous: at 1/${N} steps the eye moves at most ${jump.toFixed(3)} m, the gaze ${turn.toFixed(2)}°, the lens ${lens.toFixed(2)}°`);
+  // limits in the film's own time (film.js FILM_SECONDS): at most ~13 m/s for the eye, ~130°/s for the gaze, ~50°/s for the lens
+  const dtStep = F.FILM_SECONDS / N;
+  assert(jump / dtStep < 13, `the eye never jumps (worst ${(jump / dtStep).toFixed(1)} m/s at q ${at})`);
+  assert(turn / dtStep < 130 && lens / dtStep < 50, `the gaze and lens never jump (worst ${(turn / dtStep).toFixed(0)}°/s, ${(lens / dtStep).toFixed(0)}°/s)`);
+  checks.push(`continuous (in the film's own ${F.FILM_SECONDS.toFixed(1)} s): the eye moves at most ${(jump / dtStep).toFixed(1)} m/s, the gaze ${(turn / dtStep).toFixed(0)}°/s, the lens ${(lens / dtStep).toFixed(0)}°/s`);
 
   // the eye is in the head (once the camera has become the person), the feet on the limb or the ground
   const PH = F.PHASE;
