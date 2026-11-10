@@ -4,7 +4,7 @@
 
 **HAIZ** 是学生独立创作的**海南中学府城校区非官方数字校园**。从一棵可生长的三维榄仁树出发，把校史、学生创作、校园地图和第一人称探索组织成一段连续的空间体验；项目也包含原创互动工具和 HAIZ Pocket 学生应用。
 
-**[在线体验](https://haiz.space)** · [快速开始](START-HERE.md) · [设计共识](DESIGN.md) · [版权与素材边界](LICENSING.md)
+**[在线体验](https://haiz.space)** · [快速开始](START-HERE.md) · [设计共识](DESIGN.md) · [版权与素材边界](LICENSING.md) · [商业合作联系](COMMERCIAL-LICENSING.md)
 
 **非官方声明：** HAIZ 不代表海南中学或学校的官方信息服务。校园模型根据公开影像与有限空间资料创作，是近似表达，不能替代测绘或现场验证；第三方影像与素材保留原作者权利。
 
@@ -67,7 +67,9 @@ Flutter、Node 后端和独立原型拥有各自的开发或构建流程；对�
 
 ## 许可证、真实性与验证
 
-本仓库含原创代码、独立 AGPL 子项目、其他开源依赖和受第三方版权约束的校园照片与素材。**仓库公开并不意味着其中所有文件都可自由复制和重新分发。** 请先阅读 [LICENSING.md](LICENSING.md) 和相应子目录的 LICENSE / NOTICE。
+**自有原创代码：** [PolyForm Noncommercial 1.0.0](LICENSE)，在[明确适用范围](LICENSING.md)内允许非商业学习、研究、修改与分发。超出该协议范围的商业使用须事先联系版权人，详见 [商业合作授权](COMMERCIAL-LICENSING.md)。这是 **source-available（源码可用）**，而不是 OSI 定义的开放商业使用的开源许可。
+
+**原创美术：** 采用[逐项核实、明确标注的 CC BY-NC-SA 4.0 机制](ARTWORK-LICENSING.md)；未完成版权核验的现有素材**尚未自动获得**该许可。已有 AGPL、MIT、CC0、CC BY 等第三方许可保持不变，学生作品仍归创作者。完整说明请阅读 [LICENSING.md](LICENSING.md)。欢迎按 [CONTRIBUTING.md](CONTRIBUTING.md) 参与共创。
 
 软件渲染截图、模拟手机视口和 Node 测试不能代替真实设备 GPU、Safari 或完整生产环境的验收。创作设定、近似模型与实证资料应当明确区分。
 
