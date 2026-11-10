@@ -49,3 +49,18 @@
 ## 42 项 PR 的分类及关闭记录
 
 详见 [逐项 PR 审查清册](REPOSITORY-PR-TRIAGE-20261109.md)。其中 19 项为后继 Draft PR 已完整包含其提交的早期中间审查入口，23 项保留原状态。关闭早期 PR 时，所有对应 HEAD/base 分支继续保留。
+
+## 本轮操作结果（后续核实）
+
+- 已删除 9 条经提交祖先关系核对、未被开放 PR 引用的远程临时分支，原始 SHA 见本文件上表。
+- 已关闭 19 个其 HEAD 已完整包含在后继 PR HEAD 中的旧 Draft PR；每项关闭均保留了说明与后继链接、允许重新打开，原 head/base 分支不删除。剩余开放 PR 约 23 项。完整清单见 [PR 逐项审计](REPOSITORY-PR-TRIAGE-20261109.md)。
+- 已完成旧 APK 迁移并更新文档引用；**服务器 Git 历史仍包含旧 APK**，当前移除只减小最新文件树。
+- 运行时模型、PWA 构建和独立 Vite 原型没有被盲目删除。
+- **Git 历史尚未重写或压缩**，因为仍有未合并 PR 的祖先关系和多个有效功能分支；进行全量历史压缩前应先构建完整 mirror（含 blob）并保留远程备份。
+
+## 完整独立原型迁移（已验证）
+
+- 原 `prototypes/haiz-world/` 包含 940 个 Git 跟踪文件和约 264.8 MiB 当前 Blob。迁至 [manyIwant/haiz-world-prototype](https://github.com/manyIwant/haiz-world-prototype)，保留全部文件，新仓库增加 MIGRATION.md。
+- 本地原始内容与新仓库导入完成后的 Git tree 哈希完全一致。四组关键 Node 测试合计 32/32 通过。迁移了 v3-transaction GitHub Actions，旧仓库相应 CI 删除以免重复运行。
+- 主站六幕、Flutter 应用和其他运行时资源未迁移。旧 Git 历史仍完整，无法声称已减少服务器历史存储。
+- 旧路径的外部书签可能失效；新仓库独立运行说明和来源见 MIGRATION.md。

@@ -97,3 +97,8 @@
 - 正式为原创代码选择许可（需要权利人决定，不能由仓库治理者擅自重新授权）。
 - Android APK 迁至 Releases 并在确认引用完整后从当前版本移除；必要时对大原型资源做分包。
 - 真机验证整合六幕、网页部署、Flutter / Android 分发与性能。
+
+
+### 2026-11-09 大型资源迁移补记
+
+旧 APK 已转 GitHub Releases，完整的 HAIZ WORLD 独立原型已迁往 [单独仓库](https://github.com/manyIwant/haiz-world-prototype)。上述目录体积属于迁移前基线；详情见 [大型仓库清理记录](REPOSITORY-LARGE-CLEANUP-20261109.md)。
