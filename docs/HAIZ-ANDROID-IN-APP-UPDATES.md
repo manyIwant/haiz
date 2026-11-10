@@ -19,7 +19,7 @@ APK 包名固定为 `space.haiz.app.preview`，没有修改 ID。
 
 ## 已核验的旧版兼容性
 
-仓库归档 `releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk`
+[GitHub Releases 历史预览归档](https://github.com/manyIwant/haiz/releases/tag/haiz-pocket-v1.4-optical-v2-archive-20261109)（原仓库路径 `releases/android/haiz-pocket-v1.4-optical-v2-arm64.apk`；现已移出当前 Git 文件树，SHA-256 `f19666eb4874eb570855f1e43c4797302389890a1a1cbbef7406ba09d2d12fc2`）
 实际包名是 `space.haiz.app.preview`，`versionCode=2008`，
 签名 SHA-256 为
 `FEC8D3962D1D35CF6A975722734DA7D525E166421994C5D175AB71FC3C89D169`。
