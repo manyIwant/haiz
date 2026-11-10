@@ -1,0 +1,9 @@
+{
+  "packageId": "space.haiz.app.preview",
+  "versionName": "1.5.5",
+  "versionCode": 2105,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.5/HAIZ-Pocket-Android.apk",
+  "sha256": "568b3c5f71f275c3d733cd086a59a934b56ec466cf6101ed5ca53818f76767c4",
+  "sizeBytes": 109932630,
+  "notes": "欢迎页新增登录、注册入口及确认密码和邮箱验证引导；保留灯光动效与访客模式；同步包含最新 Pocket OCR 功能。真实账号邮件投递与云同步仍需验收。"
+}

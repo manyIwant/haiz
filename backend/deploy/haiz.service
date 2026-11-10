@@ -1,0 +1,27 @@
+[Unit]
+Description=HAIZ backend
+After=network.target
+
+[Service]
+Type=simple
+User=haiz
+Group=haiz
+WorkingDirectory=/opt/haiz
+EnvironmentFile=/etc/haiz.env
+ExecStart=/usr/bin/node /opt/haiz/backend/server.mjs
+Restart=on-failure
+RestartSec=3
+# Allow HTTP drain and the backup verifier (up to 120s) to finish.
+# A forced stop after five minutes may leave an unpublished .tmp snapshot;
+# previously completed backups remain available.
+TimeoutStopSec=300
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=haiz
+ReadWritePaths=/var/lib/haiz
+
+[Install]
+WantedBy=multi-user.target

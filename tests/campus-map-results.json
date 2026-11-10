@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "frame: the walk's plan transform reproduced for all 34 footprints; 百年榄仁树 (49.098, −78.098) → world origin; round trip exact; 1 m = 1 m; ground y = V4 water -0.85",
+    "landmarks relative to the tree: 一号教学楼 (-34.9, 24.5) 西南 43 m; 图书馆 (60.0, 14.5) 东 62 m; 凤栖堂 (-74.3, -38.0) 西北 83 m; 砚池 (9.5, 140.5) 南 141 m; 北门 (-36.1, -80.5) 西北 88 m; 太湖石 (-38.6, -0.5) 西 39 m",
+    "47 features drawn from the data (34 footprints, 11 paths, 2 courts); 26 places with the data's words, 23 project photos (all present), walk links to campus-3d.html?focus=<id>",
+    "arrival field 249×233 (2.5 m): 0 at the roots, rising outwards, faster along paths than through buildings",
+    "reveal: fronts move only outwards, lines lead the ground, T=0 is V4, T=1 is the campus; the 04 frame (arrival ≤ 0.1) is ground by T = 0.9",
+    "palette: 24 colours authored as seen, inverted through V4's ACES + Finish grade at chapter 04 (worst 0.00/255; the two water inks within 12/255)",
+    "camera: the default map view is exactly chapter 04 (landscape and phone), hands back the same direction; top view keeps target and ground scale (dolly zoom); zoom keeps the point under the cursor",
+    "history hashes: #map (the shot) · #map/<oblique|top> (the plan) · #map/<view>/<place>"
+  ]
+}

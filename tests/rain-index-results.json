@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-20T06:47:38.493Z",
+  "passed": true,
+  "roofComparisons": 21000,
+  "spatialIndex": {
+    "queries": 21000,
+    "tests": 81291,
+    "cells": 675
+  },
+  "stationaryFrames": 240,
+  "additionalStationaryQueries": 0,
+  "movingFrames": 180,
+  "exactRainBuffers": true,
+  "limits": "Exact rotated-footprint algorithm parity, not physical roof accuracy or hardware FPS."
+}

@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-07T04:39:28.088Z",
+  "checks": [
+    "pure: 2001 samples forwards, backwards and by direct jump give identical eye, gaze, lens and body",
+    "ends: q = 0 is V4's 05 frame exactly; q = 1 stands at V4's 06 eye (x, z), a person's eye height 1.62 m above the ground (V4: 1.95 m), looking at the same point with the same lens",
+    "continuous: at 1/2000 steps the eye moves at most 0.087 m, the gaze 1.10°, the lens 0.20°",
+    "the body: the eye stays in the drawn head (Δ < 1e-6 m, the walking bob aside); feet on the limb (2.75–3.18 m) then on the ground; the leap never dips below the landing",
+    "beats 0 · 0.2 · 0.55 · 0.82 · 1: the scroll snaps to poses that rest (the eye moves < 0.35 m within ±0.003 of each)",
+    "compositions: b clears the film's walk by 23.4 m and 06 by 32.4 m; a by 7.6 / 7.6 m; the unturned campus puts V4's 06 eye 8.6 m inside yihao (n, c)",
+    "05's line of sight: as the data lies (n) yihao stands 32° above the eye 27 m away (a wall); turned (b) the highest thing on the line is keji, 18.0° above the eye at 62 m (the campus in the distance, not a wall)",
+    "collision: walking at 一号教学楼 stops 0.32 m from its (padded) wall and slides 5.0 m along it; a spot inside it is moved 14.5 m to free ground",
+    "turned campus (b, 90°): 18 buildings share centre, size and rotation with the plan's features; bridges stay in their footprints; frame round trip exact; the tree stays at the root; 一号教学楼 is still 西南 of the tree, 42.6 m (campus terms); north is heading 270°",
+    "campus beyond 04: b plan in 01–04, rises 04 → 05 (monotonic), stands in 05/06; a campus left standing in 04 stays standing and sinks only on the way back to 03; a stands before the landing; c only for the walk",
+    "skeleton: eye 1.62 m standing, 1.26 m in a full crouch; walking keeps the hips within 8 cm (the stance foot stays on the ground)",
+    "ownership: scroll→hold · hold→play · play→pocket · pocket→play · play→map · map→scroll; every owner says whether the page scrolls, what the wheel means, who has the touches and V4's camera"
+  ]
+}

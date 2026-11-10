@@ -1,0 +1,13 @@
+{
+  "results": [
+    "native scroll to 03 青春 · 生长 activates the details shot (#leaves), growth 0.50",
+    "path navigator station walks to 05 日子 · 创作 (looking forward)",
+    "End key walks to 06 工具 · 全部 in full leaf",
+    "a falling leaf is caught, annotated and kept in the book",
+    "entry click draws the veil and navigates to news.html",
+    "returning restores the details shot (03) and the book (1 leaf)",
+    "static fallback lists all 18 entries as a readable page",
+    "phone 390×844: no horizontal overflow, true proportions under the lens shift, tier low"
+  ],
+  "renderer": "Chromium + SwiftShader (software); not a hardware frame-rate measurement"
+}

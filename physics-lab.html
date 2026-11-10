@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173d35">
+<meta name="description" content="HAIZ 学习实验室：原作者 Techartist 的 Every Joule 十课 3D 物理互动教材，直接由作者官网加载。">
+<title>Every Joule 原版 · HAIZ 物理实验室</title>
+<link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC",sans-serif;color:#183a31;background:#ece9df}
+*{box-sizing:border-box}body{margin:0}a,button{font:inherit}a{color:inherit}button{cursor:pointer}a:focus-visible,button:focus-visible{outline:3px solid #c68e56;outline-offset:3px}
+.shell{max-width:1920px;margin:0 auto;padding:0 24px 22px}
+.bar{height:70px;display:flex;gap:20px;align-items:center;justify-content:space-between;border-bottom:1px solid #c7c9bd}
+.brand{font:700 23px/1 Georgia,serif;letter-spacing:-1px;text-decoration:none;white-space:nowrap}
+.brand span{color:#c58a53}.nav{display:flex;align-items:center;gap:18px;font-size:12px}.nav a{text-decoration:none;border-bottom:1px solid currentColor;padding:5px 0}.nav .secondary{color:#6c786f}
+.heading{padding:25px 0 18px;display:flex;gap:20px;justify-content:space-between;align-items:end}
+.overline{font-size:10px;letter-spacing:.18em;color:#986847;font-weight:700}
+.heading h1{font:normal clamp(28px,3.5vw,51px)/1.12 Georgia,"Songti SC",serif;letter-spacing:-.045em;margin:7px 0}
+.heading p{font-size:12px;line-height:1.7;color:#62756b;margin:0}
+.actions{display:flex;align-items:center;justify-content:end;flex-wrap:wrap;gap:9px}
+.action{min-height:40px;text-decoration:none;border-radius:999px;padding:11px 17px;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;border:1px solid #1f4a3e;background:#1f4a3e;color:white;white-space:nowrap}
+.action:hover{background:#416b5e}.action.ghost{background:transparent;color:#1f4a3e}
+.viewer{position:relative;overflow:hidden;background:#19241f;border-radius:14px;border:1px solid #8ca199;box-shadow:0 18px 44px #15281b25}
+.frame{display:block;width:100%;height:calc(100dvh - 254px);min-height:580px;border:0;background:#1e2926}
+.viewer:fullscreen{border:0;border-radius:0}.viewer:fullscreen .frame{height:100dvh;min-height:0}
+.fallback{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 17px;background:#f5f1e7;border-top:1px solid #c9d0c7;font-size:12px;color:#65766c}
+.fallback a{color:#21513e;font-weight:700;text-underline-offset:3px}
+.meta{display:flex;justify-content:space-between;gap:18px;align-items:start;padding:19px 1px 0;color:#718076;font-size:11px;line-height:1.8}
+.meta p{margin:0;max-width:850px}
+.meta strong{color:#244c3c}.meta a{color:#244c3c}
+@media(max-width:900px){.shell{padding:0 12px 16px}.bar{height:59px}.nav{gap:12px}.heading{display:block;padding:21px 4px 14px}.actions{justify-content:start;margin-top:18px}.frame{height:calc(100dvh - 297px);min-height:450px}.fallback{align-items:start;flex-direction:column;gap:6px}.meta{display:block}.meta p+p{margin-top:10px}}
+@media(max-width:470px){.heading h1{font-size:29px}.nav .secondary{display:none}.action{padding:10px 13px}.frame{min-height:420px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="bar"><a class="brand" href="index.html" aria-label="返回 HAIZ 首页">haiz<span>.</span>space</a><nav class="nav" aria-label="学习实验室导航"><a href="journal.html">校园手记</a><a class="secondary" href="physics-lab-practice.html">HAIZ 原创练习</a><a href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">原作者官网 ↗</a></nav></header>
+<main>
+<section class="heading">
+<div><span class="overline">ORIGINAL INTERACTIVE EDITION / AUTHOR-HOSTED</span><h1>Every Joule · 原版互动教材</h1><p>Techartist 创作的 3D 物理课本 · 十课内容、翻页、模型、测验与教师资料均由原作者网站提供。</p></div>
+<div class="actions"><button class="action ghost" id="fullscreen" type="button">全屏体验 ⛶</button><a class="action" href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">在作者官网打开完整原版 ↗</a></div>
+</section>
+<div class="viewer" id="viewer">
+<iframe class="frame" title="Every Joule · Techartist 原版 3D 互动教材" src="https://iamtechartist.com/Apps/every-joule/" allow="fullscreen; autoplay; gamepad" allowfullscreen loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<div class="fallback"><span>如果原版未显示、画面无法操作或浏览器禁止跨站嵌入，请在新标签页打开作者官网（需要 WebGL / 图形加速）。</span><a href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">直接打开原版 →</a></div>
+</div>
+</main>
+<footer class="meta">
+<p><strong>作品署名与版权：</strong>Every Joule © 2026 Techartist。此页面通过 iframe 访问原作者公开网址，教材中的代码、3D 模型、图片与音效均由 Techartist 的服务器提供，HAIZ 未复制、下载、分发或修改这些文件。该教材不属于 HAIZ 作品；原站控制其提供和展示的内容。</p>
+<p><a href="physics-lab-practice.html">HAIZ 自制十课简化练习 ↗</a></p>
+</footer>
+</div>
+<script>
+(function(){
+ const button=document.getElementById('fullscreen');
+ const viewer=document.getElementById('viewer');
+ if(!viewer.requestFullscreen){button.hidden=true;return;}
+ button.addEventListener('click',async function(){
+  try{if(document.fullscreenElement)await document.exitFullscreen();else await viewer.requestFullscreen();}
+  catch(error){button.textContent='可在作者官网全屏体验';}
+ });
+ document.addEventListener('fullscreenchange',function(){button.textContent=document.fullscreenElement?'退出全屏 ×':'全屏体验 ⛶';});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-18T05:54:45.443Z",
+  "passed": true,
+  "checks": [
+    "desktop paper-first layout: no WebGL, models or audio before gesture",
+    "safe Unicode notes persist; real letter text download",
+    "actual deadline-based timer completes, pauses and resets",
+    "real two-level WAV decoded: genuine RMS envelope, visual, keyboard Escape, memory release, no fingerprint persistence",
+    "invalid audio rejected without fake playback",
+    "all six tools usable at 320, 390 and 768 CSS pixels without horizontal overflow",
+    "real local Three r170 scene: four glTF models, schema-checked integration, rain preset and no hidden continuous render",
+    "unload releases WebGL frame; clearing storage is not undone on pagehide",
+    "WebGL-disabled fallback leaves all paper tools usable",
+    "actual touch events change scene view; sound only unlocks from an explicit button and can be stopped",
+    "actual high-quality GTAO, depth-of-field and local glass shader pipeline renders"
+  ],
+  "scene": {
+    "revision": "170",
+    "quality": "low",
+    "paused": true,
+    "suspended": false,
+    "reduced": true,
+    "frames": 1,
+    "drawCalls": 643,
+    "triangles": 1105009,
+    "sound": false,
+    "focus": null,
+    "view": 0,
+    "models": 4
+  },
+  "localEnvelope": {
+    "early": 0.07448738813400269,
+    "late": 0.9931504130363464,
+    "duration": 2
+  },
+  "externalRequests": [],
+  "errors": [],
+  "limitations": "Headless Chromium with software WebGL; responsive behavior is tested, not real-device FPS or photogrammetric fidelity."
+}

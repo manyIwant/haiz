@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-07T09:26:20.680Z",
+  "results": [
+    {
+      "name": "composition a: campus at 05 0, at 06 1; the walk starts where the film ends",
+      "ok": true
+    },
+    {
+      "name": "composition c: campus at 05 0, at 06 0; the walk had to move the walker out of 一号教学楼 (原来的位置在建筑体量里，已移到最近的空地（9.0 m）。现在由你来走。WASD 移动，拖动环顾，M 地图，Esc 菜单。)",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

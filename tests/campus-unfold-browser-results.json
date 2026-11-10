@@ -1,0 +1,17 @@
+{
+  "when": "2026-11-06T20:40:36.847Z",
+  "renderer": "Chromium + SwiftShader (software)",
+  "checks": [
+    "the plan is a site plan: all 26 buildings of the model wait whole beneath it (nothing of the model drawn, no storey cut); 18 of them share position, size and rotation with the footprints the plan draws (Δ < 1e-6 m)",
+    "展开为三维 (real click): 7 frames, u rises monotonically 0 → 1, the camera leaves from the plan's own position and travels 344 m along one continuous path (no cut); every building has risen out of its own footprint whole (walls and roof, no cut); material front 459 m from the tree; hash #map/3d",
+    "in 3D a drag turns the campus (yaw 34° → 68°, target kept), a right-drag pans, the wheel zooms (135 → 52 m) and the page stays at 04",
+    "a real tap on 图书馆 in 3D opens its sheet (#map/3d/library); 2F cuts it 1.2 m above its second floor (y 4.69) while the rest stands whole; the sheet states the interior is inferred",
+    "Esc closes the sheet (building whole again); 收回为平面 folds the campus back into the site plan: every building sinks whole into its footprint, #map/oblique, the plan look of chapter 04",
+    "browser Forward unfolds the campus again, Back folds it: the same film both ways",
+    "on the site plan, a storey is an optional look at one building: 图书馆 2F rises out of its footprint already cut at its second floor while the rest stays a site plan; 总平面 sends it back",
+    "from the campus in 3D, 继续 · 05 folds it back, the water closes and the walk continues to 05; the model is hidden and V4's water untouched (#days)",
+    "the deep link #map/3d/library opens the campus in 3D with the library's sheet; Back steps down: sheet → 3D → plan",
+    "reduced motion: the change is 0.7 s of animation by design and completes (43.8 s of wall time here, at about one software-rendered frame per second); nothing is skipped",
+    "phone 390×844: 展开为三维 sits clear of the other controls; a tap unfolds the campus; a tap on 图书馆 opens its sheet (library); no horizontal overflow"
+  ]
+}

@@ -1,0 +1,134 @@
+/* Chapter 02 · 根脉 — words beside the bark, a finder read upwards, a paper sheet.
+   No glass panels in the climb: type sits on the picture's own shade. */
+.roots { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+/* while the history plays, the frame becomes a film's: a thin letterbox */
+.roots::before, .roots::after { content: ""; position: absolute; left: 0; right: 0; height: 7.5vh; background: #050706; transform: scaleY(0);
+  transition: transform 1.1s var(--ease); }
+.roots::before { top: 0; transform-origin: top; }
+.roots::after { bottom: 0; transform-origin: bottom; }
+body.roots-on .roots::before, body.roots-on .roots::after { transform: none; }
+
+/* ------------------------------------------------------------ the words beside the lit bark */
+.roots-cap { position: absolute; left: var(--pad); bottom: max(calc(var(--bottom) + 18px), calc(7.5vh + 20px)); width: min(620px, 52vw);
+  opacity: 0; transform: translateY(15px); transition: opacity .7s var(--ease), transform .7s var(--ease); text-shadow: 0 1px 18px rgba(4, 8, 6, .55); }
+.roots-cap.on { opacity: 1; transform: none; pointer-events: auto; }
+.roots-cap > .roots-year, .roots-cap > .roots-title { display: inline; }
+.roots-year { margin: 0; font: 400 clamp(34px, 3.2vw, 46px)/1 var(--display); letter-spacing: .01em; color: var(--ink); }
+.roots-year::after { content: ""; display: inline-block; width: clamp(28px, 4vw, 64px); height: 1px; margin: 0 16px 0 18px; vertical-align: .32em; background: rgba(246, 241, 231, .55); }
+.roots-title { margin: 0; font: 500 clamp(18px, 1.55vw, 23px)/1.4 var(--serif); letter-spacing: .12em; white-space: nowrap; }
+.roots-lead { max-width: 34em; }
+.roots-lead { margin: 14px 0 0; font-size: 14.5px; line-height: 1.8; color: var(--ink-2); max-width: 30em; }
+.roots-meta { margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.roots-grade { font-size: 11px; letter-spacing: .14em; color: var(--ink-2); padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; text-shadow: none; }
+.roots-grade[data-grade="record"] { border-color: rgba(190, 214, 176, .55); color: #d9e8cf; }
+.roots-grade[data-grade="single"], .roots-grade[data-grade="site"], .roots-grade[data-grade="official"] { border-color: rgba(236, 217, 174, .5); color: var(--gold); }
+.roots-grade[data-grade="inferred"] { border-color: rgba(190, 206, 226, .55); color: #d6e1ef; }
+.roots-grade[data-grade="gap"], .roots-grade[data-grade="memory"] { border-style: dashed; }
+.roots-open { border: 0; background: none; padding: 6px 0; font-size: 13px; letter-spacing: .12em; color: var(--ink);
+  border-bottom: 1px solid rgba(246, 241, 231, .5); }
+.roots-open::after { content: " →"; transition: margin .3s var(--ease); }
+.roots-open:hover::after { margin-left: 4px; }
+
+/* ------------------------------------------------------------ the finder: the trunk, read upwards */
+.roots-find { position: absolute; right: calc(var(--pad) + 4px); top: max(17vh, 112px); bottom: calc(var(--bottom) + 170px);
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px; opacity: 0; transition: opacity .6s var(--ease); }
+body.roots-on .roots-find { opacity: 1; pointer-events: auto; }
+body.roots-on .rail { opacity: 0; }
+.roots-find-head { margin: 0; display: flex; gap: 8px; align-items: baseline; font-size: 10.5px; letter-spacing: .2em; color: var(--ink-3); }
+.roots-find-head b { font: 400 22px/1 var(--display); color: var(--ink-2); letter-spacing: 0; }
+.roots-find ol { position: relative; flex: 1; min-height: 0; list-style: none; margin: 0; padding: 0 0 0 0; display: flex; flex-direction: column-reverse; justify-content: space-between; }
+/* the trunk line, and how far up it the walk has come */
+.roots-find ol::before, .roots-find ol::after { content: ""; position: absolute; right: 3px; bottom: 0; width: 1px; background: rgba(246, 241, 231, .24); }
+.roots-find ol::before { top: 0; }
+.roots-find ol::after { height: calc(var(--climb, 0) * 100%); background: var(--gold); transition: height .2s linear; }
+.roots-find li { display: flex; justify-content: flex-end; }
+.roots-find button { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 2px 0; color: var(--ink-3);
+  font: 400 15px/1 var(--display); letter-spacing: .02em; text-shadow: 0 1px 10px rgba(4, 8, 6, .6); }
+.roots-find button span { transition: transform .4s var(--ease), color .3s; }
+.roots-find button i { order: 2; width: 7px; height: 1px; background: currentColor; transition: width .4s var(--ease); }
+.roots-find button:hover, .roots-find button:focus-visible { color: var(--ink); }
+.roots-find button[aria-current] { color: var(--ink); font-size: 19px; }
+.roots-find button[aria-current] i { width: 16px; background: var(--gold); }
+.roots-find-tools { margin: 4px 0 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.roots-find-tools button { border: 0; background: none; padding: 3px 0; font-size: 11.5px; letter-spacing: .14em; color: var(--ink-2); border-bottom: 1px solid rgba(246, 241, 231, .3); text-shadow: 0 1px 10px rgba(4, 8, 6, .6); }
+.roots-find-tools button:hover { color: var(--ink); border-color: var(--ink-2); }
+
+/* ------------------------------------------------------------ reading: a sheet of paper beside the tree */
+html.roots-reading { overflow: hidden; scrollbar-gutter: stable; }
+.roots-sheet { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(560px, 94vw); height: 100%; max-height: 100%; max-width: none;
+  padding: 0; border: 0; background: var(--paper); color: var(--charcoal); box-shadow: -24px 0 80px rgba(4, 8, 6, .32); overflow: hidden; }
+.roots-sheet[open] { animation: roots-in .25s var(--ease); }
+.roots-sheet::backdrop { background: rgba(6, 10, 8, .22); }
+@keyframes roots-in { from { transform: translateX(24px); opacity: 0; } }
+.roots-s-in { height: 100%; overflow: auto; overscroll-behavior: contain; padding: clamp(28px, 4vw, 52px) clamp(22px, 3.4vw, 46px) 40px; }
+.roots-close { position: absolute; top: 18px; right: 20px; z-index: 1; border: 1px solid rgba(41, 46, 42, .22); background: var(--paper); color: var(--charcoal);
+  border-radius: 999px; padding: 6px 14px; font-size: 12px; letter-spacing: .14em; }
+.roots-close:hover { background: #ece6da; }
+.roots-sheet :focus-visible { outline-color: #a4533e; }
+.roots-s-year { margin: 0; font: 400 56px/1 var(--display); color: var(--green); }
+.roots-sheet h2 { margin: 10px 0 0; font: 500 26px/1.4 var(--serif); letter-spacing: .08em; outline: none; }
+.roots-s-grade { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; font-size: 12.5px; color: #626e62; }
+.roots-s-grade b { font-weight: 600; font-size: 11px; letter-spacing: .16em; padding: 2px 9px; border-radius: 999px; background: #e6e9df; color: var(--green); }
+.roots-s-grade[data-grade="single"] b, .roots-s-grade[data-grade="site"] b { background: #f1e5cc; color: #7a5323; }
+.roots-s-grade[data-grade="inferred"] b { background: #e2e8ef; color: #34495e; }
+.roots-s-grade[data-grade="gap"] b, .roots-s-grade[data-grade="memory"] b { background: transparent; border: 1px dashed #8a8f84; color: #4f564f; }
+.roots-sheet figure { margin: 24px 0 0; }
+.roots-sheet figure img { display: block; width: 100%; height: auto; border-radius: 12px; background: #e9e4d8; }
+.roots-sheet figcaption { margin-top: 8px; font-size: 12px; line-height: 1.7; color: #626e62; }
+.roots-s-body { margin-top: 20px; }
+.roots-s-body p { margin: 0 0 14px; font: 15.5px/1.9 var(--serif); }
+.roots-sheet h4 { margin: 26px 0 8px; font-size: 11px; letter-spacing: .22em; color: #626e62; font-weight: 600; }
+.roots-src { list-style: none; margin: 0; padding: 0; font-size: 13px; line-height: 1.65; }
+.roots-src li { padding: 9px 0; border-top: 1px solid rgba(41, 46, 42, .12); }
+.roots-src a { color: var(--green); text-decoration-color: rgba(41, 63, 54, .35); text-underline-offset: 3px; }
+.roots-src small { display: block; margin-top: 2px; color: #7c857a; font-size: 11.5px; }
+.roots-s-links { margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.roots-s-links a { text-decoration: none; font-size: 13px; padding: 7px 14px; border-radius: 999px; background: var(--green); color: var(--paper); }
+.roots-s-links a:hover { background: #1d2e27; }
+.roots-s-step { margin: 34px 0 0; padding-top: 16px; border-top: 1px solid rgba(41, 46, 42, .16); display: flex; justify-content: space-between; gap: 10px; }
+.roots-s-step button { border: 0; background: none; padding: 6px 0; font: 400 18px/1 var(--display); color: var(--charcoal); }
+.roots-s-step button[data-step="list"] { font: 12px/1 var(--sans); letter-spacing: .16em; color: #626e62; }
+.roots-s-step button:disabled { opacity: 0; pointer-events: none; }
+.roots-s-list { list-style: none; margin: 26px 0 0; padding: 0; }
+.roots-s-list button { width: 100%; text-align: left; display: grid; grid-template-columns: 7.4em 1fr; grid-template-rows: auto auto; column-gap: 14px; border: 0;
+  border-top: 1px solid rgba(41, 46, 42, .12); background: none; padding: 14px 4px; color: var(--charcoal); }
+.roots-s-list button:hover { background: #efe9dd; }
+.roots-s-list span { grid-row: 1 / 3; font: 400 19px/1.25 var(--display); color: var(--green); }
+.roots-s-list b { font: 500 15px/1.5 var(--serif); letter-spacing: .06em; }
+.roots-s-list small { font-size: 11.5px; color: #7c857a; }
+.roots-s-note { margin: 24px 0 0; font-size: 12px; line-height: 1.8; color: #7c857a; }
+
+/* ------------------------------------------------------------ phones: words and years at the bottom, a sheet from below */
+@media (max-width: 760px) {
+  .roots::before, .roots::after { display: none; }
+  .roots-cap { left: 16px; right: 16px; width: auto; bottom: calc(var(--bottom) + 100px); }
+  .roots-year { font-size: clamp(30px, 9vw, 38px); }
+  .roots-year::after { width: 20px; margin: 0 10px 0 12px; }
+  .roots-title { font-size: 16px; white-space: normal; }
+  .roots-lead { font-size: 13px; line-height: 1.75; }
+  .roots-meta { margin-top: 10px; }
+  .roots-find { left: 0; right: 0; top: auto; bottom: var(--bottom); flex-direction: row; align-items: center; gap: 0; padding: 0 0 0 16px; }
+  .roots-find-head { display: none; }
+  .roots-find ol { flex: 1; flex-direction: row; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x;
+    padding: 6px 4px 8px; -webkit-mask: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 18px), transparent); mask: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 18px), transparent); }
+  .roots-find ol::-webkit-scrollbar { display: none; }
+  .roots-find ol::before, .roots-find ol::after { display: none; }
+  .roots-find button { padding: 8px 9px; font-size: 16px; min-height: 36px; border-radius: 999px; }
+  .roots-find button i { display: none; }
+  .roots-find button[aria-current] { font-size: 16px; background: rgba(246, 241, 231, .14); }
+  .roots-find-tools { flex-direction: row; gap: 0; margin: 0; padding-right: 10px; }
+  .roots-find-tools .roots-list { display: none; }
+  .roots-find-tools button { border: 0; font-size: 12px; padding: 10px 8px; letter-spacing: .06em; }
+  body.roots-on .growth { opacity: 0; }
+  .roots-sheet { inset: auto 0 0 0; width: 100%; height: 90svh; max-height: 90svh; border-radius: 16px 16px 0 0; box-shadow: 0 -18px 60px rgba(4, 8, 6, .35); }
+  @keyframes roots-in { from { transform: translateY(32px); opacity: 0; } }
+  .roots-s-in { padding: 26px 18px calc(28px + env(safe-area-inset-bottom)); }
+  .roots-close { top: 12px; right: 12px; }
+  .roots-s-year { font-size: 44px; }
+  .roots-sheet h2 { font-size: 21px; }
+  .roots-s-list button { grid-template-columns: 6em 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roots-cap, .roots-find { transition: none; }
+  .roots-sheet[open] { animation: none; }
+}

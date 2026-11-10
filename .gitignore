@@ -1,0 +1,69 @@
+# 开发过程备份与临时文件（不进仓库）
+data/backup/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node（如果有）
+node_modules/
+
+# 构建产物
+dist/
+build/
+# This is a vendored browser dependency, not a project build-output folder.
+!windowsill/vendor/three/build/
+!windowsill/vendor/three/build/three.module.js
+*.log
+
+# Real-browser screenshots are generated locally by npm run test:browser.
+tests/artifacts/
+
+# Generated audit data; never commit live acceptance environment details.
+production-acceptance-output/
+
+# Self-hosted OCR vendor binaries are generated from pinned packages during CI.
+app/web/ocr/
+
+# HAIZ private runtime state and local credentials
+/.haiz-data/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+operator-invite-*.txt
+bootstrap-invite.txt
+.wrangler/
+.build/
+backend/cloudflare/.generated/
+.dev.vars
+.dev.vars.*
+
+# Generated mobile build outputs and device-local Flutter tooling.
+# Note: ignore rules do not untrack binaries already committed to Git.
+/app/.dart_tool/
+/app/build/
+/app/coverage/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/app/android/.gradle/
+/app/ios/Pods/
+
+# Installer bundles should normally be GitHub Release assets, not new Git blobs.
+/releases/android/*.apk
+/releases/android/*.aab
+
+# Independent prototype bundler output, not its authoring source assets.
+/prototypes/haiz-world/dist/
+
+# Temporary unencoded video-frame captures (final comparison assets may still be committed).
+/docs/lanren/**/frames/
+/docs/lanren/**/raw-frames/
+

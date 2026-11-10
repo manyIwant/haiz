@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>课间窗台 · haiz 校园</title>
+    <meta
+      name="description"
+      content="把便签、专注时钟、给未来的信与本机留声，放进一扇可以亲手探索的想象之窗。"
+    />
+    <meta name="theme-color" content="#f3efe6" />
+    <link rel="icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="vendor/voice-note/voice-note.css?v=12" />
+    <link rel="stylesheet" href="app.css?v=12" />
+    <script defer src="core.js?v=12"></script>
+    <script defer src="vendor/voice-note/voice-note.js?v=12"></script>
+    <script defer src="app.js?v=12"></script>
+  </head>
+  <body>
+    <a class="skip" href="#tools">跳到课间工具</a>
+    <header class="site-head">
+      <a class="wordmark" href="../journal.html"
+        >haiz<span>一隅校园，一点日常。</span></a
+      >
+      <nav aria-label="页面导航">
+        <a href="../campus-3d.html">走进校园 ↗</a
+        ><a href="../darkroom.html">共感暗房 ↗</a
+        ><a href="source.html">原作与源码</a>
+      </nav>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="pageTitle">
+        <div>
+          <p class="eyebrow">AN INTERLUDE, BY THE WINDOW / 课间实验 03</p>
+          <h1 id="pageTitle">留一扇窗，<em>给课间。</em></h1>
+        </div>
+        <p class="intro-note">
+          桌上的每件小事，都可以亲手打开。<br />写一句话，读两页书，让声音长成一株嫩芽。<span
+            >窗外海岸是想象场景，不是府城校区实景。</span
+          >
+        </p>
+      </section>
+      <div class="desk-grid">
+        <section class="scene-shell" aria-label="可选的三维书桌">
+          <div class="scene" id="sceneStage">
+            <div class="poster" id="scenePoster">
+              <img
+                src="scene-preview.jpg"
+                width="800"
+                height="900"
+                alt="由本地三维场景实际渲染的木质书桌、书本与窗外海岸"
+                fetchpriority="high"
+              />
+              <div class="poster-shade"></div>
+              <div class="poster-copy">
+                <span class="eyebrow">A SMALL PLACE TO STAY</span>
+                <h2>把日常，放在光里。</h2>
+                <p>
+                  拖动看向窗外，轻点物件走近。<br />手机与电脑，都有自己的课间。
+                </p>
+                <button id="startScene" class="button primary">
+                  推开这扇窗 <span aria-hidden="true">↗</span></button
+                ><small>点击后才加载 3D · 声音默认关闭</small>
+              </div>
+            </div>
+            <div class="scene-slot" id="sceneSlot"></div>
+          </div>
+          <div class="scene-bottom">
+            <p id="sceneStatus" role="status">
+              纸面工具现在就能用，不需要开启 3D。
+            </p>
+            <div class="scene-options">
+              <label for="sceneQuality"
+                >画质
+                <select id="sceneQuality">
+                  <option value="low">轻盈</option>
+                  <option value="balanced">均衡</option>
+                  <option value="high">精细</option>
+                </select></label
+              ><button id="unloadScene" class="text-button" hidden>
+                收起 3D
+              </button>
+            </div>
+          </div>
+          <fieldset class="weather-choices">
+            <legend>给窗外换一束光 <span>想象气候 · 非实时天气</span></legend>
+            <button data-preset="morning" aria-pressed="true">01 晴日</button
+            ><button data-preset="rain" aria-pressed="false">02 雨幕</button
+            ><button data-preset="dusk" aria-pressed="false">03 黄昏</button
+            ><button data-preset="night" aria-pressed="false">04 入夜</button>
+          </fieldset>
+          <p class="scene-caption">
+            <span>↳ 物件即入口</span> 便签可以改写，书可以翻页。开启 3D
+            后，也可以点桌上的物件找到它们。
+          </p>
+        </section>
+        <section class="workbench" id="tools" aria-labelledby="toolsTitle">
+          <div class="bench-heading">
+            <p class="eyebrow">YOUR LITTLE DESK</p>
+            <h2 id="toolsTitle">今天，想留下一点什么？</h2>
+          </div>
+          <nav class="object-list" aria-label="课间工具">
+            <button data-tool="notes" aria-pressed="true">
+              <img
+                src="vendor/fanfan/cat-star.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>窗边便签<small>01 / 留一句</small></span>
+            </button>
+            <button data-tool="focus" aria-pressed="false">
+              <img
+                src="vendor/fanfan/cat-clock.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>专注片刻<small>02 / 慢一点</small></span>
+            </button>
+            <button data-tool="letter" aria-pressed="false">
+              <img
+                src="vendor/fanfan/cat-mail.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>寄给未来<small>03 / 写一封</small></span>
+            </button>
+            <button data-tool="audio" aria-pressed="false">
+              <img
+                src="vendor/fanfan/cat-music.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>课间留声<small>04 / 听见你</small></span>
+            </button>
+            <button data-tool="book" aria-pressed="false">
+              <img
+                src="vendor/fanfan/cat-book.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>窗边共读<small>05 / 翻两页</small></span>
+            </button>
+            <button data-tool="jar" aria-pressed="false">
+              <img
+                src="vendor/fanfan/cat-coffee.svg"
+                alt=""
+                width="32"
+                height="32"
+              /><span>灵感小罐<small>06 / 换个想法</small></span>
+            </button>
+          </nav>
+          <div class="panels">
+            <section
+              class="tool-panel"
+              data-panel="notes"
+              aria-labelledby="notesTitle"
+            >
+              <p class="panel-kicker">01 — NOTES TO SELF</p>
+              <h3 id="notesTitle">树影会动，话可以留下。</h3>
+              <p id="noteRules" class="muted">
+                每张 40 字，仅存本机。打开 3D 后，纸上的字也会一起更新。
+              </p>
+              <div class="sticky-list">
+                <label
+                  >第一张<textarea
+                    id="note0"
+                    rows="2"
+                    maxlength="80"
+                    aria-describedby="noteRules"
+                  ></textarea></label
+                ><label
+                  >第二张<textarea
+                    id="note1"
+                    rows="2"
+                    maxlength="80"
+                    aria-describedby="noteRules"
+                  ></textarea></label
+                ><label
+                  >第三张<textarea
+                    id="note2"
+                    rows="2"
+                    maxlength="80"
+                    aria-describedby="noteRules"
+                  ></textarea>
+                </label>
+              </div>
+              <p class="save-state" id="saveState" role="status">
+                只属于这个浏览器的小纸条。
+              </p>
+            </section>
+            <section
+              class="tool-panel"
+              data-panel="focus"
+              hidden
+              aria-labelledby="focusTitle"
+            >
+              <p class="panel-kicker">02 — TIME, UNHURRIED</p>
+              <h3 id="focusTitle">一次，只留给一件小事。</h3>
+              <p class="muted">
+                不统计效率，不计算排名。切到后台仍按实际时间计时，回到页面可查看结果。
+              </p>
+              <div class="timer-presets" role="group" aria-label="选择计时长度">
+                <button data-minutes="2" aria-pressed="false">歇 2 分钟</button
+                ><button data-minutes="5" aria-pressed="false">5 分钟</button
+                ><button data-minutes="15" aria-pressed="false">15 分钟</button
+                ><button data-minutes="25" aria-pressed="true">25 分钟</button>
+              </div>
+              <output id="timerReadout" class="timer" aria-label="剩余时间"
+                >25:00</output
+              >
+              <div class="button-row">
+                <button class="button primary" id="timerToggle">
+                  开始这一小段</button
+                ><button class="button" id="timerReset">重新开始</button>
+              </div>
+              <p class="muted" id="timerStatus" role="status">
+                由你按下开始，没有自动播放的铃声。
+              </p>
+            </section>
+            <section
+              class="tool-panel"
+              data-panel="letter"
+              hidden
+              aria-labelledby="letterTitle"
+            >
+              <p class="panel-kicker">03 — DEAR FUTURE ME</p>
+              <h3 id="letterTitle">给下一次打开这里的自己。</h3>
+              <label class="field" for="futureLetter"
+                >这封信不会寄往服务器。<textarea
+                  id="futureLetter"
+                  rows="8"
+                  maxlength="1200"
+                  placeholder="今天路过的那片树影，我想记住……"
+                ></textarea>
+              </label>
+              <div class="letter-meta">
+                <span id="letterCount">0 / 600 字</span
+                ><span>本机保存 · 可下载带走</span>
+              </div>
+              <div class="button-row">
+                <button class="button primary" id="downloadLetter">
+                  把信装进口袋 ↓</button
+                ><button class="text-button" id="clearLetter">
+                  清空这封信
+                </button>
+              </div>
+            </section>
+            <section
+              class="tool-panel"
+              data-panel="audio"
+              hidden
+              aria-labelledby="audioTitle"
+            >
+              <p class="panel-kicker">04 — LET SOUND GROW</p>
+              <h3 id="audioTitle">让一段声音，长成嫩芽。</h3>
+              <p class="muted">
+                选择你自己的录音或音乐，波形随真实响度展开。不上传、不录麦克风、不自动转写。
+              </p>
+              <label class="file-field" for="audioFile"
+                >选择本机声音 <small>音频文件 · 最多 20 MiB / 3 分钟</small
+                ><input
+                  id="audioFile"
+                  type="file"
+                  accept="audio/*,.wav,.mp3,.m4a,.ogg,.flac,.webm" /></label
+              ><label class="field" for="audioCaption"
+                >你想配上的文字 <small>不是自动识别的字幕</small
+                ><textarea
+                  id="audioCaption"
+                  rows="2"
+                  maxlength="480"
+                  placeholder="这一阵风，来自我经过的地方。"
+                ></textarea>
+              </label>
+              <div class="button-row">
+                <label for="audioShape"
+                  >形状
+                  <select id="audioShape">
+                    <option value="sprout">嫩芽</option>
+                    <option value="clover">四叶草</option>
+                    <option value="star">星星</option>
+                    <option value="flower">小花</option>
+                  </select></label
+                ><button class="button" id="audioVisual" disabled>
+                  打开声音画布 ↗</button
+                ><button class="text-button" id="audioClear" disabled>
+                  移除声音
+                </button>
+              </div>
+              <div id="voiceSlot" data-vn-scope></div>
+              <p class="muted" id="audioStatus" role="status">
+                声音只在当前页面内存中使用，离开页面即释放。
+              </p>
+            </section>
+            <section
+              class="tool-panel"
+              data-panel="book"
+              hidden
+              aria-labelledby="bookTitle"
+            >
+              <p class="panel-kicker">05 — TWO PAGES, FOR YOU</p>
+              <h3 id="bookTitle">窗边校园小书</h3>
+              <label class="field" for="bookChapter"
+                >选一章
+                <select id="bookChapter">
+                  <option value="0">光沿瓦沟慢慢走</option>
+                  <option value="1">课间，也可以什么都不做</option>
+                  <option value="2">寄给下一次打开这里的你</option>
+                </select></label
+              >
+              <div class="book-pages">
+                <p id="bookLeft"></p>
+                <p id="bookRight"></p>
+              </div>
+              <a class="underlink" href="../architecture.html"
+                >带着这两页，去看真实建筑照片 ↗</a
+              >
+            </section>
+            <section
+              class="tool-panel"
+              data-panel="jar"
+              hidden
+              aria-labelledby="jarTitle"
+            >
+              <p class="panel-kicker">06 — A TINY POSSIBILITY</p>
+              <h3 id="jarTitle">今天，试一件很小的新事。</h3>
+              <blockquote id="promptText"></blockquote>
+              <button class="button primary" id="newPrompt">
+                从罐子里再抽一张 ↺
+              </button>
+              <p class="muted">
+                原创观察提示，不是随机生成的校史或真实聊天记录。
+              </p>
+              <a class="underlink" href="../darkroom.html"
+                >把灵感放进共感暗房 ↗</a
+              >
+            </section>
+          </div>
+        </section>
+      </div>
+      <section class="afterword" aria-labelledby="afterTitle">
+        <p class="eyebrow">SOME THINGS ARE BETTER LEFT LOCAL</p>
+        <h2 id="afterTitle">不必被看见，也值得被留下。</h2>
+        <p>
+          便签与信存在你的浏览器；声音只在当前页面内存中。没有账号、健康数据、AI
+          聊天或后台上传。浏览器清理数据后，本机内容也会消失。
+        </p>
+        <button id="clearDesk" class="text-button">清除本机窗台内容</button>
+        <p id="deskStatus" role="status"></p>
+      </section>
+    </main>
+    <footer>
+      <p>
+        场景与声音组件改编自
+        <a
+          href="https://github.com/TangfanOVO/qiaosi"
+          target="_blank"
+          rel="noopener noreferrer"
+          >幡幡 / qiaosi</a
+        >
+        · 猫咪线条图标来自 fanfan-icons。
+      </p>
+      <p>
+        本独立应用按 AGPL-3.0 提供完整源码，第三方库另保留其许可。<a
+          href="source.html"
+          >源码、修改说明与许可 ↗</a
+        >
+        <a href="../journal.html">回到校园手记 ↗</a>
+      </p>
+    </footer>
+    <noscript
+      ><p class="noscript">
+        这些本机互动需要 JavaScript。你仍可返回校园手记与建筑观察阅读内容。
+      </p></noscript
+    >
+  </body>
+</html>

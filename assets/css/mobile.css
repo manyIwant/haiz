@@ -1,0 +1,186 @@
+/* ============================================================
+   海南中学 · 移动端体验层  mobile.css
+   必须最后加载（base → components → sections → mobile）
+   目标：修真实溢出、放大触摸目标、提高可读性、降低移动端 GPU 开销
+   ============================================================ */
+
+/* ---------- 安全区（iPhone 刘海 / 底部横条）----------
+   HTML 里已设置 viewport-fit=cover，但此前没有任何 env() 处理，
+   内容会顶到听筒区与底部横条下面。 */
+:root{
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+}
+body{
+  padding-left:var(--sal);
+  padding-right:var(--sar);
+}
+
+/* ---------- 全局：横向溢出兜底 ----------
+   overflow-x:clip 不会创建滚动容器，因此不会破坏 position:sticky；
+   老浏览器降级为 hidden。 */
+html{overflow-x:hidden}
+@supports (overflow:clip){html{overflow-x:clip}}
+
+/* ---------- 触摸手感 ---------- */
+body{-webkit-tap-highlight-color:transparent}
+a,button,input,select,textarea,label,[role="button"]{touch-action:manipulation}
+
+/* ---------- 校友页世界地图 ----------
+   【修复】.world 此前完全没有 CSS，内部 viewBox=0 0 1000 500 的 SVG
+   在无约束时撑到 560px，把文档捅到 580px（390px 视口下出现横向滚动），
+   并连带把 position:fixed 的导航栏一起拉宽。 */
+.world{position:relative;width:100%;max-width:100%;overflow:hidden}
+.world svg{display:block;width:100%;height:auto}
+
+/* ============================================================
+   触摸设备：去掉「粘住」的 hover 效果
+   ============================================================ */
+@media (hover:none){
+  .card:hover .card-media img,
+  .rail-item:hover,
+  .masonry-item:hover img{transform:none}
+  .cbox:hover{transform:none}
+  .card:hover,.rail-item:hover{box-shadow:var(--sh-sm)}
+}
+
+/* ============================================================
+   小屏主优化
+   ============================================================ */
+@media (max-width:900px){
+
+  /* ---------- 首屏：修掉 hero-foot 与按钮的重叠 ----------
+     .hero-foot 是绝对定位贴底的，而 .hero-inner 的底部内边距在矮屏上不足以
+     让出空间，导致「府城校区 · 中国海南海口」压在按钮上。
+     这里把底部预留量抬到能容纳 meta 的高度，并按需缩小 meta 的字距与行高。 */
+  .hero-inner{padding-bottom:calc(clamp(96px,16vh,150px) + var(--sab))}
+  .hero-foot{
+    padding-bottom:calc(clamp(18px,3vh,30px) + var(--sab));
+    gap:12px;
+  }
+  .hero-meta{
+    font-size:.68rem;letter-spacing:.12em;line-height:1.75;
+    max-width:100%;
+  }
+  .scroll-cue .bar{height:34px}
+
+  .brand-sub{font-size:.68rem;letter-spacing:.18em}      /* 8.96px → 10.88px */
+  .sec-head .n,.eyebrow{font-size:.74rem}                /* 11.2px → 11.84px */
+  .scroll-cue{font-size:.72rem}                          /* 10.56px → 11.52px */
+  .t-mono{font-size:.78rem}                              /* 11.52px → 12.48px */
+  .tag{font-size:.72rem}
+  .crumb{font-size:.86rem}
+
+  /* 新闻卡片「来源：…」行内样式 .62rem → 统一抬高 */
+  .news-card .t-mono,.news-item .t-mono,.t-mono[style]{font-size:.74rem !important}
+
+  /* ---------- 触摸目标 ≥44px ---------- */
+  .crumb{display:flex;flex-wrap:wrap;align-items:center}
+  .crumb a{display:inline-flex;align-items:center;min-height:44px;padding-inline:2px}
+  .crumb span[aria-hidden]{display:inline-flex;align-items:center;min-height:44px}
+
+  .smap a{display:inline-flex;align-items:center;min-height:40px}
+  .footer-links a,.footer-col li a,.footer-bottom a{
+    display:inline-flex;align-items:center;min-height:40px;
+  }
+  .brand{min-height:44px;justify-content:center}
+
+  /* ---------- 正文内联链接的命中区 ----------
+     正文里的 <a> 若改成 inline-flex 会打断行内排版（遇到长链接换行时尤其明显），
+     这里改用「垂直 padding + 等量负 margin」扩大命中区，行高与换行完全不受影响。 */
+  .note-box a,.t-body a,.t-small a,.t-lead a,.stat-cn a,
+  .t-h1 a,.t-h2 a,.t-h3 a,.hero-meta a,.footer-bottom a{
+    display:inline-block;
+    padding-block:12px;
+    margin-block:-12px;
+  }
+  /* 3D 页彩蛋星星：视觉仍是小星点，仅把可点区域扩到 44px */
+  .egg-star{position:relative}
+  .egg-star::after{
+    content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%);
+  }
+
+  /* ---------- 可读性：剩余一批 11.2px 以下的标签 ---------- */
+  .stat-label{font-size:.76rem}
+  .footer-col h4{font-size:.76rem}
+  .hero-eyebrow{font-size:.76rem}
+  .subj-en,.subj-tag{font-size:.74rem}
+  .masonry-cap .cat{font-size:.68rem}
+
+  /* ---------- 性能：移动端 GPU 开销控制 ---------- */
+  /* 背景模糊是移动端掉帧主因，半径减半 */
+  .nav.is-scrolled{
+    -webkit-backdrop-filter:blur(10px) saturate(140%);
+    backdrop-filter:blur(10px) saturate(140%);
+  }
+  .glass{
+    -webkit-backdrop-filter:blur(10px) saturate(140%);
+    backdrop-filter:blur(10px) saturate(140%);
+  }
+  .glass-dark{
+    -webkit-backdrop-filter:blur(10px) saturate(130%);
+    backdrop-filter:blur(10px) saturate(130%);
+  }
+  /* 全屏噪点叠加层 + mix-blend-mode 在移动端很贵，直接关掉 */
+  .noise::after{display:none}
+
+  /* 进场位移缩短，滚动更轻快 */
+  .reveal{transform:translateY(16px);transition-duration:.6s}
+  .reveal-scale{transition-duration:.7s}
+
+  /* 横向轨道：顺滑惯性滚动 + 对齐内边距 */
+  .rail{
+    -webkit-overflow-scrolling:touch;
+    scroll-padding-inline:var(--gut);
+    overscroll-behavior-x:contain;
+  }
+  .rail-item{flex:0 0 clamp(230px,74vw,320px)}
+
+  /* 表单与按钮 */
+  input,select,textarea{font-size:16px}     /* 防止 iOS 自动缩放 */
+  .btn{padding:14px 22px}
+}
+
+/* ============================================================
+   超小屏
+   ============================================================ */
+@media (max-width:420px){
+  .brand-sub{font-size:.7rem;letter-spacing:.12em}
+  .sec-head .n,.eyebrow{font-size:.72rem;letter-spacing:.16em}
+  .masonry{columns:1}
+}
+
+/* ============================================================
+   3D 校园页：HUD 触摸目标
+   ============================================================ */
+@media (max-width:900px){
+  .hud-back{
+    display:inline-flex;align-items:center;
+    min-height:44px;padding:10px 14px;
+  }
+  .hud-credit-s a{display:inline-flex;align-items:center;min-height:32px}
+  .hud-credit-n{font-size:.82rem}
+  .hud-credit-s{font-size:.64rem}
+}
+
+/* ============================================================
+   矮屏首屏（横屏手机 / 小屏笔电）
+   竖屏手机高度通常 >700px，但横屏只有 375~430px，
+   首屏的上下留白会挤掉内容并让贴底的 meta 压到按钮上。
+   ============================================================ */
+@media (max-width:900px) and (max-height:700px){
+  .hero-inner{padding-top:clamp(76px,13vh,120px);padding-bottom:calc(clamp(76px,13vh,112px) + var(--sab))}
+  .hero-title{font-size:clamp(2.3rem,8.6vw,3.3rem)}
+  .hero-lede{font-size:clamp(.98rem,2.4vw,1.15rem);margin-top:clamp(12px,2vh,20px)}
+  .hero-actions{margin-top:clamp(16px,2.6vh,26px)}
+  .hero-eyebrow{margin-bottom:clamp(10px,1.8vh,18px)}
+  .scroll-cue{display:none}
+}
+
+/* ---------- 尊重系统减弱动效 ---------- */
+@media (prefers-reduced-motion:reduce){
+  .world svg *{animation:none !important}
+}

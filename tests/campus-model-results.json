@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "model: 26 buildings, 488868 vertices, 244068 triangles, 13.2 MB, built in 273 ms; all finite, indices and ids in range, unit normals",
+    "one source with the plan: 18 buildings share centre, size and rotation with the features the plan shader draws (Δ < 1e-9 m); bridges and dormitory wings are trimmed inside their own rectangles; every vertex stays on its footprint (porches, galleries, the library's stair excepted by a few metres) and within its height",
+    "storeys and heights: every building has the data's storeys; the top storey ends exactly at the data's model height; roofs, parapets and plant sit above it",
+    "closed solids: beimen, yihao, library, fengqitang_ting, corr_w12, dorm_m, yishu have no open edge (every directed edge has its reverse)",
+    "cuts: swept through every building in 13 mm steps, a timeline cut never rests inside its plinth or a floor slab (which would fill the whole plan with ink); the plan's own 1.2 m cut is never moved",
+    "timeline: every building rises 0 → 1 monotonically (near the tree first); the material front only grows and ends without its seam; the camera starts at the plan camera and ends at the campus view, continuous at 0.1 % steps (worst 3.68); a fold starts at the 3D view and ends in the plan look over the same ground"
+  ]
+}
