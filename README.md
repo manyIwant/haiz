@@ -61,7 +61,7 @@ Flutter、Node 后端和独立原型拥有各自的开发或构建流程；对�
 | [backend/](backend/) | 独立账号与数据服务 |
 | [app/](app/) | Flutter 应用源码 |
 | [app-preview/](app-preview/)、[pocket/](pocket/) | 不同阶段的网页构建快照，不一定是最新源码 |
-| [prototypes/](prototypes/) | 独立原型、测试与大型二进制演示资源 |
+| [独立 HAIZ WORLD 原型](https://github.com/manyIwant/haiz-world-prototype) | 完整 Vite/React 校园图谱实验已迁往独立仓库，保留源码、模型、媒体和测试 |
 | [docs/](docs/) | 技术、美术、来源与测试记录 |
 | [tests/](tests/)、[.github/workflows/](.github/workflows/) | 测试与发布自动化 |
 
