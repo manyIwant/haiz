@@ -1,0 +1,64 @@
+name: HAIZ provenance evidence checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/provenance/**'
+      - 'tests/provenance.cjs'
+      - 'LICENSING.md'
+      - 'ARTWORK-LICENSING.md'
+      - '.github/workflows/provenance.yml'
+  pull_request:
+    paths:
+      - 'docs/provenance/**'
+      - 'tests/provenance.cjs'
+      - 'LICENSING.md'
+      - 'ARTWORK-LICENSING.md'
+      - '.github/workflows/provenance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            DESIGN.md
+            LICENSING.md
+            ARTWORK-LICENSING.md
+            COMMERCIAL-LICENSING.md
+            CONTRIBUTING.md
+            docs/provenance/
+            docs/lanren-homepage-v4-20261104.md
+            docs/lanren-roots-20261107.md
+            docs/haiz-act3-leaves-20261107.md
+            docs/lanren-campus-unfold-20261106.md
+            docs/lanren-campus-map-20261105.md
+            docs/HAIZ-WORLD-NEXT-SESSION.md
+            docs/lanren/world/film.jpg
+            tests/provenance.cjs
+            scripts/lanren/build_tree.py
+            scripts/build-landscape.py
+            lanren/js/
+            lanren/assets/tree.glb
+            lanren/assets/tree.json
+            lanren/roots/
+            lanren/canopy/
+            lanren/map/
+            lanren/world/
+            assets/walk/
+            windowsill/LICENSE
+            windowsill/SOURCE.md
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate evidence ledger
+        run: node --test tests/provenance.cjs

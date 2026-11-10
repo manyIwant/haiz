@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "snapshot": {
+    "repository": "manyIwant/haiz",
+    "ref": "main",
+    "commit": "2db2c87ac178d1ae38c0190a1b537ba0b2f631dd",
+    "recorded_on": "2026-11-10",
+    "note": "Snapshot anchors are repository Git blob SHA-1 IDs, not SHA-256 checksums, copyright certificates, or proof of human authorship. Historical facts are bounded by cited repository files and commits."
+  },
+  "license_policy": "LICENSING.md",
+  "records": [
+    {
+      "id": "haiz-v4-tree",
+      "title": "榄仁树 V4 · 程序化树体与六镜头",
+      "kind": "model-and-interactive-code",
+      "status": "repo-history-documented-rights-review-required",
+      "material": [
+        "scripts/lanren/build_tree.py",
+        "lanren/assets/tree.glb",
+        "lanren/assets/tree.json",
+        "docs/lanren-homepage-v4-20261104.md"
+      ],
+      "design": [
+        "DESIGN.md",
+        "docs/lanren-homepage-v4-20261104.md"
+      ],
+      "commits": [
+        "6559e1235a54a029c71ff8a37f9e5d9c925a751d",
+        "9caa250f10ba26653903d50b4cd20204303b5202"
+      ],
+      "evidence": "生成脚本与参数描述可追溯；V4 设计文档包含屏幕截图、版本对照、照片参考与局限性。",
+      "limitations": "物种启发的概念模型；校园实景照片权属、生成模型中是否含第三方素材、AI/人类贡献比例尚未逐项核实。"
+    },
+    {
+      "id": "haiz-roots",
+      "title": "第二幕 · 根脉与校史显影",
+      "kind": "interactive-code-and-historical-content",
+      "status": "mixed-rights-and-historical-sources-review",
+      "material": [
+        "lanren/roots/roots.js",
+        "lanren/roots/history.js",
+        "docs/lanren-roots-20261107.md"
+      ],
+      "design": [
+        "DESIGN.md",
+        "docs/lanren-roots-20261107.md"
+      ],
+      "commits": [
+        "4609797c7a559174523c7b1904e0c61425722308"
+      ],
+      "evidence": "设计文档记录年代沿树干上升、投影机位、史料条目与源码/浏览器测试。",
+      "limitations": "历史图片、文字出处、署名和在网站公开展示的权限需要逐项核实；项目已有“授权待确认”标注不能理解为许可已获得。"
+    },
+    {
+      "id": "haiz-canopy",
+      "title": "第三幕 · 青春生长与作品叶位",
+      "kind": "interactive-code-and-user-content-design",
+      "status": "repo-history-documented-user-rights-separate",
+      "material": [
+        "lanren/canopy/canopy.js",
+        "lanren/canopy/address.js",
+        "docs/haiz-act3-leaves-20261107.md"
+      ],
+      "design": [
+        "DESIGN.md",
+        "docs/haiz-act3-leaves-20261107.md"
+      ],
+      "commits": [
+        "5ed67311c6cf07b9f3368a65dff892bb8499480c"
+      ],
+      "evidence": "作品=叶片、方向=枝条、共创关联等方案与首次实现已有文档及代码提交。",
+      "limitations": "演示作品不是真实学生投稿；未来投稿作者的版权必须独立记录，不能因为上传到 HAIZ 就被项目商业授权。"
+    },
+    {
+      "id": "haiz-map",
+      "title": "第四幕 · 平面水下显影到三维校园",
+      "kind": "interactive-code-and-geospatial-data",
+      "status": "repo-history-documented-data-and-reference-review",
+      "material": [
+        "lanren/map/unfold.js",
+        "lanren/map/campus3d.js",
+        "assets/walk/campus.json",
+        "docs/lanren-campus-unfold-20261106.md"
+      ],
+      "design": [
+        "DESIGN.md",
+        "docs/lanren-campus-unfold-20261106.md",
+        "docs/lanren-campus-map-20261105.md"
+      ],
+      "commits": [
+        "3ab9f4eb75184b57b201b5185e3e236ab55406a1"
+      ],
+      "evidence": "同一套占地数据用于二维与三维、完整建筑升起、单栋剖切和可逆摄影机的实现记录。",
+      "limitations": "数据与校园实景有推演部分，不是测绘成果；所参考的照片和外部设计研究不因此获得新的授权。"
+    },
+    {
+      "id": "haiz-film",
+      "title": "第五与第六幕 · 跃下回望与第一人称交接",
+      "kind": "interactive-code-and-cinematic-direction",
+      "status": "main-baseline-plus-unmerged-refinements",
+      "material": [
+        "lanren/world/film.js",
+        "lanren/world/compose.js",
+        "docs/lanren/world/film.jpg"
+      ],
+      "design": [
+        "DESIGN.md",
+        "docs/HAIZ-WORLD-NEXT-SESSION.md"
+      ],
+      "commits": [
+        "38f1e5c014a63877da9dc77015368bbda71ab34a",
+        "b781a2cd7ef1dd3ed572ae73beb599cc944b05b4"
+      ],
+      "evidence": "主分支有可逆电影与漫游交接的首次实现；额外美术精修文档位于开发分支（本快照不将其当成 main 已上线成果）。",
+      "limitations": "独立开发分支会移动；其截图、视频、建筑推断和真机验证条件不能仅凭 main 的证据推定。"
+    },
+    {
+      "id": "haiz-limestone",
+      "title": "校园石材模型 · Blender 生成与烘焙",
+      "kind": "model-and-procedural-generator",
+      "status": "previous-cc0-notice-retained",
+      "material": [
+        "scripts/build-landscape.py",
+        "assets/walk/models/campus-limestone.glb",
+        "assets/walk/models/campus-limestone.json",
+        "assets/walk/models/NOTICE.md"
+      ],
+      "design": [
+        "assets/walk/models/NOTICE.md"
+      ],
+      "commits": [
+        "262f78079e9c06fd5a43f914f8a4c6616685fbf1"
+      ],
+      "evidence": "生成器、Blender 版本、模型内容信息、SHA-256、照片参考和已有 CC0 声明可追溯。",
+      "limitations": "原 CC0 声明保持有效；参照照片的版权、Noto 字体的 OFL 及实际石头的准确性为独立问题。"
+    },
+    {
+      "id": "haiz-potted-plant",
+      "title": "盆栽道具 · 第三方模型改编",
+      "kind": "third-party-asset",
+      "status": "third-party-cc0-and-cc-by-4.0",
+      "material": [
+        "assets/walk/models/potted-plant.glb",
+        "assets/walk/models/NOTICE.md",
+        "assets/walk/credits.json"
+      ],
+      "design": [
+        "assets/walk/models/NOTICE.md"
+      ],
+      "commits": [],
+      "evidence": "已记录 Khronos glTF Sample Assets、Poly Haven 与 DGG 改编来源及相应许可证。",
+      "limitations": "不是 HAIZ 可按 PolyForm 或 CC BY-NC-SA 随意重新授权的独占原创作品。"
+    },
+    {
+      "id": "haiz-windowsill",
+      "title": "课间窗台 · AGPL 上游改编",
+      "kind": "third-party-derived-application",
+      "status": "third-party-agpl-and-independent-notices",
+      "material": [
+        "windowsill/SOURCE.md",
+        "windowsill/LICENSE"
+      ],
+      "design": [
+        "windowsill/SOURCE.md"
+      ],
+      "commits": [],
+      "evidence": "来源版本、依赖、改编内容、独立源码和 AGPL 范围均在 SOURCE.md 中公开。",
+      "limitations": "不能把 AGPL 改为 PolyForm NC，亦不可凭仓库维护者身份替原作者授予额外商业许可。"
+    }
+  ],
+  "anchors": [
+    {
+      "path": "DESIGN.md",
+      "git_blob_sha": "cce2ebfee0946443180c90c09e3063f53e203757"
+    },
+    {
+      "path": "scripts/lanren/build_tree.py",
+      "git_blob_sha": "b477340551a0bb9bd4dccfe3193b786a123d5a34"
+    },
+    {
+      "path": "lanren/assets/tree.glb",
+      "git_blob_sha": "421d32377081beb128472a19ba1c83dcaba3247a"
+    },
+    {
+      "path": "lanren/assets/tree.json",
+      "git_blob_sha": "93e434231c5c77dfee7dd447b0dc828e4231a026"
+    },
+    {
+      "path": "docs/lanren-homepage-v4-20261104.md",
+      "git_blob_sha": "ea0d7973447a3e98467a4d3f67f8881b90f02809"
+    },
+    {
+      "path": "docs/lanren-roots-20261107.md",
+      "git_blob_sha": "1f399b576cd8cf2739916ac59d3762a67e5ecd55"
+    },
+    {
+      "path": "lanren/roots/roots.js",
+      "git_blob_sha": "9c7a690294fb87a138c13f6977c8adeacda56858"
+    },
+    {
+      "path": "docs/haiz-act3-leaves-20261107.md",
+      "git_blob_sha": "6d0d1cf23774b63b692a17e33ddc9a364fcc693f"
+    },
+    {
+      "path": "lanren/canopy/canopy.js",
+      "git_blob_sha": "7dccdd5a5026cb5780c8a08cf2e2f4f2057079ca"
+    },
+    {
+      "path": "docs/lanren-campus-unfold-20261106.md",
+      "git_blob_sha": "abeee73b1abba3ba71e3ac79cc14c1dfdace23f9"
+    },
+    {
+      "path": "lanren/map/unfold.js",
+      "git_blob_sha": "27b45a6214a1233d4afbed5aac4e9e57dccbb509"
+    },
+    {
+      "path": "lanren/world/film.js",
+      "git_blob_sha": "5dc78e8c4fa0898269bb66bf4d79e14cef4eb6b0"
+    },
+    {
+      "path": "scripts/build-landscape.py",
+      "git_blob_sha": "e04ab970132c1a08ec70c49064d2071d8d7ecaa6"
+    },
+    {
+      "path": "assets/walk/models/campus-limestone.glb",
+      "git_blob_sha": "e2a981d02df6dbaf6b61b3052f716a0fd6fb8d90"
+    },
+    {
+      "path": "assets/walk/models/NOTICE.md",
+      "git_blob_sha": "693d3aaed9e51339c741ee1256e56fff74cc46da"
+    },
+    {
+      "path": "assets/walk/models/potted-plant.glb",
+      "git_blob_sha": "02b5ce89664fa40db0e9f1bc3c156a3ea9a5466a"
+    },
+    {
+      "path": "windowsill/SOURCE.md",
+      "git_blob_sha": "76b94d11ad3537daf26465256672fb7dc57be914"
+    }
+  ]
+}
