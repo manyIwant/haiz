@@ -22,31 +22,36 @@ export const DIRECTIONS = [
   {
     id: 'photo', zh: '摄影 · 影像', short: '摄影', en: 'Photography & film', sector: [38, 108],
     mood: '低角度的阳光斜穿过叶层，光本身就是材料',
-    temper: { sunAz: 40, sunEl: 30, I: 1.08, rays: 0.9, exposure: 1.0, warm: 0.62, contrast: 1.12, sat: 1.06, wind: 1 },
+    temper: { sunAz: 116, sunEl: 19, I: 1.12, rays: 0.9, exposure: 1.12, warm: 0.64, contrast: 1.12, sat: 1.06, wind: 1 },
+    open: { R: 1.9, reach: 3.2 },   // the limb comes far out: the low sun rakes along it
     twigs: [{ id: 'photo-series', zh: '组照', state: 'approved' }, { id: 'photo-moving', zh: '短片', state: 'approved' }]
   },
   {
     id: 'words', zh: '文学', short: '文学', en: 'Writing', sector: [110, 178],
     mood: '高处的柔光，像纸页上的午后',
-    temper: { sunAz: 8, sunEl: 52, I: 0.86, rays: 0.15, exposure: 0.98, warm: 0.74, contrast: 0.97, sat: 0.94, mist: 0.05, wind: 0.6 },
+    temper: { sunAz: 98, sunEl: 52, I: 0.92, rays: 0.15, exposure: 1.1, warm: 0.74, contrast: 0.97, sat: 0.94, mist: 0.05, wind: 0.6 },
+    open: { R: 1.7, reach: 2.9 },   // a narrower, quieter reach
     twigs: [{ id: 'words-poem', zh: '诗', state: 'approved' }, { id: 'words-prose', zh: '散文与小说', state: 'approved' }]
   },
   {
     id: 'sound', zh: '音乐 · 声音', short: '声音', en: 'Music & sound', sector: [180, 248],
     mood: '有风的时候，叶子比平常更响',
-    temper: { sunAz: -30, sunEl: 36, I: 0.98, rays: 0.4, exposure: 0.98, warm: 0.8, contrast: 1.04, sat: 1.0, wind: 2.1 },
+    temper: { sunAz: -112, sunEl: 30, I: 1.02, rays: 0.4, exposure: 1.08, warm: 0.8, contrast: 1.04, sat: 1.0, wind: 2.1 },
+    open: { R: 2.1, reach: 3.4 },   // loose and wide: room for the wind
     twigs: [{ id: 'sound-field', zh: '环境录音', state: 'approved' }, { id: 'sound-music', zh: '作曲与演奏', state: 'approved' }]
   },
   {
     id: 'image', zh: '绘画 · 设计', short: '绘画', en: 'Drawing & design', sector: [250, 318],
     mood: '正午的晴光，颜色最饱满的时候',
-    temper: { sunAz: 170, sunEl: 48, I: 1.1, rays: 0.1, exposure: 1.04, warm: 0.5, contrast: 1.1, sat: 1.16, wind: 0.9 },
+    temper: { sunAz: 148, sunEl: 48, I: 1.1, rays: 0.1, exposure: 1.08, warm: 0.5, contrast: 1.1, sat: 1.16, wind: 0.9 },
+    open: { R: 1.8, reach: 3.0 },
     twigs: [{ id: 'image-drawing', zh: '绘画', state: 'approved' }, { id: 'image-type', zh: '字体与版式', state: 'approved' }]
   },
   {
     id: 'code', zh: '数字创作', short: '数字', en: 'Digital & code', sector: [320, 396],   // wraps past north
     mood: '日落之后的蓝色时刻，天光比太阳更亮',
-    temper: { sunAz: 120, sunEl: 6, I: 0.58, rays: 0.25, exposure: 1.1, warm: 0.28, contrast: 1.02, sat: 1.0, wind: 0.8 },
+    temper: { sunAz: 120, sunEl: 6, I: 0.58, rays: 0.25, exposure: 1.16, warm: 0.28, contrast: 1.02, sat: 1.0, wind: 0.8 },
+    open: { R: 1.8, reach: 3.0 },
     twigs: [{ id: 'code-interactive', zh: '交互与网页', state: 'approved' }]
   }
 ];

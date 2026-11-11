@@ -85,9 +85,11 @@ const shots = process.env.ROOTS_SHOTS;   // optional folder for review captures
   // the year finder jumps; the light on the tree follows
   await page.click('.roots-find button[aria-label^="1988"]');
   await page.waitForFunction(() => window.__haizHome.roots.current === '1988' && Math.abs(window.__haizHome.state.p - (1 + 8 / 14)) < 0.004, null, T);
-  await page.waitForFunction(() => window.__haizHome.roots.slots.some((s) => s.node === '1988' && s.I > 1), null, T);
+  // the picture lights the tree, and (resting there) gathers into the print in the light
+  await page.waitForFunction(() => window.__haizHome.roots.slots.some((s) => s.node === '1988' && s.I > 1) || window.__haizHome.roots.print.node === '1988', null, T);
+  await page.waitForFunction(() => window.__haizHome.roots.print.node === '1988' && window.__haizHome.roots.print.k > 0.9, null, T);
   await page.waitForFunction(() => location.hash === '#roots/1988', null, T);
-  results.push('year finder → 1988: the camera travels there, its photograph lights the tree, address #roots/1988');
+  results.push('year finder → 1988: the camera travels there, its photograph lights the tree and, resting there, gathers into one readable print; address #roots/1988');
 
   // reading: the page holds still, the sheet shows the photograph whole and its sources
   const y0 = await R(page, () => scrollY);

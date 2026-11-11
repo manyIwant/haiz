@@ -12,6 +12,7 @@ import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
 import { pickComposition } from '../world/compose.js';
 import { createWorldState } from '../world/state.js';
+import { BEATS as FILM_STOPS, FILM_SECONDS } from '../world/film.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -71,8 +72,10 @@ function snapDirectional(pts) {
     let i = 0;
     while (i < pts.length - 1 && pts[i + 1] <= v) i++;
     const a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)];
-    if (v - a <= (b - a) * 0.1) return a;
-    if (b - v <= (b - a) * 0.1) return b;
+    // resting on a target stays there; any deliberate step off it (one arrow key is ~40 px,
+    // a few % of a stop) goes on to the next one in that direction
+    if (v - a <= (b - a) * 0.02) return a;
+    if (b - v <= (b - a) * 0.02) return b;
     return dir > 0 ? b : a;
   };
 }
@@ -86,12 +89,119 @@ function snapPoints() {
 function goTo(i, instant = false) {
   i = Math.max(0, Math.min(N - 1, i));
   const y = scrollForStop(i);
-  if (instant || reduceMotion) { scrollTo(0, y); state.p = i; landWalk(); return; }
+  if (instant || reduceMotion) { transit = null; override = null; scrollTo(0, y); state.p = i; landWalk(); return; }
+  // a distant shot (or the long climb of 02 between here and there) is reached by a direct flight
+  // through the same space, not by scrubbing through every station on the way
+  const from = transit ? transit.pv : state.p;
+  const far = Math.abs(i - from) > 1.01 || Math.abs(y - scrollY) > innerHeight * 2.2;
+  const film = from >= 3.99 && i === N - 1;   // 05 → 06 is the walker's film: it plays
+  if (far && !film && world && cam && (!W || W.policy().scroll)) { startTransit(i); return; }
   scrollTo({ top: y, behavior: 'smooth' });
 }
+
+// ------------------------------------------------------------------ transit: one flight between distant shots
+// The scroll lands on the destination at once; the camera flies there on its own path: out round
+// the tree (never through the crown), rising with the distance it has to go, looking at the tree's
+// heart on the way, while the day's light and the tree's growth pass smoothly from one shot to the
+// other. Interrupting it (another choice, a scroll) starts from wherever the camera is.
+let transit = null;
+const TREE_HEART = { x: AXIS.x, y: 6.6, z: AXIS.z };
+let crownProfile = null;   // the crown's farthest reach at each height (rosettes)
+function crownReach(y) {
+  if (!crownProfile && world) {
+    crownProfile = new Float32Array(40);
+    const ros = world.rosettes, st = world.stride;
+    for (let k = 0; k < ros.length; k += st) {
+      const b = Math.max(0, Math.min(39, Math.floor(ros[k + 1] + 2)));
+      crownProfile[b] = Math.max(crownProfile[b], Math.hypot(ros[k] - AXIS.x, ros[k + 2] - AXIS.z) + 0.5);
+    }
+  }
+  if (!crownProfile) return 0;
+  const b = Math.floor(y + 2);
+  let r = 0;
+  for (let j = b - 1; j <= b + 1; j++) if (j >= 0 && j < 40) r = Math.max(r, crownProfile[j]);
+  return r;
+}
+function startTransit(i) {
+  const a = { ...cam.s };
+  const p0 = transit ? transit.pv : state.p;
+  cam.releaseLook();
+  scrollTo(0, scrollForStop(i)); state.p = i; landWalk();
+  const b = life?.rail(i) || railAt(i);
+  transit = { t0: performance.now(), dur: (1.3 + 0.2 * Math.min(5, Math.abs(i - p0))) * 1000, a, b, i, p0, pv: p0 };
+}
+const lerpN = (x, y, t) => x + (y - x) * t;
+function transitPose(T, e) {
+  const { a, b } = T;
+  const tha = Math.atan2(a.ex - AXIS.x, a.ez - AXIS.z), thb = Math.atan2(b.ex - AXIS.x, b.ez - AXIS.z);
+  const ra = Math.hypot(a.ex - AXIS.x, a.ez - AXIS.z), rb = Math.hypot(b.ex - AXIS.x, b.ez - AXIS.z);
+  let dth = thb - tha;
+  while (dth > Math.PI) dth -= 2 * Math.PI;
+  while (dth < -Math.PI) dth += 2 * Math.PI;
+  const s = Math.sin(Math.PI * e);
+  const bulge = Math.max(0, 22 - (ra + rb) / 2) + Math.abs(dth) * 2.4;
+  const lift = 2.5 + Math.abs(dth) * 2.2 + Math.max(0, 9 - Math.max(a.ey, b.ey)) * 0.6;
+  const th = tha + dth * e, y = lerpN(a.ey, b.ey, e) + lift * s;
+  let r = lerpN(ra, rb, e) + bulge * s;
+  // the middle of the flight stays outside the crown
+  const keep = Math.min(1, Math.max(0, (e - 0.06) / 0.18)) * Math.min(1, Math.max(0, (0.94 - e) / 0.18));
+  r = Math.max(r, lerpN(r, crownReach(y) + 1.8, keep));
+  const ex = AXIS.x + Math.sin(th) * r, ez = AXIS.z + Math.cos(th) * r;
+  // the gaze passes over the tree's heart between the two shots' own targets
+  const w = Math.pow(s, 0.7) * 0.82;
+  const lx = lerpN(lerpN(a.lx, b.lx, e), TREE_HEART.x, w), ly = lerpN(lerpN(a.ly, b.ly, e), TREE_HEART.y, w), lz = lerpN(lerpN(a.lz, b.lz, e), TREE_HEART.z, w);
+  const fov = Math.min(64, Math.max(28, lerpN(a.fov, b.fov, e) + 7 * s));
+  return { ex, ey: y, ez, lx, ly, lz, fov, auth: lerpN(a.auth || 0, b.auth || 0, e), dist: Math.hypot(lx - ex, ly - y, lz - ez) };
+}
+function stepTransit() {
+  if (!transit) return;
+  const u = Math.min(1, (performance.now() - transit.t0) / transit.dur);
+  const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  transit.pv = lerpN(transit.p0, transit.i, u * u * (3 - 2 * u));
+  override = transitPose(transit, e);
+  if (u >= 1) { transit = null; override = null; }
+}
 // One scroll mapping for both the lengthened 02 history and the 05→06 film.
-const FILM_BEATS = [0.2, 0.55, 0.82];
+const FILM_BEATS = FILM_STOPS.slice(1, -1);   // film.js BEATS: over the shoulder, one's own feet, landed and looked round, the shadow noticed
 const pOfProgress = pFromU, progressOfP = uFromP;
+// ------------------------------------------------------------------ 05 → 06 at a person's pace
+// The scroll's progress through the film is proportional to the film's own clock (film.js DURATION). A scroll
+// snap would cross from one resting beat to the next in at most a second and a half (the whole walk in one
+// lurch); instead, once the visitor stops scrolling between two beats, the film plays on to the next beat in
+// the direction they were going, at the pace it takes to watch it (rewinding goes faster). Any wheel, touch
+// or key takes over at once; reduced motion keeps plain scrolling.
+const inFilm = (p) => p > 4.0005 && p < 4.9995;
+const filmPlay = { on: null, lastInput: 0, dir: 1, self: false, lastY: 0 };
+const scrollOfP = (p) => track.offsetTop + uFromP(p) * trackRange();
+for (const ev of ['wheel', 'touchstart', 'touchmove', 'keydown', 'pointerdown']) {
+  addEventListener(ev, (e) => {
+    filmPlay.lastInput = performance.now(); filmPlay.on = null;
+    if (ev === 'wheel' && e.deltaY) filmPlay.dir = e.deltaY > 0 ? 1 : -1;
+    if (ev === 'keydown') { if (['ArrowDown', 'PageDown', ' ', 'End'].includes(e.key)) filmPlay.dir = 1; else if (['ArrowUp', 'PageUp', 'Home'].includes(e.key)) filmPlay.dir = -1; }
+  }, { passive: true, capture: true });
+}
+addEventListener('scroll', () => {
+  if (filmPlay.self) { filmPlay.self = false; filmPlay.lastY = scrollY; return; }
+  if (Math.abs(scrollY - filmPlay.lastY) > 0.5) filmPlay.dir = scrollY > filmPlay.lastY ? 1 : -1;
+  filmPlay.lastY = scrollY; filmPlay.lastInput = performance.now();
+}, { passive: true });
+function filmOn(dt) {
+  if (reduceMotion || filmPlay.frozen || transit || !W || W.owner !== 'scroll' || !body.classList.contains('spatial') || !inFilm(state.p)) { filmPlay.on = null; return; }
+  const now = performance.now();
+  if (!filmPlay.on) {
+    if (now - filmPlay.lastInput < 300) return;
+    const q = (scrollY - scrollOfP(4)) / Math.max(1, scrollOfP(5) - scrollOfP(4));
+    if (FILM_STOPS.some((b) => Math.abs(b - q) < 0.002)) return;          // resting on a beat: the visitor decides
+    const target = filmPlay.dir > 0 ? FILM_STOPS.find((b) => b > q + 0.002) : [...FILM_STOPS].reverse().find((b) => b < q - 0.002);
+    if (target == null) return;
+    filmPlay.on = { q, target, dir: filmPlay.dir };
+  }
+  const f = filmPlay.on;
+  f.q += (f.dir * (f.dir > 0 ? 1 : 2.4) * Math.min(0.1, dt)) / FILM_SECONDS;
+  if ((f.dir > 0 && f.q >= f.target) || (f.dir < 0 && f.q <= f.target)) { f.q = f.target; filmPlay.on = null; }
+  filmPlay.self = true;
+  scrollTo(0, scrollOfP(4 + f.q));
+}
 let walkTween = null;
 function landWalk() {
   const st = walkTween?.scrollTrigger;
@@ -139,7 +249,8 @@ function wireScroll() {
         scrollTrigger: {
           trigger: '#track', start: 'top top', end: 'bottom bottom',
           scrub: calm ? true : 1.15,
-          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : snapper(v, self?.direction || 1)),
+          // (inside 05 → 06 the film is not snapped: it plays on to its next resting beat at its own pace, filmOn below)
+          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : inFilm(pFromU(v)) ? v : snapper(v, self?.direction || 1)),
             inertia: false, duration: calm ? 0 : { min: 0.55, max: 1.5 },
             delay: 0.1, ease: 'power2.inOut' }
         }
@@ -155,7 +266,8 @@ function wireScroll() {
     addEventListener('scroll', () => { target = pFromU((scrollY - track.offsetTop) / trackRange()); }, { passive: true });
     addEventListener('resize', measureKnots);
     if (window.ResizeObserver) new ResizeObserver(() => measureKnots()).observe(track);
-    (function follow() { state.p += (target - state.p) * 0.12; requestAnimationFrame(follow); })();
+    let tf = performance.now();
+    (function follow(now = performance.now()) { const dt = Math.min(0.1, (now - tf) / 1000); tf = now; state.p += (target - state.p) * (1 - Math.exp(-7.7 * dt)); requestAnimationFrame(follow); })();
   }
 }
 for (const a of $$('[data-go]')) a.addEventListener('click', (e) => { if (!body.classList.contains('spatial')) return; e.preventDefault(); goTo(+a.dataset.go); });
@@ -293,7 +405,7 @@ leader.append(leadPath, leadHalo, leadPin);
 svg.append(leader);
 const slabPos = { x: 0, y: 0, ry: -6, init: false, rest: 0 };
 const tmpV = new THREE.Vector3();
-function placeSlab(settle) {
+function placeSlab(settle, dt = 1 / 60) {
   const panel = active >= 0 ? panels[active] : null;
   const slab = panel?.querySelector('.slab');
   if (!slab || innerWidth <= 760) { leader.style.opacity = '0'; return; }
@@ -320,10 +432,11 @@ function placeSlab(settle) {
   // while moving the slab is carried by the scene; once the shot rests it holds
   // still against the camera's breathing (a close anchor would otherwise drift)
   const hold = settle > 0.98 ? 10 : 0.6;
-  if (Math.abs(tx - slabPos.x) > hold) slabPos.x += (tx - slabPos.x) * 0.14;
-  if (Math.abs(ty - slabPos.y) > hold) slabPos.y += (ty - slabPos.y) * 0.14;
+  const kp = 1 - Math.exp(-9 * Math.min(0.1, dt)), kr = 1 - Math.exp(-6.3 * Math.min(0.1, dt));   // the same lag at any frame rate
+  if (Math.abs(tx - slabPos.x) > hold) slabPos.x += (tx - slabPos.x) * kp;
+  if (Math.abs(ty - slabPos.y) > hold) slabPos.y += (ty - slabPos.y) * kp;
   const ry = mode === 'dock' ? 0 : -4 - 6 * ((slabPos.x + sw / 2) / W - 0.5) + (visible ? (ax - slabPos.x) / W * 6 : 0);
-  if (Math.abs(ry - slabPos.ry) > (settle > 0.98 ? 1.2 : 0.08)) slabPos.ry += (ry - slabPos.ry) * 0.1;
+  if (Math.abs(ry - slabPos.ry) > (settle > 0.98 ? 1.2 : 0.08)) slabPos.ry += (ry - slabPos.ry) * kr;
   // write whole pixels and tenths of a degree only when they change, so the
   // slab settles completely once the camera rests (links must hold still)
   const sxS = Math.round(slabPos.x) + 'px', syS = Math.round(slabPos.y) + 'px', ryS = slabPos.ry.toFixed(1) + 'deg';
@@ -477,13 +590,13 @@ async function start3D() {
   const attachMap = (md) => {
     if (!md || map) return;
     try {
-      map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!document.querySelector('dialog[open]'),
+      map = md.m.attach({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, entry, busy: () => !!transit || !!document.querySelector('dialog[open]'), campusP: () => (transit ? transit.pv : state.p),
         worldState: W, focus: () => life?.focus() || null, walking: () => !!life?.walking(), walkView: (o) => life?.walkView(o) || null }, md.geo);
     } catch (err) { console.warn('campus map unavailable', err); }
     // the film, the walker, the pocket map and the menu share the map's campus (same frame, same model)
     if (map && !life) {
       import('../world/world.js').then((m) => {
-        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params });
+        life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params, transitOn: () => !!transit, sound });
       }).catch((err) => console.warn('walk unavailable', err));
     }
   };
@@ -652,10 +765,13 @@ const C = (a) => new THREE.Color(a[0], a[1], a[2]);
 function step(dt, wallDt = dt) {
   UNIFORMS.uTime.value += dt;
   const t = UNIFORMS.uTime.value;
+  stepTransit();
+  filmOn(wallDt);
   const p = state.p;
+  const pl = transit ? transit.pv : (life?.lightP?.() ?? p);   // the day's light and the tree's growth (in flight, from home or from the walk: on the way)
   const near = Math.round(p);
   // (05 → 06 is the walker's film: 05's words stay while the eye is still in the crown, 06's come with the turn)
-  setActive(roots?.owns(p) ? -1
+  setActive(transit ? -1 : roots?.owns(p) ? -1
     : p > 4 && p < 5 ? (p < 4.1 ? 4 : p > 4.95 ? 5 : -1)
     : Math.abs(p - near) < 0.3 ? near : -1);
   roots?.tick(dt);
@@ -663,13 +779,15 @@ function step(dt, wallDt = dt) {
   life?.tick(dt, wallDt);
   canopy?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
-  const grow = canopy ? canopy.grow(growAt(p)) : growAt(p);
-  const L = lightAt(p);
+  const grow = canopy ? canopy.grow(growAt(pl)) : growAt(pl);
+  const L = lightAt(pl);
+  // in flight the lens is a wide, deep one: the macro depth of field of 03 belongs to that shot only
+  if (transit) L.aperture *= 1 - Math.sin(Math.PI * Math.min(1, (performance.now() - transit.t0) / transit.dur));
   life?.light(L, p);
   map?.light(L);
   roots?.light(L, p);
   canopy?.light(L);
-  const rail = override || railAt(p);
+  const rail = override || life?.rail?.(p) || railAt(p);   // (05 → 06: the film's own lens and focus)
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
@@ -695,7 +813,7 @@ function step(dt, wallDt = dt) {
   world.litter.update(dt, grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, active === N - 1);
   sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
   updateNav(p, grow);
-  placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
+  placeSlab(1 - Math.min(1, Math.abs(p - near) * 4), wallDt);
   map?.overlay();
   life?.overlay();
   canopy?.overlay();
@@ -723,10 +841,15 @@ function adapt(dt) {
 
 window.__haizHome = {
   get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
-  go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
+  get transit() { return transit && { i: transit.i, p0: transit.p0, pv: +transit.pv.toFixed(3) }; },
+  /** review: hold a transit at u (0…1) between the current camera and shot i */
+  transitAt: (i, u) => { if (!transit || transit.i !== i) startTransit(i); transit.t0 = performance.now() - u * transit.dur; stepTransit(); cam.snap(); },
+  go: (i) => { override = null; transit = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */
-  freeze: (on = true) => { const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },
+  freeze: (on = true) => { filmPlay.frozen = !!on; filmPlay.on = null; const ST = window.ScrollTrigger; if (ST) for (const st of ST.getAll()) { if (on) st.disable(false); else st.enable(false); } },
+  /** the film's own playback (05 → 06 between beats): state for tests */
+  get filmPlay() { return { on: !!filmPlay.on, target: filmPlay.on?.target ?? null, dir: filmPlay.dir }; },
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
   lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
   info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +(world.camera.userData.screen || world.camera.aspect).toFixed(3)],

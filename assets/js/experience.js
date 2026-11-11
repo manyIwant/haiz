@@ -1,5 +1,10 @@
 /* Shared exploration desk. No network service, telemetry, or autoplay audio. */
 (()=>{'use strict';
+// the home page (index.html) opts out of cross-document transitions: going there, skip ours before it is captured
+// (otherwise the home page aborts it and is left with an unhandled InvalidStateError it cannot catch)
+addEventListener('pageswap',e=>{const vt=e.viewTransition;if(!vt)return;for(const k of['ready','finished','updateCallbackDone'])vt[k]?.catch?.(()=>{});
+  let to='';try{to=new URL(e.activation?.entry?.url||'',location.href).pathname;}catch{}
+  if(/(^|\/)(index\.html)?$/.test(to))vt.skipTransition();});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const locations=[['beimen','北门','校门 gate'],['fengqitang','凤栖堂','绿瓦 历史 heritage'],['lanshu','百年榄仁树','树荫 tree'],['yihao','一号教学楼','教室 classroom'],['erhao','二号教学楼','外廊 corridor'],['library','图书馆','书 library'],['yanchi','砚池','池塘 水 pond'],['yundong','操场','运动 playground'],['nanmen','南门','gate'],['kexue','科学馆','实验 science']];
 const pages=[['index.html','一棵榄仁树 · 主页','主页 榄仁树 树 绕树 书页 落叶 home tree'],['descent.html','从星球到树荫','电影 地球 降落 descent'],['pocket/index.html','HAIZ Pocket','应用 app pwa 移动端'],['login/index.html','登录','账户 login account'],['journal.html','校园杂志','校园手记 新闻 社团 journal'],['architecture.html','建筑与材质实验室','实拍 材质 法线 material texture'],['physics-lab.html','能量物理实验室','10节物理实验 能量 弹簧 动能 反弹 功率 效率 电网 守恒 science physics experiment every joule'],['memory-walk.html','树荫下的三次停留','轻量阅读 树 地点 route'],['news.html','新闻档案','报道 archive'],['clubs.html','社团提案','科学 影像 音乐 club'],['life.html','课间电台','故事 便笺 FM'],['about.html','学校与校园手图','地图 历史 map'],['alumni.html','校友','alumni'],['admissions.html','来访与招生','visit'],['contact.html','关于本站','来源 隐私 联系']];

@@ -56,7 +56,8 @@ body.ready .poster { opacity: 0; }
 .track { position: relative; z-index: -1; pointer-events: none; }
 .stop { height: 100vh; height: 100svh; }
 /* 05 → 06 is the walker's film: a longer stretch of page, so each scroll lands on one beat of it */
-.js body.spatial .stop.film { height: 300vh; height: 300svh; }
+/* 05 → 06 is a 40-second film (lanren/world/film.js DURATION): a longer stretch of scroll to scrub it by hand */
+.js body.spatial .stop.film { height: 420vh; height: 420svh; }
 
 /* ------------------------------------------------------------ bar: tools, then the mark (top right) */
 .bar { position: fixed; z-index: 10; top: var(--top); right: var(--pad); display: flex; align-items: flex-start; gap: 22px; pointer-events: none; }
@@ -97,9 +98,17 @@ body.home #experienceDock { display: none; }
 
 /* the glass slab: a section's real entries, pinned into the scene */
 .slab { margin-top: 26px; width: min(100%, 340px); padding: 18px 18px 14px; border-radius: 18px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .08)), rgba(14, 20, 17, .26);
-  border: 1px solid rgba(255, 255, 255, .3); box-shadow: 0 24px 60px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .25);
-  backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); }
+  /* smoked, frosted glass: thick enough to diffuse what is behind it (a window grid or a bright leaf
+     becomes a soft field of its own colour), dark enough that light type holds on a sunlit wall,
+     still glass: its colour comes from the scene, a lit top edge, a shadow under it */
+  background: linear-gradient(165deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .025) 38%, rgba(0, 0, 0, .1) 100%), var(--slab-tint, rgba(14, 18, 16, .4));
+  border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 28px 70px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(0, 0, 0, .2);
+  backdrop-filter: blur(26px) saturate(.82) brightness(var(--slab-dim, .74)); -webkit-backdrop-filter: blur(26px) saturate(.82) brightness(var(--slab-dim, .74));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .22); }
+/* the evening chapters: the brightest backgrounds (a sunlit facade, the low sun) get a deeper, warmer smoke */
+#p-days .slab, #p-whole .slab { --slab-tint: rgba(26, 19, 14, .5); --slab-dim: .62; }
+.slab .entries .n, .slab .note { color: rgba(246, 241, 231, .76); }
+.slab .entries i { color: rgba(246, 241, 231, .7); }
 .slab-head { margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; font-size: 10.5px; letter-spacing: .26em; color: var(--ink-2); }
 .slab-head b { font: 400 34px/1 var(--display); letter-spacing: 0; color: var(--ink); }
 .entries { list-style: none; margin: 0; padding: 0; }
@@ -284,3 +293,6 @@ html:not(.js) .track, html:not(.js) .orbit, html:not(.js) .growth, html:not(.js)
 .roots-static img { display: block; width: 100%; max-width: 520px; height: auto; border-radius: 12px; margin: 6px 0 4px; }
 .roots-static small, .roots-static .g { display: block; font-size: 12px; color: var(--ink-3); }
 .roots-static .g a { color: inherit; }
+/* the evening chapters put the words on the brightest part of the picture (the low sun, a sunlit wall):
+   a soft halo of shade under the letters, no box */
+#p-days .chap, #p-whole .chap, #p-days .titling, #p-whole .titling { text-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 0 18px rgba(20, 12, 6, .55), 0 0 40px rgba(20, 12, 6, .3); }

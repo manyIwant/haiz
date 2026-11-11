@@ -58,6 +58,9 @@ export const PHOTOS = {
   },
   yanchi: {
     src: 'assets/images/campus/campus_yanchi.jpg', w: 1400, h: 1120,
+    // the light on the tree uses the picture inside its black mount and white keyline (the 区大伟 seal is kept);
+    // the reading sheet always shows the whole original
+    light: 'assets/images/campus/campus_yanchi-light.jpg',
     alt: '砚池：刻有红字「砚池」的题石，水池、热带植物与教学楼',
     credit: '画面署名「区大伟 摄」；拍摄年份与转载授权待确认。'
   },
@@ -109,7 +112,7 @@ export const NODES = [
     ],
     grade: 'single', sources: ['wiki'],
     light: { type: ['1939—1946', '停办'] },
-    at: { part: 'limb', eye: [-1.55, 1.72, 2.95], target: [-0.38, 2.0, 0.88], look: [-0.05, 2.3, 0.35], fov: 50, frame: 0.5 }
+    at: { part: 'limb', eye: [-1.55, 1.72, 2.95], target: [-0.38, 2.0, 0.88], look: [-0.05, 2.3, 0.35], fov: 50, frame: 0.4 }
   },
   {
     id: '1950', year: '1950—1953', title: '公办，定名「广东海南中学」',

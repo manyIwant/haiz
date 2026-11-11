@@ -13,8 +13,9 @@
 // Ownership of camera and input goes through lanren/world/state.js (W.claim). The page never
 // scrolls while the walk has the input, and the wheel never moves the walker.
 import * as THREE from 'three';
-import { shot, isPortrait, poseAt, CHAPTERS } from '../js/chapters.js';
-import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE } from './film.js';
+import { shot, isPortrait, poseAt, CHAPTERS, LIGHT } from '../js/chapters.js';
+import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE, PHASE } from './film.js';
+import { UNIFORMS } from '../js/foliage.js';
 import { createBody } from './body.js';
 import { eyeOffset } from './skeleton.js';
 import { buildColliders, move, nearest, freeSpot } from './collide.js';
@@ -32,6 +33,7 @@ const WALKING = new Set(['play', 'pocket', 'menu', 'transit']);
 export function attachWorld(ctx) {
   const { world, cam, state, goTo, DwellCamera, W, map, geo } = ctx;
   const reduce = !!ctx.reduceMotion;
+  const transitOn = ctx.transitOn || (() => false);   // home.js flying between distant shots: the film waits for it to land
   const camera = world.camera, canvas = world.renderer.domElement, body = document.body;
   const coarse = matchMedia('(pointer: coarse)').matches;
   if (!document.querySelector(`link[href="${CSS}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = CSS; document.head.append(l); }
@@ -52,21 +54,28 @@ export function attachWorld(ctx) {
     const hit = world.bark ? rc.intersectObject(world.bark, false)[0] : null;
     return [p[0], hit ? hit.point.y + 0.02 : p[1] + 0.24, p[2]];
   };
-  const limb = { a: onBark(0.12), b: onBark(0.62) };
+  // review only: ?leapT= (where on the limb the leap starts, 0 … 1), ?leapW= (how much it turns towards 06), ?leapD= (its length)
+  const sp = new URLSearchParams(location.search);
+  // (round 5: the leap starts near the limb's tip, 0.9 of the way out: the fall goes out through the lowest leaves and
+  // the evening campus opens below; from 0.62 the arc ran into the crown's lower limbs)
+  const LEAP = { t: +(sp.get('leapT') || 0.9), w: +(sp.get('leapW') || 1.6), d: +(sp.get('leapD') || 4.4) };
+  const limb = { a: onBark(0.12), b: onBark(LEAP.t) };
   // where the leap comes down: beyond the islet's rocks, turned a little towards 06
   function landing(e6) {
     const ld = [limb.b[0] - limb.a[0], limb.b[2] - limb.a[2]], l1 = Math.hypot(...ld);
     const to6 = [e6.ex - limb.b[0], e6.ez - limb.b[2]], l2 = Math.hypot(...to6);
-    let dx = ld[0] / l1 + 0.6 * to6[0] / l2, dz = ld[1] / l1 + 0.6 * to6[1] / l2;
+    let dx = ld[0] / l1 + LEAP.w * to6[0] / l2, dz = ld[1] / l1 + LEAP.w * to6[1] / l2;
     const n = Math.hypot(dx, dz); dx /= n; dz /= n;
-    let x = limb.b[0] + dx * 3.8, z = limb.b[2] + dz * 3.8;
+    let x = limb.b[0] + dx * LEAP.d, z = limb.b[2] + dz * LEAP.d;
     const r = Math.hypot(x, z);
     if (r < 10) { x *= 10 / r; z *= 10 / r; }
     return [x, z];
   }
   function frame6() {
-    const s6 = W.compose.shot6;
-    if (s6) return { ex: s6.eye[0], ez: s6.eye[2], lx: s6.look[0], ly: s6.look[1], lz: s6.look[2], fov: s6.fov, auth: 0, dist: Math.hypot(s6.look[0] - s6.eye[0], s6.look[2] - s6.eye[2]) };
+    const s0 = W.compose.shot6;
+    // phones have their own frame of the same moment (same eye, its own look and lens)
+    const s6 = s0 && isPortrait() && s0.portrait ? { ...s0, ...s0.portrait } : s0;
+    if (s6) return { ex: s6.eye[0], ez: s6.eye[2], lx: s6.look[0], ly: s6.look[1], lz: s6.look[2], fov: s6.fov, auth: s6.auth || 0, dist: Math.hypot(s6.look[0] - s6.eye[0], s6.look[2] - s6.eye[2]) };
     const f = shot(5), y = f.yaw * D2R, p = f.pitch * D2R;
     return { ex: f.ex, ez: f.ez, lx: f.ex + Math.sin(y) * Math.cos(p) * f.dist, ly: f.ey + Math.sin(p) * f.dist, lz: f.ez + Math.cos(y) * Math.cos(p) * f.dist, fov: f.fov, auth: f.auth, dist: f.dist };
   }
@@ -76,7 +85,25 @@ export function attachWorld(ctx) {
     if (film && k === filmKey) return film;
     filmKey = k;
     const f5 = shot(4), e6 = frame6();
-    film = makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground });
+    const args = { e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground, sunAz: W.compose.sun6 ?? LIGHT[5].sun[0] };
+    film = makeFilm(args);
+    // what the walker looks at on the way, from the campus itself: a tree passed close by, 一号教学楼's
+    // entrance while the pace slows, the ground ahead as the walk runs out
+    const fx = film.facts, sights = [{ feet: true, at: [0.02, 0.17] }];   // first, a look down at one's own feet getting going
+    const ax = fx.L2[0], az = fx.L2[2], bx = fx.G6[0] - ax, bz = fx.G6[2] - az, bl = Math.hypot(bx, bz) || 1;
+    let best = null;
+    for (const t of geo.trees || []) {
+      const s0 = ((t.x - ax) * bx + (t.z - az) * bz) / (bl * bl), lat = Math.abs(((t.x - ax) * bz - (t.z - az) * bx) / bl);
+      if (s0 < 0.12 || s0 > 0.42 || lat < 2.5 || lat > 9) continue;
+      const score = Math.abs(lat - 4.5) - 2 * (t.h || 1);
+      if (!best || score < best.score) best = { t, s0, score };
+    }
+    if (best) sights.push({ p: [best.t.x, GROUND_Y + 5.5 * (best.t.h || 1), best.t.z], at: [Math.max(0.04, best.s0 - 0.14), best.s0 + 0.05] });
+    const yh = map.section?.buildings?.find((x) => x.id === 'yihao');
+    if (yh) { const r = yh.rot + Math.PI; sights.push({ p: [yh.cx + Math.sin(r) * (yh.d / 2 + 4), GROUND_Y + 8.5, yh.cz + Math.cos(r) * (yh.d / 2 + 4)], at: [0.42, 0.68] }); }
+    sights.push({ p: [fx.G6[0] + (bx / bl) * 3.5, GROUND_Y, fx.G6[2] + (bz / bl) * 3.5], at: [0.8, 0.99] });
+    film = makeFilm({ ...args, sights });
+    film.sights = sights;
     return film;
   }
 
@@ -193,9 +220,9 @@ export function attachWorld(ctx) {
   }
 
   // ---------------------------------------------------------------- camera writing (walk, menus, flights)
-  function writeCamera(eye, yaw, pitch, fov) {
+  function writeCamera(eye, yaw, pitch, fov, roll = 0) {
     camera.position.set(eye[0], eye[1], eye[2]);
-    camera.rotation.set(pitch * D2R, (yaw + 180) * D2R, 0, 'YXZ');
+    camera.rotation.set(pitch * D2R, (yaw + 180) * D2R, roll * D2R, 'YXZ');
     const screen = DwellCamera.screen(camera);
     camera.fov = DwellCamera.fovFor(fov, screen, 0);
     camera.near = 0.06;
@@ -209,11 +236,11 @@ export function attachWorld(ctx) {
     return { eye: camera.position.toArray(), yaw: yawOf(d.x, d.z), pitch: Math.asin(clamp(d.y, -1, 1)) / D2R, fov: WALKING.has(W.owner) ? P.fov : cam.s.fov };
   };
   /** a flight between two eyes (rises a little on the way when it is long) */
-  function fly(to, dur, then) {
+  function fly(to, dur, then, pv = null) {
     const from = camState();
     from.fov = flight?.cur?.fov ?? from.fov;
     if (reduce) dur = Math.min(dur, 0.45);
-    flight = { from, to, t0: performance.now(), dur: dur * 1000, then, arc: Math.min(18, Math.hypot(to.eye[0] - from.eye[0], to.eye[2] - from.eye[2]) * 0.18) };
+    flight = { from, to, t0: performance.now(), dur: dur * 1000, then, pv, curP: pv ? pv[0] : null, arc: Math.min(18, Math.hypot(to.eye[0] - from.eye[0], to.eye[2] - from.eye[2]) * 0.18) };
   }
   function stepFlight() {
     const f = flight, k = clamp((performance.now() - f.t0) / f.dur, 0, 1), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -222,6 +249,8 @@ export function attachWorld(ctx) {
     const yaw = f.from.yaw + wrap(f.to.yaw - f.from.yaw) * e, pitch = f.from.pitch + (f.to.pitch - f.from.pitch) * e;
     const fov = (f.from.fov || FOV_WALK) + ((f.to.fov || FOV_WALK) - (f.from.fov || FOV_WALK)) * e;
     f.cur = { eye, yaw, pitch, fov };
+    // a flight to another chapter carries the day and the season with it (home.js reads lightP)
+    if (f.pv) f.curP = f.pv[0] + (f.pv[1] - f.pv[0]) * e;
     writeCamera(eye, yaw, pitch, fov);
     if (k >= 1) { flight = null; f.then?.(); }
   }
@@ -382,7 +411,7 @@ export function attachWorld(ctx) {
       Object.assign(cam.s, f);
       cam.releaseLook();
       ctx.setActive?.(i);
-    });
+    }, [5, i]);
   }
   function restart() {
     closeMenu(); closePocket(true);
@@ -610,7 +639,7 @@ export function attachWorld(ctx) {
     input.jump = false;
     if (P.air) {
       P.vy -= 13 * dt; P.y += P.vy * dt;
-      if (P.y <= g) { P.crouch = Math.min(0.75, 0.25 + Math.abs(P.vy) / 14); P.y = g; P.vy = 0; P.air = false; }
+      if (P.y <= g) { P.crouch = Math.min(0.75, 0.25 + Math.abs(P.vy) / 14); ctx.sound?.thud(Math.min(1, Math.abs(P.vy) / 6)); P.y = g; P.vy = 0; P.air = false; }
     } else if (g < P.y - 0.5) { P.air = true; P.vy = 0; } else P.y = g;
     P.crouch *= Math.exp(-dt * 5);
     // steps: the phase follows the ground covered (no sliding), the stride grows with speed
@@ -630,13 +659,28 @@ export function attachWorld(ctx) {
       if (inside && !arrived) { arrived = true; $('.wd-arrive').textContent = `已到达：${dest.name}`; say(`已到达 ${dest.name}。建筑为近似体量，不能进入。`); setTimeout(() => { $('.wd-arrive').textContent = ''; }, 4500); }
     }
   }
-  let saveAcc = 0;
+  let saveAcc = 0, leafGiven = false, evT = 0;
+  const QUIET_MS = 4200;   // the last look lasts: words and the way on come after (any step hands over at once all the same)
   function tick(dt, wall) {
     const p = state.p;
     // the end of the film: 06 holds; the scroll's owner becomes the hold's (and back)
-    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map') { W.claim('hold'); holdSince = performance.now(); wheelAcc = 0; }
+    if (W.owner === 'scroll' && p >= 4.995 && map.mode !== 'map' && !transitOn()) {
+      W.claim('hold'); holdSince = performance.now(); wheelAcc = 0;
+      // the film's last frame is given time: a leaf comes down from the crown into the evening
+      if (!reduce && !leafGiven) { leafGiven = true; setTimeout(() => { if (W.owner === 'hold') world.litter.onGift?.(); }, 900); }
+    }
     else if (W.owner === 'hold' && p < 4.99) W.claim('scroll');
+    if (p < 4.8) leafGiven = false;
     const holding = W.owner === 'hold' && !ceremonyThen;
+    // let the turn and the tree have the screen: no words, buttons or chrome while the gaze rises into
+    // the crown and for a few seconds after it arrives; then the way on fades in by itself
+    const quiet = !reduce && ((W.owner === 'scroll' && p > 4.9 && p < 4.995) || (holding && performance.now() - holdSince < QUIET_MS));
+    body.classList.toggle('wd-quiet', quiet);
+    // the evening goes on: during the long look at 06 the classrooms' lights come on, one room at a time
+    // (on the frame clock, not the wall's: a frame-by-frame render sees the same evening)
+    evT = W.owner === 'hold' ? evT + dt : 0;
+    const ev = WALKING.has(W.owner) ? 1 : W.owner === 'hold' ? Math.min(1, evT / 9) : 0;
+    map.section?.setEvening?.(reduce ? 1 : ev);
     $('.wd-hold').hidden = !holding;
     body.classList.toggle('wd-holding', holding);
     $('.wd-resume').hidden = !pendingResume;
@@ -652,43 +696,71 @@ export function attachWorld(ctx) {
     if (pocket.open) pocket.update({ x: P.x, z: P.z, yaw: P.yaw });
     beacon.material.uniforms.uT.value += wall * 1.6;
   }
-  function filmOn() { return (W.owner === 'scroll' || W.owner === 'hold') && state.p > 4.0001 && map.mode !== 'map' && !cam.push; }
+  function filmOn() { return (W.owner === 'scroll' || W.owner === 'hold') && state.p > 4.0001 && map.mode !== 'map' && !cam.push && !transitOn(); }
   function cameraHook() {
     if (flight) { stepFlight(); return true; }
     if (W.owner === 'play' || W.owner === 'pocket' || W.owner === 'menu') {
       const eye = eyeOfPlayer();
-      writeCamera(eye, P.yaw, P.pitch, P.fov);
+      writeCamera(eye, P.yaw, P.pitch, P.fov, 0.6 * Math.sin(P.phase) * Math.min(1, P.amp));
+      const st = Math.floor(P.phase / Math.PI + 0.5);
+      if (st !== lastWalkStep && P.amp > 0.15 && !P.air) ctx.sound?.step('stone', Math.min(1, P.amp));
+      lastWalkStep = st;
       return true;
     }
     return W.owner === 'transit';
   }
+  let lastStep = null, lastWalkStep = 0;
   function after() {
+    // in the crown with the person's own eyes, a leaf at the lens is looked past (foliage.js uNearCut)
+    UNIFORMS.uNearCut.value = filmOn() && state.p - 4 > PHASE.self[0] && state.p - 4 < PHASE.land[0] ? 1.3 : WALKING.has(W.owner) ? 0.7 : 0;
     if (filmOn()) {
       const ps = getFilm().pose(state.p - 4);
       // the eye is exactly in the walker's head (the look may still be easing: V4's camera turns it)
       camera.position.set(ps.cam.ex, ps.cam.ey, ps.cam.ez);
+      if (ps.cam.roll) camera.rotateZ((ps.cam.roll * Math.PI) / 180);   // the body's own sway in the image
       camera.updateMatrixWorld();
+      // footsteps (forward only): a foot comes down each time the walk's phase passes a half turn
+      const q = state.p - 4, step = Math.floor(ps.body.phase / Math.PI + 0.5);
+      if (lastStep && q > lastStep.q && step !== lastStep.step && ps.body.amp > 0.08) ctx.sound?.step(q < PHASE.leap[0] ? 'bark' : 'stone', Math.min(1, ps.body.amp + 0.3));
+      if (lastStep && lastStep.q < PHASE.land[0] && q >= PHASE.land[0]) ctx.sound?.thud();
+      lastStep = { q, step };
       cam.s.ex = ps.cam.ex; cam.s.ey = ps.cam.ey; cam.s.ez = ps.cam.ez;
       fig.group.visible = ps.body.show && W.hud.body;
+      fig.setFirstPerson(ps.body.firstPerson);
+      fig.breathe = performance.now() / 1000;
       if (fig.group.visible) fig.set(ps.body, ground(ps.body.x, ps.body.z));
       return;
     }
     if (WALKING.has(W.owner) && W.owner !== 'transit') {
       fig.group.visible = W.hud.body;
+      fig.setFirstPerson(true);
+      fig.breathe = performance.now() / 1000;
       fig.set(poseOf(), ground(P.x, P.z));
       return;
     }
     fig.group.visible = false;
   }
   function light(L, p) {
-    // 05's depth of field belongs to the view out of the crown: once the camera is a person the near world is sharp
-    if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) L.aperture *= 1 - smooth((p - 4.03) / 0.1);
+    // with the campus standing round the tree in 05 and 06, the air gives it depth: the far blocks
+    // sink into the evening haze in 05, and in 06's clear day the buildings behind the tree recede a little
+    const stand = (W.compose.rise && p > 3.6) || WALKING.has(W.owner) ? (WALKING.has(W.owner) ? 1 : smooth((p - 3.6) / 0.4)) : 0;
+    if (stand > 0) {
+      const at5 = WALKING.has(W.owner) ? 1 : clamp(p - 4, 0, 1);
+      L.density *= 1 + stand * (0.5 - 0.25 * at5);
+      L.mist *= 1 + stand * (0.3 - 0.15 * at5);
+    }
+    // 05's depth of field stays while the eye finds the person on the limb (a portrait lens, focused
+    // on them: home.js reads the rail's distance); once the camera is the person the near world is sharp
+    if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) {
+      const q = p - 4;
+      L.aperture = (L.aperture + (0.55 - L.aperture) * smooth((q - 0.03) / 0.08)) * (1 - smooth((q - 0.15) / 0.035));
+    }
     if (WALKING.has(W.owner)) L.aperture = 0;
-    // composition a: 06's sun turns with its new view (sun 77° to the right of the gaze, as in V4)
+    // composition a: 06's sun turns with its new view (low behind the walker's left shoulder, as in b)
     const s6 = W.compose.sun6;
     if (s6 != null && p > 4) {
       const f = clamp(p - 4, 0, 1), t = f * f * f * (f * (f * 6 - 15) + 10);
-      L.sunAz += wrap(s6 - 58) * t;
+      L.sunAz += wrap(s6 - LIGHT[5].sun[0]) * t;
     }
     return L;
   }
@@ -735,5 +807,5 @@ export function attachWorld(ctx) {
     endCeremony,
     pocket
   };
-  return { tick, camera: cameraHook, after, light, focus, rail: (p) => ((W.owner === 'scroll' || W.owner === 'hold') && p >= 4 && map.mode !== 'map' ? railOf(getFilm().pose(p - 4).cam) : null), overlay, walking: () => WALKING.has(W.owner) || map.fromWalk, walkView, api };
+  return { tick, camera: cameraHook, after, light, focus, lightP: () => (flight?.pv ? flight.curP : null), rail: (p) => ((W.owner === 'scroll' || W.owner === 'hold') && p >= 4 && map.mode !== 'map' ? railOf(getFilm().pose(p - 4).cam) : null), overlay, walking: () => WALKING.has(W.owner) || map.fromWalk, walkView, api };
 }

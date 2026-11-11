@@ -72,7 +72,8 @@ const near = (a, b, eps, msg) => assert(Math.abs(a - b) <= eps, `${msg}: ${a} vs
 
   // ---------------------------------------------------------------- storeys and heights
   for (const b of m.buildings) {
-    const src = campus.buildings.find((x) => x.id === b.id);
+    // (a building whose photographs contradict the shared data carries its evidence in campus3d.js OWN)
+    const src = C.ownData(campus.buildings.find((x) => x.id === b.id));
     if (b.floors) {
       assert.strictEqual(b.floors, src.floors, b.id + ' storeys');
       near(b.levels[b.levels.length - 1] + b.floorH, src.size[1], 1e-6, b.id + ' the top storey ends at the model height');

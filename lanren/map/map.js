@@ -930,7 +930,7 @@ export function attach(ctx, geo) {
     layer.setDim(S.dim);
     if (section) {
       // outside the map, the campus follows the film (and stands for the walk): one function of p
-      if (S.mode !== 'map') { S.trans = null; S.u = campusAt(W.compose, state.p, { pinned: W.campus.pinned, walking: ['play', 'pocket', 'menu', 'transit'].includes(W.owner) || !!ctx.walking?.() }); }
+      if (S.mode !== 'map') { S.trans = null; S.u = campusAt(W.compose, ctx.campusP ? ctx.campusP() : state.p, { pinned: W.campus.pinned, walking: ['play', 'pocket', 'menu', 'transit'].includes(W.owner) || !!ctx.walking?.() }); }
       // advance the change first, so the cuts, the front and the camera of this frame share one u
       if (S.trans) stepTrans();
       cutsNow(wall);

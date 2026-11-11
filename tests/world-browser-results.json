@@ -1,6 +1,18 @@
 {
-  "date": "2026-11-07T09:26:20.680Z",
+  "date": "2026-11-09T04:38:16.554Z",
   "results": [
+    {
+      "name": "phone 390×844: no overflow; the step at 06 offers turning sideways (declinable); a real touch drag on the left walks 1.19 m; map and menu are buttons",
+      "ok": true
+    },
+    {
+      "name": "Back from the walk returns to 06",
+      "ok": true
+    },
+    {
+      "name": "a reload in the walk lands at 06 with “回到上次站的地方”",
+      "ok": true
+    },
     {
       "name": "composition a: campus at 05 0, at 06 1; the walk starts where the film ends",
       "ok": true

@@ -9,6 +9,9 @@
 //   crouch  knees bending (landing, preparing a leap), tuck  legs drawn up in the air
 //   balance arms out to the sides, reach  arms forward (negative: swung back)
 //   lean    the torso leaning forward (radians), look  the head turned from the body (degrees)
+//   roll    the upper body leaning sideways (radians: balance), tilt  the arms answering it
+//   nod     the head raised (+) or lowered (degrees; only the drawn head, never the eye)
+//   weight  standing at ease on one leg (−1 … 1): hips drop to the free side, that knee softens
 export const DIM = {
   // the eye sits at the front of the head (a person's eyes are ~10 cm ahead of the chest): looking
   // down shows the chest receding and the legs and feet, not the top of the shoulders
@@ -34,13 +37,23 @@ export function angles(p) {
     lean: (p.lean || 0) + crouch * 0.38 + amp * 0.06,
     look: ((p.look || 0) * Math.PI) / 180
   };
+  // the walk carries the hips round and the shoulders against them (the head stays steady)
+  a.twistHip = 0.09 * amp * s;
+  a.twistTorso = -0.17 * amp * s;
+  const w = clamp(p.weight || 0, -1, 1);
+  a.hipRoll = 0.06 * w + 0.035 * amp * c;                 // the pelvis drops towards the free leg
+  a.roll = (p.roll || 0);                                  // the upper body's lean, in the world
+  a.nod = ((p.nod || 0) * Math.PI) / 180;
+  if (w > 0) a.kneeR += 0.2 * w; else a.kneeL += -0.2 * w;
   const bal = clamp(p.balance || 0, 0, 1), reach = clamp(p.reach || 0, -1, 1);
   // arms swing against the legs; balance lifts them out to the sides; reach brings them forward (or back)
   const armSwing = -0.75 * swing * s;
   // (balancing, the arms go out and a little forward: low enough to be seen when looking down)
   a.armL = armSwing * (1 - bal) + reach * 1.25 + tuck * 0.5 + crouch * 0.25 + bal * 0.5;
   a.armR = -armSwing * (1 - bal) + reach * 1.25 + tuck * 0.45 + crouch * 0.25 + bal * 0.5;
-  a.armOut = bal * 0.95 + tuck * 0.35 + 0.06;
+  a.armOut = bal * 0.95 + tuck * 0.35 + 0.06 + 0.05 * Math.abs(w);
+  const tilt = clamp(p.tilt || 0, -0.6, 0.6);
+  a.armOutL = a.armOut + tilt; a.armOutR = a.armOut - tilt;
   a.elbowL = 0.18 + amp * 0.25 * Math.max(0, s) + bal * 0.35 + Math.max(0, reach) * 0.35 + crouch * 0.3;
   a.elbowR = 0.18 + amp * 0.25 * Math.max(0, -s) + bal * 0.35 + Math.max(0, reach) * 0.35 + crouch * 0.3;
   // the hips sit as high as the longer (standing) leg reaches: the foot stays on the ground
@@ -49,8 +62,13 @@ export function angles(p) {
   return a;
 }
 
-/** where the eye is above and in front of the feet (m), for a pose */
+/**
+ * where the eye is above, in front of and beside the feet (m), for a pose:
+ *   base  forward of the feet by the torso's lean     head  forward of the neck (turns with look)
+ *   side  to the body's right by the upper body's roll   fwd = base + head (looking straight on)
+ */
 export function eyeOffset(p, a = angles(p)) {
   const reach = DIM.torso + DIM.headEye;
-  return { up: a.hip + Math.cos(a.lean) * reach, fwd: Math.sin(a.lean) * reach + DIM.eyeFwd };
+  const base = Math.sin(a.lean) * reach;
+  return { up: a.hip + Math.cos(a.lean) * Math.cos(a.roll) * reach, base, head: DIM.eyeFwd, side: Math.sin(a.roll) * Math.cos(a.lean) * reach, fwd: base + DIM.eyeFwd };
 }

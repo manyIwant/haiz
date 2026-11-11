@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-07T18:30:18.891Z",
+  "date": "2026-11-08T14:45:28.068Z",
   "browser": "chromium (swiftshader)",
   "results": [
     "normal scroll reaches 03 (#leaves); the canopy stays closed until asked",
@@ -8,7 +8,7 @@
     "→ moves to 文学 (#leaves/words) with 3 work leaves labelled",
     "a leaf label opens the work to read (#leaves/w/demo-leaf-gap)",
     "relations: 叶间低音 shows 衍生自 叶隙; following it flies across the crown to 文学 and frames that leaf beside the sheet",
-    "Back closes the work; Esc leaves the canopy and the camera returns to the 03 frame (0.017 m)",
+    "Back closes the work; Esc leaves the canopy and the camera returns to the 03 frame (0.009 m)",
     "after leaving, the scroll walk continues to 04",
     "a private draft is saved (no account here: on this device, and the sheet says so); 申请审核 is disabled, not faked",
     "a leaf link (#leaves/w/demo-leaf-gap) opens that work on its leaf from a cold start",
