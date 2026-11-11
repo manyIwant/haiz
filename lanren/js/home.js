@@ -13,6 +13,7 @@ import { Visits } from './visits.js';
 import { pickComposition } from '../world/compose.js';
 import { createWorldState } from '../world/state.js';
 import { BEATS as FILM_STOPS, FILM_SECONDS } from '../world/film.js';
+import { createClock } from '../world/clock.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -30,6 +31,14 @@ let world = null, cam = null, active = -1;
 let map = null;   // chapter 04's campus beneath the water (lanren/map), when it has loaded
 // how 05 and 06 meet the campus (?compose=a|b|c, lanren/world/compose.js) and the world they share
 const compose = pickComposition(location.search, (() => { try { return sessionStorage; } catch { return null; } })());
+// the world's own clock (lanren/world/clock.js): ?clock=1 lights every shot with the real sun of a real
+// instant at the campus, keeps the 05 → 06 film in one evening and lets that evening go on while 06 is
+// held. Off by default (V4's six art-directed suns); ?clock=0 turns it off again. Remembered for the tab.
+const clockOn = (() => {
+  let v = params.get('clock');
+  try { if (v == null) v = sessionStorage.getItem('haiz.clock'); else sessionStorage.setItem('haiz.clock', v); } catch { /* storage blocked */ }
+  return v === '1';
+})();
 let W = null;     // lanren/world/state.js: owner of camera and input, the campus left standing, the destination
 let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let roots = null; // 02's history on the same tree; shares the camera and scroll rail
@@ -586,6 +595,8 @@ async function start3D() {
   addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
   W = createWorldState({ compose, canvas: world.renderer.domElement, cam });
+  W.clock = clockOn ? createClock({ rotation: compose.rotation, filmSeconds: FILM_SECONDS }) : null;
+  if (W.clock) mountSlate();
   cam.rail = () => override || life?.rail(state.p) || railAt(state.p);
   const attachMap = (md) => {
     if (!md || map) return;
@@ -781,6 +792,14 @@ function step(dt, wallDt = dt) {
   // growth and the light of the day follow the walk
   const grow = canopy ? canopy.grow(growAt(pl)) : growAt(pl);
   const L = lightAt(pl);
+  // the world's clock: the sun is where it really stands at this instant over this campus (the shot's
+  // colours, haze and exposure stay the shot's own); the evening's last minutes deepen with the sun
+  const now = W?.clock ? W.clock.at(pl) : null;
+  if (now) {
+    L.sunAz = now.sunAz; L.sunEl = now.sunEl;
+    if (now.dusk > 0) duskGrade(L, now.dusk);
+    slate(now);
+  }
   // in flight the lens is a wide, deep one: the macro depth of field of 03 belongs to that shot only
   if (transit) L.aperture *= 1 - Math.sin(Math.PI * Math.min(1, (performance.now() - transit.t0) / transit.dur));
   life?.light(L, p);
@@ -820,6 +839,35 @@ function step(dt, wallDt = dt) {
   world.render(t);
   frames++;
 }
+// the last minutes of the evening, as the sun goes from where the film leaves it to the last light:
+// redder and weaker, the sky deeper, the picture a little darker (the shadows lengthen by themselves)
+function duskGrade(L, k) {
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  L.sunCol = mix(L.sunCol, [1.0, 0.5, 0.24], 0.7 * k);
+  L.I *= 1 - 0.1 * k;                 // (kept strong: at this height it is the sun that draws the long shadows)
+  L.zenith = mix(L.zenith, [0.03, 0.07, 0.24], 0.6 * k);
+  L.horizon = mix(L.horizon, [0.82, 0.52, 0.44], 0.55 * k);
+  L.glow = mix(L.glow, [1.6, 0.6, 0.24], 0.5 * k);
+  L.fog = mix(L.fog, [0.52, 0.44, 0.47], 0.5 * k);
+  L.exposure *= 1 - 0.1 * k;
+  L.warm += (0.9 - L.warm) * 0.5 * k;
+}
+// the instant, shown where the chapter is named: a place and a time, as a caption would give them
+let slateEl = null, slateKey = '';
+function mountSlate() {
+  const where = $('.orbit .where');
+  if (!where || slateEl) return;
+  slateEl = document.createElement('p');
+  slateEl.className = 'when';
+  slateEl.setAttribute('aria-hidden', 'true');
+  slateEl.style.cssText = 'margin:3px 0 0;text-align:right;font:10px var(--serif);letter-spacing:.16em;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap';
+  where.after(slateEl);
+}
+function slate(now) {
+  if (!slateEl || now.label === slateKey) return;
+  slateKey = now.label;
+  slateEl.textContent = '海口 · ' + now.label;
+}
 function loop() {
   requestAnimationFrame(function frame(now) {
     const wall = Math.min(0.5, (now - last) / 1000);
@@ -842,6 +890,10 @@ function adapt(dt) {
 window.__haizHome = {
   get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
   get transit() { return transit && { i: transit.i, p0: transit.p0, pv: +transit.pv.toFixed(3) }; },
+  /** the world's clock (null unless ?clock=1): clock.at(p) → { label, sunAz, sunEl, evening, dusk } */
+  get clock() { return W?.clock || null; },
+  /** the sun as the scene has it right now (world heading and height, degrees) */
+  get sun() { const d = world?.sun ? world.sun.position.clone().sub(world.sun.target.position).normalize() : null; return d && { az: +(((Math.atan2(d.x, d.z) * 180) / Math.PI + 360) % 360).toFixed(2), el: +((Math.asin(d.y) * 180) / Math.PI).toFixed(2) }; },
   /** review: hold a transit at u (0…1) between the current camera and shot i */
   transitAt: (i, u) => { if (!transit || transit.i !== i) startTransit(i); transit.t0 = performance.now() - u * transit.dur; stepTransit(); cam.snap(); },
   go: (i) => { override = null; transit = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },

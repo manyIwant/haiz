@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-11T10:11:11.925Z",
+  "audit": [
+    "V4's six suns as bearings over the campus (composition b, campus north 337°): 01 81°/8° (0.2° from any real sun) · 02 42°/34° (26.9° from any real sun) · 03 185°/26° (20.3° from any real sun) · 04 112°/28° (0.3° from any real sun) · 05 305°/12° (13.3° from any real sun) · 06 287°/8.5° (0.2° from any real sun)",
+    "3 of 6 stand where the sun never is at Haikou (more than 5° from every sun of the year): 02, 03, 05",
+    "over the scroll V4's sun travels 440° of heading and turns back 2 times (a real day: one way, at most ~230°)",
+    "inside the 05 → 06 film (45.4 s, one take): V4's sun goes 302° → 320° and 12.0° → 8.5° up, at most 0.75°/s (179× the real sun); the shadows turn 9.9° during the walk alone",
+    "at V4's 06 the walker stands 26.5 m from the trunk and their shadow is 11.7 m long (sun 8.5° up): it points at the tree and stops 14.8 m short of it",
+    "the compass itself is an estimate: sun.js gives the campus's north as 337° (23° west of north); campus.json's source note says the campus is turned about 41.4° from north; campus.json marks the orientation unverified"
+  ],
+  "shots": [
+    {
+      "shot": "01",
+      "worldAz": 166,
+      "el": 8,
+      "bearing": 81,
+      "offReal": 0.2,
+      "nearest": "8/25 7:00",
+      "note": ""
+    },
+    {
+      "shot": "02",
+      "worldAz": 205,
+      "el": 34,
+      "bearing": 42,
+      "offReal": 26.9,
+      "nearest": "6/22 8:40",
+      "note": ""
+    },
+    {
+      "shot": "03",
+      "worldAz": 62,
+      "el": 26,
+      "bearing": 185,
+      "offReal": 20.3,
+      "nearest": "12/23 13:04",
+      "note": "re-aimed at load on a leaf cluster (home.js aimStudy)"
+    },
+    {
+      "shot": "04",
+      "worldAz": 135,
+      "el": 28,
+      "bearing": 112,
+      "offReal": 0.3,
+      "nearest": "10/16 8:40",
+      "note": ""
+    },
+    {
+      "shot": "05",
+      "worldAz": 302,
+      "el": 12,
+      "bearing": 305,
+      "offReal": 13.3,
+      "nearest": "6/22 18:40",
+      "note": ""
+    },
+    {
+      "shot": "06",
+      "worldAz": 320,
+      "el": 8.5,
+      "bearing": 287,
+      "offReal": 0.2,
+      "nearest": "7/28 18:36",
+      "note": ""
+    }
+  ],
+  "checks": [
+    "time never runs backwards over the scroll (date and hour, 5000 steps): 01 2月24日 7:41 · 02 3月8日 9:00 · 03 3月19日 10:00 · 04 4月15日 16:00 · 05 5月15日 18:24 · 06 5月15日 18:25",
+    "05 → 06 is 45.4 s of one evening, linearly; in it the sun moves 0.18° (V4: 18.0°)",
+    "the sun is sun.js's ephemeris through the campus compass (agrees with sunVector to 0.0001°); turning the campus (a ↔ b) turns the sun with it",
+    "the sun turns one way through the whole scroll (184° of heading, no reversal), never more than 0.09° per 0.05 % of scroll",
+    "06 (5月15日 18:25): the real sun stands at 320.0°, 8.6° up — where composition b put its own (320°, 8.5°), found by choosing the day rather than by moving the sun",
+    "06 held, the evening goes on at the tree's pace and comes to rest at the last light: 0 s 18:25 sun 8.6° lights 0% · 3 s 18:29 sun 7.7° lights 19% · 6 s 18:33 sun 6.9° lights 55% · 12 s 18:37 sun 5.9° lights 96% · 30 s 18:42 sun 4.7° lights 100% · 120 s 18:44 sun 4.4° lights 100%",
+    "every reading is a pure function of (p, held): same after any detour; scrolling back out of 06 runs the held evening back without a jump",
+    "06's standpoint follows from the sun: turned 4.1° about the trunk (same 26.5 m), the walker's shadow lies on the trunk's axis at the last light (V4: passes 2.6 m beside it) and is 22.7 m long by then (V4: 11.7 m): its head lies on the rocks at the tree's foot, 3.8 m from the trunk",
+    "cost of a moving sun, counted over the film at 60 fps (2724 frames): the whole-campus shadow map is re-rendered for the sun 449× with V4's light and 5× with the clock's; the sky is re-baked into the environment map 45× and 21× (counts of key changes in the source's own keys, not a frame-rate measurement)"
+  ]
+}

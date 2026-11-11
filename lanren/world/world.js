@@ -75,7 +75,20 @@ export function attachWorld(ctx) {
     const s0 = W.compose.shot6;
     // phones have their own frame of the same moment (same eye, its own look and lens)
     const s6 = s0 && isPortrait() && s0.portrait ? { ...s0, ...s0.portrait } : s0;
-    if (s6) return { ex: s6.eye[0], ez: s6.eye[2], lx: s6.look[0], ly: s6.look[1], lz: s6.look[2], fov: s6.fov, auth: s6.auth || 0, dist: Math.hypot(s6.look[0] - s6.eye[0], s6.look[2] - s6.eye[2]) };
+    if (s6) {
+      let eye = s6.eye, look = s6.look;
+      // with the world's clock the standpoint follows from the sun, not the sun from the standpoint:
+      // the walker stops where the evening's last light will lay their shadow on the trunk (the whole
+      // frame turns about the trunk with them, a few degrees: the tree keeps its place in the picture)
+      if (W.clock) {
+        const t = anchors.trunk || [0.1, 0, 0];
+        const want = W.clock.lastLight().sunAz, have = yawOf(eye[0] - t[0], eye[2] - t[2]);
+        const d = wrap(want - have) * D2R, c = Math.cos(d), sn = Math.sin(d);
+        const turn = (v) => { const x = v[0] - t[0], z = v[2] - t[2]; return [t[0] + x * c + z * sn, v[1], t[2] - x * sn + z * c]; };
+        eye = turn(eye); look = turn(look);
+      }
+      return { ex: eye[0], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov: s6.fov, auth: s6.auth || 0, dist: Math.hypot(look[0] - eye[0], look[2] - eye[2]) };
+    }
     const f = shot(5), y = f.yaw * D2R, p = f.pitch * D2R;
     return { ex: f.ex, ez: f.ez, lx: f.ex + Math.sin(y) * Math.cos(p) * f.dist, ly: f.ey + Math.sin(p) * f.dist, lz: f.ez + Math.cos(y) * Math.cos(p) * f.dist, fov: f.fov, auth: f.auth, dist: f.dist };
   }
@@ -85,7 +98,7 @@ export function attachWorld(ctx) {
     if (film && k === filmKey) return film;
     filmKey = k;
     const f5 = shot(4), e6 = frame6();
-    const args = { e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground, sunAz: W.compose.sun6 ?? LIGHT[5].sun[0] };
+    const args = { e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground, sunAz: W.clock ? W.clock.at(5).sunAz : (W.compose.sun6 ?? LIGHT[5].sun[0]) };
     film = makeFilm(args);
     // what the walker looks at on the way, from the campus itself: a tree passed close by, 一号教学楼's
     // entrance while the pace slows, the ground ahead as the walk runs out
@@ -678,9 +691,19 @@ export function attachWorld(ctx) {
     body.classList.toggle('wd-quiet', quiet);
     // the evening goes on: during the long look at 06 the classrooms' lights come on, one room at a time
     // (on the frame clock, not the wall's: a frame-by-frame render sees the same evening)
-    evT = W.owner === 'hold' ? evT + dt : 0;
-    const ev = WALKING.has(W.owner) ? 1 : W.owner === 'hold' ? Math.min(1, evT / 9) : 0;
-    map.section?.setEvening?.(reduce ? 1 : ev);
+    // (an evening that has come stays: back at 06 from the walk the lights are still on; they only go
+    // out again when the film is scrolled back before its last frame)
+    const walked = WALKING.has(W.owner) || map.fromWalk;
+    evT = W.owner === 'hold' ? evT + dt : walked ? 9 : 0;
+    let ev = walked ? 1 : W.owner === 'hold' ? Math.min(1, evT / 9) : 0;
+    if (W.clock) {
+      // the world's clock: looking at 06 (and walking on from it) is the tree's time again; the lights
+      // are a reading of the sun's height at that instant, not a count of frames
+      if (W.owner === 'hold' || walked) { if (reduce) W.clock.held = Math.max(W.clock.held, 60); else if (!ceremonyThen) W.clock.hold(dt); }
+      else if (p < 4.93) W.clock.release(dt);
+      ev = W.clock.evening(flight?.pv ? flight.curP : p);
+    }
+    map.section?.setEvening?.(reduce && !W.clock ? 1 : ev);
     $('.wd-hold').hidden = !holding;
     body.classList.toggle('wd-holding', holding);
     $('.wd-resume').hidden = !pendingResume;
@@ -757,7 +780,8 @@ export function attachWorld(ctx) {
     }
     if (WALKING.has(W.owner)) L.aperture = 0;
     // composition a: 06's sun turns with its new view (low behind the walker's left shoulder, as in b)
-    const s6 = W.compose.sun6;
+    // (with the world's clock the sun is already the real one of that evening: nothing to turn)
+    const s6 = W.clock ? null : W.compose.sun6;
     if (s6 != null && p > 4) {
       const f = clamp(p - 4, 0, 1), t = f * f * f * (f * (f * 6 - 15) + 10);
       L.sunAz += wrap(s6 - LIGHT[5].sun[0]) * t;

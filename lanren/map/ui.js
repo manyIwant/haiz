@@ -1,6 +1,7 @@
 // The map's words and controls. WebGL draws the ground; HTML carries what has
 // to be read and pressed, pinned to the same world points through the camera.
 import { GROUND_Y } from './geo.js';
+import { OWN } from './campus3d.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const NICE = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500];
@@ -106,7 +107,13 @@ export function fillDetail(dom, p, geo, building = null, d3 = false) {
   if (p.id === 'lanshu') facts.push(['位置', '地图原点 · 一号教学楼北侧（校园坐标）']);
   else facts.push(['距榄仁树', `约 ${Math.round(p.fromTree.distance)} m · ${p.fromTree.bearing}（校园坐标方向）`]);
   facts.push(['占地', `约 ${Math.round(p.w)} × ${Math.round(p.d)} m（既有平面矩形）`]);
-  if (p.floors && p.size && ['building', 'gate'].includes(p.kind)) facts.push(['体量', `${p.floors} 层 · 模型高 ${Math.round(p.size[1])} m（沿用漫游模型，非测量）`]);
+  if (p.floors && p.size && ['building', 'gate'].includes(p.kind)) {
+    // the card describes the model that stands there: where the model departs from the shared data on
+    // evidence (campus3d.js OWN: 一号教学楼, 6 storeys from photographs), it says so
+    const own = OWN[p.id]?.data;
+    facts.push(['体量', own ? `${own.floors ?? p.floors} 层 · 模型高 ${Math.round(own.height ?? p.size[1])} m（按照片推断；共享数据仍记 ${p.floors} 层 / ${Math.round(p.size[1])} m，非测量）`
+      : `${p.floors} 层 · 模型高 ${Math.round(p.size[1])} m（沿用漫游模型，非测量）`]);
+  }
   if (p.imageWithheld) facts.push(['照片', '现有照片身份存疑，暂不显示']);
   $('.cmap-facts').innerHTML = facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
   const text = (p.note.match(/文字依据[^。]*/) || [''])[0];
