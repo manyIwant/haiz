@@ -755,7 +755,7 @@ export function createSection(world, geo, campus, layer) {
   const byGroup = new Map();
   for (const b of model.buildings) { if (!byGroup.has(b.group)) byGroup.set(b.group, []); byGroup.get(b.group).push(b); }
 
-  let sweepR = 0;
+  let sweepR = 0, flood = false;
   const api = {
     model, group, mesh, ground, buildings: model.buildings, byGroup, cuts,
     /** per-building cut heights, in the finished campus's y (a building is whole when its cut is above its top) */
@@ -769,6 +769,9 @@ export function createSection(world, geo, campus, layer) {
     setDim(v) { U.uDimB.value = v; },
     /** the evening going on (0 … 1): more classroom lights on */
     setEvening(v) { U.uEvening.value = v; },
+    /** the campus standing in the water (?world=1, 01–03): the buildings as they are, no ground laid, no campus trees */
+    setFlood(on) { flood = !!on; },
+    get flood() { return flood; },
     get evening() { return U.uEvening.value; },
     /** the height a building's label sits at: the top of what is standing */
     topOf(group) {
@@ -799,8 +802,8 @@ export function createSection(world, geo, campus, layer) {
       group.visible = any || sweepR > 0;
       // the plan is ink only: light and shadow are paid for once the material front is on its way
       mesh.material = sweepR > 0.5 ? litMat : inkMat;
-      ground.visible = sweepR > 1;
-      for (const t of trees) t.mesh.visible = sweepR > 1;
+      ground.visible = sweepR > 1 && !flood;
+      for (const t of trees) t.mesh.visible = sweepR > 1 && !flood;
       U.uCSOn.value = Math.min(1, sweepR / 40);
       // (the scene has no bounce light: the sunlit paving's warmth is given back to walls and ground in shade)
       U.uBounce.value.set(world.sun.color.r, world.sun.color.g * 0.96, world.sun.color.b * 0.84).multiplyScalar(world.sun.intensity * 0.028);

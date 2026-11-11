@@ -20,7 +20,7 @@ import { createBody } from './body.js';
 import { eyeOffset } from './skeleton.js';
 import { buildColliders, move, nearest, freeSpot } from './collide.js';
 import { createPocket } from './pocket.js';
-import { GROUND_Y } from './compose.js';
+import { GROUND_Y, shot6Turned } from './compose.js';
 
 const D2R = Math.PI / 180;
 const CSS = new URL('./world.css?v=1', import.meta.url).href;
@@ -72,23 +72,13 @@ export function attachWorld(ctx) {
     return [x, z];
   }
   function frame6() {
-    const s0 = W.compose.shot6;
+    // with the world's clock the standpoint follows from the sun, not the sun from the standpoint: the
+    // walker stops where the evening's last light will lay their shadow on the trunk (the whole frame
+    // turns about the trunk with them, a few degrees: the tree keeps its place in the picture)
+    const s0 = W.compose.shot6 && W.clock ? shot6Turned(W.compose.shot6, W.clock.lastLight().sunAz, anchors.trunk) : W.compose.shot6;
     // phones have their own frame of the same moment (same eye, its own look and lens)
     const s6 = s0 && isPortrait() && s0.portrait ? { ...s0, ...s0.portrait } : s0;
-    if (s6) {
-      let eye = s6.eye, look = s6.look;
-      // with the world's clock the standpoint follows from the sun, not the sun from the standpoint:
-      // the walker stops where the evening's last light will lay their shadow on the trunk (the whole
-      // frame turns about the trunk with them, a few degrees: the tree keeps its place in the picture)
-      if (W.clock) {
-        const t = anchors.trunk || [0.1, 0, 0];
-        const want = W.clock.lastLight().sunAz, have = yawOf(eye[0] - t[0], eye[2] - t[2]);
-        const d = wrap(want - have) * D2R, c = Math.cos(d), sn = Math.sin(d);
-        const turn = (v) => { const x = v[0] - t[0], z = v[2] - t[2]; return [t[0] + x * c + z * sn, v[1], t[2] - x * sn + z * c]; };
-        eye = turn(eye); look = turn(look);
-      }
-      return { ex: eye[0], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov: s6.fov, auth: s6.auth || 0, dist: Math.hypot(look[0] - eye[0], look[2] - eye[2]) };
-    }
+    if (s6) return { ex: s6.eye[0], ez: s6.eye[2], lx: s6.look[0], ly: s6.look[1], lz: s6.look[2], fov: s6.fov, auth: s6.auth || 0, dist: Math.hypot(s6.look[0] - s6.eye[0], s6.look[2] - s6.eye[2]) };
     const f = shot(5), y = f.yaw * D2R, p = f.pitch * D2R;
     return { ex: f.ex, ez: f.ez, lx: f.ex + Math.sin(y) * Math.cos(p) * f.dist, ly: f.ey + Math.sin(p) * f.dist, lz: f.ez + Math.cos(y) * Math.cos(p) * f.dist, fov: f.fov, auth: f.auth, dist: f.dist };
   }

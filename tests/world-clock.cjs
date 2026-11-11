@@ -67,6 +67,19 @@ const between = (a, b) => Math.acos(Math.min(1, Math.max(-1, a[0] * b[0] + a[1] 
   const dist6 = Math.hypot(s6.eye[0] - trunk[0], s6.eye[2] - trunk[2]);
   const shadowLen = (el) => 1.75 / Math.tan(el * D2R);
   audit.push(`at V4's 06 the walker stands ${dist6.toFixed(1)} m from the trunk and their shadow is ${shadowLen(CH.LIGHT[5].sun[1]).toFixed(1)} m long (sun ${CH.LIGHT[5].sun[1]}° up): it points at the tree and stops ${(dist6 - shadowLen(CH.LIGHT[5].sun[1])).toFixed(1)} m short of it`);
+  {
+    // the tree against the building it stands before (the model's own volumes)
+    const G = await mod('lanren/map/geo.js'), C3 = await mod('lanren/map/campus3d.js');
+    const campus = JSON.parse(fs.readFileSync(path.join(root, 'assets/walk/campus.json'), 'utf8'));
+    const model = C3.buildCampus(campus, G.makeFrame(campus, { rotation: B.rotation }));
+    const yh = model.buildings.find((b) => b.id === 'yihao'), foot = campus.buildings.find((b) => b.id === 'lanshu').size;
+    const buf = fs.readFileSync(path.join(root, 'lanren/assets/rosettes.bin')), ros = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4), st = tree.rosetteStride;
+    const sd = (x, z) => { const ox = x - yh.cx, oz = z - yh.cz, cs = Math.cos(yh.rot), sn = Math.sin(yh.rot), lx = Math.abs(ox * cs - oz * sn) - yh.w / 2, lz = Math.abs(ox * sn + oz * cs) - yh.d / 2; return Math.hypot(Math.max(lx, 0), Math.max(lz, 0)) + Math.min(Math.max(lx, lz), 0); };
+    let n = 0, inside = 0, close = 0, reach = 0;
+    for (let i = 0; i < ros.length; i += st) { n++; const d = sd(ros[i], ros[i + 2]); if (d < 0 && ros[i + 1] < -0.85 + yh.top) inside++; if (d < 2) close++; reach = Math.max(reach, Math.hypot(ros[i] - CH.AXIS.x, ros[i + 2] - CH.AXIS.z)); }
+    const eye3 = CH.KEYS.find((k) => k.t === 2).eye;
+    audit.push(`the tree and the building overlap: V4's crown reaches ${reach.toFixed(1)} m from its axis (the campus plan gives the tree ${foot[0]} × ${foot[2]} m); 一号教学楼's front stands ${(-sd(trunk[0], trunk[2]) * -1).toFixed(1)} m from the trunk; ${inside} of ${n} leaf clusters (${(100 * inside / n).toFixed(1)}%) lie inside its volume and ${close} within 2 m of it; V4's 03 key stands ${sd(eye3[0], eye3[2]).toFixed(1)} m from that front before home.js re-aims it at load (in the browser the re-aimed eye is at x = 12.44: 1.4 m inside)`);
+  }
   audit.push(`the compass itself is an estimate: sun.js gives the campus's north as ${SUN.SITE.campusNorthBearing}° (23° west of north); campus.json's source note says the campus is turned about 41.4° from north; campus.json marks the orientation unverified`);
 
   // ------------------------------------------------------------------ part 2: the clock
@@ -193,6 +206,31 @@ const between = (a, b) => Math.acos(Math.min(1, Math.max(-1, a[0] * b[0] + a[1] 
     assert(after.sh <= 8 && after.sh * 20 < before.sh, `campus shadow map: ${before.sh} → ${after.sh}`);
     assert(after.env < before.env, `environment map: ${before.env} → ${after.env}`);
     checks.push(`cost of a moving sun, counted over the film at 60 fps (${frames} frames): the whole-campus shadow map is re-rendered for the sun ${before.sh}× with V4's light and ${after.sh}× with the clock's; the sky is re-baked into the environment map ${before.env}× and ${after.env}× (counts of key changes in the source's own keys, not a frame-rate measurement)`);
+  }
+
+  {
+    // one place (?world=1): the campus is there from the first frame, and 01 stands where 06 will stand
+    let prevU = 2;
+    for (let p = 0; p <= 3.0001; p += 0.01) {
+      const u = CO.campusAt(B, p, { veil: true });
+      assert(u <= prevU + 1e-9, 'before 04 the standing campus only folds, never rises again, at p = ' + p.toFixed(2));
+      if (p <= CO.VEIL_FOLD[0]) assert(u === 1, 'the campus stands through 01 and the opening of 02 at p = ' + p.toFixed(2));
+      prevU = u;
+    }
+    assert(CO.campusAt(B, 3, { veil: true }) === 0, '04 opens on the plan');
+    for (let p = 3; p <= 5; p += 0.05) assert(CO.campusAt(B, p, { veil: true }) === CO.campusAt(B, p), 'from 04 on the campus is as before at p = ' + p.toFixed(2));
+    assert(CO.campusAt(B, 1, {}) === 0 && CO.campusAt(B, 1, { veil: true, walking: true }) === 1, 'without the flag nothing stands before 04; the walk always stands');
+    const turned = CO.shot6Turned(B.shot6, C.lastLight().sunAz, trunk);
+    const r0 = Math.hypot(B.shot6.eye[0] - trunk[0], B.shot6.eye[2] - trunk[2]), r1 = Math.hypot(turned.eye[0] - trunk[0], turned.eye[2] - trunk[2]);
+    const l0 = Math.hypot(B.shot6.look[0] - B.shot6.eye[0], B.shot6.look[2] - B.shot6.eye[2]), l1 = Math.hypot(turned.look[0] - turned.eye[0], turned.look[2] - turned.eye[2]);
+    assert(Math.abs(r0 - r1) < 1e-9 && Math.abs(l0 - l1) < 1e-9 && turned.eye[1] === B.shot6.eye[1], 'the turned frame is the same frame, turned about the trunk');
+    assert(Math.abs(wrap((Math.atan2(turned.eye[0] - trunk[0], turned.eye[2] - trunk[2]) * R2D) - C.lastLight().sunAz)) < 1e-6, 'the turned standpoint is on the sun\'s line');
+    // from that one standpoint: the February sun rises behind the tree, the May sun sets behind the walker
+    const gaze = Math.atan2(trunk[0] - turned.eye[0], trunk[2] - turned.eye[2]) * R2D;
+    const dawn = C.sun(0), dusk = C.lastLight();
+    const ahead = Math.abs(wrap(dawn.sunAz - gaze)), behind = Math.abs(wrap(dusk.sunAz - gaze));
+    assert(ahead < 15 && behind > 179, `dawn ${ahead}° from the gaze, dusk ${behind}°`);
+    checks.push(`one place (?world=1): the campus stands in 01 and as 02 opens (u = 1 to p ${CO.VEIL_FOLD[0]}), has withdrawn by p ${CO.VEIL_FOLD[1]} as the climb begins, and is as before from 04 on; 01 is seen from 06's standpoint (same ${r1.toFixed(1)} m, same frame). From there the sun of ${C.when(0).label} rises ${ahead.toFixed(1)}° off the line to the trunk, behind the tree; the sun of the last light sets ${behind.toFixed(1)}° from it, behind the walker`);
   }
 
   console.log('audit (V4\'s light, measured):');

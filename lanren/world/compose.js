@@ -78,14 +78,35 @@ export function pickComposition(search = '', storage = null) {
 }
 
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+/** ?world=1: where (in p) the standing campus withdraws into the water: with the first step of the climb up the
+ *  trunk, before its first year (1923, p = 1 + 1/14) is reached: nothing of today stands in the picture of then.
+ *  (It cannot simply stay through 02 and 03 as they are staged: V4's crown is some 36 m across, about
+ *  twice the footprint the campus plan gives the tree, its east limbs reach into 一号教学楼's volume, and
+ *  02's upper stations and V4's 03 eye stand within a metre or two of that front or inside it.) */
+export const VEIL_FOLD = [1.0, 1.07];
+/**
+ * 06's frame turned about the trunk so that the walker stands on the line of a given sun heading
+ * (degrees, atan2(x, z)): the standpoint follows from the sun. Eye and look turn together, so the
+ * tree keeps its place in the picture. Pure. Returns { eye, look, fov, portrait } like shot6.
+ */
+export function shot6Turned(shot6, sunAz, trunk = [0.1, 0, 0]) {
+  const have = (Math.atan2(shot6.eye[0] - trunk[0], shot6.eye[2] - trunk[2]) * 180) / Math.PI;
+  let d = sunAz - have; while (d > 180) d -= 360; while (d < -180) d += 360;
+  const r = d * D2R, c = Math.cos(r), sn = Math.sin(r);
+  const turn = (v) => { const x = v[0] - trunk[0], z = v[2] - trunk[2]; return [trunk[0] + x * c + z * sn, v[1], trunk[2] - x * sn + z * c]; };
+  return { ...shot6, eye: turn(shot6.eye), look: turn(shot6.look), portrait: shot6.portrait ? { ...shot6.portrait, look: turn(shot6.portrait.look) } : undefined, turned: d };
+}
 /**
  * How far the campus stands at scroll progress p, outside chapter 04's own map (0 the plan
  * waits under the water, 1 every building standing in material). Pure.
  *   pinned   the visitor unfolded the campus in 04 and left it standing
  *   walking  the first-person walk (or its map) is on: always standing
  */
-export function campusAt(compose, p, { pinned = false, walking = false } = {}) {
+export function campusAt(compose, p, { pinned = false, walking = false, veil = false } = {}) {
   if (walking) return 1;
+  // one place from the first frame (?world=1): the campus stands round the tree in 01 and as 02 opens, in
+  // the morning's mist and the water; it withdraws as the climb begins and is back, built, from 04 on
+  if (veil && p < 3) return Math.max(pinned ? smooth((p - 2.55) / 0.45) : 0, 1 - smooth((p - VEIL_FOLD[0]) / (VEIL_FOLD[1] - VEIL_FOLD[0])));
   // before 04 the six-shot film is V4's own: a campus left standing sinks on the way back to 03
   if (p < 3) return pinned ? smooth((p - 2.55) / 0.45) : 0;
   const r = compose.rise;

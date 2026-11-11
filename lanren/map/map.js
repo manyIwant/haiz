@@ -930,11 +930,15 @@ export function attach(ctx, geo) {
     layer.setDim(S.dim);
     if (section) {
       // outside the map, the campus follows the film (and stands for the walk): one function of p
-      if (S.mode !== 'map') { S.trans = null; S.u = campusAt(W.compose, ctx.campusP ? ctx.campusP() : state.p, { pinned: W.campus.pinned, walking: ['play', 'pocket', 'menu', 'transit'].includes(W.owner) || !!ctx.walking?.() }); }
+      const pc = ctx.campusP ? ctx.campusP() : state.p;
+      if (S.mode !== 'map') { S.trans = null; S.u = campusAt(W.compose, pc, { pinned: W.campus.pinned, veil: !!W.veil, walking: ['play', 'pocket', 'menu', 'transit'].includes(W.owner) || !!ctx.walking?.() }); }
+      // (?world=1) before 04 the campus stands in the water: the lagoon stays, no ground is laid over it
+      const flooded = !!W.veil && S.mode !== 'map' && pc < 3 && !W.campus.pinned;
+      section.setFlood(flooded);
       // advance the change first, so the cuts, the front and the camera of this frame share one u
       if (S.trans) stepTrans();
       cutsNow(wall);
-      lagoon(S.u >= 0.999 && !S.trans);
+      lagoon(S.u >= 0.999 && !S.trans && !flooded);
       section.setDim(S.dim);
       section.update(S.owns && cur ? { x: cur.tx, z: cur.tz, r: cur.s * 2.8 } : ctx.focus?.() || null);
     }

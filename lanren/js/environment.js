@@ -305,7 +305,7 @@ const WATER_FRAG = /* glsl */`
 uniform vec3 color;
 uniform sampler2D tDiffuse;
 uniform float uTimeW; uniform vec3 uHorizon; uniform vec3 uZenith; uniform vec3 uGlow; uniform vec3 uSun;
-uniform float uHasRefl;
+uniform float uHasRefl; uniform float uReflMist;
 varying vec4 vUv;
 varying vec3 vWorld;
 float wh(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
@@ -325,7 +325,10 @@ void main(){
   if (uHasRefl > 0.5) {
     vec4 uv = vUv; uv.xy += n * uv.w;
     vec4 r = texture2DProj(tDiffuse, uv);
-    refl = mix(sky, r.rgb, 0.92);
+    // in mist the mirrored world is as veiled as the world itself: what is mirrored lies about as far
+    // beyond the water as the water is from the eye (0 = clear air: V4's mirror exactly)
+    float veil = uReflMist > 0.0 ? 1.0 - exp(-uReflMist * 2.0 * distance(cameraPosition, vWorld)) : 0.0;
+    refl = mix(sky, r.rgb, 0.92 * (1.0 - veil));
   }
   // the water body: a shallow lagoon over pale sand round the islet, deep green-blue beyond
   float rr = length(p * vec2(1.0, 1.12)) + (wn(p * 0.35) - 0.5) * 2.4;
@@ -358,7 +361,7 @@ export function createWater(level, reflect, pixelRatio) {
   const uniforms = {
     color: { value: new THREE.Color(0x888888) }, tDiffuse: { value: null }, textureMatrix: { value: new THREE.Matrix4() },
     uTimeW: { value: 0 }, uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() },
-    uGlow: { value: new THREE.Color() }, uSun: { value: new THREE.Vector3(0, 1, 0) }, uHasRefl: { value: reflect ? 1 : 0 }
+    uGlow: { value: new THREE.Color() }, uSun: { value: new THREE.Vector3(0, 1, 0) }, uHasRefl: { value: reflect ? 1 : 0 }, uReflMist: { value: 0 }
   };
   let mesh;
   if (reflect) {

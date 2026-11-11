@@ -6,8 +6,10 @@
 //             does not move; 06's standpoint is the derived one; looking at 06 lets the evening go on
 //             (the sun sinks, the lights come on) and it does not start again after a walk; the
 //             instant is shown; nothing overflows on a phone
+//   world     (?world=1) 01 stands where 06 stands; the campus stands in the water through 01 and the
+//             opening of 02, then withdraws; while it stands the rail never enters a building; the cost
 //
-// usage: node tests/world-clock-browser.cjs [default] [clock] [phone] [reduced] [shots]
+// usage: node tests/world-clock-browser.cjs [default] [clock] [world] [phone] [reduced] [shots]
 //   shots  also writes the review captures to docs/lanren/continuity/ (slow in software rendering)
 const { chromium } = require('playwright');
 const assert = require('node:assert');
@@ -175,6 +177,52 @@ const HIDE = '.bar,.panels,.orbit,.growth,.card,.colophon,.leaders,#experienceDo
     assert(ev > 0.99, 'phone: the lights come on while 06 is held');
     if (SHOTS) { await page.addStyleTag({ content: HIDE }); await page.screenshot({ path: path.join(OUT, 'clock-06-phone.jpg'), type: 'jpeg', quality: 88, timeout: 240000 }); }
     ok('phone (390 × 844, clock): no sideways overflow at 01 and 06, the instant stays on the screen, the evening goes on at 06');
+    await ctx.close();
+  }
+
+  // ---------------------------------------------------------------- one place (?world=1)
+  if (run('world')) {
+    const { page, ctx } = await open('&world=1', { vw: 640, vh: 360 });
+    const camAt = async (p) => { await seek(page, p, 0.1); return page.evaluate(() => { const h = window.__haizHome, c = h.world.camera; return { pos: c.position.toArray(), u: h.map.u, flood: h.map.section.flood, groundOn: h.map.section.ground.visible, waterY: h.world.water.position.y, clear: (() => {
+      // distance from the eye to the nearest building volume standing at its height (footprints of the model itself)
+      let best = Infinity;
+      for (const b of h.map.section.buildings) {
+        if (c.position.y > -0.85 + b.top) continue;
+        const ox = c.position.x - b.cx, oz = c.position.z - b.cz, cs = Math.cos(b.rot), sn = Math.sin(b.rot);
+        const lx = Math.abs(ox * cs - oz * sn) - b.w / 2, lz = Math.abs(ox * sn + oz * cs) - b.d / 2;
+        best = Math.min(best, Math.hypot(Math.max(lx, 0), Math.max(lz, 0)) + Math.min(Math.max(lx, lz), 0));
+      }
+      return best;
+    })() }; }); };
+    const eye6 = await page.evaluate(() => { const f = window.__haizHome.life.film(1).cam; return [f.ex, f.ey, f.ez]; });
+    const c0 = await camAt(0);
+    assert(Math.hypot(c0.pos[0] - eye6[0], c0.pos[2] - eye6[2]) < 0.05 && Math.abs(c0.pos[1] - eye6[1]) < 0.1, `01 stands where 06 stands (${c0.pos.map((v) => v.toFixed(2))} vs ${eye6.map((v) => v.toFixed(2))})`);
+    assert(c0.u === 1 && c0.flood && !c0.groundOn && Math.abs(c0.waterY + 0.85) < 1e-6, '01: the campus stands, in the water (no ground laid, the lagoon not lowered): ' + JSON.stringify(c0));
+    // the rail from 01 to 04 never enters a building's volume (V4's passes where 一号教学楼 stands)
+    let worst = Infinity, at = 0, folded = null;
+    for (let p = 0; p <= 3.0001; p += 0.1) {
+      const c = await camAt(+p.toFixed(2));
+      if (c.u > 0.3 && c.clear < worst) { worst = c.clear; at = p; }
+      if (folded === null && c.u === 0) folded = p;
+    }
+    assert(worst > 1.5, `the rail comes within ${worst.toFixed(2)} m of a building at p = ${at.toFixed(1)}`);
+    const c3 = await camAt(3);
+    assert(c3.u === 0 && !c3.flood, '04 opens on the plan as before');
+    const c5 = await camAt(5);
+    assert(c5.u === 1 && !c5.flood && c5.groundOn, '06: the campus on its own ground');
+    assert(Math.hypot(c5.pos[0] - c0.pos[0], c5.pos[2] - c0.pos[2]) < 0.05, '06 and 01 are the same standpoint');
+    ok(`world: 01 stands at 06's standpoint (${c0.pos[0].toFixed(2)}, ${c0.pos[2].toFixed(2)}); the campus stands in the water (u = 1, no ground laid) through 01 and the opening of 02 and has withdrawn by p = ${folded?.toFixed(1)}; while it stands the rail keeps ${worst.toFixed(1)} m or more clear of every building; 04 and 06 as before`);
+    // what the standing campus costs in 01 (draw calls and triangles of one frame, counted by the renderer)
+    const cost = async (pg) => pg.evaluate(() => { const h = window.__haizHome, r = h.world.renderer; r.info.autoReset = false; r.info.reset(); h.still(0.1, 10); const o = { calls: r.info.render.calls, tris: r.info.render.triangles }; r.info.autoReset = true; return o; });
+    await seek(page, 0, 0.1);
+    const cw = await cost(page);
+    const base = await open('', { vw: 640, vh: 360 });
+    await seek(base.page, 0, 0.1);
+    const c01 = await base.page.evaluate(() => window.__haizHome.world.camera.position.toArray());
+    assert(Math.abs(c01[0] - 8.5) < 0.05 && Math.abs(c01[2] - 38) < 0.05, 'without the flag 01 is V4\'s own camera: ' + c01);
+    const cb = await cost(base.page);
+    ok(`cost of 01, one frame, medium tier: V4 ${cb.calls} draw calls / ${(cb.tris / 1e6).toFixed(2)} M triangles; world ${cw.calls} / ${(cw.tris / 1e6).toFixed(2)} M (the campus is drawn, mirrored and shadowed from the first frame); without the flag 01 is V4's camera (${c01[0].toFixed(1)}, ${c01[2].toFixed(1)})`);
+    await base.ctx.close();
     await ctx.close();
   }
 

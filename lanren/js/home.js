@@ -3,14 +3,14 @@
 // the six viewpoints) drives the camera, the tree's growth, the light of the
 // day and which part of HAIZ is open.
 import * as THREE from 'three';
-import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
+import { CHAPTERS, LIGHT, STAGES, KEYS, rebuildFrames, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
 import { sunPosition, haikouParts } from './sun.js';
 import { UNIFORMS, leafVisible, createHeroLeaves } from './foliage.js';
 import { Specimens } from './specimen.js';
 import { Soundscape } from './sound.js';
 import { Visits } from './visits.js';
-import { pickComposition } from '../world/compose.js';
+import { pickComposition, shot6Turned } from '../world/compose.js';
 import { createWorldState } from '../world/state.js';
 import { BEATS as FILM_STOPS, FILM_SECONDS } from '../world/film.js';
 import { createClock } from '../world/clock.js';
@@ -34,11 +34,21 @@ const compose = pickComposition(location.search, (() => { try { return sessionSt
 // the world's own clock (lanren/world/clock.js): ?clock=1 lights every shot with the real sun of a real
 // instant at the campus, keeps the 05 → 06 film in one evening and lets that evening go on while 06 is
 // held. Off by default (V4's six art-directed suns); ?clock=0 turns it off again. Remembered for the tab.
-const clockOn = (() => {
-  let v = params.get('clock');
-  try { if (v == null) v = sessionStorage.getItem('haiz.clock'); else sessionStorage.setItem('haiz.clock', v); } catch { /* storage blocked */ }
+const flag = (name) => {
+  let v = params.get(name);
+  try { if (v == null) v = sessionStorage.getItem('haiz.' + name); else sessionStorage.setItem('haiz.' + name, v); } catch { /* storage blocked */ }
   return v === '1';
-})();
+};
+// one place from the first frame (?world=1, an experiment on top of the clock): 01 is seen from where 06
+// will be seen from; the campus stands round the tree from the start, in the water and the morning's
+// mist, which lifts with the hours; it withdraws into the water as the climb of 02 begins and is back,
+// built, from 04 on. ?world=0 turns it off.
+const worldOn = flag('world') && !!compose.shot6;
+const clockOn = worldOn || flag('clock');
+const clock = clockOn ? createClock({ rotation: compose.rotation, filmSeconds: FILM_SECONDS }) : null;
+// look-dev only (?clock=1&leaf=sun): 03 on the leaves the real mid-morning sun shines through (see aimStudy).
+// The climb of 02 still ends on V4's side of the crown, so the rail swings across to them: not for visitors yet.
+const sunLeaf = !!clock && params.get('leaf') === 'sun';
 let W = null;     // lanren/world/state.js: owner of camera and input, the campus left standing, the destination
 let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let roots = null; // 02's history on the same tree; shares the camera and scroll rail
@@ -595,8 +605,10 @@ async function start3D() {
   addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
   cam = new DwellCamera(world.camera, $('#world'));
   W = createWorldState({ compose, canvas: world.renderer.domElement, cam });
-  W.clock = clockOn ? createClock({ rotation: compose.rotation, filmSeconds: FILM_SECONDS }) : null;
+  W.clock = clock;
   if (W.clock) mountSlate();
+  W.veil = worldOn;
+  if (worldOn) sameGround();
   cam.rail = () => override || life?.rail(state.p) || railAt(state.p);
   const attachMap = (md) => {
     if (!md || map) return;
@@ -663,6 +675,10 @@ const STUDY_RANK = 1;   // art-directed for the locked tree (seed 2611); preview
 function aimStudy() {
   const ros = world.rosettes, st = world.stride;
   const ranked = [];
+  // which side of the crown: V4's quiet side (and a sun then placed behind the cluster), or (?leaf=sun)
+  // the side the real mid-morning sun shines through towards the camera: the leaves that are in fact
+  // backlit at that hour. It is the forecourt's side, clear of 一号教学楼, by the long limb
+  const side0 = sunLeaf ? ((clock.at(STUDY).sunAz - 28 - 180) * Math.PI) / 180 : 1.2;
   for (let i = 0; i < ros.length; i += st) {
     const x = ros[i], y = ros[i + 1], z = ros[i + 2], tE = ros[i + 9];
     const r = Math.hypot(x - AXIS.x, z - AXIS.z);
@@ -670,13 +686,13 @@ function aimStudy() {
     // a quiet side of the tree (away from the long limb), real foliage behind,
     // the rosette sitting on the outer shell of its clump
     const th = Math.atan2(x - AXIS.x, z - AXIS.z);
-    const s = -Math.abs(Math.atan2(Math.sin(th - 1.2), Math.cos(th - 1.2))) * 1.2 - Math.abs(y - 5.5) * 0.5
+    const s = -Math.abs(Math.atan2(Math.sin(th - side0), Math.cos(th - side0))) * 1.2 - Math.abs(y - 5.5) * 0.5
       - Math.abs(tE - 0.31) * 8 - ros[i + 8] * 1.6 + ros[i + 15] * 1.2 + r * 0.12;
     ranked.push([s, i]);
   }
   if (!ranked.length) return;
   ranked.sort((a, b) => b[0] - a[0]);
-  const best = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? STUDY_RANK))][1];
+  const best = ranked[Math.min(ranked.length - 1, +(params.get('study') ?? (sunLeaf ? 0 : STUDY_RANK)))][1];
   const P = new THREE.Vector3(ros[best], ros[best + 1] + 0.06, ros[best + 2]);
   const out = new THREE.Vector3(P.x - AXIS.x, 0, P.z - AXIS.z).normalize();
   const side = new THREE.Vector3(-out.z, 0, out.x);
@@ -684,6 +700,13 @@ function aimStudy() {
   const eye = P.clone().addScaledVector(out, 0.85).addScaledVector(side, 0.28).add(new THREE.Vector3(0, 0.36, 0));
   const look = P.clone().addScaledVector(out, -0.1).add(new THREE.Vector3(0, -0.06, 0));
   retarget(STUDY, eye.toArray(), look.toArray(), 23);
+  if (sunLeaf) {
+    // the ways to and from those leaves keep to their side of the tree
+    const a3 = Math.atan2(eye.x - AXIS.x, eye.z - AXIS.z), at = (az, r, y) => [AXIS.x + Math.sin(az) * r, y, AXIS.z + Math.cos(az) * r];
+    Object.assign(KEYS.find((k) => k.t === 1.5), { eye: at(a3 + 0.75, 9.5, 2.6), look: [-2.5, 6.6, 1.0], fov: 50 });
+    Object.assign(KEYS.find((k) => k.t === 2.45), { eye: at(a3 + 0.25, 24, 16), look: [1, 8, 0], fov: 40 });
+    rebuildFrames();
+  }
   // the sun from the far side, over the cluster: grazing light that glints on
   // the glossy blades and glows through their edges
   LIGHT[STUDY].sun = [THREE.MathUtils.radToDeg(Math.atan2(-out.x, -out.z)) + 28, 34];
@@ -798,6 +821,7 @@ function step(dt, wallDt = dt) {
   if (now) {
     L.sunAz = now.sunAz; L.sunEl = now.sunEl;
     if (now.dusk > 0) duskGrade(L, now.dusk);
+    if (W.veil) { const d0 = L.density; morningAir(L, now); const wu = world.water.material.uniforms; if (wu.uReflMist) wu.uReflMist.value = L.density > d0 ? L.density : 0; }
     slate(now);
   }
   // in flight the lens is a wide, deep one: the macro depth of field of 03 belongs to that shot only
@@ -851,6 +875,25 @@ function duskGrade(L, k) {
   L.fog = mix(L.fog, [0.52, 0.44, 0.47], 0.5 * k);
   L.exposure *= 1 - 0.1 * k;
   L.warm += (0.9 - L.warm) * 0.5 * k;
+}
+// (?world=1) the morning's mist over the standing campus: thick at sunrise, gone by mid-morning. It is the
+// air that withholds the school in 01, not its absence; a reading of the clock's hour, like the sun
+const MIST = { from: 7.5 * 60, to: 10 * 60, density: 0.017, mist: 0.2 };
+function morningAir(L, now) {
+  if (now.minutes >= MIST.to) return;
+  const x = Math.min(1, Math.max(0, (now.minutes - MIST.from) / (MIST.to - MIST.from))), k = 1 - x * x * (3 - 2 * x);
+  L.density += (Math.max(L.density, MIST.density) - L.density) * k;
+  L.mist += (Math.max(L.mist, MIST.mist) - L.mist) * k;
+}
+// (?world=1) 01 stands where 06 will stand: the same eye, the same frame of the same tree, a spring
+// earlier. From there the February sun rises behind the tree; in May it sets behind the walker.
+function sameGround() {
+  const s6 = shot6Turned(compose.shot6, W.clock.lastLight().sunAz, world.meta.anchors?.trunk);
+  KEYS[0] = { t: 0, eye: s6.eye, look: s6.look, fov: s6.fov, portrait: s6.portrait ? { eye: s6.eye, look: s6.portrait.look, fov: s6.portrait.fov } : undefined };
+  // the way in to the trunk from there: round the south of the rock, clear of the long limb
+  KEYS[1] = { t: 0.55, eye: [s6.eye[0] * 0.42, 1.3, s6.eye[2] * 0.66], look: [0.6, 6.0, -1], fov: 44 };
+  rebuildFrames();
+  buildOrbitRefresh();
 }
 // the instant, shown where the chapter is named: a place and a time, as a caption would give them
 let slateEl = null, slateKey = '';
