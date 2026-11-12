@@ -252,7 +252,7 @@ class _TodayPageState extends State<TodayPage> {
     return SingleChildScrollView(
       key: const PageStorageKey('today_scroll'),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: const EdgeInsets.fromLTRB(PocketSpace.md, PocketSpace.lg, PocketSpace.md, PocketSpace.dockClearance),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

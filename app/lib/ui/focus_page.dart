@@ -38,7 +38,7 @@ class FocusPage extends StatelessWidget {
         : (1 - store.focusRemaining / total).clamp(0.0, 1.0);
     return SingleChildScrollView(
       key: const PageStorageKey('focus_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: const EdgeInsets.fromLTRB(PocketSpace.md, PocketSpace.lg, PocketSpace.md, PocketSpace.dockClearance),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),

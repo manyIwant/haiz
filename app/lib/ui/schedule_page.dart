@@ -144,7 +144,7 @@ class SchedulePage extends StatelessWidget {
     final items = coursesForDay(store.courses, store.selectedWeekday);
     return SingleChildScrollView(
       key: const PageStorageKey('schedule_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: const EdgeInsets.fromLTRB(PocketSpace.md, PocketSpace.lg, PocketSpace.md, PocketSpace.dockClearance),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

@@ -54,12 +54,13 @@
   /* 节奏 */
   --gut:clamp(20px,5vw,88px);
   --sec:clamp(88px,13vh,180px);
-  /* 垂直节奏刻度（4 的倍数，全站唯一来源） */
+  /* 功能 UI 使用 8px 网格；4px 只用于微调，大片叙事构图独立处理 */
+  --sp-xxs:4px;
   --sp-xs:8px;
   --sp-s:16px;
-  --sp-m:28px;
-  --sp-l:52px;
-  --sp-xl:84px;
+  --sp-m:32px;
+  --sp-l:48px;
+  --sp-xl:80px;
   --r-sm:12px;
   --r-md:20px;
   --r-lg:30px;

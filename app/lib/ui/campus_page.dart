@@ -36,7 +36,7 @@ class CampusPage extends StatelessWidget {
     return SingleChildScrollView(
       key: const PageStorageKey('campus_scroll'),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(23, 26, 23, 126),
+      padding: const EdgeInsets.fromLTRB(PocketSpace.md, PocketSpace.lg, PocketSpace.md, PocketSpace.dockClearance),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
