@@ -1,69 +1,9 @@
 // 化学
 import { C, TAU, clamp, lerp, group, at, rot, box, cyl, ball, plate, rod, wire, tube, glow, jar, note, card, plot, dots, liquid, flat, glass, bubbler, flow, sheet, stand, wavelength, THREE } from '../ink.js';
+import { titration } from './gen2.js';
 
 const beaker = (r, h) => group(glass(new THREE.CylinderGeometry(r, r, h, 44, 1, true).translate(0, h / 2, 0)), glass(new THREE.CircleGeometry(r, 44).rotateX(-Math.PI / 2).translate(0, 0.03, 0)));
 const mix = (a, b, t) => new THREE.Color(a).lerp(new THREE.Color(b), clamp(t));
-
-// ---------------------------------------------------------------- 酸碱中和滴定
-const titration = {
-  id: 'chem-titration', subject: 'chem', title: '酸碱中和滴定', en: 'Acid–base titration',
-  lede: ['锥形瓶里是 20.00 mL 不知道浓度的盐酸，滴了两滴酚酞。滴定管里是 0.1000 mol/L 的氢氧化钠溶液。', '一滴一滴加进去，直到最后半滴让溶液从无色变成浅红，并且半分钟不褪色。'],
-  formula: 'c(酸)·V(酸) = c(碱)·V(碱)', formulaNote: '恰好中和时，酸提供的 H⁺ 与碱提供的 OH⁻ 物质的量相等',
-  terms: [['滴定终点', '指示剂恰好变色的那一刻。'], ['酚酞', 'pH 小于 8.2 无色，大于 10 呈红色。'], ['pH 突跃', '终点附近 pH 的急剧变化。']],
-  predict: { q: '快到终点时，多加一滴氢氧化钠（约 0.05 mL），溶液的 pH 会？', options: ['只变一点点，和之前差不多', '一下子跳好几个单位', '反而降低'], answer: 1, why: '接近终点时溶液里剩下的 H⁺ 已经极少，一滴碱就足以把它们全部中和并过量，pH 会从 4 左右直接跳到 10 左右。所以终点前必须逐滴加。' },
-  challenge: '三瓶盐酸各滴定一次，误差都控制在 0.05 mL 以内。',
-  fig: '碱式滴定管、锥形瓶与 pH 曲线', hint: '先快滴，快到终点时改成逐滴。',
-  teach: {
-    where: '人教版化学 选择性必修 1 · 水溶液中的离子反应与平衡；实验活动：强酸与强碱的中和滴定。',
-    ask: ['“快速”一路滴到变色，算出来的浓度偏大还是偏小？为什么？', '如果改用甲基橙作指示剂，终点的颜色变化是什么？'],
-    simplify: '强酸强碱、25 ℃，pH 由物料守恒与水的离子积精确计算；一滴按 0.05 mL 计。不模拟润洗、读数视差等操作误差。',
-    safety: '真实操作中氢氧化钠有腐蚀性，须戴护目镜；滴定管使用前要检漏、润洗。',
-  },
-  controls: [
-    { id: 'rate', type: 'choice', label: '活塞', options: ['关', '逐滴', '快速'], value: 0 },
-    { id: 'acid', type: 'choice', label: '待测盐酸', options: ['甲', '乙', '丙'], value: 0 },
-    { id: 'drop', type: 'button', label: '滴一滴' }, { id: 'reset', type: 'button', label: '重来' },
-  ],
-  build(k) {
-    const p = k.p, CA = [0.1, 0.08, 0.125], X = -1.1, Z = -1;
-    k.root.add(at(stand(6, 0), X - 1.9, 0, Z), rod([X - 2.8, 4.4, Z], [X + 0.2, 4.4, Z], 0.07));
-    const bur = at(jar(0.17, 3.5, C.sky, { fill: 1, opacity: 0.55, glow: 0.12 }), X + 0.4, 2.35, Z);
-    k.root.add(bur, at(box(0.36, 0.14, 0.2), X + 0.4, 2.2, Z), rod([X + 0.4, 2.2, Z], [X + 0.4, 1.9, Z], 0.035));
-    const flask = at(group(glass(new THREE.CylinderGeometry(0.3, 1.05, 1.4, 44, 1, true).translate(0, 0.7, 0)), glass(new THREE.CylinderGeometry(0.3, 0.3, 0.45, 32, 1, true).translate(0, 1.62, 0)), glass(new THREE.CircleGeometry(1.05, 44).rotateX(-Math.PI / 2).translate(0, 0.03, 0))), X + 0.4, 0.1, Z);
-    const sol = flat(new THREE.CylinderGeometry(0.66, 0.98, 0.62, 44).translate(0, 0.35, 0), '#eaf4ff', { opacity: 0.5 });
-    const halo = glow(C.rose, 3.2, 0);
-    flask.add(sol, at(halo, 0, 0.4, 0));
-    const drop = ball(0.06, C.sky);
-    const g = at(plot({ w: 4.1, h: 3.2, xr: [0, 40], yr: [0, 14], xl: 'V(NaOH) / mL', yl: 'pH' }), 2.2, 0, -2.4);
-    const info = at(card('\n', { w: 3.6, size: 0.32, align: 'left' }), 2.3, 0, 2.3);
-    k.root.add(flask, drop, g, info);
-    let V = 0, acc = 0, end = null, dy = -1; const trace = [[0, 0]];
-    const pH = (v) => { const d = (CA[p.acid] * 20 - 0.1 * v) / (20 + v); return -Math.log10((d + Math.sqrt(d * d + 4e-14)) / 2); };
-    const draw = () => { g.clear().curve(trace, C.violet, 0.04); if (end) g.dot(end, 8.2, C.rose); g.dot(V, pH(V), C.amber, 0.08).done(); };
-    const add = (dv) => { if (V >= 40) return; V = Math.min(40, V + dv); const h = pH(V); trace.push([V, h]); if (end === null && h >= 8.2) end = V; dy = 1.85; draw(); };
-    const reset = () => { V = 0; end = null; trace.length = 0; trace.push([0, pH(0)]); k.set('rate', 0); draw(); };
-    reset();
-    return {
-      press(id) { id === 'drop' ? add(0.05) : reset(); },
-      change(id) { if (id === 'acid') reset(); },
-      update(dt) {
-        if (p.rate) { acc += dt * (p.rate === 1 ? 0.14 : 1.6); while (acc >= 0.05) { acc -= 0.05; add(0.05); } }
-        bur.fill(1 - V / 42);
-        const h = pH(V), pink = clamp((h - 8.2) / 1.6);
-        sol.material.color.copy(mix('#eaf4ff', '#ff4fa3', pink)); sol.material.opacity = lerp(0.42, 0.8, pink);
-        halo.material.opacity = pink * 0.4;
-        if (dy > 0.9) { dy -= dt * 5; drop.position.set(X + 0.4, dy, Z); drop.visible = true; } else drop.visible = false;
-        info.set(`V(NaOH) = ${V.toFixed(2)} mL\npH = ${h.toFixed(2)}${end ? '  已变色' : ''}`);
-        this.s = { h };
-      },
-      margin() {
-        const out = [`已滴入 ${V.toFixed(2)} mL`, `pH = ${(this.s?.h ?? 1).toFixed(2)}`];
-        if (end) { const c = 0.1 * end / 20, tr = CA[p.acid]; out.push('终点读数', ` V = ${end.toFixed(2)} mL`, 'c(HCl) = 0.1000V/20.00', ` = ${c.toFixed(4)} mol/L`, `真实值 ${tr.toFixed(4)}`, V - end > 0.3 ? '滴过头了！' : ''); } else out.push('酚酞：无色', '还没到终点');
-        return out.filter(Boolean);
-      },
-    };
-  },
-};
 
 // ---------------------------------------------------------------- 原电池
 const cell = {

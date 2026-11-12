@@ -75,7 +75,7 @@ void main(){
   for (int i = 0; i < AO; i++) {
     float t = (float(i) + .5) / float(AO), r = sqrt(t) * rpx;
     float a2 = ang + float(i) * 2.39996;
-    vec2 uv2 = vUv + vec2(cos(a2), sin(a2) * (px.y / px.x)) * r;
+    vec2 uv2 = vUv + vec2(cos(a2) * (px.x / px.y), sin(a2)) * r;
     vec3 v = vpos(uv2) - P;
     float d2 = dot(v, v);
     occ += max(0., dot(N, v) - .015 * -P.z * .02) / (d2 + .02) * step(d2, aoR * aoR * 4.);
@@ -83,6 +83,11 @@ void main(){
   float ao = clamp(1. - occ / float(AO) * aoK, 0., 1.);
   col *= mix(1., ao, .9);
 #endif
+  // 镜头：高光柔和压缩、轻微暗角；之后转到显示空间再落墨（墨线的灰阶按人眼而不是按光强混合，线才实）
+  col = mix(col, .8 + .2 * (1. - exp(-(col - .8) / .2)), step(.8, col));
+  vec2 q = vUv - .5;
+  col *= 1. - dot(q, q) * .3;
+  col = srgb(clamp(col, 0., 1.));
   // 排线：背光面画斜线，更暗处交叉
   vec3 n = normalize(ca.xyz * 2. - 1.);
   float ndl = dot(n, lightV);
@@ -92,16 +97,12 @@ void main(){
   float s1 = smoothstep(-.1, -.48, ndl), s2 = smoothstep(-.5, -.72, ndl);
   float brk = smoothstep(.22, .5, vn(fc * .05 + 7.));
   float hatch = ca.a > .8 ? max(h1 * s1, h2 * s2) * mix(.45, 1., brk) * occA : 0.;
-  col = mix(col, ink, hatch * .4);
+  col = mix(col, ink, hatch * .36);
   // 墨线：轮廓略重，笔压有轻微变化
-  float press = mix(.82, 1., vn(fc * .035 + 3.));
+  float press = mix(.84, 1., vn(fc * .035 + 3.));
   float e = max(eA * occA, eB * .82 * occB) * press;
-  col = mix(col, ink, e * .93);
-  // 镜头：高光柔和压缩、轻微暗角、极细的颗粒（顺便消除色带）
-  col = mix(col, .8 + .2 * (1. - exp(-(col - .8) / .2)), step(.8, col));
-  vec2 q = vUv - .5;
-  col *= 1. - dot(q, q) * .3;
-  col = srgb(clamp(col, 0., 1.));
+  col = mix(col, ink, e * .92);
+  // 极细的颗粒（顺便消除色带）
   col += (hash(gl_FragCoord.xy + time) - .5) * .012;
   gl_FragColor = vec4(col, 1.);
 }`;
@@ -201,7 +202,7 @@ export class Stage {
     this.comp = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false,
       defines: { AO: [0, 8, 12][this.quality] },
-      uniforms: { ...base(this.rtC, this.rtA, this.rtB), tDepth: { value: this.rtC.depthTexture }, lightV: { value: new THREE.Vector3() }, proj: { value: new THREE.Vector2() }, aoR: { value: 0.75 }, aoK: { value: 1.05 }, time: { value: 0 } },
+      uniforms: { ...base(this.rtC, this.rtA, this.rtB), ink: { value: new THREE.Vector3(0x1e / 255, 0x2b / 255, 0x36 / 255) }, tDepth: { value: this.rtC.depthTexture }, lightV: { value: new THREE.Vector3() }, proj: { value: new THREE.Vector2() }, aoR: { value: 0.75 }, aoK: { value: 1.05 }, time: { value: 0 } },
     });
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.comp);
     this.qScene = new THREE.Scene(); this.qScene.add(this.quad);

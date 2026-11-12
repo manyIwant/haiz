@@ -88,7 +88,7 @@ export function paint(el, canvas, opt = {}) {
     // 油墨扩散：纸上的小字比屏幕上略重。贴图按线性光取平均会让细笔画发灰，这里补回来。
     const fs = px(cs.fontSize), gain = fs < 22 ? 0.42 : 0.2;
     x.lineWidth = gain; x.lineJoin = 'round';
-    const strike = cs.textDecorationLine.includes('line-through');
+    const strike = cs.textDecorationLine.includes('line-through'), upper = cs.textTransform === 'uppercase';
     let i = 0;
     for (const ch of s) {
       const j = i + ch.length;
@@ -97,7 +97,7 @@ export function paint(el, canvas, opt = {}) {
         const r = range.getBoundingClientRect();
         if (r.width > 0) {
           const base = r.top - O.top + (r.height * m.a) / (m.a + m.d);
-          x.fillText(ch, r.left - O.left, base); x.strokeText(ch, r.left - O.left, base);
+          const gl = upper ? ch.toUpperCase() : ch; x.fillText(gl, r.left - O.left, base); x.strokeText(gl, r.left - O.left, base);
           if (strike) x.fillRect(r.left - O.left, base - px(cs.fontSize) * 0.3, r.width + 0.5, 1);
         }
       }

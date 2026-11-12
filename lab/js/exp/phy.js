@@ -1,81 +1,8 @@
 // 物理（上）：力学
 import { C, TAU, clamp, group, at, rot, box, cyl, ball, plate, rod, wire, spring, arrow, strip, dash, note, card, plot, dots, flat, glass, meter, tube, stand, THREE } from '../ink.js';
+import { pendulum } from './gen2.js';
 
 const G = 9.8;
-
-// ---------------------------------------------------------------- 单摆
-const pendulum = {
-  id: 'phy-pendulum', subject: 'phy', title: '单摆与重力加速度', en: 'The simple pendulum',
-  lede: ['一根细线，一颗小球。在小角度下，单摆来回一次的时间只由摆长和当地的重力加速度决定。', '量出摆长，数出周期，就能“称”出脚下这颗星球的 g。'],
-  formula: 'T = 2π √(l / g)', formulaNote: '周期 = 2π × √(摆长 ÷ 重力加速度)，摆角小于约 5° 时成立',
-  terms: [['摆长 l', '悬点到摆球球心的距离。'], ['周期 T', '完成一次全振动所用的时间。'], ['全振动', '摆球回到同一位置且运动方向相同。']],
-  predict: { q: '把木球换成同样大小、质量大得多的铁球，周期会怎样？', options: ['变长，铁球更“懒”', '变短，铁球落得快', '不变'], answer: 2, why: '质量越大，重力越大，但惯性也同比例增大，两者正好抵消。周期公式里没有质量。' },
-  challenge: '只动摆长，让这只摆变成“秒摆”：周期正好 2.00 s。',
-  fig: '单摆：铁架台、细线、摆球与秒表', hint: '拖动摆球拉开一个角度，松手。',
-  teach: {
-    where: '人教版物理 选择性必修第一册 · 机械振动：单摆；实验：用单摆测量重力加速度。',
-    ask: ['把摆角拉到 40°，秒表读数和公式算出的周期还一样吗？为什么实验要求小角度？', '在月球上同一只摆的周期是地球上的多少倍？'],
-    simplify: '细线无质量、不可伸长，无空气阻力与悬点摩擦；运动按 θ″ = −(g/l)·sinθ 数值积分，所以大角度时周期会比公式值略长，这是真实现象。',
-  },
-  controls: [
-    { id: 'l', label: '摆长 l', min: 0.3, max: 1.5, step: 0.01, value: 0.8, unit: 'm' },
-    { id: 'g', type: 'choice', label: '在', options: ['地球', '月球', '木星'], value: 0 },
-    { id: 'bob', type: 'choice', label: '摆球', options: ['木球', '铁球'], value: 0 },
-    { id: 'go', type: 'button', label: '拉到 5° 释放' },
-  ],
-  build(k) {
-    const p = k.p, S = 3.4, PIV = [0.4, 5.8, -1.2], GS = [9.8, 1.62, 24.8];
-    k.root.add(at(plate(3.4, 2.4), -2.4, 0, -1.2), at(cyl(0.11, 6.0), -3.4, 0.08, -1.2));
-    k.root.add(rod([-3.4, 5.8, -1.2], [PIV[0] + 0.3, 5.8, -1.2], 0.09), at(box(0.5, 0.34, 0.5), -3.4, 5.63, -1.2));
-    k.root.add(at(box(0.3, 0.16, 0.3), PIV[0], PIV[1] - 0.08, PIV[2]));
-    k.root.add(dash([PIV[0], PIV[1], PIV[2] - 0.02], [PIV[0], 0.3, PIV[2] - 0.02]));
-    const str = wire(PIV, [PIV[0], 3, PIV[2]], 0.02);
-    const bobs = [ball(0.34, C.wood), ball(0.34, '#cfd6dc')];
-    const trail = strip(60, { color: C.violet, w: 0.09, opacity: 0.5 });
-    const watch = at(card('T = 0.00 s\n全振动 0 次', { size: 0.34, w: 3.2, align: 'left' }), 2.6, 0, 2.2);
-    const lenTag = note('l', { size: 0.42, italic: true });
-    k.root.add(str, ...bobs, trail, watch, lenTag);
-    let th = 0.26, om = 0, t = 0, n = 0, lastCross = null, T = 0, held = false;
-    const hist = [];
-    const release = (a) => { th = a; om = 0; t = 0; n = 0; lastCross = null; T = 0; hist.length = 0; };
-    bobs.forEach((b) => k.drag(b, {
-      start: () => { held = true; },
-      move: (q) => { th = clamp(Math.atan2(q.x - PIV[0], PIV[1] - q.y), -1.05, 1.05); om = 0; },
-      end: () => { held = false; release(th); },
-    }));
-    return {
-      press: () => release(5 * Math.PI / 180),
-      change: (id) => { if (id !== 'bob') release(Math.max(Math.abs(th), 0.09) * (th < 0 ? -1 : 1)); },
-      update(dt) {
-        const g = GS[p.g];
-        if (!held && dt > 0) {
-          const steps = 8, h = dt / steps;
-          for (let i = 0; i < steps; i++) {
-            const prev = th;
-            om += -(g / p.l) * Math.sin(th) * h; th += om * h; t += h;
-            if (prev < 0 && th >= 0) {
-              const tc = t - h * (th / (th - prev));
-              if (lastCross !== null) { T = tc - lastCross; n++; }
-              lastCross = tc;
-            }
-          }
-        }
-        const L = p.l * S, q = [PIV[0] + Math.sin(th) * L, PIV[1] - Math.cos(th) * L, PIV[2]];
-        str.span(PIV, q);
-        bobs.forEach((b, i) => { b.visible = i === p.bob; b.position.set(...q); });
-        hist.push(q); if (hist.length > 26) hist.shift();
-        trail.set(hist); trail.visible = !held;
-        lenTag.position.set(PIV[0] + Math.sin(th) * L * 0.5 + 0.35, PIV[1] - Math.cos(th) * L * 0.5, PIV[2] + 0.05);
-        watch.set(`T = ${T ? T.toFixed(2) : '—'} s\n全振动 ${n} 次`);
-        this.T = T;
-      },
-      margin() {
-        const g = GS[p.g], Tf = TAU * Math.sqrt(p.l / g), T = this.T;
-        return ['T = 2π√(l/g)', ` = 2π√(${p.l.toFixed(2)}/${g})`, ` = ${Tf.toFixed(2)} s`, T ? `秒表: T = ${T.toFixed(2)} s` : '秒表: 等一个来回…', ...(T ? ['g = 4π²l/T²', ` = ${(4 * Math.PI ** 2 * p.l / T / T).toFixed(2)} m/s²`] : [])];
-      },
-    };
-  },
-};
 
 // ---------------------------------------------------------------- 平抛
 const projectile = {

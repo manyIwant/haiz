@@ -82,7 +82,7 @@ export function initNotebook(ctx) {
     const spec = specOf(exp), rec = rowsOf(exp);
     if (a === 'add') {
       const row = spec.sample?.(sp?.inst || {}, sp?.params || {});
-      if (row) { rec.rows.push(row); save(db); render(); } else flash('现在还读不出数：先让装置跑起来。');
+      if (row) { rec.rows.push(row); save(db); render(); } else flash(spec.pending || '现在还读不出数：先让装置跑起来。');
     } else if (a === 'undo') { rec.rows.pop(); save(db); render(); }
     else if (a === 'clear') { rec.rows = []; rec.notes = {}; save(db); render(); }
     else if (a === 'csv') {

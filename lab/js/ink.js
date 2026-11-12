@@ -39,10 +39,10 @@ export function matFor(color = C.paper, o = {}) {
   const kind = o.kind ?? (METAL.has(key) ? 'metal' : WOOD.has(key) ? 'wood' : 'card');
   const m = new THREE.MeshStandardMaterial({
     color, side: o.side ?? THREE.DoubleSide,
-    metalness: kind === 'metal' ? 0.82 : 0,
+    metalness: kind === 'metal' ? 0.5 : 0,
     roughness: o.roughness ?? (kind === 'metal' ? 0.36 : kind === 'wood' ? 0.68 : kind === 'ceramic' ? 0.25 : 0.88),
   });
-  m.envMapIntensity = kind === 'metal' ? 1.25 : kind === 'ceramic' ? 0.9 : 0.6;
+  m.envMapIntensity = kind === 'metal' ? 2.4 : kind === 'ceramic' ? 0.9 : 0.6;
   return m;
 }
 /** 会被描边的白模实体。o.kind: 'card'（默认）| 'metal' | 'wood' | 'ceramic' */
@@ -59,7 +59,7 @@ export function flat(geo, color, o = {}) {
 /** 玻璃材质：几乎透明，但会清楚地映出窗子的高光——这是玻璃“看得见”的原因 */
 export function glassMat(o = {}) {
   const m = new THREE.MeshStandardMaterial({
-    color: o.color ?? 0xffffff, transparent: true, opacity: o.opacity ?? 0.1, roughness: o.roughness ?? 0.06, metalness: 0,
+    color: o.color ?? 0xeaf2f0, transparent: true, opacity: o.opacity ?? 0.04, roughness: o.roughness ?? 0.06, metalness: 0,
     depthWrite: false, side: THREE.DoubleSide,
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
@@ -69,7 +69,7 @@ export function glassMat(o = {}) {
       vec3 specAll = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
       vec3 diffAll = max(outgoingLight - specAll, vec3(0.));
       float fres = pow(1. - abs(dot(normalize(vNormal), normalize(vViewPosition))), 3.);
-      float a = clamp(diffuseColor.a + fres * .22, 0., 1.);
+      float a = clamp(diffuseColor.a + fres * .13, 0., 1.);
       gl_FragColor = vec4(diffAll * a + specAll, clamp(a + dot(specAll, vec3(.3, .6, .1)), 0., 1.));`);
   };
   m.customProgramCacheKey = () => 'haiz-glass';
@@ -497,6 +497,82 @@ export function flow(pts, n, color, o = {}) {
   };
   d.step(0, 0);
   return d;
+}
+
+// ---------- 第二代零件：按真实器材的结构来做 ----------
+/** 回转体。pts: [[半径, 高度], …] 自下而上的轮廓 */
+export function lathe(pts, color = C.paper, o = {}) {
+  return solid(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(Math.max(r, 0), y)), o.seg ?? 44), color, o);
+}
+/**
+ * 玻璃器皿：给出内壁轮廓 [[r, y], …]（自下而上，第一点是内底），自动加上壁厚、口沿和内外两层反光。
+ * 返回 group：fill(h) 把液面设到高度 h（器皿自身坐标）；tint(color, opacity)；level 当前液面。
+ */
+export function vessel(profile, o = {}) {
+  const t = o.wall ?? 0.035, seg = o.seg ?? 48, V2 = (r, y) => new THREE.Vector2(Math.max(r, 0), y);
+  const top = profile[profile.length - 1], y0 = profile[0][1];
+  const outer = profile.map(([r, y], i) => V2(r + t, i === 0 ? y - t : y));
+  const pts = [V2(0, y0 - t), ...outer, V2(top[0] + t, top[1] + t * 0.4), V2(top[0], top[1] + t * 0.4), ...profile.slice().reverse().map(([r, y]) => V2(r, y)), V2(0, y0)];
+  const wall = glass(new THREE.LatheGeometry(pts, seg), o.glass);
+  const body = flat(new THREE.BufferGeometry(), o.color ?? C.sky, { opacity: o.opacity ?? 0.6 });
+  const surf = flat(new THREE.BufferGeometry(), lighten(o.color ?? C.sky, 0.3), { opacity: Math.min(1, (o.opacity ?? 0.6) + 0.25) });
+  body.renderOrder = -1; surf.renderOrder = -1;
+  const g = group(body, surf, wall);
+  const rAt = (h) => {
+    for (let i = 1; i < profile.length; i++) if (h <= profile[i][1]) { const [r0, a] = profile[i - 1], [r1, b] = profile[i]; return r0 + (r1 - r0) * (b > a ? (h - a) / (b - a) : 0); }
+    return top[0];
+  };
+  g.level = y0; g.rAt = rAt;
+  g.fill = (h) => {
+    h = clamp(h, y0, top[1]);
+    if (Math.abs(h - g.level) < 1e-4 && body.geometry.attributes.position) return g;
+    g.level = h;
+    const k = 0.965, lp = [V2(0, y0 + 0.004)];
+    for (const [r, y] of profile) { if (y >= h) break; lp.push(V2(r * k, Math.max(y, y0 + 0.004))); }
+    const rt = rAt(h) * k;
+    lp.push(V2(rt, h));
+    body.geometry.dispose(); surf.geometry.dispose();
+    body.geometry = new THREE.LatheGeometry(lp, seg);
+    // 弯月面：贴壁处略高，中间略低
+    surf.geometry = new THREE.LatheGeometry([V2(0, h - Math.min(0.03, rt * 0.18)), V2(rt * 0.7, h - Math.min(0.022, rt * 0.12)), V2(rt, h)], seg);
+    body.visible = surf.visible = h > y0 + 0.01;
+    return g;
+  };
+  g.tint = (c, op) => {
+    body.material.color.set(c); surf.material.color.copy(lighten(c, 0.3));
+    if (op !== undefined) { body.material.opacity = op; surf.material.opacity = Math.min(1, op + 0.25); }
+    return g;
+  };
+  return g.fill(o.fill ?? y0);
+}
+/** 尺寸线：两端带短横的细线 + 居中的标注。set(a, b, text) */
+export function dimension(o = {}) {
+  const line = wire([0, 0, 0], [0, 1, 0], o.r ?? 0.014), t0 = wire([0, 0, 0], [0.2, 0, 0], o.r ?? 0.014), t1 = wire([0, 0, 0], [0.2, 0, 0], o.r ?? 0.014);
+  const tag = note('', { size: o.size ?? 0.3, italic: true, w: o.w ?? 2.2, color: o.color ?? C.ink });
+  const g = group(line, t0, t1, tag), d = new THREE.Vector3(), n = new THREE.Vector3();
+  g.set = (a, b, text, side = [1, 0, 0]) => {
+    a = toV(a); b = toV(b); n.set(side[0], side[1], side[2]).multiplyScalar(0.14);
+    line.span(a, b); t0.span(a.clone().sub(n), a.clone().add(n)); t1.span(b.clone().sub(n), b.clone().add(n));
+    d.addVectors(a, b).multiplyScalar(0.5); tag.position.copy(d).addScaledVector(n, 5.2 + (o.w ?? 2.2) * 2.4);
+    if (text !== undefined) tag.set(text);
+    return g;
+  };
+  return g;
+}
+/** 实验室铁架台：铸铁底座、立杆、十字夹。返回 group，boss(y) 在立杆高度 y 处加一个十字夹并返回它 */
+export function retort(h = 7, o = {}) {
+  const steel = '#cfd6dc', w = o.w ?? 3.0, d = o.d ?? 2.0;
+  const base = solid(new THREE.BoxGeometry(w, 0.18, d).translate(0, 0.09, 0), '#d8dde1');
+  const foot = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([i, j]) => at(cyl(0.09, 0.05, '#bfc6cc', { seg: 12 }), i * (w / 2 - 0.2), -0.03, j * (d / 2 - 0.2)));
+  const post = at(cyl(0.085, h, steel, { seg: 20 }), -w / 2 + 0.42, 0.18, 0);
+  const collar = at(cyl(0.16, 0.14, steel, { seg: 20 }), -w / 2 + 0.42, 0.18, 0);
+  const g = group(base, post, collar, ...foot);
+  g.postX = -w / 2 + 0.42;
+  g.boss = (y) => {
+    const b = group(at(box(0.36, 0.3, 0.36, steel), g.postX, y - 0.15, 0), at(rot(cyl(0.05, 0.3, steel, { seg: 10 }), 0, 0, 0), g.postX, y - 0.1, 0.24), at(solid(new THREE.CylinderGeometry(0.11, 0.11, 0.07, 14).rotateX(Math.PI / 2), steel), g.postX, y, 0.33));
+    g.add(b); return b;
+  };
+  return g;
 }
 
 /** 铁架台：底座 + 立柱（+ 横臂）。返回 group */

@@ -184,7 +184,7 @@ export class Book {
   #desk(g) {
     const wood = tex(woodColor(), { repeat: [5, 5] });
     const desk = new THREE.Mesh(new THREE.PlaneGeometry(300, 300).rotateX(-Math.PI / 2),
-      new THREE.MeshStandardMaterial({ map: wood, roughness: 0.58, metalness: 0 }));
+      new THREE.MeshStandardMaterial({ map: wood, color: '#d9d2c8', roughness: 0.55, metalness: 0 }));
     desk.material.envMapIntensity = 0.9;
     desk.position.y = -0.17; desk.receiveShadow = true; desk.layers.set(1);
     const shade = new THREE.Mesh(new THREE.PlaneGeometry(120, 120).rotateX(-Math.PI / 2),

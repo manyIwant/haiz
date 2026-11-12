@@ -1,5 +1,6 @@
 // 语文 · 英语 · 历史 · 思想政治
 import { C, TAU, clamp, lerp, group, at, rot, box, cyl, ball, cone, rod, wire, strip, dash, glow, note, card, plot, flat, glass, sheet, disposeTree, THREE } from '../ink.js';
+import { printing } from './gen2.js';
 
 const fresh = (k, holder) => { disposeTree(holder); holder.clear(); };
 
@@ -231,75 +232,16 @@ const sentence = {
 };
 
 // ================================================================ 历史
-const TEXTS = ['学而不厌诲人不倦', '人而无信不知其可', '己所不欲勿施于人'];
-const printing = {
-  id: 'his-type', subject: 'his', title: '活字印刷', en: 'Movable type',
-  lede: ['北宋庆历年间，平民毕昇用胶泥刻字，一字一印，烧硬后排进铁框，就能印书。印完拆版，字模还能再用。这件事被沈括记在《梦溪笔谈》里。', '和整块雕刻的雕版相比，活字省的不是印一页的工夫，而是换一页时不必重新刻一整块版。'],
-  formula: '字模：反字　→　印张：正字', formulaNote: '字模上的字左右相反，印到纸上才是正的；排版的行序也要反过来',
-  terms: [['雕版印刷', '把整页内容反刻在一块木板上。'], ['活字', '一个字一个印，可以拆开重排。'], ['《梦溪笔谈》', '北宋沈括著，记载了毕昇的发明。']],
-  predict: { q: '字模上刻的字是什么样子的？', options: ['和书上一样的正字', '左右相反的反字', '上下颠倒的字'], answer: 1, why: '印刷相当于盖印章：纸覆上去再揭开，左右就对调了。所以字模必须刻成反字，竖排的行序在版上也是从左往右排，印出来才是从右往左读。' },
-  challenge: '三句话各印一次，雕版和活字一共各要刻多少个字？为什么差得不算太多？',
-  fig: '排好的字模（左）与印出的纸张（右）', hint: '换一句话，按“印一张”。',
-  teach: {
-    where: '统编版历史 中外历史纲要（上）· 辽宋夏金元的文化：宋代科技（活字印刷术）；选择性必修 3 · 文化的传承与保护。',
-    ask: ['只印一种书、印很多份，雕版和活字哪个更合算？印很多种书、每种印得少呢？', '活字印刷发明后，雕版在中国仍长期是主流，可能有哪些原因？（提示：汉字的数量）'],
-    simplify: '用 8 个字的版面示意排版、刷墨、覆纸的过程；“刻字数”只统计本页演示的三句话，真实印书需要数以万计的字模，常用字要备多个。',
-  },
-  controls: [
-    { id: 'text', type: 'choice', label: '', options: TEXTS.map((s) => `${s.slice(0, 4)}…`), value: 0, wide: true },
-    { id: 'mode', type: 'choice', label: '版式', options: ['活字', '雕版'], value: 0 },
-    { id: 'go', type: 'button', label: '印一张' },
-  ],
-  build(k) {
-    const p = k.p, FX = -2.0, Z = -0.6, DX = 1.12, DZ = 1.08, holder = new THREE.Group();
-    k.root.add(at(box(2.9, 0.16, 4.9, C.shade), FX, 0, Z), holder);
-    const paper = box(2.5, 0.04, 4.5), printed = at(sheet(2.3, 4.3, () => {}, { lay: 'flat' }), 0, 0.05, 0);
-    paper.add(printed); printed.visible = false;
-    const pile = at(box(2.6, 0.2, 4.6), 2.9, 0, Z);
-    const info = at(card('\n', { w: 3.6, size: 0.31, align: 'left' }), 2.9, 0, 3.0);
-    k.root.add(paper, pile, info);
-    const stock = {}, plates = new Set(); let carved = 0, n = 0, t = -1, last = '';
-    const layout = (i) => [i < 4 ? 0 : 1, i % 4]; // 版上：第一行在左（印出来在右）
-    const draw = () => {
-      fresh(k, holder);
-      const s = TEXTS[p.text], need = {};
-      [...s].forEach((ch) => { need[ch] = (need[ch] || 0) + 1; });
-      for (const ch in need) if ((stock[ch] || 0) < need[ch]) { carved += need[ch] - (stock[ch] || 0); stock[ch] = need[ch]; }
-      plates.add(p.text);
-      if (p.mode) holder.add(at(box(2.5, 0.5, 4.5, C.wood), FX, 0.16, Z));
-      [...s].forEach((ch, i) => {
-        const [c, r] = layout(i), x = FX + (c - 0.5) * DX, z = Z + (r - 1.5) * DZ;
-        if (!p.mode) holder.add(at(box(0.98, 0.5, 0.98, '#ecdcc0'), x, 0.16, z));
-        const lab = at(note(ch, { size: 0.66, lay: 'flat', bold: true }), x, 0.68, z); lab.scale.x = -1;
-        holder.add(lab);
-      });
-      printed.redraw((x, S, w, h) => {
-        x.fillStyle = '#1e2b36'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 ${S * 0.66}px "Songti SC","Noto Serif CJK SC",serif`;
-        [...s].forEach((ch, i) => { const [c, r] = layout(i); x.fillText(ch, (w / 2 + (0.5 - c) * DX) * S, (h / 2 + (r - 1.5) * DZ) * S); });
-      });
-      printed.visible = false; t = -1;
-    };
-    return {
-      press() { if (t < 0 || t > 2.4) t = 0; },
-      update(dt) {
-        const key = `${p.text}|${p.mode}`; if (key !== last) { last = key; draw(); }
-        if (t >= 0 && t <= 2.4) { t += dt; if (t > 1.3 && !printed.visible) { printed.visible = true; n++; } }
-        const a = t < 0 ? 1 : clamp(t / 2.4), over = clamp(1 - Math.abs(a - 0.5) * 2.6 + 0.3), x = lerp(2.9, FX, over), down = clamp(1 - Math.abs(a - 0.5) * 8);
-        paper.position.set(x, lerp(lerp(0.22, 2.6, Math.sin(clamp(a) * Math.PI)), 0.7, down), Z);
-        info.set(`已印 ${n} 张\n${p.mode ? '整块木板，一页一版' : '八个字模，可拆可排'}`);
-      },
-      margin: () => ['累计要刻的字：', `雕版 ${plates.size * 8} 个`, `（${plates.size} 块版）`, `活字 ${carved} 个`, '（旧字模直接再用）', '版上是反字', '行序也是反的'],
-    };
-  },
-};
-
 const DYN = [['夏', -2070, -1600], ['商', -1600, -1046], ['西周', -1046, -771], ['春秋战国', -770, -221], ['秦', -221, -207], ['汉', -202, 220], ['三国两晋南北朝', 220, 589], ['隋', 581, 618], ['唐', 618, 907], ['五代十国', 907, 960], ['宋', 960, 1279], ['元', 1271, 1368], ['明', 1368, 1644], ['清', 1644, 1912]];
 const WORLD = [[-776, '第一届古代奥运会'], [-509, '罗马共和国建立'], [-221, '（秦统一六国）'], [476, '西罗马帝国灭亡'], [1215, '英国《大宪章》'], [1492, '哥伦布到达美洲'], [1689, '英国《权利法案》'], [1776, '美国《独立宣言》'], [1789, '法国大革命'], [1868, '日本明治维新']];
 const yr = (y) => (y < 0 ? `公元前 ${-Math.round(y)} 年` : `公元 ${Math.round(y)} 年`);
+// 公元纪年没有 0 年：公元前 1 年的下一年就是公元 1 年。尺子上的位置用“连续轴”（前 1 年 = 0，公元 1 年 = 1），
+// 显示和比较时再换回历史纪年，这样滑块永远停不到“公元 0 年”，前后两年在尺上也只隔一格。
+const toAxis = (y) => (y < 0 ? y + 1 : y), toYear = (a) => (a <= 0 ? a - 1 : a);
 const timeline = {
   id: 'his-timeline', subject: 'his', title: '中国古代朝代时间尺', en: 'A timeline of dynasties',
   lede: ['背朝代歌很容易，可是每个朝代到底有多长？把四千年按真实比例摊开在一把尺子上，每个朝代是一块长短不一的积木。', '你会发现，统一六国的秦只是一条细缝，而“三国两晋南北朝”的分裂比整个唐朝还长。时间的长短，本身就是历史。'],
-  formula: '公元纪年：没有公元 0 年', formulaNote: '跨公元前后计算间隔：年数相加再减 1（如前 202 年到 220 年共 421 年）',
+  formula: '公元纪年：没有公元 0 年', formulaNote: '公元前 1 年的下一年是公元 1 年。跨公元前后计算间隔：年数相加再减 1（如前 202 年到 220 年共 421 年）',
   terms: [['公元前', '以公元元年为界向前倒数。'], ['世纪', '每一百年；公元 618 年属于 7 世纪。'], ['国祚', '一个王朝存续的时间。']],
   predict: { q: '秦朝从统一六国到灭亡，一共存在了多少年？', options: ['约 15 年', '约 150 年', '约 400 年'], answer: 0, why: '公元前 221 年统一，公元前 207 年灭亡，只有 15 年左右。它在尺子上细得几乎看不见，但郡县制、统一文字和度量衡，影响了此后两千多年。' },
   challenge: '找出尺子上最长的三块积木。再找找：哥伦布到达美洲时，中国是哪个朝代？',
@@ -310,11 +252,11 @@ const timeline = {
     simplify: '夏、商、西周早期的年代采用“夏商周断代工程”的参考数值；并立政权（辽、西夏、金等）与新莽、武周未单列，朝代交替处有重叠的按前后衔接处理。世界大事只选了少数几件作参照。',
   },
   controls: [
-    { id: 'y', label: '年份', min: -2070, max: 1912, step: 1, value: 618, fmt: yr },
+    { id: 'y', label: '年份', min: toAxis(-2070), max: 1912, step: 1, value: 618, fmt: (a) => yr(toYear(a)) },
     { id: 'a0', type: 'button', label: '秦统一' }, { id: 'a1', type: 'button', label: '唐建立' }, { id: 'a2', type: 'button', label: '郑和下西洋' }, { id: 'a3', type: 'button', label: '辛亥革命' },
   ],
   build(k) {
-    const p = k.p, Z = -1.4, X = (y) => -4.6 + (y + 2100) / 4050 * 9.2;
+    const p = k.p, Z = -1.4, X = (y) => -4.6 + (toAxis(y) + 2100) / 4050 * 9.2;
     k.root.add(at(box(9.5, 0.12, 1.5, C.shade), 0, 0, Z));
     DYN.forEach(([nm, a], i) => {
       const b = i + 1 < DYN.length ? DYN[i + 1][1] : DYN[i][2], w = Math.max(0.03, X(b) - X(a) - 0.02), h = 0.5 + (i % 2) * 0.35;
@@ -331,16 +273,17 @@ const timeline = {
     k.root.add(pin, info);
     const st = {};
     return {
-      press(id) { k.set('y', [-221, 618, 1405, 1911][+id[1]]); },
+      press(id) { k.set('y', toAxis([-221, 618, 1405, 1911][+id[1]])); },
       update() {
-        pin.position.set(X(p.y), 0, Z + 0.7);
-        let d = DYN[0]; DYN.forEach((q) => { if (p.y >= q[1]) d = q; });
+        const y = toYear(p.y);
+        pin.position.set(X(y), 0, Z + 0.7);
+        let d = DYN[0]; DYN.forEach((q) => { if (y >= q[1]) d = q; });
         const len = d[2] - d[1] - (d[1] < 0 && d[2] > 0 ? 1 : 0);
-        let w = null; WORLD.forEach((q) => { if (q[0] <= p.y) w = q; });
-        Object.assign(st, { d, len, w });
-        info.set(`${yr(p.y)}　${d[0]}\n${d[0]}：${yr(d[1]).replace(' 年', '')}—${yr(d[2]).replace('公元 ', '').replace('公元前 ', '前 ')}，约 ${len} 年\n世界：${w ? `${w[1]}（${w[0] < 0 ? '前' : ''}${Math.abs(w[0])}）` : '两河、埃及文明'}`);
+        let w = null; WORLD.forEach((q) => { if (q[0] <= y) w = q; });
+        Object.assign(st, { d, len, w, y });
+        info.set(`${yr(y)}　${d[0]}\n${d[0]}：${yr(d[1]).replace(' 年', '')}—${yr(d[2]).replace('公元 ', '').replace('公元前 ', '前 ')}，约 ${len} 年\n世界：${w ? `${w[1]}（${w[0] < 0 ? '前' : ''}${Math.abs(w[0])}）` : '两河、埃及文明'}`);
       },
-      margin: () => [yr(p.y), `${p.y < 0 ? `公元前 ${Math.ceil(-p.y / 100)}` : `公元 ${Math.floor((p.y - 1) / 100) + 1}`} 世纪`, `距今约 ${new Date().getFullYear() - p.y - (p.y < 0 ? 1 : 0)} 年`, `所在：${st.d?.[0]}`, `存续约 ${st.len} 年`, '铜色点 = 世界大事'],
+      margin: () => { const y = st.y ?? toYear(p.y); return [yr(y), `${y < 0 ? `公元前 ${Math.ceil(-y / 100)}` : `公元 ${Math.floor((y - 1) / 100) + 1}`} 世纪`, `距今约 ${new Date().getFullYear() - y - (y < 0 ? 1 : 0)} 年`, `所在：${st.d?.[0]}`, `存续约 ${st.len} 年`, '铜色点 = 世界大事']; },
     };
   },
 };
