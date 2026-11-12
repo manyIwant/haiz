@@ -256,7 +256,7 @@ export function buildTrees(campus, frame, features) {
     const w = frame.toWorld(c.x, c.z);
     if (Math.hypot(w.x, w.z) < 12) continue;                // the real tree stands here in 3D
     if (blockers.some((f) => featureSDF(f, w.x, w.z) < 0.9)) continue;   // same rule as the walk
-    out.push({ x: w.x, z: w.z, r: t.t === 'palm' ? 2.4 * (t.s || 1) : 3.6 * (t.s || 1), kind: t.t, h: t.h || 1 });
+    out.push({ x: w.x, z: w.z, r: t.t === 'palm' ? 2.4 * (t.s || 1) : 3.6 * (t.s || 1), kind: t.t, h: t.h || 1, v: t.v ?? 0 });
   }
   return out;
 }

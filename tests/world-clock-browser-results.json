@@ -1,0 +1,23 @@
+{
+  "renderer": "Chromium + SwiftShader (software); no GPU, no WebKit, no device",
+  "runs": {
+    "default+clock+world+reduced+phone": {
+      "date": "2026-11-11T10:47:42.864Z",
+      "results": [
+        "default (no flag): the scene's sun at 01, 02, 04, 05, 06 is V4's own (166°/8.0° · 205°/34.0° · 135°/28.0° · 302°/12.0° · 320°/8.5°); no clock, no instant shown",
+        "default film: the sun at q 0.30 / 0.60 / 0.75 / 0.90 stands at 304.9°/11.4° · 314.3°/9.5° · 318.1°/8.8° · 319.9°/8.5° (it turns during the take)",
+        "default 06: lights 1.00 after the look, 1.00 in the walk, 1.00 back at 06 (before this fix: back to 0.01 and coming on a second time)",
+        "clock: at every shot the scene's sun is the real sun of the instant shown: 01 2月24日 7:41 144°/7.9° · 02 3月8日 9:00 139°/28.2° · 03 3月19日 10:00 135°/44.1° · 04 4月15日 16:00 341°/40.5° · 05 5月15日 18:24 320°/8.8° · 06 5月15日 18:25 320°/8.6°",
+        "clock film: through the take the sun stays within 0.08° of heading and 0.24° of height (320.1°/8.8° → 320.0°/8.6°)",
+        "clock 06 held: 1 s 5月15日 18:26 sun 8.5° lights 0% · 7 s 5月15日 18:33 sun 6.8° lights 61% · 14 s 5月15日 18:38 sun 5.7° lights 100% · 45 s 5月15日 18:43 sun 4.5° lights 100%",
+        "clock: into the walk (lights 1.00, sun 4.5°) and back to 06 (lights 1.00, sun 4.5°): one evening, never restarted",
+        "clock: scrolled back into the film, the sun is the take's own again and the lights are off (the held evening is let go)",
+        "phone (390 × 844, clock): no sideways overflow at 01 and 06, the instant stays on the screen, the evening goes on at 06",
+        "world: 01 stands at 06's standpoint (-17.44, 19.87); the campus stands in the water (u = 1, no ground laid) through 01 and the opening of 02 and has withdrawn by p = 1.1; while it stands the rail keeps 7.9 m or more clear of every building; 04 and 06 as before",
+        "cost of 01, one frame, medium tier: V4 38 draw calls / 2.10 M triangles; world 48 / 3.30 M (the campus is drawn, mirrored and shadowed from the first frame); without the flag 01 is V4's camera (8.5, 38.0)",
+        "reduced motion (clock): 06 shows the evening as it ends at once (lights 1.00, sun 4.4°), nothing animates towards it",
+        "no page or WebGL errors"
+      ]
+    }
+  }
+}

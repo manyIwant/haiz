@@ -134,9 +134,10 @@ export const LIGHT = [
   // 05 golden hour seen from inside the crown
   { sun: [302, 12], sunCol: [1.0, 0.68, 0.40], I: 3.4, zenith: [0.14, 0.18, 0.32], horizon: [0.95, 0.62, 0.40], glow: [1.5, 0.74, 0.34],
     fog: [0.80, 0.58, 0.42], density: 0.0014, mist: 0.05, rays: 0.6, exposure: 0.95, warm: 0.85, cloud: 0.4, aperture: 0.16, focus: 0, sat: 1.06, contrast: 1.05 },
-  // 06 full day: deep blue sky, white clouds, warm sun across the crown from the right
-  { sun: [58, 40], sunCol: [1.0, 0.9, 0.72], I: 5.6, zenith: [0.025, 0.11, 0.46], horizon: [0.36, 0.54, 0.80], glow: [0.95, 0.8, 0.6],
-    fog: [0.42, 0.56, 0.74], density: 0.0010, mist: 0.03, rays: 0.0, exposure: 1.08, warm: 0.55, cloud: 0.66, aperture: 0, focus: 0, sat: 1.16, contrast: 1.12 }
+  // 06 the same evening, a little later: the sun low behind the walker lights the whole crown and
+  // throws the tree's shadow across 一号教学楼; opposite the sun, the pink band over the earth's shadow
+  { sun: [298, 8.5], sunCol: [1.0, 0.62, 0.34], I: 4.8, zenith: [0.045, 0.11, 0.33], horizon: [0.76, 0.62, 0.56], glow: [1.5, 0.70, 0.30],
+    fog: [0.62, 0.55, 0.53], density: 0.0011, mist: 0.025, rays: 0.25, exposure: 0.98, warm: 0.78, cloud: 0.5, aperture: 0, focus: 0, sat: 1.08, contrast: 1.14 }
 ];
 
 // ---------------------------------------------------------------- interpolation

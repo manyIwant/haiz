@@ -2,7 +2,7 @@
 // No buildings — the tree stands alone, as a concept of the species.
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { WIND_GLSL, UNIFORMS, mulberry } from './foliage.js';
+import { WIND_GLSL, FALL_GLSL, UNIFORMS, mulberry } from './foliage.js';
 
 // ------------------------------------------------------------------ sky
 const SKY_VERT = /* glsl */`
@@ -44,6 +44,22 @@ void main(){
     vec3 cc = mix(cBase, cTop, lit * 0.8) + uGlow * pow(cs, 7.0) * 0.9 * (1.3 - lit);
     float fade = smoothstep(0.0, 0.16, d.y) * (1.0 - 0.35 * exp(-h * 6.0));
     col = mix(col, cc, dens * fade * 0.88);
+  }
+  // twilight opposite a low sun: the pink anti-twilight arch over the blue-grey shadow of the earth
+  float tw = smoothstep(0.30, 0.06, uSun.y);
+  if (tw > 0.0) {
+    vec3 sf = normalize(vec3(uSun.x, 0.0, uSun.z) + vec3(1e-4, 0.0, 0.0));
+    float anti = max(dot(normalize(vec3(d.x, 0.0, d.z) + vec3(1e-4, 0.0, 0.0)), -sf), 0.0);
+    float side = smoothstep(-0.15, 0.85, anti);
+    float el = asin(clamp(d.y, -1.0, 1.0)) * 57.2958;
+    float belt = smoothstep(1.5, 6.0, el) * (1.0 - smoothstep(9.0, 22.0, el));
+    float earth = 1.0 - smoothstep(0.5, 4.5, el);
+    vec3 pink = vec3(0.98, 0.64, 0.62) * (0.62 + 0.25 * dot(uHorizon, vec3(0.33)));
+    vec3 shade = vec3(0.30, 0.36, 0.52) * (0.55 + 0.4 * dot(uHorizon, vec3(0.33)));
+    col = mix(col, pink, belt * side * tw * 0.42);
+    col = mix(col, shade, earth * side * tw * 0.55 * step(-0.02, d.y));
+    // the zenith deepens towards the side away from the sun
+    col *= mix(1.0, 0.86, tw * side * smoothstep(10.0, 60.0, el));
   }
   // below the horizon: the colour of distant water and haze
   col = mix(col, uHorizon * 0.8, smoothstep(0.0, -0.06, d.y));
@@ -153,6 +169,7 @@ varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;`)
     if (!depth) {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
+uniform vec4 uFall;
 varying vec3 vBark; varying vec3 vWN; varying vec3 vWP; varying float vNew;
 float bh(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
 float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -172,10 +189,11 @@ float bn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   float bao = mix(mix(0.25, 0.6, vBark.b), 1.0, vBark.r);
   // under the crown the ambient light has passed through leaves: warmer, greener, not sky-blue
   vec3 under = mix(vec3(0.72, 0.82, 0.55), vec3(1.0), smoothstep(0.35, 0.9, vBark.r));
-  reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;`);
+  reflectedLight.indirectDiffuse *= bao * under; reflectedLight.indirectSpecular *= bao;
+${FALL_GLSL}`);
     }
   };
-  mat.customProgramCacheKey = () => 'bark2-' + depth;
+  mat.customProgramCacheKey = () => 'bark3-' + depth;
   return mat;
 }
 
@@ -287,7 +305,7 @@ const WATER_FRAG = /* glsl */`
 uniform vec3 color;
 uniform sampler2D tDiffuse;
 uniform float uTimeW; uniform vec3 uHorizon; uniform vec3 uZenith; uniform vec3 uGlow; uniform vec3 uSun;
-uniform float uHasRefl;
+uniform float uHasRefl; uniform float uReflMist;
 varying vec4 vUv;
 varying vec3 vWorld;
 float wh(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
@@ -307,7 +325,10 @@ void main(){
   if (uHasRefl > 0.5) {
     vec4 uv = vUv; uv.xy += n * uv.w;
     vec4 r = texture2DProj(tDiffuse, uv);
-    refl = mix(sky, r.rgb, 0.92);
+    // in mist the mirrored world is as veiled as the world itself: what is mirrored lies about as far
+    // beyond the water as the water is from the eye (0 = clear air: V4's mirror exactly)
+    float veil = uReflMist > 0.0 ? 1.0 - exp(-uReflMist * 2.0 * distance(cameraPosition, vWorld)) : 0.0;
+    refl = mix(sky, r.rgb, 0.92 * (1.0 - veil));
   }
   // the water body: a shallow lagoon over pale sand round the islet, deep green-blue beyond
   float rr = length(p * vec2(1.0, 1.12)) + (wn(p * 0.35) - 0.5) * 2.4;
@@ -340,7 +361,7 @@ export function createWater(level, reflect, pixelRatio) {
   const uniforms = {
     color: { value: new THREE.Color(0x888888) }, tDiffuse: { value: null }, textureMatrix: { value: new THREE.Matrix4() },
     uTimeW: { value: 0 }, uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() },
-    uGlow: { value: new THREE.Color() }, uSun: { value: new THREE.Vector3(0, 1, 0) }, uHasRefl: { value: reflect ? 1 : 0 }
+    uGlow: { value: new THREE.Color() }, uSun: { value: new THREE.Vector3(0, 1, 0) }, uHasRefl: { value: reflect ? 1 : 0 }, uReflMist: { value: 0 }
   };
   let mesh;
   if (reflect) {

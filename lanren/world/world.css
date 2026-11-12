@@ -151,3 +151,7 @@ body.map-mode:not(.map-leaving) .cmap > .cmap-you.on { opacity: 1; visibility: v
   .wd-guide { bottom: calc(var(--sb) + 12px); }
   .wd-pocket-card { height: 100%; }
 }
+
+/* 06: the turn and the tree have the screen to themselves for a moment; the words and the way on come after */
+.js body.spatial #p-whole > *, .wd-hold, body .bar, body .orbit, body .growth, body .colophon, #leaders { transition: opacity 1.6s cubic-bezier(.3, .1, .2, 1) .15s; }
+body.wd-quiet #p-whole > *, body.wd-quiet .wd-hold, body.wd-quiet .bar, body.wd-quiet .orbit, body.wd-quiet .growth, body.wd-quiet .colophon, body.wd-quiet #leaders { opacity: 0 !important; pointer-events: none; transition-duration: .5s; transition-delay: 0s; }

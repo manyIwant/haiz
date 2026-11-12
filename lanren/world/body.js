@@ -40,8 +40,19 @@ function materials() {
   const skin = pixels(8, 8, (g, w, h) => noisy(g, w, h, [214, 166, 128], 10, 4));
   const trousers = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [44, 66, 56], 8, 5); g.fillStyle = '#1d2b25'; g.fillRect(0, 0, w, 1); });
   const shoe = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [108, 84, 64], 10, 6); g.fillStyle = '#e8e2d4'; g.fillRect(0, h - 2, w, 2); });
-  const hair = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [214, 166, 128], 10, 7); g.fillStyle = '#231d19'; g.fillRect(0, 0, w, 3); g.fillRect(0, 0, 1, 5); g.fillRect(w - 1, 0, 1, 5); g.fillStyle = '#2a2420'; g.fillRect(2, 4, 1, 1); g.fillRect(5, 4, 1, 1); });
-  return { shirt: std(shirt), sleeve: std(sleeve), skin: std(skin, 0.7), trousers: std(trousers, 0.9), shoe: std(shoe, 0.8), hair: std(hair, 0.8) };
+  // the head is six faces, each its own: a face in front, hair behind and on top, an ear at each side
+  const HAIR = [35, 29, 25];
+  const face = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [214, 166, 128], 10, 7); g.fillStyle = '#231d19'; g.fillRect(0, 0, w, 2); g.fillRect(0, 0, 1, 4); g.fillRect(w - 1, 0, 1, 4); g.fillRect(1, 2, 2, 1); g.fillStyle = '#2a2420'; g.fillRect(2, 4, 1, 1); g.fillRect(5, 4, 1, 1); g.fillStyle = '#b98a68'; g.fillRect(3, 6, 2, 1); });
+  const back = pixels(8, 8, (g, w, h) => { noisy(g, w, h, HAIR, 7, 8); g.fillStyle = 'rgba(255,240,220,0.06)'; g.fillRect(2, 1, 3, 2); g.fillStyle = '#c99a76'; g.fillRect(1, h - 1, w - 2, 1); });
+  const top = pixels(8, 8, (g, w, h) => { noisy(g, w, h, HAIR, 7, 9); g.fillStyle = 'rgba(255,240,220,0.07)'; g.fillRect(3, 2, 2, 3); });
+  const sideL = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [214, 166, 128], 10, 10); g.fillStyle = '#231d19'; g.fillRect(0, 0, w, 3); g.fillRect(0, 0, 3, 6); g.fillStyle = '#c4906c'; g.fillRect(4, 3, 1, 2); });
+  const under = pixels(8, 8, (g, w, h) => noisy(g, w, h, [196, 150, 116], 8, 11));
+  const head = [sideL, sideL, top, under, face, back].map((t) => std(t, 0.8));
+  // the shirt's back: plain, a yoke seam across the shoulders and the collar's green edge
+  const shirtBack = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [232, 228, 216], 9, 12); g.fillStyle = '#2f5a48'; g.fillRect(1, 0, w - 2, 1); g.fillStyle = '#d4cdbd'; g.fillRect(0, 2, w, 1); g.fillStyle = '#ddd6c6'; g.fillRect(0, h - 1, w, 1); });
+  const shirtSide = pixels(8, 8, (g, w, h) => { noisy(g, w, h, [230, 226, 214], 9, 13); g.fillStyle = '#d6cfbf'; g.fillRect(3, 0, 1, h); });
+  const shirtM = std(shirt), backM = std(shirtBack), sideM = std(shirtSide);
+  return { shirt: [sideM, sideM, shirtM, shirtM, shirtM, backM], sleeve: std(sleeve), skin: std(skin, 0.7), trousers: std(trousers, 0.9), shoe: std(shoe, 0.8), head };
 }
 
 /** a block hanging from its joint (top at y = 0), optionally moved */
@@ -56,12 +67,15 @@ export function createBody() {
   const M = materials();
   const root = new THREE.Group(); root.name = 'walker';
   const hips = new THREE.Group(); root.add(hips);
-  const torso = new THREE.Group(); hips.add(torso);
-  torso.add(block(DIM.torsoW, DIM.torso, DIM.torsoD, M.shirt, DIM.torso / 2));
+  const torso = new THREE.Group(); torso.rotation.order = 'YXZ'; hips.add(torso);
+  const chest = new THREE.Group(); torso.add(chest);
+  chest.add(block(DIM.torsoW, DIM.torso, DIM.torsoD, M.shirt, DIM.torso / 2));
   // a belt line where the shirt meets the trousers
   torso.add(block(DIM.torsoW + 0.004, 0.08, DIM.torsoD + 0.004, M.trousers, 0.04));
-  const neck = new THREE.Group(); neck.position.y = DIM.torso; torso.add(neck);
-  const head = block(DIM.head, DIM.head, DIM.head, M.hair, DIM.head / 2); neck.add(head);
+  // a collar block: the green collar and the back of the neck read from behind
+  torso.add(block(DIM.torsoW * 0.62, 0.05, DIM.torsoD * 0.9, M.trousers, DIM.torso + 0.02));
+  const neck = new THREE.Group(); neck.position.y = DIM.torso; neck.rotation.order = 'YXZ'; torso.add(neck);
+  const head = block(DIM.head, DIM.head, DIM.head, M.head, DIM.head / 2); neck.add(head);
   const arm = (side) => {
     const sh = new THREE.Group(); sh.position.set(side * DIM.shoulderX, DIM.shoulderY, 0); torso.add(sh);
     const out = new THREE.Group(); sh.add(out);
@@ -101,6 +115,8 @@ export function createBody() {
     /** first person hides the head (the eye is inside it) */
     setFirstPerson(on) { firstPerson = !!on; head.visible = !firstPerson; },
     get firstPerson() { return firstPerson; },
+    /** breathing (seconds): the chest rises a little and the shoulders with it; purely drawn */
+    breathe: 0,
     /**
      * Place and pose: feet at (x, y, z), facing yaw (degrees, heading), with the pose values of
      * skeleton.js. groundY: the ground under the feet (for the contact shade).
@@ -110,20 +126,25 @@ export function createBody() {
       root.position.set(b.x, b.y, b.z);
       root.rotation.y = (b.yaw * Math.PI) / 180;
       hips.position.y = a.hip;
-      torso.rotation.x = a.lean;                 // leaning forward (+Z is the walker's front)
-      neck.rotation.y = a.look;
+      hips.rotation.set(0, a.twistHip, a.hipRoll);
+      // leaning forward (+Z is the walker's front); rolling to the right (−X); the shoulders against the hips
+      torso.rotation.set(a.lean, a.twistTorso, a.roll - a.hipRoll);
+      // the head keeps its heading through the walk's twist (people steady their gaze), and nods
+      neck.rotation.set(-a.nod, a.look - a.twistHip - a.twistTorso, 0);
+      const br = Math.sin(api.breathe * 1.7) * (1 - Math.min(1, b.amp || 0));
+      chest.scale.set(1 + 0.012 * br, 1 + 0.008 * br, 1 + 0.02 * br);
       // forward-positive angles: a limb hanging down swings towards +Z with a negative x rotation
       L.leg.hp.rotation.x = -a.legL; R.leg.hp.rotation.x = -a.legR;
       L.leg.kn.rotation.x = a.kneeL; R.leg.kn.rotation.x = a.kneeR;
       L.arm.sh.rotation.x = -a.armL; R.arm.sh.rotation.x = -a.armR;
-      L.arm.out.rotation.z = a.armOut; R.arm.out.rotation.z = -a.armOut;
+      L.arm.out.rotation.z = a.armOutL; R.arm.out.rotation.z = -a.armOutR;
       L.arm.el.rotation.x = -a.elbowL; R.arm.el.rotation.x = -a.elbowR;
       const above = Math.max(0, b.y - groundY);
       blob.position.set(b.x, groundY + 0.025, b.z);
       blob.material.opacity = Math.max(0, 1 - above / 3);
       blob.scale.setScalar(1 + above * 0.25);
     },
-    dispose() { group.traverse((o) => { o.geometry?.dispose(); }); for (const m of Object.values(M)) { m.map?.dispose(); m.dispose(); } }
+    dispose() { group.traverse((o) => { o.geometry?.dispose(); }); for (const m of Object.values(M).flat()) { m.map?.dispose(); m.dispose(); } }
   };
   api.setFirstPerson(true);
   return api;

@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-07T19:24:16.606Z",
+  "date": "2026-11-09T03:47:03.124Z",
   "results": [
     "slot tables: photo 371, words 277, sound 295, image 325, code 231 leaves; deterministic (fingerprint 9f1a9f49), disjoint",
     "addresses: resolve only on their own tree; allocation is append-only, withdrawal keeps the leaf, relays grow beside their source",

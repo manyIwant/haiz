@@ -6,12 +6,18 @@
 // round the tree (a building stands within 40 m in every direction), so no composition
 // keeps both V4 shots *and* an open horizon; each gives something up:
 //
-//   b  (default) the campus turned 90° about the tree's root. Both V4 cameras are kept
-//      exactly; 05 looks out of the crown over the north forecourt to 北门 and 科技楼 in
-//      the sunset, 06 stands in the garden lane and looks back at the tree with 一号教学楼
-//      behind it. What changes: the campus's bearing in V4's world (V4 had none: its
-//      suns are art-directed per shot, campus "north" is unverified), so chapter 04's plan
-//      is drawn with north to the left. The tree keeps its exact place on the campus.
+//   b  (default) the campus turned 90° about the tree's root. V4's 05 camera is kept exactly
+//      (05 looks out of the crown over the north forecourt to 北门 and 科技楼 in the sunset).
+//      06 is no longer V4's eye (since round 4): the walker stops 27 m from the tree on the
+//      line the evening shadow takes back to it, and the last frame is composed from the
+//      leaves' own point cloud so the whole tree stands in the picture (desktop: 50°, the tree centred, sky
+//      above the crown, ground and shadow below; phones: the crown's full height in a
+//      portrait lens, the limb tips allowed off the sides). 06's sun is 320° (05: 302°;
+//      it turns during the film) so the light rakes 一号教学楼's front behind the tree and
+//      lays the walker's shadow on the trunk. What changes besides: the campus's bearing in
+//      V4's world (V4 had none: its suns are art-directed per shot, campus "north" is
+//      unverified), so chapter 04's plan is drawn with north to the left. The tree keeps
+//      its exact place on the campus.
 //   a  the campus as the data lays it (north up in 04). 05 is V4 exactly with the campus
 //      still beneath the water; it rises while the body drops to the ground; 06 is a new
 //      eye in the north forecourt (V4's 06 eye is inside 一号教学楼), the sun moved with it.
@@ -29,19 +35,22 @@ export const GROUND_Y = -0.85;
 
 export const COMPOSITIONS = {
   b: {
-    id: 'b', title: 'B · 校园绕树转 90°', short: '保留 V4 第五、六幕两个机位；校园在第五幕已是立体',
+    id: 'b', title: 'B · 校园绕树转 90°', short: '保留 V4 第五幕机位；第六幕为距树 27 m 的新回望（整棵树入画）；校园在第五幕已是立体',
     rotation: 90 * D2R,
     // the campus rises while the camera comes down from the map into the crown (04 → 05)
     rise: [3.08, 3.88],
-    shot6: null,                       // V4's own 06 eye (feet on the campus ground)
-    sun6: null
+    // 06 (round 5): 27 m from the tree on the line the evening shadow takes back to it, framed from the leaves'
+    // own point cloud so the whole tree stands in the picture (sky above the crown, the ground and the walker's
+    // shadow below); phones keep the crown's full height and let the limb tips run off the sides
+    shot6: { eye: [-18.82, GROUND_Y + EYE_H, 18.56], look: [-6.85, 5.9, -3.04], fov: 50, portrait: { look: [-3.67, 7.0, -1.32], fov: 70, auth: 1 } },
+    sun6: 320
   },
   a: {
     id: 'a', title: 'A · 落地后显现', short: '保留第四幕北朝上；第五幕无校园，跃下时校园升起；第六幕改在树北前庭回望',
     rotation: 0,
     rise: [4.18, 4.46],               // buildings rise while the walker stands on the limb; the ground is campus before the landing
     shot6: { eye: [7.0, GROUND_Y + EYE_H, -34.0], look: [-1.2, 6.9, 0.2], fov: 40 },
-    sun6: 269                          // V4's 06 light, turned with the new view (sun 77° to the right of the view)
+    sun6: 150                          // 06's evening sun, turned with the new view (163° from the gaze, behind the left shoulder, as in b)
   },
   c: {
     id: 'c', title: 'C · 漫游后才出现', short: '第五、六幕完全保持 V4；校园在交出控制权后才升起（06 落点在一号教学楼内，无法连续）',
@@ -69,14 +78,35 @@ export function pickComposition(search = '', storage = null) {
 }
 
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+/** ?world=1: where (in p) the standing campus withdraws into the water: with the first step of the climb up the
+ *  trunk, before its first year (1923, p = 1 + 1/14) is reached: nothing of today stands in the picture of then.
+ *  (It cannot simply stay through 02 and 03 as they are staged: V4's crown is some 36 m across, about
+ *  twice the footprint the campus plan gives the tree, its east limbs reach into 一号教学楼's volume, and
+ *  02's upper stations and V4's 03 eye stand within a metre or two of that front or inside it.) */
+export const VEIL_FOLD = [1.0, 1.07];
+/**
+ * 06's frame turned about the trunk so that the walker stands on the line of a given sun heading
+ * (degrees, atan2(x, z)): the standpoint follows from the sun. Eye and look turn together, so the
+ * tree keeps its place in the picture. Pure. Returns { eye, look, fov, portrait } like shot6.
+ */
+export function shot6Turned(shot6, sunAz, trunk = [0.1, 0, 0]) {
+  const have = (Math.atan2(shot6.eye[0] - trunk[0], shot6.eye[2] - trunk[2]) * 180) / Math.PI;
+  let d = sunAz - have; while (d > 180) d -= 360; while (d < -180) d += 360;
+  const r = d * D2R, c = Math.cos(r), sn = Math.sin(r);
+  const turn = (v) => { const x = v[0] - trunk[0], z = v[2] - trunk[2]; return [trunk[0] + x * c + z * sn, v[1], trunk[2] - x * sn + z * c]; };
+  return { ...shot6, eye: turn(shot6.eye), look: turn(shot6.look), portrait: shot6.portrait ? { ...shot6.portrait, look: turn(shot6.portrait.look) } : undefined, turned: d };
+}
 /**
  * How far the campus stands at scroll progress p, outside chapter 04's own map (0 the plan
  * waits under the water, 1 every building standing in material). Pure.
  *   pinned   the visitor unfolded the campus in 04 and left it standing
  *   walking  the first-person walk (or its map) is on: always standing
  */
-export function campusAt(compose, p, { pinned = false, walking = false } = {}) {
+export function campusAt(compose, p, { pinned = false, walking = false, veil = false } = {}) {
   if (walking) return 1;
+  // one place from the first frame (?world=1): the campus stands round the tree in 01 and as 02 opens, in
+  // the morning's mist and the water; it withdraws as the climb begins and is back, built, from 04 on
+  if (veil && p < 3) return Math.max(pinned ? smooth((p - 2.55) / 0.45) : 0, 1 - smooth((p - VEIL_FOLD[0]) / (VEIL_FOLD[1] - VEIL_FOLD[0])));
   // before 04 the six-shot film is V4's own: a campus left standing sinks on the way back to 03
   if (p < 3) return pinned ? smooth((p - 2.55) / 0.45) : 0;
   const r = compose.rise;

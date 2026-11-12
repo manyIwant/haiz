@@ -69,7 +69,7 @@ const html = `<!doctype html>
   "three/addons/": "./lanren/vendor/three/addons/"
 } }
 </script>
-<script type="module" src="lanren/js/home.js?v=2"></script>
+<script type="module" src="lanren/js/home.js?v=3"></script>
 </head>
 <body class="home">
 <div class="stage" aria-hidden="true">
