@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#d9d3c2">
+<meta name="description" content="HAIZ 实验册：一本摊开在桌上的立体实验书。物理、化学、生物、地理、数学、信息技术与通用技术的课堂互动实验，墨线白模从纸面立起，可调参数、可预测、可求证。">
+<title>HAIZ 实验册 · 各学科课堂互动实验</title>
+<link rel="icon" href="../assets/walk/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/lab.css">
+<script type="importmap">{"imports":{"three":"../lanren/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<div id="stage" aria-label="实验书">
+  <canvas id="gl" aria-label="立体实验装置。可拖动空白处转动视角。"></canvas>
+  <div id="css3d"><div class="cam"></div></div>
+</div>
+<main id="flow"></main>
+
+<article id="leafL" class="leaf leaf-l" aria-live="polite"></article>
+<section id="leafR" class="leaf leaf-r" aria-label="图注与实验控制"></section>
+
+<nav id="bar" aria-label="翻页与工具">
+  <button id="bToc" type="button" title="目录" aria-label="目录"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+  <button id="bPrev" type="button" title="上一个实验 (←)" aria-label="上一个实验"><svg viewBox="0 0 24 24"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+  <div id="bTitle"><b></b><span></span></div>
+  <button id="bNext" class="go" type="button" title="下一个实验 (→)" aria-label="下一个实验"><svg viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg></button>
+  <i class="sep"></i>
+  <button id="bPlay" type="button" title="暂停 / 继续 (空格)" aria-label="暂停或继续演示" aria-pressed="false"><svg viewBox="0 0 24 24"><path class="pause" d="M9 6v12M15 6v12"/><path class="play" d="M9 6l9 6-9 6z"/></svg></button>
+  <button id="bReset" type="button" title="重置本实验" aria-label="重置本实验"><svg viewBox="0 0 24 24"><path d="M6 12a6 6 0 1 0 2-4.5M6 5v3.5h3.5"/></svg></button>
+  <button id="bTeach" type="button" title="教师备课" aria-label="教师备课" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m3 9.5 9-4.5 9 4.5-9 4.5zM7 12v4c1.5 1.4 3.2 2 5 2s3.500-.6 5-2v-4M21 9.500v5"/></svg></button>
+  <button id="bFull" type="button" title="全屏（投影）" aria-label="全屏"><svg viewBox="0 0 24 24"><path d="M5 9V5h4M19 9V5h-4M5 15v4h4M19 15v4h-4"/></svg></button>
+</nav>
+
+<aside id="toc" hidden aria-label="目录">
+  <div class="sheet">
+    <header><div><small>HAIZ · LAB BOOK</small><h2>实验册目录</h2></div><button id="tocClose" type="button" aria-label="关闭目录">合上 ×</button></header>
+    <p class="toc-lede">每一页是一个可以动手的实验：先猜，再做，再掀开答案。数据由公式实时计算，属于理想化模型，不能代替真实实验。</p>
+    <div id="tocList"></div>
+    <footer>画风致敬 Techartist 的 <a href="https://iamtechartist.com/Apps/every-joule/" target="_blank" rel="noopener noreferrer">Every Joule</a>（立体墨线课本）。本实验册的程序、模型、文字均为 HAIZ 独立制作，未使用原作的代码与素材。 · <a href="../index.html">返回 haiz.space</a></footer>
+  </div>
+</aside>
+
+<aside id="teach" hidden aria-label="教师备课"></aside>
+<div id="fallback" hidden>这本实验册需要浏览器支持 WebGL 2 与图形加速。请换用较新的 Chrome、Edge 或 Safari 打开。</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
