@@ -1,11 +1,11 @@
 {
   "suite": "lab-browser",
   "environment": "Chromium + SwiftShader (software rendering); not a real-GPU or Safari run",
-  "experiments": 34,
+  "experiments": 42,
   "passed": 7,
   "results": [
-    "catalog: 34 experiments across 7 subjects (phy, chem, bio, geo, math, it, tech), each with prediction, answer flap and teacher notes",
-    "all 34 experiments open, render objects, write live margin notes and fit their pages; 269 control interactions without an error",
+    "catalog: 42 experiments across 11 subjects (phy, chem, bio, geo, math, it, tech, chn, eng, his, pol), each with prediction, answer flap and teacher notes",
+    "all 42 experiments open, render objects, write live margin notes and fit their pages; 323 control interactions without an error",
     "→ turns the page with the fold / flip / pop-up animation and updates the hash",
     "contents sheet lists every experiment and jumps to the chosen one",
     "teacher drawer shows curriculum mapping, questions to ask and the model’s simplifications",

@@ -36,7 +36,7 @@ const titration = {
     const drop = ball(0.06, C.sky);
     const g = at(plot({ w: 4.1, h: 3.2, xr: [0, 40], yr: [0, 14], xl: 'V(NaOH) / mL', yl: 'pH' }), 2.2, 0, -2.4);
     const info = at(card('\n', { w: 3.6, size: 0.32, align: 'left' }), 2.3, 0, 2.3);
-    k.root.add(at(plate(2.3, 2.3), X + 0.45, 0, Z), flask, drop, g, info);
+    k.root.add(flask, drop, g, info);
     let V = 0, acc = 0, end = null, dy = -1; const trace = [[0, 0]];
     const pH = (v) => { const d = (CA[p.acid] * 20 - 0.1 * v) / (20 + v); return -Math.log10((d + Math.sqrt(d * d + 4e-14)) / 2); };
     const draw = () => { g.clear().curve(trace, C.violet, 0.04); if (end) g.dot(end, 8.2, C.rose); g.dot(V, pH(V), C.amber, 0.08).done(); };
@@ -328,7 +328,8 @@ const electrolysis = {
   ],
   build(k) {
     const p = k.p, Z = -0.6, H = 3.6, CAP = 20;
-    k.root.add(at(glass(new THREE.BoxGeometry(5, 1.5, 2.4).translate(0, 0.75, 0)), 0, 0.02, Z), at(flat(new THREE.BoxGeometry(4.9, 1.1, 2.3).translate(0, 0.55, 0), '#cfe6ff', { opacity: 0.4 }), 0, 0.04, Z));
+    const rig = at(new THREE.Group(), 0.9, 0, 0); k.root.add(rig);
+    rig.add(at(glass(new THREE.BoxGeometry(5, 1.5, 2.4).translate(0, 0.75, 0)), 0, 0.02, Z), at(flat(new THREE.BoxGeometry(4.9, 1.1, 2.3).translate(0, 0.55, 0), '#cfe6ff', { opacity: 0.4 }), 0, 0.04, Z));
     const mkTube = (x) => {
       const g = at(group(glass(new THREE.CylinderGeometry(0.42, 0.42, H, 32, 1, true).translate(0, H / 2, 0)), glass(new THREE.SphereGeometry(0.42, 24, 12, 0, TAU, 0, Math.PI / 2).translate(0, H, 0))), x, 0.5, Z);
       const col = liquid(0.39, H, '#cfe6ff', 0.45); g.add(col);
@@ -337,8 +338,8 @@ const electrolysis = {
     };
     const neg = mkTube(-1.1), pos = mkTube(1.1);
     const bat = at(group(box(1.6, 0.9, 0.9, C.shade), at(note('直流电源', { size: 0.24 }), 0, 0.5, 0.46)), 0, 0, 2.2);
-    const info = at(card('\n\n', { w: 3.2, size: 0.3, align: 'left' }), -3.0, 0, 2.5);
-    k.root.add(neg.g, pos.g, neg.bub, pos.bub, bat, info, tube([[-0.6, 0.5, 2.2], [-2.2, 0.08, 1.6], [-2.9, 0.08, Z], [-2.2, 0.6, Z], [-1.1, 0.25, Z]], 0.035, C.ink), tube([[0.6, 0.5, 2.2], [2.2, 0.08, 1.6], [2.9, 0.08, Z], [2.2, 0.6, Z], [1.1, 0.25, Z]], 0.035, C.red),
+    const info = at(card('\n\n', { w: 2.9, size: 0.3, align: 'left' }), -4.1, 0, 3.0);
+    rig.add(neg.g, pos.g, neg.bub, pos.bub, bat, info, tube([[-0.6, 0.5, 2.2], [-2.2, 0.08, 1.6], [-2.9, 0.08, Z], [-2.2, 0.6, Z], [-1.1, 0.25, Z]], 0.035, C.ink), tube([[0.6, 0.5, 2.2], [2.2, 0.08, 1.6], [2.9, 0.08, Z], [2.2, 0.6, Z], [1.1, 0.25, Z]], 0.035, C.red),
       at(note('− 阴极', { size: 0.3 }), -1.1, H + 1.5, Z), at(note('+ 阳极', { size: 0.3 }), 1.1, H + 1.5, Z));
     let q = 0, t = 0;
     return {
