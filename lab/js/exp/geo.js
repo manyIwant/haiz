@@ -151,7 +151,7 @@ const contour = {
   build(k) {
     const p = k.p, X = -2.4, Z = -0.9, S = 4.7, N = 72, HALF = 2.6;
     const cv = document.createElement('canvas'); cv.width = cv.height = 768;
-    const x = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv); tex.anisotropy = 8;
+    const x = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv); tex.anisotropy = 8; tex.colorSpace = THREE.SRGBColorSpace;
     const geo = new THREE.PlaneGeometry(S, S, N, N).rotateX(-Math.PI / 2);
     const pos = geo.attributes.position, k2 = (2 * HALF) / S;
     for (let i = 0; i < pos.count; i++) pos.setY(i, hgt(pos.getX(i) * k2, pos.getZ(i) * k2) / k2);

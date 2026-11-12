@@ -4,6 +4,7 @@
 //           3 = 只描边、不排线的实体（写字的底板等）。
 import * as THREE from 'three';
 
+THREE.ColorManagement.enabled = true;
 export { THREE };
 export const L = { INK: 0, COLOR: 1, GLASS: 2, CLEAN: 3 };
 export const C = {
@@ -29,9 +30,24 @@ function mk(geo, mat, layer) {
   m.receiveShadow = layer === L.INK;
   return m;
 }
-/** 会被描边的白模实体 */
-export function solid(geo, color = C.paper) {
-  return mk(geo, new THREE.MeshLambertMaterial({ color, side: THREE.DoubleSide }), L.INK);
+// ---------- 材料 ----------
+// 白模不是“没有材质”：卡纸、木头、金属、玻璃对光的反应各不相同，只是都保持浅色，让墨线和发光的颜色做主角。
+const METAL = new Set(['#dfe3e6', '#cfd6dc', '#b4653a', '#c9ced3', '#d8dde1', '#bfc6cc', '#c8895a', '#d9b36a']);
+const WOOD = new Set(['#ead9b8', '#e3cfa6', '#d9c39a']);
+export function matFor(color = C.paper, o = {}) {
+  const key = typeof color === 'string' ? color.toLowerCase() : '';
+  const kind = o.kind ?? (METAL.has(key) ? 'metal' : WOOD.has(key) ? 'wood' : 'card');
+  const m = new THREE.MeshStandardMaterial({
+    color, side: o.side ?? THREE.DoubleSide,
+    metalness: kind === 'metal' ? 0.82 : 0,
+    roughness: o.roughness ?? (kind === 'metal' ? 0.36 : kind === 'wood' ? 0.68 : kind === 'ceramic' ? 0.25 : 0.88),
+  });
+  m.envMapIntensity = kind === 'metal' ? 1.25 : kind === 'ceramic' ? 0.9 : 0.6;
+  return m;
+}
+/** 会被描边的白模实体。o.kind: 'card'（默认）| 'metal' | 'wood' | 'ceramic' */
+export function solid(geo, color = C.paper, o) {
+  return mk(geo, matFor(color, o), L.INK);
 }
 /** 只上色、不描边（液体、发光体、色块） */
 export function flat(geo, color, o = {}) {
@@ -40,11 +56,28 @@ export function flat(geo, color, o = {}) {
     color, transparent, opacity: o.opacity ?? 1, depthWrite: !transparent, side: o.side ?? THREE.DoubleSide,
   }), L.COLOR);
 }
-/** 玻璃：只有墨线轮廓 */
-export function glass(geo) {
-  return mk(geo, new THREE.MeshBasicMaterial({
-    color: 0xffffff, transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide,
-  }), L.GLASS);
+/** 玻璃材质：几乎透明，但会清楚地映出窗子的高光——这是玻璃“看得见”的原因 */
+export function glassMat(o = {}) {
+  const m = new THREE.MeshStandardMaterial({
+    color: o.color ?? 0xffffff, transparent: true, opacity: o.opacity ?? 0.1, roughness: o.roughness ?? 0.06, metalness: 0,
+    depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+  });
+  m.envMapIntensity = 1.6;
+  m.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `
+      vec3 specAll = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+      vec3 diffAll = max(outgoingLight - specAll, vec3(0.));
+      float fres = pow(1. - abs(dot(normalize(vNormal), normalize(vViewPosition))), 3.);
+      float a = clamp(diffuseColor.a + fres * .22, 0., 1.);
+      gl_FragColor = vec4(diffAll * a + specAll, clamp(a + dot(specAll, vec3(.3, .6, .1)), 0., 1.));`);
+  };
+  m.customProgramCacheKey = () => 'haiz-glass';
+  return m;
+}
+/** 玻璃：墨线轮廓 + 真实的高光 */
+export function glass(geo, o) {
+  return mk(geo, glassMat(o), L.GLASS);
 }
 /** 让一个实体只描边、不排线、不受光（适合当写字的白底板） */
 export const clean = (m) => { m.layers.set(L.CLEAN); const c = m.material.color; m.material.dispose(); m.material = new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide }); m.receiveShadow = false; return m; };
@@ -188,7 +221,7 @@ function glowTex() {
   g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.55)');
   g.addColorStop(0.7, 'rgba(255,255,255,.14)'); g.addColorStop(1, 'rgba(255,255,255,0)');
   x.fillStyle = g; x.fillRect(0, 0, 128, 128);
-  _glowTex = new THREE.CanvasTexture(c); _glowTex.userData.shared = true;
+  _glowTex = new THREE.CanvasTexture(c); _glowTex.colorSpace = THREE.SRGBColorSpace; _glowTex.userData.shared = true;
   return _glowTex;
 }
 /** 一团彩色光晕 */
@@ -241,7 +274,7 @@ export function label(text, o = {}) {
   const w = o.w ?? wText + pad * 2, h = o.h ?? lines0.length * size * 1.32 + pad * 2;
   const c = fitCanvas(w, h), x = c.getContext('2d');
   const tex = new THREE.CanvasTexture(c);
-  tex.anisotropy = 8;
+  tex.anisotropy = 8; tex.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: !o.card, depthWrite: !!o.card, side: THREE.DoubleSide });
   const m = mk(new THREE.PlaneGeometry(w, h), mat, o.card ? L.INK : L.COLOR);
   m.receiveShadow = false; m.castShadow = !!o.card && o.lay !== 'flat';
@@ -258,7 +291,8 @@ export function label(text, o = {}) {
     x.textAlign = o.align ?? 'center';
     const ls = t.split('\n');
     const tx = x.textAlign === 'center' ? W / 2 : x.textAlign === 'right' ? W - pad * S : pad * S;
-    ls.forEach((s, i) => x.fillText(s, tx, H / 2 + ((i - (ls.length - 1) / 2) * size * 1.32 + size * 0.04) * S));
+    x.strokeStyle = x.fillStyle; x.lineWidth = size * S * 0.028; x.lineJoin = 'round';
+    ls.forEach((s, i) => { const ty = H / 2 + ((i - (ls.length - 1) / 2) * size * 1.32 + size * 0.04) * S; x.fillText(s, tx, ty); x.strokeText(s, tx, ty); });
     tex.needsUpdate = true;
     return m;
   };
@@ -284,7 +318,7 @@ export function card(text, o = {}) {
 export function plot(o = {}) {
   const w = o.w ?? 3.6, h = o.h ?? 2.6;
   const c = fitCanvas(w, h), x = c.getContext('2d');
-  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8;
+  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8; tex.colorSpace = THREE.SRGBColorSpace;
   const m = mk(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }), L.INK);
   m.receiveShadow = false;
   const S = c.width / w;
@@ -346,7 +380,7 @@ function fmtTick(v) { return Math.abs(v) >= 100 || Number.isInteger(v) ? String(
 export function dots(n, r = 0.08, color = C.paper, o = {}) {
   const geo = new THREE.SphereGeometry(r, o.seg ?? 14, 10);
   const mat = o.flat ? new THREE.MeshBasicMaterial({ color, transparent: o.opacity < 1, opacity: o.opacity ?? 1 })
-    : new THREE.MeshLambertMaterial({ color });
+    : matFor(color, { side: THREE.FrontSide });
   const im = new THREE.InstancedMesh(geo, mat, n);
   im.layers.set(o.flat ? L.COLOR : L.INK);
   im.castShadow = !o.flat && !!o.shadow; im.frustumCulled = false;
@@ -379,7 +413,7 @@ export function liquid(r, h, color, opacity = 0.75) {
  */
 export function sheet(w, h, draw, o = {}) {
   const c = fitCanvas(w, h), x = c.getContext('2d');
-  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8;
+  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8; tex.colorSpace = THREE.SRGBColorSpace;
   const m = mk(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: !o.opaque, depthWrite: !!o.opaque, side: THREE.DoubleSide }), o.ink ? L.INK : L.COLOR);
   m.castShadow = false; m.receiveShadow = false;
   m.redraw = (fn) => { x.clearRect(0, 0, c.width, c.height); fn(x, c.width / w, w, h); tex.needsUpdate = true; return m; };
@@ -404,7 +438,8 @@ export function meter(sym, o = {}) {
   }
   x.fillStyle = C.copper; x.font = `italic 600 ${S * 0.3}px ${FONT.serif}`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(sym, cx, c.height * 0.66);
-  const face = mk(new THREE.PlaneGeometry(w * 0.9, h * 0.86), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }), L.COLOR);
+  const ftex = new THREE.CanvasTexture(c); ftex.colorSpace = THREE.SRGBColorSpace; ftex.anisotropy = 8;
+  const face = mk(new THREE.PlaneGeometry(w * 0.9, h * 0.86), new THREE.MeshBasicMaterial({ map: ftex }), L.COLOR);
   face.position.set(0, h / 2, 0.005); face.castShadow = false;
   const needle = rod([0, 0, 0], [0, h * 0.62, 0], 0.018, C.red); needle.castShadow = false;
   const pivot = group(needle); pivot.position.set(0, h * 0.11, 0.05);
@@ -478,7 +513,7 @@ export function wavelength(nm) {
   else if (nm < 510) { g = 1; b = (510 - nm) / 20; } else if (nm < 580) { r = (nm - 510) / 70; g = 1; }
   else if (nm < 645) { r = 1; g = (645 - nm) / 65; } else { r = 1; }
   const f = nm < 420 ? 0.35 + 0.65 * (nm - 380) / 40 : nm > 700 ? 0.35 + 0.65 * (780 - nm) / 80 : 1;
-  return new THREE.Color(clamp(r) * f, clamp(g) * f, clamp(b) * f);
+  return new THREE.Color().setRGB(clamp(r) * f, clamp(g) * f, clamp(b) * f, THREE.SRGBColorSpace);
 }
 
 /** 数字格式：有效数字 */
