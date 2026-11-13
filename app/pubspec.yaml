@@ -75,6 +75,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/campus/
+    - assets/lamp/
   shaders:
     - shaders/haiz_optical.frag
 

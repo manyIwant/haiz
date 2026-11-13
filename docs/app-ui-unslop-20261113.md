@@ -43,3 +43,15 @@
 - `flutter test`：129 项通过（5 项跳过），与修改前一致；因文案变化更新了 `lamp_entry_test` 与 `ui_smoke_test` 的文本断言
 - Web 构建在 393×852 视口下截图检查了三个外观；尚未在 Android/iOS 真机上验收
 - 仓库根目录的 `app-preview/` 仍是旧版构建，未随本次更新
+
+## 入口：砖墙壁灯登录（2026-11-13 补充）
+
+此前 Android/iOS 在 WebView 里打开 `haiz.space/lamp-preview/`，网页版则显示 Flutter 的 `LampEntry`，两端入口不同；WebView 里的密码表单也无法真正登录（页面自述"正式账号服务尚未上线"），能用的登录是叠在右上角的 Flutter 按钮。
+
+现在 `LampEntry` 用 Flutter 原生重做了砖墙壁灯登录页，APK、iOS 与网页版共用，离线可用：
+
+- 背景为 `assets/lamp/wall-photo.webp`（与 `lamp-preview/wall-photo.webp` 同一文件）；照片里烘焙了一张占位登录卡，面板按照片几何位置覆盖它，任意屏幕尺寸都对得上
+- 灯光随操作变化：空闲 → 聚焦邮箱 → 聚焦密码 → 填写完整 → 验证中（灯泡呼吸）→ 出错（变暗并轻微摇晃）→ 成功（整面墙亮起后进入）。数值沿用原网页的灯光状态
+- 邮箱 + 密码直接调用 `PocketAuthController.signIn`（Supabase Auth），"忘记密码"调用 `sendReset`，"注册"打开原有的注册面板，"进入本机访客空间"保留
+- 面板改为中性半透明表面 + 细线，去掉了原网页的色相渐变、宽字距品牌字和"记住我"（原本没有实际功能）
+- `pocket_lamp_entrance.dart` 保留为薄包装，供 lamp 分支的 CI 工作流继续引用；`webview_flutter` 依赖已不再被代码使用，可在之后单独移除

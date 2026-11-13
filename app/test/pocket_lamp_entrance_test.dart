@@ -5,7 +5,7 @@ import 'package:haiz_pocket_flutter/ui/lamp_entry.dart';
 import 'package:haiz_pocket_flutter/ui/pocket_lamp_entrance.dart';
 
 void main() {
-  testWidgets('Local fallback entrance stays available on non-mobile platforms',
+  testWidgets('Native lamp entrance runs on every platform',
       (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     var entered = false;
@@ -18,7 +18,9 @@ void main() {
     expect(find.byType(LampEntry), findsOneWidget);
     expect(find.byKey(const Key('lamp-enter-guest')), findsOneWidget);
     await tester.tap(find.byKey(const Key('lamp-enter-guest')));
+    await tester.pump(const Duration(milliseconds: 1500));
     expect(entered, isTrue);
+    await tester.pumpAndSettle();
     debugDefaultTargetPlatformOverride = null;
   });
 }

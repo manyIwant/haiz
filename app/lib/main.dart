@@ -57,6 +57,8 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
   // Web Lamp gateway already displayed the entrance. Open the actual
   // device-local Flutter workspace directly after explicit CTA navigation.
   bool _entered = kIsWeb && Uri.base.queryParameters['fromLamp'] == '1';
+  // Keeps the entrance up while its lamp shows a successful sign-in.
+  bool _holdEntrance = false;
   bool showLab = false;
   bool showAcademic = false;
   bool _hasAppUpdate = false;
@@ -158,49 +160,19 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                   body: Center(child: CircularProgressIndicator()),
                 );
               }
-              if (!_entered && !pocketAuth.authenticated) {
-                return Stack(
-                  children: [
-                    PocketLampEntrance(
-                      onEnter: () => setState(() => _entered = true),
-                    ),
-                    Positioned(
-                      right: 16,
-                      top: 12,
-                      child: SafeArea(
-                        // The entrance is always dark: a quiet text link
-                        // for log in, one outlined button for register.
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextButton(
-                              key: const Key('pocket-account-entry'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFFDCD3C4),
-                              ),
-                              onPressed: () => _openAccountLogin(context),
-                              child: const Text('登录'),
-                            ),
-                            const SizedBox(width: 4),
-                            OutlinedButton(
-                              key: const Key('pocket-register-entry'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFFF2ECE1),
-                                backgroundColor: Colors.transparent,
-                                minimumSize: const Size(64, 40),
-                                side: const BorderSide(
-                                  color: Color(0x33F2ECE1),
-                                ),
-                              ),
-                              onPressed: () =>
-                                  _openAccountLogin(context, register: true),
-                              child: const Text('注册'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+              if (!_entered &&
+                  (!pocketAuth.authenticated || _holdEntrance)) {
+                return PocketLampEntrance(
+                  auth: pocketAuth,
+                  onHold: (hold) => setState(() => _holdEntrance = hold),
+                  onRegister: () => _openAccountLogin(context, register: true),
+                  onEnter: () => setState(() {
+                    _entered = true;
+                    _holdEntrance = false;
+                    tab = 0;
+                    showAcademic = false;
+                    showLab = false;
+                  }),
                 );
               }
               return Scaffold(
