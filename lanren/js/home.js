@@ -473,7 +473,7 @@ async function start3D() {
   // Preserve direct links and restored journeys. A fresh mobile opening only
   // downloads the tree first; campus modules arrive after its first rendered frame.
   const eagerWorld = !mobileTouch || params.has('capture') || params.has('test') ||
-    /^#(map|walk|recall)(\\/|$)/.test(entry.hash) || (saved?.c ?? 0) >= 3;
+    ['#map', '#walk', '#recall'].some((h) => entry.hash === h || entry.hash.startsWith(h + '/')) || (saved?.c ?? 0) >= 3;
   const mapData = params.has('nomap') ? Promise.resolve(null) : eagerWorld ? loadMapData() : null;
   const { buildScene, pickTier } = await import('./scene.js');
   const tierName = pickTier();
@@ -536,10 +536,10 @@ async function start3D() {
     if (params.has('nocanopy') || canopy) return;
     try { canopy = (await import('../canopy/canopy.js')).attach({ world, cam, state, goTo, DwellCamera, reduceMotion, entry, worldState: W }); }
     catch (err) { console.warn('chapter 03 canopy unavailable', err); canopy = null; }
-    canopy?.arrive(entry);
+    if (!eagerCanopy) canopy?.arrive(entry);
   };
   const eagerCanopy = !mobileTouch || params.has('capture') || params.has('test') ||
-    /^#(leaves|archive)(\\/|$)/.test(entry.hash) || (saved?.c ?? 0) >= 2;
+    ['#leaves', '#archive'].some((h) => entry.hash === h || entry.hash.startsWith(h + '/')) || (saved?.c ?? 0) >= 2;
   if (eagerCanopy) await attachCanopy();
   // On fresh phones, load later acts after the first 3D frame: no initial
   // contest between the 3D tree textures and the map/works modules.
@@ -561,6 +561,7 @@ async function start3D() {
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
   roots?.arrive(entry);
+  if (eagerCanopy) canopy?.arrive(entry);
   cam.snap();
   wireTree();
   loop();
