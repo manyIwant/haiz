@@ -48,6 +48,7 @@ dependencies:
   path_provider: ^2.1.6
   url_launcher: ^6.3.3
   webview_flutter: ^4.14.1
+  web: ^1.1.2
   supabase_flutter: ^2.18.3
   flutter_secure_storage: ^11.2.0
 
