@@ -255,9 +255,9 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   void _error(String content) {
     _setPhase('error');
     _setStatus(content, error: true);
-    _element('panel')?.classList
-      ..remove('shake')
-      ..add('shake');
+    final panel = _element('panel');
+    panel?.classList.remove('shake');
+    panel?.classList.add('shake');
   }
 
   Future<void> _submit(web.HTMLInputElement username,
