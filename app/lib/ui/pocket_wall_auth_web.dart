@@ -1,18 +1,20 @@
 import 'dart:async';
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
 
 import '../core/pocket_auth.dart';
 import 'pocket_account_sheet.dart';
 
-/// Reuses the original /lamp-preview/ wall-lamp login scene inside Flutter Web.
+/// The existing /lamp-preview/ page is the actual wall-and-light UI used by
+/// Flutter on mobile. Flutter Web embeds that unmodified same-origin scene.
 ///
-/// Only the visual/field document lives in the iframe. All credential checks,
-/// email registration and resets are performed by the SAME PocketAuthController
-/// as the native app, preserving verified Supabase sessions and RLS isolation.
-/// No access/refresh tokens or passwords are placed in URLs or posted as messages.
+/// The old page only owns presentation; its legacy /api/auth/login handler is
+/// intercepted before execution. The existing PocketAuthController exclusively
+/// owns Supabase sign-in, sign-up, password reset and verified data namespaces.
+/// Credentials never travel through URLs, postMessage, or browser storage here.
 Widget buildPocketWallAuth({
   required PocketAuthController auth,
   required VoidCallback onSuccess,
@@ -48,8 +50,8 @@ class _OriginalWallAccount extends StatefulWidget {
 
 class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   late final String _viewType;
-  late final html.IFrameElement _frame;
-  StreamSubscription<html.Event>? _loadSubscription;
+  late final web.HTMLIFrameElement _frame;
+  JSFunction? _onLoad;
   Timer? _timeout;
   Timer? _successTimer;
   bool _ready = false;
@@ -58,35 +60,34 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   bool _busy = false;
   bool _finished = false;
 
-  html.Document? get _document {
+  web.Document? get _document {
     try {
-      final frameWindow = _frame.contentWindow;
-      // The source is a fixed same-origin HAIZ document, not user-controlled.
-      if (frameWindow == null ||
-          frameWindow.location.origin != html.window.location.origin) {
-        return null;
-      }
-      return frameWindow.document;
+      // contentDocument is null for cross-origin iframes. This app only
+      // accepts the hardcoded same-origin /lamp-preview/ HTML document.
+      return _frame.contentDocument;
     } catch (_) {
       return null;
     }
   }
 
-  html.Element? _element(String id) => _document?.getElementById(id);
+  web.Element? _element(String id) => _document?.getElementById(id);
 
   @override
   void initState() {
     super.initState();
     _register = widget.initiallyRegister;
     _viewType = 'haiz-original-wall-auth-${identityHashCode(this)}';
-    _frame = html.IFrameElement()
+    _frame = web.document.createElement('iframe') as web.HTMLIFrameElement;
+    _frame
       ..src = '/lamp-preview/'
-      ..title = 'HAIZ Pocket 壁灯登录'
-      ..style.width = '100%'
-      ..style.height = '100%'
-      ..style.border = '0'
-      ..style.display = 'block';
-    _loadSubscription = _frame.onLoad.listen((_) => _wireOriginalScene());
+      ..title = 'HAIZ Pocket 壁灯登录';
+    _frame.style
+      ..width = '100%'
+      ..height = '100%'
+      ..border = '0'
+      ..display = 'block';
+    _onLoad = ((web.Event event) => _wireOriginalScene()).toJS;
+    _frame.addEventListener('load', _onLoad);
     ui_web.platformViewRegistry.registerViewFactory(
       _viewType, (int viewId) => _frame,
     );
@@ -99,126 +100,142 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
     if (_ready || !mounted) return;
     final doc = _document;
     final form = doc?.getElementById('login-form');
-    final username = doc?.getElementById('username');
-    final password = doc?.getElementById('password');
+    final usernameElement = doc?.getElementById('username');
+    final passwordElement = doc?.getElementById('password');
     final panel = doc?.getElementById('panel');
-    if (doc == null || form == null || username is! html.InputElement ||
-        password is! html.InputElement || panel == null) {
+    if (doc == null || form == null || usernameElement == null ||
+        passwordElement == null || panel == null) {
       setState(() => _unavailable = true);
       return;
     }
     _ready = true;
     _timeout?.cancel();
+    final username = usernameElement as web.HTMLInputElement;
+    final password = passwordElement as web.HTMLInputElement;
 
-    // Keep all original CSS light phases, wall photography, glass panel and
-    // focus-driven animations. Replace only the legacy /api/auth/login handler.
+    // Reuse every existing wall light phase, CSS transition, brick photo,
+    // frosted glass card and original focus/input-driven lamp animation.
     username
       ..type = 'email'
       ..placeholder = '输入电子邮箱'
       ..autocomplete = 'email';
-    doc.querySelector('label[for="username"]')?.text = '电子邮箱';
+    doc.querySelector('label[for="username"]')?.textContent = '电子邮箱';
     doc.querySelector('.service-notice')?.remove();
     doc.querySelector('.remember')?.remove();
     final meta = doc.querySelector('.meta');
-    if (meta is html.HtmlElement) meta.style.justifyContent = 'flex-end';
+    if (meta != null) (meta as web.HTMLElement).style.justifyContent = 'flex-end';
 
-    final originalBottom = doc.querySelector('.bottom');
-    originalBottom?.remove();
-    final registerLine = html.ParagraphElement()..classes.add('bottom');
-    registerLine.appendText('还没有账号？ ');
-    final switchMode = html.ButtonElement()
+    doc.querySelector('.bottom')?.remove();
+    final modeLine = doc.createElement('p') as web.HTMLParagraphElement;
+    modeLine
+      ..className = 'bottom'
+      ..textContent = '还没有账号？ ';
+    final modeButton = doc.createElement('button') as web.HTMLButtonElement;
+    modeButton
       ..type = 'button'
-      ..classes.add('reset');
-    registerLine.append(switchMode);
-    panel.append(registerLine);
+      ..className = 'reset';
+    modeLine.appendChild(modeButton);
+    panel.appendChild(modeLine);
 
-    final guestLine = html.ParagraphElement()..classes.add('bottom');
-    guestLine.appendText('暂不登录？ ');
-    final guest = html.AnchorElement(href: '#guest')..text = '使用本机访客空间';
-    guestLine.append(guest);
-    panel.append(guestLine);
+    final guestLine = doc.createElement('p') as web.HTMLParagraphElement;
+    guestLine
+      ..className = 'bottom'
+      ..textContent = '暂不登录？ ';
+    final guestLink = doc.createElement('a') as web.HTMLAnchorElement;
+    guestLink
+      ..href = '#guest'
+      ..textContent = '使用本机访客空间';
+    guestLine.appendChild(guestLink);
+    panel.appendChild(guestLine);
 
-    final confirmationLabel = html.LabelElement()
+    final confirmLabel = doc.createElement('label') as web.HTMLLabelElement;
+    confirmLabel
       ..htmlFor = 'pocket-confirm-password'
-      ..text = '确认密码'
-      ..classes.add('field-label');
-    final confirmationField = html.DivElement()..classes.add('field');
-    final confirmation = html.InputElement(type: 'password')
+      ..textContent = '确认密码'
+      ..className = 'field-label';
+    final confirmField = doc.createElement('div') as web.HTMLDivElement;
+    confirmField.className = 'field';
+    final confirm = doc.createElement('input') as web.HTMLInputElement;
+    confirm
       ..id = 'pocket-confirm-password'
+      ..type = 'password'
       ..placeholder = '再次输入密码'
       ..autocomplete = 'new-password';
-    confirmationField.append(confirmation);
-    password.parent?.parent?.insertBefore(confirmationLabel, password.parent?.nextNode);
-    confirmationLabel.parent?.insertBefore(confirmationField, confirmationLabel.nextNode);
+    confirmField.appendChild(confirm);
+    final passRow = password.parentElement;
+    final passParent = passRow?.parentNode;
+    passParent?.insertBefore(confirmLabel, passRow?.nextSibling);
+    passParent?.insertBefore(confirmField, confirmLabel.nextSibling);
 
-    // HTML's old submit handler is attached in bubble phase; capture-phase
-    // interception prevents accidental POST /api/auth/login and double submit.
-    form.addEventListener('submit', (event) {
+    // The original HTML attaches its submit handler in bubble phase.
+    // A capture-phase listener stops the obsolete /api/auth/login call.
+    form.addEventListener('submit', ((web.Event event) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      unawaited(_submit(username, password, confirmation));
-    }, true);
-    switchMode.onClick.listen((event) {
+      unawaited(_submit(username, password, confirm));
+    }).toJS, true.toJS);
+    modeButton.addEventListener('click', ((web.Event event) {
       event.preventDefault();
       if (_busy) return;
       _register = !_register;
       widget.auth.clearError();
-      confirmation.value = '';
+      confirm.value = '';
       _setStatus('');
-      _renderMode(switchMode, confirmationLabel, confirmationField);
-    });
-    guest.onClick.listen((event) {
+      _renderMode(modeButton, confirmLabel, confirmField);
+    }).toJS);
+    guestLink.addEventListener('click', ((web.Event event) {
       event.preventDefault();
-      if (_busy) return;
-      _finishAsGuest();
-    });
-    doc.getElementById('forgot')?.addEventListener('click', (event) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      if (!_busy) unawaited(_reset(username));
-    }, true);
-
-    final back = html.ButtonElement()
+      if (!_busy) _finishAsGuest();
+    }).toJS);
+    doc.getElementById('forgot')?.addEventListener(
+      'click', ((web.Event event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!_busy) unawaited(_reset(username));
+      }).toJS, true.toJS,
+    );
+    final back = doc.createElement('button') as web.HTMLButtonElement;
+    back
       ..type = 'button'
-      ..text = '← 返回'
-      ..classes.add('reset');
+      ..textContent = '← 返回'
+      ..className = 'reset';
     back.style
       ..position = 'absolute'
       ..top = '16px'
       ..left = '18px'
       ..zIndex = '4';
-    panel.append(back);
-    back.onClick.listen((event) {
+    panel.appendChild(back);
+    back.addEventListener('click', ((web.Event event) {
       event.preventDefault();
       if (!_busy) widget.onBack();
-    });
-
-    _renderMode(switchMode, confirmationLabel, confirmationField);
+    }).toJS);
+    _renderMode(modeButton, confirmLabel, confirmField);
   }
 
-  void _renderMode(html.ButtonElement switchMode,
-      html.LabelElement label, html.DivElement field) {
-    _element('login-title')?.text = _register ? '注册' : '登录';
-    _element('submit-text')?.text = _register ? '创建账号' : '登 录';
-    switchMode.text = _register ? '已有账号？返回登录' : '注册 HAIZ 账号';
+  void _renderMode(web.HTMLButtonElement modeButton,
+      web.HTMLLabelElement label, web.HTMLDivElement field) {
+    _element('login-title')?.textContent = _register ? '注册' : '登录';
+    _element('submit-text')?.textContent = _register ? '创建账号' : '登 录';
+    modeButton.textContent = _register ? '已有账号？返回登录' : '注册 HAIZ 账号';
     label.style.display = _register ? 'block' : 'none';
     field.style.display = _register ? 'flex' : 'none';
     final forgot = _element('forgot');
-    if (forgot is html.HtmlElement) {
-      forgot.style.visibility = _register ? 'hidden' : 'visible';
+    if (forgot != null) {
+      (forgot as web.HTMLElement).style.visibility =
+          _register ? 'hidden' : 'visible';
     }
     _setPhase('idle');
   }
 
-  void _setPhase(String phase) {
-    _element('scene')?.setAttribute('data-phase', phase);
+  void _setPhase(String value) {
+    _element('scene')?.setAttribute('data-phase', value);
   }
 
-  void _setStatus(String message, {bool error = false}) {
+  void _setStatus(String content, {bool error = false}) {
     final status = _element('status');
     if (status == null) return;
-    status.text = message;
-    status.className = message.isEmpty
+    status.textContent = content;
+    status.className = content.isEmpty
         ? 'status'
         : (error ? 'status visible error' : 'status visible');
   }
@@ -226,28 +243,28 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   void _setBusy(bool busy) {
     _busy = busy;
     final button = _element('submit');
-    if (button is html.ButtonElement) button.disabled = busy;
+    if (button != null) (button as web.HTMLButtonElement).disabled = busy;
     if (busy) {
       _setPhase('checking');
-      _element('submit-text')?.text = '正在验证…';
+      _element('submit-text')?.textContent = '正在验证…';
     } else {
-      _element('submit-text')?.text = _register ? '创建账号' : '登 录';
+      _element('submit-text')?.textContent = _register ? '创建账号' : '登 录';
     }
   }
 
-  void _error(String message) {
+  void _error(String content) {
     _setPhase('error');
-    _setStatus(message, error: true);
-    final panel = _element('panel');
-    panel?.classes.remove('shake');
-    panel?.classes.add('shake');
+    _setStatus(content, error: true);
+    _element('panel')?.classList
+      ..remove('shake')
+      ..add('shake');
   }
 
-  Future<void> _submit(html.InputElement username,
-      html.InputElement password, html.InputElement confirmation) async {
+  Future<void> _submit(web.HTMLInputElement username,
+      web.HTMLInputElement password, web.HTMLInputElement confirm) async {
     if (_busy || _finished) return;
-    final email = (username.value ?? '').trim();
-    final secret = password.value ?? '';
+    final email = username.value.trim();
+    final secret = password.value;
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       _error('请输入有效的电子邮箱。');
       username.focus();
@@ -258,9 +275,9 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
       password.focus();
       return;
     }
-    if (_register && confirmation.value != secret) {
+    if (_register && confirm.value != secret) {
       _error('两次输入的密码不一致。');
-      confirmation.focus();
+      confirm.focus();
       return;
     }
     if (!widget.auth.configured) {
@@ -275,9 +292,9 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
         if (!mounted) return;
         if (ok) {
           password.value = '';
-          confirmation.value = '';
-          _setStatus('请检查验证邮件，完成邮箱验证后再登录。');
+          confirm.value = '';
           _setPhase('ready');
+          _setStatus('请检查验证邮件，完成邮箱验证后再登录。');
         } else {
           _error(widget.auth.error ?? '注册暂未完成。');
         }
@@ -287,10 +304,10 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
         if (widget.auth.authenticated) {
           _finished = true;
           _setPhase('success');
-          _element('scene')?.classes.add('success');
+          _element('scene')?.classList.add('success');
           _setStatus('验证成功，正在进入 HAIZ Pocket。');
-          _element('submit-text')?.text = '验证成功';
-          final reduceMotion = html.window.matchMedia(
+          _element('submit-text')?.textContent = '验证成功';
+          final reduceMotion = web.window.matchMedia(
             '(prefers-reduced-motion: reduce)',
           ).matches;
           _successTimer = Timer(
@@ -308,8 +325,8 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
     }
   }
 
-  Future<void> _reset(html.InputElement username) async {
-    final email = (username.value ?? '').trim();
+  Future<void> _reset(web.HTMLInputElement username) async {
+    final email = username.value.trim();
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       _error('请先输入有效的账号邮箱。');
       username.focus();
@@ -338,7 +355,7 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   void _finishAsGuest() {
     _finished = true;
     _setPhase('success');
-    _element('scene')?.classes.add('success');
+    _element('scene')?.classList.add('success');
     _setStatus('正在进入本机空间…');
     _successTimer = Timer(
       const Duration(milliseconds: 450),
@@ -350,7 +367,7 @@ class _OriginalWallAccountState extends State<_OriginalWallAccount> {
   void dispose() {
     _successTimer?.cancel();
     _timeout?.cancel();
-    _loadSubscription?.cancel();
+    if (_onLoad != null) _frame.removeEventListener('load', _onLoad);
     _frame.remove();
     super.dispose();
   }
