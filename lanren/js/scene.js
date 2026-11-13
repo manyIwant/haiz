@@ -203,6 +203,13 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   // ---------------------------------------------------------------- assets
   const base = new URL('../assets/', import.meta.url);
   const texLoader = new THREE.TextureLoader();
+  // Identical decoded RGBA pixels, smaller transfers on phone browsers only.
+  // Desktop continues using the original PNG resources unchanged.
+  const mobileTextures = matchMedia('(pointer: coarse) and (max-width: 760px)').matches;
+  const webpSupported = mobileTextures &&
+    document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp');
+  const texExt = webpSupported ? 'webp' : 'png';
+  const atlasSize = tier.leafTex === 'full' ? 'web' : 'lo';
   let done = 0;
   const tick = (x) => { onProgress(++done / 9); return x; };
   const tex = (name, srgb) => texLoader.loadAsync(new URL(name, base).href).then((t) => {
@@ -218,7 +225,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     gltf.loadAsync(new URL('island.glb', base).href).then(tick),
     bin('rosettes.bin'),
     fetch(new URL('tree.json', base)).then((r) => r.json()).then(tick),
-    tex(tier.leafTex === 'full' ? 'leaf-atlas-web.png' : 'leaf-atlas-lo.png', false), tex(tier.leafTex === 'full' ? 'leaf-normal-web.png' : 'leaf-normal-lo.png', false),
+    tex(`leaf-atlas-${atlasSize}.${texExt}`, false), tex(`leaf-normal-${atlasSize}.${texExt}`, false),
     tex('bark-color.jpg', true), tex('bark-normal.jpg', false)
   ]);
   for (const t of [barkColor, barkNormal]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
