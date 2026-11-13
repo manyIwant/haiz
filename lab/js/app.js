@@ -374,7 +374,9 @@ stage.on('turnEnd', (ev, turn, cancelled) => {
   if (!turn.moved && !cancelled && performance.now() - turn.t < 500) {   // 轻点页边：直接翻过去
     T.mode = 'auto'; T.commit = true; T.t = 0.14; T.sx = T.x; T.sz = T.z; return;
   }
-  const h = T.hist, v = h.length > 1 ? (h[h.length - 1][1] - h[0][1]) / Math.max(0.016, (h[h.length - 1][0] - h[0][0]) / 1000) : 0;
+  // 松手瞬间的速度：只看最近的移动；手已经停住一会儿就算没有甩动
+  const h = T.hist, still = !h.length || performance.now() - h[h.length - 1][0] > 160;
+  const v = !still && h.length > 1 ? (h[h.length - 1][1] - h[0][1]) / Math.max(0.016, (h[h.length - 1][0] - h[0][0]) / 1000) : 0;
   const p = book.turn.p;
   T.commit = !cancelled && (v < -14 || (p > 0.42 && v < 14));
   T.mode = 'settle';
