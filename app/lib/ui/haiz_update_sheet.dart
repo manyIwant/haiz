@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'kit.dart';
+
 import '../domain/haiz_app_updates.dart';
 
 /// User-triggered updater. There is no silent APK installation or data reset.
@@ -88,50 +90,42 @@ class _HaizUpdateSheetState extends State<HaizUpdateSheet> {
   @override
   Widget build(BuildContext context) {
     final release = _release;
+    final p = PocketSkin.colorsOf(context);
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 15, 24, 30),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Row(
-              children: [
-                Icon(Icons.system_update_alt_rounded, size: 25),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('HAIZ · 软件更新',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
+            Text('软件更新', style: HaizType.section(p)),
+            const SizedBox(height: 16),
             Text(
               _installed == null
                   ? '检查 Android 安装版本…'
                   : '当前版本 ${_installed!.versionName}（${_installed!.versionCode}）',
             ),
             if (release != null) ...[
-              const SizedBox(height: 9),
+              const SizedBox(height: 8),
               Text('可更新至 ${release.versionName}（${release.versionCode}）',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
+                  style: HaizType.itemTitle(p)),
+              const SizedBox(height: 12),
               Text(release.notes.isEmpty ? '安全修复与体验改进' : release.notes),
               const SizedBox(height: 8),
               Text('完整安装包 · ${(release.sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB · SHA-256 校验'),
             ],
             if (_busy && _verifiedPath == null) ...[
-              const SizedBox(height: 17),
+              const SizedBox(height: 16),
               LinearProgressIndicator(value: _progress),
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
               Text('下载中 ${(_progress * 100).toStringAsFixed(0)}%'),
             ],
             if (_message != null) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Text(_message!, style: Theme.of(context).textTheme.bodySmall),
             ],
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             if (!HaizAppUpdates.available)
               const Text('当前平台不支持 APK 覆盖安装。请使用 Android 版本。')
             else if (_checking)
@@ -152,11 +146,11 @@ class _HaizUpdateSheetState extends State<HaizUpdateSheet> {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('重新检查更新'),
               ),
-            const SizedBox(height: 11),
-            const Text(
+            const SizedBox(height: 12),
+            Text(
               '通过系统安装器覆盖旧版本。Android 可能要求首次授权安装来源；'
               '签名证书不一致时不会强行覆盖，也不会替你卸载或清空数据。',
-              style: TextStyle(fontSize: 11, height: 1.6),
+              style: HaizType.meta(p).copyWith(height: 1.6),
             ),
           ],
         ),

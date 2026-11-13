@@ -125,10 +125,10 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
     if (_subject.isNotEmpty) options.add(_subject);
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        22,
-        6,
-        22,
-        MediaQuery.of(context).viewInsets.bottom + 26,
+        24,
+        8,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -136,7 +136,7 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionLabel(widget.task == null ? '新建学习任务' : '修改学习任务'),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(
               key: const Key('task-title'),
               controller: _title,
@@ -146,17 +146,16 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
               decoration: const InputDecoration(
                 labelText: '要做什么',
                 hintText: '例如：整理物理实验数据',
-                border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _save(),
             ),
             const SizedBox(height: 8),
-            const SectionLabel('科目'),
-            const SizedBox(height: 9),
+            const _FieldLabel('科目'),
+            const SizedBox(height: 8),
             Wrap(
-              spacing: 6,
-              runSpacing: 2,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final option in options)
                   ChoiceChip(
@@ -167,8 +166,8 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            const SectionLabel('截止日期 · 可选'),
-            const SizedBox(height: 9),
+            const _FieldLabel('截止日期 · 可选'),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -199,7 +198,7 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 17),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -211,6 +210,21 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    return Text(
+      text,
+      style: HaizType.secondary(p).copyWith(fontWeight: FontWeight.w500),
     );
   }
 }

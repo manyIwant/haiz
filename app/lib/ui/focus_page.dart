@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
+import 'editorial.dart';
 import 'kit.dart';
 
 class FocusPage extends StatelessWidget {
@@ -36,103 +37,93 @@ class FocusPage extends StatelessWidget {
     final progress = total <= 0
         ? 0.0
         : (1 - store.focusRemaining / total).clamp(0.0, 1.0);
+    final note = store.activeTask == null
+        ? ''
+        : store.noteFor(store.activeTask!.id).trim();
     return SingleChildScrollView(
       key: const PageStorageKey('focus_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: HaizSpace.page,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Eyebrow('FOCUS / ONE THING AT A TIME'),
-              const SizedBox(height: 23),
-              const PageTitle(
-                title: '留一点时间，给自己。',
-                subtitle: '不用追求打卡，只需回到手边的事。',
-              ),
-              const SizedBox(height: 30),
+              const EditorialMasthead(number: '04', chapter: '专注'),
+              const SizedBox(height: 24),
+              const PageTitle(title: '一次只做一件事', subtitle: '不用追求打卡，只需回到手边的事'),
+              const SizedBox(height: HaizSpace.section),
               PocketCard(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 29,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                 child: Column(
                   children: [
-                    const Eyebrow('CURRENT SESSION'),
-                    const SizedBox(height: 11),
+                    Text('当前任务', style: HaizType.meta(p)),
+                    const SizedBox(height: 4),
                     Text(
-                      store.activeTask?.title ?? '自由专注 · 未选择关联任务',
+                      store.activeTask?.title ?? '自由专注 · 未关联任务',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: p.foreground,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                      style: HaizType.itemTitle(p),
                     ),
-                    const SizedBox(height: 14),
                     if (store.activeTask != null) ...[
-                      TextButton.icon(
-                        onPressed: () => _editNote(context),
-                        icon: const Icon(Icons.edit_note_rounded, size: 18),
-                        label: Text(
-                          store.noteFor(store.activeTask!.id).trim().isEmpty
-                              ? '记录学习思路'
-                              : '继续编辑学习笔记',
-                        ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 4,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () => _editNote(context),
+                            icon: const Icon(Icons.edit_note_rounded, size: 18),
+                            label: Text(note.isEmpty ? '记录学习思路' : '继续编辑学习笔记'),
+                          ),
+                          if (!store.focusRunning)
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                foregroundColor: p.secondary,
+                              ),
+                              onPressed: () => store.chooseFocusTask(null),
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                              label: const Text('清除任务关联'),
+                            ),
+                        ],
                       ),
-                      if (store.noteFor(store.activeTask!.id).trim().isNotEmpty)
+                      if (note.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 0, 10, 14),
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                           child: Text(
-                            store.noteFor(store.activeTask!.id),
+                            note,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: p.secondary,
-                              fontSize: 12,
-                              height: 1.55,
-                            ),
+                            style: HaizType.secondary(p),
                           ),
                         ),
                     ],
-                    if (!store.focusRunning && store.activeTask != null)
-                      TextButton.icon(
-                        onPressed: () => store.chooseFocusTask(null),
-                        icon: const Icon(Icons.close_rounded, size: 16),
-                        label: const Text('清除任务关联'),
-                      ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 24),
                     SizedBox(
-                      width: 218,
-                      height: 218,
+                      width: 216,
+                      height: 216,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           SizedBox.expand(
                             child: CircularProgressIndicator(
                               value: 1,
-                              strokeWidth: 8,
-                              backgroundColor: p.border.withValues(alpha: .55),
-                              valueColor: AlwaysStoppedAnimation(
-                                p.border.withValues(alpha: .55),
-                              ),
+                              strokeWidth: 6,
+                              valueColor: AlwaysStoppedAnimation(p.raised),
                             ),
                           ),
                           SizedBox.expand(
                             child: TweenAnimationBuilder<double>(
                               tween: Tween(begin: progress, end: progress),
-                              duration: Duration(
-                                milliseconds:
-                                    PocketSkin.of(context).reducedMotion
-                                    ? 0
-                                    : 350,
+                              duration: HaizMotion.of(
+                                context,
+                                HaizMotion.enter,
                               ),
+                              curve: HaizMotion.ease,
                               builder: (context, v, _) =>
                                   CircularProgressIndicator(
                                     value: v,
-                                    strokeWidth: 9,
+                                    strokeWidth: 6,
                                     strokeCap: StrokeCap.round,
                                     backgroundColor: Colors.transparent,
                                     valueColor: AlwaysStoppedAnimation(
@@ -148,12 +139,11 @@ class FocusPage extends StatelessWidget {
                                 timerText,
                                 style: TextStyle(
                                   color: p.foreground,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -2,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -1,
+                                  height: 1.1,
                                   fontSize: 48,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
+                                  fontFeatures: HaizType.tabular,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -163,18 +153,15 @@ class FocusPage extends StatelessWidget {
                                     : progress > 0
                                     ? '已暂停'
                                     : '准备就绪',
-                                style: TextStyle(
-                                  color: p.secondary,
-                                  fontSize: 12,
-                                ),
+                                style: HaizType.meta(p),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 27),
-                    if (!store.focusRunning)
+                    const SizedBox(height: 24),
+                    if (!store.focusRunning) ...[
                       Wrap(
                         spacing: 8,
                         children: [
@@ -186,7 +173,8 @@ class FocusPage extends StatelessWidget {
                             ),
                         ],
                       ),
-                    const SizedBox(height: 15),
+                      const SizedBox(height: 16),
+                    ],
                     PocketPill(
                       label: store.focusRunning
                           ? '暂停'
@@ -201,129 +189,120 @@ class FocusPage extends StatelessWidget {
                           : store.startFocus,
                     ),
                     if (progress > 0) ...[
-                      const SizedBox(height: 9),
+                      const SizedBox(height: 8),
                       TextButton(
                         onPressed: () => store.finishFocus(),
                         child: const Text('结束并记录本次学习'),
                       ),
                     ],
-                    const SizedBox(height: 13),
-                    Text(
-                      '离开当前页面，计时仍会继续。',
-                      style: TextStyle(color: p.secondary, fontSize: 11),
-                    ),
+                    const SizedBox(height: 12),
+                    Text('离开当前页面，计时仍会继续', style: HaizType.meta(p)),
                   ],
                 ),
               ),
-              const SizedBox(height: 29),
+              const SizedBox(height: HaizSpace.section),
               const SectionLabel('我的学习记录'),
-              const SizedBox(height: 12),
+              const SizedBox(height: HaizSpace.group),
               Row(
                 children: [
                   Expanded(
-                    child: PocketCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Eyebrow('TODAY'),
-                          const SizedBox(height: 14),
-                          Text(
-                            '${store.todayFocusMinutes}',
-                            style: TextStyle(
-                              color: p.accent,
-                              fontSize: 35,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '分钟',
-                            style: TextStyle(color: p.secondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
+                    child: _Stat(
+                      label: '今天',
+                      value: '${store.todayFocusMinutes}',
+                      unit: '分钟',
                     ),
                   ),
-                  const SizedBox(width: 11),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: PocketCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Eyebrow('SESSIONS'),
-                          const SizedBox(height: 14),
-                          Text(
-                            '${store.focusLogs.length}',
-                            style: TextStyle(
-                              color: p.accent,
-                              fontSize: 35,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '次记录',
-                            style: TextStyle(color: p.secondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
+                    child: _Stat(
+                      label: '累计',
+                      value: '${store.focusLogs.length}',
+                      unit: '次记录',
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               if (store.focusLogs.isEmpty)
-                Text(
-                  '还没有记录。完成一次专注，就会在这里留下痕迹。',
-                  style: TextStyle(color: p.secondary, fontSize: 12),
-                )
+                Text('还没有记录。完成一次专注，就会在这里留下痕迹。', style: HaizType.secondary(p))
               else
-                for (final session in store.focusLogs.take(8))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 9),
-                    child: PocketCard(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.auto_stories_outlined,
-                            color: p.accent,
-                            size: 21,
+                PocketCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      for (final (i, session)
+                          in store.focusLogs.take(8).indexed)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            border: i == 0
+                                ? null
+                                : Border(top: BorderSide(color: p.border)),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  session.label,
-                                  style: TextStyle(
-                                    color: p.foreground,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      session.label,
+                                      style: HaizType.itemTitle(p),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${session.at.month}月${session.at.day}日 · ${session.at.hour.toString().padLeft(2, '0')}:${session.at.minute.toString().padLeft(2, '0')}',
+                                      style: HaizType.meta(p),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${session.at.month}月${session.at.day}日 · ${session.at.hour.toString().padLeft(2, '0')}:${session.at.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(
-                                    color: p.secondary,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${session.minutes} 分钟',
+                                style: HaizType.body(p)
+                                    .copyWith(fontFeatures: HaizType.tabular),
+                              ),
+                            ],
                           ),
-                          Text(
-                            '${session.minutes} min',
-                            style: TextStyle(
-                              color: p.foreground,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                    ],
                   ),
+                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Stat card: a label, a figure and its unit. Nothing else.
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value, required this.unit});
+
+  final String label;
+  final String value;
+  final String unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    return PocketCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: HaizType.meta(p)),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: value, style: HaizType.figure(p)),
+                TextSpan(text: '  $unit', style: HaizType.meta(p)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

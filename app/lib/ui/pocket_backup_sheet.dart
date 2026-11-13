@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/personal_backup.dart';
 import '../core/pocket_store.dart';
+import 'kit.dart';
 
 /// Explicit local file transfer; no backup bytes are uploaded to HAIZ.
 class PocketBackupSheet extends StatefulWidget {
@@ -217,6 +218,7 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final p = PocketSkin.colorsOf(context);
     final enabled = widget.store.guestBackupAvailable;
     final visiblePreview = enabled &&
             _previewGeneration == widget.store.generation
@@ -232,8 +234,8 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('数据备份与恢复', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 10),
+            Text('备份与恢复', style: HaizType.section(p)),
+            const SizedBox(height: 12),
             const Text(
               '备份包含任务、备注、课表和专注记录，是未加密的 JSON 文件。'
               '请勿将文件公开分享。',
@@ -245,7 +247,7 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
                 '不能通过文件覆盖；请先退出账号。',
                 key: Key('guest-backup-only'),
               ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             FilledButton.icon(
               key: const Key('backup-prepare-export'),
               onPressed: enabled && !_busy ? _prepareExport : null,
@@ -253,14 +255,16 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
               label: const Text('准备备份文件'),
             ),
             if (_prepared != null && enabled &&
-                _preparedGeneration == widget.store.generation)
+                _preparedGeneration == widget.store.generation) ...[
+              const SizedBox(height: 8),
               OutlinedButton.icon(
                 key: const Key('backup-save-json'),
                 onPressed: !_busy ? _saveExport : null,
                 icon: const Icon(Icons.download_outlined),
                 label: const Text('保存 JSON 文件'),
               ),
-            const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               key: const Key('backup-pick-json'),
               onPressed: enabled && !_busy ? _pickImport : null,
@@ -274,7 +278,7 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
                 '任务 ${backup.taskCount} · 课表 ${backup.courseCount} · '
                 '专注 ${backup.focusCount}',
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               FilledButton(
                 key: const Key('backup-merge'),
                 onPressed: enabled && !_busy ? _restore : null,
@@ -286,11 +290,11 @@ class _PocketBackupSheetState extends State<PocketBackupSheet> {
               const SizedBox(height: 12),
               Text(_status!, key: const Key('backup-status')),
             ],
-            const SizedBox(height: 14),
-            const Text(
+            const SizedBox(height: 16),
+            Text(
               '浏览器清理网站数据可能移除本地记录，请妥善保管备份。'
               '文件不会自动同步到其他设备。',
-              style: TextStyle(fontSize: 12),
+              style: HaizType.meta(p),
             ),
           ],
         ),

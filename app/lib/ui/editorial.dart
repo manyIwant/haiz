@@ -4,50 +4,128 @@ import 'kit.dart';
 
 /// Shared visual language with haiz.space's editorial pages.
 /// Photography is bundled so the landing experience works offline.
+///
+/// The masthead carries the app's one signature detail: a chapter number
+/// beside the wordmark, the same numbering the haiz.space pages use.
 class EditorialMasthead extends StatelessWidget {
-  const EditorialMasthead({super.key, required this.chapter, this.trailing});
+  const EditorialMasthead({
+    super.key,
+    required this.number,
+    required this.chapter,
+    this.trailing,
+  });
 
+  final String number;
   final String chapter;
   final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     final p = PocketSkin.of(context).colors;
-    return Row(
-      children: [
-        Text.rich(
-          TextSpan(
-            text: 'haiz',
-            children: [
-              TextSpan(
-                text: '.space',
-                style: TextStyle(color: p.accent),
-              ),
-            ],
-          ),
-          style: TextStyle(
-            color: p.foreground,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -1.1,
-          ),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Text(
-            chapter.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Text.rich(
+            TextSpan(
+              text: 'haiz',
+              children: [
+                TextSpan(
+                  text: '.space',
+                  style: TextStyle(color: p.accent),
+                ),
+              ],
+            ),
             style: TextStyle(
-              fontSize: 9,
+              color: p.foreground,
+              fontSize: 18,
+              height: 1,
               fontWeight: FontWeight.w600,
-              letterSpacing: 1.3,
-              color: p.secondary,
             ),
           ),
-        ),
-        if (trailing case final Widget action) action,
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: ChapterMark(number: number, label: chapter),
+          ),
+          if (trailing case final Widget action) action,
+          if (PocketHeaderAction.maybeOf(context) case final Widget menu) ...[
+            const SizedBox(width: 8),
+            menu,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Header for pages opened from a tab: a back link to the tab, then the
+/// chapter mark. Sits in the same 48px row as the masthead.
+class SubpageHeader extends StatelessWidget {
+  const SubpageHeader({
+    super.key,
+    required this.number,
+    required this.chapter,
+    required this.onBack,
+    this.backLabel = '校园',
+  });
+
+  final String number;
+  final String chapter;
+  final VoidCallback onBack;
+  final String backLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: p.secondary,
+              padding: const EdgeInsets.only(left: 4, right: 12),
+            ),
+            onPressed: onBack,
+            icon: const Icon(Icons.chevron_left_rounded, size: 20),
+            label: Text(backLabel),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: ChapterMark(number: number, label: chapter),
+          ),
+          if (PocketHeaderAction.maybeOf(context) case final Widget menu) menu,
+        ],
+      ),
+    );
+  }
+}
+
+/// `01 今天`: a tabular chapter number and its name, both muted.
+class ChapterMark extends StatelessWidget {
+  const ChapterMark({super.key, required this.number, required this.label});
+
+  final String number;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    final style = HaizType.meta(p);
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: number),
+          const TextSpan(text: '  '),
+          TextSpan(
+            text: label,
+            style: TextStyle(color: p.secondary),
+          ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
     );
   }
 }
@@ -64,23 +142,10 @@ class EditorialHeading extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontFamily: 'serif',
-            fontSize: 37,
-            letterSpacing: -1.6,
-            height: 1.22,
-            fontWeight: FontWeight.w500,
-            color: p.foreground,
-          ),
-        ),
+        Text(title, style: HaizType.title(p)),
         if (subtitle != null) ...[
-          const SizedBox(height: 9),
-          Text(
-            subtitle!,
-            style: TextStyle(color: p.secondary, fontSize: 13, height: 1.65),
-          ),
+          const SizedBox(height: 8),
+          Text(subtitle!, style: HaizType.secondary(p)),
         ],
       ],
     );
@@ -88,36 +153,41 @@ class EditorialHeading extends StatelessWidget {
 }
 
 /// Photographic entry shared by home and campus: one image, one action.
+/// This is the screen's bright element; everything around it stays quiet.
 class CampusPhotoPanel extends StatelessWidget {
   const CampusPhotoPanel({
     super.key,
     required this.asset,
-    required this.eyebrow,
+    required this.place,
     required this.title,
     required this.caption,
     required this.actionLabel,
     required this.onTap,
-    this.height = 228,
+    this.height = 232,
   });
 
   final String asset;
-  final String eyebrow;
+
+  /// Where the photograph was taken, shown quietly in the top corner.
+  final String place;
   final String title;
   final String caption;
   final String actionLabel;
   final VoidCallback onTap;
   final double height;
 
+  static const _ink = Color(0xFFF7F4EE);
+  static const _inkSoft = Color(0xFFDCD8CF);
+
   @override
   Widget build(BuildContext context) {
-    final p = PocketSkin.of(context).colors;
     return Semantics(
       button: true,
       label: '$title，$actionLabel',
       child: Material(
         clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(14),
-        color: const Color(0xFF253A32),
+        borderRadius: BorderRadius.circular(HaizRadius.card),
+        color: const Color(0xFF1E2622),
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
@@ -130,30 +200,35 @@ class CampusPhotoPanel extends StatelessWidget {
                   asset,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) =>
-                      const ColoredBox(color: Color(0xFF253A32)),
+                      const ColoredBox(color: Color(0xFF1E2622)),
                 ),
+                // Neutral scrim so the text sits on calm, dark space.
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0x480D211B), Color(0xDC0D211B)],
-                      stops: [.03, 1],
+                      colors: [
+                        Color(0x73000000),
+                        Color(0x00000000),
+                        Color(0x00000000),
+                        Color(0xB3000000),
+                      ],
+                      stops: [0, .28, .4, 1],
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(21, 20, 21, 20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        eyebrow.toUpperCase(),
+                        place,
                         style: const TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 1.8,
-                          color: Color(0xFFE6E8DD),
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          height: 1.4,
+                          color: _inkSoft,
                         ),
                       ),
                       const Spacer(),
@@ -161,46 +236,39 @@ class CampusPhotoPanel extends StatelessWidget {
                         title,
                         style: const TextStyle(
                           fontFamily: 'serif',
-                          fontSize: 27,
-                          color: Color(0xFFF8F3E9),
+                          fontSize: 26,
+                          color: _ink,
                           height: 1.2,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 4),
                       Text(
                         caption,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFDFE6DB),
+                          fontSize: 13,
+                          color: _inkSoft,
                           height: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 17),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Text(
                             actionLabel,
                             style: const TextStyle(
-                              color: Color(0xFFF8F3E9),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              color: _ink,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(width: 7),
+                          const SizedBox(width: 4),
                           const Icon(
-                            Icons.arrow_outward_rounded,
-                            size: 17,
-                            color: Color(0xFFF8F3E9),
-                          ),
-                          const Spacer(),
-                          Container(
-                            height: 1,
-                            width: 35,
-                            color: p.dark
-                                ? const Color(0xFFA9B9AA)
-                                : const Color(0xFFDFE6DB),
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: _ink,
                           ),
                         ],
                       ),
@@ -243,55 +311,35 @@ class EditorialLinkRow extends StatelessWidget {
       enabled: onTap != null,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(HaizRadius.inner),
         child: Container(
-          constraints: const BoxConstraints(minHeight: 76),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: p.border, width: .8)),
+            border: Border(bottom: BorderSide(color: p.border)),
           ),
           child: Row(
             children: [
-              SizedBox(
-                width: 37,
-                child: Text(
-                  number,
-                  style: TextStyle(fontSize: 10, color: p.secondary),
-                ),
-              ),
+              SizedBox(width: 32, child: Text(number, style: HaizType.meta(p))),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: p.foreground,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: p.secondary,
-                        fontSize: 11.5,
-                        height: 1.45,
-                      ),
-                    ),
+                    Text(title, style: HaizType.itemTitle(p)),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: HaizType.secondary(p)),
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
               if (status != null)
-                Text(
-                  status!,
-                  style: TextStyle(color: p.secondary, fontSize: 10.5),
-                )
+                Text(status!, style: HaizType.meta(p))
               else
                 Icon(
-                  external ? Icons.north_east_rounded : Icons.chevron_right,
-                  color: p.accent,
+                  external
+                      ? Icons.arrow_outward_rounded
+                      : Icons.chevron_right_rounded,
+                  color: p.muted,
                   size: 18,
                 ),
             ],

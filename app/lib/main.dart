@@ -168,22 +168,33 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                       right: 16,
                       top: 12,
                       child: SafeArea(
+                        // The entrance is always dark: a quiet text link
+                        // for log in, one outlined button for register.
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            OutlinedButton(
+                            TextButton(
                               key: const Key('pocket-account-entry'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFDCD3C4),
+                              ),
                               onPressed: () => _openAccountLogin(context),
                               child: const Text('登录'),
                             ),
-                            const SizedBox(width: 8),
-                            FilledButton.tonalIcon(
+                            const SizedBox(width: 4),
+                            OutlinedButton(
                               key: const Key('pocket-register-entry'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFF2ECE1),
+                                backgroundColor: Colors.transparent,
+                                minimumSize: const Size(64, 40),
+                                side: const BorderSide(
+                                  color: Color(0x33F2ECE1),
+                                ),
+                              ),
                               onPressed: () =>
                                   _openAccountLogin(context, register: true),
-                              icon: const Icon(Icons.person_add_alt_1_outlined,
-                                  size: 18),
-                              label: const Text('注册'),
+                              child: const Text('注册'),
                             ),
                           ],
                         ),
@@ -198,24 +209,46 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: !store.ready
+                        child: PocketHeaderAction(
+                          action: _PocketMenuButton(
+                            authenticated: pocketAuth.authenticated,
+                            hasUpdate: _hasAppUpdate,
+                            onAccount: () => pocketAuth.authenticated
+                                ? _confirmLogout(context)
+                                : _openAccountLogin(context),
+                            onBackup: () =>
+                                showPocketBackupSheet(context, store),
+                            onUpdate: HaizAppUpdates.available
+                                ? () => showHaizUpdateSheet(context)
+                                : null,
+                          ),
+                          child: !store.ready
                             ? Center(
                                 child: CircularProgressIndicator(
                                   color: p.accent,
                                 ),
                               )
                             : AnimatedSwitcher(
-                                duration: Duration(
-                                  milliseconds: reduce ? 0 : 230,
+                                duration: reduce
+                                    ? Duration.zero
+                                    : HaizMotion.menu,
+                                switchInCurve: HaizMotion.ease,
+                                switchOutCurve: Curves.easeIn,
+                                // Pages fill the viewport; a short page must
+                                // start at the top, not float centered.
+                                layoutBuilder: (current, previous) => Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    ...previous,
+                                    ?current,
+                                  ],
                                 ),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
                                 transitionBuilder: (child, animation) =>
                                     FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
                                         position: Tween<Offset>(
-                                          begin: const Offset(0, 0.012),
+                                          begin: const Offset(0, 0.01),
                                           end: Offset.zero,
                                         ).animate(animation),
                                         child: child,
@@ -277,101 +310,27 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                                           ),
                                 },
                               ),
+                        ),
                       ),
-                      if (store.ready)
-                        Positioned(
-                          top: 8,
-                          right: HaizAppUpdates.available ? 120 : 66,
-                          child: SafeArea(
-                            child: Material(
-                              color: p.card,
-                              borderRadius: BorderRadius.circular(24),
-                              child: IconButton(
-                                key: const Key('pocket-backup-entry'),
-                                tooltip: '备份与恢复个人记录',
-                                icon: Icon(Icons.cloud_download_outlined,
-                                    color: p.accent),
-                                onPressed: () => showPocketBackupSheet(context, store),
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (store.ready && HaizAppUpdates.available)
-                        Positioned(
-                          top: 8,
-                          right: 66,
-                          child: SafeArea(
-                            child: Material(
-                              color: p.card,
-                              borderRadius: BorderRadius.circular(24),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  IconButton(
-                                    key: const Key('app-update-entry'),
-                                    tooltip: '检查 HAIZ 更新',
-                                    icon: Icon(Icons.system_update_alt_rounded,
-                                        color: p.accent),
-                                    onPressed: () => showHaizUpdateSheet(context),
-                                  ),
-                                  if (_hasAppUpdate)
-                                    Positioned(
-                                      right: 4,
-                                      top: 4,
-                                      child: DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          color: p.accent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const SizedBox(width: 8, height: 8),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (store.ready)
-                        Positioned(
-                          right: 12,
-                          top: 8,
-                          child: SafeArea(
-                            child: Material(
-                              color: p.card,
-                              borderRadius: BorderRadius.circular(24),
-                              child: IconButton(
-                                key: const Key('account-switch'),
-                                tooltip: pocketAuth.authenticated
-                                    ? '账号与退出登录'
-                                    : '账号登录',
-                                icon: Icon(
-                                  pocketAuth.authenticated
-                                      ? Icons.verified_user_outlined
-                                      : Icons.person_outline_rounded,
-                                  color: p.accent,
-                                ),
-                                onPressed: () => pocketAuth.authenticated
-                                    ? _confirmLogout(context)
-                                    : _openAccountLogin(context),
-                              ),
-                            ),
-                          ),
-                        ),
                       if (store.ready && store.storageError != null)
                         Positioned(
                           left: 16,
                           right: 16,
                           top: 8,
-                          child: Material(
-                            color: p.card,
-                            borderRadius: BorderRadius.circular(14),
-                            child: Padding(
-                              padding: const EdgeInsets.all(13),
-                              child: Text(
-                                store.storageError!,
-                                style: TextStyle(
-                                  color: p.secondary,
-                                  fontSize: 12,
+                          child: SafeArea(
+                            child: Material(
+                              color: p.card,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  HaizRadius.control,
+                                ),
+                                side: BorderSide(color: p.negative),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Text(
+                                  store.storageError!,
+                                  style: HaizType.secondary(p),
                                 ),
                               ),
                             ),
@@ -450,5 +409,130 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
     if (index == tab) return;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => tab = index);
+  }
+}
+
+/// The one global control: account, backup and updates in a single menu,
+/// so pages keep a quiet header. A dot marks an available update.
+class _PocketMenuButton extends StatelessWidget {
+  const _PocketMenuButton({
+    required this.authenticated,
+    required this.hasUpdate,
+    required this.onAccount,
+    required this.onBackup,
+    required this.onUpdate,
+  });
+
+  final bool authenticated;
+  final bool hasUpdate;
+  final VoidCallback onAccount;
+  final VoidCallback onBackup;
+  final VoidCallback? onUpdate;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    return Material(
+      color: p.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(HaizRadius.control),
+        side: BorderSide(color: p.border),
+      ),
+      child: PopupMenuButton<String>(
+        key: const Key('account-switch'),
+        tooltip: '账号、备份与更新',
+        position: PopupMenuPosition.under,
+        onSelected: (value) => switch (value) {
+          'account' => onAccount(),
+          'backup' => onBackup(),
+          'update' => onUpdate?.call(),
+          _ => null,
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: 'account',
+            child: _MenuRow(
+              icon: authenticated
+                  ? Icons.logout_rounded
+                  : Icons.person_outline_rounded,
+              label: authenticated ? '账号与退出登录' : '账号登录',
+            ),
+          ),
+          const PopupMenuItem(
+            key: Key('pocket-backup-entry'),
+            value: 'backup',
+            child: _MenuRow(
+              icon: Icons.cloud_download_outlined,
+              label: '备份与恢复',
+            ),
+          ),
+          if (onUpdate != null)
+            PopupMenuItem(
+              key: const Key('app-update-entry'),
+              value: 'update',
+              child: _MenuRow(
+                icon: Icons.system_update_alt_rounded,
+                label: hasUpdate ? '有新版本可安装' : '检查 HAIZ 更新',
+                dot: hasUpdate,
+              ),
+            ),
+        ],
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                authenticated
+                    ? Icons.verified_user_outlined
+                    : Icons.person_outline_rounded,
+                size: 20,
+                color: p.secondary,
+              ),
+              if (hasUpdate)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: p.accent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const SizedBox(width: 6, height: 6),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label, this.dot = false});
+
+  final IconData icon;
+  final String label;
+  final bool dot;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: p.secondary),
+        const SizedBox(width: 12),
+        Text(label),
+        if (dot) ...[
+          const SizedBox(width: 8),
+          DecoratedBox(
+            decoration: BoxDecoration(color: p.accent, shape: BoxShape.circle),
+            child: const SizedBox(width: 6, height: 6),
+          ),
+        ],
+      ],
+    );
   }
 }

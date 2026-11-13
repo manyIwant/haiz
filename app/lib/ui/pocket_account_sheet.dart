@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/pocket_auth.dart';
+import 'kit.dart';
 
 /// Native credential entry. Passwords are sent only by Supabase Auth over
 /// HTTPS, never through the marketing WebView or JavaScript channels.
@@ -102,8 +103,8 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
         top: false,
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            24, 22, 24,
-            MediaQuery.of(context).viewInsets.bottom + 28,
+            24, 8, 24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
           ),
           child: Form(
             key: _form,
@@ -112,17 +113,17 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  _register ? '创建 HAIZ 账号' : '欢迎回来',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  _register ? '创建 HAIZ 账号' : '登录 HAIZ 账号',
+                  style: HaizType.section(PocketSkin.colorsOf(context)),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   _register
                       ? '用邮箱创建账号，完成邮箱验证后即可登录云端空间。'
                       : '登录后可同步个人课表、待办与专注记录。',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 20),
                 SegmentedButton<bool>(
                   key: const Key('auth-mode-switch'),
                   segments: const [
@@ -140,7 +141,7 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                     '账号服务暂时不可用，你仍可免登录使用本机空间。',
                     key: Key('auth-not-configured'),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                 ],
                 TextFormField(
                   key: const Key('account-email'),
@@ -208,13 +209,13 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                     validator: (value) => value != _password.text
                         ? '两次输入的密码不一致' : null,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
                     '注册后需要验证邮箱。访客数据不会自动合并到账号中。',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
-                const SizedBox(height: 15),
+                const SizedBox(height: 16),
                 if (_status != null)
                   Text(_status!, key: const Key('account-status')),
                 if (widget.auth.error != null)
@@ -228,7 +229,7 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                   onPressed: widget.auth.configured && !widget.auth.busy
                       ? _submit : null,
                   child: Padding(
-                    padding: const EdgeInsets.all(13),
+                    padding: const EdgeInsets.all(12),
                     child: widget.auth.busy
                         ? const SizedBox(
                             width: 19, height: 19,
@@ -238,7 +239,7 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                             ? '创建账号并发送验证邮件' : '登录 HAIZ'),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 if (!_register && widget.auth.configured)
                   Align(
                     alignment: Alignment.centerRight,
@@ -248,7 +249,7 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                       child: const Text('忘记密码？'),
                     ),
                   ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 OutlinedButton(
                   key: const Key('auth-continue-guest'),
                   onPressed: widget.auth.busy

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
 import '../domain/ticker_physics.dart';
+import 'editorial.dart';
 import 'kit.dart';
 
 class TickerLabPage extends StatefulWidget {
@@ -52,41 +53,39 @@ class _TickerLabPageState extends State<TickerLabPage>
     final p = PocketSkin.of(context).colors;
     final l = physics;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(23, 26, 23, 125),
+      padding: HaizSpace.page,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 850),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton.icon(
-                onPressed: widget.onBack,
-                icon: const Icon(Icons.arrow_back_rounded, size: 17),
-                label: const Text('返回探索'),
+              SubpageHeader(
+                number: '05',
+                chapter: '物理纸带实验',
+                onBack: widget.onBack,
               ),
-              const SizedBox(height: 8),
-              const Eyebrow('HAIZ TEACH · LAB 01'),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               const PageTitle(
-                title: '纸带上的时间。',
+                title: '纸带上的时间',
                 subtitle: '探究小车速度随时间变化的规律 · 高一物理',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 '这是一项原创、理想匀加速运动模拟，不是实测数据。原理参考交互式教材的教学设计。',
-                style: TextStyle(color: p.secondary, fontSize: 12, height: 1.5),
+                style: HaizType.meta(p).copyWith(height: 1.5),
               ),
-              const SizedBox(height: 21),
+              const SizedBox(height: 24),
               PocketCard(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('01 / 观察小车运动'),
-                    const SizedBox(height: 6),
+                    const SectionLabel('01 观察小车运动'),
+                    const SizedBox(height: 8),
                     Text(
                       '按下开始，计时器以 50 Hz 留点。',
-                      style: TextStyle(color: p.secondary, fontSize: 12),
+                      style: HaizType.secondary(p),
                     ),
                     const SizedBox(height: 12),
                     AnimatedBuilder(
@@ -102,7 +101,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                                 size: Size.infinite,
                               ),
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 4),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -113,7 +112,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                                     fontFeatures: const [
                                       FontFeature.tabularFigures(),
                                     ],
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -146,7 +145,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                             onTap: _toggle,
                           ),
                         ),
-                        const SizedBox(width: 9),
+                        const SizedBox(width: 8),
                         IconButton.filledTonal(
                           onPressed: _reset,
                           tooltip: '复位',
@@ -192,14 +191,14 @@ class _TickerLabPageState extends State<TickerLabPage>
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               PocketCard(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('02 / 测量纸带'),
-                    const SizedBox(height: 7),
+                    const SectionLabel('02 测量纸带'),
+                    const SizedBox(height: 8),
                     Text(
                       '每 0.02 s 一个原始点；每 5 个时间间隔选一个计数点，计数点相隔 0.10 s。',
                       style: TextStyle(
@@ -208,7 +207,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                         height: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     AnimatedBuilder(
                       animation: motion,
                       builder: (ctx, _) => SizedBox(
@@ -223,20 +222,20 @@ class _TickerLabPageState extends State<TickerLabPage>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Text(
                           '选计数点',
                           style: TextStyle(
                             color: p.foreground,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const Spacer(),
                         Text(
                           '$selectedPoint · t = ${l.countTime(selectedPoint).toStringAsFixed(2)} s',
-                          style: TextStyle(color: p.secondary, fontSize: 11.5),
+                          style: TextStyle(color: p.secondary, fontSize: 12),
                         ),
                       ],
                     ),
@@ -249,34 +248,35 @@ class _TickerLabPageState extends State<TickerLabPage>
                           setState(() => selectedPoint = v.round()),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: p.accent.withValues(alpha: .08),
-                        borderRadius: BorderRadius.circular(14),
+                        color: p.raised,
+                        borderRadius: BorderRadius.circular(HaizRadius.inner),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '中间时刻速度近似',
-                            style: TextStyle(color: p.secondary, fontSize: 11),
+                            style: TextStyle(color: p.secondary, fontSize: 12),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
                           Text(
                             'v = (x₍ᵢ₊₁₎ − x₍ᵢ₋₁₎) / 0.20 s',
                             style: TextStyle(
                               color: p.foreground,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 9),
+                          const SizedBox(height: 8),
                           Text(
                             'v$selectedPoint ≈ ${l.measuredSpeed(selectedPoint).toStringAsFixed(3)} m/s',
                             style: TextStyle(
-                              color: p.accent,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
+                              color: p.foreground,
+                              fontFeatures: HaizType.tabular,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -285,19 +285,19 @@ class _TickerLabPageState extends State<TickerLabPage>
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               PocketCard(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('03 / 从纸带得到 v–t 图'),
-                    const SizedBox(height: 9),
+                    const SectionLabel('03 从纸带得到 v–t 图'),
+                    const SizedBox(height: 8),
                     Text(
                       '图上的速度来自相邻计数点位置差，不是直接读取模拟器内部速度。',
-                      style: TextStyle(color: p.secondary, fontSize: 12),
+                      style: HaizType.secondary(p),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     SizedBox(
                       height: 190,
                       child: CustomPaint(
@@ -305,10 +305,10 @@ class _TickerLabPageState extends State<TickerLabPage>
                         size: Size.infinite,
                       ),
                     ),
-                    const SizedBox(height: 9),
+                    const SizedBox(height: 8),
                     Wrap(
-                      spacing: 14,
-                      runSpacing: 10,
+                      spacing: 16,
+                      runSpacing: 12,
                       alignment: WrapAlignment.spaceBetween,
                       crossAxisAlignment: WrapCrossAlignment.end,
                       children: [
@@ -319,23 +319,22 @@ class _TickerLabPageState extends State<TickerLabPage>
                               '直线斜率 ≈ 加速度',
                               style: TextStyle(
                                 color: p.secondary,
-                                fontSize: 11,
+                                fontSize: 12,
                               ),
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 4),
                             Text(
                               '${l.fittedAcceleration.toStringAsFixed(3)} m/s²',
-                              style: TextStyle(
+                              style: HaizType.figure(p).copyWith(
                                 color: p.accent,
                                 fontSize: 24,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                         Text(
                           '理想设定值：${a.toStringAsFixed(2)} m/s²',
-                          style: TextStyle(color: p.secondary, fontSize: 11),
+                          style: TextStyle(color: p.secondary, fontSize: 12),
                         ),
                       ],
                     ),
@@ -344,7 +343,7 @@ class _TickerLabPageState extends State<TickerLabPage>
               ),
               const SizedBox(height: 16),
               const SectionLabel('思考一下'),
-              const SizedBox(height: 11),
+              const SizedBox(height: 12),
               PocketCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +352,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                       '如果加速度变成 0，纸带上相邻点的距离会怎样？',
                       style: TextStyle(
                         color: p.foreground,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -365,7 +364,7 @@ class _TickerLabPageState extends State<TickerLabPage>
                         height: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 13),
+                    const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () {
                         widget.store.addTask(
@@ -462,7 +461,7 @@ class _TrackPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
       text: TextSpan(
         text: '50 Hz',
-        style: TextStyle(color: p.secondary, fontSize: 10),
+        style: TextStyle(color: p.secondary, fontSize: 12),
       ),
     );
     labels.layout();
@@ -471,7 +470,7 @@ class _TrackPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
       text: TextSpan(
         text: '理想模型 · 位置由 x = v₀t + ½at² 计算',
-        style: TextStyle(color: p.secondary, fontSize: 10),
+        style: TextStyle(color: p.secondary, fontSize: 12),
       ),
     );
     timeLabel.layout(maxWidth: width);
@@ -529,7 +528,7 @@ class _TapePainter extends CustomPainter {
           textDirection: TextDirection.ltr,
           text: TextSpan(
             text: '$num',
-            style: const TextStyle(color: Color(0xFF746853), fontSize: 9),
+            style: const TextStyle(color: Color(0xFF746853), fontSize: 12),
           ),
         );
         tp.layout();
@@ -540,7 +539,7 @@ class _TapePainter extends CustomPainter {
       textDirection: TextDirection.ltr,
       text: const TextSpan(
         text: '真实时间标记 · 每 5 个间隔标一号计数点',
-        style: TextStyle(color: Color(0xFF8A806D), fontSize: 10),
+        style: TextStyle(color: Color(0xFF8A806D), fontSize: 12),
       ),
     );
     info.layout(maxWidth: s.width - 24);
@@ -607,7 +606,7 @@ class _ChartPainter extends CustomPainter {
     for (final it in samples) {
       c.drawCircle(point(it.$1, it.$2), 3.6, Paint()..color = p.accent);
     }
-    final style = TextStyle(color: p.secondary, fontSize: 10);
+    final style = TextStyle(color: p.secondary, fontSize: 12);
     for (final t in [0.0, .4, .8, 1.2]) {
       final tp = TextPainter(
         text: TextSpan(text: t.toStringAsFixed(1), style: style),

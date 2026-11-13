@@ -69,36 +69,28 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
         .take(10)
         .toList();
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 18),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
       backgroundColor: p.card,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 560),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'HAIZ COMMAND',
-                style: TextStyle(
-                  color: p.accent,
-                  letterSpacing: 1.8,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 11),
+              Text('搜索', style: HaizType.section(p)),
+              const SizedBox(height: 12),
               TextField(
                 controller: query,
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search_rounded),
-                  hintText: '搜索任务、科目、课程…',
+                  prefixIcon: Icon(Icons.search_rounded, size: 20),
+                  hintText: '任务、科目或课程',
                 ),
               ),
-              const SizedBox(height: 13),
+              const SizedBox(height: 12),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
@@ -108,7 +100,7 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           '学习任务',
-                          style: TextStyle(color: p.secondary, fontSize: 11),
+                          style: HaizType.meta(p),
                         ),
                       ),
                     for (final task in tasks)
@@ -118,7 +110,8 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
                           task.completed
                               ? Icons.check_circle_outline
                               : Icons.radio_button_unchecked,
-                          color: p.accent,
+                          size: 20,
+                          color: task.completed ? p.accent : p.muted,
                         ),
                         title: Text(
                           task.title,
@@ -126,7 +119,12 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(task.subject),
-                        trailing: const Icon(Icons.play_arrow_rounded),
+                        trailing: Icon(
+                          Icons.timer_outlined,
+                          size: 18,
+                          color: p.muted,
+                          semanticLabel: '开始专注',
+                        ),
                         onTap: () {
                           store.chooseFocusTask(task.id);
                           Navigator.of(dialog).pop();
@@ -138,15 +136,16 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           '课程',
-                          style: TextStyle(color: p.secondary, fontSize: 11),
+                          style: HaizType.meta(p),
                         ),
                       ),
                     for (final course in courses)
                       ListTile(
                         dense: true,
                         leading: Icon(
-                          Icons.calendar_today_outlined,
-                          color: p.accent,
+                          Icons.calendar_view_week_outlined,
+                          size: 20,
+                          color: p.muted,
                         ),
                         title: Text(course.name),
                         subtitle: Text(
@@ -160,11 +159,11 @@ class _HaizCommandDialogState extends State<_HaizCommandDialog> {
                       ),
                     if (tasks.isEmpty && courses.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.all(23),
+                        padding: const EdgeInsets.all(24),
                         child: Text(
-                          '没有找到匹配结果。',
+                          '没有找到匹配结果',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: p.secondary),
+                          style: HaizType.secondary(p),
                         ),
                       ),
                   ],

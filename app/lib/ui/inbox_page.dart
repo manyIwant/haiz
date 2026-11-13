@@ -7,6 +7,7 @@ import '../core/academic_session.dart';
 import '../domain/notice_parser.dart';
 import '../domain/message_intake_bridge.dart';
 import '../domain/notice_import_service.dart';
+import 'editorial.dart';
 import 'kit.dart';
 
 class _Draft {
@@ -391,20 +392,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 TextField(
                   controller: title,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: '任务描述',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: '任务描述'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: subject,
-                  decoration: const InputDecoration(
-                    labelText: '科目',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: '科目'),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: () async {
                     final date = await showDatePicker(
@@ -422,7 +417,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   onPressed: () => setDialog(() => due = null),
                   child: const Text('清除截止日期'),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   '原文：${d.original}',
                   style: Theme.of(ctx).textTheme.bodySmall,
@@ -595,20 +590,20 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     final p = PocketSkin.of(context).colors;
     return SingleChildScrollView(
       key: const PageStorageKey('inbox'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: HaizSpace.page,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Eyebrow('HAIZ INBOX / NOTICE TO ACTION'),
-              const SizedBox(height: 23),
+              const EditorialMasthead(number: '03', chapter: '收件'),
+              const SizedBox(height: 24),
               const PageTitle(
-                title: '消息可以变成行动。',
+                title: '把通知变成待办',
                 subtitle: 'Android 授权后自动收取班群通知；全班作业通过 HAIZ Academic 同步。手动输入仅供应急。',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 24),
               if (widget.session?.identity != null &&
                   widget.session?.role == 'student' &&
                   widget.session?.selectedClass != null) ...[
@@ -623,10 +618,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     onChanged: _setAiConsent,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
               ],
               _nativeInboxSection(context),
-              const SizedBox(height: 22),
+              const SizedBox(height: HaizSpace.section),
               PocketCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,9 +630,9 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                     const SizedBox(height: 8),
                     Text(
                       '优先使用上方自动收件与班级同步。仅当原应用未产生可见通知、分享入口不可用或需要补录时，才在这里粘贴文字或导入文档。',
-                      style: TextStyle(color: p.secondary, fontSize: 12),
+                      style: HaizType.secondary(p),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     TextField(
                       key: const Key('inbox-text'),
                       controller: _input,
@@ -645,17 +640,16 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                       maxLines: 9,
                       decoration: const InputDecoration(
                         hintText: '例如：数学明天交练习册第36-39页。\n物理后天提交实验报告。',
-                        border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     Wrap(
-                      spacing: 9,
-                      runSpacing: 9,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         PocketPill(
                           label: '提取候选',
-                          icon: Icons.auto_fix_high_rounded,
+                          icon: Icons.checklist_rounded,
                           onTap: () {
                             _currentIncomingId = null;
                             _currentSource = '手动粘贴';
@@ -675,7 +669,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                         if (_importing) ...[
                           if (_ocrStatus.isNotEmpty)
                             Text(_ocrStatus,
-                              style: TextStyle(color: p.secondary, fontSize: 12)),
+                              style: HaizType.secondary(p)),
                           TextButton.icon(
                             key: const Key('cancel-screenshot-ocr'),
                             onPressed: _importCancelled ? null : _cancelImport,
@@ -698,17 +692,13 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              const SizedBox(height: 21),
+              const SizedBox(height: 24),
               if (_notice != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 18),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: Text(
                     _notice!,
-                    style: TextStyle(
-                      color: p.secondary,
-                      fontSize: 12,
-                      height: 1.6,
-                    ),
+                    style: HaizType.secondary(p),
                   ),
                 ),
               if (_drafts.isNotEmpty) ...[
@@ -716,7 +706,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   '等待你确认',
                   trailing: '${_drafts.where((d) => d.selected).length} 项选中',
                 ),
-                const SizedBox(height: 11),
+                const SizedBox(height: 12),
                 for (int i = 0; i < _drafts.length; i++) ...[
                   PocketCard(
                     padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
@@ -728,7 +718,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                           onChanged: (v) =>
                               setState(() => _drafts[i].selected = v ?? false),
                         ),
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,24 +727,27 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                                 _drafts[i].title,
                                 style: TextStyle(
                                   color: p.foreground,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   height: 1.5,
-                                  fontSize: 14,
+                                  fontSize: 15,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(
                                 '${_drafts[i].subject} · ${_humanDue(_drafts[i].due)}',
-                                style: TextStyle(color: p.accent, fontSize: 12),
+                                style: HaizType.secondary(p).copyWith(
+                                  fontFeatures: HaizType.tabular,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 _drafts[i].ambiguous
                                     ? '需要核实：日期或措辞存在不确定性'
                                     : '请核实：自动提取不代表老师已确认',
-                                style: TextStyle(
-                                  color: p.secondary,
-                                  fontSize: 10.5,
+                                style: HaizType.meta(p).copyWith(
+                                  color: _drafts[i].ambiguous
+                                      ? p.negative
+                                      : p.muted,
                                 ),
                               ),
                             ],
@@ -765,16 +758,16 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                           onPressed: () => _edit(_drafts[i]),
                           icon: Icon(
                             Icons.edit_outlined,
-                            color: p.accent,
+                            color: p.muted,
                             size: 19,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 7),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -785,7 +778,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 ),
                 if (widget.session?.role == 'student' &&
                     widget.session?.selectedClass != null) ...[
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -797,13 +790,13 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                           ? '正在提交审核…' : '提交选中任务给班级审核'),
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Text('默认不上传。仅提交你确认的任务字段，不包含聊天原文。审核通过才会被其他同学看到。',
-                    style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5)),
+                    style: HaizType.meta(p).copyWith(height: 1.5)),
                 ],
               ] else ...[
                 const SectionLabel('处理规则'),
-                const SizedBox(height: 13),
+                const SizedBox(height: 12),
                 PocketCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,14 +807,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                         '本机规则初筛',
                         '优先筛选可能与作业有关的通知，AI 可进一步理解多个行动项',
                       ),
-                      const SizedBox(height: 17),
+                      const SizedBox(height: 16),
                       _line(
                         context,
                         Icons.event_outlined,
                         '语义理解与日期校验',
                         '选用 AI 时要求模型提供原文证据；不明确的期限保持待确认',
                       ),
-                      const SizedBox(height: 17),
+                      const SizedBox(height: 16),
                       _line(
                         context,
                         Icons.verified_user_outlined,
@@ -832,10 +825,10 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   ),
                 ),
               ],
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               Text(
                 'Android 只处理已授权、可见的通知，不登录微信、不读取聊天历史。AI 识别默认关闭；开启后会将经过基础脱敏的通知内容发送给配置的模型服务，仍可能含有个人信息。',
-                style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5),
+                style: HaizType.meta(p).copyWith(height: 1.5),
               ),
             ],
           ),
@@ -850,7 +843,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
       return PocketCard(
         child: Text(
           '网页版不支持原生消息接收。Android 可按授权接收指定群通知；iPhone 可通过系统分享扩展接收文字。',
-          style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
+          style: HaizType.secondary(p),
         ),
       );
     }
@@ -888,7 +881,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             ),
           ],
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: 8),
         PocketCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -897,23 +890,16 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 MessageIntakeBridge.supportsNotificationMonitoring
                     ? '微信、QQ 等指定群的新通知可在授权后自动进入；也可以主动分享。'
                     : 'iPhone 登录 HAIZ 班级服务后可自动获取教师发布的作业；无法后台读取微信消息。支持分享的页面可选择「存入 HAIZ 收件」，否则可复制文字粘贴。',
-                style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
+                style: HaizType.secondary(p),
               ),
               if (_incoming.isEmpty) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Text('暂无接收到的消息'),
               ],
               for (final message in _incoming) ...[
-                const Divider(height: 22),
-                Text(
-                  message.source,
-                  style: TextStyle(
-                    color: p.accent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 5),
+                const Divider(height: 24),
+                Text(message.source, style: HaizType.meta(p)),
+                const SizedBox(height: 4),
                 Text(
                   message.title.isEmpty
                       ? message.text
@@ -927,12 +913,12 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                   ),
                 ),
                 if (_aiResults.containsKey(message.id)) ...[
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 8),
                   Text(
                     _aiResults[message.id]!.isEmpty
                         ? 'AI 预解析：未识别到明确作业，请人工核对'
                         : 'AI 预解析：发现 ${_aiResults[message.id]!.length} 项候选作业，等待核对',
-                    style: TextStyle(color: p.accent, fontSize: 11),
+                    style: HaizType.secondary(p),
                   ),
                 ],
                 const SizedBox(height: 8),
@@ -942,7 +928,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                       onPressed: () => _reviewIncoming(message),
                       child: const Text('提取并审核'),
                     ),
-                    const SizedBox(width: 7),
+                    const SizedBox(width: 8),
                     TextButton(
                       onPressed: () => _dismissIncoming(message),
                       child: const Text('忽略'),
@@ -953,14 +939,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         if (MessageIntakeBridge.supportsNotificationMonitoring)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               InkWell(
                 key: const Key('monitor-settings-toggle'),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 onTap: () {
                   setState(() => _monitorExpanded = !_monitorExpanded);
                   if (_monitorExpanded) unawaited(_refreshIncoming());
@@ -977,8 +963,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                               '指定群通知自动收集',
                               style: TextStyle(
                                 color: p.foreground,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
@@ -987,17 +973,16 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                                       ? '已启用 · 仅指定群'
                                       : '等待系统通知授权')
                                   : '默认关闭 · 需要你明确开启',
-                              style: TextStyle(color: p.secondary, fontSize: 11),
+                              style: HaizType.secondary(p),
                             ),
                           ],
                         ),
                       ),
                       AnimatedRotation(
                         turns: _monitorExpanded ? 0.5 : 0,
-                        duration: Duration(
-                          milliseconds: PocketSkin.of(context).reducedMotion ? 0 : 180,
-                        ),
-                        child: Icon(Icons.keyboard_arrow_down_rounded, color: p.secondary),
+                        duration: HaizMotion.of(context, HaizMotion.fast),
+                        curve: HaizMotion.ease,
+                        child: Icon(Icons.keyboard_arrow_down_rounded, color: p.muted),
                       ),
                     ],
                   ),
@@ -1007,10 +992,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               // mode an invalid PageStorage value becomes a large grey ErrorWidget.
               AnimatedSize(
                 alignment: Alignment.topCenter,
-                curve: Curves.easeInOutCubic,
-                duration: Duration(
-                  milliseconds: PocketSkin.of(context).reducedMotion ? 0 : 220,
-                ),
+                curve: HaizMotion.ease,
+                duration: HaizMotion.of(context, HaizMotion.enter),
                 child: _monitorExpanded
                     ? Padding(
                         key: const Key('monitor-settings-panel'),
@@ -1025,39 +1008,39 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 children: [
                   Row(children: [
                     Expanded(child: Text('微信通知接入诊断',
-                        style: TextStyle(color: p.foreground, fontWeight: FontWeight.w600))),
+                        style: TextStyle(color: p.foreground, fontWeight: FontWeight.w500))),
                     IconButton(
                       key: const Key('wechat-diag-refresh'),
                       tooltip: '刷新微信接入诊断',
                       onPressed: _refreshIncoming,
-                      icon: Icon(Icons.refresh_rounded, color: p.accent),
+                      icon: const Icon(Icons.refresh_rounded, size: 20),
                     ),
                   ]),
                   Text(
                     _wechatDiagnostics?.status(_monitor) ?? '设备诊断暂不可用',
                     key: const Key('wechat-diag-status'),
-                    style: TextStyle(color: p.accent, fontSize: 12, height: 1.5),
+                    style: HaizType.secondary(p).copyWith(color: p.foreground),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     '监听服务：${_wechatDiagnostics?.listenerConnected == true ? "已连接" : "未连接"}'
                     ' · 微信通知：${_wechatDiagnostics?.observedCount ?? 0} 条'
                     ' · 已入箱：${_wechatDiagnostics?.savedCount ?? 0} 条',
                     key: const Key('wechat-diag-counts'),
-                    style: TextStyle(color: p.secondary, fontSize: 11),
+                    style: HaizType.secondary(p),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     _wechatDiagnostics?.lastObservedAt == null
                         ? '暂无微信通知处理记录'
                         : '最近收到：${_wechatDiagnostics!.lastObservedAt!.toLocal()}',
-                    style: TextStyle(color: p.secondary, fontSize: 11),
+                    style: HaizType.secondary(p),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '仅在明确开启微信监测后记录处理原因、次数和时间。'
                     '不保存被过滤通知的正文、群名、发送人，也不会上传云端。',
-                    style: TextStyle(color: p.secondary, fontSize: 11, height: 1.5),
+                    style: HaizType.meta(p).copyWith(height: 1.5),
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -1082,7 +1065,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               '且正文具有学习行动词时才保存候选。通知元数据不能可靠证明一定是群聊，'
               '请使用足够独特的群名；无法读取已隐藏的通知内容或历史消息，也不会上传消息。'
               ' 保存为待办前仍需人工确认。',
-              style: TextStyle(color: p.secondary, height: 1.6, fontSize: 12),
+              style: HaizType.secondary(p),
             ),
             const SizedBox(height: 12),
             SwitchListTile.adaptive(
@@ -1104,7 +1087,6 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
               decoration: const InputDecoration(
                 labelText: '指定群名称关键词（每行一个）',
                 hintText: '例如：高一13班作业通知群',
-                border: OutlineInputBorder(),
               ),
             ),
             Wrap(
@@ -1172,7 +1154,7 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   '系统尚未授权 HAIZ 读取通知。仅在你授权后才可能接收。',
-                  style: TextStyle(color: p.accent, fontSize: 11),
+                  style: HaizType.secondary(p).copyWith(color: p.negative),
                 ),
               ),
                           ],
@@ -1195,8 +1177,8 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
     final p = PocketSkin.of(ctx).colors;
     return Row(
       children: [
-        Icon(icon, color: p.accent, size: 20),
-        const SizedBox(width: 13),
+        Icon(icon, color: p.muted, size: 20),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1205,14 +1187,14 @@ class _InboxPageState extends State<InboxPage> with WidgetsBindingObserver {
                 title,
                 style: TextStyle(
                   color: p.foreground,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 description,
                 style: TextStyle(
                   color: p.secondary,
-                  fontSize: 11,
+                  fontSize: 12,
                   height: 1.45,
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../core/academic_session.dart';
 import '../core/pocket_store.dart';
+import 'editorial.dart';
 import 'kit.dart';
 
 /// Native App client for a self-hosted HAIZ Academic deployment.
@@ -79,11 +80,11 @@ class _AcademicPageState extends State<AcademicPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(item['subject']?.toString() ?? '其他'),
-              const SizedBox(height: 9),
+              const SizedBox(height: 8),
               SelectableText(item['title']?.toString() ?? ''),
-              const SizedBox(height: 9),
+              const SizedBox(height: 8),
               Text('截止：${item['due']?.toString() ?? '未指定'}'),
-              const SizedBox(height: 9),
+              const SizedBox(height: 8),
               const Text('这只是加入个人待办，不代表已提交作业。老师后续修改不会覆盖你的私人笔记。'),
             ],
           ),
@@ -159,32 +160,30 @@ class _AcademicPageState extends State<AcademicPage> {
     final busy = session.busy;
     return SingleChildScrollView(
       key: const PageStorageKey('academic_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 30, 23, 130),
+      padding: HaizSpace.page,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 770),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton.icon(
-                onPressed: widget.onBack,
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-                label: const Text('返回探索'),
+              SubpageHeader(
+                number: '05',
+                chapter: '班级同步',
+                onBack: widget.onBack,
               ),
-              const SizedBox(height: 15),
-              const Eyebrow('HAIZ ACADEMIC / AUTHORIZED CLASSES'),
-              const SizedBox(height: 21),
+              const SizedBox(height: 24),
               const PageTitle(
-                title: '班级里的每一件事。',
+                title: '班级里的每一件事',
                 subtitle: '教师发布，学生自愿确认后加入个人待办。学校正式账号接口需要授权。',
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               if (widget.store.storageError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     widget.store.storageError!,
-                    style: TextStyle(color: p.secondary, fontSize: 12),
+                    style: HaizType.secondary(p),
                   ),
                 ),
               if (!loggedIn)
@@ -197,7 +196,7 @@ class _AcademicPageState extends State<AcademicPage> {
                       Text(
                         '只连接你信任的 HAIZ 服务端。正式环境须使用 HTTPS。'
                         '服务器须支持 v1.4 已验证身份契约；凭据不在本机持久化。',
-                        style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
+                        style: HaizType.secondary(p),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -219,7 +218,7 @@ class _AcademicPageState extends State<AcademicPage> {
                         obscureText: true,
                         decoration: const InputDecoration(labelText: '密码'),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
                       FilledButton.icon(
                         onPressed: busy ? null : _signIn,
                         icon: const Icon(Icons.cloud_done_outlined),
@@ -248,7 +247,7 @@ class _AcademicPageState extends State<AcademicPage> {
                       ),
                       Text(
                         '当前账号：${session.userId ?? ''} · ${session.origin ?? ''}',
-                        style: TextStyle(color: p.secondary, fontSize: 11),
+                        style: HaizType.secondary(p),
                       ),
                       const SizedBox(height: 8),
                       if (session.classes.isNotEmpty)
@@ -274,26 +273,23 @@ class _AcademicPageState extends State<AcademicPage> {
                             c['status'] == 'pending',
                       ))
                         const Text('班级加入申请待教师核准。'),
-                      const SizedBox(height: 9),
+                      const SizedBox(height: 8),
                       for (final item in session.assignments) ...[
                         const Divider(height: 20),
                         Text(
                           '${item['subject']?.toString() ?? '课程'} · '
                           '${item['title']?.toString() ?? '任务'}',
-                          style: TextStyle(
-                            color: p.foreground,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: HaizType.itemTitle(p),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
-                          '截止：${item['due']?.toString() ?? '未指定'}',
-                          style: TextStyle(color: p.secondary, fontSize: 12),
+                          '截止 ${item['due']?.toString() ?? '未指定'}',
+                          style: HaizType.secondary(p),
                         ),
                         const SizedBox(height: 8),
                         Wrap(
-                          spacing: 6,
-                          runSpacing: 5,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             OutlinedButton(
                               onPressed: busy ? null : () => _importAssignment(item),
@@ -321,7 +317,7 @@ class _AcademicPageState extends State<AcademicPage> {
                   widget.store.legacyArchiveAvailable &&
                   !widget.store.legacyImported)
                 Padding(
-                  padding: const EdgeInsets.only(top: 14),
+                  padding: const EdgeInsets.only(top: 16),
                   child: PocketCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,9 +327,9 @@ class _AcademicPageState extends State<AcademicPage> {
                         Text(
                           '检测到升级前未按账号区分的本机记录，已逐字节备份。'
                           '历史上可能属于多人，不会自动显示或删除。',
-                          style: TextStyle(color: p.secondary, fontSize: 12, height: 1.6),
+                          style: HaizType.secondary(p),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         OutlinedButton(
                           onPressed: busy ? null : _importLegacy,
                           child: const Text('确认并入当前账号'),
@@ -344,10 +340,10 @@ class _AcademicPageState extends State<AcademicPage> {
                 ),
               if (_message != null)
                 Padding(
-                  padding: const EdgeInsets.only(top: 15),
+                  padding: const EdgeInsets.only(top: 16),
                   child: Text(
                     _message!,
-                    style: TextStyle(color: p.secondary, fontSize: 12),
+                    style: HaizType.secondary(p),
                   ),
                 ),
             ],

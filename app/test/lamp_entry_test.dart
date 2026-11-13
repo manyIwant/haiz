@@ -9,7 +9,7 @@ void main() {
       MaterialApp(home: LampEntry(onEnter: () => entered = true)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('欢迎回来'), findsOneWidget);
+    expect(find.text('本机空间'), findsOneWidget);
     expect(find.textContaining('无账号验证'), findsOneWidget);
     expect(entered, isFalse);
     await tester.tap(find.byKey(const Key('lamp-enter-guest')));
@@ -24,6 +24,6 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('欢迎回来'), findsOneWidget);
+    expect(find.text('本机空间'), findsOneWidget);
   });
 }

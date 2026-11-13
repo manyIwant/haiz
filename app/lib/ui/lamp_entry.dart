@@ -115,28 +115,37 @@ class _LampEntryState extends State<LampEntry>
                                       child: Opacity(
                                         opacity: reveal,
                                         child: Transform.translate(
-                                          offset: Offset(0, (1 - reveal) * 18),
-                                          child: Column(
+                                          offset: Offset(0, (1 - reveal) * 8),
+                                          child: const Column(
                                             children: [
-                                              const Text(
-                                                'HAIZ',
+                                              Text.rich(
+                                                TextSpan(
+                                                  text: 'haiz',
+                                                  children: [
+                                                    TextSpan(
+                                                      text: '.space',
+                                                      style: TextStyle(
+                                                        color: _sand,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: Color(0xFFFFFAF1),
-                                                  fontSize: 48,
-                                                  fontWeight: FontWeight.w300,
-                                                  letterSpacing: 12,
-                                                  height: 1.15,
+                                                  color: _ink,
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: -0.8,
+                                                  height: 1.1,
                                                 ),
                                               ),
-                                              const SizedBox(height: 12),
-                                              const Text(
-                                                'P O C K E T   /   C A M P U S',
+                                              SizedBox(height: 8),
+                                              Text(
+                                                '校园学习空间',
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: Color(0xFFC5B494),
-                                                  fontSize: 10,
-                                                  letterSpacing: 1,
+                                                  color: _inkSoft,
+                                                  fontSize: 15,
                                                 ),
                                               ),
                                             ],
@@ -151,81 +160,65 @@ class _LampEntryState extends State<LampEntry>
                               Opacity(
                                 opacity: enter,
                                 child: Transform.translate(
-                                  offset: Offset(0, (1 - enter) * 20),
+                                  offset: Offset(0, (1 - enter) * 8),
                                   child: Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(
-                                      25, 27, 25, 23,
-                                    ),
+                                    padding: const EdgeInsets.all(24),
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xE0272119),
-                                          Color(0xE015130F),
-                                        ],
-                                      ),
+                                      color: const Color(0xFF181512),
                                       border: Border.all(
-                                        color: const Color(0x447D6545),
-                                        width: 1,
+                                        color: const Color(0x14F7F1E6),
                                       ),
-                                      borderRadius: BorderRadius.circular(26),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        const Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            'HAIZ  /  本机空间',
-                                            style: TextStyle(
-                                              color: Color(0xFFDDBA7B),
-                                              fontSize: 10,
-                                              letterSpacing: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 18),
                                         const Text(
-                                          '欢迎回来',
+                                          '本机空间',
                                           style: TextStyle(
-                                            color: Color(0xFFFFF7E8),
-                                            fontSize: 26,
+                                            color: _ink,
+                                            fontFamily: 'serif',
+                                            fontSize: 28,
+                                            height: 1.2,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 8),
                                         const Text(
-                                          '你的课表、待办与校园空间，\n从这里开始。',
+                                          '课表、待办与专注记录，从这里继续',
                                           style: TextStyle(
-                                            color: Color(0xFFD0C1AA),
-                                            fontSize: 14,
-                                            height: 1.65,
+                                            color: _inkSoft,
+                                            fontSize: 15,
+                                            height: 1.5,
                                           ),
                                         ),
-                                        const SizedBox(height: 25),
-                                        FilledButton(
+                                        const SizedBox(height: 24),
+                                        FilledButton.icon(
                                           key: const Key('lamp-enter-guest'),
                                           onPressed: widget.onEnter,
+                                          iconAlignment: IconAlignment.end,
+                                          icon: const Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 18,
+                                          ),
                                           style: FilledButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFFF4D28F),
+                                            backgroundColor: _sand,
                                             foregroundColor:
-                                                const Color(0xFF342619),
+                                                const Color(0xFF2A1F14),
                                             minimumSize:
-                                                const Size.fromHeight(54),
+                                                const Size.fromHeight(48),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(15),
+                                                  BorderRadius.circular(10),
                                             ),
                                           ),
-                                          child: const Text(
-                                            '进入本机空间  →',
+                                          label: const Text(
+                                            '进入本机空间',
                                             style: TextStyle(
                                               fontSize: 15,
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         ),
@@ -234,26 +227,13 @@ class _LampEntryState extends State<LampEntry>
                                           '仅打开此设备的访客数据 · 无账号验证或云端同步',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            color: Color(0xFFB4A28A),
-                                            fontSize: 11,
+                                            color: _muted,
+                                            fontSize: 12,
                                             height: 1.5,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 22),
-                              Opacity(
-                                opacity: enter,
-                                child: const Text(
-                                  'A QUIETER WAY TO STAY CONNECTED',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF9C8164),
-                                    fontSize: 9,
-                                    letterSpacing: 1.5,
                                   ),
                                 ),
                               ),
@@ -272,6 +252,11 @@ class _LampEntryState extends State<LampEntry>
     );
   }
 }
+
+const _ink = Color(0xFFF7F1E6);
+const _inkSoft = Color(0xFFC9BFAF);
+const _muted = Color(0xFF9A8F80);
+const _sand = Color(0xFFE9C88E);
 
 /// Warm amber offline fallback: soft, masked conic-gradient beams based on Aceternity
 /// Lamp. Unlike triangular spotlight polygons, the angular and vertical edges

@@ -38,55 +38,46 @@ class AgendaSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 27),
+        const SizedBox(height: HaizSpace.section - HaizSpace.row),
         Row(
           children: [
             const Expanded(child: SectionLabel('作业日历')),
             TextButton.icon(
               onPressed: tasks.isEmpty ? null : () => _export(context),
-              icon: const Icon(Icons.ios_share_rounded, size: 16),
+              icon: const Icon(Icons.ios_share_rounded, size: 18),
               label: const Text('导出 .ics'),
             ),
           ],
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: HaizSpace.row),
         PocketCard(
           child: tasks.isEmpty
-              ? Text(
-                  '还没有带截止日期的待办。确认通知后会自动出现在这里。',
-                  style: TextStyle(
-                    color: p.secondary,
-                    fontSize: 12,
-                    height: 1.6,
-                  ),
-                )
+              ? Text('还没有带截止日期的待办。确认通知后会出现在这里。', style: HaizType.secondary(p))
               : Column(
                   children: [
                     for (final task in tasks.take(12)) ...[
                       Row(
                         children: [
                           Container(
-                            width: 60,
-                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            width: 48,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
-                              color: p.accent.withValues(alpha: .10),
-                              borderRadius: BorderRadius.circular(12),
+                              color: p.raised,
+                              borderRadius: BorderRadius.circular(
+                                HaizRadius.inner,
+                              ),
                             ),
                             child: Column(
                               children: [
                                 Text(
-                                  task.dueIso!.substring(5, 7),
-                                  style: TextStyle(
-                                    color: p.secondary,
-                                    fontSize: 10,
-                                  ),
+                                  '${int.parse(task.dueIso!.substring(5, 7))}月',
+                                  style: HaizType.meta(p),
                                 ),
                                 Text(
                                   task.dueIso!.substring(8, 10),
-                                  style: TextStyle(
-                                    color: p.accent,
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.bold,
+                                  style: HaizType.itemTitle(p).copyWith(
+                                    fontSize: 17,
+                                    fontFeatures: HaizType.tabular,
                                   ),
                                 ),
                               ],
@@ -97,41 +88,22 @@ class AgendaSection extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  task.title,
-                                  style: TextStyle(
-                                    color: p.foreground,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13.5,
-                                  ),
-                                ),
+                                Text(task.title, style: HaizType.itemTitle(p)),
                                 const SizedBox(height: 4),
-                                Text(
-                                  task.subject,
-                                  style: TextStyle(
-                                    color: p.secondary,
-                                    fontSize: 11,
-                                  ),
-                                ),
+                                Text(task.subject, style: HaizType.meta(p)),
                               ],
                             ),
                           ),
                         ],
                       ),
                       if (task != tasks.take(12).last)
-                        Divider(
-                          height: 19,
-                          color: p.border.withValues(alpha: .7),
-                        ),
+                        Divider(height: 24, color: p.border),
                     ],
                   ],
                 ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          '日期来自导入时的人工确认；导出不会向系统日历直接写入。',
-          style: TextStyle(color: p.secondary, fontSize: 11),
-        ),
+        const SizedBox(height: HaizSpace.row),
+        Text('日期来自导入时的人工确认；导出不会直接写入系统日历', style: HaizType.meta(p)),
       ],
     );
   }

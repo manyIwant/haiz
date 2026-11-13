@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/pocket_store.dart';
 import '../domain/pocket_models.dart';
+import 'editorial.dart';
 import 'kit.dart';
 import 'agenda_section.dart';
 
@@ -33,26 +34,20 @@ class SchedulePage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionLabel('添加一节课程'),
+              const SectionLabel('添加课程'),
               const SizedBox(height: 16),
               TextField(
                 controller: name,
-                decoration: const InputDecoration(
-                  labelText: '课程名称',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: '课程名称'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: place,
-                decoration: const InputDecoration(
-                  labelText: '地点（选填）',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: '地点（选填）'),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               Wrap(
-                spacing: 5,
+                spacing: 4,
                 children: [
                   for (int d = 1; d <= 7; d++)
                     ChoiceChip(
@@ -62,7 +57,7 @@ class SchedulePage extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -79,7 +74,7 @@ class SchedulePage extends StatelessWidget {
                     ),
                   ),
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 9),
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                     child: Text('至'),
                   ),
                   Expanded(
@@ -97,7 +92,7 @@ class SchedulePage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -144,76 +139,42 @@ class SchedulePage extends StatelessWidget {
     final items = coursesForDay(store.courses, store.selectedWeekday);
     return SingleChildScrollView(
       key: const PageStorageKey('schedule_scroll'),
-      padding: const EdgeInsets.fromLTRB(23, 31, 23, 130),
+      padding: HaizSpace.page,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Eyebrow('YOUR WEEK / AN OVERVIEW'),
-              const SizedBox(height: 23),
-              const PageTitle(title: '一周，有序展开。', subtitle: '课表留在身边，不需要重复整理。'),
-              const SizedBox(height: 26),
+              const EditorialMasthead(number: '02', chapter: '课表'),
+              const SizedBox(height: 24),
+              const PageTitle(title: '本周课表', subtitle: '每周重复的课程，保存在这台设备上'),
+              const SizedBox(height: HaizSpace.section),
               Row(
                 children: [
                   const Expanded(child: SectionLabel('我的课程')),
-                  PocketPill(
-                    label: '添加课程',
-                    icon: Icons.add_rounded,
-                    onTap: () => _addCourse(context),
+                  TextButton.icon(
+                    onPressed: () => _addCourse(context),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('添加课程'),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: HaizSpace.group),
               Row(
                 children: [
                   for (int d = 1; d <= 7; d++)
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: InkWell(
+                        child: _DayCell(
+                          label: weekdayText(d),
+                          selected: store.selectedWeekday == d,
+                          hasCourses: coursesForDay(
+                            store.courses,
+                            d,
+                          ).isNotEmpty,
                           onTap: () => store.setDay(d),
-                          borderRadius: BorderRadius.circular(16),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 210),
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              color: store.selectedWeekday == d
-                                  ? p.accent
-                                  : p.card,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: store.selectedWeekday == d
-                                    ? p.accent
-                                    : p.border,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '周',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: store.selectedWeekday == d
-                                        ? Colors.white
-                                        : p.secondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  weekdayText(d),
-                                  style: TextStyle(
-                                    color: store.selectedWeekday == d
-                                        ? Colors.white
-                                        : p.foreground,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ),
                     ),
@@ -222,97 +183,76 @@ class SchedulePage extends StatelessWidget {
               const SizedBox(height: 24),
               SectionLabel(
                 '周${weekdayText(store.selectedWeekday)}',
-                trailing: '共 ${items.length} 节课程',
+                trailing: '${items.length} 节',
               ),
-              const SizedBox(height: 13),
+              const SizedBox(height: 12),
               if (items.isEmpty)
                 PocketCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 28),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.menu_book_outlined,
-                            color: p.secondary,
-                            size: 35,
-                          ),
-                          const SizedBox(height: 11),
-                          Text(
-                            '这一天没有安排课程',
-                            style: TextStyle(color: p.secondary),
-                          ),
-                        ],
-                      ),
-                    ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: Center(
+                    child: Text('这一天没有安排课程', style: HaizType.secondary(p)),
                   ),
                 ),
               for (final course in items) ...[
                 PocketCard(
-                  padding: const EdgeInsets.fromLTRB(16, 17, 10, 17),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 62,
+                        width: 56,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               minutesText(course.startMinute),
-                              style: TextStyle(
-                                color: p.foreground,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                              style: HaizType.itemTitle(p)
+                                  .copyWith(fontFeatures: HaizType.tabular),
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 4),
                             Text(
                               minutesText(course.endMinute),
-                              style: TextStyle(
-                                color: p.secondary,
-                                fontSize: 12,
-                              ),
+                              style: HaizType.meta(p),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        height: 43,
+                        height: 40,
                         width: 3,
                         decoration: BoxDecoration(
                           color: p.accent,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 15),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              course.name,
-                              style: TextStyle(
-                                color: p.foreground,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
+                            Text(course.name, style: HaizType.itemTitle(p)),
+                            if (course.example || course.location.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  course.example
+                                      ? '示例 · ${course.location}'
+                                      : course.location,
+                                  style: HaizType.secondary(p),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              course.example
-                                  ? '示例 · ${course.location}'
-                                  : course.location,
-                              style: TextStyle(
-                                color: p.secondary,
-                                fontSize: 11.5,
-                              ),
-                            ),
                           ],
                         ),
                       ),
                       IconButton(
                         tooltip: '移除课程',
-                        icon: Icon(Icons.more_horiz, color: p.secondary),
+                        icon: Icon(
+                          Icons.more_horiz_rounded,
+                          color: p.muted,
+                          size: 20,
+                        ),
                         onPressed: () => showDialog<void>(
                           context: context,
                           builder: (dialog) => AlertDialog(
@@ -337,13 +277,73 @@ class SchedulePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: HaizSpace.row),
               ],
               AgendaSection(store: store),
-              const SizedBox(height: 11),
+              const SizedBox(height: 16),
+              Text('每周重复课表 · 演示数据不会连接学校系统', style: HaizType.meta(p)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One weekday in the strip. A dot marks days that have courses.
+class _DayCell extends StatelessWidget {
+  const _DayCell({
+    required this.label,
+    required this.selected,
+    required this.hasCourses,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool hasCourses;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PocketSkin.of(context).colors;
+    final ink = selected ? p.onAccent : p.foreground;
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: '周$label',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(HaizRadius.control),
+        child: AnimatedContainer(
+          duration: HaizMotion.of(context, HaizMotion.fast),
+          curve: HaizMotion.ease,
+          height: 56,
+          decoration: BoxDecoration(
+            color: selected ? p.accent : p.card,
+            borderRadius: BorderRadius.circular(HaizRadius.control),
+            border: Border.all(color: selected ? p.accent : p.border),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               Text(
-                '当前为每周重复课表 · 演示数据不会自动连接学校系统',
-                style: TextStyle(color: p.secondary, fontSize: 11),
+                label,
+                style: TextStyle(
+                  color: ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: hasCourses
+                      ? (selected ? p.onAccent : p.muted)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: const SizedBox(width: 4, height: 4),
               ),
             ],
           ),

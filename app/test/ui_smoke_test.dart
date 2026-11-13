@@ -57,10 +57,10 @@ void main() {
     final store = PocketStore();
     await tester.pumpWidget(frame(TickerLabPage(store: store, onBack: () {})));
     await tester.pump();
-    expect(find.text('纸带上的时间。'), findsOneWidget);
-    expect(find.text('01 / 观察小车运动'), findsOneWidget);
-    expect(find.text('02 / 测量纸带'), findsOneWidget);
-    expect(find.text('03 / 从纸带得到 v–t 图'), findsOneWidget);
+    expect(find.text('纸带上的时间'), findsOneWidget);
+    expect(find.text('01 观察小车运动'), findsOneWidget);
+    expect(find.text('02 测量纸带'), findsOneWidget);
+    expect(find.text('03 从纸带得到 v–t 图'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     store.dispose();
