@@ -4,6 +4,7 @@
 // walk resumes. No cuts: every move is continuous.
 import * as THREE from 'three';
 import { poseAt } from './chapters.js';
+import { touchIntent } from './mobile-gesture.js';
 
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const damp = (cur, target, lambda, dt) => target + (cur - target) * Math.exp(-lambda * dt);
@@ -34,14 +35,16 @@ export class DwellCamera {
   _bind() {
     // Vertical scrolling stays native (wheel, trackpad, touch); a drag looks around.
     const el = this.dom;
+    const mobileGesture = matchMedia('(pointer: coarse) and (max-width: 760px)').matches;
     const pts = new Map();
     let moved = 0, downT = 0;
     el.addEventListener('pointerdown', (e) => {
       if (!this.enabled) return;
-      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, intent: null });
       moved = 0; downT = performance.now();
       if (e.pointerType !== 'touch') el.setPointerCapture?.(e.pointerId);
-      this.dragging = true;
+      // Finger drags are not camera-look until a horizontal gesture wins.
+      this.dragging = e.pointerType !== 'touch' || !mobileGesture;
       this.touch();
     });
     el.addEventListener('pointermove', (e) => {
@@ -51,7 +54,13 @@ export class DwellCamera {
       const dx = e.clientX - p.x, dy = e.clientY - p.y;
       p.x = e.clientX; p.y = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
-      if (moved < 6) return;
+      if (e.pointerType === 'touch' && mobileGesture) {
+        // Browsers allow pan-y on the canvas. Ignore diagonal noise during
+        // vertical page swipes instead of accidentally turning the camera.
+        p.intent ??= touchIntent(e.clientX - p.startX, e.clientY - p.startY);
+        if (p.intent !== 'look') return;
+        this.dragging = true;
+      } else if (moved < 6) return;
       const k = e.pointerType === 'touch' ? 0.005 : 0.0032;
       this.offTarget.az = clamp(this.offTarget.az + dx * k, -1.2, 1.2);
       if (e.pointerType !== 'touch') this.offTarget.pitch = clamp(this.offTarget.pitch + dy * k * 0.8, -0.45, 0.7);

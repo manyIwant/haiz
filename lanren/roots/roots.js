@@ -272,8 +272,15 @@ export function attach(ctx) {
     texCache.set(n.id, entry);
     return entry;
   }
-  // the four photographs are small: load them now, so a jump from the year finder finds its light ready
-  for (const n of nodes) if (n.light?.photo) lightTexture(n);
+  // Desktop prefetch remains eager. On a phone, don't make the four
+  // historical photographs compete with the 3D hero's initial downloads.
+  const preloadHistoryPhotos = () => {
+    for (const n of nodes) if (n.light?.photo) lightTexture(n);
+  };
+  if (matchMedia('(pointer: coarse) and (max-width: 760px)').matches) {
+    if (window.requestIdleCallback) requestIdleCallback(preloadHistoryPhotos, { timeout: 3000 });
+    else setTimeout(preloadHistoryPhotos, 1200);
+  } else preloadHistoryPhotos();
   const slots = [0, 1].map((i) => ({ i, node: null, dev: 0, I: 0, M: i ? U.uRPM1 : U.uRPM0, T: i ? U.uRPT1 : U.uRPT0, P: i ? U.uRPP1 : U.uRPP0, V: i ? U.uRPB : U.uRPA }));
   const projCam = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
   function bindSlot(sl) {

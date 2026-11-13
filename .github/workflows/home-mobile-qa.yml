@@ -1,0 +1,40 @@
+name: HAIZ home · mobile camera and loading QA
+
+on:
+  pull_request:
+    paths:
+      - 'lanren/js/**'
+      - 'lanren/roots/**'
+      - 'lanren/home.css'
+      - 'index.html'
+      - 'scripts/lanren/build-home.mjs'
+      - 'tests/home-mobile.test.cjs'
+      - 'tests/home-browser.cjs'
+      - '.github/workflows/home-mobile-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install existing browser test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify mobile gesture intent, nearest-stop behavior and original desktop controls
+        run: |
+          node --test tests/home-mobile.test.cjs
+          node tests/lanren.cjs
+          node tests/site.cjs
+      - name: Install Chromium for mobile viewport and scroll regression
+        run: npx playwright install --with-deps chromium
+      - name: Desktop and 390×844 phone WebGL camera regression
+        run: node tests/home-mobile-browser.cjs
