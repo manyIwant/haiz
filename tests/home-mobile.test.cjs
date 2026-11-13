@@ -35,8 +35,8 @@ test('phone-only source guards keep the desktop rail and assets intact', () => {
   assert.match(css, /height: 100lvh/);
   assert.match(camera, /touchIntent\(e\.clientX - p\.startX, e\.clientY - p\.startY\)/);
   assert.match(scene, /const texExt = webpSupported \? 'webp' : 'png'/);
-  assert.match(scene, /tex\\(`leaf-atlas-\\$\\{atlasSize\\}\\.\\$\\{texExt\\}`/);
-  assert.match(scene, /tree\\.glb/);
+  assert.ok(scene.includes('tex(`leaf-atlas-${atlasSize}.${texExt}`'));
+  assert.ok(scene.includes("'tree.glb'"));
   for (const asset of ['leaf-atlas','leaf-normal']) {
     for (const level of ['web','lo']) {
       const png = path.join(root, 'lanren/assets', asset+'-'+level+'.png');
