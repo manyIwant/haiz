@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,9 +31,11 @@ class PocketAuthConfig {
       publishableKey.startsWith('sb_publishable_');
 }
 
-/// Keychain on iOS, Android Keystore-backed encrypted storage on Android.
-/// Web deliberately has no persistent session in this iteration: an XSS
-/// vulnerability in a browser origin must not gain a long-lived refresh token.
+/// Native: Keychain on iOS, Keystore-backed encrypted storage on Android.
+/// Web PWA: flutter_secure_storage's WebCrypto-backed, same-origin storage.
+/// WebCrypto is experimental; it is NOT equivalent to an OS Keychain and
+/// cannot defend against JavaScript running on a compromised site origin.
+/// We still verify the identity with the server before unlocking cloud data.
 class _PrivateAuthStorage extends LocalStorage {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -64,9 +65,12 @@ Future<SupabaseClient?> initializePocketAuth() async {
   await Supabase.initialize(
     url: PocketAuthConfig.url,
     publishableKey: PocketAuthConfig.publishableKey,
+    // Use the same Supabase account flow on Web and native Flutter.
+    // Unlike EmptyLocalStorage, this lets an iPhone home-screen PWA restore
+    // its own session after reopening; signing out deletes the session.
+    // Safari can evict site storage, so never treat it as a backup.
     authOptions: FlutterAuthClientOptions(
-      localStorage:
-          kIsWeb ? const EmptyLocalStorage() : _PrivateAuthStorage(),
+      localStorage: _PrivateAuthStorage(),
     ),
   );
   return Supabase.instance.client;
