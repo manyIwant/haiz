@@ -41,14 +41,14 @@
     <h1>把学习空间<br>放进主屏幕。</h1>
   </div>
   <p class="lead">免费使用课表、待办与专注工具。无需 IPA、苹果开发者签名或 App Store；这是一款可以独立打开的网页 App，不是原生 iOS 应用。</p>
-  <a class="cta" href="./" id="open-pocket">打开 HAIZ Pocket</a>
-  <a class="secondary" href="https://haiz.space/">返回 HAIZ 校园</a>
-  <div id="browser-status" class="status" role="status">请先在 iPhone Safari 中打开本页，再进入 HAIZ Pocket。</div>
+  <a class="cta" href="./?login=1" id="open-pocket">使用 Flutter 账号登录</a>
+  <a class="secondary" href="./">先使用本机访客空间</a>
+  <div id="browser-status" class="status" role="status">请先在 iPhone Safari 中打开本页，再使用 Flutter 账号登录。</div>
   <section class="card" aria-labelledby="install-heading">
     <h2 id="install-heading">在 iPhone 上安装（约 4 步）</h2>
     <ol>
       <li>用 <strong>Safari</strong> 打开此页面。若当前在微信、QQ 等内置浏览器，请选择「在浏览器打开」或复制地址到 Safari。</li>
-      <li>点击上面的 <strong>打开 HAIZ Pocket</strong>，等应用界面加载完成。</li>
+      <li>点击上面的 <strong>使用 Flutter 账号登录</strong>，等应用打开同一套 Flutter 邮箱登录／注册界面。</li>
       <li>在 <strong>HAIZ Pocket 页面</strong>打开 Safari 的「分享」菜单，选择<strong>添加到主屏幕</strong>（新版本可先选「编辑操作」）。如出现「作为网页 App 打开」选项，请保持开启。</li>
       <li>点「添加」，以后从 iPhone 主屏幕的 HAIZ Pocket 图标启动。</li>
     </ol>
@@ -74,10 +74,10 @@
   const inApp = /MicroMessenger|QQ\/|Weibo|DingTalk|AlipayClient/.test(ua);
   const safari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/.test(ua) && !inApp;
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  if (standalone) el.textContent = '已经作为主屏幕网页 App 打开。点击「打开 HAIZ Pocket」进入学习空间。';
-  else if (ios && safari) el.textContent = '检测到 iPhone / iPad Safari。下一步：打开 HAIZ Pocket，在应用页面用「分享 → 添加到主屏幕」安装。';
-  else if (ios) el.textContent = '当前不是 Safari。请将此地址复制到 Safari 打开，再从 HAIZ Pocket 页面添加到主屏幕。';
-  else el.textContent = '这份安装说明针对 iPhone / iPad。也可以直接点击「打开 HAIZ Pocket」使用网页版。';
+  if (standalone) el.textContent = '已经作为主屏幕网页 App 打开。可以使用 Flutter 账号登录。';
+  else if (ios && safari) el.textContent = '检测到 iPhone / iPad Safari。下一步：进入 Flutter 登录页面，再用「分享 → 添加到主屏幕」安装。';
+  else if (ios) el.textContent = '当前不是 Safari。请将此地址复制到 Safari 打开，再从 Flutter 账号登录页面添加到主屏幕。';
+  else el.textContent = '这份安装说明针对 iPhone / iPad。也可以直接点击「使用 Flutter 账号登录」进入网页版。';
 })();
 </script>
 </body>
