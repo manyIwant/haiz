@@ -10,10 +10,14 @@ class PocketAccountSheet extends StatefulWidget {
     required this.auth,
     required this.onSuccess,
     this.initiallyRegister = false,
+    this.fullPage = false,
+    this.onContinueGuest,
   });
   final PocketAuthController auth;
   final VoidCallback onSuccess;
   final bool initiallyRegister;
+  final bool fullPage;
+  final VoidCallback? onContinueGuest;
 
   @override
   State<PocketAccountSheet> createState() => _PocketAccountSheetState();
@@ -73,10 +77,15 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
         });
       }
     } else {
-      await widget.auth.signIn(_email.text, _password.text);
-      if (mounted && widget.auth.authenticated) {
-        Navigator.of(context).pop();
-        widget.onSuccess();
+      // The full-page route can unmount as soon as authentication notifies
+      // the app. Capture the callback before awaiting the session change.
+      final onSuccess = widget.onSuccess;
+      final isFullPage = widget.fullPage;
+      final auth = widget.auth;
+      await auth.signIn(_email.text, _password.text);
+      if (auth.authenticated) {
+        if (!isFullPage && mounted) Navigator.of(context).pop();
+        onSuccess();
       }
     }
   }
@@ -103,7 +112,7 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             24, 22, 24,
-            MediaQuery.of(context).viewInsets.bottom + 28,
+            (widget.fullPage ? 0 : MediaQuery.of(context).viewInsets.bottom) + 28,
           ),
           child: Form(
             key: _form,
@@ -251,8 +260,13 @@ class _PocketAccountSheetState extends State<PocketAccountSheet> {
                 const SizedBox(height: 10),
                 OutlinedButton(
                   key: const Key('auth-continue-guest'),
-                  onPressed: widget.auth.busy
-                      ? null : () => Navigator.of(context).pop(),
+                  onPressed: widget.auth.busy ? null : () {
+                    if (widget.onContinueGuest != null) {
+                      widget.onContinueGuest!();
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
                   child: const Text('暂不登录，使用本机空间'),
                 ),
               ],
@@ -280,3 +294,74 @@ Future<void> showPocketAccountSheet(
     initiallyRegister: initiallyRegister,
   ),
 );
+
+/// A real route for direct login and registration. The Lamp welcome screen is
+/// not built behind this view; mobile and desktop share the native auth form.
+class PocketAccountPage extends StatelessWidget {
+  const PocketAccountPage({
+    super.key,
+    required this.auth,
+    required this.onSuccess,
+    required this.onContinueGuest,
+    required this.onBack,
+    this.initiallyRegister = false,
+  });
+
+  final PocketAuthController auth;
+  final VoidCallback onSuccess;
+  final VoidCallback onContinueGuest;
+  final VoidCallback onBack;
+  final bool initiallyRegister;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      key: const Key('pocket-account-page'),
+      backgroundColor: colors.surface,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        'HAIZ  /  POCKET',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        key: const Key('auth-back'),
+                        onPressed: onBack,
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        label: const Text('返回'),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: colors.outlineVariant),
+                Expanded(
+                  child: PocketAccountSheet(
+                    auth: auth,
+                    onSuccess: onSuccess,
+                    onContinueGuest: onContinueGuest,
+                    initiallyRegister: initiallyRegister,
+                    fullPage: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
