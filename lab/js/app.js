@@ -322,8 +322,11 @@ function updateTurn(dt) {
   } else {
     // 拖动：纸有一点惯性地跟着手；松手后用临界阻尼弹簧滑向终点或弹回
     const w = T.mode === 'drag' ? 26 : 9.5;
-    const ax = w * w * (T.goalX - T.x) - 2 * w * T.vx, az = w * w * (T.goalZ - T.z) - 2 * w * T.vz;
-    T.vx += ax * dt; T.vz += az * dt; T.x += T.vx * dt; T.z += T.vz * dt;
+    // 分小步积分：帧率很低时弹簧也不会发散
+    for (let n = Math.ceil(dt / 0.008), h = dt / n, i = 0; i < n; i++) {
+      const ax = w * w * (T.goalX - T.x) - 2 * w * T.vx, az = w * w * (T.goalZ - T.z) - 2 * w * T.vz;
+      T.vx += ax * h; T.vz += az * h; T.x += T.vx * h; T.z += T.vz * h;
+    }
     if (T.mode === 'settle' && Math.abs(T.goalX - T.x) < 0.03 && Math.abs(T.vx) < 0.4) { T.x = T.goalX; T.z = T.goalZ; book.bend(T.x, T.z); finishTurn(); return; }
   }
   book.bend(T.x, T.z);
@@ -412,8 +415,10 @@ function updatePops(dt) {
       continue;
     }
     const down = sp.popGoal > 0.5, w = down ? 17 : 8.5, zeta = down ? 1 : 0.6;
-    sp.popV += (w * w * (sp.popGoal - sp.pop) - 2 * zeta * w * sp.popV) * dt;
-    sp.pop = Math.min(1, sp.pop + sp.popV * dt);
+    for (let n = Math.ceil(dt / 0.008), h = dt / n, i = 0; i < n; i++) {
+      sp.popV += (w * w * (sp.popGoal - sp.pop) - 2 * zeta * w * sp.popV) * h;
+      sp.pop = Math.min(1, sp.pop + sp.popV * h);
+    }
     if (sp.pop >= 1) sp.popV = Math.min(0, sp.popV);
     stage.setPop(sp.root, sp.pop);
   }
