@@ -36,5 +36,5 @@ jobs:
           node tests/site.cjs
       - name: Install Chromium for mobile viewport and scroll regression
         run: npx playwright install --with-deps chromium
-      - name: Desktop + 390×844 phone WebGL browser regression
-        run: node tests/home-browser.cjs
+      - name: Desktop and 390×844 phone WebGL camera regression
+        run: node tests/home-mobile-browser.cjs
