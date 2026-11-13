@@ -355,6 +355,17 @@ export function attach(ctx, geo) {
   function unfold({ instant = false, history: writeHistory = true } = {}) {
     if (!section || S.mode !== 'map') return;
     if (S.trans?.dir > 0 || (S.u >= 1 && !S.trans)) return;
+    if (section.loadingBlender) {
+      if (S.waitingToUnfold) return;
+      S.waitingToUnfold = true;
+      say('正在载入校园模型…');
+      const hash = location.hash;
+      section.loadBlender().then(() => {
+        S.waitingToUnfold = false;
+        if (S.mode === 'map' && location.hash === hash) unfold({ instant, history: writeHistory });
+      });
+      return;
+    }
     if (S.detail) closeDetail({ keepCamera: true });
     togglePlaces(false);
     const path = S.trans ? S.trans.path : Unfold.unfoldPath({ ...goal }, extent, aspect(), geo.frame.northYaw);
@@ -461,7 +472,7 @@ export function attach(ctx, geo) {
       if (settled >= whole - 0.01) return whole;
       // never rest inside a slab: a cut through one would fill the whole building with ink
       return GROUND_Y + clearOfBands(settled - GROUND_Y, b.bands);
-    });
+    }, S.mode === 'map' ? S.floor?.group : null);
     const sw = Unfold.sweepAt(S.u);
     section.setSweep(sw.f * sweepMax, sw.glow);
   }
@@ -894,8 +905,10 @@ export function attach(ctx, geo) {
 
   // ---------------------------------------------------------------- per frame
   function tick(dt, wall = dt) {
+    if (section && state.p >= 2.55) section.loadBlender();
     const off = Math.abs(state.p - 3);
-    if (restoring && off < 0.008) {
+    const waitingFor3d = restoring?.view === '3d' && section?.loadingBlender;
+    if (restoring && off < 0.008 && !waitingFor3d) {
       const r = restoring;
       restoring = null;
       if (r.soft) { startReveal(4); S.pendingView = r.view; } else enterInstant(r);
@@ -903,7 +916,7 @@ export function attach(ctx, geo) {
     switch (S.mode) {
       case 'tree':
         if (off > 0.05) { S.dwell = 0; S.armed = true; }
-        else if (off < 0.008 && S.armed && !document.hidden && !ctx.busy?.()) { S.dwell += wall; if (S.dwell > (reduce ? 2.5 : DURATION.dwell)) startReveal(W.campus.pinned && S.u >= 0.999 ? 4 : 1); }
+        else if (off < 0.008 && S.armed && !waitingFor3d && !document.hidden && !ctx.busy?.()) { S.dwell += wall; if (S.dwell > (reduce ? 2.5 : DURATION.dwell)) startReveal(W.campus.pinned && S.u >= 0.999 ? 4 : 1); }
         break;
       case 'reveal':
         if (off > 0.02) { S.mode = 'cancel'; body.classList.remove('map-reveal'); say(''); break; }

@@ -40,7 +40,8 @@ export function attachWorld(ctx) {
   const fig = createBody();
   world.scene.add(fig.group);
   // the islet's heightfield covers 8.6 m round the tree (scene.js); beyond it the campus ground
-  const ground = (x, z) => (Math.abs(x) < 8.5 && Math.abs(z) < 8.5 ? Math.max(world.heightAt(x, z), GROUND_Y + 0.02) : GROUND_Y + 0.02);
+  const filmGround = (x, z) => (Math.abs(x) < 8.5 && Math.abs(z) < 8.5 ? Math.max(world.heightAt(x, z), GROUND_Y + 0.02) : GROUND_Y + 0.02);
+  const ground = (x, z) => Math.max(filmGround(x, z), map.section?.walkHeight(x, z) ?? GROUND_Y);
   // the long limb's top surface, found on the bark itself (the walker stands on it)
   const anchors = world.meta.anchors || {};
   const dip = anchors.limbDip || [-6.857, 2.41, 0.772], end = anchors.limbEnd || [-10.706, 3.261, 0.834];
@@ -76,20 +77,23 @@ export function attachWorld(ctx) {
     if (film && k === filmKey) return film;
     filmKey = k;
     const f5 = shot(4), e6 = frame6();
-    film = makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground });
+    film = makeFilm({ e5: { ex: f5.ex, ey: f5.ey, ez: f5.ez, yaw: f5.yaw, pitch: f5.pitch, fov: f5.fov, auth: f5.auth, dist: f5.dist }, e6, limb, land: landing(e6), ground: filmGround });
     return film;
   }
 
   // ---------------------------------------------------------------- what the walker cannot walk through
-  let col = null;
+  let col = null, hullsUsed = null;
   function colliders() {
-    if (col) return col;
     const sec = map.section;
+    const hulls = sec?.walkHulls || null;
+    if (col && hullsUsed === hulls) return col;
     const pl = anchors.plinth;
     const rects = geo.features.filter((f) => f.kind === 'water').map((f) => ({ id: f.id, cx: f.cx, cz: f.cz, hw: f.hw, hd: f.hd, rot: f.rot }));
     if (pl) rects.push({ id: 'hujulongpan', cx: pl.centre[0], cz: pl.centre[2], hw: pl.size[0] / 2 + 0.35, hd: pl.size[1] / 2 + 0.45, rot: pl.yaw });
     const circles = [{ id: 'lanshu', x: 0.1, z: 0, r: 1.15 }, ...geo.trees.map((t, i) => ({ id: 'tree' + i, x: t.x, z: t.z, r: 0.28 }))];
-    col = buildColliders(sec ? sec.buildings : [], { rects, circles }, geo.frame.sheet);
+    if (hulls) rects.push(...hulls);
+    hullsUsed = hulls;
+    col = buildColliders(hulls ? [] : sec?.buildings || [], { rects, circles }, geo.frame.sheet);
     return col;
   }
 
@@ -280,7 +284,7 @@ export function attachWorld(ctx) {
     }
     const c = colliders(), free = freeSpot(c, P.x, P.z);
     let moved = '';
-    if (free.moved > 0) { P.x = free.x; P.z = free.z; moved = `原来的位置在建筑体量里，已移到最近的空地（${free.moved.toFixed(1)} m）。`; }
+    if (free.moved > 0) { P.x = free.x; P.z = free.z; P.y = ground(P.x, P.z); moved = `原来的位置在建筑体量里，已移到最近的空地（${free.moved.toFixed(1)} m）。`; }
     P.vx = P.vz = P.vy = 0; P.air = false; P.crouch = 0; P.amp = 0;
     P.fov = from ? FOV_WALK : (s.fov || FOV_WALK);
     P.fovT = FOV_WALK;
@@ -300,9 +304,24 @@ export function attachWorld(ctx) {
     guided = true;
     try { localStorage.setItem('haiz.walk.guided', '1'); } catch { /* storage blocked */ }
   }
-  function handoff({ resume = false } = {}) {
+  let handoffPending = false;
+  async function handoff({ resume = false } = {}) {
     if (W.owner !== 'hold' && W.owner !== 'scroll') return;
-    if (state.p < 4.99) return;
+    if (state.p < 4.99 || handoffPending) return;
+    if (map.section && !map.section.blender) {
+      const go = $('[data-w="go"]'), resumeButton = $('[data-w="resume"]');
+      handoffPending = go.disabled = resumeButton.disabled = true;
+      go.setAttribute('aria-busy', 'true');
+      const hint = $('.wd-hold-h'), before = hint.textContent;
+      hint.textContent = '正在载入校园模型…';
+      say(hint.textContent);
+      try { await map.section.loadBlender(); } finally {
+        handoffPending = go.disabled = resumeButton.disabled = false;
+        go.removeAttribute('aria-busy');
+        hint.textContent = before;
+      }
+      if (state.p < 4.99 || (W.owner !== 'hold' && W.owner !== 'scroll')) return;
+    }
     const portrait = innerWidth < innerHeight;
     const go = () => {
       if (resume && pendingResume) {
@@ -670,7 +689,7 @@ export function attachWorld(ctx) {
       camera.updateMatrixWorld();
       cam.s.ex = ps.cam.ex; cam.s.ey = ps.cam.ey; cam.s.ez = ps.cam.ez;
       fig.group.visible = ps.body.show && W.hud.body;
-      if (fig.group.visible) fig.set(ps.body, ground(ps.body.x, ps.body.z));
+      if (fig.group.visible) fig.set(ps.body, filmGround(ps.body.x, ps.body.z));
       return;
     }
     if (WALKING.has(W.owner) && W.owner !== 'transit') {

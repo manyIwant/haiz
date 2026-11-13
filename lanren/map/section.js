@@ -1,6 +1,6 @@
 // The campus in three dimensions, inside V4's own world.
 //
-// One model (campus3d.js), three readings of it, all in the same renderer as the
+// The Blender V3 buildings share the renderer and world frame of the
 // tree and the water:
 //   site plan the buildings wait whole beneath the plan the water drew; their
 //             footprints are the plan's own (same features).
@@ -9,7 +9,7 @@
 //   real      a front that starts at the tree's roots turns card into material:
 //             the sun, its shadows, glass, tile, the campus ground and its trees.
 // On request one building can be cut at a storey (its floor plan, poché in ink).
-// Nothing here is a second scene or a picture: the plan and the campus are one model.
+// The plan and sectional solids use the same campus data and anchors.
 //
 // After flat-to-3d 02 (ink and material mixed per pixel by world position) and
 // 06 (one parts list, two worlds, a front expanding from a point), MIT; HAIZ's
@@ -240,6 +240,39 @@ function buildingDepth(U, NB) {
   return m;
 }
 
+// Both the white-card and material passes use the authored geometry. The
+// architectural floor-plan tool still uses its closed, sectional solids.
+function prepareV3Material(material, U, flag = null) {
+  material.onBeforeCompile = shader => {
+    Object.assign(shader.uniforms, U);
+    if (flag) shader.uniforms.uV3Flag = flag;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vCampusWorld;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvCampusWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+varying vec3 vCampusWorld;
+${flag ? NOISE + SHARED + 'uniform vec3 uInkWall, uInkTop, uInkSel; uniform float uDimB, uV3Flag;' : ''}`)
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+if (vCampusWorld.y < ${GROUND_Y.toFixed(3)} - 0.01) discard;`);
+    if (!flag) return;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
+        .replace('getDirectionalLightInfo( directionalLight, directLight );',
+          'getDirectionalLightInfo( directionalLight, directLight ); directLight.color *= hzCampusShadow(vCampusWorld, vec3(0.0, 1.0, 0.0));'))
+      .replace('#include <opaque_fragment>', `
+vec3 face = normalize(cross(dFdx(vCampusWorld), dFdy(vCampusWorld)));
+vec3 ink = mix(uInkWall * (0.78 + 0.15 * abs(face.x)), uInkTop, smoothstep(0.35, 0.8, abs(face.y)));
+if (uV3Flag > 1.5) ink = mix(ink, uInkSel, 0.45);
+else if (uV3Flag > 0.5) ink *= 1.035;
+vec3 lit = outgoingLight * (1.0 - (uV3Flag > 1.5 ? 0.0 : uDimB * 0.16));
+if (uV3Flag > 1.5) lit += uInkSel * 0.06;
+outgoingLight = mix(ink, lit, hzRealAt(vCampusWorld)) + uSweepCol * hzSeam(vCampusWorld);
+#include <opaque_fragment>`);
+  };
+  material.customProgramCacheKey = () => flag ? 'haiz-v3-facade' : 'haiz-v3-depth';
+}
+
 // ---------------------------------------------------------------- the ground in material
 function groundMaterial(U, layerU) {
   // (seen from a person's height, ground in a building's shade lit by the sky alone read as water:
@@ -442,7 +475,8 @@ export function createSection(world, geo, campus, layer) {
   geom.setAttribute('normal', new THREE.BufferAttribute(a.normal, 3, true));
   geom.setAttribute('aEdge', new THREE.BufferAttribute(a.edge, 4, true));
   geom.setAttribute('aInfo', new THREE.BufferAttribute(a.info, 2, true));
-  geom.setIndex(new THREE.BufferAttribute(a.index, 1));
+  const allIndices = new THREE.BufferAttribute(a.index, 1);
+  geom.setIndex(allIndices);
   geom.computeBoundingSphere();
 
   // shadow target: depth only, compared in hardware (a 1-byte colour buffer the shader never reads)
@@ -565,17 +599,92 @@ export function createSection(world, geo, campus, layer) {
   const byGroup = new Map();
   for (const b of model.buildings) { if (!byGroup.has(b.group)) byGroup.set(b.group, []); byGroup.get(b.group).push(b); }
 
-  let sweepR = 0;
+  let sweepR = 0, v3 = null, v3Ready = null, blenderSettled = false, cutGroup = '', activeCut = '';
+  const sectionIndices = new Map();
+  const cutIndex = (groupId) => {
+    if (!sectionIndices.has(groupId)) {
+      const indices = (byGroup.get(groupId) || []).flatMap(({ tris: [start, end] }) =>
+        Array.from(a.index.subarray(start * 3, end * 3)));
+      sectionIndices.set(groupId, new THREE.BufferAttribute(Uint32Array.from(indices), 1));
+    }
+    return sectionIndices.get(groupId);
+  };
+  const v3Depth = new THREE.Group();
+  shadowScene.add(v3Depth);
+  const v3DepthMat = new THREE.MeshDepthMaterial();
+  prepareV3Material(v3DepthMat, U);
+  function installV3(loaded) {
+    v3 = loaded;
+    for (const e of v3.entries) {
+      e.flag = { value: flags[e.building.index] };
+      const materials = new Map();
+      e.root.traverse(object => {
+        if (!object.isMesh) return;
+        const original = object.material;
+        if (!materials.has(original)) {
+          const material = original.clone();
+          prepareV3Material(material, U, e.flag);
+          materials.set(original, material);
+        }
+        object.material = materials.get(original);
+      });
+      e.base = e.root.position.y;
+      e.building.top = Math.max(e.building.top, e.top);
+      // Same geometry in the existing cached campus shadow pass.
+      e.depth = e.root.clone(true);
+      e.depth.traverse(o => { if (o.isMesh) o.material = v3DepthMat; });
+      v3Depth.add(e.depth);
+    }
+    group.add(v3.scene);
+    shadowKey = '';
+    return true;
+  }
+  function updateBuildings() {
+    if (!v3) return;
+    if (cutGroup !== activeCut || geom.index === allIndices) {
+      geom.setIndex(cutIndex(cutGroup));
+      activeCut = cutGroup;
+    }
+    mesh.visible = depthMesh.visible = !!cutGroup;
+    for (const { building: b, root, base, depth } of v3.entries) {
+      root.visible = depth.visible = b.group !== cutGroup && standing(b) > GROUND_Y + 0.01;
+      root.position.y = depth.position.y = base + lifts[b.index];
+    }
+  }
   const api = {
     model, group, mesh, ground, buildings: model.buildings, byGroup, cuts,
     /** per-building cut heights, in the finished campus's y (a building is whole when its cut is above its top) */
-    setCuts(fn) { for (const b of model.buildings) cuts[b.index] = fn(b); },
+    setCuts(fn, groupId) {
+      cutGroup = groupId || '';
+      for (const b of model.buildings) cuts[b.index] = fn(b);
+    },
+    get blender() { return v3?.scene || null; },
+    get walkHulls() { return v3?.hulls || null; },
+    walkHeight(x, z) {
+      let y = GROUND_Y + 0.02;
+      if (!v3) return y;
+      for (const deck of v3.decks) {
+        const dx = x - deck.cx, dz = z - deck.cz;
+        if (Math.abs(dx * deck.c - dz * deck.s) <= deck.hw && Math.abs(dx * deck.s + dz * deck.c) <= deck.hd) y = Math.max(y, deck.y);
+      }
+      return y;
+    },
+    get loadingBlender() { return !!v3Ready && !blenderSettled; },
+    loadBlender() {
+      v3Ready ??= import('./campus-v3.js').then(({ loadCampusV3 }) => loadCampusV3(geo, model.buildings))
+        .then(installV3).catch(error => { console.warn('Blender V3 campus unavailable', error); return false; })
+        .finally(() => { blenderSettled = true; });
+      return v3Ready;
+    },
     /** per-building lift: 0 standing, -(top) and below hidden under the plan */
     setLifts(fn) { for (const b of model.buildings) lifts[b.index] = fn(b); },
     lifts, standing,
     setSweep(R, glow = 0) { sweepR = R; U.uSweepR.value = R; U.uSweepGlow.value = glow; },
     get sweepR() { return sweepR; },
-    setFlags(hover, selected) { for (const b of model.buildings) flags[b.index] = b.group === selected ? 2 : b.group === hover ? 1 : 0; },
+    setFlags(hover, selected) {
+      for (const b of model.buildings) flags[b.index] = b.group === selected ? 2 : b.group === hover ? 1 : 0;
+      if (v3) for (const e of v3.entries) e.flag.value = flags[e.building.index];
+    },
     setDim(v) { U.uDimB.value = v; },
     /** the height a building's label sits at: the top of what is standing */
     topOf(group) {
@@ -606,6 +715,7 @@ export function createSection(world, geo, campus, layer) {
       group.visible = any || sweepR > 0;
       // the plan is ink only: light and shadow are paid for once the material front is on its way
       mesh.material = sweepR > 0.5 ? litMat : inkMat;
+      updateBuildings();
       ground.visible = sweepR > 1;
       for (const t of trees) t.mesh.visible = sweepR > 1;
       U.uCSOn.value = Math.min(1, sweepR / 40);
