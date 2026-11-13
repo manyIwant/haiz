@@ -1,0 +1,39 @@
+name: HAIZ home · one-time lossless mobile texture encoder
+
+on:
+  push:
+    branches: [fix/home-mobile-scroll-loading-20261113]
+    paths:
+      - '.github/workflows/home-textures-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Encode lossless WebP and compare every decoded pixel
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          python scripts/lanren/lossless-webp.py
+      - name: Commit only compressed textures to this review branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add lanren/assets/leaf-atlas-web.webp lanren/assets/leaf-normal-web.webp lanren/assets/leaf-atlas-lo.webp lanren/assets/leaf-normal-lo.webp 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No WebP saved bytes. No files changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "assets(home): lossless WebP leaf atlas textures for mobile"
+          git push origin HEAD:fix/home-mobile-scroll-loading-20261113
