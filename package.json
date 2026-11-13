@@ -26,6 +26,7 @@
     "backend:backup": "node backend/manage.mjs backup",
     "backend:bench": "node backend/benchmark.mjs",
     "test:lab": "node tests/lab-browser.cjs",
+    "capture:lab": "node tests/lab-capture.cjs",
     "test:home": "node tests/lanren.cjs && node tests/home-browser.cjs",
     "test:campus-map": "node tests/campus-map.cjs && node tests/campus-map-browser.cjs",
     "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh && node scripts/lanren/build-home.mjs"

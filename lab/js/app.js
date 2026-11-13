@@ -265,7 +265,7 @@ function startTurn(j, mode, grab) {
   const next = getSpread(j);
   ensureModel(next);
   freeze(cur);
-  cur.leafL.classList.add('away'); cur.leafR.classList.add('away');
+  if (!stacked) { cur.leafL.classList.add('away'); cur.leafR.classList.add('away'); }
   if (document.activeElement && cur.leafL.contains(document.activeElement) || cur.leafR.contains(document.activeElement)) document.activeElement.blur();
   cur.inst?.update?.(0, cur.clock);
   stage.bakePlate(cur.root, cur.plate);
@@ -457,8 +457,8 @@ function renderTeach() {
   box.innerHTML = `<button class="x" type="button" aria-label="关闭">×</button>
     <h3>教师备课 · ${SUBJECTS[exp.subject].name} ${exp.no}</h3><h2>${esc(exp.title)}</h2>
     <h3>教学定位</h3><p><b>${esc(c.kindLabel || '互动演示')}</b> · ${esc(c.stageLabel || '')}${c.grade ? ` · ${esc(c.grade)}` : ''}</p>
-    ${c.book ? `<p>${esc(c.book)}</p>` : t.where ? `<p>${esc(t.where)}</p>` : ''}
-    ${c.basis ? `<p class="basis">依据：${esc(c.basis)}${c.checked ? '' : '（章节位置未逐页核对，请以手头教材为准）'}</p>` : ''}
+    <p>${esc(c.book || t.where || '')}</p>
+    ${c.src ? `<p class="basis">依据：${esc(c.basis || '')}　${c.src.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">来源 ${i + 1}</a>`).join(' · ')}</p>` : '<p class="basis">待核对：章节位置按通行编排填写，尚未对照教材原书逐条核对，请以手头教材为准。</p>'}
     ${t.ask ? `<h3>课堂追问</h3><ul>${t.ask.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>` : ''}
     ${t.simplify ? `<h3>模型做了哪些简化</h3><p>${esc(t.simplify)}</p>` : ''}
     ${t.safety ? `<h3>真实实验提醒</h3><p class="warn">${esc(t.safety)}</p>` : ''}
@@ -576,6 +576,10 @@ function frame(now) {
     if (!qs.has('fixed')) stage.adapt(real * 1000);
   }
 }
+
+// 图形环境被系统回收（切到后台太久、显存紧张）：提示一句，恢复后重新载入当前页
+$('#gl').addEventListener('webglcontextlost', (e) => { e.preventDefault(); $('#fallback').textContent = '图形环境被系统暂时回收，恢复后会自动重新载入这一页。'; $('#fallback').hidden = false; });
+$('#gl').addEventListener('webglcontextrestored', () => location.reload());
 
 const start = Math.max(0, EXPERIMENTS.findIndex((e) => e.id === location.hash.slice(1)));
 (document.fonts?.ready || Promise.resolve()).then(async () => {

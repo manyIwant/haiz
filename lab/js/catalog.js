@@ -7,6 +7,7 @@ import geo from './exp/geo.js';
 import math from './exp/math.js';
 import more from './exp/more.js';
 import hum from './exp/hum.js';
+import base from './exp/base.js';
 import { COURSE, STAGES, KINDS } from './curriculum.js';
 
 export { STAGES, KINDS };
@@ -24,7 +25,7 @@ export const SUBJECTS = {
   pol: { name: '思想政治', short: '政', en: 'Politics & Economics', color: '#d1552e' },
 };
 
-const all = [phy, phy2, chem, bio, geo, math, more, hum];
+const all = [phy, phy2, chem, bio, geo, math, more, hum, base];
 // 按学科排好，同一学科内按教学顺序（order 小的在前；未标注的保持原有先后）
 const order = Object.keys(SUBJECTS);
 export const EXPERIMENTS = all.flat()
