@@ -16,6 +16,8 @@ import 'core/academic_session.dart';
 import 'ui/kit.dart';
 import 'ui/pocket_lamp_entrance.dart';
 import 'ui/pocket_account_sheet.dart';
+import 'ui/pocket_wall_auth_stub.dart'
+    if (dart.library.html) 'ui/pocket_wall_auth_web.dart' as wall_auth;
 import 'ui/pocket_backup_sheet.dart';
 import 'ui/ios_theme.dart';
 import 'ui/today_page.dart';
@@ -104,6 +106,13 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
           final items = await MessageIntakeBridge.entries();
           final now = DateTime.now();
           if (!mounted) return;
+          // A restored account session should not reopen a credential form.
+          if (pocketAuth.authenticated && _showAccountPage) {
+            setState(() {
+              _showAccountPage = false;
+              _entered = true;
+            });
+          }
           if (items.any(
             (item) =>
                 (item.source.startsWith('系统分享') ||
@@ -162,8 +171,8 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                   body: Center(child: CircularProgressIndicator()),
                 );
               }
-              if (_showAccountPage && !pocketAuth.authenticated) {
-                return PocketAccountPage(
+              if (_showAccountPage) {
+                return wall_auth.buildPocketWallAuth(
                   auth: pocketAuth,
                   initiallyRegister: _registerOnAccountPage,
                   onBack: () {

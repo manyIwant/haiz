@@ -94,7 +94,14 @@ test('the PWA opens the same Flutter Supabase login as native, not a legacy HTML
   assert.match(main, /queryParameters\['login'\] == '1'/);
   assert.match(main, /_openAccountLogin\(context\)/);
   assert.match(main, /_showAccountPage && !pocketAuth\.authenticated/);
-  assert.match(main, /return PocketAccountPage\(/);
+  assert.match(main, /return wall_auth\.buildPocketWallAuth\(/);
+  assert.match(main, /dart\.library\.html/);
+  const wallBridge = read('app/lib/ui/pocket_wall_auth_web.dart');
+  assert.match(wallBridge, /\/lamp-preview\//);
+  assert.match(wallBridge, /signIn\(email, secret\)/);
+  assert.match(wallBridge, /signUp\(email, secret\)/);
+  assert.match(wallBridge, /sendReset\(email\)/);
+  assert.match(wallBridge, /stopImmediatePropagation\(\)/);
   assert.doesNotMatch(main, /_loginDeepLinkPending/);
   assert.match(account, /fullPage: true/);
   assert.match(account, /onContinueGuest/);
