@@ -59,7 +59,7 @@ const html = `<!doctype html>
 <script>document.documentElement.classList.add('js')</script>
 <link rel="preload" href="lanren/assets/poster.jpg" as="image" fetchpriority="high">
 <link rel="preload" href="assets/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="lanren/home.css?v=2">
+<link rel="stylesheet" href="lanren/home.css?v=3">
 <link rel="stylesheet" href="assets/css/experience.css?v=13"><script defer src="assets/js/experience.js?v=13"></script>
 <script defer src="lanren/vendor/gsap/gsap.min.js"></script>
 <script defer src="lanren/vendor/gsap/ScrollTrigger.min.js"></script>
@@ -69,7 +69,7 @@ const html = `<!doctype html>
   "three/addons/": "./lanren/vendor/three/addons/"
 } }
 </script>
-<script type="module" src="lanren/js/home.js?v=2"></script>
+<script type="module" src="lanren/js/home.js?v=3"></script>
 </head>
 <body class="home">
 <div class="stage" aria-hidden="true">
