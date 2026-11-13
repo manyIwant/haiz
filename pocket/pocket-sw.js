@@ -8,7 +8,8 @@ const CACHE_PREFIX = 'haiz-pocket-';
 const SHELL_CACHE = CACHE_PREFIX + 'shell-' + HAIZ_VERSION;
 const RUNTIME_CACHE = CACHE_PREFIX + 'assets-' + HAIZ_VERSION;
 const SCOPE = self.registration.scope;
-const PRECACHE_URLS = new Set(HAIZ_PRECACHE.map(path => new URL(path, SCOPE).href));
+const APP_DOCUMENT = new URL('index.html', SCOPE).href;
+const INSTALL_DOCUMENT = new URL('install.html', SCOPE).href;
 
 function isPublicAsset(url) {
   if (url.origin !== new URL(SCOPE).origin || !url.href.startsWith(SCOPE)) {
@@ -17,7 +18,7 @@ function isPublicAsset(url) {
   const relative = url.href.slice(SCOPE.length).split('?')[0];
   return /^(assets|canvaskit|icons)\//.test(relative) ||
     /^ocr\/(vendor\/(tesseract|worker)\.min\.js|core\/tesseract-core[-a-z0-9]*\.wasm(\.js)?|lang\/(chi_sim|eng)\.traineddata\.gz)$/.test(relative) ||
-    /^(main\.dart\.js|flutter\.js|flutter_bootstrap\.js|manifest\.json|pocket-client\.js|pocket-ocr\.js|favicon\.png)$/.test(relative);
+    /^(main\.dart\.js|flutter\.js|flutter_bootstrap\.js|manifest\.json|pocket-client\.js|pocket-ocr\.js|pocket-ui\.css|favicon\.png)$/.test(relative);
 }
 
 self.addEventListener('install', event => {
@@ -67,7 +68,9 @@ self.addEventListener('fetch', event => {
         if (response.ok) return response;
       } catch (_) { /* offline fallback below */ }
       const cache = await caches.open(SHELL_CACHE);
-      return (await cache.match(new URL('index.html', SCOPE).href)) ||
+      // Keep the iPhone installation instructions available offline, too.
+      const documentUrl = url.pathname.endsWith('/install.html') ? INSTALL_DOCUMENT : APP_DOCUMENT;
+      return (await cache.match(documentUrl)) ||
         new Response('HAIZ 离线资源暂不可用，请在联网后重新打开。', {
           status: 503,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
@@ -78,14 +81,18 @@ self.addEventListener('fetch', event => {
 
   if (!isPublicAsset(url)) return;
   event.respondWith((async () => {
-    const cached = await caches.match(request, { ignoreSearch: true });
-    if (cached) return cached;
+    // Only use this worker's caches, not outdated assets from another build.
+    const shell = await caches.open(SHELL_CACHE);
+    const cachedShell = await shell.match(request, { ignoreSearch: true });
+    if (cachedShell) return cachedShell;
+    const runtime = await caches.open(RUNTIME_CACHE);
+    const cachedRuntime = await runtime.match(request, { ignoreSearch: true });
+    if (cachedRuntime) return cachedRuntime;
     try {
       const response = await fetch(request);
       if (response.ok && response.type === 'basic') {
-        const cache = await caches.open(RUNTIME_CACHE);
-        // Limit incremental caching to immutable Flutter static assets.
-        await cache.put(request, response.clone()).catch(() => {});
+        // Only static resources go into this version's runtime cache.
+        await runtime.put(request, response.clone()).catch(() => {});
       }
       return response;
     } catch (_) {
