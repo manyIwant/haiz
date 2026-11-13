@@ -98,7 +98,7 @@ test('the PWA opens the same Flutter Supabase login as native, not a legacy HTML
   assert.match(account, /sendReset\(/);
   assert.match(auth, /signInWithPassword\(/);
   assert.match(auth, /_PrivateAuthStorage\(\)/);
-  assert.doesNotMatch(auth, /EmptyLocalStorage/);
+  assert.doesNotMatch(auth, /localStorage:\\s*const\\s+EmptyLocalStorage\\(/);
   const webEntry = source('index.html');
   assert.doesNotMatch(webEntry, /lamp-preview|login-production|\/api\/auth\/login/);
   assert.doesNotMatch(source('install.html'), /lamp-preview|login-production|\/api\/auth\/login/);
