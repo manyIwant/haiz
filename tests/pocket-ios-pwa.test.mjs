@@ -12,7 +12,7 @@ const source = (name) => read('app/web/' + name);
 test('iPhone installation instructions are the shipped page and lead to the actual app', () => {
   const html = source('install.html');
   assert.equal(built('install.html'), html, 'published page must match Flutter Web source');
-  assert.match(html, /href="\.\/" id="open-pocket"/);
+  assert.match(html, /href="\.\/\?login=1" id="open-pocket"/);
   assert.match(html, /Safari/);
   assert.match(html, /微信/);
   assert.match(html, /添加到主屏幕/);
@@ -83,4 +83,23 @@ test('shipped and source manifests retain the same iOS home-screen identity', ()
   assert.match(html, /<base href="\/pocket\/"/);
   assert.match(html, /apple-mobile-web-app-capable/);
   assert.match(html, /apple-touch-icon/);
+});
+
+
+test('the PWA opens the same Flutter Supabase login as native, not a legacy HTML gateway', () => {
+  const main = read('app/lib/main.dart');
+  const account = read('app/lib/ui/pocket_account_sheet.dart');
+  const auth = read('app/lib/core/pocket_auth.dart');
+  assert.match(main, /PocketAccountSheet|showPocketAccountSheet/);
+  assert.match(main, /queryParameters\['login'\] == '1'/);
+  assert.match(main, /_openAccountLogin\(context\)/);
+  assert.match(account, /signIn\(/);
+  assert.match(account, /signUp\(/);
+  assert.match(account, /sendReset\(/);
+  assert.match(auth, /signInWithPassword\(/);
+  assert.match(auth, /_PrivateAuthStorage\(\)/);
+  assert.doesNotMatch(auth, /EmptyLocalStorage/);
+  const webEntry = source('index.html');
+  assert.doesNotMatch(webEntry, /lamp-preview|login-production|\/api\/auth\/login/);
+  assert.doesNotMatch(source('install.html'), /lamp-preview|login-production|\/api\/auth\/login/);
 });
