@@ -2,11 +2,23 @@
 
 状态：**独立分支候选版，尚未在真实 iPhone / Safari 上验收，未上架 App Store。**
 
+## 登录体系：以 Flutter 为唯一来源
+
+**不要使用旧版 Lamp HTML 的 `/api/auth/login`。** 该旧流程与当前 Flutter 的 Pocket 账号不是同一套认证。
+
+- iPhone 登录入口：打开 `/pocket/?login=1`，直接弹出 Flutter `PocketAccountSheet`，与 Android/iOS Flutter 使用同一份 Dart 代码。
+- 账号认证：`PocketAuthController` 通过 Supabase Auth 使用邮箱/密码登录、注册、邮箱验证与密码重置；个人记录通过 `pocket_snapshots` 且受 RLS 控制。
+- Web PWA 会话：与原生 Flutter 共用 `_PrivateAuthStorage` 接口。在 iPhone Safari 上使用 `flutter_secure_storage` 的 WebCrypto 实现持久化会话。**WebCrypto 网页存储是实验性实现，不能视为 iOS Keychain 的等价安全保护。** HTTPS 与账号存储域必须安全；如果网站遭 XSS，浏览器安全存储也可能失守。
+- 任何恢复的登录都必须通过服务器 `getUser()` 校验才能解锁账号数据；访客空间与每位用户的数据隔离。
+- 已有旧 Lamp 登录凭据不应被暗中迁移或假定与当前 Supabase 账号互通；如是旧系统账户，需要按正式迁移流程处理。
+- 网页存储可能在 Safari 清理时被删除；退出登录会清除会话，访客本地数据仍建议先导出备份。
+- 仅更新安装页并不会更新 Flutter 账号界面；必须**重新运行 `flutter build web`，并同步新的 `main.dart.js` 到 `pocket/`**。独立的 `.github/workflows/pocket-ios-preview-build.yml` 只会将更新后的程序提交到该 PR 分支，不会自动覆盖 `main`。
+
 ## 使用与安装
 
 安装入口：`https://haiz.space/pocket/install.html`；真正的 App 页面是 `https://haiz.space/pocket/`。
 
-iPhone 使用 Safari 打开安装页 → 点击「打开 HAIZ Pocket」→ 进入应用并完成首次加载 → Safari 分享菜单 →「添加到主屏幕」（如有「作为网页 App 打开」则启用）→ 在桌面点击 HAIZ Pocket 图标。
+iPhone 使用 Safari 打开安装页 → 点击「使用 Flutter 账号登录」→ 进入应用并完成首次加载 → Safari 分享菜单 →「添加到主屏幕」（如有「作为网页 App 打开」则启用）→ 在桌面点击 HAIZ Pocket 图标。
 
 **务必从实际 App 页面安装，而不是把安装说明页存到桌面。** 如果在微信或 QQ 内置浏览器，先用 Safari 打开同一 URL。
 
