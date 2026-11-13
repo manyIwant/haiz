@@ -1,8 +1,8 @@
 {
-  "version": "ios-pwa-v1-20261113-917afc2e",
+  "version": "b85c42698149-cf25324bd3df",
   "scope": "/pocket/",
   "offline_asset_count": 28,
-  "offline_asset_bytes": 20665104,
+  "offline_asset_bytes": 20672859,
   "runtime_asset_policy": "same-origin static files only",
   "includes_user_data": false
 }
