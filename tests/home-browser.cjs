@@ -100,6 +100,15 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   assert(overflow <= 0, 'no horizontal overflow on a phone: ' + overflow);
   const tier = await mp.evaluate(() => window.__haizHome.info().tier);
+  // Actual mobile Chromium emulation: a native scroll to 02 must not
+  // overshoot to 03 because a directional snap took the next chapter.
+  assert.equal(await mp.evaluate(() => window.__haizHome.info().mobileTouch), true);
+  await mp.evaluate(() => scrollTo(0, document.getElementById('roots').offsetTop));
+  await mp.waitForFunction(() => window.__haizHome.info().p > 0.75, null, { timeout: 120000 });
+  await mp.waitForTimeout(1250);
+  const phoneP = await mp.evaluate(() => window.__haizHome.info().p);
+  assert(phoneP < 1.35, 'mobile nearest-stop snap does not skip chapter 02: p=' + phoneP);
+  results.push('phone native scroll reaches chapter 02 without directional overshoot');
   // the portrait lens shift must keep the screen's proportions (setViewOffset rewrites camera.aspect)
   await mp.evaluate(() => { window.__haizHome.go(5); window.__haizHome.still(0.1, 20); });
   const shape = await mp.evaluate(() => { const e = window.__haizHome.world.camera.projectionMatrix.elements; return { drawn: e[5] / e[0], screen: innerWidth / innerHeight }; });
