@@ -74,4 +74,52 @@ void main() {
     expect(find.byKey(const Key('account-confirm-password')), findsOneWidget);
     expect(find.byKey(const Key('auth-forgot-password')), findsNothing);
   });
+
+  testWidgets('Full-page login is not a bottom sheet and keeps guest navigation',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final store = PocketStore();
+    final auth = PocketAuthController(
+      store,
+      SupabaseClient('https://example.supabase.co', 'sb_publishable_test'),
+    );
+    auth.client!.auth.stopAutoRefresh();
+    addTearDown(() {
+      auth.dispose();
+      store.dispose();
+    });
+
+    var guestSelected = false;
+    var backSelected = false;
+    await tester.pumpWidget(MaterialApp(
+      home: PocketAccountPage(
+        auth: auth,
+        onSuccess: () {},
+        onContinueGuest: () => guestSelected = true,
+        onBack: () => backSelected = true,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('pocket-account-page')), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('欢迎回来'), findsOneWidget);
+    expect(find.byKey(const Key('account-email')), findsOneWidget);
+    expect(find.byKey(const Key('account-password')), findsOneWidget);
+    expect(find.byKey(const Key('auth-forgot-password')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.ensureVisible(find.byKey(const Key('auth-continue-guest')));
+    await tester.tap(find.byKey(const Key('auth-continue-guest')));
+    expect(guestSelected, isTrue);
+    await tester.tap(find.byKey(const Key('auth-back')));
+    expect(backSelected, isTrue);
+  });
+
 }
