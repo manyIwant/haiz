@@ -35,6 +35,7 @@ export class DwellCamera {
   _bind() {
     // Vertical scrolling stays native (wheel, trackpad, touch); a drag looks around.
     const el = this.dom;
+    const mobileGesture = matchMedia('(pointer: coarse) and (max-width: 760px)').matches;
     const pts = new Map();
     let moved = 0, downT = 0;
     el.addEventListener('pointerdown', (e) => {
@@ -43,7 +44,7 @@ export class DwellCamera {
       moved = 0; downT = performance.now();
       if (e.pointerType !== 'touch') el.setPointerCapture?.(e.pointerId);
       // Finger drags are not camera-look until a horizontal gesture wins.
-      this.dragging = e.pointerType !== 'touch';
+      this.dragging = e.pointerType !== 'touch' || !mobileGesture;
       this.touch();
     });
     el.addEventListener('pointermove', (e) => {
@@ -53,7 +54,7 @@ export class DwellCamera {
       const dx = e.clientX - p.x, dy = e.clientY - p.y;
       p.x = e.clientX; p.y = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
-      if (e.pointerType === 'touch') {
+      if (e.pointerType === 'touch' && mobileGesture) {
         // Browsers allow pan-y on the canvas. Ignore diagonal noise during
         // vertical page swipes instead of accidentally turning the camera.
         p.intent ??= touchIntent(e.clientX - p.startX, e.clientY - p.startY);
