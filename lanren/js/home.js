@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
+import { nearestSnap } from './mobile-gesture.js';
 import { sunPosition, haikouParts } from './sun.js';
 import { UNIFORMS, leafVisible, createHeroLeaves } from './foliage.js';
 import { Specimens } from './specimen.js';
@@ -20,6 +21,8 @@ const params = new URLSearchParams(location.search);
 // a #map/<view>/<place> link (or a reload of one) opens chapter 04's campus plan
 const entry = { hash: location.hash, state: history.state };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Opt-in only on narrow touch-first devices; desktop ScrollTrigger behavior is unchanged.
+const mobileTouch = matchMedia('(pointer: coarse) and (max-width: 760px)').matches;
 const N = CHAPTERS.length;
 const body = document.body;
 const panels = $$('.panel');
@@ -46,7 +49,9 @@ const scrollForStop = (i) => (stops[i] ? stops[i].offsetTop : 0);
 // bottom at the bottom (the page's footer and panels below do not count).
 let knots = null;
 const track = document.getElementById('track');
-const trackRange = () => Math.max(1, track.offsetHeight - innerHeight);
+// Mobile URL bars change innerHeight mid-gesture while CSS stops remain 100svh.
+// Measure against the same stable stop height, not the expanding visual viewport.
+const trackRange = () => Math.max(1, track.offsetHeight - (mobileTouch ? stops[0]?.offsetHeight || innerHeight : innerHeight));
 function measureKnots() {
   const range = trackRange(), top = track.offsetTop;
   knots = stops.map((el, i) => [Math.max(0, Math.min(1, (el.offsetTop - top) / range)), i]);
@@ -105,6 +110,7 @@ function wireScroll() {
   const gsap = window.gsap, ST = window.ScrollTrigger;
   if (gsap && ST) {
     gsap.registerPlugin(ST);
+    if (mobileTouch) ST.config({ ignoreMobileResize: true });
     const mm = gsap.matchMedia();
     mm.add({ calm: '(prefers-reduced-motion: reduce)', full: '(prefers-reduced-motion: no-preference)' }, (ctx) => {
       const calm = ctx.conditions.calm;
@@ -113,11 +119,13 @@ function wireScroll() {
         const p = pFromU(walk.u), nearest = Math.round(p);
         state.p = Math.abs(p - nearest) < 1e-5 ? nearest : p;
       };
-      let snapper = snapDirectional(snapPoints());
+      let points = snapPoints();
+      let snapper = snapDirectional(points);
       const refreshInit = () => measureKnots();
       const refresh = () => {
         measureKnots();
-        snapper = snapDirectional(snapPoints());
+        points = snapPoints();
+        snapper = snapDirectional(points);
         landWalk();
         settle();
       };
@@ -138,10 +146,13 @@ function wireScroll() {
         u: 1, ease: 'none', onUpdate: settle,
         scrollTrigger: {
           trigger: '#track', start: 'top top', end: 'bottom bottom',
-          scrub: calm ? true : 1.15,
-          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : snapper(v, self?.direction || 1)),
-            inertia: false, duration: calm ? 0 : { min: 0.55, max: 1.5 },
-            delay: 0.1, ease: 'power2.inOut' }
+          // Phone: follow native swipe promptly and settle at the *nearest*
+          // station, never force a tiny swipe forward to the next chapter.
+          // Desktop keeps its existing cinematic delay and directional snap.
+          scrub: calm ? true : mobileTouch ? 0.22 : 1.15,
+          snap: { snapTo: (v, self) => (W && !W.policy().scroll ? v : mobileTouch ? nearestSnap(v, points) : snapper(v, self?.direction || 1)),
+            inertia: false, duration: calm ? 0 : mobileTouch ? { min: 0.20, max: 0.46 } : { min: 0.55, max: 1.5 },
+            delay: mobileTouch ? 0.20 : 0.1, ease: 'power2.inOut' }
         }
       });
       return () => {
@@ -456,8 +467,14 @@ async function start3D() {
   if (!ok || navigator.connection?.saveData || params.has('static')) return goStatic();
   body.classList.add('spatial');
   // the campus data loads alongside the tree; the map attaches before the first frame
-  const mapData = params.has('nomap') ? Promise.resolve(null)
-    : import('../map/map.js').then((m) => m.preload({ rotation: compose.rotation }).then((geo) => ({ m, geo }))).catch((err) => { console.warn('campus map unavailable', err); return null; });
+  const loadMapData = () => import('../map/map.js')
+    .then((m) => m.preload({ rotation: compose.rotation }).then((geo) => ({ m, geo })))
+    .catch((err) => { console.warn('campus map unavailable', err); return null; });
+  // Preserve direct links and restored journeys. A fresh mobile opening only
+  // downloads the tree first; campus modules arrive after its first rendered frame.
+  const eagerWorld = !mobileTouch || params.has('capture') || params.has('test') ||
+    /^#(map|walk|recall)(\\/|$)/.test(entry.hash) || (saved?.c ?? 0) >= 3;
+  const mapData = params.has('nomap') ? Promise.resolve(null) : eagerWorld ? loadMapData() : null;
   const { buildScene, pickTier } = await import('./scene.js');
   const tierName = pickTier();
   document.documentElement.dataset.tier = tierName;
@@ -467,11 +484,23 @@ async function start3D() {
     console.error(err);
     return goStatic();
   }
-  setPortrait(innerWidth / innerHeight < 0.85);
+  const canvas = $('#world');
+  const screenAspect = () => canvas.clientWidth / Math.max(1, canvas.clientHeight);
+  setPortrait(screenAspect() < 0.85);
   aimStudy();
   world.resize();
-  addEventListener('resize', () => { world.resize(); if (setPortrait(innerWidth / innerHeight < 0.85) !== undefined) buildOrbitRefresh(); });
-  cam = new DwellCamera(world.camera, $('#world'));
+  // The mobile renderer uses 100lvh. Don't recreate all render targets on
+  // Safari toolbar resize events where the stage itself has not changed.
+  let canvasWidth = canvas.clientWidth, canvasHeight = canvas.clientHeight;
+  addEventListener('resize', () => {
+    const width = canvas.clientWidth, height = canvas.clientHeight;
+    if (mobileTouch && width === canvasWidth && height === canvasHeight) return;
+    canvasWidth = width; canvasHeight = height;
+    world.resize();
+    if (setPortrait(screenAspect() < 0.85) !== undefined) buildOrbitRefresh();
+  });
+  cam = new DwellCamera(world.camera, canvas);
+  if (mobileTouch) addEventListener('scroll', () => cam?.releaseLook(), { passive: true });
   W = createWorldState({ compose, canvas: world.renderer.domElement, cam });
   cam.rail = () => override || life?.rail(state.p) || railAt(state.p);
   const attachMap = (md) => {
@@ -494,12 +523,32 @@ async function start3D() {
       buildOrbitRefresh();
     } catch (err) { console.warn('chapter 02 history unavailable', err); roots = null; stops[1].style.height = ''; }
   }
-  const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
-  if (md === 'late') mapData.then(attachMap); else attachMap(md);
-  // chapter 03: the works canopy grows on the same crown (?nocanopy compares against plain V4)
-  if (!params.has('nocanopy')) {
-    try { canopy = (await import('../canopy/canopy.js')).attach({ world, cam, state, goTo, DwellCamera, reduceMotion, entry, worldState: W }); } catch (err) { console.warn('chapter 03 canopy unavailable', err); canopy = null; }
+  if (mapData) {
+    // Desktop keeps the existing bounded preload wait; mobile deep links
+    // remain eager, but a normal mobile entry does not wait for the map.
+    if (mobileTouch) mapData.then(attachMap);
+    else {
+      const md = await Promise.race([mapData, new Promise((r) => setTimeout(() => r('late'), 4000))]);
+      if (md === 'late') mapData.then(attachMap); else attachMap(md);
+    }
   }
+  const attachCanopy = async () => {
+    if (params.has('nocanopy') || canopy) return;
+    try { canopy = (await import('../canopy/canopy.js')).attach({ world, cam, state, goTo, DwellCamera, reduceMotion, entry, worldState: W }); }
+    catch (err) { console.warn('chapter 03 canopy unavailable', err); canopy = null; }
+    canopy?.arrive(entry);
+  };
+  const eagerCanopy = !mobileTouch || params.has('capture') || params.has('test') ||
+    /^#(leaves|archive)(\\/|$)/.test(entry.hash) || (saved?.c ?? 0) >= 2;
+  if (eagerCanopy) await attachCanopy();
+  // On fresh phones, load later acts after the first 3D frame: no initial
+  // contest between the 3D tree textures and the map/works modules.
+  const defer = (fn) => requestAnimationFrame(() => {
+    if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 2500 });
+    else setTimeout(fn, 650);
+  });
+  if (!mapData && !params.has('nomap')) defer(() => loadMapData().then(attachMap));
+  if (!eagerCanopy && !params.has('nocanopy')) defer(attachCanopy);
   // came back from a page: return to the viewpoint you left from (read before the first setActive)
   // Restore the chapter family before the homepage normalizes the URL.
   const hid = entry.hash === '#walk' ? 'recall'
@@ -512,7 +561,6 @@ async function start3D() {
   wireScroll();
   if (startAt > 0) goTo(startAt, true);
   roots?.arrive(entry);
-  canopy?.arrive(entry);
   cam.snap();
   wireTree();
   loop();
@@ -730,7 +778,8 @@ window.__haizHome = {
   still: (seconds = 1, fps = 30) => { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); },
   lookdev: (eye, look, p, fov = 40) => { override = { ex: eye[0], ey: eye[1], ez: eye[2], lx: look[0], ly: look[1], lz: look[2], fov, dist: Math.hypot(look[0] - eye[0], look[1] - eye[1], look[2] - eye[2]) }; state.p = p; cam.snap(); },
   info: () => ({ active, p: state.p, grow: UNIFORMS.uGrow.value, leaves: world?.canopy.data.count, cam: world && [...world.camera.position.toArray().map((v) => +v.toFixed(2)), +world.camera.fov.toFixed(1), +(world.camera.userData.screen || world.camera.aspect).toFixed(3)],
-    falling: world?.litter.falling.length, settled: world?.litter.settled.length, tier: document.documentElement.dataset.tier })
+    falling: world?.litter.falling.length, settled: world?.litter.settled.length, tier: document.documentElement.dataset.tier,
+    mobileTouch, mapReady: !!map, canopyReady: !!canopy })
 };
 
 if ((params.has('capture') || params.has('test')) && window.gsap) window.gsap.ticker.lagSmoothing(0);   // review stills and slow test renderers

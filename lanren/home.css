@@ -284,3 +284,13 @@ html:not(.js) .track, html:not(.js) .orbit, html:not(.js) .growth, html:not(.js)
 .roots-static img { display: block; width: 100%; max-width: 520px; height: auto; border-radius: 12px; margin: 6px 0 4px; }
 .roots-static small, .roots-static .g { display: block; font-size: 12px; color: var(--ink-3); }
 .roots-static .g a { color: inherit; }
+
+/* Mobile Safari's browser chrome resizes the visual viewport mid-swipe.
+   Anchor WebGL to the stable largest viewport; do not shrink/stretch the
+   framebuffer or recompute the portrait lens as the URL bar moves.
+   Fixed reading panels still follow the visible viewport as before. */
+@media (max-width: 760px) and (pointer: coarse) {
+  @supports (height: 100lvh) {
+    .stage { height: 100lvh; bottom: auto; }
+  }
+}
