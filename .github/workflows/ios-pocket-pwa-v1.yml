@@ -1,0 +1,36 @@
+name: HAIZ iPhone PWA v1 · source and shipped shell
+
+on:
+  pull_request:
+    paths:
+      - 'app/web/**'
+      - 'pocket/index.html'
+      - 'pocket/install.html'
+      - 'pocket/manifest.json'
+      - 'pocket/pocket-client.js'
+      - 'pocket/pocket-sw.js'
+      - 'pocket/pwa-build.json'
+      - 'tests/pocket-ios-pwa.test.mjs'
+      - 'tests/pocket-pwa.test.mjs'
+      - '.github/workflows/ios-pocket-pwa-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify build templates, shipped PWA, privacy and offline assets
+        run: |
+          node --test tests/pocket-ios-pwa.test.mjs tests/pocket-pwa.test.mjs
+          node --check pocket/pocket-sw.js
+          node --check pocket/pocket-client.js
