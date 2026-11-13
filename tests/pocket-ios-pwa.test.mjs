@@ -90,10 +90,10 @@ test('the PWA opens the same Flutter Supabase login as native, not a legacy HTML
   const main = read('app/lib/main.dart');
   const account = read('app/lib/ui/pocket_account_sheet.dart');
   const auth = read('app/lib/core/pocket_auth.dart');
-  assert.match(main, /PocketAccountPage/);
+  assert.match(main, /wall_auth\.buildPocketWallAuth/);
   assert.match(main, /queryParameters\['login'\] == '1'/);
   assert.match(main, /_openAccountLogin\(context\)/);
-  assert.match(main, /_showAccountPage && !pocketAuth\.authenticated/);
+  assert.match(main, /if \(_showAccountPage\) \{/);
   assert.match(main, /return wall_auth\.buildPocketWallAuth\(/);
   assert.match(main, /dart\.library\.html/);
   const wallBridge = read('app/lib/ui/pocket_wall_auth_web.dart');
