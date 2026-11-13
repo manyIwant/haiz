@@ -15,7 +15,6 @@ import 'core/pocket_auth.dart';
 import 'core/academic_session.dart';
 import 'ui/kit.dart';
 import 'ui/pocket_lamp_entrance.dart';
-import 'ui/pocket_account_sheet.dart';
 import 'ui/pocket_wall_auth_stub.dart'
     if (dart.library.html) 'ui/pocket_wall_auth_web.dart' as wall_auth;
 import 'ui/pocket_backup_sheet.dart';
