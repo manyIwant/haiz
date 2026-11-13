@@ -28,6 +28,7 @@
     "test:lab": "node tests/lab-browser.cjs",
     "test:home": "node tests/lanren.cjs && node tests/home-browser.cjs",
     "test:campus-map": "node tests/campus-map.cjs && node tests/campus-map-browser.cjs",
+    "test:seventh": "node tests/seventh.cjs && node tests/seventh-browser.cjs",
     "test:world-clock": "node tests/world-clock.cjs && node tests/world-clock-browser.cjs",
     "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh && node scripts/lanren/build-home.mjs"
   },

@@ -14,12 +14,13 @@
 //
 // Everything is off unless home.js was asked for it (?seventh=1). Ownership goes through state.js ('seventh').
 import * as THREE from 'three';
-import { seatCamera, instantAt, instantOfMs, clampInstant, daylight, growOn, gradeP, boxOf, sixShots, lastLight, noonOf, shadedBy, shadowEdgeAbove, offLight, SPRING, TURNED } from './seat.js';
+import { seatCamera, instantAt, instantOfMs, clampInstant, daylight, growOn, gradeP, boxOf, sixShots, lastLight, noonOf, shadedBy, shadowEdgeAbove, offLight, hourOfLeaf, SPRING, TURNED } from './seat.js';
 import { eveningAt, duskAt, whenAt, solarAt } from '../world/clock.js';
 import { GROW } from '../js/chapters.js';
 import { GROUND_Y, campusAt } from '../world/compose.js';
 import { FILM_SECONDS } from '../world/film.js';
 import { UNIFORMS } from '../js/foliage.js';
+import { buildSlots, resolve } from '../canopy/address.js';
 
 const CSS = new URL('./seventh.css?v=1', import.meta.url).href;
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -83,9 +84,33 @@ export function attach(ctx) {
   }
   const noon = () => noonOf(SPRING[1], rotation);
   const DBG = {};
+  let slotTable = null;
   { const cone = parseFloat(ctx.params?.get('cone')); if (cone > 0) DBG.cone = cone; }
   const culled = new Set();
   W.cull = (b) => S.on && culled.has(b.index);
+  // the campus's trees are instanced: one that stands beyond where the picture begins (towards the sun, on a ray
+  // this low it would stand in front of everything) is drawn at no size, in the picture and in the campus's
+  // shadow map alike (they share their matrices), and is given back when the seat is left
+  let treeSets = null, treeKey = '';
+  function cullTrees(c) {
+    const grp = map.section?.group;
+    if (!grp) return;
+    if (!treeSets) treeSets = grp.children.filter((o) => o.isInstancedMesh).map((mesh) => ({ mesh, own: Float32Array.from(mesh.instanceMatrix.array) }));
+    const on = !!c && c.dist > c.margin;
+    const cd = on ? [(c.eye[0] - c.target[0]) / c.dist, (c.eye[1] - c.target[1]) / c.dist, (c.eye[2] - c.target[2]) / c.dist] : null;
+    const key = on ? [cd[0].toFixed(3), cd[1].toFixed(3), cd[2].toFixed(3), c.margin.toFixed(1), c.target.map((v) => v.toFixed(1))].join() : 'off';
+    if (key === treeKey) return;
+    treeKey = key;
+    for (const { mesh, own } of treeSets) {
+      const a = mesh.instanceMatrix.array;
+      a.set(own);
+      if (on) for (let i = 0; i < own.length; i += 16) {
+        const depth = (own[i + 12] - c.target[0]) * cd[0] + (own[i + 13] + 6 - c.target[1]) * cd[1] + (own[i + 14] - c.target[2]) * cd[2];
+        if (depth > c.margin - 3) for (let k = 0; k < 12; k++) a[i + k] = 0;
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
 
   // ---------------------------------------------------------------- state
   const S = {
@@ -217,7 +242,7 @@ export function attach(ctx) {
   }
   function finish() {
     const to = S.leaving;
-    S.on = false; S.leaving = null; S.u = 0; S.cam = null; S.free = null; culled.clear();
+    S.on = false; S.leaving = null; S.u = 0; S.cam = null; S.free = null; culled.clear(); cullTrees(null);
     restoreCamera();
     body.classList.remove('sv-on', 'sv-seated');
     $('.sv-seat').hidden = true;
@@ -308,6 +333,13 @@ export function attach(ctx) {
     const t = smooth(S.u / TURNED);
     G.aperture = (G.aperture || 0) * (1 - t);
     G.rays = (G.rays || 0) * (1 - 0.85 * t);
+    // looking down a low sun's own light, everything in the picture is lit by it and by nothing else in front:
+    // the last light's colour is the picture's colour (a deeper, redder sun; the frame a little lower in key)
+    const low = (1 - smooth((I.sunEl - 6) / 14)) * t * (DBG.grade ?? 1);
+    if (low > 0) {
+      G.sunCol = G.sunCol.map((v, i) => v + ([1.0, 0.46, 0.2][i] - v) * 0.55 * low);
+      G.I *= 1 + 0.18 * low; G.exposure *= 1 - 0.12 * low; G.contrast += 0.05 * low; G.warm += (0.95 - G.warm) * 0.5 * low; G.sat += 0.04 * low;
+    }
     for (const k of Object.keys(G)) L[k] = G[k];
     shadeAir(L);
     S.grade = pp;
@@ -323,7 +355,7 @@ export function attach(ctx) {
       camera.position.set(f.eye[0], f.eye[1], f.eye[2]); camera.up.set(0, 1, 0); camera.lookAt(look.set(f.look[0], f.look[1], f.look[2]));
       camera.fov = f.fov || 40; camera.near = f.near || 0.08; camera.far = 1200; camera.updateProjectionMatrix();
       const a0 = world.atmosphere?.uniforms; if (a0) { a0.uSkip.value = 0; a0.uOppose.value = 0; }
-      S.cam = null; culled.clear();
+      S.cam = null; culled.clear(); cullTrees(null);
       return true;
     }
     const wide = Math.pow(WIDE_K, clamp(S.u - 1, 0, WIDE) / WIDE);
@@ -343,6 +375,7 @@ export function attach(ctx) {
     // lifts, so the campus's own shadow map leaves the same buildings out (no shadow without its caster)
     culled.clear();
     const sec = map.section;
+    cullTrees(c);
     if (sec && c.dist > c.margin && !S.free) {
       const tgt = c.target, cd = [(c.eye[0] - tgt[0]) / c.dist, (c.eye[1] - tgt[1]) / c.dist, (c.eye[2] - tgt[2]) / c.dist];
       for (const b of sec.buildings) {
@@ -468,6 +501,19 @@ export function attach(ctx) {
       if (lean) { S.lean = [...lean]; S.leanT = [...lean]; S.dragging = true; } else if (lean === null) { S.dragging = false; S.lean = [0, 0]; S.leanT = [0, 0]; }
       inst();
     },
+    /**
+     * A work's own hour (seat.js hourOfLeaf): the instant of the spring when the sun looks most squarely at the
+     * rosette its address names. Read off the tree and the ephemeris; nothing of the work is touched.
+     * goWork(address) sends the seat there. (No interface yet: the works canopy has no public works.)
+     */
+    hourOf(address) {
+      slotTable ||= buildSlots(world.rosettes, world.stride);
+      const i = resolve(address, slotTable);
+      if (i == null) return null;
+      const o = i * world.stride, r = world.rosettes;
+      return hourOfLeaf([r[o], r[o + 1], r[o + 2]], [r[o + 3], r[o + 4], r[o + 5]], boxes, rotation);
+    },
+    goWork(address) { const h = api.hourOf(address); if (h && S.on) goInstant(h.doy, h.minutes); return h && { label: h.label, sunEl: h.sunEl, facing: h.facing }; },
     /** look-dev: a camera anywhere at the seat's instant ({ eye, look, fov }; null: back to the ray) */
     free(f) { S.free = f || null; },
     line: () => $('.sv-line').textContent, noon, get grade() { return S.grade; }, debug: DBG

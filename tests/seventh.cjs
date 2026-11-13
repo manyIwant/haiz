@@ -196,6 +196,33 @@ const norm = (a) => { const l = Math.hypot(...a); return a.map((v) => v / l); };
     checks.push(`the picture begins ${(dusk.margin - walkerDepth).toFixed(1)} m behind the walker at the last light, and behind 一号教学楼 at 01's instant (${dawn.margin.toFixed(0)} m from the centre)`);
   }
 
+  // ------------------------------------------------------------------ a leaf's own hour (the works canopy's addresses)
+  {
+    const AD = await mod('lanren/canopy/address.js');
+    const table = AD.buildSlots(ros, tree.rosetteStride);
+    const demo = JSON.parse(fs.readFileSync(path.join(root, 'lanren/canopy/demo/works.json'), 'utf8'));
+    assert(demo.demo === true, 'the works used here are the repository\'s own development samples, marked fictional');
+    const rows = [];
+    for (const w of demo.works) {
+      const i = AD.resolve(w.address, table);
+      if (i == null) continue;
+      const o = i * tree.rosetteStride, p = [ros[o], ros[o + 1], ros[o + 2]], axis = [ros[o + 3], ros[o + 4], ros[o + 5]];
+      const h = SEAT.hourOfLeaf(p, axis, boxes, B.rotation);
+      assert(h, 'the sun reaches the leaf at ' + w.address + ' at some instant of the spring');
+      // at that instant the sun does reach it, and no other sampled instant of that day faces it more squarely
+      assert(!SEAT.shadedBy(p, h.dir, boxes), 'at its hour the leaf at ' + w.address + ' is in the light');
+      const day = SEAT.daylight(h.doy);
+      for (let m = day.first; m <= day.last; m += 15) { const I = SEAT.instantAt(h.doy, m, B.rotation); if (!SEAT.shadedBy(p, I.dir, boxes)) assert(dot(I.dir, norm(axis)) <= Math.cos(h.facing / R2D) + 1e-6, 'the hour is the day\'s best for ' + w.address); }
+      // deterministic: the same address gives the same hour
+      const again = SEAT.hourOfLeaf(p, axis, boxes, B.rotation);
+      assert(again.doy === h.doy && again.minutes === h.minutes, 'a leaf\'s hour is a pure function of the tree and the ephemeris');
+      rows.push({ address: w.address, hour: h.label, sunEl: +h.sunEl.toFixed(1), facing: +h.facing.toFixed(1) });
+    }
+    assert(rows.length >= 8 && new Set(rows.map((r) => r.hour)).size > rows.length / 2, 'different leaves have different hours');
+    facts.leafHours = { note: 'addresses of the fictional development samples (lanren/canopy/demo/works.json); only the address is read', rows };
+    checks.push(`a leaf's own hour: each of the ${rows.length} sample addresses has one instant of the spring when the sun, clear of the school, looks most squarely at its rosette (e.g. ${rows.slice(0, 3).map((r) => `${r.address} ${r.hour}, ${r.facing}° off its axis`).join('; ')})`);
+  }
+
   // ------------------------------------------------------------------ off unless asked for
   {
     const home = fs.readFileSync(path.join(root, 'lanren/js/home.js'), 'utf8');

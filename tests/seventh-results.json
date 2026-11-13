@@ -87,6 +87,77 @@
       "dusk": 31.9,
       "behindWalker": 7,
       "dawn": 48.5
+    },
+    "leafHours": {
+      "note": "addresses of the fictional development samples (lanren/canopy/demo/works.json); only the address is read",
+      "rows": [
+        {
+          "address": "v4-2611:photo:0",
+          "hour": "5月13日 12:13",
+          "sunEl": 84.6,
+          "facing": 86.7
+        },
+        {
+          "address": "v4-2611:photo:2",
+          "hour": "5月15日 18:29",
+          "sunEl": 7.7,
+          "facing": 9.7
+        },
+        {
+          "address": "v4-2611:words:0",
+          "hour": "5月4日 7:04",
+          "sunEl": 11.7,
+          "facing": 3.2
+        },
+        {
+          "address": "v4-2611:sound:0",
+          "hour": "5月15日 18:49",
+          "sunEl": 3.2,
+          "facing": 43
+        },
+        {
+          "address": "v4-2611:words:1",
+          "hour": "5月15日 7:03",
+          "sunEl": 12.6,
+          "facing": 18.1
+        },
+        {
+          "address": "v4-2611:sound:1",
+          "hour": "5月15日 18:32",
+          "sunEl": 7,
+          "facing": 5.2
+        },
+        {
+          "address": "v4-2611:image:0",
+          "hour": "5月15日 6:53",
+          "sunEl": 10.3,
+          "facing": 67.9
+        },
+        {
+          "address": "v4-2611:image:1",
+          "hour": "5月15日 6:57",
+          "sunEl": 11.2,
+          "facing": 42.5
+        },
+        {
+          "address": "v4-2611:photo:1",
+          "hour": "4月25日 13:08",
+          "sunEl": 79.8,
+          "facing": 75.9
+        },
+        {
+          "address": "v4-2611:code:0",
+          "hour": "4月13日 7:29",
+          "sunEl": 14.6,
+          "facing": 1.8
+        },
+        {
+          "address": "v4-2611:words:2",
+          "hour": "4月21日 7:04",
+          "sunEl": 10,
+          "facing": 3.6
+        }
+      ]
     }
   },
   "checks": [
@@ -98,6 +169,7 @@
     "the last light (5月15日 18:44, 4.4°): from the seat the walker is 0.00 m from the trunk's line; 一号教学楼 stands 16.5 m behind the trunk on it",
     "no seam: entering at 06 the grade is 06's and the growth 06's; leaving into 01 they are 01's; through a day the grade never jumps",
     "the picture begins 7.0 m behind the walker at the last light, and behind 一号教学楼 at 01's instant (48 m from the centre)",
+    "a leaf's own hour: each of the 11 sample addresses has one instant of the spring when the sun, clear of the school, looks most squarely at its rosette (e.g. v4-2611:photo:0 5月13日 12:13, 86.7° off its axis; v4-2611:photo:2 5月15日 18:29, 9.7° off its axis; v4-2611:words:0 5月4日 7:04, 3.2° off its axis)",
     "off unless asked for: home.js loads lanren/seventh only with ?seventh=1; the atmosphere's and the leaves' new terms rest at zero"
   ]
 }

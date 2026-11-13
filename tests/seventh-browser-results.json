@@ -1,0 +1,16 @@
+{
+  "renderer": "Chromium + SwiftShader (software); no GPU, no Safari, no device",
+  "results": {
+    "default": [
+      "default (no flag): no module, no interface, no shade proxy, no culling hook; the atmosphere's new terms are 0; V4's light (no clock)"
+    ],
+    "seventh": [
+      "seat: entered from 06's hold at 5月15日 18:44; the camera is 0.0000° off the sun's ray, 20 km out, lens 0.081°; the walker is seen whole; shots 01–03 unseen by the sun, 04–06 seen",
+      "lean: 0.2 rad of drag is 11.4° out of the light (“离开光的座位，影子就从东西背后出来。”)",
+      "instant: 5月15日 12:36, the sun 88.76° up; the seat looks straight down (“立竿无影。日头在正上方，…”)",
+      "instant: 2月24日 7:41 from the seat: growth 0; “太阳在一号教学楼后面。整棵树都在楼的影子里，第一幕里你站的地方也是：光看不见第一幕。”",
+      "out: 06's hold again, the eye back in the walker's head, the same evening, V4's near and far planes, the atmosphere's terms at 0",
+      "back to the first act: owner scroll, p 0, the eye where 06 stood, 海口 · 2月24日 7:41; 一号教学楼's shade is on the tree"
+    ]
+  }
+}

@@ -121,8 +121,8 @@ export function gradeP(sunEl, minutes, noon, els) {
  *   half     half the height (m) of what the seat frames at the centre
  *   subject  a point the first eye was looking at (sets the plane whose size is kept: the trunk)
  *   lean     [yaw, pitch] radians out of the light (about the centre)
- *   keep     points the picture must not begin in front of (the near plane stands 7 m behind the nearest to the eye)
- * Returns { eye, target, up, fov, near, far, dist, turn, half } (fov vertical, degrees).
+ *   keep     points the picture must not begin in front of (`margin`: 7 m beyond the one nearest the eye, along the view)
+ * Returns { eye, target, up, fov, near, far, dist, turn, half, margin } (fov vertical, degrees).
  */
 export function seatCamera({ from, sun, centre, half, subject, pull = 1, lean = [0, 0], far = FAR, keep = null, aspect = 16 / 9 }) {
   const u = clamp(pull, 0, 1);
@@ -160,7 +160,9 @@ export function seatCamera({ from, sun, centre, half, subject, pull = 1, lean = 
       margin = Math.max(margin, dot(q, c) + 7);
     }
   }
-  const near = Math.max(0.08, dist - margin), farPlane = Math.max(1200, dist + 1100);
+  // (`margin` says where the picture begins; the caller leaves out what stands beyond it. The lens itself only
+  // keeps the depth buffer's slab round the campus)
+  const near = Math.max(0.08, dist - 320), farPlane = Math.max(1200, dist + 1100);
   return { eye, target, up, fov, near, far: farPlane, dist, turn, half: h, d0, margin };
 }
 
@@ -255,3 +257,32 @@ export function lastLight(clock, rotation = 0) {
 }
 /** the noon of a day, as an instant */
 export function noonOf(doy, rotation = 0) { return instantAt(doy, daylight(doy).noon, rotation); }
+
+// ---------------------------------------------------------------- a leaf's own hour
+/**
+ * Every rosette of the crown faces somewhere (rosettes.bin: its axis). Over the film's spring the sun passes
+ * closest to that axis at one instant: the instant the light looks most squarely at that leaf, with nothing of
+ * the school between. A work's address (lanren/canopy/address.js) is a rosette, so every work has, besides its
+ * place, an hour. Nothing about the work is changed or stored: it is read off the tree and the ephemeris.
+ *   p, axis   the rosette's place and unit axis
+ * Returns the instant (instantAt) with `facing`: the angle (degrees) left between the sun and the axis; or null
+ * if the sun never reaches the leaf in the spring.
+ */
+export function hourOfLeaf(p, axis, boxes, rotation = 0, { stepDay = 3, stepMin = 10 } = {}) {
+  const a = norm(axis);
+  let best = null;
+  const tryAt = (doy, m) => {
+    const I = instantAt(doy, m, rotation);
+    const f = dot(I.dir, a);
+    if (best && f <= best.f) return;
+    if (shadedBy(p, I.dir, boxes)) return;
+    best = { f, doy, m };
+  };
+  for (let d = SPRING[0]; d <= SPRING[1]; d += stepDay) { const day = daylight(d); for (let m = day.first; m <= day.last; m += stepMin) tryAt(d, m); }
+  if (!best) return null;
+  // refine round the coarse best: day by day, minute by minute
+  const c = { ...best };
+  for (let d = Math.max(SPRING[0], c.doy - stepDay); d <= Math.min(SPRING[1], c.doy + stepDay); d++) { const day = daylight(d); for (let m = Math.max(day.first, c.m - stepMin); m <= Math.min(day.last, c.m + stepMin); m++) tryAt(d, m); }
+  const I = instantAt(best.doy, best.m, rotation);
+  return { ...I, facing: Math.acos(clamp(best.f, -1, 1)) * R2D };
+}
