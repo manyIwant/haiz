@@ -86,17 +86,21 @@ vec3 leafColour(float age, float sen, float young, float variant){
 export function leafVisible(tE, old, g) { return old > 0 ? g < old : g > tE - LEAF_TIMING.bud; }
 export const GROW_GLSL = /* glsl */`
 uniform float uGrow;
+// look-dev (lanren/seventh, study C): growth as seen through slow light. uCone: an eye (xyz) and how much growth
+// one metre of distance takes back (w; 0: off, and nothing here changes). gLeafAt: the leaf's place, set by the caller.
+uniform vec4 uCone; vec3 gLeafAt = vec3(0.0);
 void leafGrow(float tE, float old, out float u, out float scl, out float young, out float fold, out float erect, out float age){
   age = 0.0;
+  float gNow = uGrow - uCone.w * distance(gLeafAt, uCone.xyz);
   if (old > 0.0) {                       // last year's leaf
     u = 1.0; young = 0.0; fold = 0.0; erect = 0.0;
-    scl = uGrow < old ? 1.0 : 0.0;
-    age = 0.80 + fract(old * 37.0) * 0.32 + smoothstep(old - 0.12, old, uGrow) * 0.15;
+    scl = gNow < old ? 1.0 : 0.0;
+    age = 0.80 + fract(old * 37.0) * 0.32 + smoothstep(old - 0.12, old, gNow) * 0.15;
     return;
   }
-  u = clamp((uGrow - tE) / ${LEAF_TIMING.unfold.toFixed(3)}, 0.0, 1.0);
-  float m = clamp((uGrow - tE - ${LEAF_TIMING.unfold.toFixed(3)} * 0.6) / ${LEAF_TIMING.mature.toFixed(3)}, 0.0, 1.0);
-  scl = uGrow < tE - ${LEAF_TIMING.bud.toFixed(3)} ? 0.0 : mix(0.07, 1.0, smoothstep(0.0, 0.9, u));
+  u = clamp((gNow - tE) / ${LEAF_TIMING.unfold.toFixed(3)}, 0.0, 1.0);
+  float m = clamp((gNow - tE - ${LEAF_TIMING.unfold.toFixed(3)} * 0.6) / ${LEAF_TIMING.mature.toFixed(3)}, 0.0, 1.0);
+  scl = gNow < tE - ${LEAF_TIMING.bud.toFixed(3)} ? 0.0 : mix(0.07, 1.0, smoothstep(0.0, 0.9, u));
   fold = (1.0 - smoothstep(0.1, 0.8, u)) * 1.3;
   erect = (1.0 - smoothstep(0.15, 0.9, u)) * 1.1;
   // bronze while the bud opens, then a bright, thin yellow-green that deepens as it matures
@@ -233,7 +237,9 @@ export const UNIFORMS = {
   uFall: { value: new THREE.Vector4(4, 1, 6, 0) },
   // a person inside the crown (05 → 06, first person): leaves nearer than this (m) dissolve away from the lens,
   // as the eye would look past a leaf an inch from it (0: off)
-  uNearCut: { value: 0 }
+  uNearCut: { value: 0 },
+  // look-dev only (GROW_GLSL): an eye and a rate; w = 0 leaves every leaf exactly as it was
+  uCone: { value: new THREE.Vector4(0, 0, 0, 0) }
 };
 /** GLSL: the falloff of chapter 03's light into the depth of the crown (strength 0: no change) */
 export const FALL_GLSL = /* glsl */`
@@ -280,7 +286,7 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
       .replace('#include <uv_vertex>', `#include <uv_vertex>
 ${loose
     ? 'float variant = aLoose.y; float age = aLoose.x; float scl = 1.0; float young = 0.0; float fold = 0.0; float erect = 0.0; float uu = 1.0;'
-    : 'float variant = aLeaf.z; float uu, scl, young, fold, erect, age; leafGrow(aLeaf.x, aLeaf.y, uu, scl, young, fold, erect, age);'}
+    : 'float variant = aLeaf.z; float uu, scl, young, fold, erect, age; gLeafAt = aRosette.xyz; leafGrow(aLeaf.x, aLeaf.y, uu, scl, young, fold, erect, age);'}
 #ifdef USE_MAP
   vMapUv.x = (variant + vMapUv.x) * 0.25;
 #endif

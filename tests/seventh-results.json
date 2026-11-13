@@ -1,0 +1,103 @@
+{
+  "facts": {
+    "way": {
+      "fov0": 50,
+      "fovSeat": 0.0814,
+      "far": 20000,
+      "lowestEye": 1.21
+    },
+    "shadows": {
+      "atSeat": 0.2,
+      "leaning7": 24.3,
+      "fromTheEye": 132.6
+    },
+    "shots": [
+      {
+        "shot": 1,
+        "instant": "2月24日 7:41",
+        "sunEl": 7.9,
+        "shadedBy": "yihao",
+        "leavesBetween": 0,
+        "seen": false
+      },
+      {
+        "shot": 2,
+        "instant": "3月8日 9:00",
+        "sunEl": 28.2,
+        "shadedBy": "yihao",
+        "leavesBetween": 2,
+        "seen": false
+      },
+      {
+        "shot": 3,
+        "instant": "3月19日 10:00",
+        "sunEl": 44.1,
+        "shadedBy": "yihao",
+        "leavesBetween": 4,
+        "seen": false
+      },
+      {
+        "shot": 4,
+        "instant": "4月15日 16:00",
+        "sunEl": 40.5,
+        "shadedBy": null,
+        "leavesBetween": 0,
+        "seen": true
+      },
+      {
+        "shot": 5,
+        "instant": "5月15日 18:24",
+        "sunEl": 8.8,
+        "shadedBy": null,
+        "leavesBetween": 0,
+        "seen": true
+      },
+      {
+        "shot": 6,
+        "instant": "5月15日 18:44",
+        "sunEl": 4.4,
+        "shadedBy": null,
+        "leavesBetween": 0,
+        "seen": true
+      }
+    ],
+    "morning": {
+      "edgeOverTrunk": [
+        19.2,
+        12.8,
+        6.8
+      ],
+      "crownTop": 15.2,
+      "edgeOverStandAt01": 15.1,
+      "trunkFootLitFrom": "2月24日 13:07",
+      "atSunEl": 60.2
+    },
+    "noon": {
+      "instant": "5月15日 12:36",
+      "sunEl": 88.76,
+      "longestShadow": 0.55
+    },
+    "lastLight": {
+      "instant": "5月15日 18:44",
+      "sunEl": 4.4,
+      "walkerBesideTrunkLine": 0,
+      "schoolBehind": 16.5
+    },
+    "begins": {
+      "dusk": 31.9,
+      "behindWalker": 7,
+      "dawn": 48.5
+    }
+  },
+  "checks": [
+    "the way: from the walker's eye (50° lens) to the seat 20 km off on the sun's ray (0.081° lens); the lens only closes, the eye only recedes, never lower than 1.2 m above the ground",
+    "shadows: a 200 m shadow of a thing 20 m off the axis shows 0.20 m from the seat, 24 m leaning 7° out of the light, 133 m from the walker's own eye",
+    "the six shots: 01 2月24日 7:41 in 一号教学楼's shadow · 02 3月8日 9:00 in 一号教学楼's shadow · 03 3月19日 10:00 in 一号教学楼's shadow · 04 4月15日 16:00 in the light · 05 5月15日 18:24 in the light · 06 5月15日 18:44 in the light",
+    "the morning: the edge of 一号教学楼's shadow stands 19.2 m over the trunk at 01 (crown top 15.2 m; 15.1 m over the standpoint), 12.8 m at 02, 6.8 m at 03; the trunk's foot is reached at 13:07 on the first day, the sun 60° up",
+    "the last day's noon: 5月15日 12:36, the sun 88.76° up; the tallest building (25.2 m) has a shadow 0.55 m long; the seat's picture has chapter 04's north",
+    "the last light (5月15日 18:44, 4.4°): from the seat the walker is 0.00 m from the trunk's line; 一号教学楼 stands 16.5 m behind the trunk on it",
+    "no seam: entering at 06 the grade is 06's and the growth 06's; leaving into 01 they are 01's; through a day the grade never jumps",
+    "the picture begins 7.0 m behind the walker at the last light, and behind 一号教学楼 at 01's instant (48 m from the centre)",
+    "off unless asked for: home.js loads lanren/seventh only with ?seventh=1; the atmosphere's and the leaves' new terms rest at zero"
+  ]
+}

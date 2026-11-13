@@ -1,0 +1,59 @@
+/* The seventh view's interface: a slate, one sentence, a small map of time, two ways out.
+   World tools as in lanren/world/world.css: translucent charcoal, warm light text, 1px edges. */
+.sv { --glass: rgba(16, 30, 25, .58); --edge: rgba(246, 241, 231, .22); --text: #f3eee3; --muted: rgba(243, 238, 227, .64); --gold: #d9b56a;
+  --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+  font: 400 13px/1.5 "Sora", "PingFang SC", "Noto Sans SC", system-ui, sans-serif; color: var(--text); }
+.sv [hidden] { display: none !important; }
+.sv button { font: inherit; color: inherit; cursor: pointer; }
+.sv kbd { font: 500 10px/1 "Sora", system-ui, sans-serif; padding: 2px 5px; border: 1px solid var(--edge); border-radius: 4px; color: var(--muted); margin-left: 6px; }
+.sv-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* the way in: under 06's own step on, quieter than it */
+.sv-enter { position: fixed; z-index: 12; left: 50%; bottom: calc(var(--sb) + 30px); transform: translateX(-50%); display: flex; gap: 12px; align-items: baseline; white-space: nowrap;
+  padding: 8px 18px; border-radius: 999px; background: transparent; border: 1px solid var(--edge); text-shadow: 0 1px 8px rgba(0, 0, 0, .5); animation: sv-in 1.6s cubic-bezier(.22, 1, .36, 1) both; }
+.sv-enter b { font: 500 13px/1.3 "Songti SC", "Noto Serif SC", serif; letter-spacing: .2em; color: var(--gold); }
+.sv-enter span { font: 400 12px/1.3 "Songti SC", "Noto Serif SC", serif; letter-spacing: .08em; color: var(--text); opacity: .86; }
+.sv-enter:hover, .sv-enter:focus-visible { background: var(--glass); }
+@keyframes sv-in { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* in the seat the six-shot film's own words and chrome rest */
+body.sv-on :is(.panels, .orbit, .rail, .growth, .leaders, .bar, .colophon, .wd-hold, #experienceDock), body.sv-on :is(.panels, .orbit, .rail, .growth, .leaders, .bar, .colophon) * { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+body.sv-on #world { cursor: grab; }
+body.sv-on #world:active { cursor: grabbing; }
+.sv-seat { position: fixed; inset: 0; z-index: 12; pointer-events: none; opacity: 0; transition: opacity 1.4s ease; }
+body.sv-seated .sv-seat { opacity: 1; }
+.sv-seat > * { pointer-events: none; }
+body.sv-seated .sv-seat :is(button, .sv-chart) { pointer-events: auto; }
+.sv-slate { position: absolute; left: calc(var(--sl) + 22px); top: calc(var(--st) + 20px); margin: 0; display: grid; gap: 5px; text-shadow: 0 1px 8px rgba(0, 0, 0, .55); }
+.sv-slate b { font: 500 13px/1.3 "Songti SC", "Noto Serif SC", serif; letter-spacing: .24em; color: var(--gold); }
+.sv-when { font: 400 11px/1.3 "Songti SC", "Noto Serif SC", serif; letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--text); opacity: .9; }
+.sv-line { position: absolute; left: calc(var(--sl) + 22px); top: calc(var(--st) + 70px); margin: 0; max-width: min(27em, calc(100vw - 44px)); font: 400 13px/1.9 "Songti SC", "Noto Serif SC", serif; letter-spacing: .06em; text-shadow: 0 1px 10px rgba(0, 0, 0, .6); min-height: 1.9em; }
+.sv-time { position: absolute; left: calc(var(--sl) + 18px); bottom: calc(var(--sb) + 18px); display: grid; gap: 6px; padding: 8px 8px 6px; background: var(--glass); border: 1px solid var(--edge); border-radius: 10px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.sv-chart { width: 236px; height: 124px; display: block; touch-action: none; cursor: crosshair; outline: none; }
+.sv-chart:focus-visible { box-shadow: 0 0 0 1px var(--gold); border-radius: 6px; }
+.sv-day { fill: rgba(243, 238, 227, .07); stroke: rgba(243, 238, 227, .28); stroke-width: .6; }
+.sv-noon { fill: none; stroke: rgba(243, 238, 227, .26); stroke-width: .5; stroke-dasharray: 1.5 2.5; }
+.sv-film { fill: none; stroke: var(--gold); stroke-width: .7; opacity: .7; }
+.sv-shot circle { stroke: var(--gold); stroke-width: .8; }
+.sv-shot.seen circle { fill: var(--gold); }
+.sv-shot.unseen circle { fill: rgba(16, 30, 25, .9); }
+.sv-shot text, .sv-ax { font: 400 7.5px/1 "Sora", system-ui, sans-serif; fill: var(--muted); letter-spacing: .06em; }
+.sv-shot text { fill: var(--text); }
+.sv-cross { stroke: rgba(243, 238, 227, .32); stroke-width: .5; }
+.sv-now { fill: #fff6df; stroke: rgba(16, 30, 25, .5); stroke-width: .6; }
+.sv-acts { display: flex; gap: 4px; }
+.sv-acts button { flex: 1; min-height: 28px; padding: 0; border-radius: 6px; border: 1px solid var(--edge); background: transparent; }
+.sv-acts button b { font: 500 10px/1 "Sora", system-ui, sans-serif; letter-spacing: .1em; }
+.sv-acts button:hover, .sv-acts button:focus-visible { background: rgba(243, 238, 227, .12); }
+.sv-hint { position: absolute; right: calc(var(--sr) + 22px); top: calc(var(--st) + 22px); margin: 0; text-align: right; font-size: 11px; color: var(--text); opacity: .7; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); white-space: nowrap; }
+.sv-go { position: absolute; right: calc(var(--sr) + 18px); bottom: calc(var(--sb) + 18px); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.sv-go button { min-height: 40px; padding: 0 16px; border-radius: 999px; background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font: 400 12px/1.2 "Songti SC", "Noto Serif SC", serif; letter-spacing: .1em; }
+.sv-go button:first-child { background: #f3eee3; color: #172b24; border: 0; font-weight: 600; }
+@media (max-width: 760px) {
+  .sv-hint { display: none; }
+  .sv-line { top: calc(var(--st) + 64px); font-size: 12px; }
+  .sv-time { left: 50%; transform: translateX(-50%); bottom: calc(var(--sb) + 66px); }
+  .sv-go { left: 0; right: 0; justify-content: center; bottom: calc(var(--sb) + 14px); }
+}
+@media (max-height: 460px) { .sv-line { max-width: 22em; } .sv-chart { width: 190px; height: 100px; } }
+@media (prefers-reduced-motion: reduce) { .sv-enter { animation: none; } .sv-seat { transition: none; } }

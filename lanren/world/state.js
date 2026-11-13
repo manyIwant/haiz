@@ -17,6 +17,7 @@
 //     pocket   the pocket map over the walk: the walker stands still, touches are the map's
 //     menu     the pause menu over the walk
 //     transit  a camera flight between two of these (nothing answers input)
+//     seventh  the sun's seat, reached from the hold (lanren/seventh; only with ?seventh=1)
 //
 // Each owner says what the wheel, a drag, a touch and the keys mean, whether the page may
 // scroll and who writes the camera (see POLICY). Pure apart from the DOM it is handed.
@@ -29,7 +30,9 @@ export const POLICY = {
   play: { scroll: false, touch: 'none', v4cam: false, wheel: 'none' },
   pocket: { scroll: false, touch: 'none', v4cam: false, wheel: 'pocket' },
   menu: { scroll: false, touch: 'none', v4cam: false, wheel: 'none' },
-  transit: { scroll: false, touch: 'none', v4cam: false, wheel: 'none' }
+  transit: { scroll: false, touch: 'none', v4cam: false, wheel: 'none' },
+  // the seventh view (lanren/seventh): the camera is on the sun's ray; a drag leans out of the light, the wheel moves along it
+  seventh: { scroll: false, touch: 'none', v4cam: false, wheel: 'seventh' }
 };
 
 export function createWorldState({ compose, canvas = null, cam = null } = {}) {

@@ -262,7 +262,7 @@ const wrap = (a) => { while (a > 180) a -= 360; while (a < -180) a += 360; retur
     let dest = null; W.on('destination', (d) => { dest = d; });
     W.setDestination('library'); assert(dest === 'library' && W.destination === 'library', 'destination announced');
     W.setDestination(null); assert(dest === null, 'destination cleared');
-    for (const [k, pol] of Object.entries(ST.POLICY)) assert(typeof pol.scroll === 'boolean' && ['film', 'map', 'none', 'pocket', 'canopy'].includes(pol.wheel), k + ' policy complete');
+    for (const [k, pol] of Object.entries(ST.POLICY)) assert(typeof pol.scroll === 'boolean' && ['film', 'map', 'none', 'pocket', 'canopy', 'seventh'].includes(pol.wheel), k + ' policy complete');
     checks.push(`ownership: ${seen.join(' · ')}; every owner says whether the page scrolls, what the wheel means, who has the touches and V4's camera`);
   }
 

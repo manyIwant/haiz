@@ -43,7 +43,10 @@ const flag = (name) => {
 // will be seen from; the campus stands round the tree from the start, in the water and the morning's
 // mist, which lifts with the hours; it withdraws into the water as the climb of 02 begins and is back,
 // built, from 04 on. ?world=0 turns it off.
-const worldOn = flag('world') && !!compose.shot6;
+// the seventh view (?seventh=1, lanren/seventh; includes the one place and the clock): from 06's hold the camera
+// can leave the walker along their own shadow's line, back and up into the sun. ?seventh=0 turns it off.
+const seventhOn = flag('seventh') && !!compose.shot6;
+const worldOn = (seventhOn || flag('world')) && !!compose.shot6;
 const clockOn = worldOn || flag('clock');
 const clock = clockOn ? createClock({ rotation: compose.rotation, filmSeconds: FILM_SECONDS }) : null;
 // look-dev only (?clock=1&leaf=sun): 03 on the leaves the real mid-morning sun shines through (see aimStudy).
@@ -53,6 +56,7 @@ let W = null;     // lanren/world/state.js: owner of camera and input, the campu
 let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let roots = null; // 02's history on the same tree; shares the camera and scroll rail
 let canopy = null; // 03's student works tree, enters only on request
+let seventh = null; // the sun's seat (lanren/seventh), reached from 06's hold; only with ?seventh=1
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -620,6 +624,12 @@ async function start3D() {
     if (map && !life) {
       import('../world/world.js').then((m) => {
         life = m.attachWorld({ world, cam, state, poseAt, goTo, DwellCamera, reduceMotion, W, map: map.api, geo: md.geo, chapters: CHAPTERS, setActive: (i) => setActive(i), entry, params, transitOn: () => !!transit, sound });
+        if (seventhOn && !seventh) {
+          import('../seventh/seventh.js').then((s) => {
+            seventh = s.attach({ world, cam, state, W, life, map: map.api, geo: md.geo, DwellCamera, reduceMotion, params, entry, poseAt, lightAt, duskGrade, morningAir,
+              toFirst: () => { override = null; transit = null; goTo(0, true); state.p = 0; cam.snap(); setActive(0); }, toSixth: () => { override = null; transit = null; goTo(5, true); state.p = 5; cam.snap(); }, slate: (label) => { if (slateEl) { slateKey = label; slateEl.textContent = '海口 · ' + label; } } });
+          }).catch((err) => console.warn('seventh view unavailable', err));
+        }
       }).catch((err) => console.warn('walk unavailable', err));
     }
   };
@@ -812,8 +822,10 @@ function step(dt, wallDt = dt) {
   map?.tick(dt, wallDt);
   life?.tick(dt, wallDt);
   canopy?.tick(dt, wallDt);
-  // growth and the light of the day follow the walk
-  const grow = canopy ? canopy.grow(growAt(pl)) : growAt(pl);
+  seventh?.tick(dt, wallDt);
+  // growth and the light of the day follow the walk (from the sun's seat: the day the seat is at)
+  const grow0 = canopy ? canopy.grow(growAt(pl)) : growAt(pl);
+  const grow = seventh ? seventh.grow(grow0) : grow0;
   const L = lightAt(pl);
   // the world's clock: the sun is where it really stands at this instant over this campus (the shot's
   // colours, haze and exposure stay the shot's own); the evening's last minutes deepen with the sun
@@ -830,6 +842,7 @@ function step(dt, wallDt = dt) {
   map?.light(L);
   roots?.light(L, p);
   canopy?.light(L);
+  seventh?.light(L);
   const rail = override || life?.rail?.(p) || railAt(p);   // (05 → 06: the film's own lens and focus)
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
@@ -841,9 +854,10 @@ function step(dt, wallDt = dt) {
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  if (!map?.camera(dt, wallDt) && !life?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
+  if (!seventh?.camera(dt, wallDt) && !map?.camera(dt, wallDt) && !life?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   life?.after(dt, wallDt);
+  seventh?.after(dt, wallDt);
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
   if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
     openingFall = 1.6 + Math.random() * 2.4;
@@ -931,7 +945,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
+  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get seventh() { return seventh?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
   get transit() { return transit && { i: transit.i, p0: transit.p0, pv: +transit.pv.toFixed(3) }; },
   /** the world's clock (null unless ?clock=1): clock.at(p) → { label, sunAz, sunEl, evening, dusk } */
   get clock() { return W?.clock || null; },

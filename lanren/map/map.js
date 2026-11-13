@@ -435,6 +435,7 @@ export function attach(ctx, geo) {
     const live = !S.trans && S.mode === 'map';
     section.setLifts((b) => {
       if (!gate) return -(b.top + 1);
+      if (ctx.worldState?.cull?.(b)) return -(b.top + 2);   // (lanren/seventh: left out of the sun's-seat picture, whole)
       if (S.mode !== 'map') { const e = Unfold.riseAt(S.u, order.get(b.index)); S.floorK.set(b.index, e); return -(1 - e * e * (3 - 2 * e)) * (b.top + 1); }
       const asked = S.floor && S.floor.group === b.group;
       // the chosen building rises on its own on the plan; everything follows u exactly while the campus changes form

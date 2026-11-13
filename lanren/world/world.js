@@ -726,6 +726,7 @@ export function attachWorld(ctx) {
   function after() {
     // in the crown with the person's own eyes, a leaf at the lens is looked past (foliage.js uNearCut)
     UNIFORMS.uNearCut.value = filmOn() && state.p - 4 > PHASE.self[0] && state.p - 4 < PHASE.land[0] ? 1.3 : WALKING.has(W.owner) ? 0.7 : 0;
+    if (W.owner === 'seventh') return;   // (lanren/seventh has the camera and stands the walker where the film left them)
     if (filmOn()) {
       const ps = getFilm().pose(state.p - 4);
       // the eye is exactly in the walker's head (the look may still be easing: V4's camera turns it)
@@ -803,6 +804,8 @@ export function attachWorld(ctx) {
     get owner() { return W.owner; },
     get player() { return { ...P }; },
     film: (q) => getFilm().pose(q),
+    /** the walker's figure and the ground under it (lanren/seventh stands it at 06 while the eye is elsewhere) */
+    figure: fig, ground,
     get facts() { return getFilm().facts; },
     limb, beats: BEATS,
     handoff: (o) => handoff(o || {}), back6, toChapter, restart, openPocket, closePocket, openMenu, closeMenu, toFullMap,

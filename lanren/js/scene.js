@@ -42,7 +42,14 @@ const AtmosphereShader = {
     uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uSunScreen: { value: new THREE.Vector3(0.5, 0.5, 0) },
     uSunCol: { value: new THREE.Color() }, uFogCol: { value: new THREE.Color() },
     uDensity: { value: 0.02 }, uFalloff: { value: 0.12 }, uMist: { value: 0.5 }, uRays: { value: 0.5 },
-    uTime: { value: 0 }, uWater: { value: -0.85 }, uAspect: { value: 1.78 }
+    uTime: { value: 0 }, uWater: { value: -0.85 }, uAspect: { value: 1.78 },
+    // the air starts this far in front of the lens (0: at the lens). A lens kilometres off (lanren/seventh) does not
+    // look through kilometres of haze: the haze is the place's own, counted from where the place begins
+    uSkip: { value: 0 }, uOppose: { value: 0 },
+    // one building's shadow as a volume in the mist (lanren/seventh: 一号教学楼 before the morning sun clears it): the
+    // air the sun reaches glows, the air in the shadow does not. uShade 0: off. Box: centre x/z, half width/depth;
+    // RT: cos and sin of its turn, and its top (world y)
+    uShade: { value: 0 }, uShadeBox: { value: new THREE.Vector4() }, uShadeRT: { value: new THREE.Vector3(1, 0, 0) }
   },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
@@ -51,7 +58,21 @@ uniform sampler2D tDiffuse; uniform sampler2D tDepth;
 uniform mat4 uProjInv; uniform mat4 uViewInv; uniform vec3 uCamPos;
 uniform vec3 uSunDir; uniform vec3 uSunScreen; uniform vec3 uSunCol; uniform vec3 uFogCol;
 uniform float uDensity; uniform float uFalloff; uniform float uMist; uniform float uRays; uniform float uTime; uniform float uWater; uniform float uAspect;
+uniform float uSkip; uniform float uOppose;
+uniform float uShade; uniform vec4 uShadeBox; uniform vec3 uShadeRT;
 varying vec2 vUv;
+// 1 where the sun reaches p past the box, 0 in its shadow (a soft edge under the eaves' line)
+float shadeLit(vec3 p){
+  vec2 o = p.xz - uShadeBox.xy;
+  vec2 lo = vec2(o.x * uShadeRT.x - o.y * uShadeRT.y, o.x * uShadeRT.y + o.y * uShadeRT.x);
+  vec2 ld = vec2(uSunDir.x * uShadeRT.x - uSunDir.z * uShadeRT.y, uSunDir.x * uShadeRT.y + uSunDir.z * uShadeRT.x);
+  vec2 d = vec2(abs(ld.x) < 1e-5 ? 1e-5 : ld.x, abs(ld.y) < 1e-5 ? 1e-5 : ld.y);
+  vec2 ta = (-uShadeBox.zw - lo) / d, tb = (uShadeBox.zw - lo) / d;
+  vec2 tmn = min(ta, tb), tmx = max(ta, tb);
+  float t0 = max(max(tmn.x, tmn.y), 0.0), t1 = min(tmx.x, tmx.y);
+  if (t1 < t0) return 1.0;
+  return smoothstep(-1.0, 1.0, p.y + t0 * uSunDir.y - uShadeRT.z);
+}
 float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
@@ -66,15 +87,16 @@ void main(){
   bool sky = d >= 0.99999;
   vec3 wp = worldAt(vUv, sky ? 0.9999 : d);
   vec3 rd = wp - uCamPos;
-  float dist = sky ? 700.0 : length(rd);
+  float dist = sky ? 700.0 : max(0.0, length(rd) - uSkip);
   rd = normalize(rd);
+  vec3 ro = uCamPos + rd * uSkip;
   // exponential height fog, integrated along the ray (closed form)
   float b = uFalloff;
-  float h0 = uCamPos.y - uWater;
+  float h0 = ro.y - uWater;
   float ry = abs(rd.y) < 1e-4 ? 1e-4 : rd.y;
   float fogAmt = uDensity * exp(-h0 * b) * (1.0 - exp(-dist * ry * b)) / (ry * b);
   // drifting mist close to the water
-  vec2 mp = (uCamPos.xz + rd.xz * min(dist, 60.0)) * 0.06 + vec2(uTime * 0.012, uTime * 0.005);
+  vec2 mp = (ro.xz + rd.xz * min(dist, 60.0)) * 0.06 + vec2(uTime * 0.012, uTime * 0.005);
   float mist = (vn(mp) * 0.6 + vn(mp * 2.7) * 0.4);
   float low = exp(-max(0.0, (sky ? 2.0 : wp.y) - uWater) * 0.55);
   fogAmt += uMist * mist * low * (1.0 - exp(-dist * 0.035)) * 0.9;
@@ -82,6 +104,15 @@ void main(){
   if (sky) fogAmt *= 0.35 * smoothstep(0.35, 0.0, rd.y);
   float mie = pow(max(dot(rd, uSunDir), 0.0), 7.0);
   vec3 fogC = uFogCol + uSunCol * mie * 0.55;
+  if (uShade > 0.0) {
+    float reach = min(dist, 110.0), acc = 0.0;
+    float jt = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    for (int i = 0; i < 12; i++) acc += shadeLit(ro + rd * (reach * (float(i) + jt) / 12.0));
+    fogC += uSunCol * uShade * (acc / 12.0 - 0.5);
+  }
+  // looking exactly down the light, every small shadow (leaf on leaf, grain on grain) is hidden behind what casts
+  // it, and the world is a little brighter there: the opposition surge, the glow round one's own shadow's head
+  if (uOppose > 0.0 && !sky) { float ph = acos(clamp(dot(-rd, uSunDir), -1.0, 1.0)); col.rgb *= 1.0 + uOppose * exp(-ph * 9.0); }
   vec3 c = mix(col.rgb, fogC, clamp(fogAmt, 0.0, 1.0));
   // light shafts (volumetric light scattering): march towards the sun on
   // screen, collecting only the bright sky right around the sun, so the
@@ -451,6 +482,6 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   return {
     renderer, scene, camera, sun, canopy, bark, island, water, grass, litter, meta, rosettes, stride,
-    heightAt, inIsland, setStage, resize, render, tier, composer
+    heightAt, inIsland, setStage, resize, render, tier, composer, atmosphere: atmo
   };
 }
