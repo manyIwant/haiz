@@ -3,6 +3,8 @@
   const base = document.baseURI;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/.test(navigator.userAgent) &&
+    !/CriOS|FxiOS|EdgiOS|OPiOS|MicroMessenger|QQ\/|Weibo|DingTalk|AlipayClient/.test(navigator.userAgent);
   const standalone = () => window.matchMedia('(display-mode: standalone)').matches ||
     navigator.standalone === true;
   let updateRegistration = null;
@@ -40,7 +42,7 @@
   function updateAvailable(registration) {
     if (!navigator.serviceWorker.controller || !registration.waiting) return;
     updateRegistration = registration;
-    showNotice('HAIZ 有新版本。现在更新不会清除浏览器中的个人记录。',
+    showNotice('HAIZ 有新版本。更新仅替换程序资源；重要记录仍建议先在 App 内备份。',
       '更新并重新打开', () => {
         const worker = updateRegistration?.waiting;
         if (!worker) return;
@@ -55,7 +57,9 @@
       if (sessionStorage.getItem('haiz-install-guide-dismissed') === '1') return;
       sessionStorage.setItem('haiz-install-guide-dismissed', '1');
     } catch (_) { /* storage may be unavailable in private mode */ }
-    showNotice('可免费将 HAIZ 添加到 iPhone 主屏幕，像 App 一样打开。',
+    showNotice(isSafari
+      ? '可以将 HAIZ Pocket 添加到 iPhone 主屏幕，像 App 一样打开。'
+      : '请在 Safari 打开 HAIZ Pocket，再添加到主屏幕。',
       '安装方法', () => {
         location.href = new URL('install.html', base).href;
       });
@@ -93,6 +97,7 @@
         registration.update().catch(() => {});
       };
       window.addEventListener('focus', maybeCheck);
+      window.addEventListener('pageshow', maybeCheck);
       document.addEventListener('visibilitychange', maybeCheck);
       if (!registration.waiting) setTimeout(installGuide, 2400);
     } catch (error) {

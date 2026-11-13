@@ -32,7 +32,7 @@
 - [HAIZ 实验册](lab/)：摊开在桌上的立体实验书，可以点页边、拖页角翻页；理科、技术与语文、英语、历史、思想政治共 45 个课堂互动页，见 [第二代重构说明](docs/lab-book-gen2-20261112.md) 与 [第一版设计与来源说明](docs/lab-book-20261111.md)。
 - [共感暗房](darkroom.html)：影像显影、笔触转音乐、PNG 和 WAV 输出。
 - [课间窗台](windowsill/)：独立 AGPL-3.0 代码模块，参见 [来源和许可](windowsill/SOURCE.md)。
-- [HAIZ Pocket](app/README.md)：Flutter 学生应用与网页预览；安装包优先查看 [GitHub Releases](https://github.com/manyIwant/haiz/releases)。
+- [HAIZ Pocket](app/README.md)：Flutter 学生应用与网页预览；[iPhone 免费主屏幕安装（候选版）](pocket/install.html) 和 [真实设备验收说明](docs/HAIZ-POCKET-IOS-PWA-V1.md)，Android 安装包见 [GitHub Releases](https://github.com/manyIwant/haiz/releases)。
 - [独立账号后端](backend/README.md)：Node.js 24 + SQLite 的注册、数据及设备会话服务。**GitHub Pages 不能运行 Node 后端**；静态页面上线不代表服务端功能已部署。
 
 ## 本地运行

@@ -2,6 +2,7 @@
 
 HAIZ Pocket 是面向校园的非官方、本地优先学习工具。Android 预览版与 Web 预览版使用同一套 Flutter 页面、任务和收件逻辑，Android 支持获授权的指定群通知接收，iOS Share Extension 支持用户主动分享；班级任务同步须部署独立 HAIZ Academic HTTPS 服务。
 
+- **iPhone 网页 App（PWA）候选版：**安装说明 https://haiz.space/pocket/install.html ，源码和第一版真机验收标准见 [iOS PWA v1 说明](../docs/HAIZ-POCKET-IOS-PWA-V1.md)。这不是 IPA、App Store 版或已经过真机验收的稳定版本。
 - 网页可交互预览：https://haiz.space/app-preview/inspect.html
 - Android 正式签名 APK：[`HAIZ Android v1.5.0`](https://github.com/manyIwant/haiz/releases/tag/haiz-android-v1.5.0)（包名与旧 v1.4.0 相同、原证书签名，可在系统安装确认后覆盖升级）
 - Android 当前正式版本：`1.5.0+2100`（旧版 `1.4.0+2008`）

@@ -57,6 +57,9 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
   // Web Lamp gateway already displayed the entrance. Open the actual
   // device-local Flutter workspace directly after explicit CTA navigation.
   bool _entered = kIsWeb && Uri.base.queryParameters['fromLamp'] == '1';
+  // Public entry for the same Flutter PocketAccountSheet used on native builds.
+  // This is never the separate legacy /api/auth/login HTML gateway.
+  bool _loginDeepLinkPending = kIsWeb && Uri.base.queryParameters['login'] == '1';
   bool showLab = false;
   bool showAcademic = false;
   bool _hasAppUpdate = false;
@@ -157,6 +160,14 @@ class _HaizPocketAppState extends State<HaizPocketApp> with WidgetsBindingObserv
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );
+              }
+              if (_loginDeepLinkPending) {
+                _loginDeepLinkPending = false;
+                if (!pocketAuth.authenticated) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && context.mounted) _openAccountLogin(context);
+                  });
+                }
               }
               if (!_entered && !pocketAuth.authenticated) {
                 return Stack(

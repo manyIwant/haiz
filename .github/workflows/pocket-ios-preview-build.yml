@@ -1,0 +1,101 @@
+name: HAIZ iPhone PWA · compile current Flutter login into preview branch
+
+on:
+  push:
+    branches:
+      - feat/ios-pocket-pwa-first-release-20261113
+    paths:
+      - 'app/lib/**'
+      - 'app/web/**'
+      - 'app/pubspec.yaml'
+      - 'scripts/build-pocket-pwa.mjs'
+      - '.github/workflows/pocket-ios-preview-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: haiz-ios-pwa-preview-branch
+  cancel-in-progress: false
+
+jobs:
+  compile:
+    if: github.ref == 'refs/heads/feat/ios-pocket-pwa-first-release-20261113'
+    name: Build real Flutter Web from the same app/lib as Android and iOS
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Compile and verify native-equivalent Flutter account form
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test test/pocket_registration_ui_test.dart test/pocket_auth_config_test.dart test/pocket_auth_isolation_test.dart test/pocket_lamp_entrance_test.dart
+      - name: Provide bundled private OCR in browser without third-party runtime CDN
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/haiz-ocr-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund \
+            tesseract.js@7.0.0 tesseract.js-core@7.0.0 \
+            @tesseract.js-data/eng@1.0.0 @tesseract.js-data/chi_sim@1.0.0
+          node scripts/prepare-pocket-ocr.mjs "$RUNNER_TEMP/haiz-ocr-deps/node_modules"
+      - name: Build PWA directly from current Flutter source
+        working-directory: app
+        run: flutter build web --release --base-href /pocket/ --no-web-resources-cdn --no-wasm-dry-run
+      - name: Generate versioned offline shell
+        run: |
+          node scripts/build-pocket-pwa.mjs app/build/web
+          test -s app/build/web/main.dart.js
+          test -s app/build/web/pocket-sw.js
+          node --check app/build/web/pocket-sw.js
+          node --check app/build/web/pocket-client.js
+          ! grep -q '__HAIZ_PRECACHE__' app/build/web/pocket-sw.js
+      - name: Stage rebuilt Flutter program only under the Pocket prefix
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat CNAME)" = haiz.space
+          before_index="$(sha256sum index.html | cut -d' ' -f1)"
+          rsync -a --delete app/build/web/ pocket/
+          test "$(sha256sum index.html | cut -d' ' -f1)" = "$before_index"
+          node --test tests/pocket-ios-pwa.test.mjs tests/pocket-pwa.test.mjs
+          git add -A pocket/
+          changed="$(git diff --cached --name-only | grep -Ev '^pocket/' || true)"
+          test -z "$changed"
+      - name: Commit the actual compiled Flutter login to this review branch, never main
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "Flutter PWA already matches the source"
+            exit 0
+          fi
+          source_sha="$(git rev-parse HEAD)"
+          remote_sha="$(git ls-remote origin refs/heads/feat/ios-pocket-pwa-first-release-20261113 | cut -f1)"
+          if [[ "$source_sha" != "$remote_sha" ]]; then
+            echo "::error::Preview branch changed during build; refuse stale artifact"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build(ios-pwa): ship current Flutter Supabase login and app runtime"
+          git push origin HEAD:feat/ios-pocket-pwa-first-release-20261113
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-pocket-ios-flutter-login-preview
+          path: app/build/web/
+          if-no-files-found: error
+          retention-days: 14
