@@ -213,3 +213,38 @@ body.stacked #bar button{width:36px;height:36px}
 body.stacked #bReset,body.stacked #bFull{display:none}
 body.stacked #teach,body.stacked #notebook{top:auto;left:8px;right:8px;width:auto;bottom:76px;max-height:62vh;transform:none}
 @media (prefers-reduced-motion:reduce){.flap-top{transition:opacity .2s}}
+
+/* ---------- 第三代：活的公式、页面上的活图、知识的笔法 ---------- */
+.leaf .scrub,.leaf .pfig-c,.leaf .law .cond{pointer-events:auto}
+.formula.law{padding:8px 14px 9px;margin:8px 0 8px;height:140px;overflow:hidden}
+#flow .formula.law{height:auto}
+.law .f{font:italic 500 25px/1.25 var(--latin);letter-spacing:.01em;white-space:nowrap}
+.law .f .n{font-style:normal}
+.law .row{font:13.5px/1.55 var(--latin);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.law .row b{color:var(--ink);font-weight:600}
+.law .row .cu{color:var(--copper)}
+.scrub{cursor:ew-resize;border-bottom:1.5px dotted var(--copper);color:var(--copper);font-style:normal;padding:0 1px;border-radius:2px;touch-action:none;user-select:none;-webkit-user-select:none}
+.scrub:hover,.scrub.on{background-color:#b4653a1f}
+.law .conds{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:5px;font-size:11.5px;line-height:1.45;color:var(--ink2)}
+.law .cond{position:relative;white-space:nowrap}
+.law .cond i{font-style:normal;color:var(--copper);margin-right:3px}
+.law .cond.broken{color:#a9483e}
+.law .cond s{text-decoration:none}
+.law .cond.broken s{text-decoration:line-through;text-decoration-color:#c2453a;text-decoration-thickness:1.5px}
+.law .cond .why{display:none;font:13px/1 var(--hand);color:#c2453a;margin-left:4px}.law .cond.broken .why,.law .cond.warn .why{display:inline}.law .cond.warn{color:#8a5a2a}.law .cond.warn .why{color:#8a5a2a}
+.law .more{margin-top:5px;padding-top:5px;border-top:1px dotted #1e2b3633;font:13.5px/1.5 var(--latin);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.law .more small{font:11px var(--serif);color:var(--ink2)}
+.law .more .err{font:15px var(--hand);color:#c2453a;margin-left:6px}
+.pfig{margin:4px 0 8px}
+.pfig-c{position:relative;touch-action:none;cursor:crosshair}
+.pfig-c canvas{display:block;width:100%;height:100%}
+.pfig figcaption{font-size:11.2px;line-height:1.45;color:var(--ink2);margin-top:2px}
+.pfig figcaption b{font:italic 600 12.5px var(--latin);color:var(--copper);margin-right:4px}
+.kt{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.kt i{display:inline-block;width:16px;height:0;border-top:2px solid currentColor}
+.kt-theory{color:var(--copper)}.kt-theory i{border-top-style:dashed}
+.kt-model{color:var(--ink)}
+.kt-simulated i{width:7px;height:7px;border:1.4px solid currentColor;border-radius:50%}
+.kt-human{color:#1f4a3e}.kt-human i{width:7px;height:7px;border:0;border-radius:50%;background-color:currentColor}
+#flow .law .f{font-size:22px;white-space:normal}
+#flow .law .row,#flow .law .more{white-space:normal}

@@ -1,6 +1,6 @@
 // Captures the documentation stills and run recordings for the HAIZ lab book into docs/lab/.
 // Frames are stepped on a virtual clock (so software rendering still yields a smooth 30 fps recording)
-// and driven with real pointer / touch events. Needs ffmpeg for the videos.  node tests/lab-capture.cjs [stills|video|phone]
+// and driven with real pointer / touch events. Needs ffmpeg for the videos.  node tests/lab-capture.cjs [stills|video|phone|gen3|gen3video]
 const { chromium } = require('playwright');
 const { execFileSync } = require('node:child_process');
 const http = require('node:http');
@@ -19,6 +19,7 @@ const clock = () => {
   performance.now = () => (vt.on ? vt.now : realNow());
   window.requestAnimationFrame = (cb) => { if (!vt.on) return realRAF(cb); q.push([++id, cb]); return id; };
   vt.enable = () => { vt.now = realNow(); vt.on = true; };
+  vt.pending = () => q.length;   // 页面的主循环已经挂到虚拟时钟上了吗
   vt.step = (n = 1, dt = 1000 / 60) => {
     for (let k = 0; k < n; k++) {
       vt.now += dt; const cur = q; q = []; cur.forEach((x) => x[1](vt.now));
@@ -45,6 +46,7 @@ const clock = () => {
     await page.goto(`${base}/lab/index.html?fixed=1&q=${q}#${hash}`);
     await page.waitForFunction(() => document.body.classList.contains('ready'), null, { timeout: 180000 });
     await page.evaluate(() => window.__vt.enable());
+    await page.waitForFunction(() => window.__vt.pending() > 0, null, { timeout: 120000 });   // 否则最初几步可能空转
     const step = (n) => page.evaluate((n) => window.__vt.step(n), n);
     const jpg = (name, o = {}) => page.screenshot({ path: path.join(out, name), type: 'jpeg', quality: 84, timeout: 180000, ...o });
     const press = (label) => page.evaluate((label) => [...document.querySelectorAll('#css3d .leaf-r button, #flow .leaf-r button')].find((b) => b.textContent === label).click(), label);
@@ -63,7 +65,7 @@ const clock = () => {
 
   if (what === 'all' || what === 'stills') {
     let s = await session('phy-pendulum', 1280, 800);
-    await s.step(60); await s.press('计时并记录'); await s.step(150); await s.jpg('phy-pendulum.jpg'); await s.ctx.close();
+    await s.step(210); await s.jpg('phy-pendulum.jpg'); await s.ctx.close();
     s = await session('chem-titration', 1280, 800);
     await s.step(30); await s.press('快速'); await s.step(760); await s.press('关'); await s.step(20); await s.jpg('chem-titration.jpg'); await s.ctx.close();
     s = await session('his-type', 1280, 800);
@@ -103,6 +105,73 @@ const clock = () => {
       await touch('touchStart', 335, 250); await roll(4);
       for (let i = 1; i <= 16; i++) { await touch('touchMove', 335 - i * 16, 250 - Math.sin(i / 16 * Math.PI) * 14); await roll(4); }
       await touch('touchEnd'); await roll(150);
+    });
+    await s.ctx.close();
+  }
+  // ---- 第三代：一页单摆（纸就是时间）与平抛的时间把手
+  const onRoot = (s, x, y, z) => s.page.evaluate(([x, y, z]) => {
+    const st = window.__lab.stage, v = window.__lab.spread.root.localToWorld(st.goal.target.clone().set(x, y, z)).project(st.cam), b = st.canvas.getBoundingClientRect();
+    return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height };
+  }, [x, y, z]);
+  const XC = -0.15, ZP = -2.55, PY = 4.85, S = 3.2;
+  const bobAt = (s, deg, l = 0.8) => onRoot(s, XC + Math.sin(deg * Math.PI / 180) * l * S, PY - Math.cos(deg * Math.PI / 180) * l * S, ZP);
+  const cam = (s, elev, yaw) => s.page.evaluate(([e, y]) => { const st = window.__lab.stage; st.goal.elev = e; st.goal.yaw = y; st.dirty = true; }, [elev, yaw]);
+  if (what === 'gen3') {
+    let s = await session('phy-pendulum', 1280, 800);
+    await s.step(30); await s.page.evaluate(() => window.__lab.inst._release(60 * Math.PI / 180)); await s.step(300);
+    await s.jpg('g3-spread.jpg');
+    await s.page.evaluate(() => window.__lab.inst._lift(1)); await s.step(20); await s.jpg('g3-worldline.jpg');
+    await cam(s, 0.34, 0.42); await s.step(80); await s.jpg('g3-low.jpg');
+    await s.page.evaluate(() => window.__lab.inst._lift(0)); await cam(s, 1.32, 0); await s.step(80); await s.jpg('g3-top.jpg');
+    await s.ctx.close();
+    s = await session('phy-pendulum', 1280, 800, { deviceScaleFactor: 2 });
+    await s.step(30); await s.page.evaluate(() => window.__lab.inst._hold(55 * Math.PI / 180)); await s.step(30);
+    await s.jpg('g3-forces.jpg', { clip: { x: 690, y: 40, width: 520, height: 400 } });
+    await s.jpg('g3-law.jpg', { clip: { x: 300, y: 200, width: 330, height: 330 } });
+    await s.ctx.close();
+    s = await session('phy-pendulum', 390, 844, { deviceScaleFactor: 2, isMobile: true, hasTouch: true }, 1);
+    await s.step(120); await s.jpg('g3-phone.jpg'); await s.page.evaluate(() => window.scrollTo(0, 560)); await s.step(10); await s.jpg('g3-phone-law.jpg'); await s.ctx.close();
+    s = await session('phy-projectile', 1280, 800);
+    await s.step(40);
+    const a = await s.page.evaluate(() => { const st = window.__lab.stage, v = st.drags[0].mesh.getWorldPosition(st.goal.target.clone()).project(st.cam), b = st.canvas.getBoundingClientRect(); return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height }; });
+    await s.page.mouse.move(a.x, a.y); await s.page.mouse.down();
+    const t = 0.3, b = await onRoot(s, -2.9 + 2 * t * 2.2, (1.25 - 4.9 * t * t) * 2.2 + 0.2, -0.8);
+    await s.page.mouse.move(b.x, b.y, { steps: 10 }); await s.step(20); await s.jpg('g3-projectile.jpg'); await s.page.mouse.up(); await s.ctx.close();
+    console.log('gen3 stills done');
+  }
+  if (what === 'gen3video') {
+    const s = await session('phy-pendulum', 1120, 700);
+    await film(s, 'g3-pendulum.mp4', async (roll) => {
+      await roll(40);
+      // 拖摆球到 55° 再松手：回复力箭头、公式的摆
+      let p = await bobAt(s, 35), q = await bobAt(s, 55);
+      await s.page.evaluate(() => window.__lab.inst._hold(35 * Math.PI / 180)); await roll(2);
+      await s.page.mouse.move(p.x, p.y); await s.page.mouse.down();
+      for (let i = 1; i <= 16; i++) { await s.page.mouse.move(p.x + (q.x - p.x) * i / 16, p.y + (q.y - p.y) * i / 16); await roll(2); }
+      await roll(40); await s.page.mouse.up(); await roll(300);
+      // 推纸带：时间倒流；再往回拉一点：时间向前
+      const tp = await onRoot(s, XC, 0.05, 1.5);
+      await s.page.mouse.move(tp.x, tp.y); await s.page.mouse.down();
+      for (let i = 1; i <= 24; i++) { await s.page.mouse.move(tp.x, tp.y - i * 5); await roll(2); }
+      await roll(20);
+      for (let i = 1; i <= 12; i++) { await s.page.mouse.move(tp.x, tp.y - 120 + i * 5); await roll(2); }
+      await s.page.mouse.up(); await roll(80);
+      // 提起纸签：曲线立成时空路径
+      const tb = await onRoot(s, XC + 3.35, 0.3, 4.15);
+      await s.page.mouse.move(tb.x, tb.y); await s.page.mouse.down();
+      for (let i = 1; i <= 20; i++) { await s.page.mouse.move(tb.x, tb.y - i * 9); await roll(2); }
+      await s.page.mouse.up(); await roll(60);
+      // 放低镜头，再升到俯视：从具体的摆，到抽象的图像
+      await s.page.mouse.move(150, 120); await s.page.mouse.down();
+      for (let i = 1; i <= 30; i++) { await s.page.mouse.move(150 - i * 3, 120 - i * 5); await roll(2); }
+      await s.page.mouse.up(); await roll(160);
+      await s.page.mouse.move(150, 120); await s.page.mouse.down();
+      for (let i = 1; i <= 40; i++) { await s.page.mouse.move(150 + i * 2.2, 120 + i * 8); await roll(2); }
+      await s.page.mouse.up(); await roll(60);
+      const tb2 = await onRoot(s, XC + 3.35, 3.3, 4.15);
+      await s.page.mouse.move(tb2.x, tb2.y); await s.page.mouse.down();
+      for (let i = 1; i <= 16; i++) { await s.page.mouse.move(tb2.x, tb2.y + i * 14); await roll(2); }
+      await s.page.mouse.up(); await roll(120);
     });
     await s.ctx.close();
   }

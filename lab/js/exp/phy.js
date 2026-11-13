@@ -1,6 +1,8 @@
 // 物理（上）：力学
 import { C, TAU, clamp, group, at, rot, box, cyl, ball, plate, rod, wire, spring, arrow, strip, dash, note, card, plot, dots, flat, glass, meter, tube, stand, THREE } from '../ink.js';
-import { pendulum } from './gen2.js';
+import { pendulum } from './gen3.js';
+import { nearestT } from '../gen3/handle.js';
+import { KIND } from '../gen3/know.js';
 
 const G = 9.8;
 
@@ -12,11 +14,11 @@ const projectile = {
   terms: [['初速度 v₀', '离开桌边瞬间的水平速度。'], ['射程 x', '落地点到桌边的水平距离。'], ['频闪', '每隔相同时间记录一次位置。']],
   predict: { q: '同一高度，一颗球水平抛出，另一颗同时松手下落，谁先落地？', options: ['下落的那颗先落地', '抛出的那颗先落地', '同时落地'], answer: 2, why: '竖直方向上，两颗球都从静止开始做自由落体，下落高度相同，用时就相同。水平速度不改变下落的快慢。' },
   challenge: '保持高度 1.25 m，让小球正好落在 1.50 m 处。',
-  fig: '平抛与自由落体的频闪对比（慢放）', hint: '调初速度和桌高，按“发射”。',
+  fig: '平抛与自由落体的频闪对比（慢放）', hint: '按“发射”；抓住飞行中的小球前后拖，时间就停在那一刻。',
   teach: {
     where: '人教版物理 必修第二册 · 抛体运动；实验：探究平抛运动的特点。',
     ask: ['数一数频闪点：相邻两点的水平间距有什么特点？竖直间距之比呢？', '初速度加倍，飞行时间变不变？射程呢？'],
-    simplify: '忽略空气阻力与小球大小；画面按 0.35 倍速慢放，频闪间隔 0.04 s。',
+    simplify: '忽略空气阻力与小球大小；画面按 0.35 倍速慢放，频闪间隔 0.04 s。铜色细线是按公式画出的理论轨迹；箭头：铜色 vx、蓝色 vy、墨色合速度 v（每 1 m/s 画 0.55 单位长）。',
   },
   controls: [
     { id: 'v', label: '初速度 v₀', min: 0.5, max: 3.5, step: 0.1, value: 2, unit: 'm/s' },
@@ -24,38 +26,60 @@ const projectile = {
     { id: 'go', type: 'button', label: '发射' },
   ],
   build(k) {
-    const p = k.p, S = 2.2, X0 = -2.9, Z = -0.8, R = 0.2;
+    const p = k.p, S = 2.2, X0 = -2.9, Z = -0.8, R = 0.2, SLOW = 0.35, DTS = 0.04;
     const tbl = at(box(1.5, 1, 1.9), X0 - 0.75, 0, Z + 0.35);
     const gun = at(box(0.9, 0.3, 0.42), X0 - 0.8, 1, Z);
     const A = ball(R), B = ball(R, '#cfd6dc');
-    const tA = dots(36, 0.075, C.violet, { flat: true }), tB = dots(36, 0.075, C.amber, { flat: true });
+    const tA = dots(40, 0.075, C.violet, { flat: true }), tB = dots(40, 0.075, C.amber, { flat: true });
     const land = flat(new THREE.RingGeometry(0.2, 0.3, 28).rotateX(-Math.PI / 2), C.copper);
-    const info = at(card('\n', { w: 3.5, size: 0.32, align: 'left' }), 2.4, 0, -3.2);
-    k.root.add(tbl, gun, A, B, tA, tB, land, info, dash([X0, 0.03, Z + 1.75], [X0 + 3.4 * S, 0.03, Z + 1.75], { len: 0.12, gap: 0.12 }));
+    const info = at(card('\n\n\n\n', { w: 4.3, size: 0.28, align: 'left' }), 2.55, 0, -3.3);
+    // 第三代：理论轨迹用“公式”的笔法（铜色细线），速度分量画在球上；抓住球拖，时间就走到那一刻
+    const path = strip(64, { color: KIND.theory.color, w: 0.06, opacity: 0.9 });
+    const vX = arrow(C.copper, 0.04), vY = arrow(C.sky, 0.04), vV = arrow(C.ink, 0.035);
+    const grip = note('抓住小球拖动 = 拖动时间', { size: 0.24, w: 3.2 });
+    k.root.add(tbl, gun, A, B, tA, tB, land, info, path, vX, vY, vV, grip, dash([X0, 0.03, Z + 1.75], [X0 + 3.4 * S, 0.03, Z + 1.75], { len: 0.12, gap: 0.12 }));
     for (let i = 0; i <= 3; i++) k.root.add(at(note(`${i} m`, { lay: 'flat', size: 0.28 }), X0 + i * S, 0.03, Z + 2.15), wire([X0 + i * S, 0.03, Z + 1.6], [X0 + i * S, 0.03, Z + 1.9]));
-    let t = 0, n = 0;
-    const fire = () => { t = 0; n = 0; for (let i = 0; i < 36; i++) { tA.put(i, 0, -50, 0, 0.001); tB.put(i, 0, -50, 0, 0.001); } tA.done(); tB.done(); };
+    let t = 0, held = false, prevT = 0;
+    const tfOf = () => Math.sqrt(2 * p.h / G);
+    const pos = (tt) => [X0 + p.v * tt * S, (p.h - 0.5 * G * tt * tt) * S + R, Z];
+    const fire = () => { t = 0; };
+    k.drag(A, {
+      start: () => { held = true; prevT = Math.min(t, tfOf()); },
+      move: (q) => { t = prevT = nearestT(pos, 0, tfOf(), q, { prev: prevT }); },
+      end: () => { held = false; },
+    });
+    const VS = 0.55;   // 每 1 m/s 画多长
     return {
       press: fire, change: fire,
       update(dt) {
-        const h = p.h, tf = Math.sqrt(2 * h / G);
+        const h = p.h, tf = tfOf();
         tbl.scale.y = h * S; gun.position.y = h * S;
-        t += dt * 0.35;
-        const tt = Math.min(t, tf), y = (h - 0.5 * G * tt * tt) * S + R;
-        A.position.set(X0 + p.v * tt * S, y, Z); B.position.set(X0 + 0.15, y, Z + 1.1);
-        while (n < 36 && n * 0.04 <= tt) {
-          const ts = n * 0.04, ys = (h - 0.5 * G * ts * ts) * S + R;
-          tA.put(n, X0 + p.v * ts * S, ys, Z); tB.put(n, X0 + 0.15, ys, Z + 1.1); n++;
-          tA.done(); tB.done();
+        if (!held) t += dt * SLOW;
+        const tt = Math.min(t, tf), [ax, ay] = pos(tt);
+        A.position.set(ax, ay, Z); B.position.set(X0 + 0.15, ay, Z + 1.1);
+        // 频闪点：只画到“此刻”为止——往回拖，后来的点就还没有发生
+        const n = Math.min(40, Math.floor(tt / DTS + 1e-9) + 1);
+        for (let i = 0; i < 40; i++) {
+          if (i < n) { const ys = pos(i * DTS)[1]; tA.put(i, X0 + p.v * i * DTS * S, ys, Z); tB.put(i, X0 + 0.15, ys, Z + 1.1); }
+          else { tA.put(i, 0, -50, 0, 0.001); tB.put(i, 0, -50, 0, 0.001); }
         }
+        tA.done(); tB.done();
+        const pts = []; for (let i = 0; i <= 63; i++) pts.push(pos((tf * i) / 63)); path.set(pts);
+        const vy = G * tt;
+        vX.set([ax, ay, Z + R], [ax + p.v * VS, ay, Z + R]);
+        vY.set([ax, ay, Z + R], [ax, ay - vy * VS, Z + R]);
+        vV.set([ax, ay, Z + R + 0.02], [ax + p.v * VS, ay - vy * VS, Z + R + 0.02]);
+        grip.position.set(ax + 0.2, ay + 0.75, Z);
+        grip.visible = held || tt < 0.02;
         land.position.set(X0 + p.v * tf * S, 0.03, Z);
-        info.set(`飞行时间 t = ${tf.toFixed(2)} s\n水平射程 x = ${(p.v * tf).toFixed(2)} m`);
-        if (t > tf + 1.4) fire();
+        info.set(`t = ${tt.toFixed(3)} s${held ? '　你正拿着时间' : ''}\nx = v₀t = ${(p.v * tt).toFixed(2)} m\n下落 ½gt² = ${(0.5 * G * tt * tt).toFixed(2)} m\nvx = ${p.v.toFixed(1)} 不变，vy = gt = ${vy.toFixed(2)} m/s\n落地：t = ${tf.toFixed(2)} s，x = ${(p.v * tf).toFixed(2)} m`);
+        if (!held && t > tf + 1.4) fire();
       },
       margin() {
-        const tf = Math.sqrt(2 * p.h / G), vy = G * tf;
+        const tf = tfOf(), vy = G * tf;
         return ['t = √(2h/g)', ` = √(2×${p.h.toFixed(2)}/9.8)`, ` = ${tf.toFixed(2)} s`, `x = v₀t = ${(p.v * tf).toFixed(2)} m`, `落地 vy = gt = ${vy.toFixed(1)} m/s`, `落地速率 ${Math.hypot(p.v, vy).toFixed(1)} m/s`];
       },
+      get state() { return { t, held, tf: tfOf() }; },
     };
   },
 };

@@ -435,7 +435,7 @@ export class Stage {
     const pick = () => {
       let best = null, bd = Infinity;
       for (const d of this.drags) {
-        if (!d.mesh.parent) continue;
+        if (!d.mesh.parent || !d.mesh.visible || !d.mesh.parent.visible) continue;
         const h = this._ray.intersectObject(d.mesh, true)[0];
         if (h && h.distance < bd) { bd = h.distance; best = d; }
       }

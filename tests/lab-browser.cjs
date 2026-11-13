@@ -1,4 +1,4 @@
-// Real-browser checks for the HAIZ lab book (lab/), second generation. Chromium; SwiftShader in CI.
+// Real-browser checks for the HAIZ lab book (lab/), second and third generation. Chromium; SwiftShader in CI.
 // Opens every page, exercises every control, turns pages by key, click and drag, and checks that the
 // printed paper, the DOM overlay and the model stay consistent. Passing here is not a visual sign-off.
 const assert = require('node:assert');
@@ -54,13 +54,13 @@ const only = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7);
     predict: e.predict && { n: e.predict.options.length, a: e.predict.answer, why: !!e.predict.why }, fig: !!e.fig,
     teach: e.teach && { where: !!(e.teach.where || e.course?.book), ask: e.teach.ask?.length, simplify: !!e.teach.simplify },
     course: e.course && { stage: e.course.stage, kind: e.course.kind, src: e.course.src?.length || 0 },
-    controls: (e.controls || []).map((c) => c.id), build: typeof e.build,
+    controls: (e.controls || []).map((c) => c.id), build: typeof e.build, law: !!e.law,
   })));
   assert(cat.length >= 45, 'at least 45 pages: ' + cat.length);
   assert.strictEqual(new Set(cat.map((e) => e.id)).size, cat.length, 'ids are unique');
   for (const e of cat) {
     assert(/^[a-z]+-[a-z0-9-]+$/.test(e.id), 'id shape: ' + e.id);
-    assert(e.title && e.en && e.lede >= 1 && e.formula && e.terms >= 2 && e.fig, 'page text present: ' + e.id);
+    assert(e.title && e.en && e.lede >= 1 && e.formula && (e.terms >= 2 || e.law) && e.fig, 'page text present: ' + e.id);
     assert(e.predict && e.predict.n === 3 && e.predict.a >= 0 && e.predict.a < 3 && e.predict.why, 'prediction present: ' + e.id);
     assert(e.teach && e.teach.where && e.teach.ask >= 2 && e.teach.simplify, 'teacher notes present: ' + e.id);
     assert(['bx', 'xb', 'tz'].includes(e.course.stage) && ['must', 'lab', 'demo', 'model', 'inquiry'].includes(e.course.kind), 'course position present: ' + e.id);
@@ -162,7 +162,7 @@ const only = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7);
   results.push('dragging the corner across the spine and letting go completes the turn');
   // a control is never a page turn, even near the page edge
   await open(page, 'phy-pendulum'); await settle(page, 300);
-  await page.locator('#css3d .leaf-r .act').last().click({ force: true });
+  await page.locator('#css3d .leaf-r .seg button').last().click({ force: true });
   await settle(page, 200);
   assert.strictEqual(await page.evaluate(() => window.__lab.index), cat.findIndex((e) => e.id === 'phy-pendulum'), 'clicking a button on the page does not turn it');
   results.push('buttons, sliders and options on the page take the pointer before the page does');
@@ -192,27 +192,77 @@ const only = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7);
   assert(await page.locator('#teach').isHidden());
   results.push('teacher drawer shows the course position (with sources, or an honest "to be checked"), questions and the model’s simplifications');
 
-  // dragging an object in the scene (the pendulum bob)
+  // ---- third generation: the pendulum page (paper is time)
   await open(page, 'phy-pendulum'); await settle(page, 400);
+  // a point on the apparatus (root-local coordinates) in screen pixels
+  const onRoot = (x, y, z) => page.evaluate(([x, y, z]) => {
+    const s = window.__lab.stage, v = window.__lab.spread.root.localToWorld(s.goal.target.clone().set(x, y, z)).project(s.cam), b = s.canvas.getBoundingClientRect();
+    return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height };
+  }, [x, y, z]);
+  // dragging the bob sets the initial condition; letting go starts a swing
   const bob = await page.evaluate(() => {
-    const s = window.__lab.stage, d = s.drags.find((x) => x.mesh.parent.visible), v = d.mesh.getWorldPosition(s.goal.target.clone()).project(s.cam), b = s.canvas.getBoundingClientRect();
+    const s = window.__lab.stage, d = s.drags.find((x) => x.mesh.parent.visible && x.mesh.geometry.type === 'SphereGeometry' && x.mesh.material.visible !== false), v = d.mesh.getWorldPosition(s.goal.target.clone()).project(s.cam), b = s.canvas.getBoundingClientRect();
     return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height };
   });
   await page.mouse.move(bob.x, bob.y); await page.mouse.down(); await page.mouse.move(bob.x + 110, bob.y - 20, { steps: 6 }); await page.mouse.up();
   await page.waitForFunction(() => window.__lab.inst.T > 0.5, null, { timeout: 120000 });
-  results.push('dragging the pendulum bob and letting go starts a swing that gets timed');
-  // the stopwatch measurement lands in the notebook, and the numbers agree with the physics
-  await page.evaluate(() => { const b = [...document.querySelectorAll('#css3d .leaf-r .seg button')].find((x) => x.textContent === '10 次'); b.click(); [...document.querySelectorAll('#css3d .leaf-r .act')].find((x) => x.textContent === '计时并记录').click(); });
-  await page.waitForFunction(() => window.__lab.notebook.rows('phy-pendulum').length > 0, null, { timeout: 240000 });
+  results.push('pendulum: dragging the bob and letting go starts a swing that gets timed');
+  // grab the paper tape and push it away from you: time runs backwards; let go and the world continues from that moment
+  await page.waitForFunction(() => window.__lab.inst.state.t - window.__lab.inst.state.t0 > 2, null, { timeout: 120000 });
+  const tp = await onRoot(-0.15, 0.05, 1.4), tw0 = await page.evaluate(() => window.__lab.inst.state.t);
+  await page.mouse.move(tp.x, tp.y); await page.mouse.down(); await page.mouse.move(tp.x, tp.y - 90, { steps: 8 });
+  const rw = await page.evaluate(() => window.__lab.inst.state);
+  assert(rw.scrubbing && rw.view < tw0 - 0.3, 'pushing the tape rewinds the pendulum: ' + JSON.stringify({ tw0, rw }));
+  await page.mouse.up();
+  const rw2 = await page.evaluate(() => window.__lab.inst.state);
+  assert(!rw2.scrubbing && rw2.t < tw0 - 0.3 && Math.abs(rw2.t - rw2.view) < 1e-6, 'letting go continues from the rewound moment: ' + JSON.stringify(rw2));
+  results.push(`pendulum: pushing the paper tape back rewinds the pendulum from t = ${tw0.toFixed(2)} s to ${rw.view.toFixed(2)} s; letting go resumes from there`);
+  // lift the tabPt: the graph on the paper rises into the bob's path through space and time
+  const tabPt = await onRoot(-0.15 + 3.35, 0.3, 4.15);
+  await page.mouse.move(tabPt.x, tabPt.y); await page.mouse.down(); await page.mouse.move(tabPt.x, tabPt.y - 160, { steps: 8 }); await page.mouse.up();
+  await page.waitForFunction(() => window.__lab.inst.state.lift > 0.99, null, { timeout: 60000 });
+  const wls = await page.evaluate(() => window.__lab.inst.state.worldline);
+  assert(wls.length === 2 && wls.every((n) => n > 600), 'both world-lines (model and formula) are drawn when lifted: ' + wls);
+  await page.evaluate(() => window.__lab.inst._lift(0));
+  results.push('pendulum: pulling the tabPt up raises the recorded curve into the bob’s world-line (the paper graph is its shadow)');
+  // the formula on the page is live: its numbers are draggable and drive the model
+  const l0 = await page.evaluate(() => window.__lab.params.l);
+  await page.focus('#css3d .leaf-l [data-s="l"]'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  const l1 = await page.evaluate(() => ({ l: window.__lab.params.l, txt: document.querySelector('#css3d .leaf-l [data-s="l"]').textContent }));
+  assert(Math.abs(l1.l - l0 - 0.02) < 1e-9 && l1.txt.startsWith(l1.l.toFixed(2)), 'scrubbing l in the formula changes the pendulum: ' + JSON.stringify({ l0, l1 }));
+  // the boundary chart is live: pressing on it pulls the pendulum to that angle; the broken assumption is marked
+  const fbx = await page.evaluate(() => { const r = document.querySelector('#css3d .leaf-l [data-fig]').getBoundingClientRect(); return { x: r.left + r.width * 0.55, y: r.top + r.height * 0.5 }; });
+  await page.mouse.move(fbx.x, fbx.y); await page.mouse.down(); await settle(page, 300);
+  const hs = await page.evaluate(() => window.__lab.inst.state);
+  await page.mouse.up(); await settle(page, 300);
+  const ampDeg = hs.amp * 180 / Math.PI;
+  assert(hs.held && ampDeg > 25 && ampDeg < 55, 'pressing on the chart pulls the bob to that angle: ' + ampDeg.toFixed(1));
+  await page.waitForFunction(() => document.querySelector('#css3d .leaf-l [data-c="a"]').classList.contains('broken'), null, { timeout: 30000 });
+  results.push(`pendulum: the formula’s numbers are draggable (l ${l0.toFixed(2)} → ${l1.l.toFixed(2)} m); pressing on the boundary chart pulls the bob to ${ampDeg.toFixed(0)}° and the small-angle assumption is struck out`);
+  // the page's world survives a page turn and keeps running while you are away
+  const s0 = await page.evaluate(() => window.__lab.inst.state);
+  const hereI = await page.evaluate(() => window.__lab.index);
+  await page.evaluate(async (i) => { await window.__lab.open(i + 1, true); }, hereI);
+  await settle(page, 1500);
+  await page.evaluate(async (i) => { await window.__lab.open(i, true); }, hereI);
+  const s1 = await page.evaluate(() => window.__lab.inst.state);
+  assert(s1.t > s0.t + 1 && Math.abs(s1.l - s0.l) < 1e-9 && s1.t0 <= s0.t, 'the pendulum world persists across a page turn and advanced while away: ' + JSON.stringify({ s0, s1 }));
+  results.push(`pendulum: turning away and back keeps the world (same l, same recorded history) and it kept swinging while away (t ${s0.t.toFixed(1)} → ${s1.t.toFixed(1)} s)`);
+  // timing: at a small angle the simulated stopwatch agrees with T = 2π√(l/g); at a large angle T is longer by 2K(sin θ₀/2)/π
+  // (the page world remembers earlier choices — the control sweep above left it on Jupiter — so pick Earth explicitly)
+  await page.evaluate(() => { for (const t of ['地球', '10 次']) [...document.querySelectorAll('#css3d .leaf-r .seg button')].find((x) => x.textContent === t).click(); window.__lab.inst._release(4 * Math.PI / 180); });
+  await page.click('#bRec');
+  const n0 = await page.evaluate(() => window.__lab.notebook.rows('phy-pendulum').length);
+  await page.click('#notebook [data-a="add"]');
+  await page.waitForFunction((n0) => window.__lab.notebook.rows('phy-pendulum').length > n0, n0, { timeout: 240000 });
   const row = await page.evaluate(() => ({ r: window.__lab.notebook.rows('phy-pendulum').slice(-1)[0], l: window.__lab.params.l }));
   const Tf = 2 * Math.PI * Math.sqrt(row.l / 9.8);
-  assert(Math.abs(row.r.T - Tf) < 0.06 && Math.abs(row.r.g - 9.8) < 0.7 && row.r.n === 10, 'pendulum row agrees with T = 2π√(l/g): ' + JSON.stringify(row));
-  await page.click('#bRec');
+  assert(Math.abs(row.r.T - Tf) < 0.06 && Math.abs(row.r.g - 9.8) < 0.7 && row.r.n === 10 && row.r.amp < 5 && row.r.who === '模拟按表', 'small-angle pendulum row agrees with T = 2π√(l/g): ' + JSON.stringify(row));
   assert((await page.locator('#notebook table tbody tr').count()) >= 1);
   const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#notebook [data-a="csv"]')]);
   assert(/HAIZ-phy-pendulum\.csv/.test(dl.suggestedFilename()));
   await page.keyboard.press('Escape');
-  results.push(`pendulum: timing 10 swings records l = ${row.l.toFixed(2)} m, T = ${row.r.T.toFixed(3)} s (formula ${Tf.toFixed(3)} s), g = ${row.r.g.toFixed(2)} m/s² into the notebook; CSV export works`);
+  results.push(`pendulum: simulated timing of 10 swings at 4° records l = ${row.l.toFixed(2)} m, T = ${row.r.T.toFixed(3)} s (formula ${Tf.toFixed(3)} s), g = ${row.r.g.toFixed(2)} m/s², labelled as simulated; CSV export works`);
 
   // titration: burette reading, pH and concentration are one consistent set of numbers
   await open(page, 'chem-titration'); await settle(page, 300);

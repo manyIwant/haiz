@@ -160,6 +160,7 @@ export function paint(el, canvas, opt = {}) {
       }
     }
     if (n.tagName === 'INPUT' && n.type === 'range') slider(n, r, alpha);
+    else if (n.tagName === 'CANVAS') { if (n.width && n.height) { x.globalAlpha = alpha; x.drawImage(n, r.left, r.top, r.width, r.height); x.globalAlpha = 1; } }   // 页面上的活图：照原样印上去
     else for (const c of n.childNodes) {
       if (c.nodeType === 3) text(c, cs, alpha);
       else if (c.nodeType === 1) walk(c, alpha);
@@ -178,6 +179,8 @@ export function syncLive(from, to) {
     src.querySelectorAll('input').forEach((inp) => inp.setAttribute('value', inp.value));
     const clone = src.cloneNode(true);
     clone.querySelectorAll('input').forEach((inp, k) => { inp.value = src.querySelectorAll('input')[k].value; });
+    const cs = src.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach((c, k) => { const o = cs[k]; if (o && o.width) { c.width = o.width; c.height = o.height; c.style.cssText = o.style.cssText; c.getContext('2d').drawImage(o, 0, 0); } });
     dst.replaceWith(clone);
   });
 }

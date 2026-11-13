@@ -25,6 +25,9 @@ const PRINT_SCALE = quality >= 2 ? 3 : 2;
 
 let cur = null, T = null, peek = null, playing = true, teachOpen = false, stacked = false;
 const cache = new Map();
+/** 每一页的“世界”：参数、模型状态、离开的时刻。翻走再翻回来，世界接着上次的样子（重置按钮才清空） */
+const memory = new Map();
+const memoryOf = (exp) => { let m = memory.get(exp.id); if (!m) memory.set(exp.id, (m = {})); return m; };
 
 // ---------------------------------------------------------------- 排版保险：字体宽窄不一，放不下时整体略缩
 function fit(inner) {
@@ -55,9 +58,13 @@ function renderLeft(sp, leaf, live) {
       <h1>${esc(exp.title)}</h1>
       <div class="en">${esc(exp.en)}</div>
       ${exp.lede.map((p) => `<p class="lede">${esc(p)}</p>`).join('')}
-      <div class="formula"><div class="f">${fmtFormula(exp.formula)}</div><div class="fn">${esc(exp.formulaNote || '')}</div></div>
-      <p class="cap">关键词</p>
-      <dl class="terms">${exp.terms.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+      ${exp.law ? '' : `<div class="formula"><div class="f">${fmtFormula(exp.formula)}</div><div class="fn">${esc(exp.formulaNote || '')}</div></div>`}
+    </div>
+    ${exp.law ? `<div class="formula law" data-live data-law>${exp.law.html || ''}</div>` : ''}
+    ${exp.figure ? `<figure class="pfig"><div class="pfig-c" data-live data-fig style="height:${exp.figure.h}px"><canvas></canvas></div><figcaption class="ink">${exp.figure.caption || ''}</figcaption></figure>` : ''}
+    <div class="ink">
+      ${exp.terms?.length ? `<p class="cap">关键词</p>
+      <dl class="terms">${exp.terms.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>` : ''}
     </div>
     <div class="predict">
       <div class="ink"><p class="cap">先猜一猜</p><p class="q">${esc(exp.predict.q)}</p></div>
@@ -140,8 +147,9 @@ function getSpread(i) {
   let sp = cache.get(i);
   if (sp) return sp;
   const exp = EXPERIMENTS[i];
-  sp = { i, exp, params: {}, sync: {}, inst: null, root: null, drags: [], plate: null, pop: 1, popV: 0, popGoal: 1, guess: null, clock: 0, marginKey: '' };
-  for (const c of exp.controls || []) if (c.type !== 'button') sp.params[c.id] = c.value;
+  const mem = memoryOf(exp);
+  sp = { i, exp, mem, params: mem.params ||= {}, sync: {}, inst: null, root: null, drags: [], plate: null, pop: 1, popV: 0, popGoal: 1, guess: null, clock: mem.clock || 0, marginKey: '' };
+  for (const c of exp.controls || []) if (c.type !== 'button' && !(c.id in sp.params)) sp.params[c.id] = c.value;
   sp.leafL = el('article', 'leaf leaf-l'); sp.leafL.setAttribute('aria-label', `${exp.title}：正文`);
   sp.leafR = el('section', 'leaf leaf-r'); sp.leafR.setAttribute('aria-label', '图注与实验控制');
   renderLeft(sp, sp.leafL, true); renderRight(sp, sp.leafR, true);
@@ -177,14 +185,23 @@ function ensureModel(sp) {
     drag: (m, o) => stage.drag(m, o, sp.drags),
     set: (id, v) => { sp.params[id] = v; sp.sync[id]?.(); },
     record: (row) => notebook.push(sp.exp, row),
+    // 第三代：页面的世界不随翻页消失。memory 跨翻页保留；away = 离开这页过了多少秒（世界在你不看的时候也在走）
+    memory: sp.mem, away: sp.mem.savedAt ? (performance.now() - sp.mem.savedAt) / 1000 : 0,
+    dirty: () => { stage.dirty = true; },
+    stage,
   };
   try { sp.inst = sp.exp.build(kit) || {}; } catch (e) { console.error(e); sp.inst = {}; }
+  sp.ac = new AbortController();
+  try { sp.inst.bindPage?.(sp.leafL, sp.leafR, sp.ac.signal); } catch (e) { console.error(e); }
   try { sp.inst.update?.(0, 0); } catch (e) { console.error(e); }
   if (!sp.plate) sp.plate = stage.newPlate();
   stage.bakePlate(sp.root, sp.plate);
 }
 function dropModel(sp) {
   if (!sp.root) return;
+  try { sp.inst?.save?.(sp.mem); } catch (e) { console.error(e); }
+  sp.mem.savedAt = performance.now(); sp.mem.clock = sp.clock;
+  sp.ac?.abort();
   stage.disposeRoot(sp.root); sp.root = null; sp.inst = null; sp.drags = [];
 }
 function dropSpread(sp) {
@@ -526,7 +543,7 @@ const setPlaying = (v) => { playing = v; $('#bPlay').setAttribute('aria-pressed'
 $('#bPlay').addEventListener('click', () => setPlaying(!playing));
 $('#bReset').addEventListener('click', () => {
   if (T) return;
-  const i = cur.i; unmount(cur); dropSpread(cur); cur = null; swap(i); stage.resetView();
+  const i = cur.i, id = cur.exp.id; unmount(cur); dropSpread(cur); memory.delete(id); cur = null; swap(i); stage.resetView();
 });
 $('#bTeach').addEventListener('click', () => { teachOpen = !teachOpen; renderTeach(); });
 $('#bRec').addEventListener('click', () => notebook.toggle());
@@ -598,5 +615,5 @@ const start = Math.max(0, EXPERIMENTS.findIndex((e) => e.id === location.hash.sl
 window.__lab = {
   stage, book, open, list: EXPERIMENTS, notebook,
   get inst() { return cur?.inst; }, get params() { return cur?.params; }, get index() { return cur?.i; },
-  get turning() { return !!T; }, get turn() { return T; }, get spread() { return cur; },
+  get turning() { return !!T; }, get turn() { return T; }, get spread() { return cur; }, memory,
 };
