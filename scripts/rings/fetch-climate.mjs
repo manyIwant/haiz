@@ -12,6 +12,7 @@
 // ~25 km grid — not a weather station in the school. One model for the whole span, so
 // 1940 and 2026 are comparable. The request carries coordinates and dates only.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { FIELDS, START, pack, unpack, dayIndex, isoOfIndex } from '../../lanren/rings/codec.js';
@@ -90,12 +91,13 @@ async function main() {
   if (rows.length < 30000) throw new Error(`only ${rows.length} days: refusing to write a truncated archive`);
   for (let i = 0; i < rows.length; i++) if (rows[i].date !== isoOfIndex(i)) throw new Error(`calendar gap at ${rows[i].date}`);
   const bin = pack(rows);
+  const sha256 = createHash('sha256').update(bin).digest('hex');
   if (update) {   // nothing new and nothing revised: leave the files (and their date) alone
     const old = await readFile(path.join(OUT, 'climate.bin'));
     if (old.length === bin.length && Buffer.compare(old, Buffer.from(bin)) === 0) { process.stdout.write(`no change (${rows.length} days)\n`); return; }
   }
   const meta = {
-    start: START, days: rows.length, last: rows[rows.length - 1].date,
+    start: START, days: rows.length, last: rows[rows.length - 1].date, sha256,
     fields: FIELDS.map(({ name, type, scale, unit }) => ({ name, type, scale, unit })),
     site: SITE, grid, model: MODEL,
     source: 'ERA5 reanalysis (Copernicus Climate Change Service / ECMWF) via Open-Meteo Historical Weather API',
