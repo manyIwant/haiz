@@ -148,6 +148,24 @@ const outDir = path.join(__dirname, 'artifacts', 'rings');
   // playing a year walks the days
   await page.keyboard.press('Escape');   // closes the span panel first
   assert.strictEqual(await page.locator('#rgMine').isHidden(), true);
+  // a falling leaf caught here is pressed with the date the ring stands on
+  await page.evaluate(() => { const R = window.__haizHome.rings; R.select('2008-08-08', 1200); R.settle(); });
+  await step(page, 1);
+  const leafAt = await page.evaluate(() => {
+    const w = window.__haizHome.world, cam = w.camera;
+    const dir = cam.position.clone(); cam.getWorldDirection(dir);
+    const p = cam.position.clone().addScaledVector(dir, 8);
+    w.litter.falling.length = 0;
+    const L = w.litter.release(p, 0.2);
+    const v = L.p.clone().project(cam), r = w.renderer.domElement.getBoundingClientRect();
+    return [r.left + (v.x * 0.5 + 0.5) * r.width, r.top + (-v.y * 0.5 + 0.5) * r.height];
+  });
+  await page.mouse.click(leafAt[0], leafAt[1]);
+  await page.waitForSelector('#specimen[open]', { timeout: 20000 });
+  assert.match(await page.locator('#specFacts').textContent(), /8 月 8 日 · 夜里 20:00/);
+  await page.click('#specLet');
+  results.push('a leaf caught under the ring is pressed with that day\'s date (2008-08-08, 夜里 20:00)');
+
   await page.evaluate(() => { const R = window.__haizHome.rings; R.select('2020-01-01', 720); R.play('year'); });
   await step(page, 6);
   s = await state(page);

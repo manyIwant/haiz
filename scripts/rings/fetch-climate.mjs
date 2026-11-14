@@ -90,6 +90,10 @@ async function main() {
   if (rows.length < 30000) throw new Error(`only ${rows.length} days: refusing to write a truncated archive`);
   for (let i = 0; i < rows.length; i++) if (rows[i].date !== isoOfIndex(i)) throw new Error(`calendar gap at ${rows[i].date}`);
   const bin = pack(rows);
+  if (update) {   // nothing new and nothing revised: leave the files (and their date) alone
+    const old = await readFile(path.join(OUT, 'climate.bin'));
+    if (old.length === bin.length && Buffer.compare(old, Buffer.from(bin)) === 0) { process.stdout.write(`no change (${rows.length} days)\n`); return; }
+  }
   const meta = {
     start: START, days: rows.length, last: rows[rows.length - 1].date,
     fields: FIELDS.map(({ name, type, scale, unit }) => ({ name, type, scale, unit })),

@@ -21,8 +21,8 @@
 import * as THREE from 'three';
 import { UNIFORMS } from '../js/foliage.js';
 import { AXIS } from '../js/chapters.js';
-import { haikouParts, formatClock, dayOfYearFor, isLeap } from '../js/sun.js';
-import { loadClimate, parts as partsOf, indexOfDate, dateLabel, weekdayLabel, isoOfIndex, yearStart, yearLength, FIRST_YEAR } from './climate.js';
+import { haikouParts, formatClock, isLeap } from '../js/sun.js';
+import { loadClimate, parts as partsOf, indexOfDate, dateLabel, weekdayLabel, isoOfIndex, yearLength, FIRST_YEAR } from './climate.js';
 import { layout, paint, pick, place, spanPath, sectorPath, wobble, LENSES, FRAME, BARK } from './disc.js';
 import { stageFor, describeDay, sunTimes, beaufort } from './almanac.js';
 import { NODES } from '../roots/history.js';
@@ -30,7 +30,6 @@ import { NODES } from '../roots/history.js';
 const TAU = Math.PI * 2;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const lerp = (a, b, t) => a + (b - a) * t;
-const ease = (t) => t * t * (3 - 2 * t);
 const KEY = 'haiz.rings.v1';
 const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
 const nf = new Intl.NumberFormat('zh-CN');
@@ -131,7 +130,7 @@ export function attach(ctx) {
     loading ||= loadClimate().then((c) => {
       climate = c; lay = layout(c);
       $('rgWait').hidden = true;
-      $('rgCount').textContent = `这棵树记得 ${nf.format(c.days)} 个日子`;
+      $('rgCount').textContent = `这棵树记得 ${nf.format(c.days)} 个日子 · 点任何一格，树就回到那一天`;
       const input = $('rgInput'), birth = $('rgBirth');
       input.min = birth.min = c.meta.start; input.max = birth.max = c.meta.last;
       const sel = $('rgClass');
@@ -297,7 +296,7 @@ export function attach(ctx) {
     $('rgInput').value = isoOfIndex(S.index);
     $('rgHour').value = String(Math.round(S.minutes / 5) * 5);
     $('rgTime').textContent = formatClock(S.minutes);
-    const sunTxt = st.sun.altitude > -0.8 ? `太阳高 ${Math.round(st.sun.altitude)}°` : st.moon.altitude > 0 ? `${st.moon.name}在天上，亮面 ${Math.round(st.moon.fraction * 100)}%` : `夜里 · ${st.moon.name}还没升起`;
+    const sunTxt = st.sun.altitude > -0.8 ? `太阳高 ${Math.round(st.sun.altitude)}°` : st.moon.altitude > 0 ? `${st.moon.name} · 亮面 ${Math.round(st.moon.fraction * 100)}%` : `夜里 · ${st.moon.name}不在天上`;
     $('rgSun').textContent = sunTxt;
     if (S.index !== lastSkyDay) { lastSkyDay = S.index; drawSkyBar(p); }
   }
@@ -510,6 +509,7 @@ export function attach(ctx) {
   async function open(arg = {}, { fromHistory = false } = {}) {
     if (S.open) { if (arg.y && climate) select(indexOfDate(arg.y, arg.m, arg.d), { minutes: arg.minutes }); return; }
     if (W && W.owner !== 'scroll' && W.owner !== 'hold') return;   // the map, the canopy or the walk has the camera: finish there first
+    for (const d of document.querySelectorAll('dialog[open]')) d.close();   // e.g. the site search that led here
     S.open = true;
     root.hidden = false;
     ensureWeather();
@@ -646,7 +646,7 @@ export function attach(ctx) {
         break;
       }
     }
-    weather?.update(clockT, world.camera, { rain: C.rain, wind: C.wind, windDir: C.windDir, stars: C.stars, horizon: C.L.horizon }, world.renderer.getPixelRatio());
+    weather?.update(clockT, world.camera, { rain: C.rain, wind: C.wind, windDir: C.windDir, stars: C.stars, horizon: C.L.horizon, night: target.night }, world.renderer.getPixelRatio());
     sound?.setRain?.(C.rain);
     S.applied = C;
     return { lush: C.lush, L, wind: C.wind, sunAlt: target.sun.altitude, fallen: C.turn > 0 ? 1 - leavesOn : 0,
@@ -696,16 +696,37 @@ export function attach(ctx) {
   }
   if (world) {
     const cv = world.renderer.domElement;
-    cv.addEventListener('pointerdown', (e) => { if (!S.open) return; S.orbit.down = { x: e.clientX, y: e.clientY, id: e.pointerId }; S.orbit.vaz = 0; cv.setPointerCapture?.(e.pointerId); });
+    cv.addEventListener('pointerdown', (e) => { if (!S.open) return; S.orbit.down = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: 0, t: performance.now() }; S.orbit.vaz = 0; cv.setPointerCapture?.(e.pointerId); });
     cv.addEventListener('pointermove', (e) => {
       const d = S.orbit.down;
       if (!S.open || !d || d.id !== e.pointerId) return;
       const dx = e.clientX - d.x, dy = e.clientY - d.y;
-      d.x = e.clientX; d.y = e.clientY;
+      d.x = e.clientX; d.y = e.clientY; d.moved += Math.abs(dx) + Math.abs(dy);
+      if (d.moved < 6) return;
       S.orbit.az -= dx * 0.0052; S.orbit.vaz = -dx * 0.0052 * 30;
       S.orbit.el = clamp(S.orbit.el + dy * 0.03, 0, 9);
     });
-    const up = (e) => { if (S.orbit.down?.id === e.pointerId) S.orbit.down = null; };
+    // a tap (not a drag) on a falling leaf catches it: a pressed leaf dated to the day the ring stands on
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    const tap = (e) => {
+      if (!climate || !ctx.catchLeaf) return;
+      const r = cv.getBoundingClientRect();
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, world.camera);
+      const leaf = world.litter.pick(ray.ray, e.pointerType === 'touch' ? 1.1 : 0.8);
+      if (!leaf) return;
+      world.litter.falling.splice(world.litter.falling.indexOf(leaf), 1);
+      const w = when(), st = stageFor(w, climate.row(S.index));
+      stopPlay();
+      ctx.catchLeaf({ age: leaf.age, variant: leaf.variant, len: leaf.len, from: 'air' },
+        { year: w.y, month: w.m, day: w.d, minutes: w.minutes }, { label: st.season.label }, { altitude: THREE.MathUtils.degToRad(st.sun.altitude) });
+    };
+    const up = (e) => {
+      const d = S.orbit.down;
+      if (d?.id !== e.pointerId) return;
+      S.orbit.down = null;
+      if (e.type === 'pointerup' && d.moved < 6 && performance.now() - d.t < 600) tap(e);
+    };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   }
 

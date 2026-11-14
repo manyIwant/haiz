@@ -1,0 +1,54 @@
+name: 年轮 · add last week's days to the ring
+
+# lanren/rings draws one cell per day from a reanalysis archive. The reanalysis trails the
+# calendar by about five days; once a week this re-reads the last 120 days (recent values
+# are still revised upstream) and appends whatever has arrived, so the ring keeps growing.
+# The request carries the campus coordinates and a date range only.
+
+on:
+  schedule:
+    - cron: '17 19 * * 0'   # Mondays 03:17 in Haikou
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rings-climate
+  cancel-in-progress: false
+
+jobs:
+  grow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            lanren/rings/
+            lanren/js/
+            lanren/roots/
+            lanren/package.json
+            scripts/rings/
+            tests/rings.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read the newest days
+        run: node scripts/rings/fetch-climate.mjs --update
+      - name: The archive is still whole
+        run: node tests/rings.cjs
+      - name: Commit the new days
+        run: |
+          if [ -z "$(git status --porcelain lanren/rings/data)" ]; then
+            echo 'No new days yet.'
+            exit 0
+          fi
+          last=$(node -p "require('./lanren/rings/data/climate.json').last")
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lanren/rings/data/climate.bin lanren/rings/data/climate.json
+          git commit -m "data(rings): the ring grows to ${last}"
+          git push

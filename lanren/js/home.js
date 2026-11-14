@@ -237,9 +237,12 @@ $('#soundButton').addEventListener('click', async () => $('#soundButton').setAtt
 // 年轮: opened from the bar, from a slab entry or from a #rings/<date> link; without WebGL it is the ring alone
 let ringsLoading = null;
 function openRings(arg = {}, opts = {}) {
-  ringsLoading ||= import('../rings/rings.js').then((m) => {
+  // asked for while the tree is still loading: wait for it (or for the static page), so the ring gets its tree
+  const settled = () => new Promise((res) => { (function poll() { if (body.classList.contains('ready') || body.classList.contains('static')) res(); else setTimeout(poll, 120); })(); });
+  ringsLoading ||= settled().then(() => import('../rings/rings.js')).then((m) => {
     rings = m.attach({ world, cam, W, DwellCamera, reduceMotion, sound, filmGrow: () => (canopy ? canopy.grow(growAt(state.p)) : growAt(state.p)),
-      openRoots: (id) => roots?.api?.open?.(id) });
+      openRoots: (id) => roots?.api?.open?.(id),
+      catchLeaf: (raw, parts, season, sun) => { sound.catch(); visits.markSeen('caught'); specimens.open(raw, parts, season, sun); } });
     return rings;
   }).catch((err) => { console.warn('rings unavailable', err); ringsLoading = null; return null; });
   return ringsLoading.then((r) => r?.open(arg, opts));

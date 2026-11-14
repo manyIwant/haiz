@@ -115,7 +115,7 @@ void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.8
   const wind = new THREE.Vector3();
   return {
     group,
-    /** s: { rain 0..1, wind 0..1.75, windDir [x,0,z], stars 0..1, horizon [r,g,b] } */
+    /** s: { rain 0..1, wind 0..1.75, windDir [x,0,z], stars 0..1, horizon [r,g,b], night 0..1 } */
     update(t, camera, s, pixelRatio = 1) {
       const raining = s.rain > 0.01;
       rain.visible = ripples.visible = raining;
@@ -126,7 +126,8 @@ void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.8
         rainMat.uniforms.uWind.value.copy(wind);
         rainMat.uniforms.uAlpha.value = 0.10 + 0.22 * s.rain;
         rainMat.uniforms.uLen.value = 0.35 + 0.5 * s.rain;
-        rainMat.uniforms.uCol.value.setRGB(s.horizon[0] * 0.9 + 0.25, s.horizon[1] * 0.9 + 0.27, s.horizon[2] * 0.9 + 0.3);
+        const lit = 0.07 + 0.2 * (1 - (s.night || 0));   // streaks catch the sky's light: little of it at night
+        rainMat.uniforms.uCol.value.setRGB(s.horizon[0] * 0.9 + lit, s.horizon[1] * 0.9 + lit * 1.08, s.horizon[2] * 0.9 + lit * 1.2);
         rainGeo.setDrawRange(0, Math.round(RAIN_N * (0.18 + 0.82 * s.rain)) * 2);
         rippleMat.uniforms.uT.value = t;
         rippleMat.uniforms.uRain.value = s.rain;
