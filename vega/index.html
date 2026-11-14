@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#c4a273">
+<meta name="format-detection" content="telephone=no">
+<title>给维嘉老师 · 一份没人布置的作业</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body data-light="on" class="is-closed">
+
+<noscript>
+  <div class="noscript">
+    <p>这是一份送给维嘉老师的课外作业。</p>
+    <p>它需要浏览器开启 JavaScript 才能翻开。请换用手机自带的浏览器，或电脑上的 Chrome / Safari / Edge 再试一次。</p>
+  </div>
+</noscript>
+
+<h1 class="sr-only" id="doc-title">给维嘉老师的课外作业</h1>
+
+<!-- ============================ 封面 ============================ -->
+<section id="cover" class="cover" aria-label="作业本封面">
+  <div class="cover-board">
+    <div class="cover-binding" aria-hidden="true"></div>
+    <div class="cover-print">
+      <p class="cover-pencil hand">没人布置的</p>
+      <p class="cover-title" aria-hidden="true"><span>作</span><span>业</span><span>本</span></p>
+      <div class="cover-rule" aria-hidden="true"></div>
+      <dl class="cover-fields">
+        <div><dt>科目</dt><dd><span class="hand">课外</span></dd></div>
+        <div data-if="senderName"><dt>姓名</dt><dd><span class="hand" data-text="senderName"></span></dd></div>
+        <div><dt>老师</dt><dd><span class="hand" data-text="teacher"></span></dd></div>
+      </dl>
+    </div>
+    <div class="cover-actions">
+      <button type="button" class="cover-open" id="open-btn">
+        <svg viewBox="0 0 40 22" aria-hidden="true"><path d="M3 19 C10 11, 15 6, 20 3 C25 6, 31 12, 37 19" /></svg>
+        <span>翻开</span>
+      </button>
+      <button type="button" class="cover-resume" id="resume-btn" hidden>上次批阅过了 · 直接翻到最后一页</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 内页 ============================ -->
+<main id="book" aria-labelledby="doc-title">
+
+  <!-- 第一页：题目（关灯后，这一页变成星图） -->
+  <article class="sheet paper" id="p1" data-page="1" tabindex="-1">
+    <canvas class="sky" aria-hidden="true"></canvas>
+    <div class="sheet-body day-ink">
+      <header class="title-line">
+        <span class="print">题目</span>
+        <span class="hand" data-text="title"></span>
+      </header>
+      <div class="grid" data-grid="opening"></div>
+
+      <figure class="phonetic">
+        <div class="staff">
+          <span class="ruby" aria-hidden="true" data-text="teacher"></span>
+          <span class="latin" lang="en">Vega</span>
+        </div>
+        <figcaption class="pencil" data-text="phoneticNote"></figcaption>
+      </figure>
+
+      <div class="grid" data-grid="afterName"></div>
+      <div class="grid" data-grid="lightsOff"></div>
+
+      <div class="switch-wrap">
+        <button type="button" class="switch" data-switch aria-pressed="false">
+          <svg viewBox="0 0 84 84" aria-hidden="true">
+            <path class="sw-plate" d="M9 8.5 C28 6.5, 57 6.8, 76 8.2 C77.8 27, 77.6 57, 76.2 76 C57 77.8, 27 77.4, 8.2 76.2 C6.6 57, 6.8 27, 9 8.5 Z"/>
+            <path class="sw-rocker" d="M31 21 C37 20.2, 47 20.2, 53.2 21 C54 35, 54 49, 53 63 C47 63.8, 37 63.8, 31 63 C30.2 49, 30.2 35, 31 21 Z"/>
+            <path class="sw-mark sw-on" d="M36.5 30.5 C40 29.8, 44 29.8, 47.5 30.5"/>
+            <path class="sw-mark sw-off" d="M36.5 54 C40 54.8, 44 54.8, 47.5 54"/>
+          </svg>
+          <span class="switch-label"><span class="when-on">关灯</span><span class="when-off">开灯</span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="pointing" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 120 120"><path d="M88 26 C66 6, 30 12, 17 40 C5 68, 22 101, 54 106 C86 111, 112 86, 108 56 C105 36, 92 24, 76 20"/></svg>
+      <p class="pointing-hand hand" data-text="pointing"></p>
+      <p class="pointing-name print">织女一 · Vega<br>天琴座 α</p>
+    </div>
+    <p class="sky-lyra print" aria-hidden="true">天琴座</p>
+    <div class="sky-note print">
+      <p class="sr-only night-only">关灯以后，这一页变成了一张星图：织女一被圈了出来，旁边写着“<span data-text="pointing"></span>”</p>
+      <p>星位据依巴谷星表（XHIP）绘制 · 上北左东<br>不是此刻的实时天空</p>
+    </div>
+    <footer class="pageno" aria-hidden="true">1</footer>
+  </article>
+
+  <!-- 第二页：二十五年 -->
+  <article class="sheet blue" id="n2" data-page="2">
+    <div class="sheet-body">
+      <div class="lines" data-lines="distance"></div>
+      <div class="journey" id="journey" aria-hidden="true"></div>
+      <p class="sr-only" id="journey-text"></p>
+      <div class="lines arrival" data-lines="arrival"></div>
+    </div>
+    <footer class="pageno" aria-hidden="true">2</footer>
+  </article>
+
+  <!-- 第三页：银版 -->
+  <article class="sheet blue" id="n3" data-page="3">
+    <div class="sheet-body">
+      <div class="lines" data-lines="plate"></div>
+      <figure class="plate" id="plate">
+        <div class="plate-case">
+          <div class="plate-mat"><div class="plate-silver"><i class="plate-star"></i></div></div>
+        </div>
+        <figcaption class="print">示意图，不是 1850 年的原件</figcaption>
+      </figure>
+      <div class="lines" data-lines="plateAfter"></div>
+    </div>
+    <footer class="pageno" aria-hidden="true">3</footer>
+  </article>
+
+  <!-- 第四页：一张真的照片 -->
+  <article class="sheet blue" id="n4" data-page="4">
+    <div class="sheet-body">
+      <figure class="photo">
+        <div class="photo-print">
+          <i class="tape t1" aria-hidden="true"></i><i class="tape t2" aria-hidden="true"></i>
+          <img src="img/vega-disk-hubble.jpg" width="900" height="900" loading="lazy" decoding="async"
+               alt="哈勃空间望远镜拍摄的织女一尘埃盘：中央一个深色圆形遮挡住恒星，四周是放射状的蓝白色光晕">
+        </div>
+        <figcaption class="print">
+          织女一周围的尘埃盘。哈勃空间望远镜 STIS 仪器拍摄，记录的是尘埃反射的星光；中央的恒星已被遮挡，颜色为后期指定，并非肉眼所见。图像经裁切。<br>
+          <span lang="en">Image: NASA, ESA, CSA, STScI, S. Wolff, K. Su, A. Gáspár (University of Arizona)</span>
+        </figcaption>
+      </figure>
+      <div class="lines" data-lines="photo"></div>
+      <div class="lines lights-on-line" data-lines="lightsOnLine"></div>
+      <div class="switch-wrap">
+        <button type="button" class="switch" data-switch aria-pressed="false">
+          <svg viewBox="0 0 84 84" aria-hidden="true">
+            <path class="sw-plate" d="M9 8.5 C28 6.5, 57 6.8, 76 8.2 C77.8 27, 77.6 57, 76.2 76 C57 77.8, 27 77.4, 8.2 76.2 C6.6 57, 6.8 27, 9 8.5 Z"/>
+            <path class="sw-rocker" d="M31 21 C37 20.2, 47 20.2, 53.2 21 C54 35, 54 49, 53 63 C47 63.8, 37 63.8, 31 63 C30.2 49, 30.2 35, 31 21 Z"/>
+            <path class="sw-mark sw-on" d="M36.5 30.5 C40 29.8, 44 29.8, 47.5 30.5"/>
+            <path class="sw-mark sw-off" d="M36.5 54 C40 54.8, 44 54.8, 47.5 54"/>
+          </svg>
+          <span class="switch-label"><span class="when-on">关灯</span><span class="when-off">开灯</span></span>
+        </button>
+      </div>
+    </div>
+    <footer class="pageno" aria-hidden="true">4</footer>
+  </article>
+
+  <!-- 第五页：正文 -->
+  <article class="sheet paper" id="letter" data-page="5">
+    <div class="sheet-body">
+      <div class="grid" data-grid="letter"></div>
+      <figure class="memory-photo" id="memory-photo" hidden>
+        <div class="photo-print"><i class="tape t1" aria-hidden="true"></i><img alt=""></div>
+        <figcaption class="pencil"></figcaption>
+      </figure>
+      <div class="grid" data-grid="letterEnd"></div>
+      <div class="grid sign" data-grid="sign"></div>
+    </div>
+    <footer class="pageno" aria-hidden="true">5</footer>
+  </article>
+
+  <!-- 第六页：教师批阅 -->
+  <article class="sheet paper" id="review" data-page="6">
+    <div class="sheet-body">
+      <div class="pencil-notes pencil" data-lines="review"></div>
+
+      <section class="review-box" aria-label="教师批阅">
+        <h2 class="review-tab print">教师批阅</h2>
+        <div class="review-area" id="review-area">
+          <canvas id="ink" aria-label="批阅栏：可以用红笔在这里写画"></canvas>
+          <div class="seal" id="seal" hidden aria-label="已阅"><span>阅</span></div>
+          <button type="button" class="pen" id="pen" aria-label="拿起红笔，在批阅栏里写画">
+            <svg viewBox="0 0 260 40" aria-hidden="true">
+              <path class="pen-body" d="M34 9 L214 7 Q222 7 224 12 L226 20 L224 28 Q222 33 214 33 L34 31 Z"/>
+              <path class="pen-grip" d="M34 9 L62 8.6 L62 31.4 L34 31 Z"/>
+              <path class="pen-cone" d="M34 9 L12 17.5 L12 22.5 L34 31 Z"/>
+              <path class="pen-tip" d="M12 17.5 L2 20 L12 22.5 Z"/>
+              <path class="pen-cap" d="M196 7.2 L214 7 Q222 7 224 12 L226 20 L224 28 Q222 33 214 33 L196 32.8 Z"/>
+              <path class="pen-clip" d="M150 5 L222 4 L222 8 L150 8.6 Z"/>
+              <path class="pen-shine" d="M66 13 L190 11.6"/>
+            </svg>
+          </button>
+          <p class="review-date print" id="review-date" hidden></p>
+        </div>
+      </section>
+
+      <div class="review-actions" id="review-actions">
+        <div class="ra ra-idle">
+          <button type="button" class="btn btn-red" id="take-pen">拿起红笔</button>
+          <button type="button" class="btn btn-quiet" id="use-seal">或者，盖一个“阅”字章</button>
+        </div>
+        <div class="ra ra-writing" hidden>
+          <button type="button" class="btn btn-quiet" id="undo">擦掉重来</button>
+          <button type="button" class="btn btn-red" id="done-pen">放下红笔</button>
+        </div>
+        <div class="ra ra-done" hidden>
+          <button type="button" class="btn btn-ink" id="keep">收下这一页</button>
+          <button type="button" class="btn btn-quiet" id="redo">重新批阅</button>
+        </div>
+        <p class="review-skip"><button type="button" class="btn-link" id="keep-blank">不批也可以 · 直接收下这一页</button></p>
+      </div>
+    </div>
+    <footer class="pageno" aria-hidden="true">6</footer>
+  </article>
+
+</main>
+
+<!-- ============================ 封底 ============================ -->
+<section id="back" class="backcover" aria-label="封底">
+  <div class="back-board">
+    <p class="goodbye hand" data-text="goodbye"></p>
+    <nav class="back-links print" aria-label="其他">
+      <button type="button" class="btn-link" id="again">合上，从头再看</button>
+      <button type="button" class="btn-link" id="open-plain">只看文字</button>
+      <button type="button" class="btn-link" id="open-credits">来源与说明</button>
+    </nav>
+    <p class="back-fine print">这是一份私人礼物，由学生自制。<br>没有人“买下”或命名任何一颗星；与文中提到的机构无关。</p>
+  </div>
+</section>
+
+<!-- ============================ 纪念页 ============================ -->
+<dialog id="keepsake-dialog" class="dlg dlg-keepsake" aria-labelledby="ks-title">
+  <div class="dlg-inner">
+    <h2 id="ks-title" class="print">最后一页</h2>
+    <p class="ks-status print" id="ks-status" role="status">正在把这一页撕下来……</p>
+    <img id="ks-img" alt="纪念页：作业本的最后一页，贴着一小张星图，圈出了织女一，下面是教师批阅栏" hidden>
+    <div class="ks-actions" hidden id="ks-actions">
+      <button type="button" class="btn btn-ink" id="ks-save">保存图片</button>
+      <button type="button" class="btn btn-quiet" id="ks-share" hidden>分享 / 存到相册</button>
+    </div>
+    <p class="ks-hint print" id="ks-hint" hidden>也可以长按图片保存。图片只在您的手机里生成，不会上传到任何地方。</p>
+    <button type="button" class="dlg-close btn-link" data-close>回到作业本</button>
+  </div>
+</dialog>
+
+<!-- ============================ 只看文字 ============================ -->
+<dialog id="plain-dialog" class="dlg dlg-plain" aria-labelledby="plain-title">
+  <div class="dlg-inner">
+    <h2 id="plain-title" class="print">只看文字</h2>
+    <div id="plain-text" class="plain-text"></div>
+    <button type="button" class="dlg-close btn-link" data-close>回到作业本</button>
+  </div>
+</dialog>
+
+<!-- ============================ 来源与说明 ============================ -->
+<dialog id="credits-dialog" class="dlg dlg-plain" aria-labelledby="credits-title">
+  <div class="dlg-inner">
+    <h2 id="credits-title" class="print">来源与说明</h2>
+    <div class="plain-text credits">
+      <p><b>关于那颗星。</b>织女一（Vega，天琴座 α）距离地球约 25 光年。没有人能购买或正式命名一颗恒星，这份作业也没有这样做——只是把它找出来，指给老师看。</p>
+      <p><b>星图。</b>第一页关灯后出现的星位，取自依巴谷星表（XHIP）数据，以织女一为中心作立体投影，上北左东。它是一张准确的星图，但不是任何时刻、任何地点的实时天空，页面也不会请求您的位置。</p>
+      <p><b>“二十五年”。</b>到达年份按约 25 光年估算，是近似值。那条刻度线上的光点位置，按您打开页面的日期计算。</p>
+      <p><b>一八五〇年。</b>1850 年，W. C. Bond 与 J. A. Whipple 在哈佛学院天文台为织女一拍下银版照片，见哈佛大学档案馆记录（HUA 19018）。页面中的银版是示意图，不是原件，也不是任何馆藏的复制品。</p>
+      <p><b>照片。</b>织女一尘埃盘图像：NASA, ESA, CSA, STScI, S. Wolff, K. Su, A. Gáspár (University of Arizona)。2024 年 11 月 1 日发布（观测完成于更早的时候），经裁切，未作其他改动。使用 NASA 图像不代表 NASA 或上述机构认可本页面。</p>
+      <p><b>字体。</b>手写体为霞鹜文楷（LXGW WenKai），印刷体为思源宋体（Noto Serif SC），均以 SIL Open Font License 1.1 授权。</p>
+      <p><b>隐私。</b>这个页面不登录、不联网上传、不使用定位。批阅栏里的笔迹只保存在这台设备的浏览器里，方便下次打开时还在；清除浏览器数据即可抹去。</p>
+      <p><b>声音。</b>没有声音。它是一本纸做的作业。</p>
+    </div>
+    <button type="button" class="dlg-close btn-link" data-close>回到作业本</button>
+  </div>
+</dialog>
+
+<script src="content.config.js"></script>
+<script src="js/sky-data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/keepsake.js"></script>
+</body>
+</html>
