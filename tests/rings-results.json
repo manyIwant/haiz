@@ -1,0 +1,18 @@
+{
+  "passed": 11,
+  "tests": [
+    "codec round-trips values and gaps",
+    "archive is whole: one row per calendar day from 1940",
+    "archive carries the storms the island remembers",
+    "calendar: dates, leap years, year lines",
+    "the baseline is a real seasonal cycle and recent decades run warmer",
+    "moon: known phases and a sane sky",
+    "sunrise and sunset at Haikou",
+    "a day stages the tree: noon, night, storm",
+    "the year of leaves closes on itself",
+    "ring geometry: every day has one cell and the cell finds its day",
+    "ring widths follow rainfall; lenses colour every day"
+  ],
+  "days": 31724,
+  "last": "2026-11-08"
+}

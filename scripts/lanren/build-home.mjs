@@ -82,6 +82,7 @@ const html = `<!doctype html>
 <header class="bar">
   <nav class="tools" aria-label="工具">
     <button id="searchButton" class="tool">全部入口 <kbd>⌘K</kbd></button>
+    <button id="ringsButton" class="tool" title="这棵树记得的每一天">年轮</button>
     <button id="bookButton" class="tool">书页 <b id="bookCount">0</b></button>
     <button id="soundButton" class="tool" aria-pressed="false"><i class="dot" aria-hidden="true"></i><span>声音</span></button>
   </nav>

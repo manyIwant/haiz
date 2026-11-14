@@ -64,17 +64,34 @@ vec3 leafColour(float age, float sen, float young, float variant){
 export function leafVisible(tE, old, g) { return old > 0 ? g < old : g > tE - LEAF_TIMING.bud; }
 export const GROW_GLSL = /* glsl */`
 uniform float uGrow;
+// 年轮 (lanren/rings): a whole year on the same leaves. Off (uYear = 0) everywhere else,
+// where the lines below reduce to V4's growth exactly.
+//   uTurn   last cohort's senescence, as lanren/js/season.js: 0 green … 1.4 every leaf fallen
+//   uFlushG growth of the new cohort in uGrow's own units
+uniform float uYear; uniform float uTurn; uniform float uFlushG;
 void leafGrow(float tE, float old, out float u, out float scl, out float young, out float fold, out float erect, out float age){
   age = 0.0;
   if (old > 0.0) {                       // last year's leaf
     u = 1.0; young = 0.0; fold = 0.0; erect = 0.0;
-    scl = uGrow < old ? 1.0 : 0.0;
+    scl = (uYear < 0.5 && uGrow < old) ? 1.0 : 0.0;
     age = 0.80 + fract(old * 37.0) * 0.32 + smoothstep(old - 0.12, old, uGrow) * 0.15;
     return;
   }
-  u = clamp((uGrow - tE) / ${LEAF_TIMING.unfold.toFixed(3)}, 0.0, 1.0);
-  float m = clamp((uGrow - tE - ${LEAF_TIMING.unfold.toFixed(3)} * 0.6) / ${LEAF_TIMING.mature.toFixed(3)}, 0.0, 1.0);
-  scl = uGrow < tE - ${LEAF_TIMING.bud.toFixed(3)} ? 0.0 : mix(0.07, 1.0, smoothstep(0.0, 0.9, u));
+  float g = uGrow;
+  if (uYear > 0.5) {
+    // the blade this bud carried through last season: it colours, then lets go (each leaf in its own time)
+    float r1 = fract(tE * 917.31 + 0.37);
+    float oldAge = (uTurn - r1 * 0.85) * 2.2;
+    if (uTurn > 0.0 && oldAge < 1.0) {
+      u = 1.0; young = 0.0; fold = 0.0; erect = 0.0; scl = 1.0;
+      age = clamp(oldAge, 0.0, 1.0) * 1.12;
+      return;
+    }
+    g = uFlushG;
+  }
+  u = clamp((g - tE) / ${LEAF_TIMING.unfold.toFixed(3)}, 0.0, 1.0);
+  float m = clamp((g - tE - ${LEAF_TIMING.unfold.toFixed(3)} * 0.6) / ${LEAF_TIMING.mature.toFixed(3)}, 0.0, 1.0);
+  scl = g < tE - ${LEAF_TIMING.bud.toFixed(3)} ? 0.0 : mix(0.07, 1.0, smoothstep(0.0, 0.9, u));
   fold = (1.0 - smoothstep(0.1, 0.8, u)) * 1.3;
   erect = (1.0 - smoothstep(0.15, 0.9, u)) * 1.1;
   // bronze while the bud opens, then a bright, thin yellow-green that deepens as it matures
@@ -205,7 +222,8 @@ export const UNIFORMS = {
   uWindDir: { value: new THREE.Vector3(0.8, 0, -0.6).normalize() },
   uTouchO: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, -99, 0, -99)) },
   uTouchD: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 1, 0, 0)) },
-  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 }
+  uGrow: { value: 0 }, uTransmit: { value: 1.0 }, uFar: { value: 0.35 },
+  uYear: { value: 0 }, uTurn: { value: 0 }, uFlushG: { value: 1 }
 };
 
 /** A MeshStandardMaterial (or depth material) patched into a growing leaf. */

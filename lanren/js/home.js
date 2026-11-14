@@ -36,6 +36,7 @@ let W = null;     // lanren/world/state.js: owner of camera and input, the campu
 let life = null;  // lanren/world/world.js: the 05 → 06 film, the walker, the pocket map and the menu
 let roots = null; // 02's history on the same tree; shares the camera and scroll rail
 let canopy = null; // 03's student works tree, enters only on request
+let rings = null;  // 年轮 (lanren/rings): the tree on any real day since 1940; loads when first opened
 let override = null;
 let saved = null;
 try { saved = JSON.parse(sessionStorage.getItem('haiz.home') || 'null'); } catch { /* storage blocked */ }   // look-dev: a fixed camera frame for reviewing the tree itself
@@ -233,6 +234,22 @@ for (const b of $$('[data-action="search"]')) b.addEventListener('click', () => 
 for (const b of $$('[data-action="roots-climb"]')) b.addEventListener('click', () => (roots ? roots.api.goStation(1) : $('.roots-static')?.scrollIntoView({ behavior: 'smooth' })));
 for (const b of $$('[data-action="roots-read"]')) b.addEventListener('click', () => (roots ? roots.api.open(null) : $('.roots-static')?.scrollIntoView({ behavior: 'smooth' })));
 $('#soundButton').addEventListener('click', async () => $('#soundButton').setAttribute('aria-pressed', String(await sound.toggle())));
+// 年轮: opened from the bar, from a slab entry or from a #rings/<date> link; without WebGL it is the ring alone
+let ringsLoading = null;
+function openRings(arg = {}, opts = {}) {
+  ringsLoading ||= import('../rings/rings.js').then((m) => {
+    rings = m.attach({ world, cam, W, DwellCamera, reduceMotion, sound, filmGrow: () => (canopy ? canopy.grow(growAt(state.p)) : growAt(state.p)),
+      openRoots: (id) => roots?.api?.open?.(id) });
+    return rings;
+  }).catch((err) => { console.warn('rings unavailable', err); ringsLoading = null; return null; });
+  return ringsLoading.then((r) => r?.open(arg, opts));
+}
+function ringsEntry(h) {
+  const m = /^#rings(?:\/(\d{4})-(\d\d)-(\d\d)(?:\/(\d\d)(\d\d))?)?$/.exec(h || '');
+  return m ? (m[1] ? { y: +m[1], m: +m[2], d: +m[3], minutes: m[4] ? +m[4] * 60 + +m[5] : null } : {}) : null;
+}
+for (const b of $$('#ringsButton, [data-action="rings"]')) b.addEventListener('click', () => openRings());
+addEventListener('popstate', () => { const r = ringsEntry(location.hash); if (r && !rings) openRings(r, { fromHistory: true }); });
 
 // navigator: the camera's real path, seen from above (reference 09). Stations
 // sit where the shots are; the dot is the camera right now.
@@ -567,6 +584,7 @@ async function start3D() {
   loop();
   body.classList.add('ready');
   visits.arrive(haikouParts(Date.now()), { label: '' });
+  if (ringsEntry(entry.hash)) openRings(ringsEntry(entry.hash), { fromHistory: true });
 }
 
 function goStatic() {
@@ -576,6 +594,7 @@ function goStatic() {
   // without WebGL the campus plan is still there, as a drawing with the same places
   import('../map/static.js').then((m) => m.renderStatic()).catch((err) => console.warn('campus plan unavailable', err));
   import('../canopy/static.js').then((m) => m.renderStatic(entry)).catch((err) => console.warn('works list unavailable', err));
+  if (ringsEntry(entry.hash)) openRings(ringsEntry(entry.hash), { fromHistory: true });
 }
 
 // The details shot is a portrait of one real cluster of new leaves on the rim
@@ -712,28 +731,32 @@ function step(dt, wallDt = dt) {
   life?.tick(dt, wallDt);
   canopy?.tick(dt, wallDt);
   // growth and the light of the day follow the walk
-  const grow = canopy ? canopy.grow(growAt(p)) : growAt(p);
+  // (年轮 open: the chosen day stages the tree instead — its place in the year, its sky, its weather)
+  const ring = rings?.stage(dt) || null;
+  const grow = ring ? ring.lush : canopy ? canopy.grow(growAt(p)) : growAt(p);
   const L = lightAt(p);
   life?.light(L, p);
   map?.light(L);
   roots?.light(L, p);
   canopy?.light(L);
+  if (ring) Object.assign(L, ring.L);
   const rail = override || railAt(p);
   const yaw = THREE.MathUtils.degToRad(L.sunAz);
   const el = THREE.MathUtils.degToRad(L.sunEl);
   sunDir.set(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
   world.setStage({ grow, sunDir, sunCol: C(L.sunCol), sunI: L.I, zenith: C(L.zenith), horizon: C(L.horizon), glow: C(L.glow),
-    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure * exitLight.boost, warm: L.warm, cloud: L.cloud, sat: L.sat, contrast: L.contrast,
+    fog: C(L.fog), density: L.density, mist: L.mist, rays: L.rays, exposure: L.exposure * exitLight.boost, warm: L.warm, cloud: L.cloud, cloudLit: L.cloudLit, sat: L.sat, contrast: L.contrast,
     aperture: L.aperture, focus: rail.focus || (L.focus > 0.1 ? L.focus : (rail.dist || Math.hypot(rail.lx - rail.ex, rail.ly - rail.ey, rail.lz - rail.ez))) });
   map?.post();
   const gust = 0.5 + 0.3 * Math.sin(t * 0.13) + 0.2 * Math.sin(t * 0.047 + 1.3) * Math.sin(t * 0.31);
   UNIFORMS.uGust.value = Math.max(0, Math.min(1, gust));
   UNIFORMS.uWind.value = reduceMotion ? 0.05 : 0.22 + 0.18 * grow;
-  if (!map?.camera(dt, wallDt) && !life?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
+  rings?.apply();
+  if (!rings?.camera(dt, wallDt) && !map?.camera(dt, wallDt) && !life?.camera(dt, wallDt) && !canopy?.camera(dt, wallDt)) cam.update(dt, wallDt);
   world.camera.updateMatrixWorld();
   life?.after(dt, wallDt);
   dwell += cam.idleSeconds() > 2 ? dt : dt * 0.4;
-  if (!reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
+  if (!ring && !reduceMotion && grow < 0.02 && (openingFall -= dt) < 0) {
     openingFall = 1.6 + Math.random() * 2.4;
     const ros = world.rosettes, st = world.stride;
     for (let k = 0; k < 40; k++) {
@@ -741,8 +764,9 @@ function step(dt, wallDt = dt) {
       if (ros[i + 10] > 0 && ros[i + 1] > 4) { world.litter.release(new THREE.Vector3(ros[i], ros[i + 1], ros[i + 2]), 0.85 + Math.random() * 0.3); break; }
     }
   }
-  world.litter.update(dt, grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, active === N - 1);
-  sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: 1 - grow }, haikouParts(Date.now()), { altitude: el });
+  world.litter.update(dt, ring ? 1 : grow, UNIFORMS.uWind.value * UNIFORMS.uGust.value, UNIFORMS.uWindDir.value, dwell, !ring && active === N - 1);
+  sound.update(UNIFORMS.uWind.value * (0.5 + UNIFORMS.uGust.value), { fallen: ring ? ring.fallen : 1 - grow }, ring ? ring.parts : haikouParts(Date.now()),
+    { altitude: ring ? THREE.MathUtils.degToRad(ring.sunAlt) : el });
   updateNav(p, grow);
   placeSlab(1 - Math.min(1, Math.abs(p - near) * 4));
   map?.overlay();
@@ -771,7 +795,7 @@ function adapt(dt) {
 }
 
 window.__haizHome = {
-  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
+  get world() { return world; }, get map() { return map?.api; }, get life() { return life?.api; }, get roots() { return roots?.api; }, get canopy() { return canopy?.api; }, get rings() { return rings?.api; }, openRings, get W() { return W; }, compose, chapters: CHAPTERS, state, goTo, pOfProgress, progressOfP,
   go: (i) => { override = null; goTo(i, true); state.p = i; cam?.snap(); setActive(i); if (world) world.litter.falling.length = 0; },
   seek: (p) => { override = null; state.p = p; cam?.snap(); if (world) world.litter.falling.length = 0; },
   /** review and tests: stop (or resume) the scroll's hold on p, so seek(p) stays where it is put */

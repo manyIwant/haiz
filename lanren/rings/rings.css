@@ -1,0 +1,156 @@
+/* 年轮 · the ring beside the tree (lanren/rings/rings.js). Colours and type follow lanren/home.css. */
+.rg { position: fixed; inset: 0; z-index: 12; pointer-events: none; color: var(--ink); font: 13px/1.6 var(--sans);
+  --rg-d: min(calc(100vh - 150px), 46vw); }
+.rg > * { pointer-events: auto; }
+.rg button, .rg input, .rg select { font: inherit; color: inherit; }
+
+/* the film's own interface steps back while the ring is open */
+body.rg-on .panels, body.rg-on .orbit, body.rg-on .growth, body.rg-on .rail, body.rg-on .leaders, body.rg-on .colophon,
+body.rg-on .rg-none { opacity: 0 !important; pointer-events: none !important; visibility: hidden; }
+body.rg-on #ringsButton, body.rg-on #searchButton, body.rg-on #bookButton { display: none; }
+body.rg-on .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(8, 11, 10, .50), rgba(8, 11, 10, .18) 46%, transparent 62%), linear-gradient(transparent 62%, rgba(8, 11, 10, .42)); }
+body.rg-on.static .stage::after { background: rgba(8, 11, 10, .72); }
+
+.rg-wipe { position: fixed; inset: 0; background: #0d1210; opacity: 0; pointer-events: none !important; transition: opacity .7s var(--ease); z-index: 3; }
+.rg-wipe.on { opacity: 1; transition-duration: .4s; }
+
+/* ------------------------------------------------------------ top left: what this is */
+.rg-kicker { position: absolute; left: var(--pad); top: var(--top); margin: 0; display: flex; align-items: baseline; gap: 12px; }
+.rg-kicker b { font: 500 26px/1 var(--serif); letter-spacing: .12em; }
+.rg-kicker span { font: 400 20px/1 var(--display); font-style: italic; color: var(--ink-2); }
+.rg-kicker em { font-style: normal; font-size: 11.5px; letter-spacing: .08em; color: var(--ink-3); }
+
+/* ------------------------------------------------------------ the disc */
+.rg-disc { position: absolute; left: calc(var(--pad) - 8px); top: calc(var(--top) + 44px); width: var(--rg-d); height: var(--rg-d);
+  display: grid; place-items: center; filter: drop-shadow(0 18px 34px rgba(0, 0, 0, .45)); }
+.rg-disc canvas { grid-area: 1 / 1; display: block; touch-action: none; }
+.rg-wood { pointer-events: none; }
+.rg-tip { position: absolute; z-index: 2; margin: 0; transform: translate(-50%, -100%); white-space: nowrap; pointer-events: none;
+  padding: 3px 10px; border-radius: 999px; font-size: 11.5px; background: rgba(16, 20, 18, .86); border: 1px solid var(--edge); }
+.rg-wait { grid-area: 1 / 1; margin: 0; color: var(--ink-2); letter-spacing: .1em; }
+
+/* ------------------------------------------------------------ under the disc: what the ring is drawn with */
+.rg-lens { position: absolute; left: var(--pad); bottom: var(--bottom); width: var(--rg-d); }
+.rg-lens-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.rg-lens-row > button { border: 1px solid var(--edge); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px; padding: 4px 14px; font-size: 12px; cursor: pointer; transition: background .3s, border-color .3s, color .3s; }
+.rg-lens-row > button:hover { border-color: rgba(246, 241, 231, .55); }
+.rg-lens-row > button[aria-checked="true"] { background: var(--ink); color: #1b201d; border-color: var(--ink); }
+.rg-lens-note { margin: 6px 0 0; font-size: 11.5px; color: var(--ink-2); min-height: 1.6em; }
+.rg-about { margin-left: auto; position: relative; font-size: 11.5px; color: var(--ink-2); }
+.rg-about summary { cursor: pointer; list-style: none; text-decoration: underline; text-decoration-color: var(--edge); text-underline-offset: 3px; }
+.rg-about summary::-webkit-details-marker { display: none; }
+.rg-about p { position: absolute; right: 0; bottom: calc(100% + 10px); width: min(430px, 80vw); margin: 0; padding: 14px 16px; border-radius: 14px;
+  background: rgba(16, 20, 18, .92); border: 1px solid var(--edge); color: var(--ink-2); line-height: 1.75; }
+
+/* ------------------------------------------------------------ the day, over the water under the tree */
+.rg-panel { position: absolute; right: var(--pad); bottom: var(--bottom); width: min(470px, 40vw); text-shadow: 0 1px 14px rgba(0, 0, 0, .5); }
+.rg-date { margin: 0; display: flex; align-items: baseline; gap: 16px; font-weight: 400; }
+.rg-date .y { font: 500 clamp(50px, 5.4vw, 80px)/.9 var(--display); letter-spacing: .01em; font-variant-numeric: lining-nums tabular-nums; }
+.rg-date .md { font: 500 clamp(20px, 2vw, 28px)/1 var(--serif); letter-spacing: .08em; }
+.rg-week { margin: 6px 0 0; font-size: 11.5px; letter-spacing: .08em; color: var(--ink-3); }
+.rg-wx { margin: 4px 0 0; font: 500 17px/1.5 var(--serif); letter-spacing: .04em; }
+.rg-tree { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.rg-hist { margin: 8px 0 0; font-size: 12px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.rg-hist span { color: var(--gold); letter-spacing: .06em; }
+.rg-hist a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: var(--edge); }
+.rg-step { margin-top: 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; text-shadow: none; }
+.rg-step button, .rg-pick, .rg-play, .rg-mine button { border: 1px solid var(--edge); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background .3s, border-color .3s; }
+.rg-step button:hover, .rg-pick:hover, .rg-play:hover, .rg-mine button:hover { border-color: rgba(246, 241, 231, .55); background: rgba(20, 26, 23, .5); }
+.rg-pick { position: relative; display: inline-flex; align-items: center; overflow: hidden; }
+.rg-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.rg-pick input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+
+.rg-clock { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--edge); display: grid; grid-template-columns: 1fr auto; column-gap: 12px; row-gap: 2px; align-items: center; text-shadow: none; }
+.rg-hours { grid-column: 1 / -1; }
+.rg-hours { position: relative; height: 40px; }
+.rg-hours canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 4px; }
+.rg-hours input { position: absolute; left: 0; right: 0; top: 4px; width: 100%; height: 24px; margin: 0; background: none; -webkit-appearance: none; appearance: none; cursor: ew-resize; }
+.rg-hours input::-webkit-slider-runnable-track { height: 24px; background: none; }
+.rg-hours input::-moz-range-track { height: 24px; background: none; }
+.rg-hours input::-webkit-slider-thumb { -webkit-appearance: none; width: 4px; height: 24px; border-radius: 2px; background: #fffdf2; box-shadow: 0 0 0 1px rgba(20, 16, 12, .6), 0 0 12px rgba(255, 253, 242, .7); }
+.rg-hours input::-moz-range-thumb { width: 4px; height: 24px; border: 0; border-radius: 2px; background: #fffdf2; box-shadow: 0 0 0 1px rgba(20, 16, 12, .6), 0 0 12px rgba(255, 253, 242, .7); }
+.rg-now { margin: 2px 0 0; display: flex; gap: 12px; align-items: baseline; text-shadow: 0 1px 12px rgba(0, 0, 0, .5); }
+.rg-now b { font: 500 26px/1 var(--display); font-variant-numeric: lining-nums tabular-nums; min-width: 3.2em; }
+.rg-now span { font-size: 12px; color: var(--ink-2); }
+.rg-plays { margin: 0; display: flex; gap: 6px; }
+.rg-play { display: inline-flex; align-items: center; gap: 8px; }
+.rg-play i { width: 0; height: 0; border-style: solid; border-width: 4.5px 0 4.5px 7px; border-color: transparent transparent transparent currentColor; }
+.rg-play[aria-pressed="true"] { background: var(--ink); color: #1b201d; border-color: var(--ink); }
+.rg-play[aria-pressed="true"] i { width: 7px; height: 9px; border: 0; border-left: 2.5px solid currentColor; border-right: 2.5px solid currentColor; }
+
+/* ------------------------------------------------------------ top right: a span of one's own, and the way back */
+.rg-side { position: absolute; right: var(--pad); top: calc(var(--top) + 46px); display: flex; gap: 6px; }
+.rg-side .tool { cursor: pointer; color: var(--ink); }
+.rg-side .tool[aria-expanded="true"] { background: var(--ink); color: #1b201d; border-color: var(--ink); }
+.rg-mine { position: absolute; right: var(--pad); top: calc(var(--top) + 86px); width: fit-content; max-width: calc(100vw - 2 * var(--pad)); max-height: calc(100vh - 150px); overflow: auto;
+  padding: 16px 18px 14px; border-radius: 18px; background: rgba(16, 21, 18, .86); border: 1px solid var(--edge);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  display: grid; grid-template-columns: 250px auto; column-gap: 22px; align-content: start; }
+.rg-mine > * { grid-column: 1; }
+.rg-mine .rg-facts { grid-column: 2; grid-row: 1 / span 6; width: 330px; margin: 0; padding: 0 0 0 20px; border-top: 0; border-left: 1px solid var(--edge); }
+.rg-mine-head { margin: 0 0 10px; font: 500 16px/1.4 var(--serif); letter-spacing: .06em; }
+.rg-mine label { display: grid; gap: 4px; margin-bottom: 10px; font-size: 11.5px; color: var(--ink-2); }
+.rg-mine input, .rg-mine select { padding: 6px 10px; border-radius: 10px; border: 1px solid var(--edge); background: rgba(246, 241, 231, .06); color-scheme: dark; font-size: 13px; }
+.rg-facts { margin: 12px 0 8px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.rg-facts p { margin: 0 0 6px; color: var(--ink-2); }
+.rg-facts .lead { font: 500 15px/1.4 var(--serif); color: var(--gold); letter-spacing: .06em; }
+.rg-facts b { color: var(--ink); font: 500 17px/1 var(--display); font-variant-numeric: lining-nums; }
+.rg-facts ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.rg-facts li button { width: 100%; text-align: left; border-radius: 10px; padding: 5px 10px; font-size: 11.5px; }
+.rg-mine-actions { margin: 10px 0 8px; display: flex; gap: 6px; }
+.rg-mine-actions #rgPoster { background: var(--ink); color: #1b201d; border-color: var(--ink); }
+.rg-small { margin: 0; font-size: 10.5px; color: var(--ink-3); line-height: 1.7; }
+
+.rg :focus-visible { outline: 2px solid #fffdf2; outline-offset: 2px; }
+
+/* ------------------------------------------------------------ narrower desktops */
+@media (max-width: 1180px) and (min-width: 761px) {
+  .rg { --rg-d: min(calc(100vh - 150px), 44vw); }
+  .rg-panel { width: min(420px, 44vw); }
+}
+
+/* ------------------------------------------------------------ phones and upright screens: tree above, ring below */
+@media (max-width: 760px), (max-aspect-ratio: 9/10) {
+  body.rg-on .stage::after { background: linear-gradient(transparent 24%, rgba(8, 11, 10, .6) 44%, rgba(8, 11, 10, .8)); }
+  body.rg-on .tools { display: none; }
+  .rg-kicker { top: calc(var(--top) + 2px); gap: 8px; }
+  .rg-kicker b { font-size: 20px; }
+  .rg-kicker span { font-size: 16px; }
+  .rg-kicker em { display: none; }
+  .rg-side { top: calc(var(--top) + 40px); left: var(--pad); right: auto; }
+  .rg-side kbd { display: none; }
+  /* the day: under the tree */
+  .rg-panel { left: var(--pad); right: var(--pad); bottom: auto; top: 30svh; width: auto; }
+  .rg-date { gap: 10px; }
+  .rg-date .y { font-size: 44px; }
+  .rg-date .md { font-size: 19px; }
+  .rg-week { display: none; }
+  .rg-wx { margin-top: 5px; font-size: 14.5px; }
+  .rg-tree { font-size: 11.5px; }
+  .rg-hist { margin-top: 2px; font-size: 11px; }
+  .rg-step { margin-top: 7px; gap: 4px; }
+  .rg-step button, .rg-pick { padding: 4px 9px; }
+  /* the ring takes what is left between the day and the clock */
+  .rg-disc { left: 0; right: 0; top: calc(30svh + 142px); bottom: calc(var(--bottom) + 116px); width: auto; height: auto; }
+  .rg-clock { position: fixed; left: var(--pad); right: var(--pad); bottom: calc(var(--bottom) + 34px); margin: 0; padding: 0; border: 0; }
+  .rg-hours { height: 36px; }
+  .rg-now { margin: 0; gap: 8px; }
+  .rg-now b { font-size: 22px; min-width: 2.9em; }
+  .rg-now span { font-size: 11px; }
+  .rg-play { padding: 4px 10px; font-size: 11.5px; }
+  .rg-lens { left: var(--pad); right: var(--pad); width: auto; bottom: calc(var(--bottom) - 6px); }
+  .rg-lens-row > button { padding: 3px 11px; font-size: 11.5px; }
+  .rg-lens-note { display: none; }
+  .rg-mine { top: calc(var(--top) + 78px); left: var(--pad); right: var(--pad); width: auto; max-height: calc(100svh - 120px); z-index: 4; display: block; }
+  .rg-mine .rg-facts { width: auto; margin: 12px 0 8px; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--edge); }
+}
+@media (max-width: 760px) and (max-height: 700px), (max-aspect-ratio: 9/10) and (max-height: 700px) {
+  .rg-panel { top: 24svh; }
+  .rg-tree { display: none; }
+  .rg-disc { top: calc(24svh + 118px); }
+}
+@media (prefers-reduced-motion: reduce) { .rg-wipe { transition: none; } }
+.rg:focus { outline: none; }

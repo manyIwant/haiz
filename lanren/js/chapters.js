@@ -26,6 +26,7 @@ export const CHAPTERS = [
     entries: [
       { action: 'roots-climb', title: '沿树干向上', en: 'Climb the years', note: '继续滚动，或在右侧选一个年代', primary: true },
       { action: 'roots-read', title: '按年代阅读', en: 'Read by year', note: '不看镜头，逐条读史料、照片与出处' },
+      { action: 'rings', title: '年轮', en: 'Rings', note: '三万个真实的日子：让树回到任何一天' },
       { href: 'campus-3d.html?focus=lanshu', title: '第一人称校园', en: 'Walk the campus', note: '从树下出发：16 间可步入的想象教室', dark: true, group: '从树下出发' },
       { href: 'descent.html', title: '从星球到树荫', en: 'The descent', note: '一段保持地理焦点的下降镜头', dark: true },
       { href: 'director.html', title: '探索导演台', en: 'Director', note: '编排你自己的步行路线' }

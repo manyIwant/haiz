@@ -50,6 +50,12 @@ export class Soundscape {
     const bp = ctx.createBiquadFilter(); bp.type = 'peaking'; bp.frequency.value = 4200; bp.gain.value = 5;
     this.leafGain = ctx.createGain(); this.leafGain.gain.value = 0;
     l.connect(hp).connect(bp).connect(this.leafGain).connect(this.master); l.start();
+    // rain (年轮): band-limited noise, silent until a rainy day is chosen
+    const rn = ctx.createBufferSource(); rn.buffer = white; rn.loop = true;
+    const rhp = ctx.createBiquadFilter(); rhp.type = 'highpass'; rhp.frequency.value = 1100;
+    const rlp = ctx.createBiquadFilter(); rlp.type = 'lowpass'; rlp.frequency.value = 7200;
+    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0;
+    rn.connect(rhp).connect(rlp).connect(this.rainGain).connect(this.master); rn.start();
     // insects: cicada-like buzz by day in the warm months, crickets at night
     const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 4700;
     const ibp = ctx.createBiquadFilter(); ibp.type = 'bandpass'; ibp.frequency.value = 4900; ibp.Q.value = 6;
@@ -78,6 +84,12 @@ export class Soundscape {
     if (warm && day) { insect = 0.012 * Math.min(1, (alt - 8) / 20); this.insectOsc.frequency.setTargetAtTime(4700, t, 1); this.insectLfo.frequency.setTargetAtTime(88, t, 1); }
     else if (alt < -4) { insect = 0.006; this.insectOsc.frequency.setTargetAtTime(4300, t, 1); this.insectLfo.frequency.setTargetAtTime(3.2, t, 1); }
     this.insectGain.gain.setTargetAtTime(insect, t, 1.2);
+  }
+
+  /** 0 dry … 1 a downpour */
+  setRain(k) {
+    if (!this.ctx || !this.rainGain) return;
+    this.rainGain.gain.setTargetAtTime(this.on ? 0.11 * Math.max(0, Math.min(1, k)) : 0, this.ctx.currentTime, 0.5);
   }
 
   _burst(gain, hp, dur, freq = 4000) {

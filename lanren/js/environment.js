@@ -13,7 +13,7 @@ void main(){
   gl_Position = p.xyww;
 }`;
 const SKY_FRAG = /* glsl */`
-uniform vec3 uSun; uniform float uTimeS; uniform float uCloud;
+uniform vec3 uSun; uniform float uTimeS; uniform float uCloud; uniform float uCloudLit;
 uniform vec3 uZenith; uniform vec3 uHorizon; uniform vec3 uGlow; uniform vec3 uSunCol;
 varying vec3 vDir;
 float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
@@ -39,7 +39,7 @@ void main(){
     vec2 toSun = normalize(uSun.xz + vec2(1e-4)) * 0.16;
     float c2 = cloudField(uv + toSun);
     float lit = clamp(1.15 - (c2 - c) * 3.2, 0.42, 1.25);
-    vec3 cTop = mix(vec3(0.96, 0.95, 0.93), uGlow * 0.9 + uHorizon * 0.3, 0.35);
+    vec3 cTop = mix(vec3(0.96, 0.95, 0.93) * uCloudLit, uGlow * 0.9 + uHorizon * 0.3, 0.35);   // uCloudLit: 1 by day (V4); 年轮 lowers it for dusk, night and storm
     vec3 cBase = mix(uZenith * 0.75 + uHorizon * 0.45, uHorizon * 0.7, 0.4);
     vec3 cc = mix(cBase, cTop, lit * 0.8) + uGlow * pow(cs, 7.0) * 0.9 * (1.3 - lit);
     float fade = smoothstep(0.0, 0.16, d.y) * (1.0 - 0.35 * exp(-h * 6.0));
@@ -54,7 +54,7 @@ export function createSky() {
   const mat = new THREE.ShaderMaterial({
     vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false,
     uniforms: {
-      uSun: { value: new THREE.Vector3(0, 1, 0) }, uTimeS: { value: 0 }, uCloud: { value: 0.5 },
+      uSun: { value: new THREE.Vector3(0, 1, 0) }, uTimeS: { value: 0 }, uCloud: { value: 0.5 }, uCloudLit: { value: 1 },
       uZenith: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() },
       uSunCol: { value: new THREE.Color() }
     }
