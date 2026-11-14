@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: rings-climate
@@ -41,9 +42,11 @@ jobs:
       - name: The archive is still whole
         run: node tests/rings.cjs
       - name: Commit the new days
+        id: save
         run: |
           if [ -z "$(git status --porcelain lanren/rings/data)" ]; then
             echo 'No new days yet.'
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           last=$(node -p "require('./lanren/rings/data/climate.json').last")
@@ -51,4 +54,12 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lanren/rings/data/climate.bin lanren/rings/data/climate.json
           git commit -m "data(rings): the ring grows to ${last}"
-          git push
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      # GITHUB_TOKEN pushes do NOT trigger a branch-published Pages build.
+      # Request one explicitly for the default branch after a successful data commit.
+      - name: Publish updated days to GitHub Pages
+        if: steps.save.outputs.changed == 'true' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"
