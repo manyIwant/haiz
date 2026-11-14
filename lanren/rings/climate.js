@@ -99,8 +99,13 @@ export function createClimate(meta, bytes) {
 
 /** fetch and unpack in the page */
 export async function loadClimate(base = new URL('./data/', import.meta.url)) {
-  const meta = await (await fetch(new URL('climate.json', base))).json();
-  const res = await fetch(new URL(`climate.bin?d=${meta.last}`, base));
+  // The archive revises recent days even when the final date stays unchanged.
+  // Always revalidate its tiny manifest and key the binary by content digest.
+  const manifest = await fetch(new URL('climate.json', base), { cache: 'no-store' });
+  if (!manifest.ok) throw new Error('climate.json ' + manifest.status);
+  const meta = await manifest.json();
+  const version = meta.sha256 || meta.built || meta.last; // old archives lack a digest
+  const res = await fetch(new URL(`climate.bin?v=${encodeURIComponent(version)}`, base));
   if (!res.ok) throw new Error('climate.bin ' + res.status);
   return createClimate(meta, await res.arrayBuffer());
 }
