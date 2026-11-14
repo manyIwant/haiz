@@ -1,0 +1,43 @@
+name: HAIZ rings · data, browser and six-act regression
+
+on:
+  pull_request:
+    paths:
+      - 'lanren/**'
+      - 'index.html'
+      - 'assets/js/experience.js'
+      - 'scripts/rings/**'
+      - 'tests/rings*'
+      - 'tests/home-browser.cjs'
+      - 'tests/lanren.cjs'
+      - '.github/workflows/rings-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify rings' archive, astronomy and data codec
+        run: node tests/rings.cjs
+      - name: Verify the original tree and source archive
+        run: |
+          node tests/lanren.cjs
+          node tests/provenance.cjs
+      - name: Install Chromium for software-rendered browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Verify rings interaction and mobile fallback
+        run: node tests/rings-browser.cjs
+      - name: Verify original six-act home remains functional
+        run: node tests/home-browser.cjs
