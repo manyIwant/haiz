@@ -6,7 +6,7 @@
     "a falling leaf is caught, annotated and kept in the book",
     "entry click draws the veil and navigates to news.html",
     "returning restores the details shot (03) and the book (1 leaf)",
-    "static fallback lists all 18 entries as a readable page",
+    "static fallback lists all 19 entries as a readable page",
     "phone 390×844: no horizontal overflow, true proportions under the lens shift, tier low"
   ],
   "renderer": "Chromium + SwiftShader (software); not a hardware frame-rate measurement"

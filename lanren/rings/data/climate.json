@@ -1,0 +1,69 @@
+{
+  "start": "1940-01-01",
+  "days": 31724,
+  "last": "2026-11-08",
+  "fields": [
+    {
+      "name": "tmax",
+      "type": "Int16",
+      "scale": 10,
+      "unit": "°C"
+    },
+    {
+      "name": "tmin",
+      "type": "Int16",
+      "scale": 10,
+      "unit": "°C"
+    },
+    {
+      "name": "rain",
+      "type": "Uint16",
+      "scale": 10,
+      "unit": "mm"
+    },
+    {
+      "name": "wind",
+      "type": "Uint8",
+      "scale": 1,
+      "unit": "km/h"
+    },
+    {
+      "name": "gust",
+      "type": "Uint8",
+      "scale": 1,
+      "unit": "km/h"
+    },
+    {
+      "name": "dir",
+      "type": "Uint8",
+      "scale": 0.5,
+      "unit": "°"
+    },
+    {
+      "name": "cloud",
+      "type": "Uint8",
+      "scale": 1,
+      "unit": "%"
+    },
+    {
+      "name": "code",
+      "type": "Uint8",
+      "scale": 1,
+      "unit": "WMO"
+    }
+  ],
+  "site": {
+    "lat": 19.996067,
+    "lon": 110.347227
+  },
+  "grid": {
+    "latitude": 20,
+    "longitude": 110.25,
+    "elevation": 19
+  },
+  "model": "era5",
+  "source": "ERA5 reanalysis (Copernicus Climate Change Service / ECMWF) via Open-Meteo Historical Weather API",
+  "licence": "Open-Meteo data CC BY 4.0; contains modified Copernicus Climate Change Service information",
+  "caveat": "模式再分析，网格约 25 km；不是校内气象站观测。台风等极端值通常被低估。",
+  "built": "2026-11-14"
+}

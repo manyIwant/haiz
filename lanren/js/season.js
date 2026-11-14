@@ -78,6 +78,7 @@ export function seasonAt(doy, yearDays = 365) {
 
 export function describe(s) {
   if (s.flush > 0 && s.flush < 0.92 && s.fallen > 0.6) return s.flush < 0.15 ? '枝头将要萌芽' : '新叶正在长出';
+  if (s.flush >= 0.92 && s.fallen > 0.6) return '新绿满枝';   // the flush is whole before the old cohort's clock resets (1 May)
   if (s.fallen > 0.85) return '叶已落尽';
   if (s.fallen > 0.25) return '红叶纷落';
   if (s.turn > 0.55) return '满树转红';

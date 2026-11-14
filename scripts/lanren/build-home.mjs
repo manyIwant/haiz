@@ -60,7 +60,7 @@ const html = `<!doctype html>
 <link rel="preload" href="lanren/assets/poster.jpg" as="image" fetchpriority="high">
 <link rel="preload" href="assets/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="lanren/home.css?v=3">
-<link rel="stylesheet" href="assets/css/experience.css?v=13"><script defer src="assets/js/experience.js?v=13"></script>
+<link rel="stylesheet" href="assets/css/experience.css?v=13"><script defer src="assets/js/experience.js?v=14"></script>
 <script defer src="lanren/vendor/gsap/gsap.min.js"></script>
 <script defer src="lanren/vendor/gsap/ScrollTrigger.min.js"></script>
 <script type="importmap">
@@ -82,6 +82,7 @@ const html = `<!doctype html>
 <header class="bar">
   <nav class="tools" aria-label="工具">
     <button id="searchButton" class="tool">全部入口 <kbd>⌘K</kbd></button>
+    <button id="ringsButton" class="tool" title="这棵树记得的每一天">年轮</button>
     <button id="bookButton" class="tool">书页 <b id="bookCount">0</b></button>
     <button id="soundButton" class="tool" aria-pressed="false"><i class="dot" aria-hidden="true"></i><span>声音</span></button>
   </nav>

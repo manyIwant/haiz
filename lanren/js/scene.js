@@ -395,6 +395,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     u.uSun.value.copy(state.sunDir);
     u.uZenith.value.copy(s.zenith); u.uHorizon.value.copy(s.horizon); u.uGlow.value.copy(s.glow); u.uSunCol.value.copy(s.sunCol);
     u.uCloud.value = s.cloud;
+    u.uCloudLit.value = s.cloudLit ?? 1;
     distance.material.uniforms.uSun.value.copy(state.sunDir);
     motes.material.uniforms.uSunM.value.copy(state.sunDir);
     motes.material.uniforms.uSunColM.value.copy(s.sunCol).multiplyScalar(0.3 * s.sunI * (0.3 + s.rays));

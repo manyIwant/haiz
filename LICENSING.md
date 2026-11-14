@@ -41,6 +41,7 @@ HAIZ 希望将**经权利人确认属于原创且可授权的美术作品**按�
 - **学生投稿作品**：著作权归作品创作者；在平台公开展示不等于将原作或商业使用权转让给 HAIZ。
 - **已有 CC0 声明的原创 `campus-limestone.glb`**：按原 CC0 许可继续提供，不能通过本文件收回或改成 NC。
 - **第三方 CC BY 模型与材质**：按原许可和署名继续使用，不能用新的 NC 规则覆盖原权利。
+- **年轮的天气档案**（`lanren/rings/data/`）：ERA5 再分析（Copernicus Climate Change Service / ECMWF），经 Open-Meteo 获取（CC BY 4.0），按来源许可与署名使用，不适用根目录 LICENSE；见该目录的 `SOURCE.md`。
 
 ## 3. 第三方代码、上游依赖
 
