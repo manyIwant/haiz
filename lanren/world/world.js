@@ -157,7 +157,7 @@ export function attachWorld(ctx) {
             <div class="wd-spots" aria-label="保存的取景点（只在这台设备上）"></div>
           </section>
           <section><h4>去往</h4>
-            <div class="wd-links">${CHAPTERS[5].entries.map((e) => e.href ? `<a href="${e.href}">${e.title}</a>` : `<button type="button" data-w="entry" data-action="${e.action}">${e.title}</button>`).join('')}<a class="wd-old" href="campus-3d.html">旧版第一人称校园（含想象教室）</a><a class="wd-old" href="director.html">探索导演台（路线与取景点）</a><a class="wd-old" href="descent.html">从星球到树荫（下降镜头）</a></div>
+            <div class="wd-links">${CHAPTERS[5].entries.map((e) => e.href ? `<a href="${e.href}">${e.title}</a>` : `<button type="button" data-w="entry" data-action="${e.action}">${e.title}</button>`).join('')}<a class="wd-new" href="campus-stroll.html">新画风预览 · 第三人称校园漫步</a><a class="wd-old" href="campus-3d.html">旧版第一人称校园（含想象教室）</a><a class="wd-old" href="director.html">探索导演台（路线与取景点）</a><a class="wd-old" href="descent.html">从星球到树荫（下降镜头）</a></div>
           </section>
         </div>
         <p class="wd-menu-note">模型为近似体量，室内为推演；校园地图沿用项目数据，不作实地导航。</p>

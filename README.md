@@ -31,6 +31,7 @@
 
 - [校园杂志](journal.html)：校史、新闻档案、社团创作提案与校园生活。虚构内容及来源待核信息会标记。
 - [第一人称校园](campus-3d.html)：道路、建筑、景观与想象教室。建筑细节并不承诺照片级或测绘精度。
+- [校园漫步 · 新画风预览](campus-stroll.html)：以第三人称走过阳光、积云和风吹过的草地；建筑沿用 Blender V3 近似模型，学生与树木由 Blender 脚本生成，见 [画风说明](docs/toon-campus-style-20261116.md)。
 - [HAIZ 实验册](lab/)：摊开在桌上的立体实验书，可以点页边、拖页角翻页；理科、技术与语文、英语、历史、思想政治共 45 个课堂互动页，见 [第二代重构说明](docs/lab-book-gen2-20261112.md) 与 [第一版设计与来源说明](docs/lab-book-20261111.md)。
 - [共感暗房](darkroom.html)：影像显影、笔触转音乐、PNG 和 WAV 输出。
 - [课间窗台](windowsill/)：独立 AGPL-3.0 代码模块，参见 [来源和许可](windowsill/SOURCE.md)。
