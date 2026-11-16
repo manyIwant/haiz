@@ -272,3 +272,13 @@ Do not turn an unapproved idea into a hard requirement. Do not modify other chap
 - V4 榄仁树在漫游中采用哪种表现。
 
 在用户确认前，六幕首页保持原样。上文「方块人物第一人称」的既定设计不因本预览自动失效。
+
+### 校园漫步 V2（2026-11-16，预览阶段）
+
+**V2 页面：** [campus-stroll-v2.html](campus-stroll-v2.html)，可与 V1 直接对比。
+
+**主题是"热带的光与荫"：** 荫是一个有颜色、透亮的地方；整张画只有一个明度结构；空气从 25 米开始分层；天空参与构图；草是皮毛，不是地毯；镜头像一个同行者。所有材质共用 [lanren/stroll/atmos.js](lanren/stroll/atmos.js) 中的天空色、空气透视、风场和阴影色选择。
+
+**太阳轨迹** 采用海口 11 月的真实方位，并假设校园坐标相对真北向西旋转 41.4°；旋转方向未经核实，见 [V2 改进说明](docs/stroll-v2-20261116.md)。
+
+**仍需用户决定后才实施：** 是否以 V2 取代 V1，以及之后是否接入六幕。

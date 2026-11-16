@@ -34,7 +34,10 @@
     "test:campus-map": "node tests/campus-map.cjs && node tests/campus-map-browser.cjs",
     "build:tree": "python3 scripts/lanren/textures.py && blender -b --python scripts/lanren/build_tree.py && ./scripts/lanren/pack.sh && node scripts/lanren/build-home.mjs",
     "build:toon": "./scripts/toon/pack.sh",
-    "test:toon": "node tests/toon-walk-browser.cjs"
+    "test:toon": "node tests/toon-walk-browser.cjs",
+    "test:stroll": "node tests/stroll-v2-browser.cjs",
+    "perf:stroll": "node tests/stroll-perf.cjs v2 && node tests/stroll-perf.cjs v1",
+    "build:clouds": "python3 scripts/stroll/build_clouds.py"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

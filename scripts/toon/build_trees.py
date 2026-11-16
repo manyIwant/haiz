@@ -27,7 +27,7 @@ import bpy  # noqa: E402,I001
 import bmesh  # noqa: E402
 import numpy as np  # noqa: E402
 from mathutils import Vector, noise  # noqa: E402
-from common import OUT, BUILD, reset, material, Builder, tube, ico, rounded_box, trs, export_glb, rng  # noqa: E402
+from common import ROOT, OUT, BUILD, reset, material, Builder, tube, ico, rounded_box, trs, export_glb, rng  # noqa: E402
 
 reset(30)
 BARK = material('Bark', '#6b5a4a', 0.9)
@@ -37,7 +37,8 @@ ATLAS_OPAQUE = (0.25, 0.25)        # centre of atlas cell 0
 
 
 # ------------------------------------------------------------------ leaf atlas (grey shade + alpha)
-def leaf_atlas(path, size=512, seed=7):
+def leaf_atlas(path, size=512, seed=7, scale=1.0, count=1.0, group=0.0):
+    """scale: leaf size; count: leaves per cluster; group: 0 smooth value falloff … 1 painted value groups"""
     from PIL import Image, ImageDraw, ImageFilter
     r = rng(seed)
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
@@ -49,7 +50,7 @@ def leaf_atlas(path, size=512, seed=7):
         S = cell * 2
         # opaque core so the blob's UVs (cell 0 centre) and dense centres never show holes
         d.ellipse([S * 0.30, S * 0.30, S * 0.70, S * 0.70], fill=(150, 150, 150, 255))
-        n = 300 if ci != 2 else 240
+        n = int((300 if ci != 2 else 240) * count)
         lobes = [r.uniform(0, 2 * math.pi) for _ in range(3)]
         leaves = []
         for _ in range(n):
@@ -61,11 +62,16 @@ def leaf_atlas(path, size=512, seed=7):
             leaves.append((cy, cx, a))
         leaves.sort()                      # draw top to bottom so upper leaves overlap the lower
         for cy, cx, a in leaves:
-            L = S * r.uniform(0.075, 0.11) * (1.3 if ci == 2 else 1.0)
+            L = S * r.uniform(0.075, 0.11) * (1.3 if ci == 2 else 1.0) * scale
             W = L * r.uniform(0.38, 0.5) * (0.6 if ci == 2 else 1.0)
             ang = a + r.uniform(-0.6, 0.6)
             # lit from the top left: value falls with y and with distance from the light
             shade = 0.55 + 0.45 * (1 - cy / S) * 0.8 + r.uniform(-0.12, 0.12)
+            if group > 0:
+                # painted value groups: a lit crown, a mid band, a shaded underside, little noise
+                y = cy / S
+                band = 1.0 if y < 0.42 else (0.8 if y < 0.62 else 0.62)
+                shade = shade * (1 - group) + (band + r.uniform(-0.05, 0.05)) * group
             v = int(max(60, min(255, 255 * shade)))
             pts = []
             for k in range(12):
@@ -94,6 +100,7 @@ class Tree:
     def __init__(self, name, seed):
         self.name = name
         self.r = rng(seed)
+        self.cr = rng(seed + 991)          # a separate stream, so per-card randoms never change the shapes
         self.trunk = Builder(name + '_trunk')
         self.leaf = Builder(name + '_leaf')
         self.clumps = []
@@ -176,10 +183,11 @@ class Tree:
                 base = len(verts)
                 quad = [p - u * h - w * h, p + u * h - w * h, p + u * h + w * h, p - u * h + w * h]
                 quv = [(u0, v0), (u0 + 0.5, v0), (u0 + 0.5, v0 + 0.5), (u0, v0 + 0.5)]
+                card = 0.5 + 0.5 * self.cr.random()       # A: per-card random (> 0.5 marks a card)
                 for q, uv in zip(quad, quv):
                     verts.append(q)
                     nors.append(nrm(q))
-                    cols.append((ao_of(q), sway_of(q), hue, 1.0))
+                    cols.append((ao_of(q), sway_of(q), hue, card))
                     uvs.append(uv)
                 faces.append((base, base + 1, base + 2, base + 3))
             self.leaf.add(verts, faces, LEAF, None, cols, nors, uvs)
@@ -490,6 +498,8 @@ def taihu_rock(name='taihu'):
 # ------------------------------------------------------------------ build all
 atlas = os.path.join(OUT, 'leaf-atlas.png')
 leaf_atlas(atlas)
+# V2: larger leaves in painted value groups, so a crown reads as brush marks, not grain
+leaf_atlas(os.path.join(ROOT, 'lanren', 'assets', 'stroll', 'leaf-atlas-v2.png'), scale=1.7, count=0.42, group=0.75, seed=11)
 print('wrote', atlas)
 
 kit = [
