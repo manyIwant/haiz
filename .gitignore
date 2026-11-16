@@ -67,3 +67,7 @@ backend/cloudflare/.generated/
 /docs/lanren/**/frames/
 /docs/lanren/**/raw-frames/
 
+
+# Python bytecode (Blender asset scripts)
+__pycache__/
+*.pyc
