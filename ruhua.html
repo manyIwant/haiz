@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3f5f52">
+  <meta name="description" content="HAIZ 第六幕「入画」预览：回望百年榄仁树，在画布上把它画下来；画离开画布，落进世界，你走进一座随海口此刻天气变化的绘画校园（非官方，近似模型）。">
+  <title>haiz.space — 入画</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="lanren/ruhua/ruhua.css?v=1">
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/"
+  } }
+  </script>
+  <script type="module" src="lanren/ruhua/main.js?v=1"></script>
+</head>
+<body data-stage="loading">
+  <canvas id="rh-canvas" aria-label="三维场景：第六幕回望榄仁树，可在画布上作画，之后用 WASD 或左手摇杆在绘画校园里漫步"></canvas>
+
+  <div id="rh-loading" aria-hidden="true">
+    <p class="rh-load-t">HAIZ · 入画</p>
+    <div id="rh-bar"><i></i></div>
+    <p id="rh-status" role="status" aria-live="polite">准备…</p>
+  </div>
+
+  <div id="rh-ui">
+    <header class="rh-top">
+      <a class="rh-mark" href="index.html" aria-label="回到 HAIZ 首页">haiz</a>
+      <p class="rh-title"><b>06 · 入画</b><span>第六幕预览</span></p>
+    </header>
+
+    <div class="rh-wx-wrap">
+      <button type="button" class="rh-wx-chip" data-act="panel" aria-expanded="false" aria-controls="rh-panel"><i aria-hidden="true"></i><span id="rh-wx">海口 · 读取中</span></button>
+      <section id="rh-panel" class="rh-panel" hidden aria-label="天气">
+        <header><h2>天气</h2><button type="button" class="rh-x" data-act="close-panel" aria-label="关闭">×</button></header>
+        <p id="rh-wx-detail" class="rh-detail"></p>
+        <button type="button" class="rh-live" data-act="live" aria-pressed="true">海口此刻</button>
+        <h3>自由天气</h3>
+        <div class="rh-grid" role="group" aria-label="天气">
+          <button type="button" data-act="wx" data-wx="clear" aria-pressed="false">晴</button>
+          <button type="button" data-act="wx" data-wx="cloudy" aria-pressed="false">多云</button>
+          <button type="button" data-act="wx" data-wx="overcast" aria-pressed="false">阴</button>
+          <button type="button" data-act="wx" data-wx="drizzle" aria-pressed="false">小雨</button>
+          <button type="button" data-act="wx" data-wx="storm" aria-pressed="false">雷阵雨</button>
+          <button type="button" data-act="wx" data-wx="windy" aria-pressed="false">大风</button>
+          <button type="button" data-act="wx" data-wx="after" aria-pressed="false">雨后</button>
+        </div>
+        <div class="rh-grid rh-hours" role="group" aria-label="时间">
+          <button type="button" data-act="hour" data-hour="7" aria-pressed="false">清晨</button>
+          <button type="button" data-act="hour" data-hour="12.5" aria-pressed="false">正午</button>
+          <button type="button" data-act="hour" data-hour="17.6" aria-pressed="false">傍晚</button>
+          <button type="button" data-act="hour" data-hour="20.5" aria-pressed="false">夜晚</button>
+        </div>
+        <p id="rh-src" class="rh-src"></p>
+      </section>
+    </div>
+
+    <section class="rh-hold" aria-labelledby="rhHoldT">
+      <p class="rh-kicker">06 · 回望</p>
+      <h2 id="rhHoldT">它在这里站了一百年。</h2>
+      <p class="rh-lede">回头再看一眼。把它画下来——</p>
+      <div class="rh-hold-b">
+        <button type="button" class="rh-go" data-act="paint">支起画架 <i aria-hidden="true">→</i></button>
+        <button type="button" class="rh-quiet" data-act="skip">直接走进校园</button>
+      </div>
+    </section>
+
+    <div class="rh-paint" aria-live="polite">
+      <ol class="rh-chips" aria-label="作画步骤">
+        <li data-chip="起稿">起稿</li><li data-chip="铺色">铺色</li><li data-chip="塑形">塑形</li><li data-chip="点叶">点叶</li><li data-chip="落款">落款</li><li data-chip="越出画框">越出画框</li>
+      </ol>
+      <p id="rh-hint" class="rh-hint" hidden></p>
+      <button type="button" class="rh-quiet rh-skip" data-act="skip">跳过</button>
+      <button type="button" class="rh-quiet rh-let" data-act="depart">让画自己走出来</button>
+    </div>
+
+    <p id="rh-arrive" class="rh-arrive" hidden>你在画里了。<span id="rh-arrive-sub">画里的天，跟着海口此刻。</span></p>
+
+    <nav class="rh-tools" aria-label="漫步">
+      <button type="button" data-act="replay">重新入画</button>
+      <button type="button" class="rh-help-btn" data-act="help" aria-label="操作说明">?</button>
+    </nav>
+    <div id="rh-stick" class="rh-stick" hidden aria-hidden="true"><i></i></div>
+
+    <section id="rh-help" class="rh-helpbox" hidden aria-labelledby="rhHelpT">
+      <h2 id="rhHelpT">入画 · 第六幕预览</h2>
+      <ul>
+        <li><b>作画</b>：在画布上拖动（或按住空格）；画完后把笔刷拖出画框外。</li>
+        <li><b>漫步</b>：WASD / 方向键 走，Shift 跑，空格 跳，拖动环顾，滚轮远近；手机左手移动、右手环顾。</li>
+        <li><b>天气</b>：右上角。默认是海口此刻（Open-Meteo 预报模型，不是校内观测）；可切换自由天气，随时回来。</li>
+      </ul>
+      <p class="rh-note">榄仁树为依物种特征创作的概念模型；建筑为近似体量；绘画中的花坛、猫与蝴蝶是创作，不是实况。猫的活动范围按校园数据放在第一食堂与二号教学楼之间（「一堂」按第一食堂理解，待确认）。</p>
+      <button type="button" data-act="close-help">知道了</button>
+    </section>
+  </div>
+</body>
+</html>
