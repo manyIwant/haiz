@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { U } from '../stroll/atmos.js';
 import { SKY } from '../stroll/sky.js';
 import { createStudent } from '../stroll/student.js';
+import { createWalker } from './walker.js';
 import { createPlayer } from '../stroll/player.js';
 import { UNIFORMS } from '../js/foliage.js';
 import { loadV4, SHOT6, sun6Dir, LIGHT6, V4_ROT } from './v4.js';
@@ -89,7 +90,10 @@ async function main() {
   await world.loadCampus();
   real.addCampus(world.campusV3);
   ui.progress(0.8);
-  const student = await createStudent(asset('assets/toon/student.glb'));
+  // the walker (scripts/ruhua/build_student.py, walked by walker.js); V2's figure if it cannot load (?figure=v2 to compare)
+  let student;
+  try { student = Q.get('figure') === 'v2' ? await createStudent(asset('assets/toon/student.glb')) : await createWalker(asset('assets/ruhua/student.glb')); }
+  catch (e) { console.warn('walker unavailable, using the V2 figure', e); student = await createStudent(asset('assets/toon/student.glb')); }
   student.root.visible = false;
   world.group.add(student.root);
   const rain = createRain({ world, mobile: coarse, layer: LAYER_PAINT });
@@ -335,8 +339,11 @@ async function main() {
       }
     } else if (D.stage === 'stroll') {
       player.update(dt);
-      camera.position.copy(followCam.position); camera.quaternion.copy(followCam.quaternion);
-      if (Math.abs(camera.fov - followCam.fov) > 0.01) { camera.fov = followCam.fov; camera.updateProjectionMatrix(); }
+      if (D.override) { const o = D.override; camera.position.set(...o.eye); camera.lookAt(...o.at); if (camera.fov !== o.fov) { camera.fov = o.fov; camera.updateProjectionMatrix(); } }
+      else {
+        camera.position.copy(followCam.position); camera.quaternion.copy(followCam.quaternion);
+        if (Math.abs(camera.fov - followCam.fov) > 0.01) { camera.fov = followCam.fov; camera.updateProjectionMatrix(); }
+      }
     }
     // ---- the world
     const feet = player && (D.stage === 'enter' || D.stage === 'stroll') ? player.state.pos : tmpV.set(camera.position.x, world.geo.frame.ground, camera.position.z);
@@ -347,6 +354,7 @@ async function main() {
     camera.updateMatrixWorld();
     world.grass.update(camera, feet, world.geo.frame.ground);
     rain.update(dt, weather, camera.position);
+    student.setUmbrella?.(S.rainNow > 0.1 || S.cur.rain > 0.15);
     // the creatures live once the painting has reached them (the cat's day ran on regardless: plan() reads the clock)
     const alive = D.stage === 'stroll' || D.stage === 'enter';
     butterflies.mesh.visible = alive;
@@ -400,8 +408,11 @@ async function main() {
   window.__ruhua = {
     D, PAINT, weather, world, real, easel, pipeline, renderer, scene, camera, U, SKY, eco, cat, butterflies, flowers, habitat,
     get player() { return player; },
+    get student() { return student; },
     get stage() { return D.stage; },
     paint: startPainting, depart, skip, replay: resetToHold,
+    /** review: hold the camera somewhere in the walk (null hands it back) */
+    look(eye, at, fov = 40) { D.override = eye ? { eye, at, fov } : null; },
     /** tests and stills: step the simulation without the frame loop, then draw once */
     still(seconds = 1, fps = 30) { paused = true; for (let i = 0; i < Math.round(seconds * fps); i++) step(1 / fps); render(); },
     resume() { paused = false; clock.getDelta(); },

@@ -330,20 +330,16 @@ export function createEasel({ renderer, pipeline, world, layerPaint = 2, mobile 
     const basis = new THREE.Matrix4().makeBasis(right, up, n);
     canvasMesh.position.copy(centre); canvasMesh.quaternion.setFromRotationMatrix(basis); canvasMesh.scale.set(cw, chh, 1);
     backMesh.position.copy(centre).addScaledVector(n, -0.014); backMesh.quaternion.copy(canvasMesh.quaternion); backMesh.scale.set(cw + 0.02, chh + 0.02, 0.024);
-    // the easel: an A-frame just behind the canvas (hidden by it, seen below it), a back leg, the tray in front
+    // the easel: front legs from the tray under the canvas to the ground, a mast and a back leg behind it
     const gy = world.heightAt(centre.x, centre.z);
     const ground = (p) => new THREE.Vector3(p.x, gy, p.z);
-    const top = centre.clone().addScaledVector(up, chh * 0.58).addScaledVector(n, -0.07);
-    const frontL = ground(centre.clone().addScaledVector(right, -cw * 0.4).addScaledVector(n, -0.07));
-    const frontR = ground(centre.clone().addScaledVector(right, cw * 0.4).addScaledVector(n, -0.07));
-    const back = ground(centre.clone().addScaledVector(n, -0.85));
-    const ends = [[top.clone().addScaledVector(right, -cw * 0.06), frontL], [top.clone().addScaledVector(right, cw * 0.06), frontR], [top.clone().addScaledVector(n, -0.02), back]];
-    legs.children.slice(0, 3).forEach((leg, i) => {
-      const [a, b] = ends[i];
-      leg.position.copy(a).add(b).multiplyScalar(0.5);
-      leg.scale.set(0.8, a.distanceTo(b), 0.8);
-      leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), a.clone().sub(b).normalize());
-    });
+    const bottom = centre.clone().addScaledVector(up, -chh * 0.5 - 0.02);
+    const behindTop = centre.clone().addScaledVector(up, chh * 0.5 + 0.12).addScaledVector(n, -0.06);
+    const ends = [
+      [bottom.clone().addScaledVector(right, -cw * 0.3).addScaledVector(n, 0.01), ground(bottom.clone().addScaledVector(right, -cw * 0.42).addScaledVector(n, 0.18))],
+      [bottom.clone().addScaledVector(right, cw * 0.3).addScaledVector(n, 0.01), ground(bottom.clone().addScaledVector(right, cw * 0.42).addScaledVector(n, 0.18))],
+      [behindTop, ground(centre.clone().addScaledVector(n, -0.8))],
+    ];
     tray.position.copy(centre).addScaledVector(up, -chh * 0.5 - 0.016).addScaledVector(n, 0.025);
     tray.quaternion.copy(canvasMesh.quaternion); tray.scale.set(cw * 1.05, 1, 1);
     // the reference: the painted world from the painter's eye (neutral grade: no vignette, no tone split)

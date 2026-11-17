@@ -32,25 +32,23 @@ const wrap = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI)
 const smooth = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 
 // ---------------------------------------------------------------- the body: an orange tabby (橘猫), in parts
-function bodyGeometry(len, rad, taper = 0.85, seg = 12, stripe = true) {
-  // a lathe along +z: round at both ends, a little narrower at the front
-  const g = new THREE.CapsuleGeometry(rad, len - rad * 2, 6, seg).rotateX(Math.PI / 2);
-  const p = g.getAttribute('position'), col = new Float32Array(p.count * 3);
+// colours in linear light (the cel shader's albedo)
+const GINGER = [0.86, 0.31, 0.055], STRIPE = [0.5, 0.14, 0.025], CREAM = [0.9, 0.8, 0.62], WHITE = [0.9, 0.86, 0.78], PINK = [0.8, 0.38, 0.34];
+function coat(x, y, z, rad, front = false) {
+  if (y < -rad * 0.42) return CREAM;                                    // the belly
+  const s = Math.sin(z * 72 + Math.sin(x * 34) * 1.4 + (front ? 1.2 : 0));
+  return s > 0.5 && y > -rad * 0.15 ? STRIPE : GINGER;                   // tabby bands across the back
+}
+function body(len, rad, taper = 0.88, seg = 14) {
+  const g = new THREE.CapsuleGeometry(rad, len - rad * 2, 8, seg).rotateX(Math.PI / 2);
+  const p = g.getAttribute('position');
   for (let i = 0; i < p.count; i++) {
     const z = p.getZ(i), y = p.getY(i), x = p.getX(i);
     const k = 1 - (1 - taper) * smooth((z + len / 2) / len);
-    p.setXYZ(i, x * k, y * (y < 0 ? 0.9 : 1) * k, z);
-    let c = [0.9, 0.52, 0.22];                                    // ginger
-    if (stripe) {
-      const s = Math.sin(z * 70 + Math.sin(x * 30) * 1.2);
-      if (s > 0.55 && y > -rad * 0.2) c = [0.68, 0.32, 0.12];     // darker tabby bands over the back
-    }
-    if (y < -rad * 0.45) c = [0.96, 0.92, 0.86];                  // white belly
-    col.set(c, i * 3);
+    p.setXYZ(i, x * k, y * (y < 0 ? 0.92 : 1.0) * k, z);
   }
-  g.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
   g.computeVertexNormals();
-  return g;
+  return tint(g, (x, y, z) => coat(x, y, z, rad));
 }
 function tint(g, fn) {
   const p = g.getAttribute('position'), col = new Float32Array(p.count * 3);
@@ -58,66 +56,70 @@ function tint(g, fn) {
   g.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
   return g;
 }
-const MAT = () => cel({ name: 'cat', key: 'cat', soft: 0.12,
+const MAT = () => cel({ name: 'cat', key: 'cat', soft: 0.14,
   vertex: { head: 'attribute vec3 aCol; varying vec3 vCol;\n', world: 'vCol = aCol;' },
-  fragment: { head: 'varying vec3 vCol;\n', albedo: 'albedo = vCol * 0.92;\n', after: /* glsl */`
-{ vec3 V = normalize(cameraPosition - vWP); outCol += albedo * uSunColor * 0.12 * pow(1.0 - max(dot(N, V), 0.0), 3.0) * shadow; }   // fur catches the light at the rim
+  fragment: { head: 'varying vec3 vCol;\n', albedo: 'albedo = vCol;\n', after: /* glsl */`
+{ vec3 V = normalize(cameraPosition - vWP); outCol += albedo * uSunColor * 0.14 * pow(1.0 - max(dot(N, V), 0.0), 3.0) * shadow; }   // fur catches the light at the rim
 ` } });
 const OUTLINE = () => new THREE.ShaderMaterial({ side: THREE.BackSide,
-  uniforms: { uW: { value: 0.0045 } },
+  uniforms: { uW: { value: 0.0035 } },
   vertexShader: 'uniform float uW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vec3 n = normalize(mat3(modelMatrix) * normal); float d = length(cameraPosition - w.xyz); w.xyz += n * uW * clamp(d * 0.3, 0.6, 3.0); gl_Position = projectionMatrix * viewMatrix * w; }',
-  fragmentShader: 'void main(){ gl_FragColor = vec4(0.12, 0.08, 0.06, 1.0); }' });
+  fragmentShader: 'void main(){ gl_FragColor = vec4(0.13, 0.07, 0.04, 1.0); }' });
 
 function buildCat() {
   const mat = MAT(), line = OUTLINE();
   const part = (geo, name, outline = true) => {
     const m = new THREE.Mesh(geo, mat); m.name = name; m.castShadow = true; m.receiveShadow = true;
-    if (outline) { const o = new THREE.Mesh(geo, line); m.add(o); }
+    if (outline) m.add(new THREE.Mesh(geo, line));
     return m;
   };
+  const sphere = (r, sx, sy, sz, fn) => tint(new THREE.SphereGeometry(r, 16, 12).scale(sx, sy, sz), fn);
   const root = new THREE.Group(); root.name = 'cat';
-  const hips = new THREE.Group(); hips.position.set(0, 0.19, -0.12); root.add(hips);
+  const hips = new THREE.Group(); hips.position.set(0, 0.16, -0.1); root.add(hips);
   const spine = new THREE.Group(); hips.add(spine);
-  const torso = part(bodyGeometry(0.36, 0.075, 0.82), 'torso'); torso.position.z = 0.13; spine.add(torso);
-  const chest = new THREE.Group(); chest.position.set(0, 0.012, 0.26); spine.add(chest);
-  const neck = new THREE.Group(); neck.position.set(0, 0.03, 0.03); chest.add(neck);
-  const head = new THREE.Group(); head.position.set(0, 0.065, 0.045); neck.add(head);
-  const skull = part(tint(new THREE.SphereGeometry(0.058, 16, 12).scale(1.05, 0.92, 1.0), (x, y, z) => (y < -0.022 && z > 0.01 ? [0.96, 0.92, 0.86] : Math.sin(x * 140) > 0.75 && y > 0.02 ? [0.68, 0.32, 0.12] : [0.9, 0.52, 0.22])), 'skull');
-  head.add(skull);
-  const muzzle = part(tint(new THREE.SphereGeometry(0.028, 12, 8).scale(1.25, 0.8, 1), () => [0.97, 0.93, 0.87]), 'muzzle');
-  muzzle.position.set(0, -0.018, 0.045); head.add(muzzle);
-  const nose = part(tint(new THREE.SphereGeometry(0.007, 8, 6), () => [0.86, 0.45, 0.45]), 'nose', false); nose.position.set(0, -0.006, 0.072); head.add(nose);
-  const ears = [-1, 1].map((s) => {
-    const e = new THREE.Group(); e.position.set(0.032 * s, 0.045, -0.005); e.rotation.z = -0.25 * s; head.add(e);
-    const g = tint(new THREE.ConeGeometry(0.024, 0.045, 4).translate(0, 0.02, 0).scale(1, 1, 0.45), (x, y, z) => (z > 0.003 ? [0.9, 0.62, 0.55] : [0.86, 0.48, 0.2]));
-    e.add(part(g, 'ear')); return e;
+  const torso = part(body(0.31, 0.07, 0.84), 'torso'); torso.position.z = 0.14; spine.add(torso);
+  const haunch = part(sphere(0.078, 1, 0.95, 1.1, (x, y, z) => coat(x, y, z, 0.078)), 'haunch'); haunch.position.set(0, 0.006, 0.01); spine.add(haunch);
+  const chest = new THREE.Group(); chest.position.set(0, 0.008, 0.25); spine.add(chest);
+  const breast = part(sphere(0.064, 0.95, 1.05, 1, (x, y, z) => (z > 0.035 && y < 0.02 ? CREAM : coat(x, y, z, 0.064, true))), 'breast'); breast.position.set(0, -0.004, 0.02); chest.add(breast);
+  const neck = new THREE.Group(); neck.position.set(0, 0.035, 0.05); chest.add(neck);
+  const neckM = part(tint(new THREE.CapsuleGeometry(0.036, 0.05, 4, 10).rotateX(-0.55), (x, y, z) => (z > 0.015 ? CREAM : GINGER)), 'neck'); neckM.position.set(0, 0.02, 0.012); neck.add(neckM);
+  const head = new THREE.Group(); head.position.set(0, 0.06, 0.04); neck.add(head);
+  head.add(part(sphere(0.054, 1.17, 0.95, 1.02, (x, y, z) => (y < -0.02 && z > 0.0 ? CREAM : Math.sin(x * 150) > 0.7 && y > 0.022 && z < 0.03 ? STRIPE : GINGER)), 'skull'));
+  for (const sx of [-1, 1]) { const ch = part(sphere(0.026, 1.2, 0.9, 1, () => CREAM), 'cheek', false); ch.position.set(0.026 * sx, -0.02, 0.03); head.add(ch); }
+  const muzzle = part(sphere(0.022, 1.3, 0.78, 1, () => CREAM), 'muzzle'); muzzle.position.set(0, -0.018, 0.046); head.add(muzzle);
+  const nose = part(sphere(0.0075, 1.2, 0.8, 1, () => PINK), 'nose', false); nose.position.set(0, -0.006, 0.066); head.add(nose);
+  const ears = [-1, 1].map((sx) => {
+    const e = new THREE.Group(); e.position.set(0.033 * sx, 0.04, -0.006); e.rotation.z = -0.32 * sx; e.rotation.x = -0.15; head.add(e);
+    e.add(part(tint(new THREE.ConeGeometry(0.025, 0.05, 4).translate(0, 0.022, 0).scale(1, 1, 0.42), (x, y, z) => (z > 0.003 && y < 0.035 ? PINK : GINGER)), 'ear'));
+    return e;
   });
-  const eyes = [-1, 1].map((s) => {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.0095, 8, 6), new THREE.MeshBasicMaterial({ color: 0x2a2218 }));
-    m.position.set(0.024 * s, 0.006, 0.05); m.scale.set(1, 1.15, 0.5); head.add(m); return m;
+  const eyes = [-1, 1].map((sx) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.0105, 10, 8), new THREE.MeshBasicMaterial({ color: 0x3a2a10 }));
+    m.position.set(0.024 * sx, 0.004, 0.047); m.scale.set(1, 1.15, 0.45); head.add(m);
+    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.0028, 6, 4), new THREE.MeshBasicMaterial({ color: 0xfff6e0 }));
+    glint.position.set(0.004, 0.004, 0.009); m.add(glint);
+    return m;
   });
   const legs = [];
-  const mkLeg = (x, z, front, parent) => {
-    const hip = new THREE.Group(); hip.position.set(x, front ? -0.02 : -0.01, z); parent.add(hip);
-    const L1 = front ? 0.105 : 0.115, L2 = front ? 0.1 : 0.105;
-    const up = part(tint(new THREE.CapsuleGeometry(0.022, L1 - 0.03, 3, 8).translate(0, -L1 / 2, 0), (px, py) => (py < -L1 * 0.7 ? [0.92, 0.6, 0.3] : [0.9, 0.52, 0.22])), 'leg-up');
-    hip.add(up);
+  const mkLeg = (x, y, z, front, parent) => {
+    const hip = new THREE.Group(); hip.position.set(x, y, z); parent.add(hip);
+    const L1 = front ? 0.085 : 0.095, L2 = front ? 0.085 : 0.09, r1 = front ? 0.019 : 0.026, r2 = front ? 0.0135 : 0.0145;
+    hip.add(part(tint(new THREE.CapsuleGeometry(r1, Math.max(0.01, L1 - r1 * 1.4), 3, 8).translate(0, -L1 / 2, 0), (px, py, pz) => coat(px, py, pz, r1)), 'leg-up'));
     const knee = new THREE.Group(); knee.position.y = -L1; hip.add(knee);
-    const low = part(tint(new THREE.CapsuleGeometry(0.016, L2 - 0.025, 3, 8).translate(0, -L2 / 2, 0), () => [0.95, 0.9, 0.84]), 'leg-low');
-    knee.add(low);
-    const paw = part(tint(new THREE.SphereGeometry(0.019, 8, 6).scale(1, 0.6, 1.3), () => [0.96, 0.93, 0.88]), 'paw'); paw.position.set(0, -L2, 0.008); knee.add(paw);
+    knee.add(part(tint(new THREE.CapsuleGeometry(r2, L2 - r2 * 1.6, 3, 8).translate(0, -L2 / 2, 0), (px, py) => (py < -L2 * 0.45 ? WHITE : GINGER)), 'leg-low'));
+    const paw = part(sphere(0.017, 1, 0.62, 1.32, () => WHITE), 'paw'); paw.position.set(0, -L2 + 0.004, 0.008); knee.add(paw);
     const leg = { hip, knee, L1, L2, front, x, side: Math.sign(x) };
     legs.push(leg); return leg;
   };
-  mkLeg(0.042, 0.0, true, chest); mkLeg(-0.042, 0.0, true, chest);
-  mkLeg(0.045, 0.0, false, hips); mkLeg(-0.045, 0.0, false, hips);
+  mkLeg(0.038, -0.028, 0.02, true, chest); mkLeg(-0.038, -0.028, 0.02, true, chest);
+  mkLeg(0.044, -0.012, 0.0, false, hips); mkLeg(-0.044, -0.012, 0.0, false, hips);
   const tail = [];
-  let parent = new THREE.Group(); parent.position.set(0, 0.03, -0.03); hips.add(parent);
+  let parent = new THREE.Group(); parent.position.set(0, 0.04, -0.055); hips.add(parent);
   for (let i = 0; i < 9; i++) {
-    const seg = new THREE.Group(); seg.position.z = i === 0 ? 0 : -0.036; parent.add(seg);
-    const r = 0.016 - i * 0.0009;
-    const m = part(tint(new THREE.CapsuleGeometry(r, 0.03, 3, 6).rotateX(Math.PI / 2).translate(0, 0, -0.018), () => (i === 8 ? [0.68, 0.32, 0.12] : i % 2 ? [0.68, 0.32, 0.12] : [0.9, 0.52, 0.22])), 'tail');
-    seg.add(m); tail.push(seg); parent = seg;
+    const seg = new THREE.Group(); seg.position.z = i === 0 ? 0 : -0.034; parent.add(seg);
+    const r = 0.0145 - i * 0.0008;
+    seg.add(part(tint(new THREE.CapsuleGeometry(r, 0.028, 3, 6).rotateX(Math.PI / 2).translate(0, 0, -0.017), () => (i % 2 ? STRIPE : GINGER)), 'tail'));
+    tail.push(seg); parent = seg;
   }
   root.traverse((o) => { o.frustumCulled = false; });
   return { root, hips, spine, chest, neck, head, ears, eyes, legs, tail };
@@ -138,13 +140,13 @@ function legIK(leg, fy, fz) {
 // ---------------------------------------------------------------- poses
 // each: hips height, spine pitch, chest/neck/head pitch, root roll, leg foot targets (relative), tail curl
 const POSES = {
-  stand: { h: 0.19, pitch: 0, roll: 0, neck: -0.25, head: 0.25, tailUp: 0.6, fold: 0 },
-  sit: { h: 0.11, pitch: -0.75, roll: 0, neck: 0.25, head: 0.45, tailUp: -0.2, fold: 1, wrap: 1 },
-  loaf: { h: 0.075, pitch: 0, roll: 0, neck: 0.15, head: 0.05, tailUp: -0.25, fold: 2, wrap: 1 },
-  lie: { h: 0.06, pitch: 0, roll: 1.3, neck: 0.4, head: -0.1, tailUp: -0.3, fold: 3 },
-  curl: { h: 0.065, pitch: 0, roll: 0.25, neck: 0.75, head: 0.55, tailUp: -0.3, fold: 2, wrap: 1.4 },
-  crouch: { h: 0.11, pitch: 0.05, roll: 0, neck: 0, head: 0.1, tailUp: -0.2, fold: 0 },
-  stretch: { h: 0.15, pitch: 0.38, roll: 0, neck: -0.3, head: 0.35, tailUp: 0.9, fold: 4 },
+  stand: { h: 0.16, pitch: 0, roll: 0, neck: -0.2, head: 0.2, tailUp: 0.6, fold: 0 },
+  sit: { h: 0.088, pitch: -0.68, roll: 0, neck: 0.35, head: 0.45, tailUp: -0.25, fold: 1, wrap: 1 },
+  loaf: { h: 0.062, pitch: 0, roll: 0, neck: 0.25, head: 0.05, tailUp: -0.3, fold: 2, wrap: 1 },
+  lie: { h: 0.05, pitch: 0, roll: 1.3, neck: 0.4, head: -0.1, tailUp: -0.3, fold: 3 },
+  curl: { h: 0.058, pitch: 0, roll: 0.25, neck: 0.8, head: 0.6, tailUp: -0.3, fold: 2, wrap: 1.4 },
+  crouch: { h: 0.095, pitch: 0.05, roll: 0, neck: 0, head: 0.1, tailUp: -0.2, fold: 0 },
+  stretch: { h: 0.13, pitch: 0.38, roll: 0, neck: -0.3, head: 0.35, tailUp: 0.9, fold: 4 },
 };
 const KEYS = ['h', 'pitch', 'roll', 'neck', 'head', 'tailUp'];
 
@@ -328,17 +330,18 @@ export function createCat(habitat, { layer = 2, butterflies = null } = {}) {
     C.root.updateMatrixWorld(true);
     const fold = S.w.fold;
     C.legs.forEach((L, i) => {
-      let fz = L.front ? 0.14 : -0.12, fy = 0.012;
+      let fz = L.front ? 0.17 : -0.1, fy = 0.01;
       if (moving) {
         const ph = (S.phase + offs[i]) % 1, duty = 0.62 - 0.12 * trot;
         if (ph < duty) fz += stride * (0.5 - ph / duty);
         else { const t = (ph - duty) / (1 - duty); fz += stride * (-0.5 + t); fy += Math.sin(t * Math.PI) * (0.035 + 0.02 * trot); }
       }
-      if (fold === 1) fz = L.front ? 0.1 : -0.03;                       // sitting: front paws together, hind folded under
-      else if (fold === 2) { fz = L.front ? 0.12 : -0.06; fy = 0.02; }   // loaf: everything tucked in
-      else if (fold === 4) fz = L.front ? 0.34 : -0.13;                  // the stretch
+      if (fold === 1) fz = L.front ? 0.12 : -0.0;                        // sitting: front paws together, hind folded under
+      else if (fold === 2) { fz = L.front ? 0.14 : -0.04; fy = 0.02; }   // loaf: everything tucked in
+      else if (fold === 4) fz = L.front ? 0.35 : -0.11;                  // the stretch
       let ly, lz;
       if (fold === 3) { ly = -0.12; lz = L.front ? 0.06 : -0.04; }       // lying on its side: legs out, relaxed
+      else if (fold === 2) { ly = -0.022; lz = L.front ? 0.03 : 0.035; }   // loaf: folded right under the body
       else if (S.groom > 0 && L.front && L.side > 0) { ly = -0.03; lz = 0.09; }   // a paw raised to the mouth
       else {
         tmpV.set(L.x, fy, fz).applyMatrix4(C.root.matrixWorld);

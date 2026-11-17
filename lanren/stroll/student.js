@@ -13,7 +13,7 @@ import { cel as toonMaterial, U as TOON } from './atmos.js';
 export const WALK_SPEED = 1.45;   // m/s the Walk clip covers at timeScale 1 (build_student.py)
 export const RUN_SPEED = 4.3;
 
-function bodyMaterial() {
+export function bodyMaterial() {
   return toonMaterial({
     name: 'student', key: 'student-v2',
     vertex: { head: 'attribute vec4 aData; varying vec4 vData;\n', world: 'vData = aData;' },
@@ -47,7 +47,7 @@ soft = kind < 0.85 && kind > 0.6 ? 0.06 : 0.02;
   });
 }
 
-function outlineMaterial() {
+export function outlineMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: { ...TOON, uWidth: { value: 0.012 }, uColor: { value: new THREE.Color(0.11, 0.1, 0.13) } },
     vertexShader: /* glsl */`

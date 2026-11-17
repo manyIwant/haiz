@@ -8,7 +8,7 @@ export function createUI({ coarse }) {
   const status = $('#rh-status');
   const body = document.body;
   const chipEls = [...root.querySelectorAll('[data-chip]')];
-  let lastCap = '';
+  let lastCap = '', lastOrigin = 'loading';
 
   root.addEventListener('click', (e) => {
     const b = e.target instanceof Element ? e.target.closest('[data-act]') : null;
@@ -57,7 +57,12 @@ export function createUI({ coarse }) {
       hint.hidden = !text;
       if (name === 'paint') api.paintStage('起稿', 0);
       if (name === 'spill') api.paintStage('越出画框', 1);
-      if (name === 'stroll') { const g = $('#rh-arrive'); g.hidden = false; setTimeout(() => { g.hidden = true; }, 6500); }
+      if (name === 'stroll') {
+        const g = $('#rh-arrive');
+        $('#rh-arrive-sub').textContent = lastOrigin === 'free' ? '画里是你选的天气；右上角可以回到「海口此刻」。'
+          : lastOrigin === 'offline' ? '暂时读不到海口的预报，画里是本月的气候常态。' : '画里的天，跟着海口此刻。';
+        g.hidden = false; setTimeout(() => { g.hidden = true; }, 6500);
+      }
     },
     paintStage(name) {
       chipEls.forEach((c) => c.setAttribute('aria-current', String(c.dataset.chip === name)));
@@ -65,6 +70,7 @@ export function createUI({ coarse }) {
       chipEls.forEach((c, j) => c.classList.toggle('done', j < i));
     },
     weather(cap, S) {
+      lastOrigin = cap.origin;
       const line = `${ORIGIN[cap.origin] || ''} · ${cap.name} ${cap.temp}° · ${cap.wind}`;
       if (line !== lastCap) {
         lastCap = line;

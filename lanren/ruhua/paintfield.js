@@ -124,7 +124,7 @@ const VERT_HEAD = 'varying vec3 vPfWP; varying vec3 vPfN;\n';
 const VERT_BODY = /* glsl */`
 {
   vec4 pw = vec4(transformed, 1.0);
-  vec3 pn = objectNormal;
+  vec3 pn = normal;   // (the attribute: every material has it; objectNormal is missing in unlit ones)
   #ifdef USE_INSTANCING
     pw = instanceMatrix * pw; pn = mat3(instanceMatrix) * pn;
   #endif
