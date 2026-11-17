@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#5e9fd0">
+  <meta name="description" content="画风预览：阳光、积云与风吹过的草地里，以第三人称走过海南中学府城校区（非官方，近似模型）。">
+  <title>haiz.space — 校园漫步 · 画风预览</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="lanren/toon/toon.css?v=1">
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/"
+  } }
+  </script>
+  <script type="module" src="lanren/toon/walk.js?v=1"></script>
+</head>
+<body>
+  <canvas id="tw-canvas" aria-label="三维校园：拖动画面环顾，WASD 或左手摇杆移动"></canvas>
+
+  <div id="tw-loading" aria-hidden="true"><p>HAIZ · 校园漫步</p></div>
+
+  <header class="tw-top">
+    <a class="tw-mark" href="index.html" aria-label="回到 HAIZ 首页">haiz</a>
+    <p class="tw-title"><b>校园漫步</b><span>画风预览 · 第三人称</span></p>
+    <p id="tw-status" class="tw-status" role="status" aria-live="polite">准备场景…</p>
+  </header>
+
+  <nav class="tw-tools" aria-label="时间与视角">
+    <div class="tw-times" role="group" aria-label="一天中的时间">
+      <button type="button" data-time="morning" aria-pressed="false">清晨</button>
+      <button type="button" data-time="noon" aria-pressed="true">正午</button>
+      <button type="button" data-time="golden" aria-pressed="false">傍晚</button>
+    </div>
+    <button type="button" class="tw-view" data-view>第三人称</button>
+    <button type="button" class="tw-help-btn" data-help aria-label="操作说明">?</button>
+  </nav>
+
+  <div id="tw-stick" class="tw-stick" hidden aria-hidden="true"><i></i></div>
+  <button type="button" class="tw-jump" data-jump aria-label="跳">跳</button>
+
+  <section id="tw-help" class="tw-help" hidden aria-labelledby="twHelpT">
+    <h2 id="twHelpT">走进这片光里</h2>
+    <ul class="tw-keys-desktop">
+      <li><b>W A S D</b> / 方向键 走 · <b>Shift</b> 跑 · <b>空格</b> 跳</li>
+      <li><b>拖动</b>画面环顾 · <b>滚轮</b>拉近拉远 · <b>V</b> 第一 / 第三人称</li>
+      <li><b>T</b> 切换清晨、正午、傍晚 · <b>H</b> 隐藏界面</li>
+    </ul>
+    <ul class="tw-keys-touch">
+      <li><b>左手</b>拖动移动，推到边缘是跑</li>
+      <li><b>右手</b>拖动环顾，双指捏合拉近拉远</li>
+    </ul>
+    <p class="tw-note">这是 HAIZ 新画风的预览页：建筑来自项目的 Blender V3 近似模型，树种按校园数据摆放、形态为物种概念；草地覆盖、校外城市与天空是绘画式的气氛表达，不是测绘或实景。</p>
+    <p class="tw-links"><a href="index.html">六幕首页</a><a href="campus-3d.html">第一人称校园（含想象教室）</a></p>
+    <button type="button" data-close>开始漫步</button>
+  </section>
+</body>
+</html>

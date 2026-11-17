@@ -1,0 +1,69 @@
+/* HAIZ · 校园漫步（画风预览）— the interface stays in the corners; the painted world is the page. */
+:root {
+  --paper: #f4f1e8;
+  --ink: #1f3a30;
+  --leaf: #2a4a3c;
+  --glass: rgba(250, 248, 240, 0.82);
+  --shadow: 0 6px 24px rgba(20, 40, 60, 0.18);
+  --ease: cubic-bezier(.23, 1, .32, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #8fc3e6; color: var(--ink);
+  font: 15px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+#tw-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+
+#tw-loading { position: fixed; inset: 0; display: grid; place-items: center; background: linear-gradient(#6aa9dc, #b9d9ee 60%, #9cc97a);
+  transition: opacity .6s var(--ease); z-index: 5; pointer-events: none; }
+#tw-loading p { font-size: 18px; letter-spacing: .2em; color: #fff; text-shadow: 0 2px 12px rgba(0, 40, 80, .3); }
+#tw-loading.done { opacity: 0; }
+
+.tw-top { position: fixed; top: max(12px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 12px;
+  z-index: 3; pointer-events: none; }
+.tw-mark { pointer-events: auto; font: 600 19px/1 "Sora", system-ui, sans-serif; color: var(--ink); text-decoration: none; background: var(--glass);
+  padding: 8px 12px; border-radius: 999px; box-shadow: var(--shadow); }
+.tw-title { margin: 0; display: flex; flex-direction: column; color: #fff; text-shadow: 0 1px 8px rgba(10, 40, 60, .45); line-height: 1.3; }
+.tw-title b { font-size: 16px; }
+.tw-title span { font-size: 13px; opacity: .92; }
+.tw-status { margin: 0; font-size: 13px; color: #fff; text-shadow: 0 1px 6px rgba(10, 40, 60, .5); }
+.tw-status:empty { display: none; }
+
+.tw-tools { position: fixed; top: max(12px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); display: flex; gap: 8px; z-index: 3; align-items: center; }
+.tw-times { display: flex; background: var(--glass); border-radius: 999px; padding: 3px; box-shadow: var(--shadow); }
+.tw-tools button { font: inherit; font-size: 14px; border: 0; cursor: pointer; color: var(--ink); background: transparent; padding: 6px 12px; border-radius: 999px;
+  transition: background .2s var(--ease), transform .12s var(--ease); }
+.tw-tools button:active { transform: scale(.96); }
+.tw-times button[aria-pressed="true"] { background: var(--leaf); color: var(--paper); }
+.tw-view, .tw-help-btn { background: var(--glass) !important; box-shadow: var(--shadow); }
+.tw-help-btn { width: 34px; padding: 6px 0 !important; }
+.tw-tools button:focus-visible, .tw-help button:focus-visible, .tw-jump:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.tw-help { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(520px, calc(100vw - 32px));
+  background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 18px; padding: 18px 20px 16px; box-shadow: var(--shadow); z-index: 4; }
+.tw-help h2 { margin: 0 0 8px; font: 600 18px/1.4 "Songti SC", "Noto Serif CJK SC", serif; }
+.tw-help ul { margin: 0 0 10px; padding-left: 18px; }
+.tw-help li { margin: 2px 0; }
+.tw-help .tw-note { font-size: 14px; margin: 8px 0; color: var(--ink); }
+.tw-help .tw-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; margin: 6px 0 12px; }
+.tw-help a { color: var(--leaf); }
+.tw-help button { font: inherit; border: 0; background: var(--leaf); color: var(--paper); padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+.tw-keys-touch { display: none; }
+@media (pointer: coarse) { .tw-keys-touch { display: block; } .tw-keys-desktop { display: none; } }
+
+.tw-stick { position: fixed; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .7);
+  background: rgba(255, 255, 255, .16); z-index: 3; pointer-events: none; }
+.tw-stick i { position: absolute; left: 34px; top: 34px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, .85); }
+.tw-jump { display: none; position: fixed; right: max(22px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom)); width: 64px; height: 64px;
+  border-radius: 50%; border: 0; background: var(--glass); color: var(--ink); font: 600 16px/1 inherit; box-shadow: var(--shadow); z-index: 3; }
+@media (pointer: coarse) { .tw-jump { display: block; } }
+
+body.tw-bare .tw-top, body.tw-bare .tw-tools, body.tw-bare .tw-jump, body.tw-bare .tw-help { opacity: 0; pointer-events: none; }
+body.tw-failed #tw-loading { opacity: 1; }
+@media (max-width: 560px) {
+  .tw-title span { display: none; }
+  .tw-tools button { padding: 6px 9px; font-size: 13px; }
+  .tw-tools { top: auto; bottom: max(14px, env(safe-area-inset-bottom)); right: 50%; transform: translateX(50%); }
+  .tw-jump { bottom: max(80px, calc(env(safe-area-inset-bottom) + 66px)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
