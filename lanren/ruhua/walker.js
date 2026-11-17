@@ -181,6 +181,7 @@ export async function createWalker(url) {
           f.t = clamp((ph - duty) / (1 - duty), 0, 1);
           // predict where the body will be at touchdown
           target.addScaledVector(G.vel, (1 - f.t) * f.dur);
+          f.to = target.clone(); f.to.y = pos.y;                 // if the body stops mid-stride, the swing finishes here
           f.cur = new THREE.Vector3().lerpVectors(f.from, target, smooth(f.t));
           f.cur.y = pos.y + Math.sin(f.t * Math.PI) * (0.07 + 0.13 * G.run) + (1 - G.run) * 0.02 * Math.sin(f.t * Math.PI * 2);
           f.roll = f.t < 0.3 ? -0.5 * (1 - f.t / 0.3) : f.t > 0.75 ? 0.3 * (f.t - 0.75) / 0.25 : 0;   // toe-off, then the heel leads

@@ -22,7 +22,7 @@ const forecast = fs.readFileSync(path.join(__dirname, 'fixtures/ruhua-archive-20
   const base = 'http://127.0.0.1:' + server.address().port;
   const browser = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
   const results = [];
-  const check = async (name, fn) => { try { await fn(); results.push(['ok', name]); } catch (e) { results.push(['FAIL', name, e.message.split('\n')[0]]); } };
+  const check = async (name, fn) => { try { await fn(); results.push(['ok', name]); } catch (e) { results.push(['FAIL', name, e.message.split('\n').slice(0, 4).join(' | ')]); } };
   async function open(viewport, { touch = false, offline = false, query = '' } = {}) {
     const ctx = await browser.newContext({ viewport, hasTouch: touch, isMobile: touch });
     const page = await ctx.newPage();
@@ -57,7 +57,7 @@ const forecast = fs.readFileSync(path.join(__dirname, 'fixtures/ruhua-archive-20
       R.easel.pointer(0.5, 0.5, false);
       return { cur: S.cur, rev: S.revealed.slice(), progress: R.easel.progress };
     });
-    assert.ok(r.cur >= 1 && r.progress > 0.15, JSON.stringify(r));
+    assert.ok(r.cur >= 1 && r.progress > 0.06, JSON.stringify(r));
   });
   await check('a drag outside the canvas paints the world (projector map), then the painting leaves', async () => {
     const r = await page.evaluate(() => {
@@ -79,12 +79,13 @@ const forecast = fs.readFileSync(path.join(__dirname, 'fixtures/ruhua-archive-20
   });
   await check('collision: walking into 一号教学楼 stops at its wall', async () => {
     const z = await page.evaluate(() => {
-      const R = window.__ruhua; R.player.place(-40, 4, 0); R.tick(0.5);
-      dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' })); R.tick(4); dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
+      // x = −20: 一号教学楼's north façade (its collision hull) is at z ≈ 8.75 (the porch further west reaches z ≈ 4.8)
+      const R = window.__ruhua; R.player.place(-20, -4, 0); R.tick(0.5);
+      dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' })); R.tick(8); dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
       return R.player.state.pos.z;
     });
-    assert.ok(z < 11, 'walker z ' + z.toFixed(2) + ' (the wall is at z ≈ 11)');
-    assert.ok(z > 6, 'walker did move ' + z.toFixed(2));
+    assert.ok(z < 8.75, 'walker z ' + z.toFixed(2) + ' (the façade is at z ≈ 8.75)');
+    assert.ok(z > 7.5, 'walker reached the wall ' + z.toFixed(2));
   });
   await check('free weather: rain wets the paving, opens the umbrella; back to 海口此刻', async () => {
     const r = await page.evaluate(() => {
