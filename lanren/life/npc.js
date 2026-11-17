@@ -31,9 +31,8 @@ export function createPeople({ life, url, heightAt, getColliders, layer = 0, mob
     const st = agent.state;
     const fig = await createWalker(url, {
       heightAt, x: st.x, z: st.z, yaw: st.yaw || 0, palette: F, fade: true, umbrella: !!P.umbrella,
-      config: { walkSpeed: P.speed, ...(P.gait.config || {}) }, basic: P.gait.basic, seed: P.gait.seed,
+      preset: P.gait.preset, config: { walkSpeed: P.speed, ...(P.gait.config || {}) }, basic: P.gait.basic, seed: P.gait.seed,
     });
-    if (P.gait.preset) fig.human.applyPreset(P.gait.preset, { walkSpeed: P.speed, ...(P.gait.config || {}) });
     if (F.scale && F.scale !== 1) fig.model.scale.setScalar(F.scale);
     accessories(fig, F.acc || [], P);
     fig.root.traverse((o) => o.layers.set(layer));
@@ -143,7 +142,10 @@ export function createPeople({ life, url, heightAt, getColliders, layer = 0, mob
     // what they carry, what they do with their head
     fig.setUmbrella(rain && P.umbrella && !s.inside);
     const holdFor = { sketch: 'sketchbook', sweep: 'broom', tend: null, read: 'book' };
-    fig.setHold(holdFor[s.act] !== undefined ? holdFor[s.act] : P.reads && s.moving ? 'book' : (P.figure.acc || []).includes('folder') ? 'folder' : null);
+    if (s.act === 'exercise') {
+      // the whole school in time: out, up, out, down (a beat of the clock everyone shares)
+      fig.setHold(['armsOut', 'armsUp', 'armsOut', null][Math.floor(ms / 1600) % 4]);
+    } else fig.setHold(holdFor[s.act] !== undefined ? holdFor[s.act] : P.reads && s.moving ? 'book' : (P.figure.acc || []).includes('folder') ? 'folder' : null);
     if (b.props) for (const [k, o] of Object.entries(b.props)) o.visible = k === 'broom' ? s.act === 'sweep' : true;
     // a glance at the player, once per meeting
     const dp = Math.hypot(player.x - fig.position.x, player.z - fig.position.z);

@@ -15,6 +15,7 @@
 
 /* the book */
 .lf-map { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; perspective: 1600px; }
+.lf-map[hidden], .lf-line[hidden], .lf-card[hidden] { display: none; }
 .lf-map::before { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 100% at 50% 60%, rgba(20, 28, 26, .22), rgba(12, 18, 16, .55)); opacity: 0; transition: opacity .5s ease; }
 .lf-map.on::before { opacity: 1; }
 .lf-book { position: relative; width: min(1180px, calc(100vw - 28px)); height: min(820px, calc(100vh - 28px)); height: min(820px, calc(100dvh - 28px));
@@ -39,6 +40,7 @@
 .lf-map-foot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px 30px; pointer-events: none; z-index: 2; }
 .lf-map-foot > * { pointer-events: auto; }
 .lf-map-foot button { border: 1px solid rgba(42, 38, 32, .35); background: rgba(238, 229, 207, .85); color: var(--lf-ink); border-radius: 999px; padding: 6px 13px; cursor: pointer; font: 13px/1 "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", serif; }
+.lf-map-foot button[aria-pressed="true"] { background: #2a2620; color: #eee5cf; }
 .lf-map-foot kbd { font: 11px/1 ui-monospace, monospace; opacity: .6; margin-left: 4px; }
 .lf-map-note { margin: 0 auto 0 0; font: 12px/1.4 "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", serif; color: rgba(42, 38, 32, .6); }
 .lf-card { position: absolute; right: 18px; top: 60px; width: min(280px, calc(100% - 36px)); background: rgba(246, 240, 225, .96); border: 1px solid rgba(42, 38, 32, .2);

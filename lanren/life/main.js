@@ -27,7 +27,7 @@ import { loadV4, SHOT6, sun6Dir, LIGHT6, V4_ROT } from '../ruhua/v4.js';
 import { createWorld, shadeAt } from '../ruhua/world.js';
 import { createRealWorld } from '../ruhua/realworld.js';
 import { createPipeline } from './pipeline.js';
-import { createEasel } from '../ruhua/easel.js';
+import { createEasel } from './easel.js';
 import { createRain } from '../ruhua/fx.js';
 import { PAINT, NO_PROJECTION, sideOf, twin } from '../ruhua/paintfield.js';
 import { createSource } from '../ruhua/weather/source.js';
@@ -346,6 +346,7 @@ async function main() {
     const act = e.target.closest('[data-life]')?.dataset.life;
     if (act === 'close') closeMap();
     if (act === 'me') { map.follow(null); map.center(player.state.pos.x, player.state.pos.z); }
+    if (act === 'day') { const on = map.toggleDay(); e.target.closest('[data-life]').setAttribute('aria-pressed', String(on)); }
   });
   addEventListener('keydown', (e) => {
     if (e.code === 'KeyM' && !/INPUT|TEXTAREA/.test(e.target.tagName || '')) { map.isOpen ? closeMap() : openMap(); }

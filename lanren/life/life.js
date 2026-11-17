@@ -188,7 +188,7 @@ export function createLife({ nav, people = PEOPLE, isRaining = () => false }) {
       st.x = A.x + (Bp.x - A.x) * tt; st.z = A.z + (Bp.z - A.z) * tt;
       st.moving = tt < 1 && dist > 0.2; st.speed = st.moving ? v : 0; st.run = b.act === 'play' && st.moving;
       st.yaw = Math.atan2(Bp.x - A.x, Bp.z - A.z);
-      if (b.act === 'play' && !st.moving) st.yaw = Math.atan2(-128 - st.x + (p.x + 128), -26 - st.z);   // face the hoop end
+      if (!st.moving && Math.hypot(p.x - st.x, p.z - st.z) > 0.5) st.yaw = Math.atan2(p.x - st.x, p.z - st.z);   // between moves, face the middle of the court / bed
     }
     return st;
   }

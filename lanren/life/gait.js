@@ -23,7 +23,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { createProceduralHuman, applyBasicControls, defaultConfig } from '../vendor/procedural-locomotion/procedural-locomotion.min.js';
+import { createProceduralHuman, applyBasicControls, defaultConfig, stylePresets } from '../vendor/procedural-locomotion/procedural-locomotion.min.js';
 import { bodyMaterial, outlineMaterial } from '../ruhua-stroll/student.js';
 import { cel, celLike } from '../ruhua-stroll/atmos.js';
 
@@ -87,7 +87,7 @@ async function loadFigure(url) {
 }
 
 /**
- * opts: { heightAt(x, z), x, z, yaw, config (gait parameters), basic (applyBasicControls values),
+ * opts: { heightAt(x, z), x, z, yaw, preset, config (gait parameters), basic (applyBasicControls values),
  *         seed, palette: { shirt, trousers, bag, hair, skin } (recolour, for the campus's other people),
  *         outline (true), shadow (true) }
  */
@@ -132,7 +132,9 @@ export async function createWalker(url, opts = {}) {
   model.position.set(opts.x ?? 0, heightAt(opts.x ?? 0, opts.z ?? 0), opts.z ?? 0);
   model.rotation.set(0, opts.yaw ?? 0, 0);
   model.updateMatrixWorld(true);
-  let config = { ...STUDENT, ...(opts.config || {}) };
+  // a style preset (the campus's other people: 'athletic', 'tired'…) is the base instead of the student's
+  // tuning; per-person overrides go on top, then the high-level controls computed from all of that
+  let config = { ...(opts.preset ? stylePresets[opts.preset] : STUDENT), ...(opts.config || {}) };
   if (opts.basic) config = { ...config, ...applyBasicControls({ ...defaultConfig, ...config }, opts.basic) };
   const human = createProceduralHuman({
     model, mapping: HAIZ_MAPPING, ground: heightGround(heightAt), config, seed: opts.seed ?? 1,
@@ -156,6 +158,10 @@ export async function createWalker(url, opts = {}) {
     folder: { L: [E(-0.12, 0, -0.12), E(-1.35, 0, -0.35)] },
     sketchbook: { L: [E(-0.1, 0, -0.1), E(-0.9, 0, -0.2)] },
     broom: { R: [E(-0.5, 0, 0.18), E(-0.6, 0, 0.05)], L: [E(-0.75, 0, -0.28), E(-0.95, 0, -0.3)] },
+    // 课间操: arms out to the sides, then up
+    // (about the forward axis +z turns an arm toward the walker's left: out for the left arm, in for the right)
+    armsOut: { R: [E(0, 0, -1.45), E(0, 0, -1.45)], L: [E(0, 0, 1.45), E(0, 0, 1.45)] },
+    armsUp: { R: [E(-2.85, 0, -0.25), E(-2.85, 0, -0.25)], L: [E(-2.85, 0, 0.25), E(-2.85, 0, 0.25)] },
   };
   function applyHold(name, k) {
     const h = HOLDS[name], bodyQ = model.getWorldQuaternion(qc);

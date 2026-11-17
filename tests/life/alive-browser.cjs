@@ -145,6 +145,50 @@ async function settle(p, seconds = 2, slices = 8) {
   await check('no page errors (desktop)', async () => { if (errors.length) throw new Error(errors.join(' | ')); return 'none'; });
   await p.close();
 
+  // 入画: the painter faces the tree before the easel rises; a resize mid-painting keeps the canvas whole
+  {
+    const t = await browser.newPage({ viewport: { width: 1100, height: 620 }, deviceScaleFactor: 1 });
+    const errs = [];
+    t.on('pageerror', (e) => errs.push(e.message));
+    await t.route('**/api.open-meteo.com/**', (r) => r.abort());
+    await t.goto(`${BASE}/ruhua-alive.html?quality=low&capture`, { waitUntil: 'load' });
+    await t.waitForFunction(() => window.__ruhua && window.__ruhua.stage === 'hold', null, { timeout: 240000 });
+    await check('支起画架: the view turns to the tree, and the blank canvas stands over its heart', async () => {
+      await t.evaluate(() => { window.__ruhua.paint(); });
+      for (let k = 0; k < 60; k++) { await t.evaluate(() => window.__ruhua.still(0.1, 10)); await t.waitForTimeout(40); if ((await t.evaluate(() => window.__ruhua.stage)) === 'paint') break; }
+      const r = await t.evaluate(async () => {
+        const R = window.__ruhua; const THREE = await import('three');
+        const P = R.easel.state.P, rect = R.easel.state.rect;
+        const crown = new THREE.Vector3(0.2, 7.0, 0.6).project(P), trunk = new THREE.Vector3(0, 1.5, 0).project(P);
+        return { stage: R.stage, rect, crown: [(crown.x + 1) / 2, (crown.y + 1) / 2], trunk: [(trunk.x + 1) / 2, (trunk.y + 1) / 2] };
+      });
+      if (r.stage !== 'paint') throw new Error('stage ' + r.stage);
+      const inR = ([u, v]) => u > r.rect[0] && u < r.rect[2] && v > r.rect[1] && v < r.rect[3];
+      if (!inR(r.crown) || !inR(r.trunk)) throw new Error(`tree outside the canvas: crown ${r.crown.map((v) => v.toFixed(2))} trunk ${r.trunk.map((v) => v.toFixed(2))} rect ${r.rect}`);
+      if (Math.abs(r.crown[0] - (r.rect[0] + r.rect[2]) / 2) > 0.08) throw new Error('crown off-centre ' + r.crown[0].toFixed(2));
+      return `crown at (${r.crown.map((v) => v.toFixed(2))}), trunk at (${r.trunk.map((v) => v.toFixed(2))}) inside the canvas`;
+    });
+    await check('a window resized mid-painting keeps the whole canvas in view (same eye, wider lens)', async () => {
+      await t.setViewportSize({ width: 620, height: 900 });
+      await t.waitForTimeout(400);
+      const r = await t.evaluate(async () => {
+        const R = window.__ruhua; const THREE = await import('three');
+        R.still(0.1, 10);
+        const m = R.easel.canvasMesh; m.updateMatrixWorld();
+        const cam = R.camera; cam.updateMatrixWorld();
+        const out = [];
+        for (const [x, y] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]) { const v = new THREE.Vector3(x, y, 0).applyMatrix4(m.matrixWorld).project(cam); out.push([+v.x.toFixed(3), +v.y.toFixed(3)]); }
+        const P = R.easel.state.P;
+        return { corners: out, sameEye: cam.position.distanceTo(P.position) < 1e-4, fov: cam.fov };
+      });
+      if (!r.sameEye) throw new Error('the eye moved');
+      if (r.corners.some(([x, y]) => Math.abs(x) > 1.001 || Math.abs(y) > 1.001)) throw new Error('canvas cut off: ' + JSON.stringify(r.corners));
+      return `fov ${r.fov.toFixed(1)}°, corners ${JSON.stringify(r.corners)}`;
+    });
+    await check('no page errors (transition)', async () => { if (errs.length) throw new Error(errs.join(' | ')); return 'none'; });
+    await t.close();
+  }
+
   // a phone, upright, with touch
   const m = await open(browser, { width: 390, height: 844 }, { mobile: true });
   await check('phone portrait: the map opens from its button and closes', async () => {

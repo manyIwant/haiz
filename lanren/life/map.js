@@ -51,7 +51,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
   const SW = Math.round((R.x1 - R.x0) * PX), SH = Math.round((R.z1 - R.z0) * PX);
   let sheet = null, roads = null, lit = null;
   const view = { cx: 0, cz: 20, s: 2.4, target: null };
-  const state = { open: false, t: 0, reveal: 0, selected: null, follow: null, blooms: [], leaves: [], lastSpawn: 0, built: false, w: 0, h: 0, dpr: 1, catTrail: [] };
+  const state = { open: false, t: 0, reveal: 0, selected: null, follow: null, blooms: [], leaves: [], lastSpawn: 0, built: false, w: 0, h: 0, dpr: 1, catTrail: [], day: { on: false, traces: {}, cursor: {}, from: 0 } };
   const toS = (x, z) => [(x - view.cx) * view.s + state.w / 2, (z - view.cz) * view.s + state.h / 2];
   const toW = (sx, sy) => [(sx - state.w / 2) / view.s + view.cx, (sy - state.h / 2) / view.s + view.cz];
 
@@ -282,8 +282,18 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     if (wx.lamps > 0.05) { g.globalAlpha = wx.lamps * 0.55; g.globalCompositeOperation = 'screen'; g.filter = 'blur(3px)'; g.drawImage(lit, sx, sy, sw, sh, 0, 0, W, Hh); g.filter = 'none'; g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
     g.restore();
     rain(dt, wx);
+    // at night the page lies under a desk lamp: warm in the middle, the edges falling into the dark
+    if (wx.night > 0.05) {
+      const k = Math.min(1, wx.night);
+      g.save(); g.globalCompositeOperation = 'multiply';
+      const R0 = Math.hypot(W, Hh) * 0.62;
+      const gr = g.createRadialGradient(W * 0.55, Hh * 0.45, R0 * 0.12, W * 0.5, Hh * 0.5, R0);
+      gr.addColorStop(0, `rgba(255, 236, 200, ${0.0})`); gr.addColorStop(0.55, `rgba(214, 190, 150, ${0.35 * k})`); gr.addColorStop(1, `rgba(70, 60, 55, ${0.75 * k})`);
+      g.fillStyle = gr; g.fillRect(0, 0, W, Hh); g.restore();
+    }
     // the life on the page
     const ms = info.clock;
+    if (state.day.on) dayTraces(ms);
     const items = [];
     for (const a of life.agents) {
       const s = a.state;
@@ -331,6 +341,37 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     if (state.follow) { const it = items.find((i) => i.a.id === state.follow); if (it) { view.cx += (it.x - view.cx) * (1 - Math.exp(-dt * 3)); view.cz += (it.z - view.cz) * (1 - Math.exp(-dt * 3)); } }
   }
   const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+  // 今日足迹: every path walked since six in the morning, in pencil, each in its person's ink. Worked out a
+  // little each frame (the day's walks need their paths found), so the lines draw themselves onto the page
+  function dayTraces(ms) {
+    const D = state.day, t0 = performance.now();
+    const start = ms - ((((ms / 3600000 + 8) % 24) + 24) % 24 - 6) * 3600000;           // 06:00 Haikou today
+    if (D.from !== start) { D.from = start; D.traces = {}; D.cursor = {}; }
+    for (const a of life.agents) {
+      const tr = D.traces[a.id] || (D.traces[a.id] = [[]]);
+      let t = D.cursor[a.id] ?? start;
+      while (t < ms && performance.now() - t0 < 7) {
+        const s = life.stateOf(a.id, t);
+        const seg = tr[tr.length - 1];
+        if (s.inside || s.away) { if (seg.length) tr.push([]); }
+        else { const last = seg[seg.length - 1]; if (!last || Math.hypot(s.x - last.x, s.z - last.z) > 1.2) { if (last && Math.hypot(s.x - last.x, s.z - last.z) > 40) tr.push([{ x: s.x, z: s.z }]); else seg.push({ x: s.x, z: s.z }); } }
+        t += 15000;
+      }
+      D.cursor[a.id] = t;
+    }
+    g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const a of life.agents) {
+      const tr = D.traces[a.id]; if (!tr) continue;
+      g.strokeStyle = INKS[a.id] || INK; g.globalAlpha = 0.28; g.lineWidth = 1.1;
+      for (const seg of tr) {
+        if (seg.length < 2) continue;
+        g.beginPath();
+        seg.forEach((q, i) => { const [x, y] = toS(q.x, q.z); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+      }
+    }
+    g.restore(); g.globalAlpha = 1;
+  }
   let tintCanvas = null;
   function tinted() {
     if (tintCanvas) return tintCanvas;
@@ -525,6 +566,9 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     resize: () => { if (state.open) resize(); },
     select(id) { state.selected = id; },
     follow(id) { state.follow = id; },
+    /** 今日足迹 on/off */
+    toggleDay(on = !state.day.on) { state.day.on = on; return on; },
+    get dayOn() { return state.day.on; },
     center(x, z) { view.cx = x; view.cz = z; clampView(); },
     onSelect(fn) { onSelect = fn; },
     get view() { return view; },
