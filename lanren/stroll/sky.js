@@ -16,6 +16,11 @@ export const SKY = {
   uCloudHaze: { value: 1 / 9000 },
   uCirrus: { value: 0.35 },
   uSunDisc: { value: 5.0 },
+  // weather (入画; defaults keep the V2 walk's sky)
+  uCardCover: { value: 1 },     // how many of the painted cumulus cards stand (by rank)
+  uOvercast: { value: 0 },      // a deck of stratus closing over
+  uMoonDisc: { value: 0 },      // the moon's disc (at night uSunDir points at the moon), 0..1 lit fraction
+  uStars: { value: 0 },
 };
 
 const DOME_VERT = /* glsl */`
@@ -27,13 +32,27 @@ void main() {
 }`;
 const DOME_FRAG = /* glsl */`
 ${GLSL}
-uniform vec3 uCloudLit; uniform vec3 uCloudShade; uniform float uCirrus; uniform float uSunDisc;
+uniform vec3 uCloudLit; uniform vec3 uCloudShade; uniform vec3 uCloudMid; uniform float uCirrus; uniform float uSunDisc;
+uniform float uOvercast; uniform float uMoonDisc; uniform float uStars;
 varying vec3 vDir;
 void main() {
   vec3 d = normalize(vDir);
   vec3 c = skyColor(d);
   float s = max(dot(d, uSunDir), 0.0);
   c += uSunGlow * (smoothstep(0.99965, 0.99985, s) * uSunDisc);
+  // night: a plain random star field (not a star chart), and the moon's disc
+  if (uStars > 0.001 && d.y > 0.0) {
+    vec2 sp = vec2(atan(d.x, d.z) * 180.0, d.y * 260.0);
+    vec2 id = floor(sp); vec2 f = fract(sp) - 0.5;
+    float h = aHash(id);
+    float star = step(0.985, h) * smoothstep(0.32, 0.0, length(f)) * (0.4 + 0.6 * aHash(id + 5.0));
+    star *= 0.75 + 0.25 * sin(uTime * (1.5 + h * 3.0) + h * 40.0);
+    c += vec3(0.8, 0.86, 1.0) * star * uStars * smoothstep(0.0, 0.25, d.y) * 1.4;
+  }
+  if (uMoonDisc > 0.001) {
+    float m = smoothstep(0.99955, 0.99975, s);
+    c = mix(c, vec3(1.05, 1.04, 0.98) * (0.35 + 0.65 * uMoonDisc), m * (1.0 - uOvercast * 0.9));
+  }
   // a high cirrus veil: long strokes along the wind, strongest overhead, gone at the horizon
   if (d.y > 0.05) {
     vec2 p = d.xz / (d.y + 0.25);
@@ -45,13 +64,33 @@ void main() {
     vec3 cc = mix(uCloudShade, uCloudLit, 0.55 + 0.45 * s);
     c = mix(c, cc, ci * 0.55);
   }
+  // an overcast deck: broad, low, horizontal strokes of grey; in rain, curtains hang below it
+  if (uOvercast > 0.001) {
+    vec2 p = d.xz / (max(d.y, 0.0) + 0.12);
+    vec2 w = normalize(uWindDir);
+    vec2 q = vec2(dot(p, w), dot(p, vec2(-w.y, w.x)));
+    float n = aFbm(vec2(q.x * 0.55, q.y * 2.4) + vec2(uTime * 0.01, 0.0));
+    float n2 = aNoise(vec2(q.x * 2.1, q.y * 9.0) - uTime * 0.02);
+    vec3 deck = mix(uCloudShade, uCloudMid, smoothstep(0.25, 0.8, n) * 0.85 + n2 * 0.15);
+    deck = mix(deck, uCloudLit, pow(s, 6.0) * 0.25 * (1.0 - uRain));
+    float body = smoothstep(-0.04, 0.22, d.y);
+    float a = uOvercast * mix(0.75, 1.0, n) * body;
+    c = mix(c, deck, a);
+    if (uRain > 0.01) {
+      float curtain = aNoise(vec2(atan(d.x, d.z) * 34.0, d.y * 3.0 - uTime * 0.05)) * smoothstep(0.32, 0.02, d.y) * smoothstep(-0.02, 0.04, d.y);
+      c = mix(c, uCloudShade * 0.85, curtain * uRain * 0.45);
+    }
+  }
   gl_FragColor = vec4(c, 1.0);
 }`;
 
 const CARD_VERT = /* glsl */`
 attribute vec3 aCenter; attribute vec3 aCard;   // centre (cloud-group space); width, height, flip
-varying vec2 vUv; varying vec2 vLocal; varying vec3 vWP; varying vec3 vRight; varying vec3 vToCam; varying float vDist; varying float vFlip;
+attribute float aRank;                             // 0 the hero masses … 1 the last small ones (fade first)
+uniform float uCardCover;
+varying vec2 vUv; varying vec2 vLocal; varying vec3 vWP; varying vec3 vRight; varying vec3 vToCam; varying float vDist; varying float vFlip; varying float vShow;
 void main() {
+  vShow = smoothstep(aRank - 0.08, aRank + 0.08, uCardCover * 1.08);
   vec3 c = (modelMatrix * vec4(aCenter, 1.0)).xyz;
   float sx = aCard.x, sy = aCard.y;
   vFlip = aCard.z;
@@ -64,12 +103,15 @@ void main() {
 const CARD_FRAG = /* glsl */`
 ${GLSL}
 uniform sampler2D uAtlas; uniform vec3 uCloudLit; uniform vec3 uCloudMid; uniform vec3 uCloudShade; uniform vec3 uCloudRim;
-uniform float uCloudHaze; uniform float uOpacity;
-varying vec2 vUv; varying vec2 vLocal; varying vec3 vWP; varying vec3 vRight; varying vec3 vToCam; varying float vDist; varying float vFlip;
+uniform float uCloudHaze; uniform float uOpacity; uniform float uOvercast;
+varying vec2 vUv; varying vec2 vLocal; varying vec3 vWP; varying vec3 vRight; varying vec3 vToCam; varying float vDist; varying float vFlip; varying float vShow;
 void main() {
+  if (vShow < 0.004) discard;
   vec4 t = texture2D(uAtlas, vUv);
   float w = fwidth(t.a) * 0.85 + 0.003;
-  float alpha = smoothstep(0.5 - w, 0.5 + w, t.a);
+  // a card thins from its edges inwards as it fades (it evaporates, it is not dimmed)
+  float th = 0.5 + (1.0 - vShow) * 0.45;
+  float alpha = smoothstep(th - w, th + w, t.a);
   if (alpha < 0.004) discard;
   vec3 n = vec3((t.r * 2.0 - 1.0) * vFlip, t.g * 2.0 - 1.0, 0.0);
   n.z = sqrt(max(0.05, 1.0 - dot(n.xy, n.xy)));
@@ -88,7 +130,9 @@ void main() {
   vec3 hz = skyColor(normalize(vec3(dir.x, max(dir.y, 0.0) * 0.3 + 0.015, dir.z)));
   float haze = clamp(vDist * uCloudHaze, 0.0, 0.8) + smoothstep(0.32, 0.02, vLocal.y) * 0.32;
   c = mix(c, hz, clamp(haze, 0.0, 0.88));
-  gl_FragColor = vec4(c, alpha * uOpacity);
+  // under an overcast deck the cumulus sink into it
+  c = mix(c, mix(uCloudShade, uCloudMid, 0.5), uOvercast * 0.6);
+  gl_FragColor = vec4(c, alpha * uOpacity * (1.0 - 0.85 * uOvercast));
 }`;
 
 // the composition: azimuth (0 = campus south, +Z; 90 = east, +X), distance, base altitude, width, atlas cell
@@ -130,7 +174,10 @@ export function createSky(atlasUrl) {
   });
   // all cards in one geometry (one draw call), far ones first so the usual view composites in order
   const cards = LAYOUT.map(([az, d, alt, w, cell], i) => ({ az, d, alt, w, cell, flip: i % 3 === 1 ? -1 : 1 })).sort((a, b) => b.d - a.d);
-  const pos = [], uvs = [], ctr = [], card = [], idx = [];
+  const pos = [], uvs = [], ctr = [], card = [], idx = [], rank = [];
+  // rank: the widest masses stay longest when the sky clears; far pale banks next; small high ones go first
+  const order = cards.map((k, i) => ({ i, score: k.w / 2300 - (k.alt > 850 ? 0.5 : 0) + (k.d > 4000 ? 0.15 : 0) })).sort((a, b) => b.score - a.score);
+  const rankOf = new Map(order.map((o, r) => [o.i, r / Math.max(1, order.length - 1)]));
   cards.forEach((k, i) => {
     const a = k.az * Math.PI / 180, h = k.w * 0.5;
     const c = [Math.sin(a) * k.d, -0.85 + k.alt + h * 0.38, Math.cos(a) * k.d];
@@ -139,7 +186,7 @@ export function createSky(atlasUrl) {
       pos.push(x, y, 0);
       const uu = k.flip < 0 ? 1 - u : u;
       uvs.push((col + uu) * 0.5, 1 - (row + 1 - v) * 0.25);
-      ctr.push(...c); card.push(k.w, h, k.flip);
+      ctr.push(...c); card.push(k.w, h, k.flip); rank.push(rankOf.get(i));
     });
     idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
   });
@@ -148,17 +195,21 @@ export function createSky(atlasUrl) {
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   g.setAttribute('aCenter', new THREE.Float32BufferAttribute(ctr, 3));
   g.setAttribute('aCard', new THREE.Float32BufferAttribute(card, 3));
+  g.setAttribute('aRank', new THREE.Float32BufferAttribute(rank, 1));
   g.setIndex(idx);
   const mesh = new THREE.Mesh(g, mat);
   mesh.frustumCulled = false;
   mesh.renderOrder = -5;
   clouds.add(mesh);
-  return {
+  const api = {
     group, clouds, atlas,
+    /** how fast the cloud field turns round (1 = the V2 walk's slow drift); the weather sets it from the wind */
+    drift: 1,
     update(dt, focus) {
       // the sky travels with the walker (it is kilometres away) and drifts slowly round
       group.position.set(focus.x * 0.85, 0, focus.z * 0.85);
-      clouds.rotation.y += dt * 0.0016;
+      clouds.rotation.y += dt * 0.0016 * api.drift;
     },
   };
+  return api;
 }

@@ -38,7 +38,9 @@ const WALL = /* glsl */`
   albedo = mix(albedo * vec3(1.03, 0.97, 0.9), albedo, smoothstep(0.0, 0.9, hgt));
   float along = dot(vWP.xz, normalize(vec2(-N.z, N.x) + 1e-4));
   float streak = aNoise(vec2(along * 1.7, vWP.y * 0.09));
-  albedo *= 1.0 - vertical * 0.07 * smoothstep(0.6, 0.92, streak) * smoothstep(1.5, 6.0, hgt);
+  albedo *= 1.0 - vertical * (0.07 + 0.12 * uWet) * smoothstep(0.6, 0.92, streak) * smoothstep(1.5, 6.0, hgt);
+  // rain darkens a wall from the foot up (splash-back) and where it runs down under the eaves
+  albedo = wetAlbedo(albedo, uWet * (0.35 + 0.45 * (1.0 - smoothstep(0.0, 2.5, hgt)) + 0.2 * streak), 0.75);
   ao = mix(0.75, 1.0, smoothstep(0.0, 1.2, hgt));
 #ifdef JOINTS
   float fl = abs(fract(hgt / 3.6 + 0.02) - 0.5);
@@ -52,6 +54,7 @@ const TILES = /* glsl */`
   float course = abs(fract((vWP.y - uGroundY) * 3.2) - 0.5);
   albedo *= 0.92 + 0.08 * smoothstep(0.35, 0.5, course);
   albedo *= 0.92 + 0.14 * aNoise(vWP.xz * 0.4);
+  albedo = wetAlbedo(albedo, uWet, 0.6);
 }
 `;
 const GLASS = /* glsl */`
@@ -76,6 +79,12 @@ const GLASS = /* glsl */`
   room = mix(room, curtain, hasCurtain * step(1.0 - curtainH, py));
   float refl = mix(0.6, 1.0, h2) * (1.0 - 0.45 * step(0.88, h3));
   vec3 g = mix(room, sky, clamp(fres * refl, 0.0, 1.0));
+  // after dark: classrooms lit for evening study (cool tubes), a few warm rooms; curtains glow
+  if (uLamps > 0.001) {
+    float on = step(fract(h1 * 7.13 + h2 * 3.7), uLamps * 0.8);
+    vec3 lamp = mix(vec3(0.82, 0.92, 1.0), vec3(1.0, 0.76, 0.46), step(0.78, h3)) * mix(2.2, 1.5, hasCurtain);
+    g = mix(g, lamp, on * (1.0 - 0.6 * fres));
+  }
   // a painted highlight streak on some panes only
   float d = (along + hgt * 0.8) * 0.9 + h1 * 3.0;
   float streak = smoothstep(0.86, 0.9, fract(d * 0.25)) * (1.0 - smoothstep(0.9, 0.95, fract(d * 0.25)));
@@ -119,8 +128,8 @@ function meanOf(texture) {
   return [lin(r / n), lin(gg / n), lin(b / n)];
 }
 
-export async function createCampus(geo, model = buildCampus(geo.campus, geo.frame)) {
-  const v3 = await loadCampusV3(geo, model.buildings);
+export async function createCampus(geo, model = buildCampus(geo.campus, geo.frame), preloaded = null) {
+  const v3 = preloaded || await loadCampusV3(geo, model.buildings);
   const cache = new Map();
   let tris = 0;
   v3.scene.traverse((o) => {

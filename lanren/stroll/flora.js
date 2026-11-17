@@ -42,7 +42,7 @@ const WIND_BEGIN = /* glsl */`
   #endif
   float ph = dot(ip.xz, vec2(0.13, 0.071));
   float gust = windField(ip.xz);
-  float s = aData.g * uSwayAmp * (0.3 + 0.95 * gust);
+  float s = aData.g * uSwayAmp * uWindSway * (0.3 + 0.95 * gust);
   float hgt = max(position.y, 0.0);
   vec2 wd = uWindDir;
   float sway = sin(uTime * 1.15 + ph) * 0.45 + sin(uTime * 2.7 + ph * 1.7 + position.y * 0.6) * 0.2 + gust * 0.6;
@@ -78,12 +78,15 @@ albedo = mix(albedo, albedo * vec3(1.08, 1.04, 0.8), step(0.8, card) * 0.5);    
 albedo = mix(albedo, vec3(0.34, 0.075, 0.03), step(0.5, uMode) * step(uMode, 1.5) * step(0.972, card) * 0.7);
 albedo = mix(albedo, vec3(0.64, 0.05, 0.23), step(1.5, uMode) * smoothstep(0.34, 0.4, vData.b) * step(0.25, card) * 0.92);
 ao = mix(0.45, 1.0, vData.r);
+albedo = wetAlbedo(albedo, uWet, 0.4);
 `,
       after: /* glsl */`
 {
   vec3 vd = normalize(vWP - cameraPosition);
   float back = pow(max(dot(vd, uSunDir), 0.0), 3.0);
   outCol += uSunColor * albedo * back * 0.55 * vData.r * (0.4 + 0.6 * shadow);
+  // wet leaves catch the sky on their outer faces
+  outCol += uSkyAmb * 0.07 * uWet * vData.r * smoothstep(0.2, 0.9, N.y * 0.5 + 0.5);
 }
 `,
     },
@@ -97,7 +100,7 @@ function barkMaterial(color) {
   const mat = cel({
     name: 'bark', key: 'bark-v2', color, uniforms,
     vertex: { head: WIND_HEAD, begin: WIND_BEGIN, world: 'vData = aData;' },
-    fragment: { head: 'varying vec4 vData;\n', albedo: 'ao = mix(0.55, 1.0, vData.r); albedo *= mix(0.72, 1.0, vData.r);\n' },
+    fragment: { head: 'varying vec4 vData;\n', albedo: 'ao = mix(0.55, 1.0, vData.r); albedo *= mix(0.72, 1.0, vData.r); albedo = wetAlbedo(albedo, uWet, 0.8);\n' },
   });
   const depth = celDepth({ key: 'bark-v2', uniforms, vertex: { head: WIND_HEAD.replace('varying vec4 vData;', ''), begin: WIND_BEGIN } });
   return { mat, depth };
@@ -204,7 +207,7 @@ function fallingLeaves(count = 70) {
   return m;
 }
 
-export async function createFlora(geo, { url, atlasUrl }) {
+export async function createFlora(geo, { url, atlasUrl, skipLanshu = false, skipRock = false }) {
   const [gltf, atlas] = await Promise.all([
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url),
     new THREE.TextureLoader().loadAsync(atlasUrl),
@@ -261,10 +264,10 @@ export async function createFlora(geo, { url, atlasUrl }) {
     }
   };
   for (const [part, list] of buckets) place(part, list);
-  place('lanshu', [{ x: 0, z: 0, kind: 'lanshu', h: 1, s: 1, rot: 0.4 }]);
+  if (!skipLanshu) place('lanshu', [{ x: 0, z: 0, kind: 'lanshu', h: 1, s: 1, rot: 0.4 }]);
   const rockF = geo.features.find((f) => f.id === 'hujulongpan');
   const rockSrc = node('taihu');
-  if (rockF && rockSrc) {
+  if (rockF && rockSrc && !skipRock) {
     const mat = cel({ name: 'stone', key: 'stone-v2', color: new THREE.Color('#a7ada4'),
       vertex: { head: 'attribute vec4 aData; varying vec4 vData;\n', world: 'vData = aData;' },
       fragment: { head: 'varying vec4 vData;\n', albedo: 'ao = mix(0.5, 1.0, vData.r); albedo *= mix(0.74, 1.04, vData.r);\n' } });

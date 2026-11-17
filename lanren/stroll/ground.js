@@ -305,6 +305,27 @@ albedo *= mix(1.0, 0.86 + 0.26 * stroke, lawn);
 albedo = mix(albedo, albedo * vec3(1.12, 1.16, 0.86) + vec3(0.012, 0.016, 0.0), lawn * gust * 0.55);
 // fine grain everywhere, so no surface is a flat fill up close
 albedo *= 0.95 + 0.1 * aNoise(vWP.xz * 3.1);
+// weather: paving darkens when wet, lawns a little; water stands in the paving's hollows
+float paving = (1.0 - lawn) * inside;
+float pud = puddleAt(vWP.xz) * paving;
+albedo = wetAlbedo(albedo, uWet, mix(0.4, 1.0, paving));
+`,
+      after: /* glsl */`
+if (uWet > 0.001 || pud > 0.001) {
+  vec3 V = normalize(cameraPosition - vWP);
+  vec2 rip = rainRipple(vWP.xz) * (0.25 + 0.75 * pud);
+  vec3 Nw = normalize(vec3(rip.x, 1.0, rip.y));
+  vec3 R = reflect(-V, Nw);
+  float fres = 0.04 + 0.96 * pow(1.0 - max(dot(Nw, V), 0.0), 5.0);
+  vec3 skyR = skyColor(R);
+  // a wet film is a weak, broken sheen; standing water is a dark mirror
+  float film = uWet * paving * (0.35 + 0.65 * aNoise(vWP.xz * 1.7));
+  outCol = mix(outCol, outCol * 0.5, pud * 0.45);
+  float k = max(film * fres * 0.7, pud * mix(0.3, 1.0, fres));
+  outCol = mix(outCol, skyR * (0.5 + 0.5 * shadow), clamp(k, 0.0, 0.92));
+  float spec = pow(max(dot(R, uSunDir), 0.0), 220.0);
+  outCol += uSunGlow * spec * shadow * (pud + film * 0.5) * 2.2;
+}
 `,
     },
   });
@@ -340,7 +361,8 @@ void main() {
   float h0 = aNoise(p + uTime * 0.25) + aNoise(p * 2.3 - uTime * 0.31) * 0.5;
   float hx = aNoise(p + vec2(e, 0) + uTime * 0.25) + aNoise((p + vec2(e, 0)) * 2.3 - uTime * 0.31) * 0.5;
   float hz = aNoise(p + vec2(0, e) + uTime * 0.25) + aNoise((p + vec2(0, e)) * 2.3 - uTime * 0.31) * 0.5;
-  vec3 N = normalize(vec3((h0 - hx) * 0.3, 1.0, (h0 - hz) * 0.3));
+  vec2 rip = rainRipple(vWP.xz);
+  vec3 N = normalize(vec3((h0 - hx) * 0.3 + rip.x, 1.0, (h0 - hz) * 0.3 + rip.y));
   vec3 R = reflect(-V, N);
   vec3 sky = skyColor(R);
   float fres = 0.04 + 0.96 * pow(1.0 - max(dot(N, V), 0.0), 5.0);

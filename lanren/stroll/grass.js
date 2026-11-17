@@ -131,8 +131,9 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   vGround = g; vGust = gust;
   float t = position.y;
   vec2 face = vec2(cos(aRnd.w), sin(aRnd.w));
-  vec2 lean = wd * (0.18 + 0.95 * gust) + vec2(-face.y, face.x) * (aRnd.z - 0.5) * 0.6;
-  lean += wd * sin(uTime * (1.7 + aRnd.z) + aRnd.w * 5.0 + dot(root, wd) * 0.7) * (0.08 + 0.14 * gust);
+  float sw = min(uWindSway, 2.2);
+  vec2 lean = wd * (0.18 + 0.95 * gust) * mix(1.0, sw, 0.8) + vec2(-face.y, face.x) * (aRnd.z - 0.5) * 0.6;
+  lean += wd * sin(uTime * (1.7 + aRnd.z) + aRnd.w * 5.0 + dot(root, wd) * 0.7) * (0.08 + 0.14 * gust) * sw;
   vec2 away = root - uPlayer.xz; float pd = length(away);
   lean += away / max(pd, 0.01) * smoothstep(0.9, 0.12, pd) * 1.7;
   float bl = min(length(lean), 1.6);
@@ -140,7 +141,7 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   float wdt = uW * (0.75 + 0.5 * aRnd.z) * (1.0 - pow(t, 1.4) * 0.88);
   p.xz += face * position.x * wdt * step(0.002, h);
   p.xz += lean * t * t * h * 0.62;
-  p.y += h * t * (1.0 - 0.32 * bl * t * t);
+  p.y += h * t * (1.0 - 0.32 * bl * t * t) * (1.0 - 0.18 * uRain - 0.08 * uWet);
   transformed = p;
   objectNormal = normalize(vec3(lean.x * 0.12 + face.y * 0.08, 1.0, lean.y * 0.12 - face.x * 0.08));
   vT = t;
@@ -156,6 +157,7 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   albedo = mix(vGround * 0.96, tipc, smoothstep(0.15, 1.0, vT));
   albedo *= 1.0 + vGust * 0.18 * vT;
   albedo = mix(albedo, vec3(0.92, 0.88, 0.8), vFlower * smoothstep(0.85, 0.97, vT));
+  albedo = wetAlbedo(albedo, uWet, 0.35);
   ao = mix(0.8, 1.0, vT);
 }
 `,

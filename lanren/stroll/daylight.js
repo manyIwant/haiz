@@ -88,12 +88,30 @@ export function createDaylight(scene, { shadowSize = 2048, shadowBox = 55 } = {}
     return cur;
   }
   apply(to);
+  // 入画: a continuous light (lanren/ruhua/weather/model.js palette) instead of the three moods
+  let ext = null;
+  const setC = (c, v) => (Array.isArray(v) ? c.setRGB(v[0], v[1], v[2]) : c.copy(v));
+  function applyParams(p) {
+    ext = p;
+    setC(U.uShadeHue.value, p.shadeHue); U.uShadeMix.value = p.shadeMix;
+    setC(U.uSunColor.value, p.sun); setC(U.uSkyAmb.value, p.skyAmb); setC(U.uGroundAmb.value, p.groundAmb); setC(U.uRim.value, p.rim);
+    setC(U.uZenith.value, p.zenith); setC(U.uHorizon.value, p.horizon); setC(U.uSunGlow.value, p.sunGlow); setC(U.uDepthCol.value, p.depthCol);
+    U.uDepthTint.value = p.depthTint; U.uAirScale.value = p.air; U.uFogFalloff.value = p.falloff; U.uMist.value = p.mist;
+    U.uCloudShadow.value = p.cloudShadow;
+    setC(SKY.uCloudLit.value, p.cloudLit); setC(SKY.uCloudMid.value, p.cloudMid); setC(SKY.uCloudShade.value, p.cloudShade); setC(SKY.uCloudRim.value, p.cloudRim);
+    sun.shadow.radius = p.shadowRadius;
+    dir.set(p.dir[0], p.dir[1], p.dir[2]).normalize();
+    U.uSunDir.value.copy(dir);
+    lightDir.copy(dir); lightDir.y = Math.max(lightDir.y, 0.17); lightDir.normalize();
+  }
   return {
     sun,
-    get name() { return name; },
-    get mood() { return t >= 1 ? to : cur; },
+    applyParams,
+    get name() { return ext ? 'live' : name; },
+    get mood() { return ext || (t >= 1 ? to : cur); },
     set(n, instant = false) {
       if (!MOODS[n]) return;
+      ext = null;
       name = n;
       from = t >= 1 ? { ...to } : { ...cur, ...Object.fromEntries(COLORS.map((k) => [k, cur[k].clone()])) };
       to = MOODS[n];

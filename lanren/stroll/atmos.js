@@ -12,6 +12,8 @@
 //   wind      windField(xz) — gust fronts travelling across the campus. The grass leans with it, the
 //             lawn's sheen moves with it, the trees sway harder when it reaches them
 //   clouds    the same cloud layer that draws the sky casts the drifting shadows on the ground
+//   weather   (入画, lanren/ruhua) wetness, standing water, rain, night and lit windows, and a global
+//             wind strength. All default to the V2 walk's dry, lit day, so campus-stroll-v2 is unchanged
 import * as THREE from 'three';
 
 export const U = {
@@ -38,6 +40,13 @@ export const U = {
   uMist: { value: 0 },
   uShadeHue: { value: new THREE.Color(0.62, 0.68, 1.0) },
   uShadeMix: { value: 0.28 },
+  // weather (defaults: the V2 walk's dry day)
+  uWet: { value: 0 },          // 0 dry … 1 soaked paving
+  uPuddle: { value: 0 },       // 0 none … 1 standing water in every hollow
+  uRain: { value: 0 },         // falling rain now, 0..1
+  uNight: { value: 0 },        // 0 day … 1 night
+  uLamps: { value: 0 },        // 0 … 1 lit windows
+  uWindSway: { value: 1 },     // multiplies how far crowns and blades move
 };
 
 export const GLSL = /* glsl */`
@@ -46,6 +55,7 @@ uniform vec3 uZenith; uniform vec3 uHorizon; uniform vec3 uSunGlow; uniform vec3
 uniform float uDepthTint; uniform float uAirScale; uniform float uFogFalloff; uniform float uFogMax; uniform float uGroundY;
 uniform float uTime; uniform vec2 uWindDir; uniform float uWindSpeed; uniform float uWindGust;
 uniform float uCloudShadow; uniform float uCloudCover; uniform float uMist; uniform vec3 uShadeHue; uniform float uShadeMix;
+uniform float uWet; uniform float uPuddle; uniform float uRain; uniform float uNight; uniform float uLamps; uniform float uWindSway;
 
 float aHash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float aNoise(vec2 p) {
@@ -81,6 +91,43 @@ float cloudShade(vec3 wp) {
   float n = aFbm(p * 0.0075 + uWindDir * uTime * 0.012);
   float c = smoothstep(0.58 - uCloudCover * 0.2, 0.68 - uCloudCover * 0.2, n);
   return 1.0 - uCloudShadow * c;
+}
+
+// ---- water left on the ground: hollows in the paving and along the kerbs fill first
+float puddleField(vec2 xz) {
+  float n = aFbm(xz * 0.19 + 3.7) * 0.7 + aNoise(xz * 0.9) * 0.3;
+  return n;
+}
+/** 0..1 standing water at xz for the current uPuddle (soft edge) */
+float puddleAt(vec2 xz) {
+  if (uPuddle < 0.01) return 0.0;
+  float th = 0.78 - uPuddle * 0.36;
+  return smoothstep(th, th + 0.035, puddleField(xz));
+}
+/** rings of falling drops on standing water: a perturbed normal (xz), 0 when dry */
+vec2 rainRipple(vec2 xz) {
+  if (uRain < 0.01) return vec2(0.0);
+  vec2 acc = vec2(0.0);
+  for (int k = 0; k < 2; k++) {
+    vec2 p = xz * (2.2 + float(k) * 1.3) + float(k) * 17.0;
+    vec2 id = floor(p), f = fract(p) - 0.5;
+    float h = aHash(id + float(k));
+    float rate = 0.8 + 0.6 * h;
+    float ph = fract(uTime * rate + h * 7.0);
+    float on = step(1.0 - uRain * 0.9, aHash(id + floor(uTime * rate + h * 7.0) * 1.31));
+    vec2 c = (vec2(aHash(id + 3.1), aHash(id + 7.7)) - 0.5) * 0.5;
+    vec2 d = f - c; float r = length(d);
+    float ring = sin((r - ph * 0.45) * 60.0) * smoothstep(0.08, 0.0, abs(r - ph * 0.45)) * (1.0 - ph);
+    acc += on * ring * d / max(r, 1e-3);
+  }
+  return acc * 0.35;
+}
+/** what wetness does to a surface's colour: darker, a little richer (porosity 0 glass … 1 soil) */
+vec3 wetAlbedo(vec3 albedo, float wet, float porosity) {
+  float k = wet * porosity;
+  vec3 a = albedo * mix(1.0, 0.58, k);
+  float l = dot(a, vec3(0.3, 0.59, 0.11));
+  return mix(a, mix(vec3(l), a, 1.18), k);
 }
 
 vec3 aerial(vec3 col, vec3 wp) {
@@ -148,10 +195,11 @@ export function cel(opts = {}) {
   m.fog = false;
   const extra = opts.uniforms || {};
   const V = opts.vertex || {}, F = opts.fragment || {};
-  const key = 'v2:' + (opts.key || m.name) + ':' + [V.head, V.begin, V.world, F.head, F.albedo, F.after].map((s) => (s || '').length).join(',');
+  const key = 'v2:' + (opts.key || m.name) + ':' + [V.head, V.begin, V.world, F.head, F.pre, F.albedo, F.after].map((s) => (s || '').length).join(',');
   m.customProgramCacheKey = () => key;
   if (opts.defines) m.defines = { ...(m.defines || {}), ...opts.defines };
   m.userData.uniforms = extra;
+  m.userData.celOpts = opts;
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U, extra);
     sh.vertexShader = sh.vertexShader
@@ -165,6 +213,7 @@ float shadow = 1.0;
 #if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0
   shadow = getShadow( directionalShadowMap[ 0 ], directionalLightShadows[ 0 ].shadowMapSize, directionalLightShadows[ 0 ].shadowIntensity, directionalLightShadows[ 0 ].shadowBias, directionalLightShadows[ 0 ].shadowRadius, vDirectionalShadowCoord[ 0 ] );
 #endif
+${F.pre || ''}
 vec3 N = normalize(vWN);
 ${opts.flipBack ? 'N = gl_FrontFacing ? N : -N;' : ''}
 float ao = 1.0;
@@ -183,6 +232,27 @@ reflectedLight.indirectDiffuse = vec3(0.0);
     m.userData.shader = sh;
   };
   return m;
+}
+
+/**
+ * Another cel material built from the same recipe as `m` (same uniforms objects, so wind, weather and
+ * light stay in step), with hooks appended and options overridden. Used by 入画 for the remembered
+ * and the painted variants of every V2 surface.
+ *   extra: { key, soft, uniforms, fragment: { head, pre, albedo, after } }
+ */
+export function celLike(m, extra = {}) {
+  const o = m.userData.celOpts;
+  if (!o) throw new Error('celLike: not a cel material');
+  const F = o.fragment || {}, X = extra.fragment || {};
+  const cat = (a, b) => (a || '') + (b || '');
+  const n = cel({
+    ...o, key: (o.key || o.name) + ':' + (extra.key || 'like'), soft: extra.soft ?? o.soft,
+    uniforms: { ...(o.uniforms || {}), ...(extra.uniforms || {}) },
+    fragment: { head: cat(F.head, X.head), pre: cat(F.pre, X.pre), albedo: cat(F.albedo, X.albedo), after: cat(F.after, X.after) },
+  });
+  if (m.map) n.map = m.map;
+  n.name = m.name + ':' + (extra.key || 'like');
+  return n;
 }
 
 /** depth material for shadows that moves its vertices like the colour material (wind) */

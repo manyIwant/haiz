@@ -13,7 +13,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-const Grade = {
+export const Grade = {
   uniforms: {
     tDiffuse: { value: null }, uExposure: { value: 1 }, uSat: { value: 1.06 },
     uShadowTone: { value: new THREE.Color(0.95, 0.98, 1.06) }, uHighTone: { value: new THREE.Color(1.03, 1.0, 0.96) },

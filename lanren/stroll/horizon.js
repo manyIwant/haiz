@@ -63,6 +63,14 @@ export function createHorizon(geo) {
 float fl = fract((vWP.y - uGroundY) / 3.2);
 float wall = 1.0 - step(0.8, abs(normalize(vWN).y));
 albedo *= 1.0 - wall * 0.22 * step(0.55, fl) * step(fl, 0.85);
+float cityWin = wall * step(0.55, fl) * step(fl, 0.85);
+`, after: /* glsl */`
+// the city at night: some windows lit in every band
+if (uLamps > 0.001) {
+  vec2 cell = floor(vec2(dot(vWP.xz, vec2(0.7, 0.7)) * 0.6, (vWP.y - uGroundY) / 3.2));
+  float on = step(aHash(cell), uLamps * 0.45);
+  outCol += vec3(1.0, 0.8, 0.55) * 1.6 * on * cityWin;
+}
 ` } });
   const blocks = [];
   const R0 = Math.hypot(hx, hz) + 30;
