@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>HAIZ · 动作实验室</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <style>
+    html, body { margin: 0; height: 100%; background: #dfe6e2; font: 13px/1.4 system-ui, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; color: #24302c; overflow: hidden; }
+    #lab-canvas { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - 150px); display: block; }
+    #lab-chart { position: absolute; left: 0; bottom: 0; width: 100%; height: 150px; background: #f3f5f1; border-top: 1px solid #b9c4bb; }
+    #lab-hud { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); background: rgba(255,255,255,.86); padding: 6px 12px; border-radius: 8px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 32px); box-sizing: border-box; }
+    #lab-hud span { color: #4b5a55; font-variant-numeric: tabular-nums; }
+    #lab-labels span { position: absolute; font-size: 11px; color: #4b5a55; background: rgba(255,255,255,.7); padding: 1px 6px; border-radius: 4px; }
+    nav { position: absolute; right: 8px; bottom: 158px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 16px); }
+    nav a { background: rgba(255,255,255,.86); color: #24302c; text-decoration: none; padding: 4px 9px; border-radius: 6px; }
+    nav a[aria-current] { background: #2d5c55; color: #fff; }
+    @media (max-width: 640px) { #lab-canvas { height: calc(100% - 120px); } #lab-chart { height: 120px; } nav { bottom: 126px; } }
+  </style>
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/"
+  } }
+  </script>
+  <script type="module" src="lanren/life/lab.js?v=1"></script>
+</head>
+<body>
+  <canvas id="lab-canvas" aria-label="人物动作对比：侧面、正面、背面、斜上方四个视角"></canvas>
+  <div id="lab-labels" aria-hidden="true"></div>
+  <div id="lab-hud" role="status">载入中…</div>
+  <canvas id="lab-chart" aria-label="步态图：两只脚的高度、骨盆高度、速度与支撑期滑步"></canvas>
+  <nav aria-label="对比">
+    <a href="?figure=new">新步态</a><a href="?figure=v1">入画 v1</a><a href="?figure=v2">V2 clips</a>
+    <a href="?seq=walk">走</a><a href="?seq=turn">转身</a><a href="?seq=run">跑</a><a href="?seq=jump">跳</a><a href="?seq=start">起步/急停</a>
+  </nav>
+  <script>
+    // keep the current figure / sequence when switching the other
+    for (const a of document.querySelectorAll('nav a')) {
+      const q = new URLSearchParams(location.search), add = new URLSearchParams(a.getAttribute('href').slice(1));
+      for (const [k, v] of add) q.set(k, v);
+      a.href = '?' + q.toString();
+      if ([...add].every(([k, v]) => (new URLSearchParams(location.search).get(k) || (k === 'figure' ? 'new' : 'all')) === v)) a.setAttribute('aria-current', 'true');
+    }
+  </script>
+</body>
+</html>
