@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-17T11:48:23.773Z",
+  "ok": true,
+  "results": [
+    {
+      "name": "nav grid builds from the walk's colliders",
+      "ok": true,
+      "note": "500×440 cells in 87 ms"
+    },
+    {
+      "name": "every door and spot is reachable from the old tree",
+      "ok": true,
+      "note": "50 places"
+    },
+    {
+      "name": "paths never cross a wall, a pond or a trunk (sampled every 10 cm)",
+      "ok": true,
+      "note": "18871 samples"
+    },
+    {
+      "name": "the paths keep to the 校道: most of a long walk is on surveyed paths and courts",
+      "ok": true,
+      "note": "82% on paths, 138 m"
+    },
+    {
+      "name": "a weekday: everyone moves at their own pace, never through a wall, never jumps",
+      "ok": true,
+      "note": "林知夏 159 min outdoors, 陈屿 153 min outdoors, 符老师 37 min outdoors, 王一苇 40 min outdoors, 吴伯 397 min outdoors"
+    },
+    {
+      "name": "the day has its rhythm: 课间操 on the field, lunch in a canteen, 晚自习 indoors, asleep at night",
+      "ok": true,
+      "note": "ok"
+    },
+    {
+      "name": "the same minute is the same for every visitor (deterministic)",
+      "ok": true,
+      "note": "5 moments × 5 people"
+    },
+    {
+      "name": "rain starting at 12:36 re-plans without anyone jumping; they go to shelter or indoors",
+      "ok": true,
+      "note": "Lin: 一二号楼西连廊 · 看雨"
+    },
+    {
+      "name": "weekends are different: the teacher is away on Saturday, Sunday brings the boarders back for 晚自习",
+      "ok": true,
+      "note": "ok"
+    },
+    {
+      "name": "footprints for the map come from the same day (stride, sides alternate)",
+      "ok": true,
+      "note": "93 steps in two minutes"
+    }
+  ]
+}

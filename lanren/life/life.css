@@ -14,9 +14,9 @@
 .lf-line b { font-weight: 600; margin-right: .5em; opacity: .85; }
 
 /* the book */
-.lf-map { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; background: radial-gradient(120% 100% at 50% 60%, rgba(20, 28, 26, .28), rgba(12, 18, 16, .55));
-  opacity: 0; transition: opacity .5s ease; perspective: 1600px; }
-.lf-map.on { opacity: 1; }
+.lf-map { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; perspective: 1600px; }
+.lf-map::before { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 100% at 50% 60%, rgba(20, 28, 26, .22), rgba(12, 18, 16, .55)); opacity: 0; transition: opacity .5s ease; }
+.lf-map.on::before { opacity: 1; }
 .lf-book { position: relative; width: min(1180px, calc(100vw - 28px)); height: min(820px, calc(100vh - 28px)); height: min(820px, calc(100dvh - 28px));
   transform: translateY(70vh) rotateX(32deg) scale(.86); transform-origin: 50% 100%; transition: transform .75s cubic-bezier(.2, .9, .25, 1); transform-style: preserve-3d; }
 .lf-map.on .lf-book { transform: none; }
@@ -35,7 +35,7 @@
 .lf-map-title b { font: 600 22px/1.2 "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", serif; letter-spacing: .12em; }
 .lf-map-title span { font: 13px/1.5 "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", serif; opacity: .75; }
 .lf-seal { font-style: normal; display: grid; place-items: center; width: 34px; height: 34px; margin-top: 2px; background: var(--lf-seal); color: #f6e9d8; border-radius: 3px;
-  font: 600 11px/1.05 "Songti SC", "Noto Serif SC", serif; writing-mode: vertical-rl; letter-spacing: .1em; opacity: .9; transform: rotate(-3deg); }
+  font: 600 12px/1.15 "Songti SC", "Noto Serif SC", serif; text-align: center; opacity: .9; transform: rotate(-3deg); }
 .lf-map-foot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px 30px; pointer-events: none; z-index: 2; }
 .lf-map-foot > * { pointer-events: auto; }
 .lf-map-foot button { border: 1px solid rgba(42, 38, 32, .35); background: rgba(238, 229, 207, .85); color: var(--lf-ink); border-radius: 999px; padding: 6px 13px; cursor: pointer; font: 13px/1 "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", serif; }

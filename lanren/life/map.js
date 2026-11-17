@@ -192,20 +192,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       }
       c.globalAlpha = 1; c.fillStyle = INK; c.beginPath(); c.arc(x, y, 2.2, 0, TAU); c.fill();
     }
-    // labels: the buildings' names in a quiet serif; the old tree's in hand
-    c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle';
-    const named = new Set();
-    for (const f of F) {
-      if (!f.name || named.has(f.name) || f.kind === 'road') continue;
-      if (!['building', 'gate', 'water', 'botanic', 'garden', 'field', 'court', 'pavilion'].includes(f.kind)) continue;
-      named.add(f.name);
-      const [x, y] = P(f.cx, f.cz);
-      const big = f.hw * f.hd > 900;
-      c.globalAlpha = f.kind === 'building' ? 0.86 : 0.7;
-      c.font = `${big ? 15 : 12}px ${FONT_SERIF}`;
-      const name = f.name.replace('（推演）', '');
-      if (f.hd > f.hw * 1.8 && f.kind === 'building') { vertical(c, name, x, y, big ? 15 : 12); } else c.fillText(name, x, f.kind === 'pavilion' ? y + 7 * PX : y);
-    }
+    // (the places' names are written per frame, at a size the eye can read: see placeNames)
     c.globalAlpha = 0.9; c.font = `16px ${FONT_HAND}`; c.fillStyle = '#3d4a30';
     { const [x, y] = P(0, 0); c.fillText('百年榄仁树', x + 15 * PX, y - 13 * PX); c.font = `11px ${FONT_HAND}`; c.globalAlpha = 0.6; c.fillText('(0, 0)', x + 15 * PX, y - 9.5 * PX); }
     c.globalAlpha = 1;
@@ -217,6 +204,35 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       lc.fillStyle = 'rgba(255, 196, 92, 0.85)';
       lc.beginPath(); pts.forEach(([x, y], i) => (i ? lc.lineTo(x, y) : lc.moveTo(x, y))); lc.closePath(); lc.fill();
     }
+  }
+  // the places' names: one per place, at the footprint's centre (the boys' dormitory once, on its spine)
+  const NAMES = [];
+  {
+    const seen = new Set();
+    for (const f of geo.features) {
+      if (!f.name || f.kind === 'road' || seen.has(f.name)) continue;
+      if (!['building', 'gate', 'water', 'botanic', 'garden', 'field', 'court', 'pavilion'].includes(f.kind)) continue;
+      seen.add(f.name);
+      NAMES.push({ name: f.name.replace('（推演）', ''), x: f.cx, z: f.cz + (f.kind === 'pavilion' ? 7 : 0), kind: f.kind, area: f.hw * f.hd, tall: f.hd > f.hw * 1.8 && f.kind === 'building' });
+    }
+    NAMES.sort((a, b) => b.area - a.area);
+  }
+  function placeNames(placed) {
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const n of NAMES) {
+      const [x, y] = toS(n.x, n.z);
+      if (x < -60 || y < -60 || x > state.w + 60 || y > state.h + 60) continue;
+      const big = n.area > 900, size = Math.round((big ? 13 : 11.5) * Math.min(1.25, Math.max(0.9, view.s / 2.4)));
+      if (n.area < 120 && view.s < 2.2) continue;
+      g.font = `${size}px ${FONT_SERIF}`;
+      const w = n.tall ? size + 4 : g.measureText(n.name).width + 6, h = n.tall ? n.name.length * size * 1.05 + 4 : size + 4;
+      const box = { x: x - w / 2, y: y - h / 2, w, h };
+      if (placed.some((p) => box.x < p.x + p.w && box.x + box.w > p.x && box.y < p.y + p.h && box.y + box.h > p.y)) continue;
+      placed.push(box);
+      g.globalAlpha = n.kind === 'building' || n.kind === 'gate' ? 0.82 : 0.66; g.fillStyle = INK;
+      if (n.tall) vertical(g, n.name, x, y, size); else g.fillText(n.name, x, y);
+    }
+    g.globalAlpha = 1; g.textBaseline = 'alphabetic';
   }
   function leaf(c, x, y, a, s, col, alpha) {
     // the 榄仁 leaf: obovate, widest near the tip, a midrib
@@ -275,7 +291,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       const ink = INKS[a.id] || INK;
       if (s.inside) { items.push({ kind: 'inside', a, ink, x: s.x, z: s.z, label: a.person.name, sub: `${s.label} · ${s.what}` }); }
       const steps = stepsFor(a, ms);
-      drawSteps(steps, ink, a.person.kind === 'teacher' ? 1.05 : 1, 'shoe');
+      drawSteps(steps, ink, a.person.kind === 'teacher' ? 1.4 : 1.32, 'shoe');
       if (!s.inside) {
         const p = a.live || s;
         items.push({ kind: 'out', a, ink, x: p.x, z: p.z, label: a.person.name, sub: s.act === 'walk' ? `去${s.toLabel}${s.going ? '（' + s.going + '）' : ''}` : `${s.label} · ${s.what}` });
@@ -286,12 +302,20 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       const ct = state.catTrail, c = info.cat;
       const last = ct[ct.length - 1];
       if (!last || Math.hypot(c.x - last.x, c.z - last.z) > 0.32) { ct.push({ x: c.x, z: c.z, t: ms, yaw: last ? Math.atan2(c.x - last.x, c.z - last.z) : 0, side: last ? -last.side : 1 }); if (ct.length > 300) ct.shift(); }
-      drawSteps(ct.filter((p) => ms - p.t < 240000).map((p) => ({ ...p })), INKS.cat, 0.8, 'paw', ms);
+      drawSteps(ct.filter((p) => ms - p.t < 240000), INKS.cat, 1.05, 'paw', ms);
       items.push({ kind: 'out', a: { id: 'cat', person: { name: '橘猫' } }, ink: INKS.cat, x: c.x, z: c.z, label: '橘猫', sub: c.label || '' });
+    }
+    // where you painted the tree: the easel still stands there, with its charcoal
+    if (info.easel) {
+      const [ex, ey] = toS(info.easel.x, info.easel.z);
+      g.save(); g.translate(ex, ey); g.strokeStyle = INKS.you; g.globalAlpha = 0.75; g.lineWidth = 1.1; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-5, 6); g.lineTo(0, -7); g.lineTo(5, 6); g.moveTo(0, -7); g.lineTo(0, 7); g.moveTo(-6, -1); g.lineTo(6, -1); g.stroke();
+      g.globalAlpha = 0.65; g.fillStyle = INKS.you; g.font = `11px ${FONT_HAND}`; g.textAlign = 'center'; g.fillText('写生处', 0, 18);
+      g.restore(); g.globalAlpha = 1;
     }
     // you
     if (info.player) {
-      drawSteps(info.playerSteps.filter((p) => ms - p.t < 240000), INKS.you, 1, 'shoe', ms);
+      drawSteps(info.playerSteps.filter((p) => ms - p.t < 240000), INKS.you, 1.32, 'shoe', ms);
       const [px, py] = toS(info.player.x, info.player.z);
       // where you are looking: a pencil wedge
       const th = Math.atan2(Math.cos(info.player.camYaw), Math.sin(info.player.camYaw));
@@ -331,7 +355,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
   function drawSteps(steps, ink, size, kind, msNow) {
     const ms = msNow ?? get().clock;
     let lastX = -1e9, lastY = -1e9, side = 1;
-    const gap = kind === 'paw' ? 7 : 9;
+    const gap = kind === 'paw' ? 8 : 11;
     for (let i = steps.length - 1; i >= 0; i--) {
       const p = steps[i];
       const [x, y] = toS(p.x, p.z);
@@ -375,21 +399,35 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       });
     }
     g.globalAlpha = 1;
-    for (const it of items) {
-      if (it.kind === 'inside') continue;
+    // outdoors: a leader line to the name; names try four corners and take the first that is free
+    const placed = [];
+    for (const list of inside.values()) for (const it of list) if (it.hit) placed.push(it.hit);
+    const order = items.filter((it) => it.kind !== 'inside').sort((a, b) => (a.kind === 'you' ? -1 : b.kind === 'you' ? 1 : 0));
+    for (const it of order) {
       const [x, y] = toS(it.x, it.z);
       if (it.kind !== 'you') { g.fillStyle = it.ink; g.beginPath(); g.arc(x, y, 2.6, 0, TAU); g.fill(); }
-      const lx = x + 10, ly = y - 10;
-      g.strokeStyle = it.ink; g.globalAlpha = 0.5; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x + 2, y - 2); g.lineTo(lx - 2, ly + 3); g.stroke();
-      g.globalAlpha = 1; g.textAlign = 'left';
-      g.font = `600 ${it.kind === 'you' ? 15 : 14}px ${FONT_HAND}`; g.fillStyle = it.ink;
-      g.fillText(it.label, lx, ly);
+      g.font = `600 ${it.kind === 'you' ? 15 : 14}px ${FONT_HAND}`;
       const w0 = g.measureText(it.label).width;
-      if (it.sub) { g.font = `11px ${FONT_HAND}`; g.globalAlpha = 0.75; g.fillText(it.sub, lx, ly + 13); g.globalAlpha = 1; }
+      g.font = `11px ${FONT_HAND}`;
       const w1 = it.sub ? g.measureText(it.sub).width : 0;
-      it.hit = { x: x - 8, y: ly - 16, w: Math.max(w0, w1) + 22, h: 34 };
-      if (state.selected === it.a.id) { g.strokeStyle = it.ink; g.globalAlpha = 0.6; g.setLineDash([2, 3]); g.strokeRect(lx - 4, ly - 15, Math.max(w0, w1) + 8, it.sub ? 33 : 20); g.setLineDash([]); g.globalAlpha = 1; }
+      const bw = Math.max(w0, w1) + 6, bh = it.sub ? 31 : 19;
+      let box = null;
+      for (const [dx, dy, al] of [[12, -12, 'l'], [12, 18 + (it.sub ? 12 : 0), 'l'], [-12, -12, 'r'], [-12, 18 + (it.sub ? 12 : 0), 'r'], [12, -40, 'l'], [-12, -40, 'r']]) {
+        const bx = al === 'l' ? x + dx - 3 : x + dx - bw + 3, by = y + dy - 15;
+        const cand = { x: bx, y: by, w: bw, h: bh, lx: al === 'l' ? x + dx : x + dx, ly: y + dy, al };
+        if (!placed.some((p) => cand.x < p.x + p.w && cand.x + cand.w > p.x && cand.y < p.y + p.h && cand.y + cand.h > p.y)) { box = cand; break; }
+      }
+      if (!box) box = { x: x + 9, y: y - 27, w: bw, h: bh, lx: x + 12, ly: y - 12, al: 'l' };
+      placed.push(box);
+      g.strokeStyle = it.ink; g.globalAlpha = 0.5; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.lineTo(box.al === 'l' ? box.lx - 2 : box.lx + 2, box.ly - 4); g.stroke();
+      g.globalAlpha = 1; g.textAlign = box.al === 'l' ? 'left' : 'right';
+      g.font = `600 ${it.kind === 'you' ? 15 : 14}px ${FONT_HAND}`; g.fillStyle = it.ink;
+      g.fillText(it.label, box.lx, box.ly);
+      if (it.sub) { g.font = `11px ${FONT_HAND}`; g.globalAlpha = 0.78; g.fillText(it.sub, box.lx, box.ly + 13); g.globalAlpha = 1; }
+      it.hit = { x: Math.min(x - 8, box.x), y: Math.min(y - 8, box.y), w: Math.abs(box.x - x) + box.w + 8, h: Math.max(box.h, Math.abs(box.y - y) + 8) + 8 };
+      if (state.selected === it.a.id) { g.strokeStyle = it.ink; g.globalAlpha = 0.6; g.setLineDash([2, 3]); g.strokeRect(box.x - 2, box.y - 1, box.w + 4, box.h + 2); g.setLineDash([]); g.globalAlpha = 1; }
     }
+    placeNames(placed);
   }
   // the compass (a 榄仁 leaf pointing to the North Gate), the scale, the seal
   function frameMarks(info) {
@@ -401,10 +439,10 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     g.font = `10px ${FONT_HAND}`; g.globalAlpha = 0.55; g.fillText('校园坐标 · 非真北', cx, cy + 30);
     g.restore();
     // scale bar
-    const m = 50, L = m * view.s, x0 = 22, y0 = Hh - 30;
+    const m = view.s > 4 ? 20 : 50, L = m * view.s, x0 = 30, y0 = Hh - 62;
     g.strokeStyle = INK; g.lineWidth = 1.2; g.globalAlpha = 0.75;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + L, y0); g.moveTo(x0, y0 - 4); g.lineTo(x0, y0 + 4); g.moveTo(x0 + L, y0 - 4); g.lineTo(x0 + L, y0 + 4); g.moveTo(x0 + L / 2, y0 - 2.5); g.lineTo(x0 + L / 2, y0 + 2.5); g.stroke();
-    g.fillStyle = INK; g.font = `11px ${FONT_HAND}`; g.textAlign = 'left'; g.fillText('50 米', x0 + L + 6, y0 + 4);
+    g.fillStyle = INK; g.font = `11px ${FONT_HAND}`; g.textAlign = 'left'; g.fillText(m + ' 米', x0 + L + 6, y0 + 4);
     g.globalAlpha = 1;
     void info;
   }
@@ -478,7 +516,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     open(center) {
       build(); resize();
       state.open = true; state.reveal = 0; state.t = 0;
-      view.s = Math.max(fitScale() * 1.6, Math.min(3.2, Math.min(state.w, state.h) / 150));
+      view.s = Math.max(fitScale() * 1.25, Math.min(3.0, Math.min(state.w, state.h) / 240));
       if (center) { view.cx = center.x; view.cz = center.z; }
       clampView();
     },
