@@ -1,0 +1,26 @@
+name: HAIZ Multiplayer SDK
+
+on:
+  pull_request:
+    paths:
+      - 'lanren/multiplayer/**'
+      - 'tests/multiplayer/**'
+      - 'multiplayer-alpha.html'
+      - 'supabase/migrations/*haiz_multiplayer*'
+      - '.github/workflows/haiz-multiplayer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: SDK, transport, presentation and map contracts (no live backend)
+        run: node --test tests/multiplayer/*.test.mjs
