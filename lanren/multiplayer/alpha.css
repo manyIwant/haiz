@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr);
+  font: 1rem/1.35 system-ui, sans-serif; color: #172019; background: #f4f6f2; }
+header { padding: 0.5rem max(0.75rem, env(safe-area-inset-left)); }
+h1 { font-size: 1.125rem; margin: 0; }
+p { margin: 0.3rem 0; }
+form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; }
+button, input { font: inherit; padding: 0.3rem 0.45rem; }
+input { width: 11.5rem; max-width: 58vw; }
+main { position: relative; overflow: hidden; min-height: 40dvh; }
+#world { display: block; width: 100%; height: 100%; position: absolute; touch-action: none; background: #dbe8f1; }
+#world:focus-visible { outline: 2px solid #21482c; outline-offset: -3px; }
+#controls { position: absolute; display: flex; align-items: center; gap: 0.5rem; pointer-events: none;
+  bottom: max(0.75rem, env(safe-area-inset-bottom)); left: 0.75rem; right: 0.75rem; }
+#controls span { background: #f4f6f2; padding: 0.25rem 0.45rem; }
+#jump { pointer-events: auto; margin-left: auto; min-height: 2.75rem; }
+#stick { position: fixed; width: 104px; height: 104px; border: 2px solid #fff; border-radius: 50%;
+  transform: translate(-50%, -50%); pointer-events: none; }
+#stick span { display: block; width: 30px; height: 30px; margin: 35px; border-radius: 50%; background: #fff; }
+.touch { display: none; }
+@media (pointer: coarse) {
+  button, input { min-height: 2.75rem; }
+  .desktop { display: none; }
+  .touch { display: inline; }
+}

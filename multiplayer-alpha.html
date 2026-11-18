@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>HAIZ 共游 Alpha · 工程验收</title>
+  <link rel="stylesheet" href="lanren/multiplayer/alpha.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    } }
+  </script>
+  <script type="module" src="lanren/multiplayer/alpha.js"></script>
+</head>
+<body>
+  <header>
+    <h1>HAIZ 共游 Alpha</h1>
+    <p>仅限受邀账号。加入后会共享昵称和虚拟校园位置。隐身时可以继续漫游。</p>
+    <form id="login">
+      <label>HAIZ Pocket 邮箱 <input id="email" type="email" autocomplete="username" required></label>
+      <label>密码 <input id="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit">登录</button>
+    </form>
+    <form id="room-form" hidden>
+      <label>房间 <input id="room" value="campus-alpha" required maxlength="32" pattern="[a-z0-9][a-z0-9\-]{0,31}" spellcheck="false"></label>
+      <label>昵称 <input id="nickname" placeholder="访客" maxlength="40" autocomplete="off"></label>
+      <button id="join" type="submit" disabled>加入共游</button>
+      <button id="leave" type="button" disabled>退出共游</button>
+      <button id="visibility" type="button" aria-pressed="false" disabled>隐身</button>
+      <button id="sign-out" type="button">退出登录</button>
+    </form>
+    <p id="status" role="status">正在加载校园…</p>
+    <p>可见玩家：<output id="count">0</output><span id="members"></span></p>
+  </header>
+  <main>
+    <canvas id="world" aria-label="三维校园" tabindex="0"></canvas>
+    <div id="stick" aria-hidden="true" hidden><span></span></div>
+    <div id="controls">
+      <span class="desktop">WASD / 方向键移动 · Shift 跑 · 拖动转向 · 空格跳</span>
+      <span class="touch">左侧拖动行走，拉到边缘跑 · 右侧拖动转向</span>
+      <button id="jump" type="button" disabled>跳跃</button>
+    </div>
+  </main>
+</body>
+</html>
