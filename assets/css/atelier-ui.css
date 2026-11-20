@@ -52,3 +52,76 @@ body[data-page] .site-nav.scrolled{background:#f7f3ebf2}
 @media(max-width:800px){.field-hero h1{font-size:62px}.field-nav nav,.director-nav>div{gap:15px}.field-note{padding:24px!important}.field-hero{padding-top:42px;padding-bottom:55px}.field-hero figure>img{aspect-ratio:1.2}.light-card{min-height:240px}}
 @media(max-width:650px){.field-nav,.director-nav{padding-block:20px}.field-hero h1{font-size:57px}.field-hero figure{border-radius:12px}.field-hero figcaption{font-size:9px;padding:12px}.field-note{padding:22px!important}.place-tabs button{padding:9px 13px;font-size:11px}.material-lab{padding-top:50px;padding-bottom:50px}.light-card{min-height:230px}.atelier-chapters{left:15px;translate:none;bottom:18px;padding:4px}.atelier-chapters a{font-size:10px;padding:10px 12px}.director-hero{padding-top:55px}.director-hero h1{font-size:clamp(38px,12vw,50px)}}
 @media(prefers-reduced-motion:reduce){.atelier-reveal{animation:none}.light-card:hover{translate:none}*,*:before,*:after{scroll-behavior:auto!important}.image-button img,.gallery-frame img,.field-hero figure>img{transition:none}}
+
+/* HAIZ functional UI foundations — 8pt rhythm, quiet accents, readable controls.
+   Scoped to editorial/data pages; cinematic hero and 3D canvas keep their own art direction. */
+:root{
+  --ui-space-1:8px;
+  --ui-space-2:16px;
+  --ui-space-3:24px;
+  --ui-space-4:32px;
+  --ui-space-6:48px;
+  --ui-type-caption:12px;
+  --ui-type-body:14px;
+  --ui-control-min:44px;
+  --ui-accent:#966548;
+}
+body[data-page] .eyebrow,
+body[data-page] .section-kicker,
+body[data-page] .news-meta,
+body[data-page] .news-meta time,
+body[data-page] .section-footnote{
+  font-size:var(--ui-type-caption);
+  letter-spacing:.08em;
+  line-height:1.6;
+}
+body[data-page] .news-card>p,
+body[data-page] .club-row-intro{
+  font-size:var(--ui-type-body);
+  line-height:1.75;
+}
+body[data-page] .desktop-nav a,
+body[data-page] .nav-walk,
+body[data-page] .menu-toggle,
+body[data-page] .filter-tabs button,
+body[data-page] .filter-buttons button,
+body[data-page] .place-tabs button,
+body[data-page] .collect-button,
+body[data-page] .atelier-chapters a{
+  min-height:var(--ui-control-min);
+}
+body[data-page] .desktop-nav a,
+body[data-page] .nav-walk,
+body[data-page] .filter-tabs button,
+body[data-page] .filter-buttons button,
+body[data-page] .place-tabs button,
+body[data-page] .atelier-chapters a{
+  font-size:var(--ui-type-caption);
+}
+body[data-page] .desktop-nav a,
+body[data-page] .atelier-chapters a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+body[data-page] .menu-toggle{
+  width:var(--ui-control-min);
+  align-items:center;
+}
+body[data-page] .brand small,
+body[data-page] .site-menu>a>small{
+  font-size:11px;
+}
+body[data-page] .news-meta{gap:var(--ui-space-1);}
+@media(max-width:650px){
+  body[data-page] .atelier-chapters{
+    max-width:calc(100vw - 30px);
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  body[data-page] .atelier-chapters a{
+    flex-shrink:0;
+    padding-inline:var(--ui-space-2);
+  }
+}
