@@ -11,6 +11,7 @@ python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
 - [Character Lab](http://127.0.0.1:8769/character-lab/hunyuan/) 可旋转、缩放、检查骨骼、切换七段动作和三档 LOD，比较原始高模，并切换日光、树荫、黄昏及阴影。三角面和 Draw Calls 包含渲染统计，FPS 取浏览器帧时间。开启高模对照时按需载入源文件。
+- [步态 A/B](http://127.0.0.1:8769/character-lab/hunyuan/motion-ab/) 用同一混元学生比较程序化步态与 Quaternius 片段加脚底 IK。参见 [动作实验和素材出处](motion-ab/README.md)。
 - [入画 · 校园漫游](http://127.0.0.1:8769/ruhua.html?figure=hunyuan&stage=stroll) 使用 `WASD` 或方向键移动，`Shift` 跑步，拖动视角。手机左侧触控移动、右侧拖动观察。去掉 `stage=stroll` 可走完整「入画」流程。去掉 `figure=hunyuan` 即进入原角色。
 
 ## 资产

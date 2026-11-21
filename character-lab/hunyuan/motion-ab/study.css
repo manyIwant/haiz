@@ -1,0 +1,23 @@
+.study {
+  position: relative;
+  min-height: clamp(420px, 59svh, 610px);
+  border: 1px solid var(--line);
+  background: #303b36;
+}
+.study canvas { touch-action: auto; cursor: default; }
+.study-labels { position: absolute; z-index: 1; inset: 14px 0 auto; display: flex; text-align: center; color: #f5f3e8; font-size: 14px; }
+.study-labels span { flex: 1; }
+.study::after { content: ""; position: absolute; pointer-events: none; top: 0; bottom: 0; left: 50%; border-left: 1px solid #e8e5ce6b; }
+.transport { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 14px; }
+.transport button { min-height: 44px; padding: 0 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 4px; cursor: pointer; }
+.transport button[aria-pressed=true] { background: var(--accent); color: white; }
+.transport input { flex: 1; min-width: 0; }
+.transport output { min-width: 94px; text-align: right; font: 600 12px ui-monospace, monospace; }
+.views { border-top: 1px solid var(--line); }
+@media(max-width: 580px) {
+  .study { min-height: min(54svh, 440px); }
+  .study-labels { font-size: 12px; }
+  .transport { gap: 6px; }
+  .transport button { padding: 0 8px; }
+  .transport label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}

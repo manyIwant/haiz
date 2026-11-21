@@ -28,6 +28,8 @@ button, select, input { font: inherit; }
 .brand { display: flex; align-items: baseline; gap: 14px; }
 .brand span:first-child { font: 700 23px Georgia, serif; letter-spacing: .045em; }
 .brand span + span { color: var(--muted); }
+.lab-nav { display: flex; align-items: center; gap: clamp(10px, 2vw, 22px); }
+.lab-nav a { white-space: nowrap; }
 main { width: min(1450px, 100%); margin: auto; padding: 25px clamp(16px, 4vw, 58px) 22px; }
 .title { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-bottom: 16px; }
 h1 { font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: clamp(29px, 4vw, 51px); margin: 0; font-weight: 750; }

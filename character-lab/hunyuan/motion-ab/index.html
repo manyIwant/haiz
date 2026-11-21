@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HAIZ · 步态 A/B</title>
+  <link rel="stylesheet" href="../lab.css">
+  <link rel="stylesheet" href="./study.css">
+  <script type="importmap">{"imports":{"three":"../../../lanren/vendor/three/three.module.min.js","three/addons/":"../../../lanren/vendor/three/addons/"}}</script>
+  <script type="module" src="./study.js"></script>
+</head>
+<body>
+  <header class="mast">
+    <div class="brand"><span>HAIZ</span><span>Character Lab</span></div>
+    <a href="../">返回角色验证台 <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <div class="title"><h1>步态 A/B</h1><p role="status" id="status">载入模型与动作…</p></div>
+    <section class="study" aria-label="同角色同镜头动作对照">
+      <div class="study-labels"><span>A · 程序化步态</span><span>B · Quaternius + 脚底 IK</span></div>
+      <canvas id="stage" aria-label="两侧学生并排演示起步、步行、跑步、转向与停步"></canvas>
+    </section>
+    <div class="transport">
+      <button type="button" id="play" disabled>暂停</button>
+      <button type="button" id="restart" disabled>重播</button>
+      <label for="time">时间</label>
+      <input type="range" id="time" min="0" max="13" step=".0166667" value="0" disabled>
+      <output id="clock" for="time">0.0 / 13.0 s</output>
+    </div>
+    <div class="transport views" role="group" aria-label="机位">
+      <button type="button" data-angle=".78" aria-pressed="true">三分之四</button>
+      <button type="button" data-angle="1.57" aria-pressed="false">侧面</button>
+      <button type="button" data-angle="3.141593" aria-pressed="false">背面</button>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,263 @@
+{
+  "browser": "153.0.8010.12",
+  "model": "HAIZ Hunyuan LOD 1",
+  "template": {
+    "count": 21,
+    "verifiedClips": 8
+  },
+  "assetClips": {
+    "idle": {
+      "source": "Idle_Loop",
+      "seconds": 2.5,
+      "samples": 76,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.05333333333333334,
+        "R": 0.18666666666666668
+      }
+    },
+    "walk": {
+      "source": "Walk_Loop",
+      "seconds": 1.3333333730697632,
+      "samples": 42,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.9512195121951219,
+        "R": 0.4634146341463415
+      }
+    },
+    "jog": {
+      "source": "Jog_Fwd_Loop",
+      "seconds": 0.9333333373069763,
+      "samples": 30,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 1,
+        "R": 0.5172413793103449
+      }
+    },
+    "run": {
+      "source": "Sprint_Loop",
+      "seconds": 0.6666666865348816,
+      "samples": 22,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.9523809523809523,
+        "R": 0.47619047619047616
+      }
+    },
+    "start": {
+      "source": "Sprint_Enter",
+      "seconds": 0.8666666746139526,
+      "samples": 28,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.8888888888888888,
+        "R": 0
+      }
+    },
+    "stop": {
+      "source": "Sprint_Exit",
+      "seconds": 1.6666666269302368,
+      "samples": 51,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.06,
+        "R": 0.5
+      }
+    },
+    "left": {
+      "source": "Turn90_L",
+      "seconds": 2,
+      "samples": 61,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.5,
+        "R": 0.21666666666666667
+      }
+    },
+    "right": {
+      "source": "Turn90_R",
+      "seconds": 2,
+      "samples": 61,
+      "mappedRotations": 21,
+      "offsets": {
+        "L": 0.48333333333333334,
+        "R": 0.25
+      }
+    }
+  },
+  "tickHz": 60,
+  "maximumPathDifference_m": 0,
+  "stateFrames": {
+    "idle": 122,
+    "walk": 154,
+    "start": 96,
+    "run": 136,
+    "left": 93,
+    "right": 80,
+    "jog": 2,
+    "stop": 96
+  },
+  "stages": {
+    "等候": {
+      "slideA": {
+        "samples": 146,
+        "p95_cm": 0
+      },
+      "slideB": {
+        "samples": 146,
+        "p95_cm": 8.817202081491938e-7
+      },
+      "gapA": {
+        "samples": 148,
+        "p95_cm": 0.000009603198418417502
+      },
+      "gapB": {
+        "samples": 148,
+        "p95_cm": 0.00020754869337474835
+      },
+      "torsoTiltP95_deg": [
+        1.3895294067718207,
+        6.411276387588377
+      ]
+    },
+    "起步与步行": {
+      "slideA": {
+        "samples": 88,
+        "p95_cm": 0.00004251703903946113
+      },
+      "slideB": {
+        "samples": 88,
+        "p95_cm": 0.0000682814682501608
+      },
+      "gapA": {
+        "samples": 104,
+        "p95_cm": 0.00021187034674116645
+      },
+      "gapB": {
+        "samples": 104,
+        "p95_cm": 0.00038838531458418313
+      },
+      "torsoTiltP95_deg": [
+        9.360079022640837,
+        9.532343129393494
+      ]
+    },
+    "加速与跑步": {
+      "slideA": {
+        "samples": 42,
+        "p95_cm": 0.0000988414723272876
+      },
+      "slideB": {
+        "samples": 42,
+        "p95_cm": 0.00021148549747264356
+      },
+      "gapA": {
+        "samples": 58,
+        "p95_cm": 0.04766295768913318
+      },
+      "gapB": {
+        "samples": 58,
+        "p95_cm": 0.04733313697109538
+      },
+      "torsoTiltP95_deg": [
+        19.16991030411808,
+        35.072698564114724
+      ]
+    },
+    "左转": {
+      "slideA": {
+        "samples": 39,
+        "p95_cm": 0.00013156831499347739
+      },
+      "slideB": {
+        "samples": 39,
+        "p95_cm": 0.00048103543047337786
+      },
+      "gapA": {
+        "samples": 47,
+        "p95_cm": 0.02045893641063612
+      },
+      "gapB": {
+        "samples": 47,
+        "p95_cm": 0.020037392815841493
+      },
+      "torsoTiltP95_deg": [
+        13.472545142974173,
+        11.930355165756465
+      ]
+    },
+    "右转": {
+      "slideA": {
+        "samples": 48,
+        "p95_cm": 0.9343928279033572
+      },
+      "slideB": {
+        "samples": 48,
+        "p95_cm": 0.9343718529443962
+      },
+      "gapA": {
+        "samples": 52,
+        "p95_cm": 0.031316547195578415
+      },
+      "gapB": {
+        "samples": 52,
+        "p95_cm": 0.031162449232507994
+      },
+      "torsoTiltP95_deg": [
+        10.329866132395866,
+        10.943888806806113
+      ]
+    },
+    "再加速": {
+      "slideA": {
+        "samples": 27,
+        "p95_cm": 0.00006271678970587196
+      },
+      "slideB": {
+        "samples": 27,
+        "p95_cm": 0.00021592901867725995
+      },
+      "gapA": {
+        "samples": 31,
+        "p95_cm": 0.03133587355662326
+      },
+      "gapB": {
+        "samples": 31,
+        "p95_cm": 0.031206049659809887
+      },
+      "torsoTiltP95_deg": [
+        19.577244290230976,
+        34.88398636410859
+      ]
+    },
+    "停步": {
+      "slideA": {
+        "samples": 64,
+        "p95_cm": 0.00003219129388804158
+      },
+      "slideB": {
+        "samples": 64,
+        "p95_cm": 0.00006218674620564333
+      },
+      "gapA": {
+        "samples": 68,
+        "p95_cm": 0.03130408527229622
+      },
+      "gapB": {
+        "samples": 68,
+        "p95_cm": 0.03130656207269433
+      },
+      "torsoTiltP95_deg": [
+        9.290257655717399,
+        16.886455464918036
+      ]
+    }
+  },
+  "mobileViewport": {
+    "width": 390,
+    "height": 844,
+    "overflow": false
+  }
+}
