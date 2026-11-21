@@ -4,8 +4,8 @@
 
 一部约三分钟的短片（1920×1080，30 fps）。它从一次真实的 Claude Code 编程实验开始，经过 N-gram 的一个“路口”，进入一个由两首诗记住的世界。
 
-- 成片：`spring-no-recipient-v2.mp4`（发行版，HEVC，<100 MB）
-- 母版：`build/master.mp4`（H.264 高码率；不进仓库，可用 `render/render_all.sh` 重新生成）
+- 成片：`spring-no-recipient-v2.mp4`：2:58.6，1920×1080，30 fps，HEVC 两遍编码约 3.7 Mbps + AAC 192 kbps 48 kHz 立体声，87.5 MB；整体响度 -15.2 LUFS（标准化目标 -16）。为了放进仓库压得比较狠：和母版相比 SSIM 0.950，胶片颗粒基本被压掉，芦苇等细节略软。
+- 母版：`build/master.mp4`：H.264 CRF 14，约 63 Mbps，1.4 GB，不进仓库，可用 `render/render_all.sh` 重新生成
 - 旧版（v1，7:26）完整保留在 `../spring-no-recipient/`，可直接对比。
 
 ---
