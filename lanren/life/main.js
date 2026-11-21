@@ -49,7 +49,8 @@ const TIERS = {
   medium: { pr: Math.min(devicePixelRatio, 1.5), shadow: 2048, samples: 4, paint: 2048, leafDensity: 0.7, isletGrass: 6000 },
   low: { pr: Math.min(devicePixelRatio, 1), shadow: 2048, samples: 0, paint: 2048, leafDensity: 0.45, isletGrass: 3000 },
 };
-const tierName = TIERS[Q.get('quality')] ? Q.get('quality') : (coarse ? 'medium' : 'high');
+// High is the minimum presentation quality, including touch devices. Explicit quality= remains for diagnostics.
+const tierName = TIERS[Q.get('quality')] ? Q.get('quality') : 'high';
 const tier = TIERS[tierName];
 const LAYER_REAL = 1, LAYER_PAINT = 2;
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
@@ -447,9 +448,10 @@ async function main() {
   // ---------------------------------------------------------------- per frame
   const focus = new THREE.Vector3(), tmpV = new THREE.Vector3(), enterQ = new THREE.Quaternion();
   const LOOK_TREE = new THREE.Vector3(0.2, 7.0, 0.6);           // the crown (tree.json crown centre, turned into this frame), a little low
-  let frameMs = 16, govT = 0;
-  const fixedScale = Q.has('scale') ? Number(Q.get('scale')) : null;
-  if (fixedScale) pipeline.setScale(fixedScale);
+  let frameMs = 16;
+  // Always render at full tier resolution. Explicit ?scale= is for controlled comparisons only.
+  const requestedScale = Q.has('scale') ? Number(Q.get('scale')) : 1;
+  pipeline.setScale(Number.isFinite(requestedScale) && requestedScale > 0 ? requestedScale : 1);
   function step(dt) {
     U.uTime.value += dt;
     pipeline.tick(dt);
@@ -585,13 +587,6 @@ async function main() {
     if (!map.isOpen || mapFrames % 4 === 1) render();
     map.frame(Math.min(raw, 1 / 20));
     frameMs = frameMs * 0.92 + raw * 1000 * 0.08;
-    govT += raw;
-    if (!fixedScale && govT > 1.5) {
-      govT = 0;
-      const budget = D.stage === 'hold' || D.stage === 'stroll' ? 22 : 30;
-      if (frameMs > budget * 1.15 && pipeline.scale > 0.55) pipeline.setScale(pipeline.scale - 0.1);
-      else if (frameMs < budget * 0.7 && pipeline.scale < 1) pipeline.setScale(pipeline.scale + 0.05);
-    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
