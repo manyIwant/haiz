@@ -21,7 +21,7 @@ async function open(browser, viewport, opts = {}) {
   const errors = [];
   p.on('pageerror', (e) => errors.push(e.message));
   await p.route('**/api.open-meteo.com/**', (r) => r.abort());     // offline: the climate-normal fallback
-  await p.goto(`${BASE}/ruhua-alive.html?stage=stroll&quality=low&capture`, { waitUntil: 'load' });
+  await p.goto(`${BASE}/ruhua-alive.html?stage=stroll&quality=low&capture&date=2026-11-17`, { waitUntil: 'load' });
   await p.waitForFunction(() => window.__ruhua && window.__ruhua.stage === 'stroll', null, { timeout: 240000 });
   return { p, errors };
 }

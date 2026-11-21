@@ -32,6 +32,12 @@ const base = arg('base', 'http://127.0.0.1:8123');
   for (let k = 0; k < 200; k++) { await run(1 / fps); await p.waitForTimeout(30); if ((await p.evaluate(() => window.__ruhua.stage)) === 'paint') break; }
   await mark('paint');
   // the player paints with the brush held down (space): the strokes go down in the painter's order
+  if (process.argv.includes('--quick')) {
+    // (review of the departure only: the painting is laid at once, unfilmed)
+    await p.evaluate(() => { const R = window.__ruhua; R.paintAll(); R.tick(3, 10); });
+    n = 0; durs.length = 0;
+    for (const f of fs.readdirSync(path.join(out, 'f'))) fs.unlinkSync(path.join(out, 'f', f));
+  }
   await p.evaluate(() => window.__ruhua.easel.hold(true));
   cur = paintFps;
   for (let k = 0; k < 80; k++) { await run(0.5); const st = await p.evaluate(() => window.__ruhua.stage); if (st !== 'paint') break; }
@@ -54,6 +60,6 @@ const base = arg('base', 'http://127.0.0.1:8123');
   await b.close();
   const list = durs.map((d, i) => `file '${path.resolve(out, 'f', String(i).padStart(5, '0') + '.png')}'\nduration ${d.toFixed(4)}`).join('\n');
   fs.writeFileSync(path.join(out, 'frames.txt'), list + `\nfile '${path.resolve(out, 'f', String(n - 1).padStart(5, '0') + '.png')}'\n`);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', path.join(out, 'frames.txt'), '-vf', 'fps=12,format=yuv420p', '-c:v', 'libx264', '-crf', '22', path.join(out, 'transition.mp4')]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', path.join(out, 'frames.txt'), '-vf', 'fps=12,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p', '-c:v', 'libx264', '-crf', '22', path.join(out, 'transition.mp4')]);
   console.log('frames', n);
 })();

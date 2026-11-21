@@ -41,6 +41,14 @@ export const HAIZ_MAPPING = {
   rightArm: { shoulder: 'shoulder.R', upperArm: 'upperarm.R', forearm: 'forearm.R', hand: 'hand.R' },
 };
 
+// the living campus's figures add five three-joint fingers to each hand (the gait relaxes them)
+const fingers = (sd) => Object.fromEntries(['thumb', 'index', 'middle', 'ring', 'pinky'].map((f) => [f, [1, 2, 3].map((j) => `${f}.0${j}.${sd}`)]));
+export const HAIZ_MAPPING_HANDS = {
+  ...HAIZ_MAPPING,
+  leftArm: { ...HAIZ_MAPPING.leftArm, fingers: fingers('L') },
+  rightArm: { ...HAIZ_MAPPING.rightArm, fingers: fingers('R') },
+};
+
 // The player's student: brisk, light, a little bounce — a 16-year-old crossing the campus, not a soldier
 // and not a tired adult. Speeds stay what the walk's camera and distances were designed for.
 export const STUDENT = {
@@ -65,6 +73,17 @@ export function heightGround(heightAt) {
       return true;
     },
   };
+}
+
+// the drawn edge of the figure: V2's inverted hull, but none on the eyes and inside the mouth (their colour
+// carries kind < 0.3), where a hull pushed out along the normals would poke through the narrow creases
+function figureOutline() {
+  const m = outlineMaterial();
+  m.vertexShader = m.vertexShader
+    .replace('uniform float uWidth;', 'uniform float uWidth;\nattribute vec4 aData;')
+    .replace('wp.xyz += wn * uWidth', 'wp.xyz += wn * uWidth * step(0.3, aData.a)');
+  m.needsUpdate = true;
+  return m;
 }
 
 function umbrella() {
@@ -94,32 +113,44 @@ async function loadFigure(url) {
 export async function createWalker(url, opts = {}) {
   const gltf = await loadFigure(url);
   const model = SkeletonUtils.clone(gltf.scene);
-  let skinned = null;
-  model.traverse((o) => { if (o.isSkinnedMesh) skinned = o; });
-  if (!skinned) throw new Error('gait: no skinned mesh');
-  let geo = skinned.geometry;
-  if (!geo.getAttribute('aData')) {
-    geo = geo.clone();
-    geo.setAttribute('aData', geo.getAttribute('color').clone());
-    geo.deleteAttribute('color');
-    if (opts.palette) recolour(geo, opts.palette);
-    skinned.geometry = geo;
-  }
+  // the figure's parts (scripts/life/build_people.py): the body in its uniform, several hairstyles, a bag;
+  // this person keeps the body, one hairstyle and (or not) the bag. (The 入画 v1 figure is one mesh.)
+  const meshes = [];
+  model.traverse((o) => { if (o.isSkinnedMesh) meshes.push(o); });
+  if (!meshes.length) throw new Error('gait: no skinned mesh');
+  const hairs = meshes.filter((m) => /^Hair-/.test(m.name));
+  const hairName = 'Hair-' + (opts.hair || (hairs[0] ? hairs[0].name.slice(5) : ''));
+  const keep = meshes.filter((m) => !/^Hair-|^Bag|^Glasses/.test(m.name) || m.name === hairName || (m.name.startsWith('Bag') && opts.bag !== false) || (m.name.startsWith('Glasses') && opts.glasses));
+  for (const m of meshes) if (!keep.includes(m)) m.parent.remove(m);
   // the campus's people can dissolve (into a doorway): a painterly breakup in world space, not a fade
   const uFade = { value: 1 };
-  skinned.material = opts.fade ? celLike(bodyMaterial(), { key: 'fade', uniforms: { uFade },
+  const material = opts.fade ? celLike(bodyMaterial(), { key: 'fade', uniforms: { uFade },
     fragment: { head: 'uniform float uFade;\n', pre: 'if (uFade < 0.999 && aNoise(vWP.xy * 11.0 + vWP.zy * 7.0) * 0.8 + aNoise(vWP.xz * 31.0) * 0.2 > uFade * 1.08 - 0.04) discard;\n' } }) : bodyMaterial();
-  skinned.castShadow = opts.shadow !== false; skinned.receiveShadow = true;
-  skinned.frustumCulled = false;
-  let outline = null;
-  if (opts.outline !== false) {
-    outline = new THREE.SkinnedMesh(geo, outlineMaterial());
-    outline.material.uniforms.uWidth.value = 0.008;
-    outline.bind(skinned.skeleton, skinned.bindMatrix);
-    outline.frustumCulled = false;
-    outline.position.copy(skinned.position); outline.quaternion.copy(skinned.quaternion); outline.scale.copy(skinned.scale);
-    skinned.parent.add(outline);
+  const outlines = [];
+  for (const sk of keep) {
+    let geo = sk.geometry;
+    if (!geo.getAttribute('aData')) {
+      geo = geo.clone();
+      geo.setAttribute('aData', geo.getAttribute('color').clone());
+      geo.deleteAttribute('color');
+      if (opts.palette) recolour(geo, opts.palette);
+      sk.geometry = geo;
+    }
+    sk.material = material;
+    sk.castShadow = opts.shadow !== false; sk.receiveShadow = true;
+    sk.frustumCulled = false;
+    if (opts.outline !== false) {
+      const ol = new THREE.SkinnedMesh(geo, figureOutline());
+      ol.material.uniforms.uWidth.value = 0.006;
+      ol.bind(sk.skeleton, sk.bindMatrix);
+      ol.frustumCulled = false;
+      ol.position.copy(sk.position); ol.quaternion.copy(sk.quaternion); ol.scale.copy(sk.scale);
+      sk.parent.add(ol);
+      outlines.push(ol);
+    }
   }
+  const skinned = keep.find((m) => !/^Hair-|^Bag|^Glasses/.test(m.name)) || keep[0];
+  const outline = outlines[0] || null;
   const root = new THREE.Group();
   root.name = 'walker';
   const blob = new THREE.Mesh(new THREE.CircleGeometry(0.4, 24), new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
@@ -129,16 +160,19 @@ export async function createWalker(url, opts = {}) {
   root.add(model, blob);
 
   const heightAt = opts.heightAt || (() => 0);
+  // created facing +Z (the figure's own front): the gait's heading is measured from the orientation at
+  // creation, and HAIZ steers in world yaw, so every body starts square and is turned afterwards (place)
   model.position.set(opts.x ?? 0, heightAt(opts.x ?? 0, opts.z ?? 0), opts.z ?? 0);
-  model.rotation.set(0, opts.yaw ?? 0, 0);
+  model.rotation.set(0, 0, 0);
   model.updateMatrixWorld(true);
   // a style preset (the campus's other people: 'athletic', 'tired'…) is the base instead of the student's
   // tuning; per-person overrides go on top, then the high-level controls computed from all of that
   let config = { ...(opts.preset ? stylePresets[opts.preset] : STUDENT), ...(opts.config || {}) };
   if (opts.basic) config = { ...config, ...applyBasicControls({ ...defaultConfig, ...config }, opts.basic) };
+  const hasFingers = !!model.getObjectByName('thumb01L');
   const human = createProceduralHuman({
-    model, mapping: HAIZ_MAPPING, ground: heightGround(heightAt), config, seed: opts.seed ?? 1,
-    forward: new THREE.Vector3(Math.sin(opts.yaw ?? 0), 0, Math.cos(opts.yaw ?? 0)),
+    model, mapping: hasFingers ? HAIZ_MAPPING_HANDS : HAIZ_MAPPING, ground: heightGround(heightAt), config, seed: opts.seed ?? 1,
+    forward: new THREE.Vector3(0, 0, 1),
   });
 
   const bone = (n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n));
@@ -226,8 +260,10 @@ export async function createWalker(url, opts = {}) {
     human.reset();
   }
 
+  if (opts.yaw) { model.rotation.set(0, opts.yaw, 0); model.updateMatrixWorld(true); human.reset(); human.targetHeading = human.heading; }
+
   return {
-    root, model, skinned, outline, human, G, blob,
+    root, model, skinned, outline, outlines, human, G, blob,
     get position() { return human.position; },
     get speed() { return human.speed; },
     get heading() { return human.heading; },
@@ -258,8 +294,8 @@ export async function createWalker(url, opts = {}) {
       G.fade = f; uFade.value = f;
       const vis = G.visible && f > 0.01;
       model.visible = vis; blob.visible = vis; blob.material.opacity = f;
-      if (outline) outline.visible = f > 0.98;
-      skinned.castShadow = opts.shadow !== false && f > 0.5;
+      for (const ol of outlines) ol.visible = f > 0.98;
+      for (const sk of keep) sk.castShadow = opts.shadow !== false && f > 0.5;
     },
     bone,
     on: (...a) => human.on(...a),
@@ -276,7 +312,8 @@ const GROUPS = {
 function recolour(geo, pal) {
   const a = geo.getAttribute('aData'), pos = geo.getAttribute('position');
   const near = (i, g) => Math.abs(a.getX(i) - g[0]) + Math.abs(a.getY(i) - g[1]) + Math.abs(a.getZ(i) - g[2]) < 0.04;
-  const set = (i, hex) => { const t = new THREE.Color(hex); a.setXYZ(i, t.r, t.g, t.b); };
+  const isCol = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  const set = (i, hex) => { if (!isCol(hex)) return; const t = new THREE.Color(hex); a.setXYZ(i, t.r, t.g, t.b); };
   for (let i = 0; i < a.count; i++) {
     const kind = a.getW(i);
     if (kind > 0.85) {

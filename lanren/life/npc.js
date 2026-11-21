@@ -29,11 +29,11 @@ export function createPeople({ life, url, heightAt, getColliders, layer = 0, mob
   async function makeBody(agent) {
     const P = agent.person, F = P.figure;
     const st = agent.state;
-    const fig = await createWalker(url, {
-      heightAt, x: st.x, z: st.z, yaw: st.yaw || 0, palette: F, fade: true, umbrella: !!P.umbrella,
-      preset: P.gait.preset, config: { walkSpeed: P.speed, ...(P.gait.config || {}) }, basic: P.gait.basic, seed: P.gait.seed,
+    const fig = await createWalker(url.replace('student-m', F.model || 'student-m'), {
+      heightAt, x: st.x, z: st.z, yaw: st.yaw || 0, palette: F, fade: true, umbrella: !!P.umbrella, hair: F.style, bag: !F.noBag, glasses: !!F.glasses,
+      // their walking pace in the gait is their pace in the day (the tempo control would scale it again)
+      preset: P.gait.preset, config: { walkSpeed: P.speed / (P.gait.basic?.tempo || 1), ...(P.gait.config || {}) }, basic: P.gait.basic, seed: P.gait.seed,
     });
-    if (F.scale && F.scale !== 1) fig.model.scale.setScalar(F.scale);
     accessories(fig, F.acc || [], P);
     fig.root.traverse((o) => o.layers.set(layer));
     group.add(fig.root);
@@ -105,7 +105,8 @@ export function createPeople({ life, url, heightAt, getColliders, layer = 0, mob
       tx = ahead.x; tz = ahead.z;
       // stay with the day: behind → hurry a little, ahead → ease off
       const along = (s.x - pos.x) * Math.sin(s.yaw) + (s.z - pos.z) * Math.cos(s.yaw);
-      speed = s.speed * clamp(1 + along * 0.22, 0.6, 1.35);
+      // (gently: well above a person's own pace the gait answers with bent knees and a lean — a body hurrying)
+      speed = s.speed * clamp(1 + along * 0.15, 0.7, 1.15);
     } else {
       const d = Math.hypot(tx - pos.x, tz - pos.z);
       speed = d > 0.35 ? Math.min(P.speed, 0.4 + d * 0.8) : 0;
@@ -185,13 +186,13 @@ export function createPeople({ life, url, heightAt, getColliders, layer = 0, mob
     const toModel = (v) => fig.model.worldToLocal(v.clone());
     const hL = toModel(handL), hR = toModel(handR);
     for (const k of list) {
-      if (k === 'ponytail') {
+      if (k === 'ponytail-legacy') {
         const g = new THREE.Group();
         const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.032, 0.13, 4, 8).translate(0, -0.085, 0), mat(P.figure.hair || '#2a1d16', 'hair-tail'));
         const tie = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.009, 6, 12).rotateX(Math.PI / 2), mat('#b8443a', 'hair-tie'));
         g.add(tail, tie);
         props.ponytail = attach('head', g, new THREE.Vector3(0, 1.63, -0.105), new THREE.Euler(0.35, 0, 0));
-      } else if (k === 'glasses') {
+      } else if (k === 'glasses-legacy') {
         const g = new THREE.Group(), m = mat('#1d1d20', 'glasses');
         for (const x of [-0.033, 0.033]) g.add(new THREE.Mesh(new THREE.TorusGeometry(0.019, 0.0035, 5, 14), m).translateX(x));
         g.add(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.004, 0.004), m));

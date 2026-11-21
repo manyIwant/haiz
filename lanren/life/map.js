@@ -36,6 +36,14 @@ function vnoise(x, y) {
   const a = hash2(ix, iy), b = hash2(ix + 1, iy), c = hash2(ix, iy + 1), d = hash2(ix + 1, iy + 1);
   return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
 }
+// value noise that repeats every p cells (for seamless tiles)
+function tileNoise(x, y, p) {
+  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const h = (i, j) => hash2(((i % p) + p) % p, ((j % p) + p) % p);
+  const a = h(ix, iy), b = h(ix + 1, iy), c = h(ix, iy + 1), d = h(ix + 1, iy + 1);
+  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
+}
 const fbm = (x, y) => vnoise(x, y) * 0.5 + vnoise(x * 2.1 + 7, y * 2.1 + 3) * 0.3 + vnoise(x * 4.3 + 1, y * 4.3 + 9) * 0.2;
 
 /**
@@ -63,16 +71,26 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     const c = sheet.getContext('2d');
     const P = (x, z) => [(x - R.x0) * PX, (z - R.z0) * PX];
     const r0 = rng(20261117);
-    // paper: warm, uneven, with fibres
-    c.fillStyle = '#eee5cf'; c.fillRect(0, 0, SW, SH);
-    const img = c.getImageData(0, 0, SW, SH), d = img.data;
-    for (let y = 0; y < SH; y++) for (let x = 0; x < SW; x++) {
-      const k = (y * SW + x) * 4;
-      const n = fbm(x / 140, y / 140) * 0.6 + vnoise(x / 9, y / 9) * 0.25 + hash2(x, y) * 0.15;
-      const v = (n - 0.5) * 22;
-      d[k] = Math.min(255, d[k] + v); d[k + 1] = Math.min(255, d[k + 1] + v * 0.95); d[k + 2] = Math.min(255, d[k + 2] + v * 0.8);
+    // paper: warm, uneven, with fibres — one 512 px tile (seamless: the noise wraps), laid as a pattern,
+    // then a broad unevenness over the whole sheet (cheap enough for a phone's first open)
+    const T = 512, tile = document.createElement('canvas'); tile.width = tile.height = T;
+    const tc = tile.getContext('2d'), img = tc.createImageData(T, T), d = img.data;
+    for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) {
+      const k = (y * T + x) * 4;
+      const n = tileNoise(x / 8, y / 8, T / 8) * 0.55 + hash2(x, y) * 0.45;
+      const v = (n - 0.5) * 16;
+      d[k] = 238 + v; d[k + 1] = 229 + v * 0.95; d[k + 2] = 207 + v * 0.8; d[k + 3] = 255;
     }
-    c.putImageData(img, 0, 0);
+    tc.putImageData(img, 0, 0);
+    c.fillStyle = c.createPattern(tile, 'repeat'); c.fillRect(0, 0, SW, SH);
+    // broad unevenness: soft blotches of warmer and cooler paper
+    for (let i = 0; i < 70; i++) {
+      const x = r0() * SW, y = r0() * SH, rad = 120 + r0() * 380;
+      const gr = c.createRadialGradient(x, y, 0, x, y, rad);
+      const warm = r0() < 0.5;
+      gr.addColorStop(0, warm ? 'rgba(160, 120, 60, 0.05)' : 'rgba(255, 255, 245, 0.08)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = gr; c.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
     c.globalAlpha = 0.05; c.strokeStyle = '#7a6a50'; c.lineWidth = 0.6;
     for (let i = 0; i < SW * SH / 2600; i++) { const x = r0() * SW, y = r0() * SH, a = r0() * TAU, L = 3 + r0() * 9; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a + 0.5) * L * 0.5, y + Math.sin(a + 0.5) * L * 0.5, x + Math.cos(a) * L, y + Math.sin(a) * L); c.stroke(); }
     c.globalAlpha = 1;
@@ -213,7 +231,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       if (!f.name || f.kind === 'road' || seen.has(f.name)) continue;
       if (!['building', 'gate', 'water', 'botanic', 'garden', 'field', 'court', 'pavilion'].includes(f.kind)) continue;
       seen.add(f.name);
-      NAMES.push({ name: f.name.replace('（推演）', ''), x: f.cx, z: f.cz + (f.kind === 'pavilion' ? 7 : 0), kind: f.kind, area: f.hw * f.hd, tall: f.hd > f.hw * 1.8 && f.kind === 'building' });
+      NAMES.push({ name: f.name.replace('（推演）', ''), x: f.cx, z: f.cz + (f.kind === 'pavilion' ? 8.5 : f.kind === 'garden' ? -9 : 0), kind: f.kind, area: f.hw * f.hd, tall: f.hd > f.hw * 1.8 && f.kind === 'building' });
     }
     NAMES.sort((a, b) => b.area - a.area);
   }
@@ -251,10 +269,10 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
 
   // ---------------------------------------------------------------- the page, every frame
   function resize() {
-    const r = canvas.getBoundingClientRect();
+    // layout size, not the on-screen box: the book is still scaled by its opening animation
     state.dpr = Math.min(devicePixelRatio || 1, 2);
-    state.w = r.width; state.h = r.height;
-    canvas.width = Math.round(r.width * state.dpr); canvas.height = Math.round(r.height * state.dpr);
+    state.w = canvas.clientWidth; state.h = canvas.clientHeight;
+    canvas.width = Math.round(state.w * state.dpr); canvas.height = Math.round(state.h * state.dpr);
   }
   function draw(dt) {
     const W = state.w, Hh = state.h;
@@ -279,7 +297,13 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     // weather on the page
     const wx = info.weather;
     if (wx.wet > 0.02) { g.globalAlpha = Math.min(0.32, wx.wet * 0.32); g.globalCompositeOperation = 'multiply'; g.drawImage(tinted(), sx, sy, sw, sh, 0, 0, W, Hh); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
-    if (wx.lamps > 0.05) { g.globalAlpha = wx.lamps * 0.55; g.globalCompositeOperation = 'screen'; g.filter = 'blur(3px)'; g.drawImage(lit, sx, sy, sw, sh, 0, 0, W, Hh); g.filter = 'none'; g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
+    if (wx.lamps > 0.05) {
+      // 晚自习: the classrooms glow through the paper (a soft halo, then the warm wash itself)
+      g.globalCompositeOperation = 'screen';
+      g.globalAlpha = Math.min(1, wx.lamps) * 0.5; g.filter = 'blur(10px)'; g.drawImage(lit, sx, sy, sw, sh, 0, 0, W, Hh);
+      g.globalAlpha = Math.min(1, wx.lamps) * 0.6; g.filter = 'blur(2px)'; g.drawImage(lit, sx, sy, sw, sh, 0, 0, W, Hh);
+      g.filter = 'none'; g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    }
     g.restore();
     rain(dt, wx);
     // at night the page lies under a desk lamp: warm in the middle, the edges falling into the dark
@@ -288,7 +312,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       g.save(); g.globalCompositeOperation = 'multiply';
       const R0 = Math.hypot(W, Hh) * 0.62;
       const gr = g.createRadialGradient(W * 0.55, Hh * 0.45, R0 * 0.12, W * 0.5, Hh * 0.5, R0);
-      gr.addColorStop(0, `rgba(255, 236, 200, ${0.0})`); gr.addColorStop(0.55, `rgba(214, 190, 150, ${0.35 * k})`); gr.addColorStop(1, `rgba(70, 60, 55, ${0.75 * k})`);
+      gr.addColorStop(0, `rgba(255, 236, 200, ${0.0})`); gr.addColorStop(0.45, `rgba(200, 176, 140, ${0.42 * k})`); gr.addColorStop(1, `rgba(52, 46, 48, ${0.88 * k})`);
       g.fillStyle = gr; g.fillRect(0, 0, W, Hh); g.restore();
     }
     // the life on the page
@@ -354,8 +378,8 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
         const s = life.stateOf(a.id, t);
         const seg = tr[tr.length - 1];
         if (s.inside || s.away) { if (seg.length) tr.push([]); }
-        else { const last = seg[seg.length - 1]; if (!last || Math.hypot(s.x - last.x, s.z - last.z) > 1.2) { if (last && Math.hypot(s.x - last.x, s.z - last.z) > 40) tr.push([{ x: s.x, z: s.z }]); else seg.push({ x: s.x, z: s.z }); } }
-        t += 15000;
+        else { const last = seg[seg.length - 1]; const dd = last ? Math.hypot(s.x - last.x, s.z - last.z) : 9; if (dd > 1.2) { if (last && dd > (s.run ? 16 : 7)) tr.push([{ x: s.x, z: s.z }]); else seg.push({ x: s.x, z: s.z }); } }
+        t += 4000;
       }
       D.cursor[a.id] = t;
     }
@@ -473,7 +497,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
   // the compass (a 榄仁 leaf pointing to the North Gate), the scale, the seal
   function frameMarks(info) {
     const W = state.w, Hh = state.h;
-    const cx = W - 46, cy = 92;
+    const cx = W - 48, cy = Hh - 116;
     g.save(); g.globalAlpha = 0.85;
     leaf(g, cx, cy, 0, 30, '#5a7a48', 0.85);
     g.fillStyle = INK; g.font = `13px ${FONT_HAND}`; g.textAlign = 'center'; g.fillText('北门', cx, cy - 22);
@@ -562,7 +586,11 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
       clampView();
     },
     close() { state.open = false; state.follow = null; },
-    frame(dt) { if (state.open) draw(dt); },
+    frame(dt) {
+      if (!state.open) return;
+      if (!state.w || !view.s) { resize(); if (!view.s) view.s = Math.max(fitScale() * 1.25, Math.min(3.0, Math.min(state.w, state.h) / 240)); if (!state.w) return; }
+      draw(dt);
+    },
     resize: () => { if (state.open) resize(); },
     select(id) { state.selected = id; },
     follow(id) { state.follow = id; },

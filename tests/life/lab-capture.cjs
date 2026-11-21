@@ -16,7 +16,7 @@ const every = Number(arg('every', 1));
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   p.on('pageerror', (e) => console.log('[err]', e.message));
   p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[c]', m.text().slice(0, 200)); });
-  await p.goto(`${base}/walker-lab.html?figure=${figure}&seq=${seq}&view=${view}&capture`, { waitUntil: 'load' });
+  await p.goto(`${base}/walker-lab.html?figure=${figure}&seq=${seq}&view=${view}&capture${process.argv.includes('--yaw') ? '&yaw=' + arg('yaw') : ''}${process.argv.includes('--hold') ? '&hold=' + arg('hold') : ''}`, { waitUntil: 'load' });
   await p.waitForFunction(() => window.__lab, null, { timeout: 60000 });
   const total = await p.evaluate(() => window.__lab.total);
   const n = Number(arg('frames', Math.round(total * 30)));

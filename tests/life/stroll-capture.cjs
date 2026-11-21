@@ -15,7 +15,7 @@ const SCRIPT = [[1.0, []], [2.6, ['KeyW']], [1.6, ['KeyW', 'KeyD']], [1.4, ['Key
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   p.on('pageerror', (e) => console.log('[err]', e.message));
   await p.route('**/api.open-meteo.com/**', (r) => r.abort());
-  await p.goto(`http://127.0.0.1:8123/${page}?stage=stroll&quality=low&capture&scale=1&figure=${figure}`, { waitUntil: 'load' });
+  await p.goto(`http://127.0.0.1:8123/${page}?stage=stroll&quality=low&capture&scale=1&figure=${figure}&date=2026-11-17`, { waitUntil: 'load' });
   await p.waitForFunction(() => window.__ruhua && window.__ruhua.stage === 'stroll', null, { timeout: 240000 });
   await p.evaluate(({ at, h }) => { const R = window.__ruhua; if (h) R.weather.setFree('clear', Number(h)); R.player.place(at[0], at[1], at[2]); R.still(2.5); }, { at, h: arg('hour') });
   let n = 0;

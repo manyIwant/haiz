@@ -21,7 +21,7 @@ export const PEOPLE = [
   {
     id: 'lin', name: '林知夏', role: '高二（3）班', kind: 'student',
     about: '喜欢植物。课间常到榄仁树下站一会儿，午饭后去植物园画速写，傍晚绕砚池走一圈。',
-    figure: { shirt: '#f3f1ea', trousers: '#2e3a5c', bag: '#7a9a6a', hair: '#2a1d16', skin: '#f0c9a8', acc: ['ponytail', 'sketchbook'], scale: 0.955 },
+    figure: { model: 'student-f', style: 'ponytail', bag: '#6f8f63', acc: ['sketchbook'] },
     gait: { basic: { tempo: 1.04, stride: 0.95, armSwing: 0.8, stepHeight: 1.1, looseness: 1.1 }, seed: 11 },
     speed: 1.3, run: 3.0, umbrella: true, rainHabit: 'watch',
     plan(d) {
@@ -63,7 +63,7 @@ export const PEOPLE = [
   {
     id: 'chen', name: '陈屿', role: '高一（7）班', kind: 'student',
     about: '篮球队的。总是踩着铃声跑进教室；午饭后、放学后都在篮球场。下雨不打伞，用手挡着头跑。',
-    figure: { shirt: '#f5f4ef', trousers: '#253049', bag: '#2f3f6a', hair: '#1b1512', skin: '#d9a982', acc: [], scale: 1.02 },
+    figure: { model: 'student-m', style: 'buzz', bag: '#2f3f6a', skin: '#cfa385', acc: [] },
     gait: { preset: 'athletic', basic: { tempo: 1.08, armSwing: 1.2, hipSway: 0.9, looseness: 1.15 }, seed: 23 },
     speed: 1.55, run: 3.6, umbrella: false, rainHabit: 'dash',
     plan(d) {
@@ -104,7 +104,7 @@ export const PEOPLE = [
   {
     id: 'fu', name: '符老师', role: '物理教师', kind: 'teacher',
     about: '办公室在科学馆。上课前抱着教案从科学馆走到一号楼、二号楼；下班从北门回家，周二周四留下来看晚自习。',
-    figure: { shirt: '#c9d7e3', trousers: '#4a4a4f', bag: '#3e3a36', hair: '#2b2622', skin: '#e2b996', acc: ['glasses', 'folder'], scale: 0.99, noBag: true },
+    figure: { model: 'teacher-f', style: 'bob', trousers: '#4a4a4f', glasses: true, acc: ['folder'], noBag: true },
     gait: { basic: { tempo: 0.94, stride: 0.98, armSwing: 0.7, lean: 1, looseness: 0.9 }, seed: 37 },
     speed: 1.2, run: 2.2, umbrella: true, rainHabit: 'inside',
     plan(d) {
@@ -142,7 +142,7 @@ export const PEOPLE = [
   {
     id: 'wang', name: '王一苇', role: '高三（1）班', kind: 'student',
     about: '图书馆三楼靠窗的位置几乎是他的。走路也在看书；午休、放学后都在图书馆，周六一整天。',
-    figure: { shirt: '#eceff0', trousers: '#2a3146', bag: '#5c4a3b', hair: '#191513', skin: '#e6bf9c', acc: ['book'], scale: 1.0 },
+    figure: { model: 'student-m', style: 'part', bag: '#5c4a3b', glasses: true, acc: ['book'] },
     gait: { basic: { tempo: 0.92, stride: 0.95, armSwing: 0.5, lean: 4, looseness: 0.85 }, seed: 41 },
     speed: 1.15, run: 2.6, umbrella: true, rainHabit: 'inside', reads: true,
     plan(d) {
@@ -179,8 +179,8 @@ export const PEOPLE = [
   {
     id: 'wu', name: '吴伯', role: '校工', kind: 'worker',
     about: '每天清晨扫榄仁树下和北门路上的落叶，上午去植物园，下午给花坛浇水。下雨时在衍林亭里坐着等雨停。',
-    figure: { shirt: '#7d8a6a', trousers: '#3d3b36', bag: '#5a5148', hair: '#8a857c', skin: '#c99a76', acc: ['broom'], scale: 0.97, noBag: true },
-    gait: { preset: 'tired', basic: { tempo: 0.85, lean: 7, armSwing: 0.6, looseness: 1.2 }, seed: 53 },
+    figure: { model: 'worker-m', style: 'grey', trousers: '#3d3b36', skin: '#c9a084', acc: ['broom'], noBag: true },
+    gait: { preset: 'tired', basic: { tempo: 0.85, lean: 3, armSwing: 0.6, looseness: 1.2 }, seed: 53 },
     speed: 0.95, run: 1.6, umbrella: true, rainHabit: 'shelter',
     plan(d) {
       const B = [];

@@ -55,8 +55,10 @@ const LAYER_REAL = 1, LAYER_PAINT = 2;
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 const smoother = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
 // the transition's clock, relative to the moment the walker steps aside
-const T = { project: 0.9, front: 2.2, sky: 3.3, enter: 9.6, enterDur: 4.4, done: 14.4 };
-if (reduce) Object.assign(T, { project: 0.4, front: 1.2, sky: 1.8, enter: 6.0, enterDur: 1.6, done: 9.5 });
+// (the exit from the body starts once the tree and the sky are painted; the campus goes on filling in
+// behind the dolly and the walk is handed back when the dolly ends — see 'finishing')
+const T = { project: 0.9, front: 2.2, sky: 3.3, enter: 6.8, enterDur: 4.4, done: 14.4 };
+if (reduce) Object.assign(T, { project: 0.4, front: 1.2, sky: 1.8, enter: 4.6, enterDur: 1.6, done: 9.5 });
 
 async function main() {
   const ui = createUI({ coarse });
@@ -115,7 +117,7 @@ async function main() {
   try {
     if (figure === 'v2') { student = await createStudent(asset('assets/toon/student.glb')); createPlayerFor = createOldPlayer; }
     else if (figure === 'v1') { student = await (await import('./legacy/walker-v1.js')).createWalker(asset('assets/ruhua/student.glb')); createPlayerFor = createOldPlayer; }
-    else student = await createWalker(asset('assets/ruhua/student.glb'), { heightAt, x: SHOT6.eye[0], z: SHOT6.eye[2], fade: true });
+    else student = await createWalker(asset('assets/life/student-m.glb'), { heightAt, x: SHOT6.eye[0], z: SHOT6.eye[2], fade: true, hair: 'short' });
   } catch (e) { console.warn('walker unavailable, using the V2 figure', e); student = await createStudent(asset('assets/toon/student.glb')); createPlayerFor = createOldPlayer; }
   student.root.visible = false;
   world.group.add(student.root);
@@ -131,7 +133,23 @@ async function main() {
   const nav = buildNav({ colliders: world.colliders, features: world.geo.features, bounds: { x0: -300, x1: 200, z0: -140, z1: 300 } });
   let raining = false;
   const life = createLife({ nav, isRaining: () => raining });
-  const people = createPeople({ life, url: asset('assets/ruhua/student.glb'), heightAt, getColliders: () => world.colliders, layer: LAYER_PAINT, mobile: coarse, say: (who, line) => ui.line?.(who, line) });
+  // review: ?date=2026-11-17 lives that day (Haikou) at the clock's hour, whatever today is
+  let dayShift = 0;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(Q.get('date') || '')) {
+    const [y, m, d] = Q.get('date').split('-').map(Number);
+    const c = haikouClock(Date.now());
+    dayShift = Date.UTC(y, m - 1, d) - Date.UTC(c.y, c.m - 1, c.d);
+  }
+  // the campus's clock advances with the simulation (so bodies and their day move together, also when
+  // frames are stepped or clamped), and catches up with Haikou's clock when it falls behind or jumps
+  let lifeT = 0;
+  const advanceLife = (dt, wall) => {
+    lifeT += dt * 1000;
+    if (wall > lifeT || wall < lifeT - 60000) lifeT = wall;
+    return lifeT;
+  };
+  const lifeClock = () => lifeT + dayShift;
+  const people = createPeople({ life, url: asset('assets/life/student-m.glb'), heightAt, getColliders: () => world.colliders, layer: LAYER_PAINT, mobile: coarse, say: (who, line) => ui.line?.(who, line) });
   world.group.add(people.group);
   const eco = createEcosystem({ habitat });
   const butterflies = eco.add(createButterflies(habitat, { max: coarse ? 16 : 24, layer: LAYER_PAINT }));
@@ -191,12 +209,14 @@ async function main() {
   real.update(0, camera.position);
 
   function resetToHold() {
-    D.stage = 'hold'; D.clock = 0; D.t = 0;
+    D.stage = 'hold'; D.clock = 0; D.t = 0; D.finishing = false;
     PAINT.uPaintOn.value = 0; PAINT.uProjStart.value = 1e6; PAINT.uFrontStart.value = 1e6; PAINT.uSkyStart.value = 1e6;
     PAINT.uProjMap.value = NO_PROJECTION; PAINT.uProjDepth.value = NO_PROJECTION;
     setPaintMaterials(true);
     real.group.visible = true;
     student.root.visible = false;
+    people.group.visible = false;                  // the campus's people return with the painting
+    if (map.isOpen) closeMap();
     easel.reset();
     player?.setEnabled(false);
     holdCamera();
@@ -256,6 +276,7 @@ async function main() {
   function enterWalk(x, z, yaw, instant = false) {
     ensurePlayer(x, z, yaw);
     student.root.visible = true;
+    people.group.visible = true;
     player.setEnabled(false);
     for (let i = 0; i < 60; i++) player.update(1 / 30);
     D.enterFrom = { pos: camera.position.clone(), quat: camera.quaternion.clone(), fov: camera.fov };
@@ -276,7 +297,7 @@ async function main() {
   const playerSteps = [];
   student.on?.('footstep', ({ position }) => {
     const h = student.heading ?? 0;
-    playerSteps.push({ x: position.x, z: position.z, yaw: h, side: playerSteps.length % 2 ? 1 : -1, t: weather.state.clock, run: (student.human?.runBlend || 0) > 0.5 });
+    playerSteps.push({ x: position.x, z: position.z, yaw: h, side: playerSteps.length % 2 ? 1 : -1, t: lifeClock(), run: (student.human?.runBlend || 0) > 0.5 });
     if (playerSteps.length > 400) playerSteps.shift();
   });
   // the sketchbook itself, in the walker's left hand while the map is open
@@ -296,7 +317,7 @@ async function main() {
       const S = weather.state, P = player?.state;
       const c = cat.describe();
       return {
-        clock: S.clock,
+        clock: lifeClock(),
         player: P ? { x: P.pos.x, z: P.pos.z, camYaw: P.camYaw } : null, playerSteps,
         cat: { x: c.at[0], z: c.at[1], label: CAT_WORDS[c.act] || '' },
         easel: easel.group.visible && easel.canvasMesh ? { x: easel.canvasMesh.position.x, z: easel.canvasMesh.position.z } : null,
@@ -307,10 +328,11 @@ async function main() {
   function openMap() {
     if (D.stage !== 'stroll' || map.isOpen) return;
     const P = player.state;
+    mapEl.hidden = false;                           // shown first: the page measures its canvas when it opens
     map.open({ x: P.pos.x, z: P.pos.z });
     const c = weather.caption();
     mapDate.textContent = `${c.date} · ${c.clock} · ${c.name} ${c.temp}°`;
-    mapEl.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => mapEl.classList.add('on')));
+    requestAnimationFrame(() => requestAnimationFrame(() => mapEl.classList.add('on')));
     mapBtn?.setAttribute('aria-expanded', 'true');
     player.setEnabled(false);
     // in the picture behind the page, the walker has the sketchbook up and is looking into it
@@ -428,7 +450,8 @@ async function main() {
     pipeline.tick(dt);
     D.t += dt;
     const S = applyWeather(dt);
-    const painting = D.stage !== 'hold' && D.stage !== 'stroll';
+    advanceLife(dt, S.clock);
+    const painting = D.stage !== 'hold' && (D.stage !== 'stroll' || D.finishing);
     if (painting) D.clock += dt;
     PAINT.uPaintClock.value = D.clock;
     PAINT.uPaintOn.value = painting ? 1 : 0;
@@ -458,7 +481,7 @@ async function main() {
         const yaw = Math.atan2(-camera.position.x, -camera.position.z);
         world.extraCircles = world.extraCircles.filter((c) => c.id !== 'easel').concat([{ id: 'easel', x: easel.canvasMesh.position.x, z: easel.canvasMesh.position.z, r: 0.45 }]);
         world.rebuild();
-        enterWalk(camera.position.x, camera.position.z, yaw);
+        enterWalk(camera.position.x + Math.sin(yaw) * 0.45, camera.position.z + Math.cos(yaw) * 0.45, yaw);
         ui.stage('enter');
       }
     }
@@ -471,7 +494,7 @@ async function main() {
       const k = smoother(D.t / T.enterDur);
       const back = smooth(Math.min(1, D.t / (T.enterDur * 0.55)));
       tmpV.copy(D.enterFrom.pos).addScaledVector(D.enterBack, back * 2.4);
-      tmpV.y += back * 0.3;
+      tmpV.y += Math.min(1, back * 1.6) * 0.42;                       // up over the head first, then back
       camera.position.lerpVectors(tmpV, followCam.position, smoother((D.t - T.enterDur * 0.35) / (T.enterDur * 0.65)));
       camera.position.y += Math.sin(k * Math.PI) * 0.12;
       camera.lookAt(LOOK_TREE);
@@ -480,17 +503,19 @@ async function main() {
       camera.quaternion.slerp(followCam.quaternion, smoother((D.t - T.enterDur * 0.55) / (T.enterDur * 0.45)));
       camera.fov = D.enterFrom.fov + (followCam.fov - D.enterFrom.fov) * k;
       camera.updateProjectionMatrix();
-      student.setFade?.(smooth((D.t - 0.15) / 1.3));
+      student.setFade?.(smooth((back - 0.32) / 0.38));                // painted in once the eye is clear of the head
       student.lookAt(0, 0.28, 0.85);                                   // still looking up into the tree
-      if (D.t >= T.enterDur && D.clock - D.departAt > T.done) {
-        D.stage = 'stroll';
-        easel.empty();
-        setPaintMaterials(false);
-        real.group.visible = false;
+      if (D.t >= T.enterDur) {
+        // the walk is yours; the far campus may still be filling in for a few seconds
+        D.stage = 'stroll'; D.finishing = true;
         player.setEnabled(true);
         ui.stage('stroll');
       }
     } else if (D.stage === 'stroll') {
+      if (D.finishing) {
+        easel.update(dt, D.clock);
+        if (D.clock - D.departAt > T.done) { D.finishing = false; easel.empty(); setPaintMaterials(false); real.group.visible = false; }
+      }
       player.update(dt);
       if (D.override) { const o = D.override; camera.position.set(...o.eye); camera.lookAt(...o.at); if (camera.fov !== o.fov) { camera.fov = o.fov; camera.updateProjectionMatrix(); } }
       else {
@@ -517,8 +542,8 @@ async function main() {
       eco.update(dt, { clock: S.clock, time: S.time });
       const wet = Math.max(S.rainNow, S.cur.rain);
       raining = raining ? wet > 0.08 : wet > 0.3;
-      life.update(S.clock);
-      people.update(dt, S.clock, { player: { x: ps.pos.x, z: ps.pos.z, speed: ps.speed }, rain: raining, hours: haikouClock(S.clock).hours });
+      life.update(lifeClock());
+      people.update(dt, lifeClock(), { player: { x: ps.pos.x, z: ps.pos.z, speed: ps.speed }, rain: raining, hours: haikouClock(S.clock).hours });
       if (map.isOpen) student.lookAt(0, -0.6, 1);
     }
     // eyes adapt a little in deep shade
@@ -531,7 +556,7 @@ async function main() {
   function render() {
     renderer.info.reset();
     if (D.stage === 'hold' || D.stage === 'aim') pipeline.renderReal(scene, camera, null);
-    else if (D.stage === 'stroll') pipeline.renderPainted(scene, camera, null);
+    else if (D.stage === 'stroll' && !D.finishing) pipeline.renderPainted(scene, camera, null);
     else pipeline.renderBoth(scene, camera);
     camera.layers.enableAll();
   }

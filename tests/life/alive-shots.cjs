@@ -10,7 +10,7 @@ async function page(b, w, h, mobile = false) {
   const p = await b.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
   p.on('pageerror', (e) => console.log('[err]', e.message));
   await p.route('**/api.open-meteo.com/**', (r) => r.abort());
-  await p.goto('http://127.0.0.1:8123/ruhua-alive.html?stage=stroll&quality=low&capture', { waitUntil: 'load' });
+  await p.goto('http://127.0.0.1:8123/ruhua-alive.html?stage=stroll&quality=low&capture&date=2026-11-17', { waitUntil: 'load' });
   await p.waitForFunction(() => window.__ruhua && window.__ruhua.stage === 'stroll', null, { timeout: 240000 });
   return p;
 }
@@ -27,7 +27,7 @@ async function mapShot(p, name, wx, hour, at, opts = {}) {
   if (opts.select) await p.evaluate((id) => { const R = window.__ruhua; R.map.select(id); }, opts.select);
   if (opts.day) { await p.evaluate(() => window.__ruhua.map.toggleDay(true)); for (let i = 0; i < 90; i++) { await p.evaluate(() => window.__ruhua.still(0.03)); await p.waitForTimeout(20); } }
   await p.evaluate(() => window.__ruhua.still(0.2));
-  await p.screenshot({ path: path.join(out, name + '.png') });
+  await p.screenshot({ path: path.join(out, name + '.png'), timeout: 180000 });
   console.log('shot', name);
 }
 async function peopleShot(p, name, hour, who, offset, opts = {}) {
@@ -41,7 +41,7 @@ async function peopleShot(p, name, hour, who, offset, opts = {}) {
   }, { who, offset });
   await settle(p, opts.warm ?? 4, 14);
   const info = await p.evaluate((who) => { const R = window.__ruhua; const b = R.people.bodies.get(who); return { st: R.life.byId.get(who).state.act, body: b ? b.active : false }; }, who);
-  await p.screenshot({ path: path.join(out, name + '.png') });
+  await p.screenshot({ path: path.join(out, name + '.png'), timeout: 180000 });
   console.log('shot', name, JSON.stringify(info));
 }
 (async () => {

@@ -33,6 +33,12 @@ const VIEWS = {
   front: { off: [0, 1.2, 4.6], at: [0, 0.95, 0], fov: 32, label: '正 front' },
   back: { off: [0, 1.4, -4.6], at: [0, 0.95, 0], fov: 32, label: '背 back' },
   three: { off: [3.4, 2.6, 3.2], at: [0, 0.85, 0], fov: 34, label: '斜 three-quarter' },
+  // portrait: the figure itself, close (?view=portrait)
+  pfront: { off: [0, 1.15, 2.6], at: [0, 0.9, 0], fov: 38, label: '正' },
+  pside: { off: [2.6, 1.15, 0], at: [0, 0.9, 0], fov: 38, label: '侧' },
+  pback: { off: [-1.4, 1.2, -2.2], at: [0, 0.9, 0], fov: 38, label: '背斜' },
+  face: { off: [0.25, 1.62, 0.62], at: [0, 1.55, 0], fov: 30, label: '脸' },
+  mouth: { off: [0.05, 1.53, 0.3], at: [0, 1.5, 0], fov: 22, label: '口' },
 };
 
 async function main() {
@@ -50,6 +56,7 @@ async function main() {
   // light: one sun, as the walk has it (cel shading reads U.uSunDir)
   const sunDir = new THREE.Vector3(0.45, 0.8, 0.35).normalize();
   U.uSunDir.value.copy(sunDir);
+  U.uSunColor.value.setRGB(1.3, 1.24, 1.12); U.uSkyAmb.value.setRGB(0.42, 0.48, 0.6); U.uGroundAmb.value.setRGB(0.3, 0.28, 0.22);
   U.uDepthTint.value = 0; U.uFogMax.value = 0; U.uCloudShadow.value = 0;
   const sun = new THREE.DirectionalLight(0xffffff, 1);
   sun.castShadow = true;
@@ -76,8 +83,14 @@ albedo *= 1.0 - 0.1 * l1 - 0.16 * l2 - 0.2 * l5;
   let walker;
   if (figure === 'v1') walker = await (await import('./legacy/walker-v1.js')).createWalker(asset('assets/ruhua/student.glb'));
   else if (figure === 'v2') walker = await (await import('../ruhua-stroll/student.js')).createStudent(asset('assets/toon/student.glb'));
-  else walker = await (await import('./gait.js')).createWalker(asset('assets/ruhua/student.glb'));
+  else if (figure.startsWith('npc:')) {
+    // one of the campus's people, with their own gait (lanren/life/people.js), on the lab floor
+    const P = (await import('./people.js')).PEOPLE.find((q) => q.id === figure.slice(4));
+    walker = await (await import('./gait.js')).createWalker(asset(`assets/life/${P.figure.model}.glb`), { hair: P.figure.style, bag: !P.figure.noBag, glasses: !!P.figure.glasses, yaw: Number(Q.get('yaw') || 0), palette: P.figure, preset: P.gait.preset, config: { walkSpeed: P.speed, ...(P.gait.config || {}) }, basic: P.gait.basic, seed: P.gait.seed });
+  } else if (figure === 'new-old-body') walker = await (await import('./gait.js')).createWalker(asset('assets/ruhua/student.glb'));
+  else walker = await (await import('./gait.js')).createWalker(asset('assets/life/student-m.glb'), { hair: Q.get('hair') || 'short' });
   scene.add(walker.root);
+  if (Q.get('hold') && walker.setHold) walker.setHold(Q.get('hold'));
   walker.root.traverse((o) => { if (o.isMesh) o.castShadow = true; });
 
   // footprints: where each contact began (static in the world, so a sliding foot shows against them)
@@ -91,7 +104,7 @@ albedo *= 1.0 - 0.1 * l1 - 0.16 * l2 - 0.2 * l5;
 
   // ---------------------------------------------------------------- the controller: the walk's own
   const dummyCam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-  const createPlayer = figure === 'new' ? createNewPlayer : createOldPlayer;
+  const createPlayer = figure === 'new' || figure === 'new-old-body' || figure.startsWith('npc:') ? createNewPlayer : createOldPlayer;
   const player = createPlayer({ camera: dummyCam, dom: canvas, student: walker, getColliders: () => null, heightAt: () => 0, spawn: { x: 0, z: 0, yaw: 0 }, coarse: false });
   const held = new Set();
   const setKeys = (want) => {
@@ -209,6 +222,10 @@ albedo *= 1.0 - 0.1 * l1 - 0.16 * l2 - 0.2 * l5;
   for (const k of Object.keys(VIEWS)) cams[k] = new THREE.PerspectiveCamera(VIEWS[k].fov, 1, 0.05, 200);
   const layout = () => {
     const W = canvas.clientWidth, H = canvas.clientHeight;
+    if (viewMode === 'portrait') {
+      const qw = W / 4;
+      return ['pfront', 'pside', 'pback', 'face'].map((k, i) => ({ k, x: i * qw, y: 0, w: qw, h: H }));
+    }
     if (viewMode !== 'quad') return [{ k: viewMode, x: 0, y: 0, w: W, h: H }];
     const hw = W / 2, hh = H / 2;
     return [{ k: 'side', x: 0, y: hh, w: hw, h: hh }, { k: 'front', x: hw, y: hh, w: hw, h: hh }, { k: 'back', x: 0, y: 0, w: hw, h: hh }, { k: 'three', x: hw, y: 0, w: hw, h: hh }];
@@ -253,7 +270,7 @@ albedo *= 1.0 - 0.1 * l1 - 0.16 * l2 - 0.2 * l5;
     segT += dt;
     if (segT >= seg[0]) { segT = 0; segI = (segI + 1) % script.length; if (segI === 0 && !Q.has('capture')) restart(); }
     const avg = M.contactFrames ? M.slideSum / M.contactFrames : 0;
-    hud.innerHTML = `<b>${figure === 'new' ? '新 · new walk' : figure === 'v1' ? '旧 · 入画 v1 (程序化)' : '旧 · V2 漫游 (clips)'}</b> <span>${seg[2]}</span> <span>${player.state.speed.toFixed(2)} m/s</span>` +
+    hud.innerHTML = `<b>${figure === 'new' ? '新 · new walk' : figure === 'v1' ? '旧 · 入画 v1 (程序化)' : figure === 'v2' ? '旧 · V2 漫游 (clips)' : figure}</b> <span>${seg[2]}</span> <span>${player.state.speed.toFixed(2)} m/s</span>` +
       `<span>foot slide in stance: mean ${(avg * 100).toFixed(1)} cm/s · max ${(M.slideMax * 100).toFixed(0)} cm/s · sliding ${(M.contactFrames ? (100 * M.slidingFrames) / M.contactFrames : 0).toFixed(1)}%</span>`;
   }
   function restart() {

@@ -1,11 +1,11 @@
 {
-  "date": "2026-11-17T11:59:57.198Z",
+  "date": "2026-11-21T04:28:05.643Z",
   "ok": true,
   "results": [
     {
       "name": "nav grid builds from the walk's colliders",
       "ok": true,
-      "note": "500×440 cells in 38 ms"
+      "note": "500×440 cells in 20 ms"
     },
     {
       "name": "every door and spot is reachable from the old tree",
