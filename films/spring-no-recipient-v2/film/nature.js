@@ -21,9 +21,11 @@ function foliageMaterial(params, swayAmp, key) {
   const { roughness, ...lp } = params;
   const m = new THREE.MeshLambertMaterial(lp);
   m.userData.tint = { value: new THREE.Color(1, 1, 1) };
+  m.userData.bloom = { value: 0 };
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     sh.uniforms.uTint = m.userData.tint;
+    sh.uniforms.uBloom = m.userData.bloom;
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
         attribute float aSway; attribute float aPhase; uniform float uTime; uniform float uWind; varying vec3 vWPos;`)
@@ -42,8 +44,19 @@ function foliageMaterial(params, swayAmp, key) {
           vWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
         #endif`);
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos; uniform vec3 uTint;\n' + ATMOS_CHUNK)
-      .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= uTint;')
+      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos; uniform vec3 uTint; uniform float uBloom;\n' + ATMOS_CHUNK)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb *= uTint;
+        if (uBloom > 0.0) {
+          // blossom: replace the leaf colour (keep its light/dark texture), clustered pink / white / peach
+          float lum = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
+          float sh = clamp(0.55 + lum * 2.2, 0.55, 1.25);
+          vec3 q = floor(vWPos * 0.9);
+          float h = fract(sin(dot(q, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+          vec3 pink = vec3(0.93, 0.50, 0.64), white = vec3(0.96, 0.86, 0.88), peach = vec3(0.97, 0.66, 0.58);
+          vec3 bc = h < 0.55 ? pink : (h < 0.85 ? white : peach);
+          diffuseColor.rgb = mix(diffuseColor.rgb, bc * sh * 0.8, uBloom);
+        }`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
         // light through leaves when the sun is behind them
         { vec3 V = normalize(cameraPosition - vWPos); float back = pow(max(dot(-V, uSunDir), 0.0), 4.0);

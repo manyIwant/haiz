@@ -358,10 +358,10 @@ async function renderAt(t) {
       P.altRefl = (on) => {
         if (sh.altRefl.lit) W.glassMat.uniforms.lit.value = on ? 1 : 0;
         if (sh.altRefl.blossom) {
-          NAT.leafMat.userData.tint.value.setRGB(...(on ? [3.1, 1.0, 1.55] : [1, 1, 1]));
-          NAT.blobMat.userData.tint.value.setRGB(...(on ? [3.4, 1.35, 2.0] : [1, 1, 1]));
-          NAT.hillMat.userData.tint.value.setRGB(...(on ? [2.4, 1.15, 1.6] : [1, 1, 1]));
-          if (NAT.ivyMat) NAT.ivyMat.userData.tint.value.setRGB(...(on ? [3.0, 1.1, 1.6] : [1, 1, 1]));
+          NAT.leafMat.userData.bloom.value = on ? 1.0 : 0.0;
+          NAT.blobMat.userData.bloom.value = on ? 0.9 : 0.0;
+          NAT.hillMat.userData.bloom.value = on ? 0.7 : 0.0;
+          if (NAT.ivyMat) NAT.ivyMat.userData.bloom.value = on ? 0.85 : 0.0;
         }
       };
     }
