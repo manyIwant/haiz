@@ -29,6 +29,8 @@ OUT = ROOT / "assets" / "bake"
 OUT.mkdir(parents=True, exist_ok=True)
 RES = {"room": 4096, "furn": 2048, "bldg": 4096, "station": 3072, "land": 2048}
 K, S = 12.0, 64.0          # log encoding: covers 0 .. (2^12-1)/64 = 64 in linear units
+# dark states are stored pre-multiplied so they keep enough 8-bit codes; film/world.js divides again
+STATE_SCALE = {"dawn": 32.0, "night": 16.0, "dusk_nosun": 4.0, "morning_nosun": 4.0}
 
 
 def oidn_denoise(rgb):
@@ -133,8 +135,11 @@ def main():
             px = bake_group(g, res, st)
             t = time.time()
             den = oidn_denoise(px)
-            encode_png(den, OUT / f"{g}_{st}.png")
-            index.setdefault(g, {})[st] = dict(file=f"{g}_{st}.png", res=res, spp=spp)
+            sc = STATE_SCALE.get(st, 1.0)
+            encode_png(den * sc, OUT / f"{g}_{st}.png")
+            raw = ROOT / "build" / "bake_raw"; raw.mkdir(parents=True, exist_ok=True)
+            np.save(raw / f"{g}_{st}.npy", den.astype(np.float16))
+            index.setdefault(g, {})[st] = dict(file=f"{g}_{st}.png", res=res, spp=spp, scale=sc)
             print(f"  denoised+saved {g}_{st} ({time.time() - t:.0f}s)", flush=True)
             idx_path.write_text(json.dumps(index, indent=1))
 

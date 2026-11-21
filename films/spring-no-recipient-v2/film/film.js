@@ -16,9 +16,9 @@ function noise1(x) { const i = Math.floor(x), f = x - i; const h = (n) => { cons
 // ------------------------------------------------------------------ grades
 const GRADE = {
   dusk:    { exposure: 0.85, lift: [0.012, 0.010, 0.024], gamma: [1, 1, 1], gain: [1.07, 0.99, 0.88], sat: 1.06, contrast: 1.08, bloom: 0.06, vign: 0.32, grain: 0.032 },
-  night:   { exposure: 1.35, lift: [0.006, 0.010, 0.022], gamma: [1, 1, 1.02], gain: [0.94, 0.98, 1.06], sat: 0.85, contrast: 1.08, bloom: 0.09, vign: 0.38, grain: 0.04 },
+  night:   { exposure: 5.0, lift: [0.006, 0.010, 0.022], gamma: [1, 1, 1.02], gain: [0.94, 0.98, 1.06], sat: 0.85, contrast: 1.08, bloom: 0.09, vign: 0.38, grain: 0.04 },
   morning: { exposure: 1.05, lift: [0.024, 0.028, 0.034], gamma: [1, 1, 1], gain: [0.99, 1.0, 1.02], sat: 0.9, contrast: 0.94, bloom: 0.04, vign: 0.22, grain: 0.028 },
-  dawn:    { exposure: 2.0, lift: [0.012, 0.016, 0.03], gamma: [1, 1, 1.03], gain: [0.93, 0.97, 1.06], sat: 0.8, contrast: 0.98, bloom: 0.05, vign: 0.3, grain: 0.036 },
+  dawn:    { exposure: 26.0, lift: [0.012, 0.016, 0.03], gamma: [1, 1, 1.03], gain: [0.93, 0.97, 1.06], sat: 0.8, contrast: 0.98, bloom: 0.05, vign: 0.3, grain: 0.036 },
   room:    { exposure: 1.6 },
 };
 function mixGrade(a, b, k) {
@@ -31,9 +31,9 @@ function mixGrade(a, b, k) {
 }
 const FOG = {
   dusk:    { col: [0.80, 0.64, 0.55], sun: [1.0, 0.62, 0.34], d: 0.0011 },
-  night:   { col: [0.020, 0.028, 0.050], sun: [0.03, 0.03, 0.05], d: 0.0016 },
+  night:   { col: [0.0035, 0.0048, 0.0095], sun: [0.004, 0.005, 0.009], d: 0.0016 },
   morning: { col: [0.70, 0.78, 0.88], sun: [0.95, 0.93, 0.86], d: 0.0006 },
-  dawn:    { col: [0.30, 0.34, 0.46], sun: [0.55, 0.42, 0.42], d: 0.0013 },
+  dawn:    { col: [0.0125, 0.0140, 0.0240], sun: [0.020, 0.016, 0.018], d: 0.0013 },
 };
 
 // ------------------------------------------------------------------ text
@@ -63,9 +63,9 @@ const TEXT = [
   L(111.4, 116.0, '凌晨有人问时间会不会认错回家的路', POS.mid),
   L(116.4, 120.8, '月亮走过操场，捡到没有寄出的路', POS.high),
   L(121.4, 125.8, '风把远方塞进了半开的回信', POS.lowR),
-  L(126.4, 131.0, '雨停以后河流替山记住了全部花期', POS.high),
+  L(126.4, 131.0, '雨停以后河流替山记住了全部花期', POS.low),
   L(132.6, 137.6, '河流还不知道自己的名字', { x: 960, y: 760, align: 'center' }),
-  L(140.0, 144.4, '春天带走了每一个没有地址的夏天', POS.high),
+  L(140.0, 144.4, '春天带走了每一个没有地址的夏天', POS.lowR),
   L(145.0, 149.4, '黄昏把远方塞进了空椅子', POS.low),
   L(150.0, 154.6, '钟表背着所有来不及说的话，还给树', POS.mid),
   L(155.0, 159.4, '回声在黎明之前又叫了一个秋天', POS.high),
@@ -169,7 +169,7 @@ if (handoff) { handoff.colorSpace = THREE.SRGBColorSpace; W.water.material.unifo
 // a second key on the station window sill
 const key2 = W.dyn.key.clone(); key2.position.copy(B(0.645, 74.2, 2.0805)); key2.rotation.y = 2.1; W.scene.add(key2);
 // shadows only used by the shadow sweep
-W.sun.shadow.mapSize.set(2048, 2048); W.sun.shadow.bias = -0.0004; W.sun.shadow.normalBias = 0.02;
+W.sun.shadow.mapSize.set(2048, 2048); W.sun.shadow.bias = -0.0012; W.sun.shadow.normalBias = 0.06;
 Object.assign(W.sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 160 });
 W.sun.target.position.copy(B(-2.1, 0, 2.2));
 W.scene.traverse(o => { if (o.isMesh && !o.material.transparent) { o.castShadow = true; o.receiveShadow = true; } });
@@ -195,7 +195,7 @@ function applyLight(sh, t) {
     // the room at night, then the sun comes back the wrong way round: west, over the top, to the east
     const u = ramp(t, SWEEP.a, SWEEP.b, eio);
     setLighting(W, 'dusk_nosun', 'morning_nosun', u);
-    const az = lerp(258, 104 - 360, u), el = Math.sin(u * Math.PI) * 58 + lerp(4, 22, u);
+    const az = lerp(258, 104 - 360, u), el = Math.sin(u * Math.PI) * 58 + lerp(7, 22, u);
     U.uSunDir.value.copy(sunDirFromAzEl((az + 720) % 360, el));
     const sc = new THREE.Color(1.0, 0.62, 0.34).lerp(new THREE.Color(1.0, 0.95, 0.88), u).multiplyScalar(lerp(3.2, 4.6, u) * ramp(t, SWEEP.a - 0.6, SWEEP.a + 0.6));
     U.uSunCol.value.copy(sc);
@@ -216,9 +216,11 @@ function applyLight(sh, t) {
   for (const m of W.baked) {
     const g = m.userData.group, has = (s) => W.bakeIndex[g] && W.bakeIndex[g][s];
     let gain = 1;
-    if (!has(b) && b === 'night') gain = lerp(1, 0.07, k);
-    if (!has(a) && a === 'night') gain = lerp(0.07, 1, k);
-    if (a === 'night' && b === 'night' && !has('night')) gain = 0.07;
+    // groups without a night bake: dusk light scaled down to roughly moonlight
+    const NG = 0.004;
+    if (!has(b) && b === 'night') gain = lerp(1, NG, k);
+    if (!has(a) && a === 'night') gain = lerp(NG, 1, k);
+    if (a === 'night' && b === 'night' && !has('night')) gain = NG;
     m.userData.lmLocalGain.value = gain;
   }
   return { a, b, k };
@@ -227,6 +229,10 @@ function applyLight(sh, t) {
 function applyGradeFog(L0, sh, t) {
   const ga = GRADE[L0.a.replace('_nosun', '')] || GRADE.dusk, gb = GRADE[L0.b.replace('_nosun', '')] || GRADE.dusk;
   let g = mixGrade(ga, gb, L0.k);
+  // exposure: interpolate the *look* in log space and divide by the linearly blended scene level
+  const LV = { dusk: 1.0, morning: 1.2, dawn: 0.014, night: 0.004 };
+  const la = LV[L0.a.replace('_nosun', '')] ?? 1, lb = LV[L0.b.replace('_nosun', '')] ?? 1;
+  if (la !== lb) g.exposure = Math.exp(lerp(Math.log(ga.exposure * la), Math.log(gb.exposure * lb), L0.k)) / lerp(la, lb, L0.k);
   if (sh.interior && (sh.interiorUntil == null || t < sh.interiorUntil)) g = { ...g, exposure: g.exposure * (L0.a === 'dawn' ? 1.15 : 1.45) };
   const fa = FOG[L0.a.replace('_nosun', '')] || FOG.dusk, fb = FOG[L0.b.replace('_nosun', '')] || FOG.dusk;
   U.uFogCol.value.setRGB(...fa.col.map((v, i) => lerp(v, fb.col[i], L0.k)));
@@ -240,7 +246,7 @@ function applyWorld(sh, t) {
   const wind = typeof sh.wind === 'function' ? sh.wind(t) : (sh.wind ?? 0.3);
   U.uWind.value = wind;
   U.uMist.value = typeof sh.mist === 'function' ? sh.mist(t) : (sh.mist ?? 0);
-  U.uMistCol.value.copy(U.uFogCol.value).lerp(new THREE.Color(0.75, 0.78, 0.85), 0.4);
+  U.uMistCol.value.copy(U.uFogCol.value).multiplyScalar(1.25);
   // the window sash: wide open for the passage in poem one, half open in poem two
   const sashDeg = sh.sash ?? (t < 100 ? 88 : 30);
   W.sashPivot.rotation.y = -sashDeg * Math.PI / 180;
@@ -284,12 +290,15 @@ function applyWorld(sh, t) {
   for (const m of W.baked) if (m.userData.emit) m.userData.emit.value = 6.0 * night;
   // moon (daylight moon low in the west)
   const sky = W.sky.material.uniforms;
-  sky.moonAmt.value = sh.moon ? 1.0 : (night > 0.5 ? 0.6 : 0);
+  const level = (st) => ({ dusk: 1.0, morning: 1.2, dawn: 0.014, night: 0.004 })[st.replace('_nosun', '')] ?? 1;
+  const skyLevel = lerp(level(L0last.a), level(L0last.b), L0last.k);
+  sky.moonAmt.value = sh.moon ? 1.0 : (night > 0.5 ? 0.012 : 0);
   sky.moonDir.value.copy(sunDirFromAzEl(sh.moon ? 252 : 200, sh.moon ? 24 : 35));
-  sky.stars.value = night * 0.8;
+  sky.stars.value = night * 0.012;
   sky.cloudAmt.value = { dusk: 0.62, night: 0.35, morning: 0.0, dawn: 0.25 }[L0last.b] ?? 0.3;
   sky.cloudCol.value.set(L0last.b === 'dusk' ? 0xffb38a : L0last.b === 'dawn' ? 0xb7a9c2 : 0xf2f2f2);
   sky.cloudShade.value.set(L0last.b === 'dusk' ? 0x5a4a5e : 0x3a4458);
+  sky.cloudCol.value.multiplyScalar(skyLevel); sky.cloudShade.value.multiplyScalar(skyLevel);
   // rain on a single pane while the sun shines (letter shot)
   W.glassMat.uniforms.rain.value = (sh.name === 'letter' || (sh.name === 'glide' && t > 56.5)) ? 1 : 0;
   // petals and dust

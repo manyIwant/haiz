@@ -1,0 +1,112 @@
+{
+ "encoding": {
+  "K": 12.0,
+  "S": 64.0
+ },
+ "room": {
+  "dusk": {
+   "file": "room_dusk.png",
+   "res": 4096,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "dusk_nosun": {
+   "file": "room_dusk_nosun.png",
+   "res": 4096,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "morning_nosun": {
+   "file": "room_morning_nosun.png",
+   "res": 4096,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "morning": {
+   "file": "room_morning.png",
+   "res": 4096,
+   "spp": 64,
+   "scale": 1.0
+  }
+ },
+ "furn": {
+  "dusk": {
+   "file": "furn_dusk.png",
+   "res": 2048,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "dusk_nosun": {
+   "file": "furn_dusk_nosun.png",
+   "res": 2048,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "morning_nosun": {
+   "file": "furn_morning_nosun.png",
+   "res": 2048,
+   "spp": 64,
+   "scale": 1.0
+  },
+  "morning": {
+   "file": "furn_morning.png",
+   "res": 2048,
+   "spp": 64,
+   "scale": 1.0
+  }
+ },
+ "bldg": {
+  "dusk": {
+   "file": "bldg_dusk.png",
+   "res": 4096,
+   "spp": 40,
+   "scale": 1.0
+  },
+  "morning": {
+   "file": "bldg_morning.png",
+   "res": 4096,
+   "spp": 40,
+   "scale": 1.0
+  }
+ },
+ "station": {
+  "dusk": {
+   "file": "station_dusk.png",
+   "res": 3072,
+   "spp": 48,
+   "scale": 1.0
+  },
+  "night": {
+   "file": "station_night.png",
+   "res": 3072,
+   "spp": 48,
+   "scale": 1.0
+  }
+ },
+ "land": {
+  "dusk": {
+   "file": "land_dusk.png",
+   "res": 2048,
+   "spp": 32,
+   "scale": 1.0
+  },
+  "morning": {
+   "file": "land_morning.png",
+   "res": 2048,
+   "spp": 32,
+   "scale": 1.0
+  },
+  "dawn": {
+   "file": "land_dawn.png",
+   "res": 2048,
+   "spp": 32,
+   "scale": 1.0
+  },
+  "night": {
+   "file": "land_night.png",
+   "res": 2048,
+   "spp": 32,
+   "scale": 1.0
+  }
+ }
+}

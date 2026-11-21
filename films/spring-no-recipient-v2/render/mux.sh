@@ -1,16 +1,9 @@
 #!/bin/bash
-# Assemble picture + sound: concat world chunks, dissolve terminal -> river at 41.6-42.4 s,
-# loudness-normalise the mix (-16 LUFS, -1.5 dBTP) and encode master + distribution files.
+# Assemble picture + sound: encode frames, dissolve terminal -> river at 41.6-42.4 s,
+# loudness-normalise the mix (-16 LUFS, -1.5 dBTP), encode master + distribution files.
 set -e
-# world chunks in film order (render_all.sh writes world_0..N-1; the manual schedule wrote w_*)
-: > build/video/world.txt
-if [ -f build/video/w_a1.mkv ]; then
-  for c in w_a1 w_a2 w_b w_c1 w_c2; do echo "file '$c.mkv'" >> build/video/world.txt; done
-else
-  WORKERS=${1:-2}
-  for ((w=0; w<WORKERS; w++)); do echo "file 'world_$w.mkv'" >> build/video/world.txt; done
-fi
-ffmpeg -y -loglevel error -f concat -safe 0 -i build/video/world.txt -c copy build/video/world.mkv
+[ -d build/frames_term ] && bash render/encode_frames.sh build/frames_term 0 build/video/term.mkv
+bash render/encode_frames.sh build/frames 1248 build/video/world.mkv
 python3 music/score.py
 ffmpeg -y -loglevel error -i build/audio/mix.wav -af loudnorm=I=-16:TP=-1.5:LRA=14 -ar 48000 build/audio/mix_norm.wav
 ffmpeg -y -loglevel error -i build/video/term.mkv -i build/video/world.mkv -i build/audio/mix_norm.wav \

@@ -90,7 +90,7 @@ const LM_CHUNK = /* glsl */`
   #ifdef USE_LIGHTMAP
     vec3 lmA = (exp2(texture2D(lightMap, vLightMapUv).rgb * 12.0) - 1.0) / 64.0;
     vec3 lmB = (exp2(texture2D(lm2, vLightMapUv).rgb * 12.0) - 1.0) / 64.0;
-    irradiance += mix(lmA, lmB, uLmMix) * lightMapIntensity * uLmGain * lmLocalGain;
+    irradiance += mix(lmA * lmInvA, lmB * lmInvB, uLmMix) * lightMapIntensity * uLmGain * lmLocalGain;
   #endif
 #endif
 #if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )
@@ -120,13 +120,15 @@ function makeBaked(spec, name, lmA, lmB) {
   m.envMapIntensity = spec.rough < 0.5 ? 0.55 : 0.25;
   m.userData.lm2 = { value: lmB || lmA };
   m.userData.lmLocalGain = { value: 1.0 };
+  m.userData.lmInvA = { value: 1.0 }; m.userData.lmInvB = { value: 1.0 };
   m.name = name;
   m.onBeforeCompile = (shader) => {
     patchAtmos(shader);
     shader.uniforms.lm2 = m.userData.lm2;
     shader.uniforms.lmLocalGain = m.userData.lmLocalGain;
+    shader.uniforms.lmInvA = m.userData.lmInvA; shader.uniforms.lmInvB = m.userData.lmInvB;
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D lm2; uniform float uLmMix; uniform float uLmGain; uniform float lmLocalGain; uniform float uDirect;')
+      .replace('#include <common>', '#include <common>\nuniform sampler2D lm2; uniform float uLmMix; uniform float uLmGain; uniform float lmLocalGain; uniform float uDirect; uniform float lmInvA; uniform float lmInvB;')
       .replace('#include <lights_fragment_maps>', LM_CHUNK)
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin.replace(
         'getDirectionalLightInfo( directionalLight, directLight );',
@@ -547,10 +549,12 @@ function makeBed() {
 // ------------------------------------------------------------- lighting states
 // Crossfade every baked material between the lightmaps of two states; sun/sky/fog follow.
 export function setLighting(W, a, b = a, k = 0, look = {}) {
+  const inv = (g, s) => { const e = W.bakeIndex[g] && (W.bakeIndex[g][s] || W.bakeIndex[g].dusk); return e && e.scale ? 1 / e.scale : 1; };
   for (const m of W.baked) {
     const g = m.userData.group;
     m.lightMap = W.lm(g, a);
     m.userData.lm2.value = W.lm(g, b);
+    m.userData.lmInvA.value = inv(g, a); m.userData.lmInvB.value = inv(g, b);
   }
   U.uLmMix.value = k;
   const sa = W.lighting[a.replace('_nosun', '')], sb = W.lighting[b.replace('_nosun', '')];
