@@ -241,6 +241,41 @@ def build(name, spec):
     J = {k: V[np.array(v)].mean(axis=0) for k, v in SKEL['joints'].items()}
     head = lambda b: J[SKEL['bones'][b]['head']]
     tail = lambda b: J[SKEL['bones'][b]['tail']]
+    # ---- merged weights, on every base vertex
+    names = ['hips', 'spine', 'chest', 'neck', 'head']
+    for sd in ('.L', '.R'):
+        names += ['shoulder' + sd, 'upperarm' + sd, 'forearm' + sd, 'hand' + sd]
+        names += [f'{fn}.0{j}{sd}' for fn in FINGERS.values() for j in (1, 2, 3)]
+        names += ['thigh' + sd, 'shin' + sd, 'foot' + sd, 'toe' + sd]
+    bi = {n: i for i, n in enumerate(names)}
+    Wm = np.zeros((len(V), len(names)))
+    for mb, lst in WEIGHTS.items():
+        t = bi[merged_bone(mb)]
+        for v, w in lst: Wm[v, t] += w
+    eye_v = sorted({i for f in eye_f for i in f})
+    Wm[eye_v] = 0; Wm[eye_v, bi['head']] = 1
+    # four strongest, normalised
+    top4 = np.argsort(-Wm, axis=1)[:, :4]
+    W4 = np.zeros_like(Wm)
+    rows = np.arange(len(V))[:, None]
+    W4[rows, top4] = Wm[rows, top4]
+    ssum = W4.sum(axis=1, keepdims=True); ssum[ssum == 0] = 1
+    W4 /= ssum
+
+    # ---- the legs, re-posed straight: MakeHuman stands with its feet apart; the gait expects each ankle under
+    # its hip in the bind pose. A rigid turn of each leg about its hip joint, blended by the skin weights.
+    for sd, sg in (('.L', 1), ('.R', -1)):
+        piv = head('upperleg01' + sd).copy()
+        ank = head('foot' + sd)
+        th = math.atan2(ank[0] - piv[0], piv[1] - ank[1])        # how far the ankle stands out
+        c, s_ = math.cos(th), math.sin(th)
+        Rz = np.array([[c, s_, 0], [-s_, c, 0], [0, 0, 1]])      # turns the ankle back under the hip
+        legw = sum(W4[:, bi[n + sd]] for n in ('thigh', 'shin', 'foot', 'toe'))
+        moved = (V - piv) @ Rz.T + piv
+        V = V + (moved - V) * legw[:, None]
+        for k in list(J.keys()):
+            if k.endswith(sd + '____head') or k.endswith(sd + '____tail'):
+                if any(t in k for t in ('upperleg', 'lowerleg', 'foot', 'toe')): J[k] = (J[k] - piv) @ Rz.T + piv
     # ---- the gait's skeleton: (head, tail, parent)
     B = {}
     hipL, hipR = head('upperleg01.L'), head('upperleg01.R')
@@ -262,27 +297,11 @@ def build(name, spec):
                 par = f'{fn}.0{j}{sd}'
         B['thigh' + sd] = (head('upperleg01' + sd), head('lowerleg01' + sd), 'hips')
         B['shin' + sd] = (head('lowerleg01' + sd), head('foot' + sd), 'thigh' + sd)
-        ball = tail('foot' + sd)
+        # the foot runs to the ball (the toes' first joints), the toe to their tips
+        ball = np.mean([head(f'toe{t}-1' + sd) for t in (1, 2, 3, 4, 5)], axis=0)
+        tip = np.mean([tail(n + sd) for n in ('toe1-2', 'toe2-3', 'toe3-3')], axis=0)
         B['foot' + sd] = (head('foot' + sd), ball, 'shin' + sd)
-        tip = np.array([ball[0], ball[1], ball[2] + 0.06])
         B['toe' + sd] = (ball, tip, 'foot' + sd)
-    # ---- merged weights, on every base vertex
-    names = list(B.keys())
-    bi = {n: i for i, n in enumerate(names)}
-    Wm = np.zeros((len(V), len(names)))
-    for mb, lst in WEIGHTS.items():
-        t = bi[merged_bone(mb)]
-        for v, w in lst: Wm[v, t] += w
-    eye_v = sorted({i for f in eye_f for i in f})
-    Wm[eye_v] = 0; Wm[eye_v, bi['head']] = 1
-    # four strongest, normalised
-    top4 = np.argsort(-Wm, axis=1)[:, :4]
-    W4 = np.zeros_like(Wm)
-    rows = np.arange(len(V))[:, None]
-    W4[rows, top4] = Wm[rows, top4]
-    ssum = W4.sum(axis=1, keepdims=True); ssum[ssum == 0] = 1
-    W4 /= ssum
-
     def wdict(i):
         nz = np.nonzero(W4[i])[0]
         return {names[k]: float(W4[i, k]) for k in nz}
@@ -346,19 +365,35 @@ def build(name, spec):
             if region == 'trousers':
                 pelvis = np.array([W4[i, bi['hips']] > 0.15 and V[i][1] > B['thigh.L'][0][1] - 0.16 for i in vs]) & movable
                 P = taubin(P, nb, pelvis, it=24, lam=0.6, mu=-0.62)
-                # the front of the pelvis under the cloth: no closer than the lower belly above it
+                # the front of the pelvis under the cloth: no closer than the lower belly above it (eased in at
+                # the sides and the top: a hard-edged box left creases that read as dark rectangles)
                 yh = (B['thigh.L'][0][1] + B['thigh.R'][0][1]) / 2
                 band = [k for k in range(len(vs)) if yh + 0.03 < P[k][1] < yh + 0.08 and abs(P[k][0]) < 0.09 and P[k][2] > 0]
+                ss = lambda e0, e1, x: min(1.0, max(0.0, (x - e0) / (e1 - e0))) ** 2 * (3 - 2 * min(1.0, max(0.0, (x - e0) / (e1 - e0))))
                 for k in range(len(vs)):
                     x, y, z = P[k]
-                    if not (abs(x) < 0.08 and yh - 0.12 < y < yh + 0.03 and z > 0): continue
+                    if not (abs(x) < 0.1 and yh - 0.14 < y < yh + 0.05 and z > 0): continue
                     ref = [P[j][2] for j in band if abs(P[j][0] - x) < 0.015]
                     if not ref: continue
                     zr = max(ref) - 0.004 - max(0.0, (yh + 0.03 - y)) * 0.35
-                    if z > zr: P[k][2] = zr + (z - zr) * 0.15
+                    wgt = (1 - ss(0.05, 0.1, abs(x))) * ss(yh - 0.14, yh - 0.09, y) * (1 - ss(yh + 0.0, yh + 0.05, y))
+                    if z > zr: P[k][2] = z + ((zr + (z - zr) * 0.15) - z) * wgt
+                # the crotch: cloth bridges between the legs, it does not follow the groin (left alone its
+                # folds catch the light as dark patches)
+                crotch = np.array([abs(V[i][0]) < 0.11 and yh - 0.2 < V[i][1] < yh + 0.05 for i in vs]) & movable
+                P = taubin(P, nb, crotch, it=30, lam=0.65, mu=-0.67)
         if region != 'skin':
             # clean hems: the open edges snap to their cut (a level line round the hips, a ring across the arm
             # or the shin), instead of following the mesh's quads
+            if region == 'trousers':
+                # the waistband under the shirt: a level top edge, drawn in to the skin so the shirt (which
+                # smoothing pulls in at the waist) always covers it
+                for k, i in enumerate(vs):
+                    if P[k][1] > hem_y - 0.03:
+                        a = min(1.0, (P[k][1] - (hem_y - 0.03)) / 0.025)
+                        P[k] -= N_all[i] * (THICK['trousers'] + 0.003) * a
+                for k in bset:
+                    if P[k][1] > hem_y - 0.02: P[k][1] = hem_y + 0.012
             for k in sorted(bset):
                 i = vs[k]
                 sd = '.L' if V[i][0] > 0 else '.R'
@@ -372,6 +407,26 @@ def build(name, spec):
                     h, t = B['shin' + sd][0], B['shin' + sd][1]
                     tt = tparam(P[k], h, t)
                     if abs(tt - 0.9) < 0.12: P[k] += (t - h) * (0.9 - tt)
+            # the snap moved the hem only up or down, so round the body it still zigzags in and out between the
+            # waist's section and the hips' (it shades as a grey band): smooth it along its length, then the
+            # faces just above it
+            if region == 'shirt':
+                ring = [k for k in bset if abs(P[k][1] - hem_y - 0.002) < 1e-6]
+                rs = set(ring)
+                radj = {}
+                for a, b in boundary_edges(Fl):
+                    if a in rs and b in rs: radj.setdefault(a, []).append(b); radj.setdefault(b, []).append(a)
+                for it in range(20):
+                    f = 0.5 if it % 2 == 0 else -0.53
+                    Q = P.copy()
+                    for k in ring:
+                        nk = radj.get(k, [])
+                        if len(nk) == 2:
+                            m = 0.5 * (P[nk[0]] + P[nk[1]])
+                            Q[k][0] += f * (m[0] - P[k][0]); Q[k][2] += f * (m[2] - P[k][2])
+                    P = Q
+                near = np.array([abs(P[k][1] - hem_y) < 0.07 for k in range(len(vs))]) & movable
+                P = taubin(P, nb, near, it=8)
         if region == 'shirt':
             # short sleeves flare a little toward the hem
             for k, i in enumerate(vs):
@@ -413,11 +468,19 @@ def build(name, spec):
         for f in Fl: out.F.append([base + j for j in f])
         # the hem: each open edge folds back to the skin
         if region != 'skin':
+            # (straight in from the cut edge: back to the original, stepped vertices it showed as a ragged rim)
+            # (on its own vertices: sharing the edge's, its normals bent the cloth's last row of faces under,
+            # which shaded as a grey band along every hem)
             for a, b in boundary_edges(Fl):
                 ia, ib = vs[a], vs[b]
-                na = out.add_vertex(V[ia] - N_all[ia] * 0.002, COL[region], wdict(ia))
-                nb2 = out.add_vertex(V[ib] - N_all[ib] * 0.002, COL[region], wdict(ib))
-                out.F.append([base + b, base + a, na, nb2])
+                ea = out.add_vertex(P[a], COL[region], wdict(ia))
+                eb = out.add_vertex(P[b], COL[region], wdict(ib))
+                # deep enough to close the gap where the cloth stands off the body (a flared sleeve, a straight
+                # trouser leg round the ankle): otherwise the inside of the opening showed the outline's dark shell
+                dep = {'shirt': 0.03, 'trousers': 0.035, 'shoes': 0.012}[region]
+                na = out.add_vertex(P[a] - N_all[ia] * dep, COL[region], wdict(ia))
+                nb2 = out.add_vertex(P[b] - N_all[ib] * dep, COL[region], wdict(ib))
+                out.F.append([eb, ea, na, nb2])
     face(out, V, W4, names, bi, J, B, spec)
     eyes(out, V, eye_f, wdict)
     parts = [out]
@@ -536,6 +599,19 @@ def hair(style, V, body_f, W4, bi, N_all, B, J, spec, wdict):
         P[k] += N_all[i] * th
     nb = neighbours(len(vs), Fl)
     bset = {a for e in boundary_edges(Fl) for a in e}
+    # the shell was cut along whole triangles, so its edge steps up and down: lay it on the hairline curve
+    # (it sits a little above it, never below) and smooth it along its length, a drawn line, not a stair
+    badj = {}
+    for a, b in boundary_edges(Fl): badj.setdefault(a, []).append(b); badj.setdefault(b, []).append(a)
+    for k in bset:
+        P[k][1] = 0.75 * (hairline(P[k]) + 0.002) + 0.25 * P[k][1]
+    for it in range(16):
+        f = 0.5 if it % 2 == 0 else -0.53    # Taubin along the loop: smooths without shrinking it into the scalp
+        Q = P.copy()
+        for k in bset:
+            nbk = badj.get(k, [])
+            if len(nbk) == 2: Q[k] = P[k] + f * (0.5 * (P[nbk[0]] + P[nbk[1]]) - P[k])
+        P = Q
     P = taubin(P, nb, np.array([k not in bset for k in range(len(vs))]), it=10)
     base = 0
     for k, i in enumerate(vs): part.add_vertex(P[k], hc, {'head': 1.0})
@@ -563,16 +639,28 @@ def hair(style, V, body_f, W4, bi, N_all, B, J, spec, wdict):
     for a, b in edges: adj.setdefault(a, []).append(b); adj.setdefault(b, []).append(a)
     for _ in range(4):
         drop = {k: 0.5 * d + 0.5 * (sum(drop[j] for j in adj[k]) / len(adj[k])) for k, d in drop.items()}
+    # then the locks themselves: pointed tips of a few lengths, not one even curtain
+    ph = (sum(map(ord, style)) % 5) * 0.7
+    for k, d in drop.items():
+        r = P[k] - c
+        th = math.atan2(r[0], r[2])
+        tip = (1 - abs(math.sin(th * 8.0 + ph))) ** 1.4
+        drop[k] = d * (0.5 + 0.5 * tip) * (0.85 + 0.15 * math.sin(th * 3.0 + ph * 1.7))
     rows = 3
     ring = {k: [k] for k in drop}
     for k, d in drop.items():
         if d < 0.002: continue
         p = P[k]; r = p - c
         out_dir = r.copy(); out_dir[1] = 0; out_dir /= max(np.linalg.norm(out_dir), 1e-6)
+        s0 = V[vs[k]]; o = p - s0
         for j in range(1, rows + 1):
             t = j / rows
-            # hangs down, held a little off the face, tips narrowing in
-            q = p + np.array([0, -d * t, 0]) + out_dir * (0.004 + (0.012 if style.startswith('bob') else 0.0) * t) * (1 - 0.3 * t)
+            # hangs down and settles onto the forehead / the sides of the head (the tips lie close to it,
+            # the hair is not a curtain standing off the face); a bob's ends swing out a little
+            if style.startswith('bob'):
+                q = p + np.array([0, -d * t, 0]) + out_dir * (0.004 + 0.012 * t) * (1 - 0.3 * t)
+            else:
+                q = s0 + o * (1 - 0.55 * t) + np.array([0, -d * t, 0]) + out_dir * (0.007 * t)
             ring[k].append(part.add_vertex(q, hc, {'head': 1.0}))
     for a, b in edges:
         ra, rb = ring[a], ring[b]
@@ -647,32 +735,56 @@ def backpack(V, B, N_all, used, wdict, bi, W4):
     part = Part('Bag')
     ch0, ch1 = B['chest'][:2]
     back_z = min(V[i][2] for i in used if abs(V[i][1] - (ch0[1] + 0.05)) < 0.03 and abs(V[i][0]) < 0.05)
-    cen = np.array([0, ch0[1] + 0.03, back_z - 0.075])
-    w, h, d, rr = 0.30, 0.40, 0.13, 0.035
+    cen = np.array([0, ch0[1] + 0.03, back_z - 0.072])
+    w, h, d = 0.29, 0.40, 0.16
     col = (*BAG, K_CLOTH)
+    seam = (BAG[0] * 0.55, BAG[1] * 0.55, BAG[2] * 0.55, K_CLOTH)
     wts = {'chest': 1.0}
-    # a rounded box: a superellipse in each slice
-    rings = []
-    ny, nk = 7, 20
-    for j in range(ny):
-        y = -h / 2 + h * j / (ny - 1)
-        ring = []
-        for k in range(nk):
-            a = k / nk * math.tau
-            ca, sa = math.cos(a), math.sin(a)
-            x = math.copysign(abs(ca) ** 0.35, ca) * w / 2
-            z = math.copysign(abs(sa) ** 0.35, sa) * d / 2
-            shrink = 1 - 0.18 * (abs(y) / (h / 2)) ** 6
-            ring.append(part.add_vertex(cen + np.array([x * shrink, y, z * shrink]), col, wts))
-        rings.append(ring)
-    for j in range(ny - 1):
-        for k in range(nk):
-            part.F.append([rings[j][k], rings[j + 1][k], rings[j + 1][(k + 1) % nk], rings[j][(k + 1) % nk]])
-    for j, sgn in ((0, -1), (ny - 1, 1)):
-        cap = part.add_vertex(cen + np.array([0, sgn * h / 2 * 1.0, 0]), col, wts)
-        for k in range(nk):
-            f = [rings[j][k], rings[j][(k + 1) % nk], cap]
-            part.F.append(f[::-1] if sgn > 0 else f)
+
+    def pillow(cen, w, h, d, ny, nk, col, flat_back=True, seam_ring=None):
+        """a soft bag body: a rounded slab that bulges where its load sits (low) and is flat against the back"""
+        rings = []
+        for j in range(ny):
+            v = j / (ny - 1)
+            y = -h / 2 + h * v
+            # the top folds over round; the bottom is fuller (books sit there)
+            top = math.sin(min(1.0, (1 - v) / 0.22) * math.pi / 2) ** 0.7 if v > 0.78 else 1.0
+            bot = math.sin(min(1.0, v / 0.12) * math.pi / 2) ** 0.6 if v < 0.12 else 1.0
+            ww = w / 2 * (0.9 + 0.1 * (1 - v)) * (0.55 + 0.45 * top) * (0.75 + 0.25 * bot)
+            dd = d / 2 * (0.75 + 0.35 * (1 - v)) * top * bot
+            ring = []
+            for k in range(nk):
+                a = k / nk * math.tau
+                ca, sa = math.cos(a), math.sin(a)
+                x = math.copysign(abs(ca) ** 0.55, ca) * ww
+                z = math.copysign(abs(sa) ** 0.6, sa) * dd
+                if flat_back and z > 0: z *= 0.45     # the side against the student's back is nearly flat
+                c = seam_ring if (seam_ring is not None and abs(sa) < 0.13) else col
+                ring.append(part.add_vertex(cen + np.array([x, y, z]), c, wts))
+            rings.append(ring)
+        for j in range(ny - 1):
+            for k in range(nk):
+                part.F.append([rings[j][k], rings[j + 1][k], rings[j + 1][(k + 1) % nk], rings[j][(k + 1) % nk]])
+        for j, sgn in ((0, -1), (ny - 1, 1)):
+            cap = part.add_vertex(np.mean([part.V[i] for i in rings[j]], axis=0) + np.array([0, sgn * 0.004, 0]), col, wts)
+            for k in range(nk):
+                f = [rings[j][k], rings[j][(k + 1) % nk], cap]
+                part.F.append(f[::-1] if sgn > 0 else f)
+        return rings
+
+    # the body (with its zip seam running round the side), then a front pocket low on its outer face
+    pillow(cen, w, h, d, 12, 28, col, seam_ring=seam)
+    pillow(cen + np.array([0, -0.085, -d / 2 * 0.86 + 0.012]), w * 0.66, h * 0.4, 0.06, 7, 20, col, seam_ring=seam)
+    # a grab loop over the top
+    prev = None
+    for t in np.linspace(0, 1, 9):
+        a = t * math.pi
+        p = cen + np.array([math.cos(a) * 0.04, h / 2 - 0.004 + math.sin(a) * 0.028, 0.012])
+        q0 = part.add_vertex(p + np.array([0, 0, -0.008]), seam, wts)
+        q1 = part.add_vertex(p + np.array([0, 0, 0.008]), seam, wts)
+        if prev:
+            part.F.append([prev[0], prev[1], q1, q0]); part.F.append([q0, q1, prev[1], prev[0]])
+        prev = (q0, q1)
     # straps: from the top of the bag over each shoulder to the armpit and back to the bag's lower corner
     scol = (*STRAPS, K_CLOTH)
     for sd, sx in (('.L', 1), ('.R', -1)):

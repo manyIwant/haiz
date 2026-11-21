@@ -180,7 +180,7 @@ export const PEOPLE = [
     id: 'wu', name: '吴伯', role: '校工', kind: 'worker',
     about: '每天清晨扫榄仁树下和北门路上的落叶，上午去植物园，下午给花坛浇水。下雨时在衍林亭里坐着等雨停。',
     figure: { model: 'worker-m', style: 'grey', trousers: '#3d3b36', skin: '#c9a084', acc: ['broom'], noBag: true },
-    gait: { preset: 'tired', basic: { tempo: 0.85, lean: 3, armSwing: 0.6, looseness: 1.2 }, seed: 53 },
+    gait: { preset: 'tired', basic: { tempo: 0.85, lean: 1.5, armSwing: 0.6, looseness: 1.2 }, seed: 53 },
     speed: 0.95, run: 1.6, umbrella: true, rainHabit: 'shelter',
     plan(d) {
       const B = [];

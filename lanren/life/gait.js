@@ -24,7 +24,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { createProceduralHuman, applyBasicControls, defaultConfig, stylePresets } from '../vendor/procedural-locomotion/procedural-locomotion.min.js';
-import { bodyMaterial, outlineMaterial } from '../ruhua-stroll/student.js';
+import { outlineMaterial } from '../ruhua-stroll/student.js';
 import { cel, celLike } from '../ruhua-stroll/atmos.js';
 
 const clamp = THREE.MathUtils.clamp;
@@ -77,11 +77,64 @@ export function heightGround(heightAt) {
 
 // the drawn edge of the figure: V2's inverted hull, but none on the eyes and inside the mouth (their colour
 // carries kind < 0.3), where a hull pushed out along the normals would poke through the narrow creases
+// The campus's bodies (scripts/life/build_people.py) on the shared light. Unlike the V2 student's material
+// (kept as it is for the V2 stroll): skin turns over a wide, soft terminator (a face is a smooth form;
+// a hard cel edge breaks it into patches at the nose and eye sockets), and the hair's highlight is the
+// hair's own colour lifted, not a grey band painted over it.
+function figureMaterial() {
+  return cel({
+    name: 'figure', key: 'life-figure',
+    vertex: { head: 'attribute vec4 aData; varying vec4 vData;\n', world: 'vData = aData;' },
+    fragment: {
+      head: 'varying vec4 vData;\n',
+      albedo: /* glsl */`
+albedo = vData.rgb;
+float kind = vData.a;
+soft = kind < 0.85 && kind > 0.6 ? 0.2 : (kind < 0.6 && kind > 0.35 ? 0.1 : 0.06);
+// hair: strands, a fine grain running down the head, so it reads as hair and not a painted shell
+float strand = kind < 0.6 && kind > 0.35 ? aNoise(vec2((vWP.x + vWP.z) * 150.0, vWP.y * 18.0)) * 0.6 + aNoise(vec2((vWP.x - vWP.z) * 90.0, vWP.y * 9.0)) * 0.4 : 0.5;
+if (kind < 0.6 && kind > 0.35) albedo *= 0.78 + 0.44 * strand;
+`,
+      after: /* glsl */`
+{
+  float kind = vData.a;
+  vec3 V = normalize(cameraPosition - vWP);
+  if (kind < 0.35) {
+    outCol = albedo * (uSkyAmb * 0.35 + uSunColor * 0.32);
+  } else if (kind < 0.6) {
+    vec3 H = normalize(uSunDir + V);
+    float nh = dot(N, H);
+    float band = smoothstep(0.8, 0.86, nh) * (1.0 - smoothstep(0.9, 0.95, nh));
+    // dark hair lifts a lot (relative to itself), grey hair only a little: no chrome
+    float lum = dot(albedo, vec3(0.3, 0.59, 0.11));
+    vec3 lift = mix(albedo * 1.4 + vec3(0.012, 0.011, 0.013), albedo * 0.22, smoothstep(0.08, 0.3, lum));
+    outCol += lift * uSunColor * band * shadow * smoothstep(0.35, 0.75, strand) * 1.6;
+  } else if (kind < 0.85) {
+    float ndl = dot(N, uSunDir);
+    float shade = 1.0 - smoothstep(-0.2, 0.3, ndl) * shadow;
+    outCol += albedo * vec3(0.2, 0.06, 0.035) * shade;
+    // light through the ear rims and the edge of the cheek against a bright sky
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+    outCol += albedo * vec3(0.12, 0.05, 0.03) * fres;
+  }
+}
+`,
+    },
+  });
+}
+
+// The drawn edge: an inverted hull. Pushed back along the view ray (which leaves it where it is on screen),
+// so it shows only at the silhouette and never pokes through a concave form (nostrils, eye sockets, the
+// corners of the mouth). Eyes and the inside of the mouth (kind < 0.3) carry none.
 function figureOutline() {
   const m = outlineMaterial();
   m.vertexShader = m.vertexShader
     .replace('uniform float uWidth;', 'uniform float uWidth;\nattribute vec4 aData;')
-    .replace('wp.xyz += wn * uWidth', 'wp.xyz += wn * uWidth * step(0.3, aData.a)');
+    .replace('wp.xyz += wn * uWidth * clamp(d * 0.25, 0.6, 2.5);',
+      'float w = uWidth * clamp(d * 0.25, 0.6, 2.5) * step(0.3, aData.a);\n  wp.xyz += wn * w;')
+    .replace('gl_Position = projectionMatrix * viewMatrix * wp;',
+      'vec4 vp = viewMatrix * wp;\n  vp.xyz += normalize(vp.xyz) * w * 2.2;\n  gl_Position = projectionMatrix * vp;');
+  if (!/vp\.xyz \+= normalize/.test(m.vertexShader)) throw new Error('gait: outline shader changed');
   m.needsUpdate = true;
   return m;
 }
@@ -90,8 +143,8 @@ function umbrella() {
   const g = new THREE.Group();
   const canopyMat = cel({ name: 'umbrella', key: 'umbrella', color: new THREE.Color('#2f5f57'), side: THREE.DoubleSide, soft: 0.2,
     fragment: { albedo: 'float rib = abs(fract(atan(vWP.x, vWP.z) * 1.27) - 0.5); albedo *= 0.9 + 0.12 * smoothstep(0.05, 0.0, rib);\n' } });
-  const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.52, 0.2, 16, 1, true).translate(0, 0.86, 0), canopyMat);
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.9, 6).translate(0, 0.42, 0), cel({ name: 'umb-shaft', key: 'umb-shaft', color: new THREE.Color('#3a3530') }));
+  const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.19, 16, 1, true).translate(0, 0.6, 0), canopyMat);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.66, 6).translate(0, 0.3, 0), cel({ name: 'umb-shaft', key: 'umb-shaft', color: new THREE.Color('#3a3530') }));
   const handle = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.009, 6, 10, Math.PI).rotateZ(Math.PI).translate(0.035, 0, 0), shaft.material);
   g.add(canopy, shaft, handle);
   g.traverse((o) => { o.castShadow = true; });
@@ -124,8 +177,8 @@ export async function createWalker(url, opts = {}) {
   for (const m of meshes) if (!keep.includes(m)) m.parent.remove(m);
   // the campus's people can dissolve (into a doorway): a painterly breakup in world space, not a fade
   const uFade = { value: 1 };
-  const material = opts.fade ? celLike(bodyMaterial(), { key: 'fade', uniforms: { uFade },
-    fragment: { head: 'uniform float uFade;\n', pre: 'if (uFade < 0.999 && aNoise(vWP.xy * 11.0 + vWP.zy * 7.0) * 0.8 + aNoise(vWP.xz * 31.0) * 0.2 > uFade * 1.08 - 0.04) discard;\n' } }) : bodyMaterial();
+  const material = opts.fade ? celLike(figureMaterial(), { key: 'fade', uniforms: { uFade },
+    fragment: { head: 'uniform float uFade;\n', pre: 'if (uFade < 0.999 && aNoise(vWP.xy * 11.0 + vWP.zy * 7.0) * 0.8 + aNoise(vWP.xz * 31.0) * 0.2 > uFade * 1.08 - 0.04) discard;\n' } }) : figureMaterial();
   const outlines = [];
   for (const sk of keep) {
     let geo = sk.geometry;
@@ -308,6 +361,7 @@ export async function createWalker(url, opts = {}) {
 // worker), the bag and its straps fold away inside the torso.
 const GROUPS = {
   shirt: [0.93, 0.93, 0.90], trousers: [0.09, 0.12, 0.20], bag: [0.78, 0.30, 0.10], straps: [0.25, 0.22, 0.20],
+  seam: [0.429, 0.165, 0.055],   // the bag's zip and grab loop: the bag's colour, darker
 };
 function recolour(geo, pal) {
   const a = geo.getAttribute('aData'), pos = geo.getAttribute('position');
@@ -319,9 +373,10 @@ function recolour(geo, pal) {
     if (kind > 0.85) {
       if (near(i, GROUPS.shirt) && pos.getY(i) > 0.5) { if (pal.shirt) set(i, pal.shirt); }
       else if (near(i, GROUPS.trousers)) { if (pal.trousers) set(i, pal.trousers); }
-      else if (near(i, GROUPS.bag) || near(i, GROUPS.straps)) {
+      else if (near(i, GROUPS.bag) || near(i, GROUPS.straps) || near(i, GROUPS.seam)) {
         if (pal.noBag) pos.setXYZ(i, 0, 1.22, -0.02);
         else if (pal.bag && near(i, GROUPS.bag)) set(i, pal.bag);
+        else if (isCol(pal.bag) && near(i, GROUPS.seam)) { const t = new THREE.Color(pal.bag).multiplyScalar(0.55); a.setXYZ(i, t.r, t.g, t.b); }
       }
     } else if (kind > 0.6) { if (pal.skin) set(i, pal.skin); }
     else if (kind > 0.35) { if (pal.hair) set(i, pal.hair); }
