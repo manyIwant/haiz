@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>春天没有收件人 · 终端</title>
+<link rel="stylesheet" href="vendor/xterm/xterm.css">
+<style>
+  :root { --bg: #0c0c0e; --fg: #e7e4dd; --dim: #77726a; --amber: #e0965a; --mono: "JetBrains Mono", "Noto Sans Mono CJK SC", monospace;
+          --cjkmono: "Noto Sans Mono CJK SC", "JetBrains Mono", monospace; --serif: "Noto Serif CJK SC", serif; --sans: "Noto Sans CJK SC", sans-serif; }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #070708; }
+  #termCam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #termBox { position: relative; padding: 18px 26px; background: var(--bg); border-radius: 12px; box-shadow: 0 0 0 1px #26262b, 0 30px 80px rgba(0,0,0,.6); }
+  #term .xterm-viewport { overflow: hidden !important; background: var(--bg) !important; }
+  #term .xterm-screen { background: var(--bg); }
+  .cursor-off #term .xterm-rows .xterm-cursor { background-color: transparent !important; color: inherit !important; outline: none !important; box-shadow: none !important; }
+  .abs { position: absolute; }
+  #hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--sans); }
+  .tag { position: absolute; left: 44px; top: 30px; font-size: 19px; color: #8d877e; letter-spacing: .04em; line-height: 1.6; }
+  .tag b { font-weight: 400; color: #b9b2a6; }
+  .rec { position: absolute; right: 44px; top: 30px; font-family: var(--mono); font-size: 19px; color: #8d877e; letter-spacing: .06em; }
+  .rec i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #c0453a; margin-right: 10px; vertical-align: 2px; }
+  .jump { position: absolute; left: 0; right: 0; top: 92px; text-align: center; font-family: var(--mono); font-size: 24px; color: #cfc8bc; letter-spacing: .12em; }
+  .jump span { background: rgba(12,12,14,.86); padding: 8px 22px; border-radius: 6px; }
+  #mech { position: absolute; inset: 0; }
+  .line { position: absolute; white-space: nowrap; font-family: var(--cjkmono); color: var(--fg); }
+  .ch { display: inline-block; text-align: center; }
+  .lab { position: absolute; font-family: var(--sans); font-size: 21px; color: #8a847b; letter-spacing: .06em; white-space: nowrap; }
+  .cap { position: absolute; left: 0; right: 0; bottom: 92px; text-align: center; font-family: var(--serif); font-size: 38px; color: #e9e5dc; letter-spacing: .1em; }
+  .opt { position: absolute; font-family: var(--cjkmono); white-space: nowrap; }
+  .src { position: absolute; font-family: var(--cjkmono); white-space: nowrap; font-size: 26px; color: #6f6a62; letter-spacing: .08em; }
+  .src b { font-weight: 400; color: #bdb6aa; }
+  .frac { position: absolute; font-family: var(--mono); font-size: 22px; color: #8a847b; }
+  svg { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="termCam"><div id="termBox"><div id="term"></div></div></div>
+  <div id="mech"></div>
+  <div id="hud"></div>
+</div>
+<script src="vendor/xterm/xterm.js"></script>
+<script src="vendor/xterm/addon-unicode11.js"></script>
+<script src="../../spring-no-recipient/data/recording.js"></script>
+<script src="data/fork.js"></script>
+<script src="term.js"></script>
+</body>
+</html>

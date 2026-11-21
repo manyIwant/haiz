@@ -1,0 +1,318 @@
+{
+ "plaster": {
+  "tex": "plaster",
+  "tile": 2.0,
+  "rough": 0.9
+ },
+ "ceiling": {
+  "tex": "plaster",
+  "tile": 2.0,
+  "rough": 0.92,
+  "tint": [
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "paintgreen": {
+  "tex": "paintgreen",
+  "tile": 2.0,
+  "rough": 0.35
+ },
+ "terrazzo": {
+  "tex": "terrazzo",
+  "tile": 1.0,
+  "rough": 0.45
+ },
+ "wood": {
+  "tex": "wood",
+  "tile": 1.2,
+  "rough": 0.45
+ },
+ "door": {
+  "tex": "wood",
+  "tile": 1.2,
+  "rough": 0.5,
+  "tint": [
+   0.42,
+   0.2,
+   0.14
+  ]
+ },
+ "metal_blue": {
+  "tex": "metal",
+  "tile": 1.0,
+  "rough": 0.45,
+  "tint": [
+   0.11,
+   0.21,
+   0.3
+  ]
+ },
+ "metal_win": {
+  "tex": "metal",
+  "tile": 1.0,
+  "rough": 0.5,
+  "tint": [
+   0.24,
+   0.34,
+   0.3
+  ]
+ },
+ "metal_grey": {
+  "tex": "metal",
+  "tile": 1.0,
+  "rough": 0.5,
+  "tint": [
+   0.36,
+   0.38,
+   0.38
+  ]
+ },
+ "metal_dark": {
+  "tex": "metal",
+  "tile": 1.0,
+  "rough": 0.5,
+  "tint": [
+   0.05,
+   0.05,
+   0.05
+  ]
+ },
+ "whitepaint": {
+  "tex": "metal",
+  "tile": 1.0,
+  "rough": 0.5,
+  "tint": [
+   0.8,
+   0.8,
+   0.76
+  ]
+ },
+ "chalkboard": {
+  "tex": "chalkboard",
+  "unit": true,
+  "rough": 0.8
+ },
+ "concrete": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 0.88
+ },
+ "platform": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 0.85,
+  "tint": [
+   1.05,
+   1.03,
+   1.0
+  ]
+ },
+ "facade": {
+  "tex": "facade",
+  "tile": 3.0,
+  "rough": 0.9,
+  "tint": [
+   1.0,
+   0.86,
+   0.68
+  ]
+ },
+ "band": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 0.88,
+  "tint": [
+   0.95,
+   0.95,
+   0.95
+  ]
+ },
+ "stone": {
+  "tex": "stone",
+  "tile": 2.0,
+  "rough": 0.75
+ },
+ "corr": {
+  "tex": "corr",
+  "tile": 1.0,
+  "rough": 0.55
+ },
+ "grass": {
+  "tex": "grass",
+  "tile": 4.0,
+  "rough": 0.95
+ },
+ "track": {
+  "tex": "track",
+  "tile": 1.0,
+  "rough": 0.9
+ },
+ "turf": {
+  "tex": "grass",
+  "tile": 4.0,
+  "rough": 0.95,
+  "tint": [
+   0.75,
+   1.0,
+   0.7
+  ]
+ },
+ "paper": {
+  "tex": "paper",
+  "tile": 0.3,
+  "rough": 0.9
+ },
+ "sign": {
+  "tex": "sign",
+  "unit": true,
+  "rough": 0.6
+ },
+ "timetable": {
+  "tex": "timetable",
+  "unit": true,
+  "rough": 0.9
+ },
+ "clock": {
+  "tex": "clock",
+  "unit": true,
+  "rough": 0.3
+ },
+ "tactile": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 0.7,
+  "tint": [
+   1.3,
+   0.85,
+   0.12
+  ]
+ },
+ "whiteline": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 0.7,
+  "tint": [
+   1.5,
+   1.5,
+   1.45
+  ]
+ },
+ "mud": {
+  "tex": "concrete",
+  "tile": 2.0,
+  "rough": 1.0,
+  "tint": [
+   0.22,
+   0.2,
+   0.15
+  ]
+ },
+ "book_r": {
+  "col": [
+   0.42,
+   0.06,
+   0.05
+  ],
+  "rough": 0.7
+ },
+ "book_b": {
+  "col": [
+   0.05,
+   0.12,
+   0.3
+  ],
+  "rough": 0.7
+ },
+ "book_g": {
+  "col": [
+   0.1,
+   0.25,
+   0.12
+  ],
+  "rough": 0.7
+ },
+ "book_w": {
+  "col": [
+   0.7,
+   0.66,
+   0.58
+  ],
+  "rough": 0.8
+ },
+ "book_y": {
+  "col": [
+   0.7,
+   0.5,
+   0.12
+  ],
+  "rough": 0.7
+ },
+ "black": {
+  "col": [
+   0.02,
+   0.02,
+   0.02
+  ],
+  "rough": 0.6
+ },
+ "brass": {
+  "col": [
+   0.62,
+   0.45,
+   0.2
+  ],
+  "rough": 0.35,
+  "metal": 1.0
+ },
+ "tube": {
+  "col": [
+   0.85,
+   0.85,
+   0.85
+  ],
+  "rough": 0.3
+ },
+ "lampglow": {
+  "col": [
+   0.9,
+   0.85,
+   0.7
+  ],
+  "rough": 0.5,
+  "emit": [
+   1.0,
+   0.82,
+   0.55
+  ]
+ },
+ "darkroom": {
+  "tex": "plaster",
+  "tile": 2.0,
+  "rough": 0.9,
+  "tint": [
+   0.5,
+   0.5,
+   0.5
+  ]
+ },
+ "curtain": {
+  "tex": "fabric",
+  "tile": 0.5,
+  "rough": 0.95,
+  "tint": [
+   0.85,
+   0.85,
+   0.8
+  ]
+ },
+ "glass": {
+  "col": [
+   0.8,
+   0.85,
+   0.85
+  ],
+  "rough": 0.05
+ }
+}

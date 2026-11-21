@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script></head>
+<body><canvas id="c" width="1920" height="1080"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { loadWorld, setLighting, setEnv, captureEnv, B, U } from './world.js';
+import { Pipeline } from './pipeline.js';
+const q = new URLSearchParams(location.search);
+const W_ = +(q.get('w') || 1920), H_ = +(q.get('h') || 1080);
+const canvas = document.getElementById('c'); canvas.width = W_; canvas.height = H_;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1); renderer.setSize(W_, H_, false);
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
+const W = await loadWorld(renderer);
+const pipe = new Pipeline(renderer, W, W_, H_);
+const cam = new THREE.PerspectiveCamera(+(q.get('fov') || 55), W_ / H_, 0.05, 6000);
+const st = q.get('state') || 'dusk';
+setLighting(W, st, st, 0);
+U.uTime.value = +(q.get('t') || 10);
+const P = (k, d) => (q.get(k) || d).split(',').map(Number);
+const cp = P('cam', '0.9,-4.6,2.45'), tp = P('tgt', '-4.5,3.5,2.0');
+cam.position.copy(B(...cp)); cam.lookAt(B(...tp));
+cam.updateMatrixWorld();
+const fog = { dusk: [[0.75, 0.62, 0.55], [1.0, 0.62, 0.35], 0.0016], morning: [[0.72, 0.80, 0.90], [0.95, 0.92, 0.85], 0.0009], dawn: [[0.36, 0.40, 0.52], [0.6, 0.45, 0.45], 0.0018], night: [[0.02, 0.025, 0.04], [0.03, 0.03, 0.05], 0.002] }[st];
+U.uFogCol.value.setRGB(...fog[0]); U.uFogSun.value.setRGB(...fog[1]); U.uFogDensity.value = fog[2];
+await new Promise(r => setTimeout(r, 1500)); // textures
+const env = captureEnv(W, renderer, B(...P('envAt', cp.join(','))));
+setEnv(W, env);
+const exposure = +(q.get('exp') || 1);
+const t0 = performance.now();
+pipe.render(cam, { grade: { exposure }, shafts: q.get('shafts') ? { strength: +q.get('shafts'), center: B(-2.1, 0, 2.7).toArray(), boxMin: B(-5.76, 5, 1.0).toArray().map((v,i)=>i==2?-5:v), boxMax: [1.5, 4.4, 5] } : null });
+renderer.getContext().finish();
+window.renderMs = performance.now() - t0;
+window.ready = true;
+</script></body></html>

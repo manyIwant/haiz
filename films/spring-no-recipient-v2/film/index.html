@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>春天没有收件人 · 世界</title>
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #text { position: absolute; inset: 0; pointer-events: none; }
+  .ln { position: absolute; font-family: "Noto Serif CJK SC", serif; color: #f3efe7; font-size: 54px; letter-spacing: .14em; white-space: nowrap;
+        text-shadow: 0 0 2px rgba(0,0,0,.35), 0 2px 18px rgba(0,0,0,.42), 0 0 42px rgba(0,0,0,.25); font-weight: 400; }
+  .ln.v { writing-mode: vertical-rl; letter-spacing: .3em; }
+  .title { font-size: 72px; letter-spacing: .32em; }
+  .note { position: absolute; font-family: "Noto Sans CJK SC", sans-serif; font-size: 20px; color: rgba(243,239,231,.78); letter-spacing: .08em;
+          text-shadow: 0 1px 10px rgba(0,0,0,.55); white-space: nowrap; }
+  #endcard { position: absolute; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; opacity: 0; }
+  #endcard p { margin: 0; font-family: "Noto Sans CJK SC", sans-serif; font-size: 25px; color: #c9c3b8; letter-spacing: .08em; line-height: 1.7; text-align: center; }
+  #endcard p.t { font-family: "Noto Serif CJK SC", serif; font-size: 40px; color: #ece7dd; letter-spacing: .3em; margin-bottom: 18px; }
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="text"></div>
+  <div id="endcard">
+    <p class="t">春天没有收件人</p>
+    <p>终端画面：2026 年 11 月 21 日一次真实的 Claude Code 会话，按录制的字节与时间戳重放。<br>
+       “河上有一条河很长”“我家门前有一个名字”是程序原样打印 / 写入的句子，片中概率为语料里的真实计数。</p>
+    <p>《失物招领》《春天没有收件人》是此前人机共创的诗稿，参考 N-gram 的拼接思路，经人工挑选与修改；<br>
+       它们不是这次程序的输出。</p>
+    <p>教室、河、车站由 Blender 建模并以 Cycles 烘焙光照，用 Three.js 拍摄。配乐为原创。</p>
+  </div>
+</div>
+<script type="module" src="film.js"></script>
+</body>
+</html>
