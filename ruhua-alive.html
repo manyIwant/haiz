@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3f5f52">
+  <meta name="description" content="HAIZ 第六幕「入画」· 校园活着：画下百年榄仁树，走进画里的校园。几个虚构的同学、老师和校工按自己的作息生活；打开速写本里的「海中活点地图」，看见他们正在走的路（非官方，近似模型；人物为虚构，不追踪任何真实的人）。">
+  <title>haiz.space — 入画 · 校园活着</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="lanren/ruhua/ruhua.css?v=1">
+  <link rel="stylesheet" href="lanren/life/life.css?v=1">
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/"
+  } }
+  </script>
+  <script type="module" src="lanren/life/main.js?v=1"></script>
+</head>
+<body data-stage="loading">
+  <canvas id="rh-canvas" aria-label="三维场景：第六幕回望榄仁树，可在画布上作画，之后用 WASD 或左手摇杆在绘画校园里漫步"></canvas>
+
+  <div id="rh-loading" aria-hidden="true">
+    <p class="rh-load-t">HAIZ · 入画</p>
+    <div id="rh-bar"><i></i></div>
+    <p id="rh-status" role="status" aria-live="polite">准备…</p>
+  </div>
+
+  <div id="rh-ui">
+    <header class="rh-top">
+      <a class="rh-mark" href="index.html" aria-label="回到 HAIZ 首页">haiz</a>
+      <p class="rh-title"><b>06 · 入画</b><span>校园活着 · 预览</span></p>
+    </header>
+
+    <div class="rh-wx-wrap">
+      <button type="button" class="rh-wx-chip" data-act="panel" aria-expanded="false" aria-controls="rh-panel"><i aria-hidden="true"></i><span id="rh-wx">海口 · 读取中</span></button>
+      <section id="rh-panel" class="rh-panel" hidden aria-label="天气">
+        <header><h2>天气</h2><button type="button" class="rh-x" data-act="close-panel" aria-label="关闭">×</button></header>
+        <p id="rh-wx-detail" class="rh-detail"></p>
+        <button type="button" class="rh-live" data-act="live" aria-pressed="true">海口此刻</button>
+        <h3>自由天气</h3>
+        <div class="rh-grid" role="group" aria-label="天气">
+          <button type="button" data-act="wx" data-wx="clear" aria-pressed="false">晴</button>
+          <button type="button" data-act="wx" data-wx="cloudy" aria-pressed="false">多云</button>
+          <button type="button" data-act="wx" data-wx="overcast" aria-pressed="false">阴</button>
+          <button type="button" data-act="wx" data-wx="drizzle" aria-pressed="false">小雨</button>
+          <button type="button" data-act="wx" data-wx="storm" aria-pressed="false">雷阵雨</button>
+          <button type="button" data-act="wx" data-wx="windy" aria-pressed="false">大风</button>
+          <button type="button" data-act="wx" data-wx="after" aria-pressed="false">雨后</button>
+        </div>
+        <div class="rh-grid rh-hours" role="group" aria-label="时间">
+          <button type="button" data-act="hour" data-hour="7" aria-pressed="false">清晨</button>
+          <button type="button" data-act="hour" data-hour="12.5" aria-pressed="false">正午</button>
+          <button type="button" data-act="hour" data-hour="17.6" aria-pressed="false">傍晚</button>
+          <button type="button" data-act="hour" data-hour="20.5" aria-pressed="false">夜晚</button>
+        </div>
+        <p id="rh-src" class="rh-src"></p>
+      </section>
+    </div>
+
+    <section class="rh-hold" aria-labelledby="rhHoldT">
+      <p class="rh-kicker">06 · 回望</p>
+      <h2 id="rhHoldT">它在这里站了一百年。</h2>
+      <p class="rh-lede">回头再看一眼。把它画下来——</p>
+      <div class="rh-hold-b">
+        <button type="button" class="rh-go" data-act="paint">支起画架 <i aria-hidden="true">→</i></button>
+        <button type="button" class="rh-quiet" data-act="skip">直接走进校园</button>
+      </div>
+    </section>
+
+    <div class="rh-paint" aria-live="polite">
+      <ol class="rh-chips" aria-label="作画步骤">
+        <li data-chip="起稿">起稿</li><li data-chip="铺色">铺色</li><li data-chip="塑形">塑形</li><li data-chip="点叶">点叶</li><li data-chip="落款">落款</li><li data-chip="越出画框">越出画框</li>
+      </ol>
+      <p id="rh-hint" class="rh-hint" hidden></p>
+      <button type="button" class="rh-quiet rh-skip" data-act="skip">跳过</button>
+      <button type="button" class="rh-quiet rh-let" data-act="depart">让画自己走出来</button>
+    </div>
+
+    <p id="rh-arrive" class="rh-arrive" hidden>你在画里了。<span id="rh-arrive-sub">画里的天，跟着海口此刻。</span></p>
+
+    <nav class="rh-tools" aria-label="漫步">
+      <button type="button" class="lf-map-btn" data-life="map" aria-controls="lf-map" aria-expanded="false" title="海中活点地图（M）"><i aria-hidden="true"></i><span>活点地图</span></button>
+      <button type="button" data-act="replay">重新入画</button>
+      <button type="button" class="rh-help-btn" data-act="help" aria-label="操作说明">?</button>
+    </nav>
+    <div id="rh-stick" class="rh-stick" hidden aria-hidden="true"><i></i></div>
+    <p id="lf-line" class="lf-line" role="status" aria-live="polite" hidden><b></b><span></span></p>
+
+    <section id="rh-help" class="rh-helpbox" hidden aria-labelledby="rhHelpT">
+      <h2 id="rhHelpT">入画 · 第六幕预览</h2>
+      <ul>
+        <li><b>作画</b>：在画布上拖动（或按住空格）；画完后把笔刷拖出画框外。</li>
+        <li><b>漫步</b>：WASD / 方向键 走，Shift 跑，空格 跳，拖动环顾，滚轮远近；手机左手移动、右手环顾。</li>
+        <li><b>天气</b>：右上角。默认是海口此刻（Open-Meteo 预报模型，不是校内观测）；可切换自由天气，随时回来。</li>
+        <li><b>活点地图</b>：M 键或右下角的速写本。地图上是几个虚构人物按自己作息走过的脚印、那只猫和你；轻点名字看他们在做什么，「今日足迹」画出今天早上六点以来每个人走过的路。</li>
+      </ul>
+      <p class="rh-note">榄仁树为依物种特征创作的概念模型；建筑为近似体量；绘画中的花坛、猫与蝴蝶是创作，不是实况。猫的活动范围按校园数据放在第一食堂与二号教学楼之间（「一堂」按第一食堂理解，待确认）。校园里的林知夏、陈屿、符老师、王一苇、吴伯都是虚构人物，作息是按寄宿制高中的一般节奏编写的；活点地图只显示他们、猫和你自己，不追踪、不显示任何真实学生和老师的位置。</p>
+      <button type="button" data-act="close-help">知道了</button>
+    </section>
+  </div>
+  <section id="lf-map" class="lf-map" hidden aria-label="海中活点地图">
+    <div class="lf-book">
+      <div class="lf-page">
+        <canvas id="lf-map-canvas" aria-label="海中活点地图：校园平面，虚构人物的脚印、猫和你的位置。拖动平移，滚轮或双指缩放，轻点名字查看"></canvas>
+        <header class="lf-map-head">
+          <p class="lf-map-title"><b>海中活点地图</b><span id="lf-map-date"></span></p>
+          <i class="lf-seal" aria-hidden="true">海<br>中</i>
+        </header>
+        <aside id="lf-card" class="lf-card" hidden></aside>
+        <footer class="lf-map-foot">
+          <button type="button" data-life="me">回到我</button>
+          <button type="button" data-life="day" aria-pressed="false" title="今天早上六点以来走过的路">今日足迹</button>
+          <p class="lf-map-note">脚印属于虚构人物与你自己 · 不显示任何真实的人</p>
+          <button type="button" class="lf-map-close" data-life="close">合上 <kbd>M</kbd></button>
+        </footer>
+      </div>
+      <div class="lf-cover" aria-hidden="true"><span>速写 · 海中</span></div>
+    </div>
+  </section>
+</body>
+</html>
