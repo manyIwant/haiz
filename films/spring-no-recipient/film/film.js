@@ -43,22 +43,63 @@ const grainTiles = [];
     g.putImageData(img, 0, 0); grainTiles.push(c);
   }
 })();
+// paper fibres: thousands of short, faint strokes, drawn once
+const fibres = document.createElement('canvas'); fibres.width = W; fibres.height = H;
+(function () {
+  const g = fibres.getContext('2d');
+  for (let i = 0; i < 5200; i++) {
+    const x = hash(i * 3 + 1) * W, y = hash(i * 3 + 2) * H, a = hash(i * 3 + 3) * Math.PI, L = 6 + 22 * hash(i * 7 + 5);
+    g.strokeStyle = hash(i * 11) > .5 ? 'rgba(120,98,72,.10)' : 'rgba(255,255,255,.22)'; g.lineWidth = .6 + hash(i * 13) * .6;
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * L * .5 + 2, y + Math.sin(a) * L * .5 - 2, x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+  }
+})();
+// depth: large, out-of-focus characters from the corpus drifting behind everything
+const depthCtx = document.getElementById('depth').getContext('2d');
+let DEPTH = null;
+function buildDepth() {
+  const pool = [...'河流名字钥匙车站信雨春天钟回没有地址窗户夏天黄昏风雪桥时间']; const out = [];
+  for (let i = 0; i < 22; i++) {
+    const ch = pool[Math.floor(hash(i * 17 + 3) * pool.length)], size = 140 + 260 * hash(i * 5 + 1), blur = 10 + 18 * hash(i * 9 + 2);
+    const c = document.createElement('canvas'); const pad = Math.ceil(blur * 3); c.width = c.height = Math.ceil(size * 1.3 + pad * 2);
+    const g = c.getContext('2d'); g.filter = `blur(${blur}px)`; g.fillStyle = 'rgba(70,55,40,1)'; g.font = `300 ${size}px "Noto Serif CJK SC"`; g.textBaseline = 'middle'; g.textAlign = 'center';
+    g.fillText(ch, c.width / 2, c.height / 2);
+    out.push({ c, x: hash(i * 23 + 7) * W, y: hash(i * 29 + 11) * H, vx: (hash(i * 31) - .5) * 9, vy: -2 - 5 * hash(i * 37), a: .016 + .022 * hash(i * 41) });
+  }
+  return out;
+}
+function drawDepth(t) {
+  if (!DEPTH) DEPTH = buildDepth();
+  depthCtx.clearRect(0, 0, W, H);
+  const k = .55 + .45 * Math.max(fade(t, 0, 1, 14, 18), fade(t, 404, 412, 446, 447), fade(t, 240, 246, 330, 340) * .7);
+  for (const d of DEPTH) {
+    const x = ((d.x + d.vx * t) % (W + 400) + W + 400) % (W + 400) - 200, y = ((d.y + d.vy * t) % (H + 400) + H + 400) % (H + 400) - 200;
+    depthCtx.globalAlpha = d.a * k; depthCtx.drawImage(d.c, x - d.c.width / 2, y - d.c.height / 2);
+  }
+  depthCtx.globalAlpha = 1;
+}
 function warmthAt(t) { // 0 = neutral (technical), 1 = warm (poems)
   return Math.max(fade(t, 196, 204, 240, 246) * .6, fade(t, 244, 250, 314, 320), fade(t, 332, 338, 420, 426));
 }
 function drawBackground(t, frame) {
   const w = warmthAt(t);
-  bg.fillStyle = '#0b0a09'; bg.fillRect(0, 0, W, H);
-  const gx = W * (.5 + .18 * Math.sin(t * .031)), gy = H * (.42 + .1 * Math.cos(t * .023));
-  const g = bg.createRadialGradient(gx, gy, 0, gx, gy, 1100);
-  g.addColorStop(0, `rgba(${Math.round(lerp(60, 92, w))},${Math.round(lerp(58, 66, w))},${Math.round(lerp(56, 44, w))},${lerp(.32, .42, w)})`);
-  g.addColorStop(1, 'rgba(0,0,0,0)');
+  const hush = fade(t, C.music.silenceStart - 1.5, C.music.silenceStart, C.music.silenceEnd - .5, C.music.silenceEnd + 1.5); // the silent line: the light dims a little
+  bg.fillStyle = '#ebe6dc'; bg.fillRect(0, 0, W, H);
+  // a window light that drifts very slowly across the paper
+  const gx = W * (.34 + .22 * Math.sin(t * .021)), gy = H * (.22 + .08 * Math.cos(t * .017));
+  const g = bg.createRadialGradient(gx, gy, 0, gx, gy, 1400);
+  g.addColorStop(0, `rgba(255,251,242,${lerp(.75, .92, w) * (1 - .5 * hush)})`); g.addColorStop(.55, 'rgba(255,248,236,.18)'); g.addColorStop(1, 'rgba(255,248,236,0)');
   bg.fillStyle = g; bg.fillRect(0, 0, W, H);
-  const v = bg.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * 1.05);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.78)');
+  const cx = W * (.78 - .1 * Math.sin(t * .013)), cy = H * (.86 + .05 * Math.cos(t * .019));
+  const g2 = bg.createRadialGradient(cx, cy, 0, cx, cy, 900);
+  g2.addColorStop(0, `rgba(205,128,86,${lerp(.07, .13, w)})`); g2.addColorStop(1, 'rgba(205,128,86,0)');
+  bg.fillStyle = g2; bg.fillRect(0, 0, W, H);
+  bg.globalAlpha = .5; bg.drawImage(fibres, 0, 0); bg.globalAlpha = 1;
+  const v = bg.createRadialGradient(W / 2, H * .46, H * .42, W / 2, H / 2, H * 1.12);
+  v.addColorStop(0, 'rgba(90,70,50,0)'); v.addColorStop(1, `rgba(90,70,50,${.30 + .22 * hush})`);
   bg.fillStyle = v; bg.fillRect(0, 0, W, H);
+  drawDepth(t);
   grainCtx.clearRect(0, 0, W, H);
-  grainCtx.globalAlpha = .055; grainCtx.drawImage(grainTiles[frame % 8], 0, 0, W, H);
+  grainCtx.globalAlpha = .07; grainCtx.drawImage(grainTiles[frame % 8], 0, 0, W, H); grainCtx.globalAlpha = 1;
 }
 
 /* ------------------------------------------------------------------ the real terminal */
@@ -124,12 +165,12 @@ const TERM_VIS = [[3.0, 5.5, 57.2, 58.8], [117.3, 118.3, 156.0, 157.8], [319.0, 
 const INPUT = { input: true };
 const CENTER = { center: true };
 const CAM = [
-  [4.0, 1.22, CENTER], [8.3, 1.28, CENTER], [10.2, 1.9, INPUT], [14.6, 1.9, INPUT], [17.2, 1.28, CENTER],
-  [28.9, 1.28, CENTER], [30.8, 1.62, { text: '名岂文章黑', dy: -14 }], [33.6, 1.62, { text: '名岂文章黑', dy: -14 }], [35.2, 1.45, { text: '"春风吹又生"' }], [36.99, 1.45, { text: '"春风吹又生"' }],
-  [37.0, 1.9, INPUT], [41.0, 1.9, INPUT], [42.6, 1.28, CENTER], [50.6, 1.28, CENTER], [52.6, 1.9, { text: '39. 外面有点饿了' }], [58.8, 2.25, { text: '39. 外面有点饿了' }],
-  [118.0, 1.9, INPUT], [122.7, 1.9, INPUT], [124.3, 1.28, CENTER], [132.0, 1.28, CENTER], [134.2, 1.6, { text: 'output_things.txt 里' }], [140.99, 1.7, { text: 'output_things.txt 里' }],
-  [141.0, 1.9, INPUT], [144.3, 1.9, INPUT], [145.8, 1.28, CENTER], [150.5, 1.28, CENTER], [152.2, 1.62, { text: '2 个字是唯一一个' }], [157.8, 1.7, { text: '2 个字是唯一一个' }],
-  [320.0, 1.28, CENTER], [334.6, 1.62, INPUT],
+  [4.0, 1.02, CENTER], [8.3, 1.10, CENTER], [10.2, 1.9, INPUT], [14.6, 1.9, INPUT], [17.2, 1.12, CENTER],
+  [28.9, 1.12, CENTER], [30.8, 1.62, { text: '名岂文章黑', dy: -14 }], [33.6, 1.62, { text: '名岂文章黑', dy: -14 }], [35.2, 1.45, { text: '"春风吹又生"' }], [36.99, 1.45, { text: '"春风吹又生"' }],
+  [37.0, 1.9, INPUT], [41.0, 1.9, INPUT], [42.6, 1.12, CENTER], [50.6, 1.12, CENTER], [52.6, 1.9, { text: '39. 外面有点饿了' }], [58.8, 2.25, { text: '39. 外面有点饿了' }],
+  [118.0, 1.9, INPUT], [122.7, 1.9, INPUT], [124.3, 1.12, CENTER], [132.0, 1.12, CENTER], [134.2, 1.6, { text: 'output_things.txt 里' }], [140.99, 1.7, { text: 'output_things.txt 里' }],
+  [141.0, 1.9, INPUT], [144.3, 1.9, INPUT], [145.8, 1.12, CENTER], [150.5, 1.12, CENTER], [152.2, 1.62, { text: '2 个字是唯一一个' }], [157.8, 1.7, { text: '2 个字是唯一一个' }],
+  [320.0, 1.12, CENTER], [334.6, 1.62, INPUT],
 ];
 function resolveFocus(f) {
   if (f.center) return [boxW() / 2, boxH() / 2];
@@ -178,6 +219,11 @@ async function renderTerminal(t) {
   const box = document.getElementById('termBox');
   box.style.width = boxW() + 'px';
   cam.style.transform = `translate(${W / 2 - c.x * c.s}px, ${H / 2 - c.y * c.s}px) scale(${c.s})`;
+  // tilt only in wide shots; flat when we lean in to read
+  const tilt = clamp((1.5 - c.s) / .4);
+  const enter = Math.max(...TERM_VIS.map(v => (t >= v[0] - .01 && t <= v[1] + 1.2) ? 1 - ramp(t, v[0], v[1] + 1.0, eo) : 0));
+  box.style.transform = `perspective(2600px) rotateX(${(4.5 + 1.5 * Math.sin(t * .2)) * tilt + enter * 8}deg) rotateY(${(-6 + 2 * Math.sin(t * .13)) * tilt}deg) translateY(${enter * 70}px)`;
+  box.style.filter = enter > .01 ? `blur(${enter * 12}px)` : 'none';
   HL.forEach((h, i) => {
     const o = fade(t, h[0], h[0] + .5, h[1] - .5, h[1]); const b = hlBoxes[i];
     if (o <= 0) { b.style.display = 'none'; return; }
@@ -195,7 +241,7 @@ async function renderTerminal(t) {
 
 /* ------------------------------------------------------------------ HUD: tags, captions */
 const hud = { clock: '', speed: '', skip: '', clockO: 0, skipO: 0 };
-const RED = '#d9534f', AMBER = '#e2a65a', GREY = '#8a8378';
+const RED = '#c0392b', AMBER = '#c15f3c', GREY = '#8a8378';
 const FINAL = '定稿 · 此前一次 N-gram 实验的输出，经人工挑选、排列与少量修改';
 const TAGS = [
   [2.0, 58.4, '真实录屏 · Claude Code v2.1.330 · 终端原样回放', RED],
@@ -298,11 +344,11 @@ const slotX = j => 960 - 2.5 * SLOT + j * SLOT; // char j of the 6-char line; j=
 scene([57.0, 118.2], root => {
   const st = MECH;
   st.big = el('div', 'abs big center', root); st.big.style.top = (LINE_Y - 80) + 'px'; st.bigChars = chars(st.big, st.line);
-  st.pads = [-2, -1, 6].map(j => { const d = el('div', 'abs', root); setStyle(d, { left: (slotX(j) - 58) + 'px', top: (LINE_Y - 64) + 'px', width: '116px', height: '128px', border: '1.5px dashed rgba(236,229,216,.22)', borderRadius: '10px' }); const lab = el('div', 'note abs', d, j === 6 ? '句末' : '句首'); setStyle(lab, { left: 0, right: 0, top: '138px', textAlign: 'center', fontFamily: 'var(--sans)', fontSize: '19px' }); return d; });
+  st.pads = [-2, -1, 6].map(j => { const d = el('div', 'abs', root); setStyle(d, { left: (slotX(j) - 58) + 'px', top: (LINE_Y - 64) + 'px', width: '116px', height: '128px', border: '1.5px dashed rgba(40,34,28,.22)', borderRadius: '10px' }); const lab = el('div', 'note abs', d, j === 6 ? '句末' : '句首'); setStyle(lab, { left: 0, right: 0, top: '138px', textAlign: 'center', fontFamily: 'var(--sans)', fontSize: '19px' }); return d; });
   st.slots = [...st.line].map((c, j) => { const d = el('div', 'abs big', root, c); setStyle(d, { left: (slotX(j) - 60) + 'px', top: (LINE_Y - 80) + 'px', width: '120px', textAlign: 'center' }); return d; });
   st.endMark = el('div', 'abs', root, '句末'); setStyle(st.endMark, { left: (slotX(6) - 58) + 'px', top: (LINE_Y - 30) + 'px', width: '116px', textAlign: 'center', fontSize: '34px', color: 'var(--amber)' });
-  st.q = el('div', 'abs big', root, '?'); setStyle(st.q, { width: '120px', textAlign: 'center', color: 'rgba(226,166,90,.75)', fontFamily: 'var(--mono)', fontSize: '84px', top: (LINE_Y - 56) + 'px' });
-  st.win = el('div', 'abs', root); setStyle(st.win, { top: (LINE_Y - 76) + 'px', height: '152px', borderRadius: '14px', boxShadow: '0 0 0 2px rgba(226,166,90,.95), 0 0 40px rgba(226,166,90,.25)' });
+  st.q = el('div', 'abs big', root, '?'); setStyle(st.q, { width: '120px', textAlign: 'center', color: 'rgba(193,95,60,.75)', fontFamily: 'var(--mono)', fontSize: '84px', top: (LINE_Y - 56) + 'px' });
+  st.win = el('div', 'abs', root); setStyle(st.win, { top: (LINE_Y - 76) + 'px', height: '152px', borderRadius: '14px', boxShadow: '0 0 0 2px rgba(193,95,60,.95), 0 0 40px rgba(193,95,60,.25)' });
   st.winLab = el('div', 'abs', st.win, '只看这两个字'); setStyle(st.winLab, { left: 0, right: 0, top: '-46px', textAlign: 'center', fontSize: '21px', color: 'var(--amber)', letterSpacing: '.1em' });
   // probability strips (one per step)
   st.strips = MECH.ex.steps.map((s, k) => {
@@ -310,27 +356,27 @@ scene([57.0, 118.2], root => {
     const total = s.total; let x = 0; const segs = [];
     s.dist.forEach(([c, n], i) => {
       const w = 1400 * n / total; const g = el('div', 'abs', d);
-      const bgc = i % 2 ? 'rgba(236,229,216,.13)' : 'rgba(236,229,216,.2)'; g.dataset.bg = bgc;
+      const bgc = i % 2 ? 'rgba(40,34,28,.13)' : 'rgba(40,34,28,.2)'; g.dataset.bg = bgc;
       setStyle(g, { left: x + 'px', width: Math.max(w - 2, 1) + 'px', top: 0, height: '70px', background: bgc, borderRadius: '3px' });
       if (w > 30) { const lab = el('div', 'abs', g, dispChar(c)); setStyle(lab, { left: 0, right: 0, top: '12px', textAlign: 'center', fontSize: c === '>' ? '22px' : '36px', lineHeight: '44px' }); }
       if (w > 60 && n > 1) { const cn = el('div', 'abs note', g, String(n)); setStyle(cn, { left: 0, right: 0, top: '78px', textAlign: 'center', fontSize: '18px' }); }
       segs.push({ c, n, x, w, g }); x += w;
     });
-    const head = el('div', 'abs note', d); setStyle(head, { left: 0, top: '-44px', fontSize: '20px', fontFamily: 'var(--sans)', color: '#b9b1a3' });
+    const head = el('div', 'abs note', d); setStyle(head, { left: 0, top: '-44px', fontSize: '20px', fontFamily: 'var(--sans)', color: '#6f685d' });
     const ctxShow = s.ctx.replace(/</g, '·');
     head.textContent = s.ctx === '<<' ? `句首之后，语料里出现过的字（共 ${total} 次）` : `「${ctxShow}」之后，语料里出现过的字（共 ${total} 次）`;
     const pick = segs.find(sg => sg.c === s.pick);
     const pickLab = el('div', 'abs', d, `${dispChar(s.pick)}  ${pick.n}/${total}`); setStyle(pickLab, { left: (pick.x + pick.w / 2 - 100) + 'px', width: '200px', textAlign: 'center', top: '112px', fontSize: '26px', color: 'var(--amber)', fontFamily: 'var(--sans)' });
-    const marker = el('div', 'abs', d); setStyle(marker, { width: '2px', height: '96px', background: 'var(--amber)', boxShadow: '0 0 12px rgba(226,166,90,.8)' });
+    const marker = el('div', 'abs', d); setStyle(marker, { width: '2px', height: '96px', background: 'var(--amber)', boxShadow: '0 0 12px rgba(193,95,60,.8)' });
     const mx = pick.x + pick.w * (.35 + .3 * hash(k + 17));
     // the source sentence under each candidate (shown for the many-way junction)
     const srcs = [];
     if (s.dist.length > 1 && s.dist.length <= 12) {
       segs.forEach(sg => {
         const sent = sentencesWith(TR.corpus_modern, s.ctx, sg.c)[0]; if (!sent) return;
-        const v = el('div', 'abs', d); setStyle(v, { left: (sg.x + sg.w / 2 - 14) + 'px', top: '150px', writingMode: 'vertical-rl', height: '272px', fontSize: '21px', letterSpacing: '.12em', color: '#8a8378', lineHeight: '28px' });
+        const v = el('div', 'abs', d); setStyle(v, { left: (sg.x + sg.w / 2 - 14) + 'px', top: '150px', writingMode: 'vertical-rl', height: '272px', fontSize: '21px', letterSpacing: '.12em', color: '#9a9286', lineHeight: '28px' });
         const i0 = sent.indexOf(s.ctx + sg.c);
-        [...sent].forEach((ch, ci) => { const sp = el('span', null, v, ch); if (ci >= i0 && ci < i0 + 3) sp.style.color = sg.c === s.pick ? 'var(--amber)' : '#d6cfc2'; });
+        [...sent].forEach((ch, ci) => { const sp = el('span', null, v, ch); if (ci >= i0 && ci < i0 + 3) sp.style.color = sg.c === s.pick ? 'var(--amber)' : '#2f2b26'; });
         srcs.push(v);
       });
     }
@@ -346,7 +392,7 @@ scene([57.0, 118.2], root => {
     const row = el('div', null, card); setStyle(row, { display: 'flex', alignItems: 'baseline', gap: '28px', margin: '18px 0' });
     const n = el('span', 'mono', row, String(no)); setStyle(n, { color: '#5d584f', fontSize: '24px', width: '36px', textAlign: 'right' });
     const c = el('span', 'mono', row); c.innerHTML = code; setStyle(c, { fontSize: '28px', color: '#e6e3de', whiteSpace: 'pre' });
-    const k = el('div', null, card, cmt); setStyle(k, { marginLeft: '64px', fontSize: '24px', color: 'var(--amber)', letterSpacing: '.08em' });
+    const k = el('div', null, card, cmt); setStyle(k, { marginLeft: '64px', fontSize: '24px', color: '#e8956a', letterSpacing: '.08em' });
   };
   L(28, 'self.counts[k][ctx][toks[i]] <span style="color:#e2a65a">+= 1</span>', '训练：这几个字后面跟着哪个字，记一次');
   L(40, 'return rng.<span style="color:#e2a65a">choices</span>(chars, weights)[0]', '生成：按记下的次数，随机抽一个');
@@ -398,7 +444,7 @@ scene([57.0, 118.2], root => {
     const dropU = ramp(t, sc[1] - .45, sc[1], t => t * t);
     setStyle(s.marker, { left: s.mx + 'px', top: (lerp(-140, -14, dropU)) + 'px', opacity: t > sc[1] - .5 ? 1 : 0 });
     const hit = t >= sc[1];
-    s.pick.g.style.background = hit ? 'rgba(226,166,90,.85)' : s.pick.g.dataset.bg;
+    s.pick.g.style.background = hit ? 'rgba(193,95,60,.85)' : s.pick.g.dataset.bg;
     s.pickLab.style.opacity = hit ? ramp(t, sc[1], sc[1] + .3) : 0;
     s.srcs.forEach((v, i) => { v.style.opacity = fade(t, sc[0] + .8 + i * .12, sc[0] + 1.3 + i * .12, sc[2] - .3, sc[2]); });
   });
@@ -424,24 +470,45 @@ function buildSeam(root, _unused, line, corpus) {
   const span = maxI - minI + 1; const sp = Math.min(140, 1640 / span); const fs = Math.round(sp * .7);
   const x0 = 960 - (span - 1) * sp / 2 - minI * sp;
   const xOf = i => x0 + i * sp;
-  const COL = ['var(--amber)', 'var(--blue)', '#c9a6d8'];
+  const COL = ['var(--amber)', 'var(--blue)', '#8a6a9a'];
   const lineChars = [...line].map((c, i) => {
     const e = el('div', 'abs', d, c); setStyle(e, { left: (xOf(i) - sp / 2) + 'px', width: sp + 'px', textAlign: 'center', top: (rowsY[1] - fs * .7) + 'px', fontSize: fs + 'px' });
     const owners = pcs.map((p, k) => (i >= p.from && i < p.to ? k : -1)).filter(k => k >= 0);
-    e.style.color = owners.length > 1 ? '#fffaf0' : COL[owners[0] % 3];
-    if (owners.length > 1) e.style.textShadow = '0 0 22px rgba(255,240,210,.85)';
+    e.style.color = owners.length > 1 ? '#1d1b18' : COL[owners[0] % 3];
+    if (owners.length > 1) e.style.fontWeight = 500;
     return e;
   });
   const srcRows = pcs.map((p, k) => {
     const s = [...corpus[p.sent]]; const y = pcs.length === 2 ? rowsY[k === 0 ? 0 : 2] : rowsY[0] - 30 + k * (rowsY[2] - rowsY[0] + 60) / (pcs.length - 1);
     const items = s.map((c, j) => {
       const li = starts[k] + j; const used = li >= p.from && li < p.to;
-      const e = el('div', 'abs', d, c); setStyle(e, { left: (xOf(li) - sp / 2) + 'px', width: sp + 'px', textAlign: 'center', top: (y - fs * .5) + 'px', fontSize: Math.round(fs * .62) + 'px', color: used ? COL[k % 3] : '#5f5a52' });
+      const e = el('div', 'abs', d, c); setStyle(e, { left: (xOf(li) - sp / 2) + 'px', width: sp + 'px', textAlign: 'center', top: (y - fs * .5) + 'px', fontSize: Math.round(fs * .62) + 'px', color: used ? COL[k % 3] : '#b3aa9d' });
       return e;
     });
     return { items, y };
   });
-  return { d, lineChars, srcRows, rowsY, fs };
+  // hand-drawn connectors: each used source character is tied to its place in the new line
+  const NS = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'draw'); svg.setAttribute('width', W); svg.setAttribute('height', H); d.appendChild(svg);
+  const paths = [];
+  pcs.forEach((p, k) => {
+    const yS = srcRows[k].y, below = yS > rowsY[1];
+    for (let li = p.from; li < p.to; li++) {
+      const x = xOf(li), j = hash(li * 31 + k * 7) - .5;
+      const y1 = below ? yS - fs * .52 : yS + fs * .42, y2 = below ? rowsY[1] + fs * .5 : rowsY[1] - fs * .78;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', `M ${x + j * 4} ${y1} C ${x + j * 14} ${lerp(y1, y2, .35)}, ${x - j * 12} ${lerp(y1, y2, .65)}, ${x + j * 3} ${y2}`);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', k % 2 ? '#4e6e80' : '#c15f3c'); path.setAttribute('stroke-width', '1.5'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('opacity', '.55');
+      svg.appendChild(path); const L = Math.abs(y2 - y1) * 1.15; path.style.strokeDasharray = L; path.style.strokeDashoffset = L; paths.push({ path, L, k });
+    }
+  });
+  // a loose pencil ring around the shared two characters (the seam)
+  const ring = document.createElementNS(NS, 'path'); svg.appendChild(ring);
+  const ov = pcs.length > 1 ? [pcs[1].from, pcs[0].to - 1] : [0, 0];
+  const rx0 = xOf(ov[0]) - sp * .62, rx1 = xOf(ov[1]) + sp * .62, ry = rowsY[1] - fs * .2, rh = fs * .78;
+  ring.setAttribute('d', `M ${rx0 + 10} ${ry - rh} C ${rx0 - 26} ${ry - rh * .6}, ${rx0 - 22} ${ry + rh * .9}, ${(rx0 + rx1) / 2} ${ry + rh * 1.02} S ${rx1 + 30} ${ry - rh * .2}, ${rx1 - 6} ${ry - rh * .98} S ${rx0 + 40} ${ry - rh * 1.18}, ${rx0 + 2} ${ry - rh * .7}`);
+  ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#c15f3c'); ring.setAttribute('stroke-width', '2'); ring.setAttribute('stroke-linecap', 'round'); ring.setAttribute('opacity', '.8');
+  const RL = (rx1 - rx0) * 2.6 + rh * 5; ring.style.strokeDasharray = RL; ring.style.strokeDashoffset = RL;
+  return { d, lineChars, srcRows, rowsY, fs, paths, ring, RL };
 }
 function updateSeam(sv, t, a, b, opt) {
   const o = fade(t, a, a + .8, b - .6, b); sv.d.style.display = o > 0 ? '' : 'none'; if (o <= 0) return;
@@ -451,6 +518,8 @@ function updateSeam(sv, t, a, b, opt) {
     r.items.forEach(e => { e.style.opacity = u; e.style.transform = `translateY(${(1 - u) * (r.y < sv.rowsY[1] ? -26 : 26)}px)`; });
   });
   sv.lineChars.forEach((e, i) => { const u = opt.fromMech ? 1 : ramp(t, a + i * .05, a + .6 + i * .05); e.style.opacity = u; });
+  sv.paths.forEach((p, i) => { const u = ramp(t, a + 1.2 + p.k * .35 + i * .04, a + 1.9 + p.k * .35 + i * .04); p.path.style.strokeDashoffset = p.L * (1 - u); });
+  sv.ring.style.strokeDashoffset = sv.RL * (1 - ramp(t, a + 2.2, a + 3.2, eo));
 }
 
 /* ================================================================== ACT: window-size sweep (157–176) */
@@ -464,16 +533,16 @@ scene([156.5, 176.6], root => {
   ];
   root._rows = rows.map((r, i) => {
     const y = 250 + i * 150; const g = el('div', 'abs', root); setStyle(g, { left: 0, right: 0, top: y + 'px', height: '120px' });
-    const lab = el('div', 'abs', g, r.label); setStyle(lab, { left: '170px', top: '16px', fontSize: '26px', color: '#b9b1a3', letterSpacing: '.06em' });
+    const lab = el('div', 'abs', g, r.label); setStyle(lab, { left: '170px', top: '16px', fontSize: '26px', color: '#6f685d', letterSpacing: '.06em' });
     const boxes = el('div', 'abs', g); setStyle(boxes, { left: '170px', top: '62px', display: 'flex', gap: '6px' });
-    for (let q = 0; q < 4; q++) { const b = el('div', null, boxes); setStyle(b, { width: '22px', height: '22px', borderRadius: '4px', border: '1.5px solid ' + (q < r.k ? 'var(--amber)' : 'rgba(236,229,216,.18)'), background: q < r.k ? 'rgba(226,166,90,.25)' : 'transparent' }); }
+    for (let q = 0; q < 4; q++) { const b = el('div', null, boxes); setStyle(b, { width: '22px', height: '22px', borderRadius: '4px', border: '1.5px solid ' + (q < r.k ? 'var(--amber)' : 'rgba(40,34,28,.18)'), background: q < r.k ? 'rgba(193,95,60,.25)' : 'transparent' }); }
     const arrow = el('div', null, boxes, '→ ?'); setStyle(arrow, { fontFamily: 'var(--mono)', fontSize: '20px', color: 'var(--amber)', marginLeft: '6px', lineHeight: '22px' });
-    const txt = el('div', 'abs', g); setStyle(txt, { left: '520px', top: '4px', fontSize: '50px', letterSpacing: '.04em', color: r.k === 2 ? 'var(--paper)' : '#cfc8bb', whiteSpace: 'nowrap' });
+    const txt = el('div', 'abs', g); setStyle(txt, { left: '520px', top: '4px', fontSize: '50px', letterSpacing: '.04em', color: r.k === 2 ? 'var(--paper)' : '#4a453e', whiteSpace: 'nowrap' });
     const cs = chars(txt, r.line);
     const note = el('div', 'abs note', g, r.note); setStyle(note, { left: '524px', top: '80px', fontFamily: 'var(--sans)', fontSize: '20px' });
     return { g, cs, note, lab, boxes };
   });
-  const ax = el('div', 'abs', root); root._ax = ax; setStyle(ax, { left: '520px', width: '1240px', top: '880px', height: '2px', background: 'linear-gradient(90deg, rgba(141,180,204,.1), rgba(226,166,90,.9) 50%, rgba(141,180,204,.1))' });
+  const ax = el('div', 'abs', root); root._ax = ax; setStyle(ax, { left: '520px', width: '1240px', top: '880px', height: '2px', background: 'linear-gradient(90deg, rgba(141,180,204,.1), rgba(193,95,60,.9) 50%, rgba(141,180,204,.1))' });
   const l1 = el('div', 'abs note', ax, '噪声'); setStyle(l1, { left: '-10px', top: '14px', fontFamily: 'var(--sans)', fontSize: '22px' });
   const l2 = el('div', 'abs note', ax, '背诵'); setStyle(l2, { right: '-10px', top: '14px', fontFamily: 'var(--sans)', fontSize: '22px' });
   const l3 = el('div', 'abs note', ax, '奇怪的新句子'); setStyle(l3, { left: '560px', top: '14px', fontFamily: 'var(--sans)', fontSize: '22px', color: 'var(--amber)' });
@@ -500,13 +569,19 @@ SFX.push({ t: 186.3, type: 'select' }, { t: 199.5, type: 'land' });
 const PICKED80 = [34, 67, 9, 23, 25, 33, 55]; // 1-based line numbers chosen during production
 scene([175.8, 246.4], root => {
   // field of 80 raw lines
-  const field = el('div', 'abs', root); root._field = field; setStyle(field, { inset: 0 });
+  const field = el('div', 'abs', root); root._field = field;
+  setStyle(field, { left: '150px', top: '74px', width: '1620px', height: '900px', background: '#f8f5ee', borderRadius: '4px',
+    boxShadow: '0 1px 0 rgba(255,255,255,.8) inset, 0 40px 90px rgba(70,50,30,.22), 0 8px 22px rgba(70,50,30,.14)', transformOrigin: '50% 0%' });
+  const head = el('div', 'abs mono', field, 'output_things.txt'); setStyle(head, { left: '48px', top: '22px', fontSize: '15px', color: '#a39a8d', letterSpacing: '.08em' });
   root._items = TR.raw80.map((s, i) => {
     const col = i < 40 ? 0 : 1, row = i % 40;
-    const e = el('div', 'abs', field); setStyle(e, { left: (col ? 1010 : 170) + 'px', top: (96 + row * 22.4) + 'px', fontSize: '17px', whiteSpace: 'nowrap', color: '#9a9388' });
-    const n = el('span', 'mono', e, String(i + 1).padStart(2, ' ') + '. '); n.style.color = '#5d584f';
-    el('span', null, e, s);
-    if (TR.copies80[i]) { const m = el('span', null, e, '  [语料原句]'); m.style.color = '#5d584f'; }
+    const e = el('div', 'abs', field); setStyle(e, { left: (col ? 840 : 48) + 'px', top: (58 + row * 20.6) + 'px', fontSize: '16px', whiteSpace: 'nowrap', color: '#3a352f' });
+    const mark = el('div', 'abs', e); e._mark = mark;
+    const n = el('span', 'mono', e, String(i + 1).padStart(2, ' ') + '. '); n.style.color = '#a39a8d'; n.style.position = 'relative';
+    const tx = el('span', null, e, s); tx.style.position = 'relative';
+    if (TR.copies80[i]) { const m = el('span', null, e, '  [语料原句]'); m.style.color = '#a39a8d'; m.style.position = 'relative'; }
+    setStyle(mark, { left: '30px', top: '2px', height: '18px', width: '0px', background: 'rgba(214,122,76,.36)', borderRadius: '3px 9px 4px 10px', transform: `rotate(${(hash(i) - .5) * 1.2}deg)` });
+    e._textW = 0; e._tx = tx;
     return e;
   });
   // KWIC concordance on 没有
@@ -515,36 +590,39 @@ scene([175.8, 246.4], root => {
     const y = 300 + r * 96; const i0 = s.indexOf('没有'); const cs = [...s];
     const items = cs.map((c, j) => {
       const e = el('div', 'abs', root, c); const x = keyX + (j - i0) * SP;
-      setStyle(e, { left: (x - SP / 2) + 'px', width: SP + 'px', textAlign: 'center', top: (y - FS * .7) + 'px', fontSize: FS + 'px', color: '#cfc8bb' });
+      setStyle(e, { left: (x - SP / 2) + 'px', width: SP + 'px', textAlign: 'center', top: (y - FS * .7) + 'px', fontSize: FS + 'px', color: '#4a453e' });
       return { e, j, rel: j - i0, x, y };
     });
     return { items, r, i0, y };
   });
   const band = el('div', 'abs', root); root._band = band;
-  setStyle(band, { left: (keyX - SP / 2 - 8) + 'px', width: (SP * 2 + 16) + 'px', top: '226px', height: '600px', borderRadius: '12px', background: 'linear-gradient(180deg, rgba(255,240,210,0), rgba(255,240,210,.09) 20%, rgba(255,240,210,.09) 80%, rgba(255,240,210,0))' });
+  setStyle(band, { left: (keyX - SP / 2 - 8) + 'px', width: (SP * 2 + 16) + 'px', top: '226px', height: '600px', borderRadius: '12px', background: 'linear-gradient(180deg, rgba(193,95,60,0), rgba(193,95,60,.10) 20%, rgba(193,95,60,.10) 80%, rgba(193,95,60,0))' });
   // small poem (this run's lines; one labelled human edit)
   const sp = el('div', 'abs', root); root._sp = sp; setStyle(sp, { inset: 0 });
   const LINES = [['信封上的雪很厚', 9], ['我坐在车站的钟', 25], ['钟停了，我也没有看见我', 67]];
   root._spLines = LINES.map(([s, no], i) => {
     const e = el('div', 'abs serif', sp); setStyle(e, { left: 0, right: 0, textAlign: 'center', top: (420 + i * 104) + 'px', fontSize: '54px', letterSpacing: '.12em', color: 'var(--paper)', fontWeight: 400 });
     const main = el('span', null, e, s);
-    let ins = null; if (no === 25) { ins = el('span', null, e, '声里'); ins.style.color = 'var(--amber)'; }
+    let ins = null, caret = null;
+    if (no === 25) { caret = el('span', null, e, '‸'); setStyle(caret, { color: 'var(--amber)', position: 'relative', top: '30px', fontFamily: 'var(--sans)', fontSize: '44px', marginLeft: '-.12em', marginRight: '-.38em', display: 'inline-block', width: '.5em' }); ins = el('span', null, e, '声里'); setStyle(ins, { color: 'var(--amber)', position: 'relative', top: '-34px', fontSize: '40px', marginLeft: '-.1em' }); }
     const n = el('div', 'abs note', sp, `第 ${no} 行`); setStyle(n, { left: '1500px', top: (446 + i * 104) + 'px', fontFamily: 'var(--sans)', fontSize: '19px' });
-    return { e, main, ins, n };
+    return { e, main, ins, caret, n };
   });
   root._n34 = el('div', 'abs note', sp, '第 34 行'); setStyle(root._n34, { left: '1500px', top: '342px', fontFamily: 'var(--sans)', fontSize: '19px' });
   root._editNote = el('div', 'abs', sp, '人工修改 · +2 字'); setStyle(root._editNote, { left: 0, right: 0, textAlign: 'center', top: '742px', fontSize: '22px', color: 'var(--amber)', letterSpacing: '.12em' });
   SFX.push({ t: 232.6, type: 'key' }, { t: 233.05, type: 'key' });
 }, (t, root) => {
   // field
-  const fo = fade(t, 176.0, 176.8, 188.0, 189.2); root._field.style.display = fo > 0 ? '' : 'none'; root._field.style.opacity = fo;
+  const fo = fade(t, 175.9, 177.0, 188.0, 189.2); root._field.style.display = fo > 0 ? '' : 'none'; root._field.style.opacity = fo;
+  root._field.style.transform = `perspective(2400px) rotateX(${lerp(14, 3, ramp(t, 175.9, 178.4, eo))}deg) rotateZ(${lerp(-1.6, -.6, ramp(t, 175.9, 186))}deg) translateY(${lerp(60, 0, ramp(t, 175.9, 178.2, eo)) - 16 * ramp(t, 186.2, 189.2)}px) scale(${lerp(.89, .92, ramp(t, 176, 188))})`;
+  root._field.style.filter = t > 187.6 ? `blur(${ramp(t, 187.6, 189.2) * 6}px)` : 'none';
   root._items.forEach((e, i) => {
     const a = 176.2 + (i % 40) * .04 + (i >= 40 ? .3 : 0);
     const picked = PICKED80.includes(i + 1);
     const sel = ramp(t, 186.3 + PICKED80.indexOf(i + 1) * .12, 186.9 + PICKED80.indexOf(i + 1) * .12);
     const base = ramp(t, a, a + .4);
-    e.style.opacity = base * (picked ? 1 : lerp(1, .16, ramp(t, 186.2, 187.2)));
-    e.style.color = picked && t > 186.3 ? `rgba(${Math.round(lerp(154, 240, sel))},${Math.round(lerp(147, 232, sel))},${Math.round(lerp(136, 216, sel))},1)` : '#9a9388';
+    e.style.opacity = base * (picked ? 1 : lerp(1, .3, ramp(t, 186.4, 187.6)));
+    if (picked) { if (!e._textW) e._textW = e._tx.offsetWidth + 10; e._mark.style.width = (e._textW * eo(sel)) + 'px'; }
   });
   // KWIC
   const kwO = fade(t, 188.4, 189.6, 245.0, 246.2);
@@ -557,22 +635,22 @@ scene([175.8, 246.4], root => {
     row.items.forEach(it => {
       const a = 188.6 + r * .22; let o = ramp(t, a, a + .6) * kwO;
       const nextChar = it.rel === 2;
-      let col = '#cfc8bb', y = row.y, x = it.x;
-      if (nextChar && t > 193.2) { const u = ramp(t, 193.2 + r * .18, 193.6 + r * .18); col = `rgba(${Math.round(lerp(207, 226, u))},${Math.round(lerp(200, 166, u))},${Math.round(lerp(187, 90, u))},1)`; }
+      let col = '#4a453e', y = row.y, x = it.x;
+      if (nextChar && t > 193.2) { const u = ramp(t, 193.2 + r * .18, 193.6 + r * .18); col = mix('#4a453e', '#c15f3c', u); }
       // which characters survive the meeting
       const keep = (first && it.rel < 2) || (last && it.rel >= 2);
       if (!keep) o *= 1 - ramp(t, 196.6 + (first || last ? .4 : 0), 197.8 + (first || last ? .4 : 0));
       if (keep) {
         y = lerp(row.y, 540, meet);
-        if (first) col = mix(col, '#e2a65a', meet * (it.rel < 0 ? 1 : 0));
-        if (first && it.rel >= 0) col = mix(col, '#fffaf0', meet);
-        if (last) col = mix(col, '#8db4cc', meet);
-        col = mix(col, '#ece5d8', serifU);
+        if (first) col = mix(col, '#c15f3c', meet * (it.rel < 0 ? 1 : 0));
+        if (first && it.rel >= 0) col = mix(col, '#1d1b18', meet);
+        if (last) col = mix(col, '#4e6e80', meet);
+        col = mix(col, '#1d1b18', serifU);
         x = x + 60 * meet; // recentre: 5 chars left of the junction, 4 right
         y = lerp(y, 330, upU);
         it.e.style.fontFamily = serifU > .5 ? 'var(--serif)' : 'var(--sans)';
         it.e.style.fontSize = lerp(48, 58, serifU) + 'px';
-        it.e.style.textShadow = first && it.rel >= 0 && it.rel < 2 ? `0 0 ${24 * meet * (1 - serifU)}px rgba(255,240,210,.9)` : 'none';
+        it.e.style.fontWeight = first && it.rel >= 0 && it.rel < 2 && serifU < .5 ? 500 : 400;
       }
       setStyle(it.e, { opacity: o, color: col, top: (y - 48 * .7) + 'px', left: (x - 30) + 'px' });
     });
@@ -583,7 +661,7 @@ scene([175.8, 246.4], root => {
   root._spLines.forEach((l, i) => {
     const a = 226.4 + i * 1.6; l.e.style.opacity = ramp(t, a, a + 1.0); l.n.style.opacity = ramp(t, a + .4, a + 1.2);
     l.e.style.transform = `translateY(${(1 - ramp(t, a, a + 1.0, eo)) * 10}px)`;
-    if (l.ins) { const s = '声里'; const k = t < 232.6 ? 0 : t < 233.05 ? 1 : 2; l.ins.textContent = s.slice(0, k); }
+    if (l.ins) { const s = '声里'; const k = t < 232.6 ? 0 : t < 233.05 ? 1 : 2; l.ins.textContent = s.slice(0, k); l.caret.style.opacity = ramp(t, 231.9, 232.4); }
   });
   root._editNote.style.opacity = fade(t, 233.2, 233.8, 240.5, 241.5);
 });
@@ -611,21 +689,22 @@ function poemScene(P, endT) {
       return { e, cs: chars(e, s) };
     });
     // machine view brackets (window sliding over pairs)
-    root._mv = el('div', 'abs', root); setStyle(root._mv, { height: '96px', borderRadius: '10px', boxShadow: '0 0 0 1.5px rgba(226,166,90,.8)' });
+    root._mv = el('div', 'abs', root); setStyle(root._mv, { height: '96px', borderRadius: '10px', boxShadow: '0 0 0 1.5px rgba(193,95,60,.8)' });
     // full page
     const page = el('div', 'abs serif', root); root._page = page; setStyle(page, { left: 0, right: 0, top: '0px', textAlign: 'center' });
-    const pt = el('div', null, page, P.title); root._pt = pt; setStyle(pt, { fontSize: '40px', letterSpacing: '.4em', paddingLeft: '.4em', marginBottom: '44px', fontWeight: 300, color: '#d8d0c2' });
-    root._pageLines = P.lines.map(s => { const d = el('div', null, page); setStyle(d, { fontSize: '35px', letterSpacing: '.12em', lineHeight: '66px', color: '#e6dfd2' }); return { d, cs: chars(d, s) }; });
+    const pt = el('div', null, page, P.title); root._pt = pt; setStyle(pt, { fontSize: '40px', letterSpacing: '.4em', paddingLeft: '.4em', marginBottom: '44px', fontWeight: 300, color: '#4a453e' });
+    root._pageLines = P.lines.map(s => { const d = el('div', null, page); setStyle(d, { fontSize: '35px', letterSpacing: '.12em', lineHeight: '66px', color: '#2a2723' }); return { d, cs: chars(d, s) }; });
     root._pageH = 40 + 44 + nL * 66;
     page.style.top = Math.round((H - root._pageH) / 2 - 10) + 'px';
     SFX.push({ t: cue.title[0], type: 'title' });
   }, (t, root) => {
+    root.style.transform = `scale(${1 + .03 * ramp(t, cue.title[0], endT, u => u)})`;
     // title
     const to = fade(t, cue.title[0], cue.title[0] + 1.4, cue.title[1] - 1.2, cue.title[1] - .1);
     root._tt.style.opacity = to;
     root._title.forEach((c, j) => {
       c.style.opacity = ramp(t, cue.title[0] + j * .16, cue.title[0] + 1.0 + j * .16);
-      if (P.titleGlow) { const gi = P.title.indexOf(P.titleGlow); const g = (j === gi || j === gi + 1) ? fade(t, cue.title[0] + 2.0, cue.title[0] + 2.8, cue.title[1] - 2.0, cue.title[1] - 1.0) : 0; c.style.color = mix('#ece5d8', '#e2a65a', g); c.style.textShadow = g > 0 ? `0 0 ${20 * g}px rgba(226,166,90,.6)` : 'none'; }
+      if (P.titleGlow) { const gi = P.title.indexOf(P.titleGlow); const g = (j === gi || j === gi + 1) ? fade(t, cue.title[0] + 2.0, cue.title[0] + 2.8, cue.title[1] - 2.0, cue.title[1] - 1.0) : 0; c.style.color = mix('#1d1b18', '#c15f3c', g); }
     });
     // lines: current at centre, previous dimmed above
     root._lines.forEach((L, i) => {
@@ -704,7 +783,7 @@ scene([C.acts.ending[0], C.duration + 1], root => {
     if (k === 'title') setStyle(d, { fontFamily: 'var(--serif)', fontSize: '44px', letterSpacing: '.4em', paddingLeft: '.4em', fontWeight: 300, marginBottom: '6px' });
     if (k === 'gap') setStyle(d, { height: '34px' });
     if (k === 'h') setStyle(d, { fontSize: '21px', color: 'var(--amber)', letterSpacing: '.3em', marginTop: '22px', paddingLeft: '.3em' });
-    if (k === 'p') setStyle(d, { fontSize: '23px', color: '#cbc4b7', letterSpacing: '.06em', marginTop: '8px', fontWeight: 300 });
+    if (k === 'p') setStyle(d, { fontSize: '23px', color: '#57514a', letterSpacing: '.06em', marginTop: '8px', fontWeight: 300 });
     return d;
   });
 }, (t, root) => {
@@ -713,6 +792,13 @@ scene([C.acts.ending[0], C.duration + 1], root => {
   root._q[1].style.opacity = fade(t, e[0] + 4.2, e[0] + 5.6, e[1] - 1.4, e[1] - .2);
   root._cr.style.opacity = fade(t, c[0] + .4, c[0] + 1.8, C.duration - 1.6, C.duration - .2);
   root._crs.forEach((d, i) => { d.style.opacity = ramp(t, c[0] + .4 + i * .18, c[0] + 1.4 + i * .18); });
+});
+
+scene([0, 5.0], root => {
+  const c = el('div', 'abs', root); root._c = c; setStyle(c, { left: '952px', top: '520px', width: '16px', height: '38px', background: 'var(--amber)', borderRadius: '2px' });
+}, (t, root) => {
+  const blink = (Math.floor(t / .53) % 2 === 0) ? 1 : .15;
+  root._c.style.opacity = fade(t, .8, 1.2, 3.2, 4.2) * blink;
 });
 
 /* ------------------------------------------------------------------ main entry */

@@ -1,10 +1,12 @@
+/* Visual language: warm paper, ink, one clay accent, one slate accent.
+   The real terminal stays dark; it is shown as an object resting in that light. */
 :root {
-  --ink: #0b0a09;
-  --paper: #ece5d8;
-  --dim: #8a8378;
-  --faint: #4a463f;
-  --amber: #e2a65a;
-  --blue: #8db4cc;
+  --ink: #ece7dd;          /* paper (stage background) */
+  --paper: #1d1b18;        /* primary text = ink */
+  --dim: #7c7569;
+  --faint: #b7afa3;
+  --amber: #c15f3c;        /* clay accent */
+  --blue: #4e6e80;         /* slate accent */
   --serif: "Noto Serif CJK SC", "Noto Serif CJK", serif;
   --sans: "Noto Sans CJK SC", "Noto Sans CJK", sans-serif;
   --mono: "JetBrains Mono", "Noto Sans Mono CJK SC", monospace;
@@ -15,14 +17,15 @@ html, body { margin: 0; background: #000; overflow: hidden; }
   background: var(--ink); color: var(--paper); font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
 }
-#bg, #grain { position: absolute; inset: 0; pointer-events: none; }
-#grain { mix-blend-mode: screen; opacity: .9; }
+#bg, #depth, #grain { position: absolute; inset: 0; pointer-events: none; }
+#grain { mix-blend-mode: multiply; }
 
-/* ---------- real terminal ---------- */
+/* ---------- the real terminal, as an object in the light ---------- */
 #termCam { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
 #termBox {
-  position: relative; padding: 0; border-radius: 10px; background: #0f0f11;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 40px 120px rgba(0,0,0,.65);
+  position: relative; border-radius: 18px; background: #121214; transform-origin: 50% 50%;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 2px 0 rgba(255,255,255,.04) inset,
+              0 60px 140px rgba(70,50,30,.30), 0 18px 40px rgba(70,50,30,.22);
 }
 #term { padding: 14px 16px; }
 #term .xterm-viewport { overflow: hidden !important; background: transparent !important; }
@@ -30,40 +33,43 @@ html, body { margin: 0; background: #000; overflow: hidden; }
 #hl { position: absolute; left: 0; top: 0; pointer-events: none; }
 .hlbox {
   position: absolute; border-radius: 6px;
-  box-shadow: 0 0 0 1.5px rgba(226,166,90,.95), 0 0 26px rgba(226,166,90,.35);
-  background: rgba(226,166,90,.08);
+  box-shadow: 0 0 0 1.6px rgba(232,141,98,.95), 0 0 28px rgba(232,141,98,.35);
+  background: rgba(232,141,98,.10);
 }
 
 /* ---------- typography scenes ---------- */
-#scene { position: absolute; inset: 0; }
-#scene > .sc { position: absolute; inset: 0; }
+#scene { position: absolute; inset: 0; transform-origin: 50% 50%; }
+#scene > .sc { position: absolute; inset: 0; transform-origin: 50% 50%; }
 .abs { position: absolute; }
 .ch { display: inline-block; white-space: pre; }
-.big { font-family: var(--sans); font-weight: 400; font-size: 112px; letter-spacing: .08em; }
+.big { font-family: var(--sans); font-weight: 300; font-size: 112px; letter-spacing: .08em; }
 .serif { font-family: var(--serif); }
 .mono { font-family: var(--mono); }
 .center { left: 0; right: 0; text-align: center; }
 .note { font-family: var(--mono); font-size: 20px; color: var(--dim); letter-spacing: .04em; }
+svg.draw { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 
-/* ---------- HUD ---------- */
+/* ---------- HUD: small paper labels ---------- */
 #hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--mono); }
+.pill {
+  background: rgba(240,236,228,.86); border-radius: 999px; padding: 8px 18px;
+  box-shadow: 0 0 0 1px rgba(60,50,40,.08), 0 6px 20px rgba(60,45,30,.10);
+}
 #tag {
-  position: absolute; left: 64px; top: 48px; font-size: 19px; color: #b9b1a3;
+  position: absolute; left: 56px; top: 44px; font-size: 19px; color: #3c3832;
   letter-spacing: .06em; display: flex; align-items: center; gap: 12px; white-space: nowrap;
   font-family: var(--sans); font-weight: 400;
 }
-#tag i { width: 9px; height: 9px; border-radius: 50%; background: #d9534f; display: inline-block; }
-#clock { position: absolute; right: 64px; top: 48px; font-size: 19px; color: #9d968a; letter-spacing: .08em; }
-#speed { position: absolute; right: 64px; top: 80px; font-size: 26px; color: var(--amber); letter-spacing: .04em; text-align: right; }
-#skip { position: absolute; left: 0; right: 0; top: 48px; text-align: center; font-size: 19px; color: #b9b1a3; font-family: var(--sans); letter-spacing: .1em; }
+#tag i { width: 8px; height: 8px; border-radius: 50%; background: #c0392b; display: inline-block; }
+#clock { position: absolute; right: 56px; top: 44px; font-size: 18px; color: #4b463f; letter-spacing: .08em; }
+#speed { position: absolute; right: 56px; top: 96px; font-size: 24px; color: var(--amber); letter-spacing: .04em; text-align: right; }
+#skip { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); font-size: 19px; color: #3c3832; font-family: var(--sans); letter-spacing: .1em; white-space: nowrap; }
 
 /* ---------- captions ---------- */
 #cap {
-  position: absolute; left: 0; right: 0; bottom: 92px; text-align: center;
-  font-family: var(--sans); font-weight: 300; font-size: 38px; letter-spacing: .08em;
-  color: #e8e1d4; text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 0 2px rgba(0,0,0,.8);
+  position: absolute; left: 0; right: 0; bottom: 84px; text-align: center;
+  font-family: var(--sans); font-weight: 400; font-size: 36px; letter-spacing: .08em; color: #24211d;
 }
 #cap div { position: absolute; left: 0; right: 0; bottom: 0; }
-
-#capBg { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; pointer-events: none;
-  background: linear-gradient(180deg, rgba(8,8,9,0) 0%, rgba(8,8,9,.82) 45%, rgba(8,8,9,.92) 100%); }
+#capBg { position: absolute; left: 0; right: 0; bottom: 0; height: 250px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(236,231,221,0) 0%, rgba(236,231,221,.90) 48%, rgba(236,231,221,.97) 100%); }
