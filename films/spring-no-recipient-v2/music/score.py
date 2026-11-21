@@ -279,8 +279,11 @@ pad_chord(28.0, 12.0, "Ab2 Eb3 C4", gain=0.35, att=3.0, rel=3.0, bright=0.3)
 # ================================================================ PART TWO: the world 42-171.6
 place("sfx", drop(), 42.15, 0.5)
 # ---- ambience
-bed("water", 42.0, 58.0, 0.11, fade=1.2)
+bed("water", 42.0, 47.6, 0.11, fade=1.2)        # the crane climbs away from the water...
 bed("wind", 42.0, 58.0, 0.035)
+bed("wind", 46.0, 53.4, 0.07, fade=1.6)          # ...into open air above the roofs
+bed("reeds", 48.0, 53.0, 0.025, fade=1.4)
+bed("water", 52.4, 58.0, 0.11, fade=0.5)         # cut: back down on the water
 bed("room", 57.0, 65.8, 0.06, fade=0.8)
 bed("water", 57.0, 65.8, 0.05, src=WATER_MUFFLED)
 for k in range(8):                       # the classroom clock, quiet

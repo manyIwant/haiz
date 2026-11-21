@@ -122,10 +122,10 @@ const SHOTS = [
     cam: [K(144.6, [1.05, 88.4, 1.7], [-12.0, 91.2, 1.25], 44), K(149.6, [0.85, 88.9, 1.68], [-12.0, 91.6, 1.25], 44)] },
   { name: 'stclock', t0: 149.6, t1: 154.6, light: 'morning', env: [-3, 70, 2.5], wind: 0.6,
     cam: [K(149.6, [-5.0, 68.4, 2.5], [-2.0, 72.0, 3.9], 30), K(154.6, [-4.8, 68.9, 2.55], [-2.0, 72.0, 3.92], 27)] },
-  { name: 'dawnfall', rays: 0.8, t0: 154.6, t1: 159.6, light: (t) => ['morning', 'dawn', ramp(t, 155.0, 158.6)], env: [-14, 50, 2], mist: (t) => ramp(t, 155.5, 159.6) * 0.5,
+  { name: 'dawnfall', rays: 0.8, t0: 154.6, t1: 159.6, light: (t) => ['morning', 'dawn', ramp(t, 155.0, 158.6)], env: [-14, 50, 2], mist: (t) => ramp(t, 155.5, 159.6) * 0.32,
     cam: [K(154.6, [-14.0, 62.0, 1.6], [-10.0, 10.0, 2.6], 50), K(159.6, [-14.2, 59.5, 1.6], [-10.0, 8.0, 2.6], 50)] },
-  { name: 'silence', t0: 159.6, t1: 171.6, light: 'dawn', env: [-4, 0, 2.5], interior: true, mist: 0.55, sash: 30,
-    cam: [K(159.6, [-4.55, -0.65, 2.78], [-9.5, 0.5, 0.5], 46), K(171.6, [-4.95, -0.42, 2.72], [-9.5, 0.6, 0.4], 44)] },
+  { name: 'silence', t0: 159.6, t1: 171.6, light: 'dawn', env: [-4, 0, 2.5], interior: true, mist: 0.28, sash: 72,
+    cam: [K(159.6, [-4.1, 0.55, 2.5], [-7.6, 0.15, 1.55], 42), K(171.6, [-4.45, 0.5, 2.44], [-7.6, 0.2, 1.5], 40)] },
 ];
 
 // ------------------------------------------------------------------ camera
@@ -219,10 +219,10 @@ function applyLight(sh, t) {
     const g = m.userData.group, has = (s) => W.bakeIndex[g] && W.bakeIndex[g][s];
     let gain = 1;
     // groups without a night bake: dusk light scaled down to roughly moonlight
-    const NG = 0.004;
-    if (!has(b) && b === 'night') gain = lerp(1, NG, k);
-    if (!has(a) && a === 'night') gain = lerp(NG, 1, k);
-    if (a === 'night' && b === 'night' && !has('night')) gain = NG;
+    // (any state without its own bake borrows dusk, scaled by the ratio of scene levels)
+    const LVL = { dusk: 1.0, morning: 1.2, dawn: 0.014, night: 0.004 };
+    const fb = (s) => has(s) ? 1 : (LVL[s.replace('_nosun', '')] ?? 1) / (has('dusk') ? 1 : 1);
+    gain = lerp(fb(a), fb(b), k);
     m.userData.lmLocalGain.value = gain;
   }
   return { a, b, k };
@@ -249,7 +249,7 @@ function applyWorld(sh, t) {
   const wind = typeof sh.wind === 'function' ? sh.wind(t) : (sh.wind ?? 0.3);
   U.uWind.value = wind;
   U.uMist.value = typeof sh.mist === 'function' ? sh.mist(t) : (sh.mist ?? 0);
-  U.uMistCol.value.copy(U.uFogCol.value).multiplyScalar(1.25);
+  U.uMistCol.value.copy(U.uFogCol.value).multiplyScalar(0.85);
   // the window sash: wide open for the passage in poem one, half open in poem two
   const sashDeg = sh.sash ?? (t < 100 ? 88 : 30);
   W.sashPivot.rotation.y = -sashDeg * Math.PI / 180;

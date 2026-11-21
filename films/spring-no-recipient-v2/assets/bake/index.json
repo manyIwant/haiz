@@ -27,6 +27,12 @@
    "res": 4096,
    "spp": 64,
    "scale": 1.0
+  },
+  "dawn": {
+   "file": "room_dawn.png",
+   "res": 4096,
+   "spp": 64,
+   "scale": 32.0
   }
  },
  "furn": {
@@ -40,19 +46,25 @@
    "file": "furn_dusk_nosun.png",
    "res": 2048,
    "spp": 64,
-   "scale": 1.0
+   "scale": 4.0
   },
   "morning_nosun": {
    "file": "furn_morning_nosun.png",
    "res": 2048,
    "spp": 64,
-   "scale": 1.0
+   "scale": 4.0
   },
   "morning": {
    "file": "furn_morning.png",
    "res": 2048,
    "spp": 64,
    "scale": 1.0
+  },
+  "dawn": {
+   "file": "furn_dawn.png",
+   "res": 2048,
+   "spp": 64,
+   "scale": 32.0
   }
  },
  "bldg": {
@@ -67,6 +79,12 @@
    "res": 4096,
    "spp": 40,
    "scale": 1.0
+  },
+  "dawn": {
+   "file": "bldg_dawn.png",
+   "res": 4096,
+   "spp": 40,
+   "scale": 32.0
   }
  },
  "station": {
