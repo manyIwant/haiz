@@ -1,0 +1,74 @@
+[
+ {
+  "t": 58,
+  "type": "whoosh"
+ },
+ {
+  "t": 70.6,
+  "type": "pick"
+ },
+ {
+  "t": 73,
+  "type": "pick"
+ },
+ {
+  "t": 74.3,
+  "type": "pick"
+ },
+ {
+  "t": 75.5,
+  "type": "pick"
+ },
+ {
+  "t": 81,
+  "type": "pick"
+ },
+ {
+  "t": 84.8,
+  "type": "pick"
+ },
+ {
+  "t": 86.4,
+  "type": "pick"
+ },
+ {
+  "t": 118,
+  "type": "whoosh"
+ },
+ {
+  "t": 157.2,
+  "type": "whoosh"
+ },
+ {
+  "t": 186.3,
+  "type": "select"
+ },
+ {
+  "t": 199.5,
+  "type": "land"
+ },
+ {
+  "t": 232.6,
+  "type": "key"
+ },
+ {
+  "t": 233.05,
+  "type": "key"
+ },
+ {
+  "t": 246,
+  "type": "whoosh"
+ },
+ {
+  "t": 246,
+  "type": "title"
+ },
+ {
+  "t": 334,
+  "type": "whoosh"
+ },
+ {
+  "t": 334,
+  "type": "title"
+ }
+]
