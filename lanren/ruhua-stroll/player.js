@@ -222,7 +222,8 @@ export function createPlayer({ camera, dom, student, getColliders, heightAt, spa
     if (fp > 0.001) eye.lerp(new THREE.Vector3(S.pos.x + Math.sin(S.yaw) * 0.12, S.pos.y + 1.56, S.pos.z + Math.cos(S.yaw) * 0.12), fp);
     camera.position.copy(eye);
     // aim past the student so they sit low in the frame, the place opening ahead of them
-    aim.set(pivot.x + cfx * cp * 3.2, pivot.y + 0.55 - spv * 3.2, pivot.z + cfz * cp * 3.2);
+    const aimLift = student.cameraAimLift?.(run) ?? 0.55;
+    aim.set(pivot.x + cfx * cp * 3.2, pivot.y + aimLift - spv * 3.2, pivot.z + cfz * cp * 3.2);
     if (fp > 0.001) aim.lerp(new THREE.Vector3(eye.x + cfx * cp * 5, eye.y - spv * 5, eye.z + cfz * cp * 5), fp);
     camera.lookAt(aim);
     if (Math.abs(camera.fov - C.fov.v) > 0.01) { camera.fov = C.fov.v; camera.updateProjectionMatrix(); }

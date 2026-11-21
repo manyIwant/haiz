@@ -1,0 +1,545 @@
+{
+  "desktop": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+    "initial": {
+      "tier": "near",
+      "motion": "Idle",
+      "modelTriangles": 63394,
+      "originalTriangles": 0,
+      "drawCalls": 4,
+      "renderedTriangles": 126790,
+      "fps": 57.64705882352941,
+      "frameP95Ms": 16.799999999999955,
+      "samples": 49,
+      "loadMs": 111.5,
+      "textures": 5,
+      "geometries": 3,
+      "jsHeapBytes": 21700000
+    },
+    "walk": {
+      "tier": "near",
+      "motion": "Walk",
+      "modelTriangles": 63394,
+      "originalTriangles": 0,
+      "drawCalls": 4,
+      "renderedTriangles": 126790,
+      "fps": 60.00461573967229,
+      "frameP95Ms": 16.700000000000045,
+      "samples": 52,
+      "loadMs": 111.5,
+      "textures": 5,
+      "geometries": 3,
+      "jsHeapBytes": 21700000
+    },
+    "far": {
+      "tier": "far",
+      "motion": "Run",
+      "modelTriangles": 7200,
+      "originalTriangles": 0,
+      "drawCalls": 3,
+      "renderedTriangles": 7202,
+      "fps": 60.00461573967229,
+      "frameP95Ms": 16.800000000000182,
+      "samples": 52,
+      "loadMs": 35.5,
+      "textures": 9,
+      "geometries": 5,
+      "jsHeapBytes": 21700000
+    },
+    "comparison": {
+      "tier": "near",
+      "motion": "Rest",
+      "modelTriangles": 63394,
+      "originalTriangles": 1500000,
+      "drawCalls": 7,
+      "renderedTriangles": 1626792,
+      "fps": 54.234941149319184,
+      "frameP95Ms": 16.800000000000182,
+      "samples": 47,
+      "loadMs": 0.10000002384185791,
+      "textures": 10,
+      "geometries": 8,
+      "jsHeapBytes": 21700000
+    },
+    "errors": []
+  },
+  "mobileEmulation": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+    "initial": {
+      "tier": "mid",
+      "motion": "Idle",
+      "modelTriangles": 22100,
+      "originalTriangles": 0,
+      "drawCalls": 4,
+      "renderedTriangles": 44202,
+      "fps": 60.004615739672275,
+      "frameP95Ms": 16.700000000000045,
+      "samples": 52,
+      "loadMs": 43.200000047683716,
+      "textures": 5,
+      "geometries": 3,
+      "jsHeapBytes": 19300000
+    },
+    "walk": {
+      "tier": "mid",
+      "motion": "Walk",
+      "modelTriangles": 22100,
+      "originalTriangles": 0,
+      "drawCalls": 4,
+      "renderedTriangles": 44202,
+      "fps": 59.9976923964463,
+      "frameP95Ms": 16.700000000000045,
+      "samples": 52,
+      "loadMs": 43.200000047683716,
+      "textures": 5,
+      "geometries": 3,
+      "jsHeapBytes": 19300000
+    },
+    "far": {
+      "tier": "far",
+      "motion": "Run",
+      "modelTriangles": 7200,
+      "originalTriangles": 0,
+      "drawCalls": 3,
+      "renderedTriangles": 7202,
+      "fps": 60.00461573967229,
+      "frameP95Ms": 16.700000000000273,
+      "samples": 52,
+      "loadMs": 32.5,
+      "textures": 9,
+      "geometries": 5,
+      "jsHeapBytes": 19300000
+    },
+    "errors": []
+  },
+  "campus": {
+    "walk": {
+      "lowestSoleNdcY": -0.8163594185576473,
+      "avatar": "hunyuan",
+      "detail": "near",
+      "skin": true,
+      "pbr": true,
+      "speed": 1.8499906806191204,
+      "run": 0,
+      "x": -27.870900461071027,
+      "y": -0.83,
+      "z": -19.852246649556566,
+      "elevation": -0.83,
+      "camera": [
+        -30.56830275455157,
+        1.5578313383295006,
+        -22.797447740664378
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 503,
+      "tris": 3581370,
+      "ms": 16.7,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -27.87,
+        -19.85
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "rest": 29,
+          "flee": 2
+        },
+        "activity": 0.84
+      }
+    },
+    "run": {
+      "lowestSoleNdcY": -0.9222256124459003,
+      "avatar": "hunyuan",
+      "detail": "near",
+      "skin": true,
+      "pbr": true,
+      "speed": 4.599943901175508,
+      "run": 0.9949792687519141,
+      "x": -24.189056001601486,
+      "y": -0.83,
+      "z": -16.128243665741962,
+      "elevation": -0.83,
+      "camera": [
+        -26.445249979130033,
+        1.6016243675976853,
+        -18.60500022702986
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 502,
+      "tris": 3544914,
+      "ms": 16.7,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -24.19,
+        -16.13
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "rest": 31,
+          "flee": 2
+        },
+        "activity": 0.84
+      }
+    },
+    "idle": {
+      "lowestSoleNdcY": -0.7364255387694373,
+      "avatar": "hunyuan",
+      "detail": "near",
+      "skin": true,
+      "pbr": true,
+      "speed": 0.008464746612202189,
+      "run": 0.01980269019909627,
+      "x": -23.00145282042039,
+      "y": -0.83,
+      "z": -14.92704197485267,
+      "elevation": -0.83,
+      "camera": [
+        -25.695153896253927,
+        1.5214588650151062,
+        -17.868409893072332
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 500,
+      "tris": 3521556,
+      "ms": 16.6,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -23,
+        -14.93
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "rest": 30,
+          "fly": 4
+        },
+        "activity": 0.84
+      }
+    },
+    "contact": {
+      "walk": {
+        "flatSoleGap_cm": {
+          "count": 71,
+          "p95": 1.3145819415334992,
+          "max": 3.0128297546185068
+        },
+        "flatSoleMotionPerFrame_cm": {
+          "count": 66,
+          "p95": 0.2110244939884961,
+          "max": 0.4622025391220329
+        }
+      },
+      "run": {
+        "flatSoleGap_cm": {
+          "count": 33,
+          "p95": 1.4185372881398428,
+          "max": 2.667117950767517
+        },
+        "flatSoleMotionPerFrame_cm": {
+          "count": 28,
+          "p95": 0.5477292919674268,
+          "max": 1.0575752001272345
+        }
+      }
+    },
+    "farAsset": {
+      "lowestSoleNdcY": -0.198175079239717,
+      "avatar": "hunyuan",
+      "detail": "far",
+      "skin": true,
+      "pbr": true,
+      "speed": 0.19906105326737356,
+      "run": 0.18921116061401594,
+      "x": -13.469376795861638,
+      "y": -0.83,
+      "z": -5.285820041615777,
+      "elevation": -0.83,
+      "camera": [
+        1.1137424552915487,
+        2.67,
+        -5.707474234151673
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 403,
+      "tris": 3012292,
+      "ms": 16.5,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -13.47,
+        -5.29
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "fly": 10,
+          "feed": 4,
+          "rest": 19
+        },
+        "activity": 0.84
+      }
+    },
+    "recoveredAsset": "near",
+    "collision": {
+      "wall": "keji",
+      "moved_m": 0.6199000000000001,
+      "clearance_m": 0.30009999999999337,
+      "cameraBoom_m": 0.700000000000193,
+      "desiredBoom_m": 4.850040975849858
+    },
+    "errors": []
+  },
+  "campusTouchEmulation": {
+    "walk": {
+      "lowestSoleNdcY": -0.34680666595751614,
+      "avatar": "hunyuan",
+      "detail": "mid",
+      "skin": true,
+      "pbr": true,
+      "speed": 1.4012929834264294,
+      "run": 0,
+      "x": -32.05265043259125,
+      "y": -0.83,
+      "z": -24.450839420814326,
+      "elevation": -0.83,
+      "camera": [
+        -37.80297152802047,
+        1.972407636550641,
+        -29.030977154917657
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 426,
+      "tris": 3283505,
+      "ms": 16.7,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -32.05,
+        -24.45
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "rest": 31
+        },
+        "activity": 0.84
+      }
+    },
+    "idle": {
+      "lowestSoleNdcY": -0.3047580657813493,
+      "avatar": "hunyuan",
+      "detail": "mid",
+      "skin": true,
+      "pbr": true,
+      "speed": 0.001140028871816777,
+      "run": 0,
+      "x": -31.87499698013419,
+      "y": -0.83,
+      "z": -24.295757214328923,
+      "elevation": -0.83,
+      "camera": [
+        -39.13537768445303,
+        1.1147935576483,
+        -27.281993310504156
+      ],
+      "stage": "stroll",
+      "clock": 0,
+      "tier": "low",
+      "scale": 1,
+      "calls": 414,
+      "tris": 3206031,
+      "ms": 16.7,
+      "weather": {
+        "name": "多云",
+        "temp": 25,
+        "rh": 72,
+        "wind": "东北风 3 级",
+        "windWord": "微风",
+        "windMs": "3.8",
+        "clock": "17:23",
+        "date": "11 月 21 日",
+        "origin": "offline",
+        "age": null,
+        "fallback": true
+      },
+      "origin": "offline",
+      "progress": 0,
+      "player": [
+        -31.87,
+        -24.3
+      ],
+      "cat": {
+        "act": "canteen",
+        "pose": "sit",
+        "mode": "settle",
+        "at": [
+          131.1,
+          88
+        ],
+        "spot": "canteen",
+        "trust": 0
+      },
+      "butterflies": {
+        "total": 92,
+        "patches": 78,
+        "active": {
+          "rest": 31
+        },
+        "activity": 0.84
+      }
+    },
+    "errors": []
+  },
+  "browser": "153.0.8010.12",
+  "legacy": {
+    "skinned": true,
+    "originalShader": true,
+    "originalOutline": true,
+    "isHunyuan": false
+  }
+}

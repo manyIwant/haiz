@@ -21,6 +21,7 @@
 //   weather  in rain an umbrella opens in the right hand (and closes when it stops)
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { bodyMaterial, outlineMaterial } from '../ruhua-stroll/student.js';
 import { cel } from '../ruhua-stroll/atmos.js';
 
@@ -43,24 +44,27 @@ function umbrella() {
   return g;
 }
 
-export async function createWalker(url) {
-  const gltf = await new GLTFLoader().loadAsync(url);
+export async function createWalker(url, { pbr = false, heightAt } = {}) {
+  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
   const model = gltf.scene;
   let skinned = null;
   model.traverse((o) => { if (o.isSkinnedMesh) skinned = o; });
   if (!skinned) throw new Error('walker: no skinned mesh');
-  const geo = skinned.geometry;
-  geo.setAttribute('aData', geo.getAttribute('color'));
-  geo.deleteAttribute('color');
-  skinned.material = bodyMaterial();
+  let outline = null;
+  if (!pbr) {
+    const geo = skinned.geometry;
+    geo.setAttribute('aData', geo.getAttribute('color'));
+    geo.deleteAttribute('color');
+    skinned.material = bodyMaterial();
+    outline = new THREE.SkinnedMesh(geo, outlineMaterial());
+    outline.material.uniforms.uWidth.value = 0.008;
+    outline.bind(skinned.skeleton, skinned.bindMatrix);
+    outline.frustumCulled = false;
+    outline.position.copy(skinned.position); outline.quaternion.copy(skinned.quaternion); outline.scale.copy(skinned.scale);
+    skinned.parent.add(outline);
+  }
   skinned.castShadow = skinned.receiveShadow = true;
   skinned.frustumCulled = false;
-  const outline = new THREE.SkinnedMesh(geo, outlineMaterial());
-  outline.material.uniforms.uWidth.value = 0.008;
-  outline.bind(skinned.skeleton, skinned.bindMatrix);
-  outline.frustumCulled = false;
-  outline.position.copy(skinned.position); outline.quaternion.copy(skinned.quaternion); outline.scale.copy(skinned.scale);
-  skinned.parent.add(outline);
   const root = new THREE.Group();
   root.name = 'walker';
   const blob = new THREE.Mesh(new THREE.CircleGeometry(0.4, 24), new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
@@ -72,6 +76,7 @@ export async function createWalker(url) {
   // ---- the bind pose, in the figure's own space (it faces +Z)
   const bone = (n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n));   // the loader drops the dots ('hand.L' → 'handL')
   const names = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder.L', 'shoulder.R', 'upperarm.L', 'upperarm.R', 'forearm.L', 'forearm.R', 'hand.L', 'hand.R', 'thigh.L', 'thigh.R', 'shin.L', 'shin.R', 'foot.L', 'foot.R', 'toe.L', 'toe.R'];
+  if (pbr && bone('bag')) names.push('bag');
   const B = {}, rest = {};
   model.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(model.matrixWorld).invert();
@@ -93,6 +98,26 @@ export async function createWalker(url) {
   const legLen = (s) => ({ L1: rest['thigh.' + s].pos.distanceTo(rest['shin.' + s].pos), L2: rest['shin.' + s].pos.distanceTo(rest['foot.' + s].pos) });
   const LEG = { L: legLen('L'), R: legLen('R') };
   const ankleH = rest['foot.L'].pos.y;                    // ankle height above the soles at rest
+  // For the scanned model, stance targets are under the actual ankle and the
+  // end of the sole is the pivot of a heel strike or toe-off.
+  const soles = {};
+  if (pbr) {
+    const positions = skinned.geometry.attributes.position;
+    const sample = new THREE.Vector3();
+    const meshToModel = inv.clone().multiply(skinned.matrixWorld);
+    for (const s of ['L', 'R']) {
+      const ankle = rest['foot.' + s].pos;
+      let heel = null, toe = null;
+      for (let i = 0; i < positions.count; i++) {
+        sample.fromBufferAttribute(positions, i).applyMatrix4(meshToModel);
+        if (sample.x * ankle.x <= 0 || sample.y > 0.019) continue;
+        if (!heel || sample.z < heel.z) heel = sample.clone();
+        if (!toe || sample.z > toe.z) toe = sample.clone();
+      }
+      if (!heel || !toe) throw new Error('walker: missing shoe soles');
+      soles[s] = { heel: heel.sub(ankle), toe: toe.sub(ankle) };
+    }
+  }
   const hipW = rest['thigh.L'].pos.x;                     // + is the walker's left
   const restDir = { thighL: dirOf('thigh.L', 'shin.L'), thighR: dirOf('thigh.R', 'shin.R'), shinL: dirOf('shin.L', 'foot.L'), shinR: dirOf('shin.R', 'foot.R'),
     armL: dirOf('upperarm.L', 'forearm.L'), armR: dirOf('upperarm.R', 'forearm.R'), foreL: dirOf('forearm.L', 'hand.L'), foreR: dirOf('forearm.R', 'hand.R') };
@@ -121,11 +146,14 @@ export async function createWalker(url) {
   const keepRest = (n) => { const p = modelQ[B[n].parent?.userData.wk]; const q = p ? p.clone().multiply(rest[n].local) : rest[n].q.clone(); B[n].quaternion.copy(rest[n].local); modelQ[n] = q; };
   const delta = (axis, ang, base) => new THREE.Quaternion().setFromAxisAngle(axis, ang).multiply(base);
 
+  const groundY = (p) => heightAt ? heightAt(p.x, p.z) : root.position.y;
+  const stanceX = (s) => pbr ? rest['foot.' + s].pos.x : (s === 'L' ? hipW : -hipW);
+  const stanceZ = (s) => pbr ? rest['foot.' + s].pos.z : 0.02;
   function plantAll() {
     for (const s of ['L', 'R']) {
       const f = G.feet[s];
-      tmp.set(s === 'L' ? hipW : -hipW, 0, 0.02).applyMatrix4(mW);
-      f.at.copy(tmp); f.at.y = root.position.y; f.swing = false; f.yaw = G.yaw;
+      tmp.set(stanceX(s), 0, stanceZ(s)).applyMatrix4(mW);
+      f.at.copy(tmp); f.at.y = groundY(f.at); f.swing = false; f.yaw = G.yaw;
     }
   }
 
@@ -148,6 +176,7 @@ export async function createWalker(url) {
     root.updateMatrixWorld(true);
     mW.copy(model.matrixWorld); mInv.copy(mW).invert();
     const pos = root.position;
+    const prevYaw = G.yaw;
     G.yaw = root.rotation.y;
     if (!G.init || pos.distanceTo(G.lastPos) > 1.5) { G.init = true; G.lastPos.copy(pos); G.vel.set(0, 0, 0); plantAll(); }
     // the body's own motion (whatever moved it)
@@ -161,29 +190,35 @@ export async function createWalker(url) {
     G.air += ((airborne ? 1 : 0) - G.air) * (1 - Math.exp(-dt * (airborne ? 12 : 8)));
     const moving = G.speed > 0.12 && !airborne;
     // ---- cadence and stride
-    const step = G.speed < 2.2 ? 0.36 + 0.26 * G.speed : 0.82 + 0.17 * G.speed;     // one step (m)
-    const cadence = Math.max(0.6, G.speed / step);                                   // steps per second
-    const duty = 0.62 - 0.26 * G.run;
+    const step = G.speed < 2.2 ? 0.36 + 0.26 * G.speed : 0.82 + 0.17 * G.speed;
+    const duty = 0.62 - (pbr ? 0.36 : 0.26) * G.run;
+    const supportReach = Math.min(LEG.L.L1 + LEG.L.L2, LEG.R.L1 + LEG.R.L2) * .61;
+    const minimumCadence = pbr ? G.speed * duty / supportReach : 0;
+    const cadence = Math.max(0.6, G.speed / step, minimumCadence);
+    if (pbr && moving && !G.wasMoving) G.phase = duty * 0.5;
     if (moving) G.phase += cadence * dt * 0.5;
+    G.wasMoving = moving;
     const fwd = tmp2.set(Math.sin(G.yaw), 0, Math.cos(G.yaw)).clone();
     const left = new THREE.Vector3(fwd.z, 0, -fwd.x);
+    const travel = pbr && moving ? G.vel.clone().normalize() : fwd;
     for (const s of ['L', 'R']) {
       const f = G.feet[s], side = s === 'L' ? 1 : -1;
       const ph = fract(G.phase + (s === 'L' ? 0 : 0.5));
       // where this foot should come down: under the hip, half a step ahead of where the body will be
-      const ahead = moving ? step * 0.5 : 0;
-      const target = new THREE.Vector3().copy(pos).addScaledVector(left, hipW * side * (moving ? 0.85 : 1)).addScaledVector(fwd, ahead + (moving ? 0 : 0.02));
+      const ahead = moving ? (pbr ? G.speed * duty / cadence : step * 0.5) : 0;
+      const target = new THREE.Vector3().copy(pos).addScaledVector(left, stanceX(s) * (moving ? (pbr ? 0.93 : 0.85) : 1))
+        .addScaledVector(travel, ahead).addScaledVector(fwd, pbr || !moving ? stanceZ(s) : 0);
       if (moving) {
         const swinging = ph >= duty;
         if (swinging && !f.swing) { f.swing = true; f.from.copy(f.at); f.dur = (1 - duty) / (cadence * 0.5); f.t = 0; }
-        if (!swinging && f.swing) { f.swing = false; f.at.copy(target); f.at.y = pos.y; f.yaw = G.yaw; }
+        if (!swinging && f.swing) { f.swing = false; f.at.copy(target); f.at.y = groundY(f.at); f.yaw = G.yaw; }
         if (f.swing) {
           f.t = clamp((ph - duty) / (1 - duty), 0, 1);
           // predict where the body will be at touchdown
           target.addScaledVector(G.vel, (1 - f.t) * f.dur);
-          f.to = target.clone(); f.to.y = pos.y;                 // if the body stops mid-stride, the swing finishes here
+          f.to = target.clone(); f.to.y = groundY(f.to);                 // if the body stops mid-stride, the swing finishes here
           f.cur = new THREE.Vector3().lerpVectors(f.from, target, smooth(f.t));
-          f.cur.y = pos.y + Math.sin(f.t * Math.PI) * (0.07 + 0.13 * G.run) + (1 - G.run) * 0.02 * Math.sin(f.t * Math.PI * 2);
+          f.cur.y = groundY(f.cur) + Math.sin(f.t * Math.PI) * (0.07 + 0.13 * G.run) + (1 - G.run) * 0.02 * Math.sin(f.t * Math.PI * 2);
           f.roll = f.t < 0.3 ? -0.5 * (1 - f.t / 0.3) : f.t > 0.75 ? 0.3 * (f.t - 0.75) / 0.25 : 0;   // toe-off, then the heel leads
           f.yaw += wrap(G.yaw - f.yaw) * (1 - Math.exp(-dt * 10));
         } else {
@@ -199,8 +234,8 @@ export async function createWalker(url) {
         }
         const off = f.at.distanceTo(target), turn = Math.abs(wrap(G.yaw - f.yaw));
         const other = G.feet[s === 'L' ? 'R' : 'L'];
-        if (!f.swing && !other.swing && (off > 0.22 || turn > 0.55)) { f.swing = true; f.from.copy(f.at); f.to = target.clone(); f.to.y = pos.y; f.t = 0; f.dur = 0.32; }
-        if (f.swing) { f.cur = new THREE.Vector3().lerpVectors(f.from, f.to, smooth(f.t)); f.cur.y = pos.y + Math.sin(f.t * Math.PI) * 0.06; f.yaw += wrap(G.yaw - f.yaw) * (1 - Math.exp(-dt * 12)); }
+        if (!f.swing && !other.swing && (off > 0.22 || turn > 0.55)) { f.swing = true; f.from.copy(f.at); f.to = target.clone(); f.to.y = groundY(f.to); f.t = 0; f.dur = 0.32; }
+        if (f.swing) { f.cur = new THREE.Vector3().lerpVectors(f.from, f.to, smooth(f.t)); f.cur.y = groundY(f.cur) + Math.sin(f.t * Math.PI) * 0.06; f.yaw += wrap(G.yaw - f.yaw) * (1 - Math.exp(-dt * 12)); }
         else f.cur = f.at.clone();
         f.roll *= Math.exp(-dt * 8);
       }
@@ -241,23 +276,49 @@ export async function createWalker(url) {
     setModel('head', delta(Y, ly * 0.6 + pelvisYaw * 0.3, delta(X, -lp * 0.65 - lean * 0.3, rest.head.q)));
     // ---- the legs: hip → planted ankle
     root.updateMatrixWorld(true); mW.copy(model.matrixWorld); mInv.copy(mW).invert();
+    const targets = {};
+    let pelvisDrop = 0;
+    for (const s of ['L', 'R']) {
+      const f = G.feet[s];
+      const ankle = worldToModel(f.cur.clone());
+      ankle.y += pbr ? rest['foot.' + s].pos.y : ankleH;
+      const yaw = wrap(f.yaw - G.yaw);
+      const lateral = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+      if (pbr && !f.swing && !airborne) {
+        if (Math.abs(f.roll) > 1e-4) {
+          const pivot = soles[s][f.roll > 0 ? 'heel' : 'toe'].clone().applyAxisAngle(Y, yaw);
+          ankle.add(pivot).sub(pivot.clone().applyAxisAngle(lateral, -f.roll));
+        }
+        const hip = B['thigh.' + s].getWorldPosition(new THREE.Vector3()).applyMatrix4(mInv);
+        const horizontal = Math.hypot(ankle.x - hip.x, ankle.z - hip.z);
+        const length = LEG[s].L1 + LEG[s].L2 - .004;
+        const maxHeight = Math.sqrt(Math.max(0, length * length - horizontal * horizontal));
+        pelvisDrop = Math.max(pelvisDrop, hip.y - ankle.y - maxHeight);
+      }
+      targets[s] = { ankle, yaw, lateral };
+    }
+    if (pbr) {
+      const need = Math.min(.16, pelvisDrop);
+      G.reachDrop = Math.max(need, (G.reachDrop || 0) * Math.exp(-dt * 15));
+      B.hips.position.add(tmp.set(0, -G.reachDrop, 0).applyQuaternion(parentQInv));
+    }
     B.hips.updateMatrixWorld(true);
     for (const s of ['L', 'R']) {
       const f = G.feet[s];
+      const { ankle, yaw, lateral } = targets[s];
       const hipM = B['thigh.' + s].getWorldPosition(new THREE.Vector3()).applyMatrix4(mInv);
-      const ankle = worldToModel(f.cur.clone()); ankle.y += ankleH;
-      const footYaw = wrap(f.yaw - G.yaw);
-      const pole = new THREE.Vector3(Math.sin(footYaw) + (s === 'L' ? 0.12 : -0.12), 0, Math.cos(footYaw));
+      const pole = new THREE.Vector3(Math.sin(yaw) + (s === 'L' ? 0.12 : -0.12), 0, Math.cos(yaw));
       const { L1, L2 } = LEG[s];
+      if (pbr && ankle.distanceTo(hipM) > L1 + L2 - .001) {
+        ankle.sub(hipM).setLength(L1 + L2 - .001).add(hipM);
+      }
       const k = ik(hipM, ankle, L1, L2, pole).clone();
       const thighQ = qFrom(restDir['thigh' + s], k.clone().sub(hipM)).multiply(rest['thigh.' + s].q);
       setModel('thigh.' + s, thighQ);
-      const sd = tmp2.copy(ankle).sub(k);
-      setModel('shin.' + s, qFrom(restDir['shin' + s], sd).multiply(rest['shin.' + s].q));
-      // the foot: its own heading, rolled heel-to-toe
-      const lat = new THREE.Vector3(Math.cos(footYaw), 0, -Math.sin(footYaw));
-      setModel('foot.' + s, delta(lat, -f.roll, delta(Y, footYaw, rest['foot.' + s].q)));
-      setModel('toe.' + s, delta(lat, Math.max(0, f.roll) * -0.9 + Math.max(0, -f.roll) * 0.0, modelQ['foot.' + s].clone().multiply(rest['toe.' + s].local)));
+      setModel('shin.' + s, qFrom(restDir['shin' + s], ankle.clone().sub(k)).multiply(rest['shin.' + s].q));
+      setModel('foot.' + s, delta(lateral, -f.roll, delta(Y, yaw, rest['foot.' + s].q)));
+      const toeCurl = -Math.max(0, f.roll) * 0.9;
+      setModel('toe.' + s, delta(lateral, toeCurl, modelQ['foot.' + s].clone().multiply(rest['toe.' + s].local)));
     }
     // ---- the arms: against the legs
     const um = G.umb;
@@ -266,14 +327,23 @@ export async function createWalker(url) {
       const legZ = s === 'L' ? fl.z : fr.z;
       let flex = clamp(-legZ * (0.75 + 1.2 * runK), -0.45, 0.65) * (moving ? 1 : 0) + (moving ? 0.05 : 0.02 * Math.sin(G.time * 0.7 + side));
       let bend = 0.2 + 0.08 * walkK + 1.25 * runK + Math.max(0, flex) * 0.5;
+      const bindArmOffset = pbr ? -0.44 : 0;
       let abd = 0.06 + 0.1 * runK + G.air * 0.3;
       if (s === 'R' && um > 0.01) { flex = flex * (1 - um) + 0.75 * um; bend = bend * (1 - um) + 1.55 * um; abd = abd * (1 - um) + 0.15 * um; }
       keepRest('shoulder.' + s);
       const fwdAxis = new THREE.Vector3(1, 0, 0);
-      const armQ = delta(Z, abd * side, delta(fwdAxis, -flex, rest['upperarm.' + s].q));
+      const armQ = delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex, rest['upperarm.' + s].q));
       setModel('upperarm.' + s, armQ);
-      setModel('forearm.' + s, delta(Z, abd * side, delta(fwdAxis, -flex - bend, rest['forearm.' + s].q)));
-      setModel('hand.' + s, delta(Z, abd * side, delta(fwdAxis, -flex - bend * 0.9, rest['hand.' + s].q)));
+      setModel('forearm.' + s, delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex - bend, rest['forearm.' + s].q)));
+      setModel('hand.' + s, delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex - bend * 0.9, rest['hand.' + s].q)));
+    }
+    if (B.bag) {
+      const pitch = clamp(-G.accel * .007 + Math.sin(cyc * 2) * (.013 * walkK + .052 * runK), -.11, .11);
+      const roll = clamp(wrap(G.yaw - prevYaw) / dt * -.017, -.07, .07);
+      const k = 1 - Math.exp(-dt * 9);
+      G.bagPitch = THREE.MathUtils.lerp(G.bagPitch || 0, pitch, k);
+      G.bagRoll = THREE.MathUtils.lerp(G.bagRoll || 0, roll, k);
+      setModel('bag', delta(Z, G.bagRoll, delta(X, G.bagPitch, modelQ.chest.clone().multiply(rest.bag.local))));
     }
     // the umbrella opens and closes
     const want = G.umbWant ? 1 : 0;
@@ -289,7 +359,7 @@ export async function createWalker(url) {
   }
 
   return {
-    root, model, skinned, outline, G,
+    root, model, skinned, outline, G, clips: gltf.animations,
     update,
     lookAt(yaw, pitch, weight = 1) { G.look.ty = yaw; G.look.tp = pitch; G.look.tw = weight; },
     setVisible(v) { model.visible = v; blob.visible = v; },

@@ -1,0 +1,70 @@
+:root {
+  color-scheme: light;
+  --paper: #eeece4;
+  --surface: #f6f4ed;
+  --ink: #25312d;
+  --muted: #526359;
+  --line: #cfcfc1;
+  --stage: #303b36;
+  --accent: #2b5849;
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; text-underline-offset: .23em; }
+button, select, input { font: inherit; }
+:focus-visible { outline: 2px solid #a35b30; outline-offset: 3px; }
+.mast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 60px;
+  padding: 10px clamp(18px, 4vw, 66px);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.brand { display: flex; align-items: baseline; gap: 14px; }
+.brand span:first-child { font: 700 23px Georgia, serif; letter-spacing: .045em; }
+.brand span + span { color: var(--muted); }
+main { width: min(1450px, 100%); margin: auto; padding: 25px clamp(16px, 4vw, 58px) 22px; }
+.title { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-bottom: 16px; }
+h1 { font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: clamp(29px, 4vw, 51px); margin: 0; font-weight: 750; }
+#status, .hint { color: var(--muted); font-size: 13px; margin: 0; }
+.workbench { display: grid; grid-template-columns: minmax(0, 1fr) 246px; min-height: 565px; border: 1px solid var(--line); }
+.stage { position: relative; background: var(--stage); min-height: 565px; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+canvas:active { cursor: grabbing; }
+canvas:focus-visible { outline-offset: -5px; }
+.stage-labels { position: absolute; z-index: 1; inset: 14px 0 auto; display: flex; color: #f5f3e8; pointer-events: none; text-align: center; font-size: 13px; }
+.stage-labels span { flex: 1; }
+.stage[data-compare]::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid #e8e5ce43; pointer-events: none; }
+.angles { display: flex; gap: 5px; position: absolute; z-index: 2; bottom: 13px; left: 50%; translate: -50% 0; }
+.angles button { min-height: 44px; min-width: 48px; border: 1px solid #eceadb5c; border-radius: 4px; color: #f4f1e8; background: #252f2be8; cursor: pointer; font-size: 13px; }
+.angles button[aria-pressed=true] { background: #f2eee1; color: #25332e; border-color: #f2eee1; }
+.inspector { background: var(--surface); padding: 18px; display: grid; align-content: start; gap: 18px; }
+fieldset { border: 0; margin: 0; min-width: 0; padding: 0; }
+legend { padding: 0 0 7px; color: var(--muted); font-weight: 700; font-size: 13px; }
+select { width: 100%; min-height: 44px; padding: 0 8px; color: var(--ink); border: 1px solid var(--line); background: #fffcf2; border-radius: 4px; }
+.motion-row { display: flex; align-items: stretch; gap: 5px; }
+.motion-row select { min-width: 0; }
+.motion-row button { flex: none; padding: 0 7px; border: 1px solid var(--line); border-radius: 4px; background: #fffcf2; color: var(--ink); cursor: pointer; font-size: 12px; }
+.toggle, .range { display: flex; align-items: center; font-size: 13px; gap: 6px; min-height: 40px; }
+.toggle input { accent-color: var(--accent); width: 17px; height: 17px; margin: 0; }
+.range { justify-content: space-between; min-height: 26px; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.light-toggles { display: flex; gap: 13px; }
+.stats { margin: 0; padding-top: 11px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; border-top: 1px solid var(--line); }
+.stats dt { color: var(--muted); font-size: 12px; }
+.stats dd { margin: 3px 0 0; font: 600 17px ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.hint { margin-top: 10px; }
+@media (max-width: 740px) {
+  main { padding-top: 17px; }
+  .stage { min-height: min(64svh, 540px); }
+  .workbench { grid-template-columns: minmax(0, 1fr); min-height: auto; }
+  .inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 15px; padding: 14px; }
+  .stats { padding-top: 0; border-top: 0; align-content: start; }
+  .stats dd { font-size: 15px; }
+  .light-toggles { gap: 7px; flex-wrap: wrap; }
+}

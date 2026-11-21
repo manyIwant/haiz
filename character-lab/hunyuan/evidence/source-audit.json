@@ -1,0 +1,45 @@
+{
+  "sha256": "85a0f622739ded8194260211b876ef6ec98f8bab6eb592ed75ae51d3e48c7d67",
+  "bytes": 27000692,
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "meshes": 1,
+  "attributes": [
+    "POSITION"
+  ],
+  "vertices": 749996,
+  "triangles": 1500000,
+  "bounds_min": [
+    -0.3470308482646942,
+    0.0,
+    -0.17222069203853607
+  ],
+  "bounds_max": [
+    0.34792572259902954,
+    1.1612915992736816,
+    0.12312515825033188
+  ],
+  "components": [
+    {
+      "root": 0,
+      "triangles": 1500000,
+      "signed_volume": 0.030702068900346817
+    }
+  ],
+  "edges": 2250000,
+  "boundary_edges": 0,
+  "non_manifold_edges": 0,
+  "reversed_neighbor_edges": 0,
+  "exact_duplicate_positions": 0,
+  "zero_area_triangles": 0,
+  "duplicate_triangles": 0,
+  "signed_volume": 0.030702068900346817,
+  "uv": 0,
+  "materials": 0,
+  "images": 0,
+  "skins": 0,
+  "animations": 0
+}

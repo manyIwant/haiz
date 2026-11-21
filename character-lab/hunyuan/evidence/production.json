@@ -1,0 +1,18 @@
+{
+  "refinedJointEdges": 597,
+  "near": {
+    "triangles": 63394,
+    "vertices_before_uv_splits": 31693,
+    "bytes": 6373768
+  },
+  "mid": {
+    "triangles": 22100,
+    "vertices_before_uv_splits": 11046,
+    "bytes": 2674576
+  },
+  "far": {
+    "triangles": 7200,
+    "vertices_before_uv_splits": 3596,
+    "bytes": 1065892
+  }
+}

@@ -90,10 +90,21 @@ async function main() {
   await world.loadCampus();
   real.addCampus(world.campusV3);
   ui.progress(0.8);
-  // the walker (scripts/ruhua/build_student.py, walked by walker.js); V2's figure if it cannot load (?figure=v2 to compare)
-  let student;
-  try { student = Q.get('figure') === 'v2' ? await createStudent(asset('assets/toon/student.glb')) : await createWalker(asset('assets/ruhua/student.glb')); }
-  catch (e) { console.warn('walker unavailable, using the V2 figure', e); student = await createStudent(asset('assets/toon/student.glb')); }
+  // The Hunyuan character can be reviewed on the real campus via ?figure=hunyuan.
+  let student, studentFill;
+  try {
+    if (Q.get('figure') === 'hunyuan') {
+      const { createHunyuan } = await import('../../character-lab/hunyuan/avatar.js');
+      student = await createHunyuan({ mobile: coarse, heightAt: world.heightAt });
+      studentFill = new THREE.HemisphereLight(0xc4dbf0, 0x9c9672, 1.3);
+      world.group.add(studentFill);
+    } else {
+      student = Q.get('figure') === 'v2' ? await createStudent(asset('assets/toon/student.glb')) : await createWalker(asset('assets/ruhua/student.glb'));
+    }
+  } catch (error) {
+    console.warn('walker unavailable, using the V2 figure', error);
+    student = await createStudent(asset('assets/toon/student.glb'));
+  }
   student.root.visible = false;
   world.group.add(student.root);
   const rain = createRain({ world, mobile: coarse, layer: LAYER_PAINT });
@@ -124,7 +135,7 @@ async function main() {
       return variants.get(m);
     };
     world.group.traverse((o) => {
-      if (!o.isMesh || o === student.root) return;
+      if (!o.isMesh || (studentFill && o === student.skinned)) return;
       if (Array.isArray(o.material)) swaps.push({ o, normal: o.material, paint: o.material.map(variant) });
       else if (!o.material.isShaderMaterial) swaps.push({ o, normal: o.material, paint: variant(o.material) });
     });
@@ -366,6 +377,15 @@ async function main() {
     // eyes adapt a little in deep shade
     D.shadeT -= dt;
     if (D.shadeT <= 0) { D.shadeT = 0.2; D.shade = shadeAt(world, feet); }
+    if (studentFill && alive) {
+      const sun = world.day.sun;
+      sun.color.copy(U.uSunColor.value);
+      sun.intensity = Math.min(1.25, 1.55 - .42 * D.shade);
+      studentFill.color.copy(U.uSkyAmb.value);
+      studentFill.groundColor.copy(U.uGroundAmb.value);
+      studentFill.intensity = 1.34 + .2 * D.shade;
+      if (student.model.visible) student.observeDistance(camera.position.distanceTo(student.root.position));
+    }
     D.adapt += (1 + 0.18 * D.shade - D.adapt) * (1 - Math.exp(-dt * 1.1));
     pipeline.setGrade(S.pal.exposure * D.adapt, S.pal.sat, S.pal.bloom);
     ui.weather(weather.caption(), S);

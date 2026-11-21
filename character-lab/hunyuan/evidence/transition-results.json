@@ -1,0 +1,16 @@
+{
+  "browser": "153.0.8010.12",
+  "transition": {
+    "entered": {
+      "stage": "enter",
+      "visible": true,
+      "pbr": true
+    },
+    "result": {
+      "stage": "stroll",
+      "hasRainUmbrella": true,
+      "asset": "hunyuan"
+    },
+    "errors": []
+  }
+}

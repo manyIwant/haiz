@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#eeece4">
+  <title>HAIZ · 角色验证台</title>
+  <link rel="stylesheet" href="./lab.css">
+  <script type="importmap">
+    {"imports":{"three":"../../lanren/vendor/three/three.module.min.js","three/addons/":"../../lanren/vendor/three/addons/"}}
+  </script>
+  <script type="module" src="./lab.js"></script>
+</head>
+<body>
+  <header class="mast">
+    <div class="brand"><span>HAIZ</span><span>Character Lab</span></div>
+    <a href="../../ruhua.html?figure=hunyuan&amp;stage=stroll">进入校园 <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <div class="title">
+      <h1>海南中学学生</h1>
+      <p id="status" role="status">准备角色资源…</p>
+    </div>
+    <div class="workbench">
+      <section class="stage" aria-label="角色观察区">
+        <canvas id="stage" tabindex="0" aria-label="拖动或使用方向键旋转，滚轮或双指缩放"></canvas>
+        <div class="stage-labels"><span id="original-label" hidden>混元原始高模</span><span id="tier-label">优化角色</span></div>
+        <div class="angles" role="group" aria-label="观察角度">
+          <button type="button" data-view="three-quarter" aria-pressed="true">3/4</button>
+          <button type="button" data-view="front" aria-pressed="false">正面</button>
+          <button type="button" data-view="side" aria-pressed="false">侧面</button>
+          <button type="button" data-view="back" aria-pressed="false">背面</button>
+        </div>
+      </section>
+      <aside class="inspector" aria-label="验证选项">
+        <fieldset>
+          <legend>动作</legend>
+          <div class="motion-row"><select id="motion" aria-label="动作">
+            <option>Idle</option><option>Walk</option><option>Run</option>
+            <option>Turn Left</option><option>Turn Right</option>
+            <option>Start Walking</option><option>Walk Stop</option>
+            <option value="Rest">绑定姿势</option>
+          </select><button id="replay" type="button">重播</button></div>
+          <label class="toggle"><input type="checkbox" id="rig"> 显示骨骼</label>
+        </fieldset>
+        <fieldset>
+          <legend>细节层级</legend>
+          <select id="lod" aria-label="细节层级">
+            <option value="near">LOD 0 · 近景</option>
+            <option value="mid">LOD 1 · 中景</option>
+            <option value="far">LOD 2 · 远景</option>
+          </select>
+          <label class="toggle"><input type="checkbox" id="compare"> 对照原始高模</label>
+          <label class="range" for="distance"><span>观察距离</span><output id="distance-value" for="distance">3.4 m</output></label>
+          <input id="distance" type="range" min="1.25" max="12" step=".05" value="3.4">
+        </fieldset>
+        <fieldset>
+          <legend>光照</legend>
+          <select id="light" aria-label="照明预设">
+            <option value="day">自然日光</option><option value="shade">树荫</option><option value="dusk">黄昏</option>
+          </select>
+          <div class="light-toggles">
+            <label class="toggle"><input type="checkbox" id="ambient" checked> 环境光</label>
+            <label class="toggle"><input type="checkbox" id="shadows" checked> 阴影</label>
+          </div>
+        </fieldset>
+        <dl class="stats">
+          <div><dt>模型三角面</dt><dd id="triangles">—</dd></div>
+          <div><dt>渲染三角面</dt><dd id="rendered">—</dd></div>
+          <div><dt>Draw Calls</dt><dd id="calls">—</dd></div>
+          <div><dt>FPS</dt><dd id="fps">—</dd></div>
+        </dl>
+      </aside>
+    </div>
+    <p class="hint">拖动旋转模型，滚轮或双指缩放。观察区获得焦点后可用方向键和 + / −。</p>
+  </main>
+</body>
+</html>
