@@ -236,9 +236,11 @@ def clip_samples(rig, name, duration, speed=None, turn=0, start_stop=0):
             flex = swing * (.48 if running else .29) * pace
             elbow = .09 + (.91 if running else .26) * pace
             for n, p, r in [(shoulder, -pitch*.95, -sign*.10), (upper, flex, -sign*.41),
-                            (forearm, flex+elbow, -sign*.44), (hand, flex+elbow*.90, -sign*.43)]:
-                # The source is in an A pose. Negative roll on the left brings the arm inward.
-                set_pose(n, rotation(n, p, turning-.41*twist, r))
+                            (forearm, flex-elbow, -sign*.48), (hand, flex-elbow*.90, -sign*.48)]:
+                # Bring the source's A pose inward before applying elbow flexion.
+                body_yaw = Quaternion(up, turning-.41*twist)
+                arm_pitch, arm_roll = Quaternion(x_axis,p), Quaternion(y_axis,r)
+                set_pose(n, body_yaw @ arm_pitch @ arm_roll @ rest[n])
             hip0, knee0, ankle0, hip_relative, L, S, ankle, foot_q, _ = legs[s]
             hip = hip_origin + pelvis + hip_relative
             direction = (ankle - hip).normalized()

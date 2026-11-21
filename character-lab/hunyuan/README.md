@@ -64,9 +64,9 @@ Blender 使用 5.2.3，浏览器脚本使用仓库的 Playwright。录制脚本�
 - [浏览器实测](evidence/browser-results.json) · [桌面校园](evidence/campus-desktop.png) · [校园跑步](evidence/campus-run.png) · [触屏模拟校园](evidence/campus-mobile.png) · [动作视频](evidence/student-motion.mp4)
 - [入画交接和雨伞测试](evidence/transition-results.json) · [交接截图](evidence/campus-transition.png)
 
-Chromium 153 使用 Apple M5 的 ANGLE Metal 渲染。在本机服务、近景站姿和阴影开启的情况下，桌面得到 57.6 FPS，首次模型获取与解析约 112 ms。390 × 844 触屏模拟使用中景，得到 60.0 FPS，模型获取与解析约 43 ms。两次均是短窗口样本。渲染统计含地面、网格和阴影通道，共 4 个 Draw Calls。
+Chromium 153 使用 Apple M5 的 ANGLE Metal 渲染。在本机服务、近景站姿和阴影开启的情况下，桌面得到 57.6 FPS，首次模型获取与解析约 82 ms。390 × 844 触屏模拟使用中景，得到 60.0 FPS，模型获取与解析约 42 ms。两次均是短窗口样本。渲染统计含地面、网格和阴影通道，共 4 个 Draw Calls。
 
-校园脚底采样以 60 Hz 步进，只统计平脚支撑且相邻帧共用同一落脚点的样本。走路连续帧水平位移 P95 为 0.21 cm（66 个样本），跑步为 0.55 cm（28 个样本）。脚底到地面的偏差 P95 分别为 1.31 cm 和 1.42 cm。贴近科技楼时碰撞保持约 0.30 m 间距，镜头受阻时由约 4.9 m 缩到 0.70 m。
+校园脚底采样以 60 Hz 步进，只统计平脚支撑且相邻帧共用同一落脚点的样本。走路连续帧水平位移 P95 为 0.21 cm（66 个样本），跑步为 0.55 cm（28 个样本）。脚底到地面的偏差 P95 分别为 1.31 cm 和 1.42 cm。贴近科技楼时碰撞保持约 0.30 m 间距，镜头受阻时由约 4.85 m 缩到 0.70 m。
 
 浏览器测试覆盖键盘、触屏、三档 LOD、校内近远景切换、遮挡、主路径入画交接、雨伞以及原角色回滚。转场测试从页面按钮启动，用测试时钟加速笔触和镜头阶段。
 

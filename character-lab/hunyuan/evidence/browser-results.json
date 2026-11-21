@@ -9,12 +9,12 @@
       "drawCalls": 4,
       "renderedTriangles": 126790,
       "fps": 57.64705882352941,
-      "frameP95Ms": 16.799999999999955,
+      "frameP95Ms": 16.700000000000045,
       "samples": 49,
-      "loadMs": 111.5,
+      "loadMs": 81.5,
       "textures": 5,
       "geometries": 3,
-      "jsHeapBytes": 21700000
+      "jsHeapBytes": 20500000
     },
     "walk": {
       "tier": "near",
@@ -23,13 +23,13 @@
       "originalTriangles": 0,
       "drawCalls": 4,
       "renderedTriangles": 126790,
-      "fps": 60.00461573967229,
+      "fps": 59.99999999999999,
       "frameP95Ms": 16.700000000000045,
-      "samples": 52,
-      "loadMs": 111.5,
+      "samples": 51,
+      "loadMs": 81.5,
       "textures": 5,
       "geometries": 3,
-      "jsHeapBytes": 21700000
+      "jsHeapBytes": 20500000
     },
     "far": {
       "tier": "far",
@@ -38,13 +38,13 @@
       "originalTriangles": 0,
       "drawCalls": 3,
       "renderedTriangles": 7202,
-      "fps": 60.00461573967229,
-      "frameP95Ms": 16.800000000000182,
-      "samples": 52,
-      "loadMs": 35.5,
+      "fps": 59.99999999999999,
+      "frameP95Ms": 16.700000000000273,
+      "samples": 51,
+      "loadMs": 29.899999976158142,
       "textures": 9,
       "geometries": 5,
-      "jsHeapBytes": 21700000
+      "jsHeapBytes": 20500000
     },
     "comparison": {
       "tier": "near",
@@ -53,13 +53,13 @@
       "originalTriangles": 1500000,
       "drawCalls": 7,
       "renderedTriangles": 1626792,
-      "fps": 54.234941149319184,
+      "fps": 54.11764705882351,
       "frameP95Ms": 16.800000000000182,
-      "samples": 47,
-      "loadMs": 0.10000002384185791,
+      "samples": 46,
+      "loadMs": 0.09999990463256836,
       "textures": 10,
       "geometries": 8,
-      "jsHeapBytes": 21700000
+      "jsHeapBytes": 20500000
     },
     "errors": []
   },
@@ -75,7 +75,7 @@
       "fps": 60.004615739672275,
       "frameP95Ms": 16.700000000000045,
       "samples": 52,
-      "loadMs": 43.200000047683716,
+      "loadMs": 42.39999997615814,
       "textures": 5,
       "geometries": 3,
       "jsHeapBytes": 19300000
@@ -87,10 +87,10 @@
       "originalTriangles": 0,
       "drawCalls": 4,
       "renderedTriangles": 44202,
-      "fps": 59.9976923964463,
+      "fps": 60.004615739672275,
       "frameP95Ms": 16.700000000000045,
       "samples": 52,
-      "loadMs": 43.200000047683716,
+      "loadMs": 42.39999997615814,
       "textures": 5,
       "geometries": 3,
       "jsHeapBytes": 19300000
@@ -102,10 +102,10 @@
       "originalTriangles": 0,
       "drawCalls": 3,
       "renderedTriangles": 7202,
-      "fps": 60.00461573967229,
+      "fps": 59.99999999999999,
       "frameP95Ms": 16.700000000000273,
-      "samples": 52,
-      "loadMs": 32.5,
+      "samples": 51,
+      "loadMs": 33.89999997615814,
       "textures": 9,
       "geometries": 5,
       "jsHeapBytes": 19300000
@@ -114,21 +114,21 @@
   },
   "campus": {
     "walk": {
-      "lowestSoleNdcY": -0.8163594185576473,
+      "lowestSoleNdcY": -0.8162013677018412,
       "avatar": "hunyuan",
       "detail": "near",
       "skin": true,
       "pbr": true,
-      "speed": 1.8499906806191204,
+      "speed": 1.8499904513842471,
       "run": 0,
-      "x": -27.870900461071027,
+      "x": -27.874010493971245,
       "y": -0.83,
-      "z": -19.852246649556566,
+      "z": -19.855392293520545,
       "elevation": -0.83,
       "camera": [
-        -30.56830275455157,
-        1.5578313383295006,
-        -22.797447740664378
+        -30.57208569185208,
+        1.5578733237599585,
+        -22.80134715416861
       ],
       "stage": "stroll",
       "clock": 0,
@@ -144,7 +144,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -154,7 +154,7 @@
       "progress": 0,
       "player": [
         -27.87,
-        -19.85
+        -19.86
       ],
       "cat": {
         "act": "canteen",
@@ -178,28 +178,28 @@
       }
     },
     "run": {
-      "lowestSoleNdcY": -0.9222256124459003,
+      "lowestSoleNdcY": -0.9288772144845785,
       "avatar": "hunyuan",
       "detail": "near",
       "skin": true,
       "pbr": true,
-      "speed": 4.599943901175508,
-      "run": 0.9949792687519141,
-      "x": -24.189056001601486,
+      "speed": 4.599943850659146,
+      "run": 0.994977043534543,
+      "x": -24.192507501549272,
       "y": -0.83,
-      "z": -16.128243665741962,
+      "z": -16.131734686681526,
       "elevation": -0.83,
       "camera": [
-        -26.445249979130033,
-        1.6016243675976853,
-        -18.60500022702986
+        -26.44890818357396,
+        1.6016585066443696,
+        -18.60872976954454
       ],
       "stage": "stroll",
       "clock": 0,
       "tier": "low",
       "scale": 1,
-      "calls": 502,
-      "tris": 3544914,
+      "calls": 503,
+      "tris": 3549790,
       "ms": 16.7,
       "weather": {
         "name": "多云",
@@ -208,7 +208,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -242,21 +242,21 @@
       }
     },
     "idle": {
-      "lowestSoleNdcY": -0.7364255387694373,
+      "lowestSoleNdcY": -0.7363495270465398,
       "avatar": "hunyuan",
       "detail": "near",
       "skin": true,
       "pbr": true,
-      "speed": 0.008464746612202189,
-      "run": 0.01980269019909627,
-      "x": -23.00145282042039,
+      "speed": 0.008393940489884082,
+      "run": 0.01968016651893904,
+      "x": -23.00627256208932,
       "y": -0.83,
-      "z": -14.92704197485267,
+      "z": -14.931916904403328,
       "elevation": -0.83,
       "camera": [
-        -25.695153896253927,
-        1.5214588650151062,
-        -17.868409893072332
+        -25.70059680620079,
+        1.5213252751870274,
+        -17.87394412651433
       ],
       "stage": "stroll",
       "clock": 0,
@@ -264,7 +264,7 @@
       "scale": 1,
       "calls": 500,
       "tris": 3521556,
-      "ms": 16.6,
+      "ms": 16.7,
       "weather": {
         "name": "多云",
         "temp": 25,
@@ -272,7 +272,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -281,7 +281,7 @@
       "origin": "offline",
       "progress": 0,
       "player": [
-        -23,
+        -23.01,
         -14.93
       ],
       "cat": {
@@ -309,52 +309,52 @@
       "walk": {
         "flatSoleGap_cm": {
           "count": 71,
-          "p95": 1.3145819415334992,
-          "max": 3.0128297546185068
+          "p95": 1.3147647358227377,
+          "max": 3.0118505499748705
         },
         "flatSoleMotionPerFrame_cm": {
           "count": 66,
-          "p95": 0.2110244939884961,
-          "max": 0.4622025391220329
+          "p95": 0.21095694907381518,
+          "max": 0.461612994364823
         }
       },
       "run": {
         "flatSoleGap_cm": {
           "count": 33,
-          "p95": 1.4185372881398428,
-          "max": 2.667117950767517
+          "p95": 1.418035781157645,
+          "max": 2.6665544387470264
         },
         "flatSoleMotionPerFrame_cm": {
           "count": 28,
-          "p95": 0.5477292919674268,
-          "max": 1.0575752001272345
+          "p95": 0.5476403695465495,
+          "max": 1.0572047635618984
         }
       }
     },
     "farAsset": {
-      "lowestSoleNdcY": -0.198175079239717,
+      "lowestSoleNdcY": -0.19802517382960652,
       "avatar": "hunyuan",
       "detail": "far",
       "skin": true,
       "pbr": true,
-      "speed": 0.19906105326737356,
-      "run": 0.18921116061401594,
-      "x": -13.469376795861638,
+      "speed": 0.18729999420495472,
+      "run": 0.18142412370061958,
+      "x": -13.472573814055517,
       "y": -0.83,
-      "z": -5.285820041615777,
+      "z": -5.2890536668882255,
       "elevation": -0.83,
       "camera": [
-        1.1137424552915487,
+        1.1092396094588324,
         2.67,
-        -5.707474234151673
+        -5.7120286392878326
       ],
       "stage": "stroll",
       "clock": 0,
       "tier": "low",
       "scale": 1,
-      "calls": 403,
-      "tris": 3012292,
-      "ms": 16.5,
+      "calls": 404,
+      "tris": 3012494,
+      "ms": 16.4,
       "weather": {
         "name": "多云",
         "temp": 25,
@@ -362,7 +362,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -401,35 +401,35 @@
       "wall": "keji",
       "moved_m": 0.6199000000000001,
       "clearance_m": 0.30009999999999337,
-      "cameraBoom_m": 0.700000000000193,
-      "desiredBoom_m": 4.850040975849858
+      "cameraBoom_m": 0.7000000000001354,
+      "desiredBoom_m": 4.8497131499443045
     },
     "errors": []
   },
   "campusTouchEmulation": {
     "walk": {
-      "lowestSoleNdcY": -0.34680666595751614,
+      "lowestSoleNdcY": -0.3468103452171919,
       "avatar": "hunyuan",
       "detail": "mid",
       "skin": true,
       "pbr": true,
-      "speed": 1.4012929834264294,
+      "speed": 1.4012930736024514,
       "run": 0,
-      "x": -32.05265043259125,
+      "x": -32.05201119377469,
       "y": -0.83,
-      "z": -24.450839420814326,
+      "z": -24.450285013817087,
       "elevation": -0.83,
       "camera": [
-        -37.80297152802047,
-        1.972407636550641,
-        -29.030977154917657
+        -37.80260482923936,
+        1.9724525328895441,
+        -29.03080385704657
       ],
       "stage": "stroll",
       "clock": 0,
       "tier": "low",
       "scale": 1,
-      "calls": 426,
-      "tris": 3283505,
+      "calls": 427,
+      "tris": 3284365,
       "ms": 16.7,
       "weather": {
         "name": "多云",
@@ -438,7 +438,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -471,29 +471,29 @@
       }
     },
     "idle": {
-      "lowestSoleNdcY": -0.3047580657813493,
+      "lowestSoleNdcY": -0.30470709049423894,
       "avatar": "hunyuan",
       "detail": "mid",
       "skin": true,
       "pbr": true,
-      "speed": 0.001140028871816777,
+      "speed": 0.0011400288348227365,
       "run": 0,
-      "x": -31.87499698013419,
+      "x": -31.875432060228885,
       "y": -0.83,
-      "z": -24.295757214328923,
+      "z": -24.29614376625142,
       "elevation": -0.83,
       "camera": [
-        -39.13537768445303,
-        1.1147935576483,
-        -27.281993310504156
+        -39.13590097854253,
+        1.1148092848114617,
+        -27.282560508057152
       ],
       "stage": "stroll",
       "clock": 0,
       "tier": "low",
       "scale": 1,
-      "calls": 414,
-      "tris": 3206031,
-      "ms": 16.7,
+      "calls": 415,
+      "tris": 3206891,
+      "ms": 16.6,
       "weather": {
         "name": "多云",
         "temp": 25,
@@ -501,7 +501,7 @@
         "wind": "东北风 3 级",
         "windWord": "微风",
         "windMs": "3.8",
-        "clock": "17:23",
+        "clock": "17:26",
         "date": "11 月 21 日",
         "origin": "offline",
         "age": null,
@@ -510,7 +510,7 @@
       "origin": "offline",
       "progress": 0,
       "player": [
-        -31.87,
+        -31.88,
         -24.3
       ],
       "cat": {

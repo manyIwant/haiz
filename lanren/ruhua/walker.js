@@ -145,6 +145,11 @@ export async function createWalker(url, { pbr = false, heightAt } = {}) {
   }
   const keepRest = (n) => { const p = modelQ[B[n].parent?.userData.wk]; const q = p ? p.clone().multiply(rest[n].local) : rest[n].q.clone(); B[n].quaternion.copy(rest[n].local); modelQ[n] = q; };
   const delta = (axis, ang, base) => new THREE.Quaternion().setFromAxisAngle(axis, ang).multiply(base);
+  // Bring the A-pose arms in before applying sagittal flexion. Doing it after
+  // flexion pushes the bent forearms away from the chest during a sprint.
+  const armSwing = (base, pitch, spread) => pbr
+    ? delta(X, pitch, delta(Z, spread, base))
+    : delta(Z, spread, delta(X, pitch, base));
 
   const groundY = (p) => heightAt ? heightAt(p.x, p.z) : root.position.y;
   const stanceX = (s) => pbr ? rest['foot.' + s].pos.x : (s === 'L' ? hipW : -hipW);
@@ -331,11 +336,10 @@ export async function createWalker(url, { pbr = false, heightAt } = {}) {
       let abd = 0.06 + 0.1 * runK + G.air * 0.3;
       if (s === 'R' && um > 0.01) { flex = flex * (1 - um) + 0.75 * um; bend = bend * (1 - um) + 1.55 * um; abd = abd * (1 - um) + 0.15 * um; }
       keepRest('shoulder.' + s);
-      const fwdAxis = new THREE.Vector3(1, 0, 0);
-      const armQ = delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex, rest['upperarm.' + s].q));
-      setModel('upperarm.' + s, armQ);
-      setModel('forearm.' + s, delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex - bend, rest['forearm.' + s].q)));
-      setModel('hand.' + s, delta(Z, (abd + bindArmOffset) * side, delta(fwdAxis, -flex - bend * 0.9, rest['hand.' + s].q)));
+      const spread = (abd + bindArmOffset) * side;
+      setModel('upperarm.' + s, armSwing(rest['upperarm.' + s].q, -flex, spread));
+      setModel('forearm.' + s, armSwing(rest['forearm.' + s].q, -flex - bend, spread));
+      setModel('hand.' + s, armSwing(rest['hand.' + s].q, -flex - bend * 0.9, spread));
     }
     if (B.bag) {
       const pitch = clamp(-G.accel * .007 + Math.sin(cyc * 2) * (.013 * walkK + .052 * runK), -.11, .11);
