@@ -81,6 +81,12 @@
    "res": 3072,
    "spp": 48,
    "scale": 1.0
+  },
+  "morning": {
+   "file": "station_morning.png",
+   "res": 3072,
+   "spp": 48,
+   "scale": 1.0
   }
  },
  "land": {
@@ -100,13 +106,13 @@
    "file": "land_dawn.png",
    "res": 2048,
    "spp": 32,
-   "scale": 1.0
+   "scale": 32.0
   },
   "night": {
    "file": "land_night.png",
    "res": 2048,
    "spp": 32,
-   "scale": 1.0
+   "scale": 16.0
   }
  }
 }

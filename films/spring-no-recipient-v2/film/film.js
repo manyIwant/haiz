@@ -15,9 +15,9 @@ function noise1(x) { const i = Math.floor(x), f = x - i; const h = (n) => { cons
 
 // ------------------------------------------------------------------ grades
 const GRADE = {
-  dusk:    { exposure: 0.85, lift: [0.012, 0.010, 0.024], gamma: [1, 1, 1], gain: [1.07, 0.99, 0.88], sat: 1.06, contrast: 1.08, bloom: 0.06, vign: 0.32, grain: 0.032 },
-  night:   { exposure: 5.0, lift: [0.006, 0.010, 0.022], gamma: [1, 1, 1.02], gain: [0.94, 0.98, 1.06], sat: 0.85, contrast: 1.08, bloom: 0.09, vign: 0.38, grain: 0.04 },
-  morning: { exposure: 1.05, lift: [0.024, 0.028, 0.034], gamma: [1, 1, 1], gain: [0.99, 1.0, 1.02], sat: 0.9, contrast: 0.94, bloom: 0.04, vign: 0.22, grain: 0.028 },
+  dusk:    { exposure: 0.85, lift: [0.0, 0.006, 0.03], gamma: [1, 1, 1], gain: [1.1, 0.98, 0.84], sat: 1.14, contrast: 1.14, bloom: 0.06, vign: 0.32, grain: 0.032 },
+  night:   { exposure: 5.0, lift: [0.0, 0.008, 0.024], gamma: [1, 1, 1.02], gain: [0.96, 0.98, 1.08], sat: 0.9, contrast: 1.1, bloom: 0.09, vign: 0.38, grain: 0.04 },
+  morning: { exposure: 1.05, lift: [0.010, 0.014, 0.024], gamma: [1, 1, 1], gain: [0.98, 1.0, 1.03], sat: 1.04, contrast: 1.04, bloom: 0.04, vign: 0.22, grain: 0.028 },
   dawn:    { exposure: 26.0, lift: [0.012, 0.016, 0.03], gamma: [1, 1, 1.03], gain: [0.93, 0.97, 1.06], sat: 0.8, contrast: 0.98, bloom: 0.05, vign: 0.3, grain: 0.036 },
   room:    { exposure: 1.6 },
 };
@@ -32,7 +32,7 @@ function mixGrade(a, b, k) {
 const FOG = {
   dusk:    { col: [0.80, 0.64, 0.55], sun: [1.0, 0.62, 0.34], d: 0.0011 },
   night:   { col: [0.0035, 0.0048, 0.0095], sun: [0.004, 0.005, 0.009], d: 0.0016 },
-  morning: { col: [0.70, 0.78, 0.88], sun: [0.95, 0.93, 0.86], d: 0.0006 },
+  morning: { col: [0.70, 0.78, 0.88], sun: [0.95, 0.93, 0.86], d: 0.00035 },
   dawn:    { col: [0.0125, 0.0140, 0.0240], sun: [0.020, 0.016, 0.018], d: 0.0013 },
 };
 
@@ -78,28 +78,30 @@ const END = { a: 171.6, b: 178.6 };
 // Shots marked cont:true continue the previous shot's camera without a cut.
 const K = (t, p, l, f = 50) => ({ t, p, l, f });
 const SHOTS = [
-  { name: 'mirror', t0: 42.0, t1: 49.0, light: 'dusk', env: [-12, 0, 3],
-    cam: [K(42.0, [-11.5, 1.0, 3.4], [-11.5, 1.03, 0], 46), K(44.4, [-12.2, 0.2, 3.3], [-11.0, 3.0, 0], 46), K(46.6, [-17.5, -6.5, 2.6], [-8.0, 2.0, 2.8], 46), K(49.0, [-24.5, -13.0, 2.1], [-6.0, 1.5, 5.2], 46)],
+  { name: 'mirror', t0: 42.0, t1: 45.0, light: 'dusk', env: [-12, 0, 3],
+    cam: [K(42.0, [-11.5, 1.0, 3.4], [-11.5, 1.03, 0], 46), K(43.8, [-12.6, -0.6, 3.0], [-9.0, 2.0, 1.2], 46), K(45.0, [-15.0, -4.6, 2.5], [-6.0, 0.8, 4.4], 46)],
     water: (t) => ({ termMix: 1 - ramp(t, 42.4, 45.8), chop: 0.22 * ramp(t, 42.6, 45.0), rippleAmt: 0.55 * (1 - ramp(t, 45.5, 48.5)), rippleT: Math.max(0, t - 42.15), rippleC: [-11.5, 1.0] }) },
-  { name: 'glide', t0: 49.0, t1: 58.0, light: 'dusk', env: [-10, 0, 2.5], cont: true,
-    cam: [K(49.0, [-24.5, -13.0, 2.1], [-6.0, 1.5, 5.2], 46), K(52.8, [-15.5, -4.0, 2.2], [-6.0, 0.0, 3.2], 50), K(55.8, [-8.6, -0.15, 2.62], [-5.0, 0.0, 2.65], 52), K(58.0, [-5.25, 0.05, 2.62], [-2.0, 0.7, 2.35], 56)] },
+  { name: 'crane', t0: 45.0, t1: 52.6, light: 'dusk', env: [-14, -10, 12], cont: true, rays: 1.0, wind: 0.5,
+    cam: [K(45.0, [-15.0, -4.6, 2.5], [-6.0, 0.8, 4.4], 46), K(47.4, [-14.6, -8.4, 7.0], [-5.0, -36.0, 7.5], 48), K(50.0, [-13.8, -11.0, 13.0], [-21.0, -80.0, 2.5], 48), K(52.6, [-13.2, -12.5, 18.5], [-34.0, -95.0, 1.0], 50)] },
+  { name: 'glide', t0: 52.6, t1: 58.0, light: 'dusk', env: [-10, 0, 2.5], rays: 0.6,
+    cam: [K(52.6, [-14.4, -3.0, 1.95], [-6.0, 0.0, 3.2], 48), K(55.8, [-8.6, -0.15, 2.62], [-5.0, 0.0, 2.65], 52), K(58.0, [-5.25, 0.05, 2.62], [-2.0, 0.7, 2.35], 56)] },
   { name: 'letter', t0: 58.0, t1: 63.6, light: 'dusk', env: [-3, 0, 2.5], cont: true, interior: true, shafts: 1.0, dust: 1.0,
     cam: [K(58.0, [-5.25, 0.05, 2.62], [-2.0, 0.7, 2.35], 56), K(60.4, [-3.55, 0.05, 2.18], [-5.1, 1.55, 1.78], 48), K(63.6, [-3.75, 0.32, 2.08], [-5.35, 1.85, 1.86], 42)] },
-  { name: 'out', t0: 63.6, t1: 72.0, light: (t) => ['dusk', 'night', ramp(t, 68.4, 73.0)], env: [-10, 0, 2], cont: true,
+  { name: 'out', t0: 63.6, t1: 72.0, rays: 0.7, light: (t) => ['dusk', 'night', ramp(t, 68.4, 73.0)], env: [-10, 0, 2], cont: true,
     cam: [K(63.6, [-3.75, 0.32, 2.08], [-5.35, 1.85, 1.86], 42), K(65.2, [-4.7, 0.0, 2.62], [-7.2, -0.1, 2.5], 50), K(66.6, [-6.7, 0.0, 2.66], [-10, 0.0, 2.1], 52), K(68.8, [-14.2, -2.2, 0.95], [-6.0, 1.0, 3.2], 44), K(72.0, [-16.4, 3.0, 1.05], [-12.5, 30.0, 1.6], 46)],
     interiorUntil: 65.9, shaftsUntil: 65.4,
     altRefl: { lit: 1, mix: (t) => fade(t, 66.4, 67.6, 71.0, 72.0) } },
   { name: 'north', t0: 72.0, t1: 79.0, light: 'night', env: [-12, 50, 2], cont: true, wind: (t) => 0.4 + 0.9 * fade(t, 73.2, 74.6, 77.4, 79.0),
     cam: [K(72.0, [-16.4, 3.0, 1.05], [-12.5, 30.0, 1.6], 46), K(75.6, [-15.0, 44.0, 1.3], [-6.0, 70.0, 2.2], 45), K(79.0, [-10.6, 66.4, 1.62], [-3.2, 75.8, 2.6], 40)] },
   { name: 'key', t0: 79.0, t1: 84.0, light: 'night', env: [-2, 72, 2.2],
-    cam: [K(79.0, [-1.55, 72.6, 2.24], [0.645, 74.2, 2.09], 36), K(84.0, [-0.75, 73.45, 2.2], [0.655, 74.25, 2.09], 32)] },
+    cam: [K(79.0, [-0.3, 73.5, 2.34], [0.645, 74.2, 2.085], 30), K(84.0, [0.04, 73.78, 2.27], [0.645, 74.2, 2.085], 24)] },
   { name: 'clock', t0: 84.0, t1: 92.6, light: 'night', env: [-3, 72, 2.2], wind: 0.5,
     cam: [K(84.0, [-4.6, 69.0, 2.3], [-2.0, 72.0, 3.95], 30), K(87.6, [-4.9, 70.0, 2.25], [-2.05, 72.2, 3.9], 30), K(92.6, [-5.6, 72.4, 2.05], [-3.25, 75.8, 2.6], 34)] },
   { name: 'queue', t0: 92.6, t1: 98.4, light: 'night', env: [-1, 68, 2.2],
     cam: [K(92.6, [-2.8, 63.2, 1.75], [0.0, 69.0, 1.9], 44), K(98.4, [-2.4, 64.6, 1.72], [0.2, 70.2, 1.9], 42)] },
   { name: 'sweep', t0: 98.4, t1: 105.4, light: 'sweep', env: [-2, 0, 2.6], interior: true, shafts: 1.2, dust: 1.0,
     cam: [K(98.4, [0.95, -4.65, 2.65], [-4.2, 2.4, 1.55], 62), K(105.4, [0.85, -4.35, 2.6], [-4.3, 2.6, 1.55], 60)] },
-  { name: 'morning', t0: 105.4, t1: 111.0, light: 'morning', env: [-20, -20, 2],
+  { name: 'morning', t0: 105.4, t1: 111.0, light: 'morning', env: [-20, -20, 2], expo: 1.7,
     cam: [K(105.4, [-26.5, -31.0, 1.8], [-6.0, 12.0, 3.6], 52), K(111.0, [-25.6, -27.6, 1.85], [-6.0, 14.0, 3.6], 52)] },
   { name: 'roomclock', t0: 111.0, t1: 116.0, light: 'morning', env: [-2, 1, 2.6], interior: true, clockBack: true,
     cam: [K(111.0, [-2.05, 1.5, 2.62], [-2.13, 4.94, 3.68], 32), K(116.0, [-2.08, 1.9, 2.75], [-2.13, 4.94, 3.7], 26)] },
@@ -117,10 +119,10 @@ const SHOTS = [
   { name: 'bridge', t0: 139.6, t1: 144.6, light: 'morning', env: [-22, -60, 2],
     cam: [K(139.6, [-27.5, -52.0, 1.2], [-21.0, -70.0, 2.4], 50), K(144.6, [-26.8, -55.0, 1.25], [-21.0, -70.0, 2.4], 50)] },
   { name: 'bench', t0: 144.6, t1: 149.6, light: 'morning', env: [-1, 86, 2],
-    cam: [K(144.6, [0.55, 85.4, 1.72], [-12.0, 89.0, 1.55], 46), K(149.6, [0.35, 86.2, 1.7], [-12.0, 89.6, 1.55], 46)] },
+    cam: [K(144.6, [1.05, 88.4, 1.7], [-12.0, 91.2, 1.25], 44), K(149.6, [0.85, 88.9, 1.68], [-12.0, 91.6, 1.25], 44)] },
   { name: 'stclock', t0: 149.6, t1: 154.6, light: 'morning', env: [-3, 70, 2.5], wind: 0.6,
-    cam: [K(149.6, [-5.4, 64.6, 1.95], [-2.0, 72.0, 3.95], 36), K(154.6, [-5.2, 65.6, 2.0], [-2.0, 72.0, 3.95], 34)] },
-  { name: 'dawnfall', t0: 154.6, t1: 159.6, light: (t) => ['morning', 'dawn', ramp(t, 155.0, 158.6)], env: [-14, 50, 2], mist: (t) => ramp(t, 155.5, 159.6) * 0.5,
+    cam: [K(149.6, [-5.0, 68.4, 2.5], [-2.0, 72.0, 3.9], 30), K(154.6, [-4.8, 68.9, 2.55], [-2.0, 72.0, 3.92], 27)] },
+  { name: 'dawnfall', rays: 0.8, t0: 154.6, t1: 159.6, light: (t) => ['morning', 'dawn', ramp(t, 155.0, 158.6)], env: [-14, 50, 2], mist: (t) => ramp(t, 155.5, 159.6) * 0.5,
     cam: [K(154.6, [-14.0, 62.0, 1.6], [-10.0, 10.0, 2.6], 50), K(159.6, [-14.2, 59.5, 1.6], [-10.0, 8.0, 2.6], 50)] },
   { name: 'silence', t0: 159.6, t1: 171.6, light: 'dawn', env: [-4, 0, 2.5], interior: true, mist: 0.55, sash: 30,
     cam: [K(159.6, [-4.55, -0.65, 2.78], [-9.5, 0.5, 0.5], 46), K(171.6, [-4.95, -0.42, 2.72], [-9.5, 0.6, 0.4], 44)] },
@@ -158,8 +160,8 @@ renderer.setPixelRatio(1); renderer.setSize(W_, H_, false);
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = true;
 const W = await loadWorld(renderer);
-const NAT = addNature(W);
-const petals = makePetals(W);
+const NAT = await addNature(W);
+const petals = makePetals(W, 4500);
 const dust = makeDust(W);
 const pipe = new Pipeline(renderer, W, W_, H_);
 const cam = new THREE.PerspectiveCamera(50, W_ / H_, 0.05, 6000);
@@ -234,6 +236,7 @@ function applyGradeFog(L0, sh, t) {
   const la = LV[L0.a.replace('_nosun', '')] ?? 1, lb = LV[L0.b.replace('_nosun', '')] ?? 1;
   if (la !== lb) g.exposure = Math.exp(lerp(Math.log(ga.exposure * la), Math.log(gb.exposure * lb), L0.k)) / lerp(la, lb, L0.k);
   if (sh.interior && (sh.interiorUntil == null || t < sh.interiorUntil)) g = { ...g, exposure: g.exposure * (L0.a === 'dawn' ? 1.15 : 1.45) };
+  if (sh.expo) g = { ...g, exposure: g.exposure * sh.expo };
   const fa = FOG[L0.a.replace('_nosun', '')] || FOG.dusk, fb = FOG[L0.b.replace('_nosun', '')] || FOG.dusk;
   U.uFogCol.value.setRGB(...fa.col.map((v, i) => lerp(v, fb.col[i], L0.k)));
   U.uFogSun.value.setRGB(...fa.sun.map((v, i) => lerp(v, fb.sun[i], L0.k)));
@@ -295,7 +298,7 @@ function applyWorld(sh, t) {
   sky.moonAmt.value = sh.moon ? 1.0 : (night > 0.5 ? 0.012 : 0);
   sky.moonDir.value.copy(sunDirFromAzEl(sh.moon ? 252 : 200, sh.moon ? 24 : 35));
   sky.stars.value = night * 0.012;
-  sky.cloudAmt.value = { dusk: 0.62, night: 0.35, morning: 0.0, dawn: 0.25 }[L0last.b] ?? 0.3;
+  sky.cloudAmt.value = { dusk: 0.68, night: 0.35, morning: 0.16, dawn: 0.3 }[L0last.b] ?? 0.3;
   sky.cloudCol.value.set(L0last.b === 'dusk' ? 0xffb38a : L0last.b === 'dawn' ? 0xb7a9c2 : 0xf2f2f2);
   sky.cloudShade.value.set(L0last.b === 'dusk' ? 0x5a4a5e : 0x3a4458);
   sky.cloudCol.value.multiplyScalar(skyLevel); sky.cloudShade.value.multiplyScalar(skyLevel);
@@ -355,13 +358,20 @@ async function renderAt(t) {
       P.altRefl = (on) => {
         if (sh.altRefl.lit) W.glassMat.uniforms.lit.value = on ? 1 : 0;
         if (sh.altRefl.blossom) {
-          NAT.leafMat.userData.tint.value.setRGB(...(on ? [2.2, 1.05, 1.25] : [1, 1, 1]));
-          NAT.blobMat.userData.tint.value.setRGB(...(on ? [2.6, 1.3, 1.6] : [1, 1, 1]));
-          NAT.hillMat.userData.tint.value.setRGB(...(on ? [1.8, 1.1, 1.3] : [1, 1, 1]));
+          NAT.leafMat.userData.tint.value.setRGB(...(on ? [3.1, 1.0, 1.55] : [1, 1, 1]));
+          NAT.blobMat.userData.tint.value.setRGB(...(on ? [3.4, 1.35, 2.0] : [1, 1, 1]));
+          NAT.hillMat.userData.tint.value.setRGB(...(on ? [2.4, 1.15, 1.6] : [1, 1, 1]));
+          if (NAT.ivyMat) NAT.ivyMat.userData.tint.value.setRGB(...(on ? [3.0, 1.1, 1.6] : [1, 1, 1]));
         }
       };
     }
   } else W.water.material.uniforms.reflAltMix.value = 0;
+  if (sh.rays) {
+    const sp = cam.position.clone().addScaledVector(U.uSunDir.value, 3000).project(cam);
+    const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd);
+    if (fwd.dot(U.uSunDir.value) > 0.05) P.rays = { uv: [sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5], strength: sh.rays * clamp((fwd.dot(U.uSunDir.value) - 0.05) * 3) };
+  }
+  NAT.cones.forEach(c => c.material.uniforms.amt.value = (L0last.a === 'night' ? 1 - L0last.k : 0) + (L0last.b === 'night' ? L0last.k : 0));
   if (sh.shafts && (sh.shaftsUntil == null || t < sh.shaftsUntil)) {
     P.shafts = { strength: sh.shafts * (U.uSunCol.value.r > 0.01 ? 1 : 0), center: B(-2.1, 0, 2.7).toArray(), boxMin: [-5.76, 1.0, -5.0], boxMax: [1.5, 4.4, 5.0], frame };
   }

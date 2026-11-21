@@ -15,12 +15,19 @@ export const B = (x, y, z) => new THREE.Vector3(x, z, -y);
 const ASSETS = '../assets/';
 const texLoader = new THREE.TextureLoader();
 const texCache = {};
+// every image load is tracked so a render never starts before its textures exist
+export const PENDING = [];
+function track(url, setup) {
+  let res; const pr = new Promise(r => (res = r)); PENDING.push(pr);
+  const t = texLoader.load(url, () => res(), undefined, () => res());
+  setup(t); return t;
+}
 
 function loadTex(file, srgb, repeat = 1) {
   const key = file + '|' + srgb;
   let base = texCache[key];
   if (!base) {
-    base = texLoader.load(ASSETS + file);
+    base = track(ASSETS + file, () => {});
     base.flipY = false;
     base.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     base.wrapS = base.wrapT = THREE.RepeatWrapping;
@@ -114,6 +121,7 @@ function makeBaked(spec, name, lmA, lmB) {
     p.color = new THREE.Color(...spec.col);
   }
   const m = new THREE.MeshStandardMaterial(p);
+  if (spec.unit) m.side = THREE.DoubleSide;   // single quads (clock faces, boards, signs) seen from either side
   if (p.normalMap) m.normalScale.set(0.6, 0.6);
   m.lightMap = lmA;
   m.lightMapIntensity = Math.PI;
@@ -333,7 +341,7 @@ function makeWater(normA, normB) {
     depthTest: false, depthWrite: false,
   });
   // the river: x -35.3 .. -5.95 (blender), y -420..420
-  const g = new THREE.PlaneGeometry(33.1, 840, 1, 1);
+  const g = new THREE.PlaneGeometry(33.1, 8000, 1, 1);
   g.rotateX(-Math.PI / 2);
   const mesh = new THREE.Mesh(g, mat);
   mesh.position.set((-39.05 - 5.95) / 2, 0, 0);
@@ -377,7 +385,7 @@ export async function loadWorld(renderer, opts = {}) {
         const d = new THREE.DataTexture(new Uint8Array([150, 150, 150, 255]), 1, 1); d.needsUpdate = true; d.channel = 1;
         return (lmCache[k] = d);
       }
-      const t = texLoader.load(ASSETS + 'bake/' + e.file);
+      const t = track(ASSETS + 'bake/' + e.file, () => {});
       t.flipY = false; t.colorSpace = THREE.NoColorSpace; t.channel = 1;
       t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
       lmCache[k] = t;
@@ -466,6 +474,9 @@ export async function loadWorld(renderer, opts = {}) {
     W.dyn.bed.traverse((o) => { if (o.isMesh) o.material = makeBed(); });
   }
   W.pmrem = pmrem;
+  // preload every lightmap of every state, and wait for all images
+  for (const g of BAKED) for (const st in (bakeIndex[g] || {})) W.lm(g, st);
+  await Promise.all(PENDING);
   return W;
 }
 
@@ -504,7 +515,7 @@ function makeGlass() {
         }
         // windows lit from inside (only ever seen in the river's reflection)
         float pane = 0.85 + 0.15 * sin(floor(vWPos.z * 0.42) * 12.9898 + floor(vWPos.y * 0.28) * 78.233);
-        c = mix(c, vec3(1.0, 0.66, 0.34) * 2.2 * pane, lit * 0.9);
+        c = mix(c, vec3(1.0, 0.64, 0.30) * 4.5 * pane, lit * 0.95);
         a = mix(a, 1.0, lit * 0.9);
         gl_FragColor = vec4(c, a);
       }`,

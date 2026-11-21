@@ -93,7 +93,7 @@ export class Pipeline {
         acc *= dt;
         float g = anis; float mu = dot(rd, sunDir);
         float phase = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5) * 0.08;
-        gl_FragColor = vec4(sunCol * acc * strength * phase, 0.0);
+        gl_FragColor = vec4(sunCol * acc * strength * phase, 1.0);
       }`, {
       tDepth: { value: null }, tSunDepth: { value: null }, invProjView: { value: new THREE.Matrix4() }, sunMat: { value: new THREE.Matrix4() },
       camPos: { value: new THREE.Vector3() }, boxMin: { value: new THREE.Vector3() }, boxMax: { value: new THREE.Vector3() },
@@ -101,6 +101,18 @@ export class Pipeline {
       anis: { value: 0.55 }, sunDir: { value: new THREE.Vector3() },
     }, { blending: THREE.AdditiveBlending, transparent: true });
 
+    // screen-space light scattering from the sun (only bright sky pixels emit)
+    this.raysA = mk(width >> 1, height >> 1); this.raysB = mk(width >> 1, height >> 1);
+    this.raySrc = fsq(`uniform sampler2D tColor, tDepth; uniform vec2 sunUV; uniform float aspect; varying vec2 vUv;
+      void main(){ float sky = step(0.99999, texture2D(tDepth, vUv).x); vec3 c = texture2D(tColor, vUv).rgb;
+        vec2 d = (vUv - sunUV) * vec2(aspect, 1.0); float w = exp(-dot(d, d) * 9.0);
+        float l = max(max(c.r, c.g), c.b); gl_FragColor = vec4(c * sky * w * smoothstep(0.4, 2.0, l), 1.0); }`,
+      { tColor: { value: null }, tDepth: { value: null }, sunUV: { value: new THREE.Vector2() }, aspect: { value: width / height } });
+    this.rayBlur = fsq(`uniform sampler2D tSrc; uniform vec2 sunUV; uniform float frame; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + frame) * 43758.5453); }
+      void main(){ vec2 dlt = (vUv - sunUV) / 64.0 * 0.92; vec2 uv = vUv - dlt * h(gl_FragCoord.xy); vec3 acc = vec3(0.0); float dec = 1.0;
+        for (int i = 0; i < 64; i++) { uv -= dlt; acc += texture2D(tSrc, uv).rgb * dec; dec *= 0.965; }
+        gl_FragColor = vec4(acc / 22.0, 1.0); }`, { tSrc: { value: null }, sunUV: { value: new THREE.Vector2() }, frame: { value: 0 } });
     this.bright = fsq(`uniform sampler2D tSrc; uniform float thr; varying vec2 vUv;
       void main(){ vec3 c = texture2D(tSrc, vUv).rgb; float l = max(max(c.r,c.g),c.b); gl_FragColor = vec4(c * smoothstep(thr, thr * 2.5, l), 1.0); }`,
       { tSrc: { value: null }, thr: { value: 1.0 } });
@@ -233,6 +245,15 @@ export class Pipeline {
     mark('water+glass');
     // 4. light shafts
     if (P.shafts && P.shafts.strength > 0) this.renderShafts(cam, P.shafts);
+    if (P.rays && P.rays.strength > 0) {
+      this.raySrc.mat.uniforms.tColor.value = this.comp.texture; this.raySrc.mat.uniforms.tDepth.value = this.opaque.depthTexture;
+      this.raySrc.mat.uniforms.sunUV.value.set(...P.rays.uv);
+      r.setRenderTarget(this.raysA); r.render(this.raySrc.scene, ORTHO);
+      this.rayBlur.mat.uniforms.tSrc.value = this.raysA.texture; this.rayBlur.mat.uniforms.sunUV.value.set(...P.rays.uv); this.rayBlur.mat.uniforms.frame.value = (P.frame || 0) % 97;
+      r.setRenderTarget(this.raysB); r.render(this.rayBlur.scene, ORTHO);
+      this.add.mat.uniforms.tSrc.value = this.raysB.texture; this.add.mat.uniforms.k.value = P.rays.strength;
+      r.setRenderTarget(this.comp); r.autoClear = false; r.render(this.add.scene, ORTHO); r.autoClear = true;
+    }
     mark('shafts');
     // 5. bloom
     let src = this.comp.texture;

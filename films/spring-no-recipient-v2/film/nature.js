@@ -168,7 +168,7 @@ function willow(seed, height, leafMat, barkMat) {
   return grp;
 }
 
-export function addNature(W) {
+export async function addNature(W) {
   const scene = W.scene;
   const N = { willows: [], leafMats: [] };
   const leafTex = leafStripTexture();
@@ -219,9 +219,12 @@ export function addNature(W) {
   }
   // far tree masses on the open land beyond the west bank
   {
-    const geo = new THREE.IcosahedronGeometry(1, 2);
+    let geo = new THREE.IcosahedronGeometry(1, 3);
+    geo = (await import('./vendor/three/utils/BufferGeometryUtils.js')).mergeVertices(geo);
     const p = geo.attributes.position; const r0 = rng(5);
-    for (let i = 0; i < p.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(p, i); v.multiplyScalar(0.8 + 0.35 * Math.sin(v.x * 5.1 + v.y * 3.3) * Math.cos(v.z * 4.2)); p.setXYZ(i, v.x, v.y, v.z); }
+    for (let i = 0; i < p.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(p, i);
+      const n = 0.86 + 0.10 * Math.sin(v.x * 3.1 + v.y * 2.3) * Math.cos(v.z * 2.7) + 0.05 * Math.sin(v.x * 9.0 + v.z * 7.0) * Math.cos(v.y * 8.0);
+      v.multiplyScalar(n); if (v.y < -0.3) v.y = -0.3 + (v.y + 0.3) * 0.3; p.setXYZ(i, v.x, v.y, v.z); }
     geo.computeVertexNormals();
     geo.setAttribute('aSway', new THREE.Float32BufferAttribute(new Float32Array(p.count), 1));
     const count = 520; const ph = new Float32Array(count); geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
@@ -230,9 +233,9 @@ export function addNature(W) {
     const r = rng(9); const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), c = new THREE.Color();
     for (let i = 0; i < count; i++) {
       let x, y;
-      if (i < 260) { x = -70 - Math.pow(r(), 1.5) * 700; y = -900 + r() * 1900; }          // west plain
+      if (i < 260) { x = -110 - Math.pow(r(), 1.5) * 700; y = -900 + r() * 1900; }         // west plain
       else if (i < 400) { x = 30 + r() * 600; y = -900 + r() * 1900; if (x < 90 && Math.abs(y) < 160) x += 120; } // behind the school
-      else { const row = i % 2; x = -95 - row * 9; y = -400 + (i - 400) * 7.2 + r() * 3; }       // a line of poplars
+      else { const row = i % 2; x = -150 - row * 11; y = -400 + (i - 400) * 7.2 + r() * 3; }      // a line of poplars
       const poplar = i >= 400;
       const w = poplar ? 2.6 + r() * 1.2 : 3 + r() * 5, h = poplar ? 6.5 + r() * 2.5 : w * (0.7 + r() * 0.5);
       q.setFromEuler(new THREE.Euler(0, r() * 6, 0)); s.set(w, h, w);
@@ -267,6 +270,77 @@ export function addNature(W) {
     const hills = new THREE.Mesh(g, mat); hills.frustumCulled = false; scene.add(hills); N.hills = hills; N.hillMat = mat;
   }
   N.blobMat = N.blobs.material; N.reedMat = N.reeds.material;
+  // ivy (爬山虎) climbing the river face of the school, rooted at the plinth, framing the windows
+  {
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.clearRect(0, 0, 128, 128);
+    g.beginPath(); g.moveTo(64, 120);
+    g.bezierCurveTo(20, 104, 4, 70, 18, 44); g.bezierCurveTo(28, 52, 36, 50, 40, 40);
+    g.bezierCurveTo(38, 20, 52, 8, 64, 4); g.bezierCurveTo(76, 8, 90, 20, 88, 40);
+    g.bezierCurveTo(92, 50, 100, 52, 110, 44); g.bezierCurveTo(124, 70, 108, 104, 64, 120); g.closePath();
+    const gr = g.createRadialGradient(64, 90, 6, 64, 64, 70); gr.addColorStop(0, '#b9d27a'); gr.addColorStop(1, '#6f9a3c');
+    g.fillStyle = gr; g.fill();
+    g.strokeStyle = 'rgba(60,80,30,0.55)'; g.lineWidth = 2;
+    for (const [x, y] of [[64, 8], [22, 48], [106, 48], [40, 92], [88, 92]]) { g.beginPath(); g.moveTo(64, 116); g.lineTo(x, y); g.stroke(); }
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const leaf = new THREE.PlaneGeometry(1, 1); leaf.rotateY(-Math.PI / 2);   // faces -x (west, the river)
+    const count = 15000; const r = rng(404);
+    leaf.setAttribute('aSway', new THREE.Float32BufferAttribute(new Float32Array([0.6, 0.6, 0.2, 0.2]), 1));
+    const ph = new Float32Array(count); for (let i = 0; i < count; i++) ph[i] = r() * 6.28;
+    leaf.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
+    const mat = foliageMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide }, 0.03, 'ivy');
+    const im = new THREE.InstancedMesh(leaf, mat, count);
+    // patches: [root y, height, half width]
+    const patches = [[-23.2, 9.5, 1.6], [-17.0, 6.0, 2.2], [-12.6, 3.2, 1.0], [-6.9, 7.8, 1.7], [-2.0, 4.6, 0.9], [2.1, 2.9, 0.7], [5.3, 8.6, 1.4], [11.6, 5.0, 1.8], [16.2, 10.5, 2.4], [23.0, 6.5, 1.5]];
+    const WIN = [];
+    for (const fz of [1.0, 4.6, 8.2]) for (const [c0, k] of [[-19.62, 2], [-10.24, 3], [0, 3], [10.24, 3], [19.62, 2]]) {
+      const cs = k === 3 ? [c0 - 3.3, c0, c0 + 3.3] : [c0 - 2.1, c0 + 2.1];
+      for (const cc of cs) WIN.push([cc - 1.25, cc + 1.25, fz + 0.82, fz + 3.05]);
+    }
+    const inWin = (y, z) => WIN.some(w => y > w[0] && y < w[1] && z > w[2] && z < w[3]);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), col = new THREE.Color();
+    let n = 0, guard = 0;
+    while (n < count && guard++ < count * 20) {
+      const pt = patches[Math.floor(r() * patches.length)];
+      // a vine fans out from its root: a few runners that wander upward and sideways
+      const run = Math.floor(r() * 5), seed = pt[0] * 13 + run * 7;
+      const hz = Math.pow(r(), 0.75) * pt[1] * (0.6 + 0.4 * Math.sin(seed));
+      const lean = (Math.sin(seed * 1.7) * 1.4) * pt[2];
+      const wander = Math.sin(hz * 1.3 + seed) * 0.5 + Math.sin(hz * 3.1 + seed * 2) * 0.2;
+      const y = pt[0] + lean * (hz / pt[1]) + wander + (r() - 0.5) * (0.35 + hz * 0.12);
+      const z = 1.0 + hz + (r() - 0.5) * 0.2;
+      if (r() < 0.25 && hz > pt[1] * 0.85) continue;                  // thin, ragged tips
+      if (inWin(y, z) || Math.abs(y) > 24.0 || z > 12.6) continue;
+      const s0 = 0.14 + r() * 0.14;
+      q.setFromEuler(new THREE.Euler((r() - 0.5) * 0.9, (r() - 0.5) * 0.8, (r() - 0.5) * 1.6 + Math.PI));
+      m.compose(B(-6.02 - r() * 0.13, y, z), q, sc.set(s0, s0, s0));
+      im.setMatrixAt(n, m);
+      const red = r() < 0.05;
+      col.setHSL(red ? 0.02 + r() * 0.04 : 0.22 + r() * 0.07, red ? 0.55 : 0.45 + r() * 0.2, red ? 0.36 : 0.30 + r() * 0.16);
+      im.setColorAt(n, col);
+      n++;
+    }
+    im.count = n; im.frustumCulled = false;
+    scene.add(im); N.ivy = im; N.ivyMat = mat;
+  }
+  // haze under each canopy lamp at night: soft additive cones
+  N.cones = [];
+  {
+    const geo = new THREE.ConeGeometry(1.9, 3.3, 32, 1, true); geo.translate(0, -1.65, 0);
+    for (let yl = 52; yl <= 100; yl += 8) {
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { amt: { value: 0 } },
+        vertexShader: `varying float vH; varying vec3 vN; varying vec3 vV; void main(){ vH = -position.y / 3.3; vec4 w = modelMatrix * vec4(position, 1.0);
+          vN = normalize(mat3(modelMatrix) * normal); vV = normalize(cameraPosition - w.xyz); gl_Position = projectionMatrix * viewMatrix * w; }`,
+        fragmentShader: `uniform float amt; varying float vH; varying vec3 vN; varying vec3 vV;
+          void main(){ float e = pow(abs(dot(normalize(vN), normalize(vV))), 1.6); float a = pow(1.0 - vH, 2.6) * e * e * 0.085 * amt;
+            gl_FragColor = vec4(vec3(1.0, 0.82, 0.58) * a, 1.0); }`,
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      });
+      const cone = new THREE.Mesh(geo, mat); cone.position.copy(B(-3.5, yl, 4.49)); cone.frustumCulled = false;
+      scene.add(cone); N.cones.push(cone);
+    }
+  }
   return N;
 }
 
@@ -313,7 +387,7 @@ export function makeDust(W, count = 2600) {
         vec4 mv = viewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
         gl_PointSize = px * (1.2 + aSeed * 1.6) * 3.0 / max(-mv.z, 0.4); }`,
     fragmentShader: `uniform vec3 uSunCol; uniform float amount; varying float vLit; varying float vSeed;
-      void main(){ vec2 d = gl_PointCoord - 0.5; float a = exp(-dot(d, d) * 14.0); gl_FragColor = vec4(uSunCol * vLit * amount * a * (0.4 + vSeed), 0.0); }`,
+      void main(){ vec2 d = gl_PointCoord - 0.5; float a = exp(-dot(d, d) * 14.0); gl_FragColor = vec4(uSunCol * vLit * amount * a * (0.4 + vSeed), 1.0); }`,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
   const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.visible = false;

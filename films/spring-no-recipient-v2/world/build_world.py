@@ -389,7 +389,7 @@ def build_hero_room():
     box(g, cx - 0.6, cx + 0.6, 4.0, 4.6, f + 0.2, f + 1.15, {"all": "door", "+z": "wood"})
     # blackboard with frame and chalk ledge
     bx0, bx1, bz0, bz1, by = cx - 2.0, cx + 2.0, 2.05, 3.25, y1 - 0.012
-    quad_unit(g, [(bx1, by, bz0), (bx0, by, bz0), (bx0, by, bz1), (bx1, by, bz1)], "chalkboard", flip_u=True)
+    quad_unit(g, [(bx0, by, bz0), (bx1, by, bz0), (bx1, by, bz1), (bx0, by, bz1)], "chalkboard")
     box(g, bx0 - 0.05, bx0, y1 - 0.04, y1, bz0 - 0.05, bz1 + 0.05, "metal_grey")
     box(g, bx1, bx1 + 0.05, y1 - 0.04, y1, bz0 - 0.05, bz1 + 0.05, "metal_grey")
     box(g, bx0, bx1, y1 - 0.04, y1, bz1, bz1 + 0.05, "metal_grey")
@@ -400,11 +400,11 @@ def build_hero_room():
     # wall clock above the board; hands are dynamic
     ccz = 3.72
     cyl(g, (cx, y1, ccz), (cx, y1 - 0.05, ccz), 0.175, "black", seg=32)
-    quad_unit(g, [(cx + 0.15, y1 - 0.056, ccz - 0.15), (cx - 0.15, y1 - 0.056, ccz - 0.15), (cx - 0.15, y1 - 0.056, ccz + 0.15), (cx + 0.15, y1 - 0.056, ccz + 0.15)], "clock", flip_u=True)
+    quad_unit(g, [(cx - 0.15, y1 - 0.056, ccz - 0.15), (cx + 0.15, y1 - 0.056, ccz - 0.15), (cx + 0.15, y1 - 0.056, ccz + 0.15), (cx - 0.15, y1 - 0.056, ccz + 0.15)], "clock")
     # loudspeaker box
     box(g, x1 - 1.1, x1 - 0.7, y1 - 0.2, y1, 3.75, 4.05, {"all": "door"})
     # back board (黑板报)
-    quad_unit(g, [(x0 + 0.8, y0 + 0.012, 2.0), (x1 - 0.9, y0 + 0.012, 2.0), (x1 - 0.9, y0 + 0.012, 3.4), (x0 + 0.8, y0 + 0.012, 3.4)], "chalkboard")
+    quad_unit(g, [(x1 - 0.9, y0 + 0.012, 2.0), (x0 + 0.8, y0 + 0.012, 2.0), (x0 + 0.8, y0 + 0.012, 3.4), (x1 - 0.9, y0 + 0.012, 3.4)], "chalkboard")
     # timetable near the front door
     quad_unit(g, [(x1 - 0.005, 3.1, 2.4), (x1 - 0.005, 2.55, 2.4), (x1 - 0.005, 2.55, 3.13), (x1 - 0.005, 3.1, 3.13)], "timetable", flip_u=False)
     # desks and chairs (students face north, windows on their left)
@@ -543,7 +543,7 @@ def build_dynamic():
 def build_banks():
     g = "land"
     # east bank: paved walk by the water, then soil; continues past the building both ways
-    for (ya, yb, gg) in ((-130.0, YS, g), (YN, 150.0, g), (-420.0, -130.0, "far"), (150.0, 420.0, "far")):
+    for (ya, yb, gg) in ((-130.0, YS, g), (YN, 150.0, g), (-4000.0, -130.0, "far"), (150.0, 4000.0, "far")):
         box(gg, XW, -2.5, ya, yb, -2.8, 1.0, {"all": "concrete", "+z": "platform", "-x": "concrete"}, skip=("-y", "+y", "-z"))
         box(gg, -2.5, 80.0, ya, yb, -2.8, 1.0, {"all": "concrete", "+z": "grass"}, skip=("-x", "-y", "+y", "-z"))
     box(g, XCOR2, 80.0, YS, YN, -2.8, 1.0, {"all": "concrete", "+z": "grass"})
@@ -551,15 +551,17 @@ def build_banks():
     # school boundary wall beyond the corridor
     box(g, 22.0, 22.3, -60.0, 34.0, 1.0, 3.2, {"all": "facade"})
     # river bed and the sunken playground in front of the school
-    box("bed", -36.0, XW, -420.0, 420.0, -3.4, -2.8, {"all": "mud"})
+    box("bed", -36.0, XW, -4000.0, 4000.0, -3.4, -2.8, {"all": "mud"})
     box("bed", -30.0, -8.0, -46.0, 46.0, -2.8, -1.7, {"all": "mud", "+z": "track"})
     # far (west) bank: stone revetment slope and open land
     m = "stone"
     emit(g, [(-35.0, -420, -2.8), (-35.0, 420, -2.8), (-39.0, 420, 1.0), (-39.0, -420, 1.0)], m)
+    for (ya, yb) in ((-4000.0, -420.0), (420.0, 4000.0)):
+        emit("far", [(-35.0, ya, -2.8), (-35.0, yb, -2.8), (-39.0, yb, 1.0), (-39.0, ya, 1.0)], m)
     box(g, -110.0, -39.0, -130.0, 150.0, -2.8, 1.0, {"all": None, "+z": "grass"})
-    for (xa, xb, ya, yb) in ((-1400.0, -110.0, -1400.0, 1400.0), (-110.0, -39.0, -1400.0, -130.0), (-110.0, -39.0, 150.0, 1400.0)):
+    for (xa, xb, ya, yb) in ((-4000.0, -110.0, -4000.0, 4000.0), (-110.0, -39.0, -4000.0, -130.0), (-110.0, -39.0, 150.0, 4000.0)):
         box("far", xa, xb, ya, yb, -2.8, 1.0, {"all": None, "+z": "grass"})
-    for (xa, xb, ya, yb) in ((80.0, 1400.0, -1400.0, 1400.0), (-6.0, 80.0, -1400.0, -420.0), (-6.0, 80.0, 420.0, 1400.0)):
+    for (xa, xb, ya, yb) in ((80.0, 4000.0, -4000.0, 4000.0),):
         box("far", xa, xb, ya, yb, -2.8, 1.0, {"all": None, "+z": "grass"})
     # railing along the east walk where there is no platform
     for (ya, yb) in ((-200.0, YS - 0.5), (YN + 0.5, 36.0), (114.0, 220.0)):
