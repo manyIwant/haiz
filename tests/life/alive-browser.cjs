@@ -117,16 +117,21 @@ async function settle(p, seconds = 2, slices = 8) {
     if (!open.open || open.hidden) throw new Error('map did not open');
     const ink = await p.evaluate(() => {
       const c = document.querySelector('#lf-map-canvas'), g = c.getContext('2d');
-      const d = g.getImageData(0, 0, c.width, c.height).data; let dark = 0;
-      for (let i = 0; i < d.length; i += 16) if (d[i] + d[i + 1] + d[i + 2] < 300) dark++;
-      return dark / (d.length / 16);
+      // a light paper page: count what is not paper (ink lines, washes, hatching), not only black
+      const d = g.getImageData(0, 0, c.width, c.height).data; let ink = 0;
+      for (let i = 0; i < d.length; i += 16) if (d[i + 3] > 0 && d[i] + d[i + 1] + d[i + 2] < 560) ink++;
+      return ink / (d.length / 16);
     });
-    if (ink < 0.01) throw new Error('the page is blank');
-    if (SHOTS) await p.screenshot({ path: path.join(SHOTS, 'alive-map-desktop.png') });
+    if (ink < 0.03) throw new Error('the page is blank: ' + ink.toFixed(3));
+    // freeze the page (people keep walking in real time while a slow software-GL screenshot is taken, and
+    // their names move with them): find the name and tap it on the same frame
     const tapped = await p.evaluate(() => {
-      const it = window.__ruhua.map.items.find((i) => i.a.id !== 'you' && i.hit);
+      window.__ruhua.still(0.05);
+      // a name the visitor can actually reach (not under the page's title or its buttons)
+      const c = document.querySelector('#lf-map-canvas'), r = c.getBoundingClientRect();
+      const it = window.__ruhua.map.items.find((i) => i.a.id !== 'you' && i.hit
+        && document.elementFromPoint(r.left + i.hit.x + i.hit.w / 2, r.top + i.hit.y + i.hit.h / 2) === c);
       if (!it) return null;
-      const r = document.querySelector('#lf-map-canvas').getBoundingClientRect();
       return { x: r.left + it.hit.x + it.hit.w / 2, y: r.top + it.hit.y + it.hit.h / 2, name: it.label };
     });
     if (!tapped) throw new Error('nothing to tap');
@@ -134,7 +139,8 @@ async function settle(p, seconds = 2, slices = 8) {
     await p.waitForTimeout(300);
     const card = await p.evaluate(() => ({ hidden: document.querySelector('#lf-card').hidden, text: document.querySelector('#lf-card').textContent }));
     if (card.hidden || !card.text.includes(tapped.name.slice(0, 2))) throw new Error('no card for ' + tapped.name + ': ' + card.text);
-    if (SHOTS) await p.screenshot({ path: path.join(SHOTS, 'alive-map-card.png') });
+    if (SHOTS) await p.screenshot({ path: path.join(SHOTS, 'alive-map-card.png'), timeout: 180000 });
+    await p.evaluate(() => window.__ruhua.resume());
     await p.keyboard.press('KeyM');
     await p.waitForTimeout(900);
     const closed = await p.evaluate(() => ({ open: window.__ruhua.map.isOpen, hidden: document.querySelector('#lf-map').hidden, enabled: window.__ruhua.player.state }));
@@ -173,7 +179,7 @@ async function settle(p, seconds = 2, slices = 8) {
       await t.waitForTimeout(400);
       const r = await t.evaluate(async () => {
         const R = window.__ruhua; const THREE = await import('three');
-        R.still(0.1, 10);
+        R.still(1.6, 24);                    // the easel rises (1.1 s) before it is measured
         const m = R.easel.canvasMesh; m.updateMatrixWorld();
         const cam = R.camera; cam.updateMatrixWorld();
         const out = [];
@@ -199,7 +205,7 @@ async function settle(p, seconds = 2, slices = 8) {
     const r = await m.p.evaluate(() => ({ open: window.__ruhua.map.isOpen, w: document.querySelector('#lf-map-canvas').clientWidth, h: document.querySelector('#lf-map-canvas').clientHeight, sw: document.documentElement.scrollWidth }));
     if (!r.open) throw new Error('did not open');
     if (r.sw > 391) throw new Error('page scrolls sideways: ' + r.sw);
-    if (SHOTS) await m.p.screenshot({ path: path.join(SHOTS, 'alive-map-phone.png') });
+    if (SHOTS) await m.p.screenshot({ path: path.join(SHOTS, 'alive-map-phone.png'), timeout: 180000 });
     await m.p.tap('[data-life="close"]');
     await m.p.waitForTimeout(900);
     const closed = await m.p.evaluate(() => window.__ruhua.map.isOpen);

@@ -140,12 +140,15 @@ async function main() {
     const c = haikouClock(Date.now());
     dayShift = Date.UTC(y, m - 1, d) - Date.UTC(c.y, c.m - 1, c.d);
   }
-  // the campus's clock advances with the simulation (so bodies and their day move together, also when
-  // frames are stepped or clamped), and catches up with Haikou's clock when it falls behind or jumps
+  // the campus's clock advances with the simulation, so bodies and their day move together also when
+  // frames are slow and their steps clamped. Behind Haikou's clock it catches up gently (at most 8 %
+  // faster, which a body's catch-up pace can follow); only a large gap (a hidden tab, a changed hour)
+  // is a jump. (Snapping to the wall clock on every slow frame let the day run ahead of the bodies.)
   let lifeT = 0;
   const advanceLife = (dt, wall) => {
-    lifeT += dt * 1000;
-    if (wall > lifeT || wall < lifeT - 60000) lifeT = wall;
+    const lag = wall - lifeT;
+    if (lag > 90000 || lag < -90000) lifeT = wall;
+    else lifeT += dt * 1000 * (lag > 0 ? 1 + Math.min(0.08, lag / 30000) : 1);
     return lifeT;
   };
   const lifeClock = () => lifeT + dayShift;
@@ -331,7 +334,9 @@ async function main() {
     mapEl.hidden = false;                           // shown first: the page measures its canvas when it opens
     map.open({ x: P.pos.x, z: P.pos.z });
     const c = weather.caption();
-    mapDate.textContent = `${c.date} · ${c.clock} · ${c.name} ${c.temp}°`;
+    // the campus's own day (with ?date= it is another day than the visitor's): the page heads with that date
+    const lc = haikouClock(lifeClock());
+    mapDate.textContent = `${lc.m} 月 ${lc.d} 日 · ${c.clock} · ${c.name} ${c.temp}°`;
     requestAnimationFrame(() => requestAnimationFrame(() => mapEl.classList.add('on')));
     mapBtn?.setAttribute('aria-expanded', 'true');
     player.setEnabled(false);

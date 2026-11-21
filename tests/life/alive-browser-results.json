@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-21T05:44:28.981Z",
+  "ok": true,
+  "results": [
+    {
+      "name": "the walk starts with the new gait, the people and the map",
+      "ok": true,
+      "note": "5 people, 220000 nav cells"
+    },
+    {
+      "name": "at 12:43 on a Tuesday the day is where it should be",
+      "ok": true,
+      "note": "lin:eat chen:play fu:eat wang:read wu:rest"
+    },
+    {
+      "name": "a body walks where the day says, and the map draws it there",
+      "ok": true,
+      "note": "body within 1.45 m of its day; map within 0.000 m of the body"
+    },
+    {
+      "name": "nobody stands inside a wall (player pushed into a building, people walking)",
+      "ok": true,
+      "note": "player kept 0.46 m clear (stopped at z=4.3), people —"
+    },
+    {
+      "name": "rain reaches the people (umbrellas, plans) and the page (drops, wet paths)",
+      "ok": true,
+      "note": "吴伯 → null; umbrellas [[\"lin\",1],[\"wu\",1]]"
+    },
+    {
+      "name": "the map opens from the sketchbook, draws, answers a tap, and closes (M)",
+      "ok": true,
+      "note": "7 names on the page, ink 5.8%, card for 陈屿"
+    },
+    {
+      "name": "no page errors (desktop)",
+      "ok": true,
+      "note": "none"
+    },
+    {
+      "name": "支起画架: the view turns to the tree, and the blank canvas stands over its heart",
+      "ok": true,
+      "note": "crown at (0.50,0.50), trunk at (0.49,0.29) inside the canvas"
+    },
+    {
+      "name": "a window resized mid-painting keeps the whole canvas in view (same eye, wider lens)",
+      "ok": true,
+      "note": "fov 83.1°, corners [[-0.46,-0.233],[0.46,-0.233],[0.46,0.28],[-0.46,0.28]]"
+    },
+    {
+      "name": "no page errors (transition)",
+      "ok": true,
+      "note": "none"
+    },
+    {
+      "name": "phone portrait: the map opens from its button and closes",
+      "ok": true,
+      "note": "page 374×828"
+    },
+    {
+      "name": "no page errors (phone)",
+      "ok": true,
+      "note": "none"
+    }
+  ]
+}
