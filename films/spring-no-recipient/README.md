@@ -90,8 +90,11 @@ python3 analysis/trace.py
 node render/export_sfx.cjs
 python3 music/compose.py
 node render/render.cjs 3
-bash render/mux.sh
+bash render/mux.sh            # 高码率母版 → build/春天没有收件人.mp4
+bash render/encode_dist.sh    # 发行版（HEVC，<100 MB）→ spring-no-recipient.mp4
 ```
+
+只修改了某一段画面时，可以只重渲染那一段：`OUTDIR=build/patch node render/render.cjs 3 起始秒 结束秒`，再用 ffmpeg 的 trim 和 concat 按帧号拼回去。
 
 预览单帧：在浏览器中打开 `film/index.html?t=200`；实时播放（无声）：打开 `film/index.html?play=240`。
 

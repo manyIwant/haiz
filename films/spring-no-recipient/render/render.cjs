@@ -9,8 +9,8 @@ const cues = JSON.parse(fs.readFileSync(path.join(ROOT, 'film/cues.js'), 'utf8')
 const FPS = cues.fps;
 const workers = parseInt(process.argv[2] || '3', 10);
 const t0 = parseFloat(process.argv[3] || '0'), t1 = parseFloat(process.argv[4] || String(cues.duration));
-const F0 = Math.round(t0 * FPS), F1 = Math.round(t1 * FPS);
-const out = path.join(ROOT, 'build/video'); fs.mkdirSync(out, { recursive: true });
+const F0 = Math.round(t0 * FPS), F1 = Math.round(t1 * FPS); // frame range [F0, F1)
+const out = process.env.OUTDIR ? path.resolve(process.env.OUTDIR) : path.join(ROOT, 'build/video'); fs.mkdirSync(out, { recursive: true });
 
 async function worker(id, a, b) {
   const browser = await chromium.launch({ args: ['--font-render-hinting=none', '--disable-gpu-vsync'] });

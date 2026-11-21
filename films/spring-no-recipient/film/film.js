@@ -293,7 +293,7 @@ const MECH = (() => {
   sched.forEach(s => SFX.push({ t: s[1], type: 'pick' }));
   return { line, ex, sched };
 })();
-const SLOT = 150, LINE_Y = 352;
+const SLOT = 150, LINE_Y = 300, STRIP_Y = 515;
 const slotX = j => 960 - 2.5 * SLOT + j * SLOT; // char j of the 6-char line; j=-2,-1 start pads, j=6 end
 scene([57.0, 118.2], root => {
   const st = MECH;
@@ -306,7 +306,7 @@ scene([57.0, 118.2], root => {
   st.winLab = el('div', 'abs', st.win, '只看这两个字'); setStyle(st.winLab, { left: 0, right: 0, top: '-46px', textAlign: 'center', fontSize: '21px', color: 'var(--amber)', letterSpacing: '.1em' });
   // probability strips (one per step)
   st.strips = MECH.ex.steps.map((s, k) => {
-    const d = el('div', 'abs', root); setStyle(d, { left: '260px', top: '640px', width: '1400px', height: '70px' });
+    const d = el('div', 'abs', root); setStyle(d, { left: '260px', top: STRIP_Y + 'px', width: '1400px', height: '70px' });
     const total = s.total; let x = 0; const segs = [];
     s.dist.forEach(([c, n], i) => {
       const w = 1400 * n / total; const g = el('div', 'abs', d);
@@ -328,7 +328,7 @@ scene([57.0, 118.2], root => {
     if (s.dist.length > 1 && s.dist.length <= 12) {
       segs.forEach(sg => {
         const sent = sentencesWith(TR.corpus_modern, s.ctx, sg.c)[0]; if (!sent) return;
-        const v = el('div', 'abs', d); setStyle(v, { left: (sg.x + sg.w / 2 - 14) + 'px', top: '170px', writingMode: 'vertical-rl', height: '330px', fontSize: '22px', letterSpacing: '.12em', color: '#8a8378', lineHeight: '28px' });
+        const v = el('div', 'abs', d); setStyle(v, { left: (sg.x + sg.w / 2 - 14) + 'px', top: '150px', writingMode: 'vertical-rl', height: '272px', fontSize: '21px', letterSpacing: '.12em', color: '#8a8378', lineHeight: '28px' });
         const i0 = sent.indexOf(s.ctx + sg.c);
         [...sent].forEach((ch, ci) => { const sp = el('span', null, v, ch); if (ci >= i0 && ci < i0 + 3) sp.style.color = sg.c === s.pick ? 'var(--amber)' : '#d6cfc2'; });
         srcs.push(v);
@@ -366,7 +366,7 @@ scene([57.0, 118.2], root => {
     const u = ramp(t, sc[1], sc[1] + .55, eo);
     s.style.display = t >= sc[1] && t < 90.2 ? '' : 'none';
     if (t >= sc[1]) {
-      const stripY = 640 + 35 - (LINE_Y); const pick = st.strips[j].pick;
+      const stripY = STRIP_Y + 35 - (LINE_Y); const pick = st.strips[j].pick;
       const fromX = 260 + pick.x + pick.w / 2 - slotX(j);
       s.style.transform = `translate(${(1 - u) * fromX}px, ${(1 - u) * stripY}px) scale(${lerp(.42, 1, u)})`;
       s.style.color = shown && t < 89.0 ? (j === 4 ? 'var(--amber)' : 'var(--paper)') : 'var(--paper)';
