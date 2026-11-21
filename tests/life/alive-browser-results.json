@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-21T05:44:28.981Z",
+  "date": "2026-11-21T06:17:20.686Z",
   "ok": true,
   "results": [
     {
@@ -15,7 +15,7 @@
     {
       "name": "a body walks where the day says, and the map draws it there",
       "ok": true,
-      "note": "body within 1.45 m of its day; map within 0.000 m of the body"
+      "note": "body within 1.47 m of its day; map within 0.000 m of the body"
     },
     {
       "name": "nobody stands inside a wall (player pushed into a building, people walking)",
@@ -30,7 +30,7 @@
     {
       "name": "the map opens from the sketchbook, draws, answers a tap, and closes (M)",
       "ok": true,
-      "note": "7 names on the page, ink 5.8%, card for 陈屿"
+      "note": "7 names on the page, ink 11.6%, card for 陈屿"
     },
     {
       "name": "no page errors (desktop)",

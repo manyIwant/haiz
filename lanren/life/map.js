@@ -446,6 +446,16 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     }
     g.globalAlpha = 1;
   }
+  // the page's own furniture over the drawing (its title and seal, the buttons along the foot): names keep
+  // out from under it, where they could be neither read nor tapped
+  function chrome() {
+    const r = canvas.getBoundingClientRect(), out = [];
+    for (const el of root.querySelectorAll('.lf-map-head, .lf-map-foot button, .lf-map-foot .lf-map-note')) {
+      const b = el.getBoundingClientRect();
+      if (b.width && b.height) out.push({ x: b.left - r.left - 4, y: b.top - r.top - 4, w: b.width + 8, h: b.height + 8 });
+    }
+    return out;
+  }
   function labels(items) {
     g.textBaseline = 'alphabetic';
     // people indoors: stacked in graphite inside their building
@@ -465,7 +475,7 @@ export function createMap({ geo, life, get, mobile = false, root = document.quer
     }
     g.globalAlpha = 1;
     // outdoors: a leader line to the name; names try four corners and take the first that is free
-    const placed = [];
+    const placed = chrome();
     for (const list of inside.values()) for (const it of list) if (it.hit) placed.push(it.hit);
     const order = items.filter((it) => it.kind !== 'inside').sort((a, b) => (a.kind === 'you' ? -1 : b.kind === 'you' ? 1 : 0));
     for (const it of order) {
