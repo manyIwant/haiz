@@ -75,6 +75,10 @@ async function checkPage(browser, base, deviceName, page) {
   // defaultBrowserType only picks an engine in the Playwright test runner; drop it here.
   const { defaultBrowserType, ...contextOptions } = device;
   const ctx = await browser.newContext({ ...contextOptions, serviceWorkers: 'block' });
+  // Third-party hosts are blocked: the check covers this checkout only, gives the same answer on
+  // and off the network, and never blames HAIZ for an embedded site's own errors (e.g. the
+  // cross-origin Every Joule iframe on physics-lab.html threw on CI but not offline).
+  await ctx.route((url) => url.origin !== base, (route) => route.abort('blockedbyclient'));
   const tab = await ctx.newPage();
   const errors = [], missing = [], failures = [], warnings = [];
   tab.on('pageerror', (e) => errors.push(String(e.message || e).split('\n')[0]));

@@ -36,6 +36,8 @@ node tests/acceptance/run.mjs --only=cinematic-runtime,rings
 - 加载和 2.5 秒稳定期内有未捕获异常
 - 横向溢出：`documentElement.scrollWidth` 大于设备宽度。注意：Chromium 在 `isMobile` 下会把 `innerWidth` 撑大到内容宽度，所以这里和设备本身宽度比较，否则恰好看不到这个问题（自检发现过）。
 
+第三方域名的请求一律拦截：检查只针对本仓库的文件，联网与断网结果一致，也不会把嵌入的外部网站（例如 `physics-lab.html` 里的 Every Joule iframe）自己的报错算到 HAIZ 头上。
+
 只警告：禁止双指缩放；独立控件小于 24×24 CSS px（WCAG 2.2 2.5.8，正文里的行内链接除外）；正文小于 12 px。
 
 ## 这套验收不覆盖什么 · Not covered
