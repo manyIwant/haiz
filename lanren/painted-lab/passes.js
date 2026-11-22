@@ -93,13 +93,13 @@ const LABGRADE = {
   uniforms: { tHDR: { value: null }, tAO: { value: null }, tDepth: { value: null }, uExposure: { value: 1 }, uSat: { value: 1.06 },
     uShadowTone: { value: new THREE.Color(0.95, 0.98, 1.06) }, uHighTone: { value: new THREE.Color(1.03, 1.0, 0.96) },
     uShadeHue: { value: new THREE.Color(0.6, 0.67, 1.0) }, uKey: { value: new THREE.Color(0.6, 0.75, 0.9) },
-    uWash: { value: 1 }, uPlanes: { value: 1 }, uFarPlane: { value: new THREE.Vector2(45, 320) }, uNearPlane: { value: new THREE.Vector2(4, 22) },
+    uVig: { value: 0.2 }, uWash: { value: 1 }, uPlanes: { value: 1 }, uFarPlane: { value: new THREE.Vector2(45, 320) }, uNearPlane: { value: new THREE.Vector2(4, 22) },
     uSimplify: { value: new THREE.Vector2(8, 160) }, uNear: { value: 0.1 }, uFar: { value: 6000 } },
   fragmentShader: /* glsl */`
 ${COMMON}
 uniform sampler2D tHDR; uniform sampler2D tAO; uniform sampler2D tDepth; uniform float uExposure; uniform float uSat;
 uniform vec3 uShadowTone; uniform vec3 uHighTone; uniform vec3 uShadeHue; uniform vec3 uKey;
-uniform float uWash; uniform float uPlanes; uniform vec2 uFarPlane; uniform vec2 uNearPlane; uniform vec2 uSimplify;
+uniform float uVig; uniform float uWash; uniform float uPlanes; uniform vec2 uFarPlane; uniform vec2 uNearPlane; uniform vec2 uSimplify;
 varying vec2 vUv;
 vec3 neutral(vec3 c) {
   const float start = 0.76, desat = 0.15;
@@ -139,6 +139,9 @@ void main() {
   }
   // alpha carries how much the painter simplifies here (0 near … 1 far), for the paint pass
   float simp = sky ? 0.55 : smoothstep(uSimplify.x, uSimplify.y, d);
+  // V2's vignette, in the same place in the chain (linear light, before encoding)
+  vec2 q = vUv - 0.5;
+  c *= 1.0 - uVig * smoothstep(0.25, 0.9, dot(q, q) * 2.2);
   gl_FragColor = vec4(srgb(clamp(c, 0.0, 1.0)), simp);
 }`,
 };
@@ -237,14 +240,14 @@ void main() {
 
 const FINAL = {
   uniforms: { tPaint: { value: null }, tBase: { value: null }, tDepth: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uPx: { value: 1 },
-    uInk: { value: 1 }, uPaper: { value: 1 }, uSplit: { value: -1 }, uVig: { value: 0.2 }, uTime: { value: 0 },
+    uInk: { value: 1 }, uPaper: { value: 1 }, uSplit: { value: -1 }, uTime: { value: 0 },
     uShadeHue: { value: new THREE.Color(0.6, 0.67, 1.0) }, uNear: { value: 0.1 }, uFar: { value: 6000 },
     uProjInv: { value: new THREE.Matrix4() }, uViewInv: { value: new THREE.Matrix4() }, uGroundY: { value: -0.85 }, tDebug: { value: null }, uDebug: { value: 0 } },
   fragmentShader: /* glsl */`
 ${COMMON}
 uniform mat4 uProjInv; uniform mat4 uViewInv; uniform float uGroundY; uniform sampler2D tDebug; uniform float uDebug;
 uniform sampler2D tPaint; uniform sampler2D tBase; uniform sampler2D tDepth; uniform vec2 uRes; uniform float uPx;
-uniform float uInk; uniform float uPaper; uniform float uSplit; uniform float uVig; uniform float uTime; uniform vec3 uShadeHue;
+uniform float uInk; uniform float uPaper; uniform float uSplit; uniform float uTime; uniform vec3 uShadeHue;
 varying vec2 vUv;
 float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h12(i), h12(i + vec2(1, 0)), f.x), mix(h12(i + vec2(0, 1)), h12(i + vec2(1, 1)), f.x), f.y); }
@@ -287,8 +290,6 @@ void main() {
     c *= 1.0 - (g - 0.5) * 0.085 * uPaper * (1.25 - l);
     c = mix(c, c * vec3(1.012, 1.0, 0.975), uPaper * 0.6);
   }
-  vec2 q = vUv - 0.5;
-  c *= 1.0 - uVig * smoothstep(0.25, 0.9, dot(q, q) * 2.2);
   c += (h12(gl_FragCoord.xy + uTime * 61.0) - 0.5) / 255.0;
   if (uSplit >= 0.0) {
     float x = vUv.x;

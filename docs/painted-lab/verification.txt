@@ -1,0 +1,42 @@
+# node lanren/painted-lab/tools/check.cjs --views lanshu,library,aerial  (2026-11-22, Chromium + SwiftShader, 960x540, cloud container)
+PASS  1 loads with buildings  
+PASS  2 [lanshu] all layers off = V2 original  mean |Δ| 0.25/255
+PASS  3 [lanshu] all layers on changes the picture, no holes  mean |Δ| 5.76/255, holes 0
+PASS  4 [lanshu] layer core alone has an effect  mean |Δ| 0.51/255, holes 0
+PASS  4 [lanshu] layer brush alone has an effect  mean |Δ| 0.51/255, holes 0
+PASS  4 [lanshu] layer broken alone has an effect  mean |Δ| 0.37/255, holes 0
+PASS  4 [lanshu] layer light alone has an effect  mean |Δ| 1.92/255, holes 0
+PASS  4 [lanshu] layer wash alone has an effect  mean |Δ| 1.24/255, holes 0
+PASS  4 [lanshu] layer planes alone has an effect  mean |Δ| 1.24/255, holes 0
+PASS  4 [lanshu] layer paint alone has an effect  mean |Δ| 1.88/255, holes 0
+PASS  4 [lanshu] layer ink alone has an effect  mean |Δ| 0.87/255, holes 0
+PASS  4 [lanshu] layer paper alone has an effect  mean |Δ| 1.80/255, holes 0
+PASS  5 [lanshu] split: left original, right lab  left |Δ| 0.33, right |Δ| 0.34
+PASS  2 [library] all layers off = V2 original  mean |Δ| 0.25/255
+PASS  3 [library] all layers on changes the picture, no holes  mean |Δ| 7.84/255, holes 0
+PASS  4 [library] layer core alone has an effect  mean |Δ| 1.00/255, holes 0
+PASS  4 [library] layer brush alone has an effect  mean |Δ| 0.51/255, holes 0
+PASS  4 [library] layer broken alone has an effect  mean |Δ| 0.35/255, holes 0
+PASS  4 [library] layer light alone has an effect  mean |Δ| 2.06/255, holes 0
+PASS  4 [library] layer wash alone has an effect  mean |Δ| 1.48/255, holes 0
+PASS  4 [library] layer planes alone has an effect  mean |Δ| 3.69/255, holes 0
+PASS  4 [library] layer paint alone has an effect  mean |Δ| 2.61/255, holes 0
+PASS  4 [library] layer ink alone has an effect  mean |Δ| 1.47/255, holes 0
+PASS  4 [library] layer paper alone has an effect  mean |Δ| 1.97/255, holes 0
+PASS  5 [library] split: left original, right lab  left |Δ| 0.32, right |Δ| 0.32
+PASS  2 [aerial] all layers off = V2 original  mean |Δ| 0.25/255
+PASS  3 [aerial] all layers on changes the picture, no holes  mean |Δ| 6.40/255, holes 0
+PASS  4 [aerial] layer core alone has an effect  mean |Δ| 0.19/255, holes 0
+PASS  4 [aerial] layer brush alone has an effect  mean |Δ| 0.92/255, holes 0
+PASS  4 [aerial] layer broken alone has an effect  mean |Δ| 0.37/255, holes 0
+PASS  4 [aerial] layer light alone has an effect  mean |Δ| 0.94/255, holes 0
+PASS  4 [aerial] layer wash alone has an effect  mean |Δ| 1.25/255, holes 0
+PASS  4 [aerial] layer planes alone has an effect  mean |Δ| 0.70/255, holes 0
+PASS  4 [aerial] layer paint alone has an effect  mean |Δ| 3.73/255, holes 0
+PASS  4 [aerial] layer ink alone has an effect  mean |Δ| 0.63/255, holes 0
+PASS  4 [aerial] layer paper alone has an effect  mean |Δ| 2.61/255, holes 0
+PASS  5 [aerial] split: left original, right lab  left |Δ| 0.34, right |Δ| 0.35
+PASS  1 no page or console errors  
+
+38/38 checks passed
+exit=0
