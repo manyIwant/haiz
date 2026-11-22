@@ -61,10 +61,21 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // renderer the flight to 06 is still under way, which moves the leaf off the click point.
   await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 5) < 1e-3, null, { timeout: 180000 });
   const pos = await page.evaluate(() => {
-    const w = window.__haizHome.world, cam = w.camera;
-    const p = cam.position.clone().add(cam.getWorldDirection(cam.position.clone()).multiplyScalar(6)); p.y += 0.8;
+    const w = window.__haizHome.world, cam = w.camera, dir = cam.getWorldDirection(cam.position.clone());
+    // At 06 the camera stands at (-21.5, 0.79, 29.5), where the litter's ground heightfield
+    // reads 25.6 m and is still 13.6 m six metres ahead (measured locally). A leaf released 6 m
+    // ahead is "under the ground", settles on the first frame and there is nothing to catch
+    // (falling 0, settled 1 — seen on CI and locally). Take the nearest distance along the view
+    // whose release point is above that surface (≈15–20 m here; picking scales with distance),
+    // and hold the leaf still: this step is about catching, not about how leaves fall.
+    let p = null;
+    for (const d of [6, 5, 7, 4, 8, 10, 12, 14, 16, 18, 20, 24]) {
+      const q = cam.position.clone().add(dir.clone().multiplyScalar(d)); q.y += 0.8;
+      if (q.y - 0.1 > w.litter.heightAt(q.x, q.z) + 0.3) { p = q; break; }
+    }
+    if (!p) throw new Error('no point in front of the camera is above the ground to release a leaf');
     w.litter.falling.length = 0;
-    const L = w.litter.release(p, 0.8, 0.2, true); L.slow = 0.01;
+    const L = w.litter.release(p, 0.8, 0.2, true); L.slow = 0;
     const v = L.p.clone().project(cam);
     return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight];
   });
@@ -75,7 +86,7 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   } catch (e) {
     const diag = await page.evaluate(() => {
       const w = window.__haizHome.world, info = window.__haizHome.info();
-      return { info, falling: w.litter.falling.length, leaf: w.litter.falling.map((L) => L.slow === 0.01 && L.p.toArray().map((n) => +n.toFixed(2))).filter(Boolean) };
+      return { info, settled: w.litter.settled.slice(-2).map((g) => [g.x, g.y, g.z].map((n) => +n.toFixed(2))), falling: w.litter.falling.length, leaf: w.litter.falling.map((L) => L.slow === 0 && L.p.toArray().map((n) => +n.toFixed(2))).filter(Boolean) };
     }).catch((err) => 'page not inspectable: ' + err.message.split('\n')[0]);
     console.error('[home-browser] leaf not caught', JSON.stringify({ clickedAt: pos.map(Math.round), camBefore, page: diag, errors }, null, 1));
     throw e;
