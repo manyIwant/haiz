@@ -334,6 +334,7 @@ export function createRide(ctx) {
   }
 
   // ---------------------------------------------------------------- the skateboard
+  const STANCE = { front: 0.2, back: -0.28, half: 0.24 };          // the feet on the deck: over the bolts, a shoulder apart
   const BOARD = { pushTo: 6.2, kick: 1.35, max: 9, roll: 0.06, lawn: 3.2, brake: 2.6 };
   function stepBoard(dt, inp) {
     const col = getColliders();
@@ -418,17 +419,23 @@ export function createRide(ctx) {
     const o = S.ollie;
     const pre = o >= 0 && o < 0.14 ? smooth(o / 0.14) : 0;
     const tuck = S.air ? Math.sin(Math.min(1, S.airT / 0.55) * Math.PI) : 0;
-    const crouch = 0.045 + 0.16 * pre + 0.2 * tuck + 0.22 * S.crouch + 0.07 * Math.abs(S.carve) / 0.3 + push * 0.12;
+    const crouch = 0.035 + 0.16 * pre + 0.2 * tuck + 0.22 * S.crouch + 0.06 * Math.abs(S.carve) / 0.3 + push * 0.1;
     const top = board.topY;
-    const hipLocal = new THREE.Vector3(S.carve * 0.25, top + D.ankle + D.leg * 0.97 - crouch, -0.01 + push * 0.12);
+    // standing tall: the hips go where the legs, nearly straight (a soft knee), reach the two feet a
+    // stance apart, measured from the hip sockets rather than the hips joint (which sits above them)
+    const span = Math.max(0.05, STANCE.half - D.hipW * 0.5);
+    const stand = Math.sqrt(Math.max(0.2, (D.leg * 0.955) ** 2 - span * span)) + (D.hipDrop || 0);
+    const hipY = top + D.ankle * 0.9 + stand - crouch;
+    const hipLocal = new THREE.Vector3(S.carve * 0.25, hipY, -0.04 + push * 0.12);
     const hips = toWorld(deck, hipLocal, new THREE.Vector3());
     // keep the hips over the board even as the deck rolls: correct toward world-up
     const feet = {};
     const fwdW = new THREE.Vector3(0, 0, 1).applyQuaternion(fq);
     // front foot over the front bolts, angled toward the nose; back foot on the tail
-    const fL = toWorld(deck, _a.set(0.0, top + D.ankle * 0.9, 0.17 + push * 0.04), new THREE.Vector3());
-    feet.L = { at: fL, pole: _b.set(-1, 0, 0.35).applyQuaternion(dq).clone(), q: new THREE.Quaternion().copy(dq).multiply(qTmp.setFromAxisAngle(Yax, -Math.PI / 2 + 0.45 + push * 0.9)) };
-    let rAt = toWorld(deck, _a.set(0.01, top + D.ankle * 0.9, -0.24), new THREE.Vector3());
+    const fL = toWorld(deck, _a.set(0.0, top + D.ankle * 0.9, STANCE.front + push * 0.04), new THREE.Vector3());
+    // knees forward over the toes and a little apart (the front one toward the nose, the back toward the tail)
+    feet.L = { at: fL, pole: _b.set(-1, 0, 0.45).applyQuaternion(dq).clone(), q: new THREE.Quaternion().copy(dq).multiply(qTmp.setFromAxisAngle(Yax, -Math.PI / 2 + 0.45 + push * 0.9)) };
+    let rAt = toWorld(deck, _a.set(0.01, top + D.ankle * 0.9, STANCE.back), new THREE.Vector3());
     const rq = new THREE.Quaternion().copy(dq).multiply(qTmp.setFromAxisAngle(Yax, -Math.PI / 2 - 0.15));
     if (push > 0.001) {
       // the pushing foot: down beside the board ahead of the back truck, back along the ground, up and home
@@ -446,18 +453,18 @@ export function createRide(ctx) {
     }
     // the tail foot pops: with the tail it goes down then lifts; in the air both feet tuck under
     if (S.air) { const t = tuck * 0.12; fL.y += t; rAt.y += t * 1.2; }
-    feet.R = { at: rAt, pole: _b.set(-1, 0, -0.1).applyQuaternion(dq).clone().lerp(fwdW, push), q: rq };
+    feet.R = { at: rAt, pole: _b.set(-1, 0, -0.4).applyQuaternion(dq).clone().lerp(fwdW, push), q: rq };
     // arms out for balance: the leading arm toward the nose, the trailing one back; they swing with the carve
     const hands = {};
     const sway = Math.sin(performance.now() * 0.0011) * 0.03;
     // (board -x is where the rider faces; the arms hang out to the sides, a little in front, lifting as the board carves)
-    const hy = top + D.ankle + D.leg * 0.97 - crouch;
+    const hy = hipY;
     const armL = toWorld(board.group, _a.set(-0.13 + S.carve * 0.3, hy - 0.06 + Math.abs(S.carve) * 0.5 + tuck * 0.25, 0.44 + sway), new THREE.Vector3());
     const armR = toWorld(board.group, _a.set(-0.06 + S.carve * 0.2, hy - 0.12 + Math.abs(S.carve) * 0.3 + tuck * 0.2, -0.42 - sway), new THREE.Vector3());
     if (push > 0.01) { armL.lerp(toWorld(board.group, _a.set(-0.25, top + D.leg + 0.05, 0.3), new THREE.Vector3()), push * 0.6); armR.lerp(toWorld(board.group, _a.set(-0.2, top + D.leg + 0.0, -0.05), new THREE.Vector3()), push * 0.7); }
     hands.L = { at: armL, pole: _b.set(0.6, -1, 0.2).applyQuaternion(dq).clone() };
     hands.R = { at: armR, pole: _b.set(0.6, -1, -0.2).applyQuaternion(dq).clone() };
-    rig.pose({ frame: frameQ, hips, pitch: [0.12 + crouch * 0.6, 0.06 + crouch * 0.3, 0.04], twist: [0.25 - open * 0.3, 0.2 - open * 0.15], side: S.carve * 0.6,
+    rig.pose({ frame: frameQ, hips, pitch: [0.06 + crouch * 0.6, 0.03 + crouch * 0.3, 0.02], twist: [0.25 - open * 0.3, 0.2 - open * 0.15], side: S.carve * 0.6,
       look: -0.12, headYaw: 1.15 - open * 1.0, feet, hands, curl: 0.25 });
   }
 

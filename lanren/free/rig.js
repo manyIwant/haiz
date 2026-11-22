@@ -73,6 +73,7 @@ export function createRig(student) {
     thigh: len('thigh.L', 'shin.L'), shin: len('shin.L', 'foot.L'),
     upper: len('upperarm.L', 'forearm.L'), fore: len('forearm.L', 'hand.L'),
     ankle: P('foot.L').y, shoulder: P('upperarm.L').y, hipW: Math.abs(P('thigh.L').x - P('thigh.R').x),
+    hipDrop: P('hips').y - P('thigh.L').y,          // the hips joint sits this far above the hip sockets
   };
   dims.leg = dims.thigh + dims.shin;
   dims.arm = dims.upper + dims.fore;
