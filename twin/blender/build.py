@@ -182,8 +182,10 @@ CAMERAS = {
     'oblique_ne':((95.0, 70.0, 45.0), (5.0, -2.0, 8.0), 35.0),
     'oblique_nw':((-90.0, 75.0, 40.0), (-5.0, -2.0, 8.0), 35.0),
     'top':       ((0.0, 10.0, 260.0), (0.0, 10.0, 0.0), 50.0),
-    # approximate viewpoints of reference photographs (refined by the calibration tool later)
-    'lanshu':    ((42.6, 16.2, 2.2), (31.9, 5.7, 4.6), 21.0),
+    'lanren_w':  ((19.0, 27.0, 1.65), (42.0, 16.0, 5.5), 16.0),
+    # approximate viewpoints of reference photographs; 'lanshu' and 'gate_n' are replaced by their calibrated
+    # cameras (CALIBRATED) when the calibration report exists
+    'lanshu':    ((49.8, 22.75, 1.27), (31.9, 5.7, 4.6), 26.0),
     'taihushi':  ((0.6, 41.0, 1.7), (0.3, 28.4, 1.9), 30.0),
     'gate_n':    ((0.0, 119.8, 1.52), (0.0, 0.0, 1.52), 36.0 * 2036 / 2560),
     'gate_obl':  ((-14.0, 128.0, 4.5), (0.0, 106.0, 4.5), 30.0),
@@ -193,20 +195,23 @@ CAMERAS = {
 # principal-point offsets (Blender shift_x, shift_y) for cameras matched to cropped photographs
 CAMERA_SHIFT = {'gate_n': (0.0, (1075 - 673.5) / 2560)}
 # cameras recovered from photographs by twin/tools/calib.py; they replace the approximate entries above
-CALIBRATED = {'gate_n': 'evidence/calibration/hero-2560'}
+CALIBRATED = {'gate_n': 'evidence/calibration/hero-2560', 'lanshu': 'evidence/calibration/lanshu-1600'}
 
 
 def calibrated_camera(sc, name, stem, sensor=36.0):
-    """Camera from a calib.py report: position, yaw, roll and focal length fitted on the photograph, principal
-    point as Blender shift.  calib.py convention: at yaw 0 the camera looks along -y; image x to the right."""
+    """Camera from a calibration report (calib.py or calib_lines.py): position, orientation and focal length fitted
+    on the photograph, principal point as Blender shift.  Lens distortion (calib_lines k1) is not rendered."""
     rep = json.loads((TWIN / f'{stem}.report.json').read_text())
     W, H = json.loads((TWIN / f'{stem}.json').read_text())['image_size']
     c = rep['camera']
-    yaw, roll = math.radians(c['yaw_deg']), math.radians(c['roll_deg'])
-    fwd = Vector((-math.sin(yaw), -math.cos(yaw), 0.0))
-    right0 = Vector((-math.cos(yaw), math.sin(yaw), 0.0)); up0 = Vector((0.0, 0.0, 1.0))
-    right = right0 * math.cos(roll) + up0 * math.sin(roll)
-    up = up0 * math.cos(roll) - right0 * math.sin(roll)
+    if 'basis' in c:                            # calib_lines.py report: explicit camera axes (pitch and roll included)
+        right, up, fwd = (Vector(c['basis'][k]) for k in ('right', 'up', 'forward'))
+    else:                                       # calib.py report: level camera, yaw and roll only
+        yaw, roll = math.radians(c['yaw_deg']), math.radians(c['roll_deg'])
+        fwd = Vector((-math.sin(yaw), -math.cos(yaw), 0.0))
+        right0 = Vector((-math.cos(yaw), math.sin(yaw), 0.0)); up0 = Vector((0.0, 0.0, 1.0))
+        right = right0 * math.cos(roll) + up0 * math.sin(roll)
+        up = up0 * math.cos(roll) - right0 * math.sin(roll)
     cam = bpy.data.cameras.new(name)
     cam.sensor_fit = 'HORIZONTAL'
     cam.sensor_width = sensor

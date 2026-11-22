@@ -1,0 +1,845 @@
+{
+ "schema": "haiz-twin-calibration/2",
+ "image": "assets/images/web/lanshu-1600.jpg",
+ "image_size": [
+  1600,
+  1280
+ ],
+ "picture_area": [
+  52,
+  162,
+  1540,
+  1153
+ ],
+ "principal_point": [
+  796.0,
+  657.5
+ ],
+ "note": "Edge segments measured on the repo image with sub-pixel edge and ridge fitting along hand-placed search segments (no pixels of the photograph are stored here). The photograph (区大伟) is framed by a white border; the picture area is 1488 x 991 px (3:2), taken as uncropped, so the principal point is its centre. World lines are on the east wing of Teaching Block 1 (data/buildings/yihao.json): bay 5.25 m from the 31.5 m wing length on the Esri/OSM outline, ground-floor windows centred in the bays in the plane 0.45 m behind the wing front (y -0.75).",
+ "camera_model": "pinhole with radial distortion k1; principal point fixed at the centre of the picture area; free position, yaw, pitch, roll, focal length, k1",
+ "anchors": {
+  "z_bot": {
+   "value": 1.85,
+   "basis": "ground-floor window sill 0.80 m above the building floor (z 1.05, estimated); the camera height and every height in the solution move with this value"
+  }
+ },
+ "structure_params": {
+  "m": {
+   "init": 0.8,
+   "desc": "offset of the outer mullions from the window centre (m)"
+  },
+  "w": {
+   "init": 3.25,
+   "desc": "outer frame width of the ground-floor windows (m)"
+  },
+  "z_top": {
+   "init": 3.9,
+   "desc": "height of the ground-floor window heads (twin z)"
+  },
+  "z_tr": {
+   "init": 3.3,
+   "desc": "height of the transom bars (twin z)"
+  },
+  "tower_y": {
+   "init": 1.5,
+   "desc": "y of the vertical edge read as the east tower corner"
+  }
+ },
+ "init": {
+  "x": 49.0,
+  "y": 22.8,
+  "z": 1.25,
+  "yaw": -138.0,
+  "pitch": 10.0,
+  "roll": -4.2,
+  "f": 1250.0,
+  "k1": 0.0
+ },
+ "init_spread": [
+  [
+   0,
+   0,
+   1.0
+  ],
+  [
+   -4,
+   0.5,
+   0.85
+  ],
+  [
+   4,
+   -0.5,
+   1.2
+  ],
+  [
+   8,
+   -2,
+   1.5
+  ]
+ ],
+ "profile_f": [
+  1050,
+  1150,
+  1250,
+  1350,
+  1450,
+  1600
+ ],
+ "alternatives": [
+  [
+   "tower"
+  ],
+  [
+   "upper"
+  ],
+  [
+   "transom"
+  ],
+  [
+   "tower",
+   "upper"
+  ]
+ ],
+ "features": [
+  {
+   "id": "winA_mullion_east",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     633.15,
+     822
+    ],
+    [
+     635.7,
+     872
+    ]
+   ],
+   "x": [
+    29.625,
+    "m",
+    1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window A (east wing, bay 4 from the east end), east mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winA_mullion_centre",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     660.31,
+     822
+    ],
+    [
+     663.07,
+     872
+    ]
+   ],
+   "x": 29.625,
+   "y": -0.75,
+   "desc": "ground-floor window A (east wing, bay 4 from the east end), centre mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winA_mullion_west",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     684.01,
+     822
+    ],
+    [
+     686.97,
+     872
+    ]
+   ],
+   "x": [
+    29.625,
+    "m",
+    -1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window A (east wing, bay 4 from the east end), west mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winB_mullion_east",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     787.05,
+     822
+    ],
+    [
+     790.05,
+     866
+    ]
+   ],
+   "x": [
+    24.375,
+    "m",
+    1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window B (east wing, bay 5 from the east end), east mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winB_mullion_centre",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     808.66,
+     822
+    ],
+    [
+     811.76,
+     866
+    ]
+   ],
+   "x": 24.375,
+   "y": -0.75,
+   "desc": "ground-floor window B (east wing, bay 5 from the east end), centre mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winB_mullion_west",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     827.72,
+     822
+    ],
+    [
+     830.95,
+     866
+    ]
+   ],
+   "x": [
+    24.375,
+    "m",
+    -1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window B (east wing, bay 5 from the east end), west mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winC_mullion_east",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     911.06,
+     820
+    ],
+    [
+     914.16,
+     858
+    ]
+   ],
+   "x": [
+    19.125,
+    "m",
+    1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window C (east wing, bay 6 from the east end), east mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winC_mullion_centre",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     928.24,
+     820
+    ],
+    [
+     931.55,
+     858
+    ]
+   ],
+   "x": 19.125,
+   "y": -0.75,
+   "desc": "ground-floor window C (east wing, bay 6 from the east end), centre mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winC_mullion_west",
+   "type": "vline",
+   "group": "mullion",
+   "px": [
+    [
+     943.89,
+     820
+    ],
+    [
+     947.19,
+     858
+    ]
+   ],
+   "x": [
+    19.125,
+    "m",
+    -1
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window C (east wing, bay 6 from the east end), west mullion of the lower sashes; centre line by ridge fitting"
+  },
+  {
+   "id": "winD_frame_west",
+   "type": "vline",
+   "group": "frame",
+   "px": [
+    [
+     534.01,
+     884
+    ],
+    [
+     530.32,
+     796
+    ]
+   ],
+   "x": [
+    34.875,
+    "w",
+    -0.5
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window D, west (image right) edge of the outer frame against the wall; the east edge is hidden by the colonnade pier"
+  },
+  {
+   "id": "winA_frame_west",
+   "type": "vline",
+   "group": "frame",
+   "px": [
+    [
+     712.62,
+     872
+    ],
+    [
+     708.42,
+     800
+    ]
+   ],
+   "x": [
+    29.625,
+    "w",
+    -0.5
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window A, west (image right) edge of the outer frame against the wall; the east edge is hidden by the colonnade pier"
+  },
+  {
+   "id": "winB_frame_west",
+   "type": "vline",
+   "group": "frame",
+   "px": [
+    [
+     851.81,
+     866
+    ],
+    [
+     847.06,
+     800
+    ]
+   ],
+   "x": [
+    24.375,
+    "w",
+    -0.5
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window B, west (image right) edge of the outer frame against the wall; the east edge is hidden by the colonnade pier"
+  },
+  {
+   "id": "winC_frame_west",
+   "type": "vline",
+   "group": "frame",
+   "px": [
+    [
+     964.7,
+     858
+    ],
+    [
+     959.66,
+     801
+    ]
+   ],
+   "x": [
+    19.125,
+    "w",
+    -0.5
+   ],
+   "y": -0.75,
+   "desc": "ground-floor window C, west (image right) edge of the outer frame against the wall; the east edge is hidden by the colonnade pier"
+  },
+  {
+   "id": "tower_corner",
+   "type": "vline",
+   "group": "tower",
+   "px": [
+    [
+     1047.89,
+     878
+    ],
+    [
+     1031.16,
+     705
+    ]
+   ],
+   "x": 16.5,
+   "y": "tower_y",
+   "z_range": [
+    1.0,
+    7.0
+   ],
+   "desc": "left edge of the sunlit granite face of the east tower (shade/sun boundary); taken as the tower front corner at x 16.5 with its y left free, because it may be a shadow edge"
+  },
+  {
+   "id": "winD_head",
+   "type": "xline",
+   "group": "head",
+   "px": [
+    [
+     402,
+     787.7
+    ],
+    [
+     531,
+     789.79
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_top",
+   "x_range": [
+    36.475,
+    33.275
+   ],
+   "desc": "ground-floor window D, head edge (midpoint used)"
+  },
+  {
+   "id": "winA_head",
+   "type": "xline",
+   "group": "head",
+   "px": [
+    [
+     608,
+     791.07
+    ],
+    [
+     712,
+     792.63
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_top",
+   "x_range": [
+    31.225,
+    28.025
+   ],
+   "desc": "ground-floor window A, head edge (midpoint used)"
+  },
+  {
+   "id": "winB_head",
+   "type": "xline",
+   "group": "head",
+   "px": [
+    [
+     769,
+     793.46
+    ],
+    [
+     850,
+     793.42
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_top",
+   "x_range": [
+    25.975,
+    22.775
+   ],
+   "desc": "ground-floor window B, head edge (midpoint used)"
+  },
+  {
+   "id": "winC_head",
+   "type": "xline",
+   "group": "head",
+   "px": [
+    [
+     900,
+     794.44
+    ],
+    [
+     964,
+     794.4
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_top",
+   "x_range": [
+    20.725,
+    17.525
+   ],
+   "desc": "ground-floor window C, head edge (midpoint used)"
+  },
+  {
+   "id": "winD_sill",
+   "type": "xline",
+   "group": "sill",
+   "px": [
+    [
+     402,
+     894.14
+    ],
+    [
+     531,
+     888.04
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_bot",
+   "x_range": [
+    36.475,
+    33.275
+   ],
+   "desc": "ground-floor window D, sill edge (midpoint used)"
+  },
+  {
+   "id": "winA_sill",
+   "type": "xline",
+   "group": "sill",
+   "px": [
+    [
+     608,
+     880.32
+    ],
+    [
+     712,
+     874.89
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_bot",
+   "x_range": [
+    31.225,
+    28.025
+   ],
+   "desc": "ground-floor window A, sill edge (midpoint used)"
+  },
+  {
+   "id": "winB_sill",
+   "type": "xline",
+   "group": "sill",
+   "px": [
+    [
+     769,
+     872.36
+    ],
+    [
+     850,
+     867.8
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_bot",
+   "x_range": [
+    25.975,
+    22.775
+   ],
+   "desc": "ground-floor window B, sill edge (midpoint used)"
+  },
+  {
+   "id": "winC_sill",
+   "type": "xline",
+   "group": "sill",
+   "px": [
+    [
+     900,
+     865.04
+    ],
+    [
+     964,
+     861.29
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_bot",
+   "x_range": [
+    20.725,
+    17.525
+   ],
+   "desc": "ground-floor window C, sill edge (midpoint used)"
+  },
+  {
+   "id": "winD_transom",
+   "type": "xline",
+   "group": "transom",
+   "px": [
+    [
+     402,
+     816.8
+    ],
+    [
+     531,
+     816.0
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_tr",
+   "x_range": [
+    36.475,
+    33.275
+   ],
+   "desc": "ground-floor window D, transom edge (midpoint used)",
+   "weight": 0.5
+  },
+  {
+   "id": "winA_transom",
+   "type": "xline",
+   "group": "transom",
+   "px": [
+    [
+     608,
+     816.7
+    ],
+    [
+     712,
+     815.3
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_tr",
+   "x_range": [
+    31.225,
+    28.025
+   ],
+   "desc": "ground-floor window A, transom edge (midpoint used)",
+   "weight": 0.5
+  },
+  {
+   "id": "winB_transom",
+   "type": "xline",
+   "group": "transom",
+   "px": [
+    [
+     769,
+     815.8
+    ],
+    [
+     850,
+     814.3
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_tr",
+   "x_range": [
+    25.975,
+    22.775
+   ],
+   "desc": "ground-floor window B, transom edge (midpoint used)",
+   "weight": 0.5
+  },
+  {
+   "id": "winC_transom",
+   "type": "xline",
+   "group": "transom",
+   "px": [
+    [
+     900,
+     813.6
+    ],
+    [
+     964,
+     813.6
+    ]
+   ],
+   "y": -0.75,
+   "z": "z_tr",
+   "x_range": [
+    20.725,
+    17.525
+   ],
+   "desc": "ground-floor window C, transom edge (midpoint used)",
+   "weight": 0.5
+  },
+  {
+   "id": "upper_vertical_1",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     828.97,
+     590
+    ],
+    [
+     803.47,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_vertical_2",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     840.58,
+     590
+    ],
+    [
+     814.2,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_vertical_3",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     845.79,
+     590
+    ],
+    [
+     818.51,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_vertical_4",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     852.63,
+     590
+    ],
+    [
+     824.57,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_vertical_5",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     908.15,
+     590
+    ],
+    [
+     877.05,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_vertical_6",
+   "type": "vdir",
+   "group": "upper",
+   "px": [
+    [
+     939.45,
+     590
+    ],
+    [
+     906.92,
+     260
+    ]
+   ],
+   "desc": "long vertical edge of a pilaster or window jamb on storeys 3-6 of the east wing, seen through the canopy (y 260-590)"
+  },
+  {
+   "id": "upper_horizontal_1",
+   "type": "xdir",
+   "group": "upper",
+   "px": [
+    [
+     866,
+     257.74
+    ],
+    [
+     914,
+     279.54
+    ]
+   ],
+   "desc": "head or sill of an upper-storey window of the east wing (parallel to the facade)"
+  },
+  {
+   "id": "upper_horizontal_2",
+   "type": "xdir",
+   "group": "upper",
+   "px": [
+    [
+     864,
+     353.3
+    ],
+    [
+     916,
+     372.77
+    ]
+   ],
+   "desc": "head or sill of an upper-storey window of the east wing (parallel to the facade)"
+  },
+  {
+   "id": "upper_horizontal_3",
+   "type": "xdir",
+   "group": "upper",
+   "px": [
+    [
+     872,
+     458.13
+    ],
+    [
+     924,
+     473.01
+    ]
+   ],
+   "desc": "head or sill of an upper-storey window of the east wing (parallel to the facade)"
+  },
+  {
+   "id": "upper_horizontal_4",
+   "type": "xdir",
+   "group": "upper",
+   "px": [
+    [
+     760,
+     541.71
+    ],
+    [
+     826,
+     553.82
+    ]
+   ],
+   "desc": "head or sill of an upper-storey window of the east wing (parallel to the facade)"
+  },
+  {
+   "id": "upper_horizontal_5",
+   "type": "xdir",
+   "group": "upper",
+   "px": [
+    [
+     872,
+     514.57
+    ],
+    [
+     924,
+     524.31
+    ]
+   ],
+   "desc": "head or sill of an upper-storey window of the east wing (parallel to the facade)"
+  }
+ ]
+}
