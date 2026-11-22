@@ -578,7 +578,7 @@ export function createRide(ctx) {
     broom.group.quaternion.copy(machineQ(S.yaw, S.pitch, S.roll));
     broom.group.updateMatrixWorld(true);
   }
-  const hover = { t: 0 };
+  const hover = { t: 0, v: 0, vy: 0, sx: 0, sz: 0, wx: 0, wz: 0 };     // sx/sz: the legs' swing (a damped pendulum), wx/wz its rate
   function poseBroom(dt) {
     hover.t += dt;
     const b = broom.body;
@@ -588,14 +588,32 @@ export function createRide(ctx) {
     frameQ.copy(bq);
     const drift = Math.sin(hover.t * 1.3) * 0.015 * (1 - fly);
     const hips = toWorld(b, _a.set(0, 0.1 + drift, -0.05), new THREE.Vector3());
+    // the legs are a pendulum hanging from the broom: speeding up swings them back, slowing swings them
+    // forward, a turn throws them outward, climbing lets them trail and sinking lifts them; then they
+    // settle (under-damped, so they overshoot once). Hovering, they idle: a lazy alternate kick.
+    if (dt > 0) {
+      const acc = clamp((S.speed - hover.v) / dt, -12, 12), ay = clamp((S.vy - hover.vy) / dt, -12, 12);
+      hover.v = S.speed; hover.vy = S.vy;
+      const tx = clamp(-S.turnRate * S.speed * 0.035, -0.22, 0.22);                 // outward of the turn (broom +x is the rider's left)
+      const tz = clamp(-acc * 0.03 - S.vy * 0.012, -0.3, 0.2);
+      hover.wx += ((tx - hover.sx) * 30 - hover.wx * 5.5) * dt; hover.sx += hover.wx * dt;
+      hover.wz += ((tz - hover.sz) * 26 - hover.wz * 4.8 - ay * 0.04) * dt; hover.sz += hover.wz * dt;
+    }
     const feet = {};
     for (const sd of ['L', 'R']) {
       const s = sd === 'L' ? 1 : -1;
-      // hovering, the legs hang; flying, they fold back along the broom, out of the wind
-      const hang = new THREE.Vector3(s * 0.15, -0.66 + Math.sin(hover.t * 1.7 + s) * 0.02, 0.1 + Math.sin(hover.t * 1.1 + s * 2) * 0.03);
-      const fold = new THREE.Vector3(s * 0.15, -0.42, -0.3 - dash * 0.08);
-      const at = toWorld(b, hang.lerp(fold, fly), new THREE.Vector3());
-      feet[sd] = { at, pole: _b.set(s * 0.25, 0, 1).applyQuaternion(bq).clone(), q: new THREE.Quaternion().copy(bq).multiply(qTmp.setFromAxisAngle(Xax, 0.25 + fly * 0.65)) };
+      const idle = (1 - fly) * Math.sin(hover.t * 1.9 + (s > 0 ? 0 : 2.6));
+      // hovering, the legs hang loose: knees soft and a little forward, one foot ahead of the other, toes
+      // dropped; flying, they fold back along the broom out of the wind, knees a touch apart
+      const hang = new THREE.Vector3(s * 0.16, -0.6 + Math.sin(hover.t * 1.7 + s) * 0.02, 0.16 + s * 0.05 + idle * 0.07);
+      const fold = new THREE.Vector3(s * (0.17 + dash * 0.02), -0.4 + s * 0.02, -0.32 - dash * 0.08 + s * 0.04);
+      const loc = hang.lerp(fold, fly);
+      // the swing pivots about the hips: it moves the feet more the further they hang below
+      const reach = 0.5 + 0.5 * (1 - fly);
+      loc.x += hover.sx * reach; loc.z += hover.sz * reach; loc.y += Math.abs(hover.sz) * 0.25 * reach;
+      const at = toWorld(b, loc, new THREE.Vector3());
+      const point = 0.45 + fly * 0.6 + idle * 0.12 - hover.sz * 0.6;              // toes: dropped when hanging, pointed in flight
+      feet[sd] = { at, pole: _b.set(s * (0.3 + fly * 0.15), 0, 1).applyQuaternion(bq).clone(), q: new THREE.Quaternion().copy(bq).multiply(qTmp.setFromAxisAngle(Xax, point)) };
     }
     const hands = {
       L: { at: toWorld(b, _a.set(0.03, 0.02, 0.36 + fly * 0.06), new THREE.Vector3()), pole: _b.set(0.7, -0.5, -0.5).applyQuaternion(bq).clone() },
