@@ -16,6 +16,7 @@ const quality = arg('quality', 'high');
 const modes = arg('modes', 'split').split(',');
 const layers = arg('layers', '');
 const debug = arg('debug', '');
+const preset = arg('preset', '');
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -23,7 +24,7 @@ const debug = arg('debug', '');
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  const q = `still&quality=${quality}&time=${time}&scale=1${layers ? '&layers=' + layers : ''}`;
+  const q = `still&quality=${quality}&time=${time}&scale=1${layers ? '&layers=' + layers : ''}${preset ? '&preset=' + preset : ''}`;
   await page.goto(`${base}/painted-lab.html?${q}`);
   await page.waitForFunction(() => window.__lab || document.body.dataset.stage === 'failed', null, { timeout: 240000 });
   if (!(await page.evaluate(() => !!window.__lab))) { console.log('FAILED', errors); process.exit(1); }
@@ -33,7 +34,7 @@ const debug = arg('debug', '');
     for (const m of modes) {
       const t = Date.now();
       await page.evaluate(([v, m, d]) => { window.__lab.setView(v); window.__lab.setMode(m); window.__lab.debug(d); window.__lab.render(); }, [v, m, debug]);
-      const file = path.join(out, `${v}-${time}-${m}${debug ? '-' + debug : ''}.png`);
+      const file = path.join(out, `${v}-${time}-${m}${preset ? '-' + preset : ''}${debug ? '-' + debug : ''}.png`);
       await page.screenshot({ path: file });
       console.log(file, `${Date.now() - t} ms (software GL)`);
     }

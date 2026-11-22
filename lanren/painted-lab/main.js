@@ -50,6 +50,8 @@ const LAYERS = [
   { id: 'paint', group: '画面', label: '油彩', hint: '沿结构方向的笔触滤镜，远处概括为形' },
   { id: 'ink', group: '画面', label: '线', hint: '轮廓与转折处的有色线，随距离淡出' },
   { id: 'paper', group: '画面', label: '纸', hint: '固定在画面上的纸纹与颜料沉积' },
+  { id: 'focus', group: '画意', label: '焦点', hint: '画中心画完，四周与前后放松、笔触变大', bold: true },
+  { id: 'margin', group: '画意', label: '留白', hint: '四边颜色退回到纸上，只剩起稿的线', bold: true },
 ];
 
 async function main() {
@@ -131,19 +133,31 @@ async function main() {
   // ------------------------------------------------------------ state
   const on = {};
   const fromQ = Q.get('layers');
-  for (const l of LAYERS) on[l.id] = fromQ ? fromQ.split(',').includes(l.id) : true;
+  // 研究 study: every measured layer on, the composition layers off. 画意 painting: everything,
+  // with wider strokes — a bolder picture for the few shots worth taking that far
+  let preset = Q.get('preset') === 'painting' ? 'painting' : 'study';
+  for (const l of LAYERS) on[l.id] = fromQ ? fromQ.split(',').includes(l.id) : (preset === 'painting' || !l.bold);
   let mode = ['lab', 'base', 'split'].includes(Q.get('mode')) ? Q.get('mode') : 'split';
   let split = 0.5;
   let dirty = true;
   const applyLayers = () => {
     LABM.uLabLight.value = on.light ? 1 : 0;
     LABM.uLabMat.value.set(on.core ? 1 : 0, on.brush ? 1 : 0, on.broken ? 1 : 0, (on.core || on.brush || on.broken) ? 1 : 0);
-    Object.assign(pipe.S, { wash: on.wash ? 1 : 0, planes: on.planes ? 1 : 0, paint: on.paint ? 1 : 0, ink: on.ink ? 1 : 0, paper: on.paper ? 1 : 0 });
+    Object.assign(pipe.S, { wash: on.wash ? 1 : 0, planes: on.planes ? 1 : 0, paint: on.paint ? 1 : 0, ink: on.ink ? 1 : 0, paper: on.paper ? 1 : 0, focus: on.focus ? 1 : 0, margin: on.margin ? 1 : 0 });
+    pipe.radius = preset === 'painting' ? [3.8, 8] : [3.2, 6];
     dirty = true;
   };
   applyLayers();
 
   // ------------------------------------------------------------ interface
+  const markPreset = () => document.querySelectorAll('[data-preset]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.preset === preset)));
+  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+    preset = b.dataset.preset;
+    for (const l of LAYERS) on[l.id] = preset === 'painting' || !l.bold;
+    document.querySelectorAll('[data-layer]').forEach((i) => { i.checked = on[i.dataset.layer]; });
+    markPreset(); applyLayers();
+  }));
+  markPreset();
   const list = $('#pl-layers');
   let group = '';
   for (const l of LAYERS) {
@@ -279,6 +293,7 @@ async function main() {
     setView: (id) => { setView(id, true); orbit.update(0); dirty = true; },
     setMode: (m) => { mode = m; markMode(); },
     setTime: (n) => { day.set(n, true); markTime(); dirty = true; },
+    setPreset: (p) => { document.querySelector(`[data-preset="${p}"]`)?.click(); },
     setLayers: (ids) => { for (const l of LAYERS) on[l.id] = ids.includes(l.id); document.querySelectorAll('[data-layer]').forEach((i) => { i.checked = on[i.dataset.layer]; }); applyLayers(); },
     setSplit,
     debug: (name) => { pipe.debug = name || null; dirty = true; },

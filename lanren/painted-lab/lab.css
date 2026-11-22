@@ -53,6 +53,7 @@ body[data-mode="split"] #pl-split { display: block; }
 .pl-chips { display: flex; flex-wrap: wrap; gap: 2px; }
 .pl-panel .pl-chips button { background: #e6e2d6; margin: 0 2px 2px 0; }
 .pl-panel .pl-chips button[aria-pressed="true"] { background: var(--leaf); }
+.pl-presets { margin: 2px 0 4px; }
 .pl-honest { margin: 12px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
 
 .pl-foot { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(720px, calc(100vw - 32px)); pointer-events: none; }

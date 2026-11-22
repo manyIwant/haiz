@@ -45,6 +45,10 @@
     <aside class="pl-side">
       <button type="button" class="pl-panel-btn" data-act="panel" aria-expanded="true" aria-controls="pl-panel">图层</button>
       <section id="pl-panel" class="pl-panel" aria-label="实验图层">
+        <div class="pl-chips pl-presets" role="group" aria-label="画法">
+          <button type="button" data-preset="study" aria-pressed="true" title="可测量的实验层，构图层关闭">研究</button>
+          <button type="button" data-preset="painting" aria-pressed="false" title="全部层，加上焦点与留白，笔触更大">画意</button>
+        </div>
         <div id="pl-layers"></div>
         <h3>时间</h3>
         <div class="pl-chips" role="group" aria-label="时间">

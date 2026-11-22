@@ -93,12 +93,13 @@ const LABGRADE = {
   uniforms: { tHDR: { value: null }, tAO: { value: null }, tDepth: { value: null }, uExposure: { value: 1 }, uSat: { value: 1.06 },
     uShadowTone: { value: new THREE.Color(0.95, 0.98, 1.06) }, uHighTone: { value: new THREE.Color(1.03, 1.0, 0.96) },
     uShadeHue: { value: new THREE.Color(0.6, 0.67, 1.0) }, uKey: { value: new THREE.Color(0.6, 0.75, 0.9) },
-    uVig: { value: 0.2 }, uWash: { value: 1 }, uPlanes: { value: 1 }, uFarPlane: { value: new THREE.Vector2(45, 320) }, uNearPlane: { value: new THREE.Vector2(4, 22) },
+    uFocusK: { value: 0 }, uFocusD: { value: 30 }, uAspect: { value: 1.78 }, uVig: { value: 0.2 }, uWash: { value: 1 }, uPlanes: { value: 1 }, uFarPlane: { value: new THREE.Vector2(45, 320) }, uNearPlane: { value: new THREE.Vector2(4, 22) },
     uSimplify: { value: new THREE.Vector2(8, 160) }, uNear: { value: 0.1 }, uFar: { value: 6000 } },
   fragmentShader: /* glsl */`
 ${COMMON}
 uniform sampler2D tHDR; uniform sampler2D tAO; uniform sampler2D tDepth; uniform float uExposure; uniform float uSat;
 uniform vec3 uShadowTone; uniform vec3 uHighTone; uniform vec3 uShadeHue; uniform vec3 uKey;
+uniform float uFocusK; uniform float uFocusD; uniform float uAspect;
 uniform float uVig; uniform float uWash; uniform float uPlanes; uniform vec2 uFarPlane; uniform vec2 uNearPlane; uniform vec2 uSimplify;
 varying vec2 vUv;
 vec3 neutral(vec3 c) {
@@ -139,6 +140,16 @@ void main() {
   }
   // alpha carries how much the painter simplifies here (0 near … 1 far), for the paint pass
   float simp = sky ? 0.55 : smoothstep(uSimplify.x, uSimplify.y, d);
+  // 焦点 focus: a painter finishes the subject and lets the rest go — away from the centre of
+  // interest (the frame's centre, at the subject's distance) strokes widen and colour quietens
+  if (uFocusK > 0.001) {
+    float radial = smoothstep(0.14, 0.7, length((vUv - 0.5) * vec2(uAspect, 1.0)));
+    float depthAway = sky ? 1.0 : smoothstep(0.3, 1.3, abs(log(d / uFocusD)));
+    float away = clamp(max(radial, depthAway * 0.85), 0.0, 1.0) * uFocusK;
+    simp = clamp(simp + away * 0.8, 0.0, 1.0);
+    float lf = luma(c);
+    c = mix(c, mix(vec3(lf), c, 0.72), away);
+  }
   // V2's vignette, in the same place in the chain (linear light, before encoding)
   vec2 q = vUv - 0.5;
   c *= 1.0 - uVig * smoothstep(0.25, 0.9, dot(q, q) * 2.2);
@@ -240,13 +251,14 @@ void main() {
 
 const FINAL = {
   uniforms: { tPaint: { value: null }, tBase: { value: null }, tDepth: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uPx: { value: 1 },
-    uInk: { value: 1 }, uPaper: { value: 1 }, uSplit: { value: -1 }, uTime: { value: 0 },
+    uMargin: { value: 0 }, uAspect: { value: 1.78 }, uInk: { value: 1 }, uPaper: { value: 1 }, uSplit: { value: -1 }, uTime: { value: 0 },
     uShadeHue: { value: new THREE.Color(0.6, 0.67, 1.0) }, uNear: { value: 0.1 }, uFar: { value: 6000 },
     uProjInv: { value: new THREE.Matrix4() }, uViewInv: { value: new THREE.Matrix4() }, uGroundY: { value: -0.85 }, tDebug: { value: null }, uDebug: { value: 0 } },
   fragmentShader: /* glsl */`
 ${COMMON}
 uniform mat4 uProjInv; uniform mat4 uViewInv; uniform float uGroundY; uniform sampler2D tDebug; uniform float uDebug;
 uniform sampler2D tPaint; uniform sampler2D tBase; uniform sampler2D tDepth; uniform vec2 uRes; uniform float uPx;
+uniform float uMargin; uniform float uAspect;
 uniform float uInk; uniform float uPaper; uniform float uSplit; uniform float uTime; uniform vec3 uShadeHue;
 varying vec2 vUv;
 float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -259,7 +271,8 @@ float paper(vec2 p) {
 void main() {
   vec2 px = 1.0 / uRes;
   vec3 c = texture2D(tPaint, vUv).rgb;
-  if (uInk > 0.001) {
+  float sketchLine = 0.0;
+  if (uInk > 0.001 || uMargin > 0.001) {
     bool sky = texture2D(tDepth, vUv).x >= 0.99999;
     float d = sky ? uFar : viewDist(tDepth, vUv);
     float w = mix(1.5, 0.9, smoothstep(4.0, 50.0, d)) * uPx;
@@ -277,8 +290,31 @@ void main() {
     vec3 wp = (uViewInv * vec4(vp.xyz / vp.w, 1.0)).xyz;
     float aboveGround = smoothstep(0.45, 1.3, wp.y - uGroundY);
     line = sky ? 0.0 : clamp(line, 0.0, 1.0) * (1.0 - smoothstep(25.0, 240.0, d)) * aboveGround;
+    sketchLine = line;
     vec3 inkCol = c * mix(vec3(0.62), uShadeHue * 0.62, 0.55);
     c = mix(c, inkCol, line * 0.7 * uInk);
+  }
+  if (uMargin > 0.001) {
+    // 留白: the picture is still being painted. Toward the edges colour gives way to the bare
+    // sheet, where only the drawing remains — the same picture the easel starts from in 入画
+    vec2 sp = gl_FragCoord.xy / uPx;
+    float e = min(min(vUv.x, 1.0 - vUv.x) * uAspect, min(vUv.y, 1.0 - vUv.y));
+    float along = abs(vUv.x - 0.5) * uAspect > abs(vUv.y - 0.5) ? sp.y : sp.x;
+    float across = abs(vUv.x - 0.5) * uAspect > abs(vUv.y - 0.5) ? sp.x : sp.y;
+    float brush = vnoise(vec2(along * 0.006, across * 0.0035)) * 0.5 + vnoise(vec2(along * 0.025, across * 0.012)) * 0.32 + vnoise(vec2(along * 0.11, across * 0.05)) * 0.18;
+    float reach = 0.03 + 0.085 * uMargin;
+    float fill = smoothstep(reach - 0.04, reach + 0.05, e + (brush - 0.5) * 0.16);
+    float gx = luma(texture2D(tPaint, vUv + vec2(px.x * uPx, 0.0)).rgb) - luma(texture2D(tPaint, vUv - vec2(px.x * uPx, 0.0)).rgb);
+    float gy = luma(texture2D(tPaint, vUv + vec2(0.0, px.y * uPx)).rgb) - luma(texture2D(tPaint, vUv - vec2(0.0, px.y * uPx)).rgb);
+    float sketch = clamp(sketchLine * 0.9 + smoothstep(0.06, 0.3, length(vec2(gx, gy))) * 0.55, 0.0, 1.0);
+    vec3 sheet = vec3(0.955, 0.93, 0.875);
+    vec3 drawn = sheet * (1.0 - sketch * 0.5 * vec3(1.0, 0.98, 0.94));
+    // a thin wash runs ahead of the colour, and pigment pools along the edge where it stopped
+    vec3 wash = mix(sheet, c, 0.28);
+    float washK = smoothstep(reach - 0.05, reach - 0.005, e + (brush - 0.5) * 0.2);
+    vec3 m = mix(drawn, wash * (1.0 - sketch * 0.3), washK * 0.65);
+    c = mix(m, c, fill);
+    c *= 1.0 - 0.14 * uMargin * 4.0 * fill * (1.0 - fill);
   }
   if (uPaper > 0.001) {
     // pigment gathers where one colour meets another
@@ -328,7 +364,7 @@ export function createLabPipeline(renderer, { samples = 4, tier = 'high' } = {})
   const M = { ao: mat(AO), aoBlur: mat(AOBLUR), grade: mat(LABGRADE), base: mat(Grade), tensor: mat(TENSOR), gauss: mat(GAUSS), kuwa: mat(kuwaharaShader(T.maxR)), final: mat(FINAL) };
   const size = new THREE.Vector2(), paintSize = new THREE.Vector2();
   let scale = 1, time = 0;
-  const S = { wash: 1, planes: 1, paint: 1, ink: 1, paper: 1 };   // layer strengths (0 = off)
+  const S = { wash: 1, planes: 1, paint: 1, ink: 1, paper: 1, focus: 0, margin: 0 };   // layer strengths (0 = off)
   const run = (m, target) => { quad.material = m; renderer.setRenderTarget(target); quad.render(renderer); };
   const timings = {};
 
@@ -390,6 +426,7 @@ export function createLabPipeline(renderer, { samples = 4, tier = 'high' } = {})
       g.tHDR.value = hdr.texture; g.tDepth.value = depth; g.tAO.value = aoTex || ao.texture; g.uWash.value = aoTex ? S.wash : 0; g.uPlanes.value = S.planes;
       const fd = Math.max(8, api.focus);
       g.uNearPlane.value.set(fd * 0.2, fd * 0.6); g.uFarPlane.value.set(fd * 1.7, fd * 7); g.uSimplify.value.set(fd * 0.35, fd * 4);
+      g.uFocusK.value = S.focus; g.uFocusD.value = fd; g.uAspect.value = size.x / size.y;
       run(M.grade, ldr);
       let src = ldr.texture;
       if (S.paint > 0.001) {
@@ -408,6 +445,7 @@ export function createLabPipeline(renderer, { samples = 4, tier = 'high' } = {})
       f.tPaint.value = src; f.tBase.value = base.texture; f.tDepth.value = depth; f.uRes.value.set(size.x, size.y); f.uPx.value = api.pxFull;
       f.uProjInv.value.copy(camera.projectionMatrixInverse); f.uViewInv.value.copy(camera.matrixWorld);
       f.uDebug.value = api.debug ? 1 : 0; f.tDebug.value = api.debug ? { ao: aoB, ldr, paint, ten }[api.debug]?.texture || null : null;
+      f.uMargin.value = S.margin; f.uAspect.value = size.x / size.y;
       f.uInk.value = S.ink; f.uPaper.value = S.paper; f.uSplit.value = split; f.uTime.value = time % 100;
       run(M.final, null);
     },

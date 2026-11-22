@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const base = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'http://localhost:8765';
 const [w, h] = arg('size', '960x540').split('x').map(Number);
-const ALL = ['core', 'brush', 'broken', 'light', 'wash', 'planes', 'paint', 'ink', 'paper'];
+const ALL = ['core', 'brush', 'broken', 'light', 'wash', 'planes', 'paint', 'ink', 'paper', 'focus', 'margin'];
 
 (async () => {
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
