@@ -27,7 +27,7 @@ node tools/campus-audit/capture.mjs          # 用 Playwright 生成影像叠加
 
 **缺少必需数据时直接失败（fail closed）。** 以下数据源是必需的：`campus.json`、`campus-data.js`、`data/buildings.json`、`data/campus-sports.json`、`lanren/life/places.js`、Blender V3 GLB、影像 manifest 及其引用的每一张影像、`control-points.json`、`data/campus-credibility.json`。其中任何一个读取失败都会报 `error`，依赖它的检查会显示为 `skip`，不会悄悄跳过。碰撞体样本和校史数据是可选数据源，缺失时只报 `warn`。
 
-**适用范围。** 这是对仓库内数据的一致性和证据标注审查，**不是实地测绘验收**。通过审查不代表模型与校园 1:1 吻合。
+**适用范围。** 这是对仓库内数据的一致性和证据标注审查，**不是实地测绘验收**。CI 显示绿色不能代替精度验收，通过审查也不代表模型与校园 1:1 吻合。审计**不读取 `twin/**`**（#92 的高保真重建）：它的 GLB 和 `twin/data/buildings/*.json` 需要先写好对应的读取适配，才能纳入审计范围。
 
 CI：`.github/workflows/campus-audit.yml` 只在相关路径发生改动时触发，会依次运行单元测试和审计，出现任何 error 都会失败。
 
@@ -42,11 +42,15 @@ CI：`.github/workflows/campus-audit.yml` 只在相关路径发生改动时触�
 | `estimated` | 依据照片推断、套用通用尺寸，或来自已无法核实的旧数据 |
 | `invented` | 为体验而创作，没有空间依据 |
 | `documented` | 名称、用途等非空间事实，来自公开文献 |
+| `photo-derived` | 依据带标定的照片量取尺寸，并注明标定残差。该标签与 twin/ 三维重建（#92）共用。也接受 `photo-derived/estimated` 这类组合标签，前一部分描述主体，后一部分描述细部 |
 
 以后如果加入真实测绘，请先把原始文件提交到仓库，例如 `data/survey/…`，再在 `data/campus-credibility.json` 中把对应条目改为 `surveyed`，并同时满足以下两点：
 
 - 在 `sources` 里写明该文件的路径。文件必须能被解析为测量数据：GeoJSON 或 KML 中要有数值坐标，CSV 至少要有两行数值，LAS、E57、PLY、DWG 要带有各自的格式签名。空的 `{}` 不算测量数据。
 - 写上 `"survey": {"method", "date", "surveyor", "accuracy"}`，缺少任何一项都会报 error。
+- 文件中的坐标必须**落在该对象上**。工具用影像拟合预测该建筑在地面上的位置，再与测量几何的中心比较，容差为占地半对角线 + 3×RMS + 10 m。测的是别的建筑，或者坐标参考系不是 WGS84 经纬度、因而无法核对位置时，都会报 error，不予认可。
+
+**`surveyed` 通过只说明满足了可接受的条件，不等于实测认证。** 工具只检查四件事：格式、坐标、位置与对象相符、元数据齐全。它**无法**验证测量是否真实发生，也无法验证声称的精度。
 
 树点按每个点单独展开（`tree-0` 到 `tree-299`），所以可以对单个树点单独覆盖标签。但目前 300 个点共用同一条依据（invented），没有任何一棵树与真实的树一一对应过。
 

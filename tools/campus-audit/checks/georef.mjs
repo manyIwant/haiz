@@ -10,6 +10,28 @@ export const CLAIMED_ROTATION_DEG = 41.4; // meta.source.plan: "校园整体相�
 /** campus (x, z) → model east/north: +X is model east, −Z is model north (toward the North Gate) */
 const modelEN = (x, z) => [x, -z];
 
+/**
+ * The least-squares fit of campus data onto the imagery tile, or null if it cannot be made.
+ * toGround(x, z) gives ground east/north metres from the imagery centre (manifest.target, WGS84).
+ */
+export function imageryFit(S) {
+  const cp = S.controlPoints, man = S.imagery, c = S.campus;
+  if (!cp || !man || !c) return null;
+  const layer = man.layers.find((l) => l.name === cp.layer);
+  if (!layer) return null;
+  const src = [], dst = [];
+  for (const p of cp.points) {
+    const b = c.buildings.find((x) => x.id === p.id);
+    if (!b) continue;
+    const f = rectToFootprint(b.rect, c.meta.transform, b.rot || 0);
+    const g = imagePixelToGround(p.u, p.v, layer.bounds, layer.pixels);
+    src.push(modelEN(f.cx, f.cz)); dst.push([g.e, g.n]);
+  }
+  if (src.length < 3) return null;
+  const fit = fitSimilarity(src, dst);
+  return { fit, target: [man.target.lat, man.target.lon], toGround: (x, z) => fit.apply(modelEN(x, z)) };
+}
+
 export function run(S) {
   const out = [];
   const c = S.campus, tf = c.meta.transform;

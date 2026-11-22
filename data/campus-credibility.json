@@ -4,8 +4,9 @@
   "baseline": "main@b7ad45d",
   "purpose": "One credibility tag for every kind of spatial statement the digital campus makes. tools/campus-audit reads this file, expands it over every feature in assets/walk/campus.json and refuses any 'surveyed' tag that does not point at a raw survey file kept in the repository.",
   "tags": {
-    "surveyed": "Measured on site (tape, total station, GNSS, laser scan, photogrammetry with ground control) and the raw measurement file is kept in this repository. Nothing currently qualifies.",
+    "surveyed": "Measured on site (tape, total station, GNSS, laser scan, photogrammetry with ground control) and the raw measurement file is kept in this repository. The audit only checks that the file parses, lies on the object and carries method/date/surveyor/accuracy; it cannot certify the measurement itself. Nothing currently qualifies.",
     "public-map": "Read from public mapping or imagery (OSM, Esri World Imagery, official site plan) whose source, date and method are recorded; accuracy limited by that source.",
+    "photo-derived": "Dimensions read off photographs with a stated calibration (scale reference, residual). Shared with the twin/ reconstruction (PR #92). Combined tags such as photo-derived/estimated (main body / detail) are accepted.",
     "estimated": "An interpretation: proportions read from photographs, generic dimensions (court sizes, storey heights), or legacy data whose origin cannot be checked any more. Plausible, not measured.",
     "invented": "Created for the experience with no spatial evidence (interiors, door positions, tree positions in planted beds, character routes).",
     "documented": "Non-spatial facts (names, dates, uses) taken from public documents; graded separately in lanren/roots/history.js for the history chapter."

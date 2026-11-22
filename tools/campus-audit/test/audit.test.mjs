@@ -92,23 +92,9 @@ test('audit flags overlapping buildings, split paths and a tree in a wall', asyn
   assert.ok(R.counts.error >= 1);
 });
 
-test('"surveyed" needs a parseable raw survey file and survey metadata', async () => {
-  let R = await partial(fixture((c, cred) => { cred.items.a = { position: { tag: 'surveyed', sources: ['docs/notes.md'] } }; }));
+test('"surveyed" without a cited raw survey file is an error', async () => {
+  const R = await partial(fixture((c, cred) => { cred.items.a = { position: { tag: 'surveyed', sources: ['docs/notes.md'] } }; }));
   assert.ok(has(R, 'credibility', 'error', /a\.position.*no raw survey file/));
-  const meta = { method: 'RTK GNSS', date: '2027-01-10', surveyor: 'field team', accuracy: '0.03 m' };
-  const survey = (content, withMeta) => {
-    const dir = fixture((c, cred) => { cred.items.a = { position: { tag: 'surveyed', sources: ['survey/a.geojson'], ...(withMeta ? { survey: meta } : {}) } }; });
-    fs.mkdirSync(path.join(dir, 'survey')); fs.writeFileSync(path.join(dir, 'survey/a.geojson'), content);
-    return partial(dir);
-  };
-  const real = JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[110.3428, 19.998], [110.3429, 19.998], [110.3429, 19.9981], [110.3428, 19.998]]] } }] });
-  R = await survey('{}', true);
-  assert.ok(has(R, 'credibility', 'error', /a\.position.*not usable survey data/), 'an empty {} is not survey data');
-  R = await survey(real, false);
-  assert.ok(has(R, 'credibility', 'error', /a\.position.*without survey metadata/), 'metadata required');
-  R = await survey(real, true);
-  assert.ok(!has(R, 'credibility', 'error', /a\.position/), 'valid file + metadata passes');
-  assert.ok(has(R, 'credibility', 'pass', /a\.position.*RTK GNSS/));
 });
 
 test('survey file validation by format', () => {
@@ -134,8 +120,7 @@ test('fail closed: missing required sources are errors; --allow-incomplete marks
   assert.ok(R.findings.some((f) => f.check === 'georef' && f.severity === 'skip'), 'skipped imagery fit is reported, not silent');
 });
 
-test('fail closed on the real data: a copy of the repo without the V3 GLB or an imagery tile has errors', async () => {
-  const copy = (skip) => {
+function copy(skip) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'campus-real-'));
     const files = [...Object.values(SOURCES), 'docs/campus-audit/REPORT.md', 'docs/descent-review.md', 'tools/campus-audit/control-points.json'];
     const man = JSON.parse(fs.readFileSync(path.join(ROOT, SOURCES.imagery), 'utf8'));
@@ -147,7 +132,9 @@ test('fail closed on the real data: a copy of the repo without the V3 GLB or an 
     }
     // places.js and history.js are ES modules that import nothing, so they load from the copy
     return dir;
-  };
+}
+
+test('fail closed on the real data: a copy of the repo without the V3 GLB or an imagery tile has errors', async () => {
   let R = await audit(copy(null));
   assert.equal(R.counts.error, 0, 'the complete copy audits clean');
   R = await audit(copy(SOURCES.glb));
@@ -178,4 +165,65 @@ test('the real repository audits without errors', async () => {
   const g = R.results.georef.result.imagery;
   assert.ok(g && Math.abs(g.rotationDeg - 41.4) < 5, 'orientation near the legacy claim');
   assert.ok(Math.abs(g.scale - 1) < 0.08, 'scale near 1');
+});
+
+// ------------------------------------------------------------- surveyed: format, metadata and location
+const META = { method: 'RTK GNSS', date: '2027-01-10', surveyor: 'field team', accuracy: '0.03 m' };
+/** a square polygon of `half` metres around the WGS84 point where the imagery fit puts building `at` */
+async function surveyPolygonAt(at, half = 10) {
+  const { loadAll } = await import('../lib/load.mjs');
+  const { imageryFit } = await import('../checks/georef.mjs');
+  const S = await loadAll(ROOT);
+  const F = imageryFit(S);
+  const b = S.campus.buildings.find((x) => x.id === at);
+  const f = rectToFootprint(b.rect, S.campus.meta.transform, b.rot || 0);
+  const [e, n] = F.toGround(f.cx, f.cz);
+  const k = 180 / Math.PI / 6378137;
+  const ll = (de, dn) => [F.target[1] + ((e + de) * k) / Math.cos((F.target[0] * Math.PI) / 180), F.target[0] + (n + dn) * k];
+  const ring = [ll(-half, -half), ll(half, -half), ll(half, half), ll(-half, half), ll(-half, -half)];
+  return JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }] });
+}
+async function auditSurvey(content, entry = {}) {
+  const dir = copy(null);
+  const credFile = path.join(dir, 'data/campus-credibility.json');
+  const cred = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+  cred.items.yihao = { ...cred.items.yihao, position: { tag: 'surveyed', basis: 'test', sources: ['data/survey/yihao.geojson'], ...entry } };
+  fs.writeFileSync(credFile, JSON.stringify(cred));
+  fs.mkdirSync(path.join(dir, 'data/survey'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'data/survey/yihao.geojson'), content);
+  return audit(dir);
+}
+
+test('surveyed: an empty {} file is rejected', async () => {
+  const R = await auditSurvey('{}', { survey: META });
+  assert.ok(has(R, 'credibility', 'error', /yihao\.position.*not usable survey data/));
+});
+
+test('surveyed: a real survey of the right building without metadata is rejected', async () => {
+  const R = await auditSurvey(await surveyPolygonAt('yihao'));
+  assert.ok(has(R, 'credibility', 'error', /yihao\.position.*without survey metadata/));
+});
+
+test('surveyed: a valid survey file of a DIFFERENT building cannot give yihao a survey constraint', async () => {
+  const R = await auditSurvey(await surveyPolygonAt('canteen1'), { survey: META });
+  assert.ok(has(R, 'credibility', 'error', /yihao\.position.*does not measure this object/), 'wrong building is an error');
+  assert.ok(!has(R, 'credibility', 'pass', /yihao\.position/), 'and never a pass');
+});
+
+test('surveyed: a survey in a CRS the tool cannot check is not accepted', async () => {
+  const R = await auditSurvey(await surveyPolygonAt('yihao'), { survey: { ...META, crs: 'EPSG:32649' } });
+  assert.ok(has(R, 'credibility', 'error', /yihao\.position.*cannot confirm/));
+});
+
+test('surveyed: right building + metadata is admissible, and the pass says what was NOT checked', async () => {
+  const R = await auditSurvey(await surveyPolygonAt('yihao'), { survey: META });
+  assert.ok(!has(R, 'credibility', 'error', /yihao\.position/));
+  const pass = R.findings.find((f) => f.check === 'credibility' && f.severity === 'pass' && /yihao\.position/.test(f.subject));
+  assert.ok(pass && /NOT checked/.test(pass.message) && /not an independent survey certification/.test(pass.message));
+});
+
+test('tag vocabulary: photo-derived and combined a/b tags are valid, nonsense is not', async () => {
+  const { validTag } = await import('../checks/credibility.mjs');
+  assert.ok(validTag('photo-derived') && validTag('photo-derived/estimated') && validTag('photo-derived/public-map'));
+  assert.ok(!validTag('photo') && !validTag('estimated/maybe') && !validTag(undefined));
 });

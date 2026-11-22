@@ -2,6 +2,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { finding } from '../lib/model.mjs';
+import { rectToFootprint } from '../lib/geom.mjs';
+import { enu } from '../lib/geo.mjs';
+import { imageryFit } from './georef.mjs';
 
 const C = 'credibility';
 const SURVEY_EXT = /\.(kml|gpx|geojson|json|csv|txt|dxf|dwg|las|laz|e57|ply)$/i;
@@ -44,7 +47,50 @@ export function validateSurveyFile(file) {
   }
 }
 
-const TAGS = ['surveyed', 'public-map', 'estimated', 'invented', 'documented'];
+// 'photo-derived' is shared with the twin/ reconstruction (PR #92): dimensions read off calibrated
+// photographs with the residual noted. A combined tag 'a/b' (main body / detail) is valid when every part is.
+export const TAGS = ['surveyed', 'public-map', 'documented', 'photo-derived', 'estimated', 'invented'];
+export const validTag = (t) => typeof t === 'string' && t.split('/').every((p) => TAGS.includes(p.trim()));
+const primary = (t) => String(t).split('/')[0].trim();
+
+/** WGS84 [lat, lon] points in a GeoJSON / KML / GPX survey file, or null for formats that carry no geodetic coordinates we can read. */
+export function surveyLatLons(file) {
+  const ext = path.extname(file).toLowerCase(), text = fs.readFileSync(file, 'utf8');
+  const out = [];
+  if (ext === '.geojson' || ext === '.json') {
+    const walk = (c) => { if (typeof c[0] === 'number') out.push([c[1], c[0]]); else c.forEach(walk); };
+    const j = JSON.parse(text);
+    for (const f of j.type === 'FeatureCollection' ? j.features : [j]) if (f.geometry) walk(f.geometry.coordinates);
+  } else if (ext === '.kml') {
+    for (const m of text.matchAll(/<coordinates>([\s\S]*?)<\/coordinates>/g)) for (const t of m[1].trim().split(/\s+/)) { const [lon, lat] = t.split(',').map(Number); out.push([lat, lon]); }
+  } else if (ext === '.gpx') {
+    for (const m of text.matchAll(/lat="(-?[\d.]+)"\s+lon="(-?[\d.]+)"/g)) out.push([Number(m[1]), Number(m[2])]);
+  } else return null;
+  return out.filter(([la, lo]) => Number.isFinite(la) && Number.isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180);
+}
+
+/**
+ * Does a survey file's geometry sit on the object it claims to measure? Compared in ground metres
+ * against the object's position predicted by the imagery fit. This rejects a real survey file of
+ * the wrong building; it says nothing about the survey's own accuracy or authenticity.
+ */
+export function checkSurveyLocation(S, id, file, crs) {
+  const b = S.campus.buildings.find((x) => x.id === id);
+  if (!b) return { ok: false, verified: false, why: `'${id}' is not a campus feature with a footprint, so the location cannot be checked` };
+  if (crs && !/^(EPSG:4326|WGS ?84|CRS84)$/i.test(String(crs).trim())) return { ok: false, verified: false, why: `survey CRS ${crs} cannot be checked by this tool (only WGS84 lon/lat)` };
+  const pts = surveyLatLons(file);
+  if (!pts) return { ok: false, verified: false, why: `${path.extname(file)} carries no WGS84 coordinates this tool can read` };
+  if (!pts.length) return { ok: false, verified: false, why: 'no valid lon/lat coordinates' };
+  const F = imageryFit(S);
+  if (!F) return { ok: false, verified: false, why: 'no imagery fit available to predict where the object is' };
+  const f = rectToFootprint(b.rect, S.campus.meta.transform, b.rot || 0);
+  const [pe, pn] = F.toGround(f.cx, f.cz);
+  const g = pts.map((p) => enu(F.target, p));
+  const ce = g.reduce((a, v) => a + v.e, 0) / g.length, cn = g.reduce((a, v) => a + v.n, 0) / g.length;
+  const off = Math.hypot(ce - pe, cn - pn);
+  const tol = Math.hypot(f.hw, f.hd) * F.fit.scale + 3 * F.fit.rms + 10;
+  return { ok: off <= tol, verified: true, offset: off, tolerance: tol, why: off <= tol ? '' : `survey geometry centre lies ${off.toFixed(0)} m from where ${id} is (tolerance ${tol.toFixed(0)} m): the file does not measure this object` };
+}
 
 /** Which defaults block applies to a campus feature. */
 export function classOf(b) {
@@ -113,7 +159,7 @@ export function run(S) {
   const cred = S.credibility;
   if (!cred) return { rows: [], findings: [finding(C, 'error', 'data/campus-credibility.json', 'credibility annotations missing')] };
   const rows = expand(cred, S.campus, S.places);
-  const bad = rows.filter((r) => !TAGS.includes(r.tag));
+  const bad = rows.filter((r) => !validTag(r.tag));
   for (const r of bad) out.push(finding(C, 'error', `${r.id}.${r.aspect}`, `unknown or missing tag '${r.tag}'`));
   // the one hard rule: "surveyed" needs a raw survey file in the repo that parses as survey data,
   // plus survey metadata (method, date, surveyor, accuracy) on the statement itself
@@ -124,11 +170,15 @@ export function run(S) {
     const valid = [];
     for (const f of cited) {
       const v = validateSurveyFile(path.join(S.root, f));
-      if (v.ok) valid.push(f); else out.push(finding(C, 'error', subject, `cited survey file ${f} is not usable survey data: ${v.why}`));
+      if (!v.ok) { out.push(finding(C, 'error', subject, `cited survey file ${f} is not usable survey data: ${v.why}`)); continue; }
+      const loc = checkSurveyLocation(S, r.id, path.join(S.root, f), r.survey?.crs);
+      if (!loc.verified) out.push(finding(C, 'error', subject, `cannot confirm that ${f} measures ${r.id}: ${loc.why}; not accepted as a survey constraint`));
+      else if (!loc.ok) out.push(finding(C, 'error', subject, loc.why));
+      else valid.push(`${f} (on ${r.id}, ${loc.offset.toFixed(0)} m from predicted centre)`);
     }
     const missingMeta = SURVEY_META.filter((k) => !(r.survey && String(r.survey[k] || '').trim()));
     if (missingMeta.length) out.push(finding(C, 'error', subject, `tagged surveyed without survey metadata: ${missingMeta.join(', ')} (add "survey": {method, date, surveyor, accuracy})`));
-    else if (valid.length) out.push(finding(C, 'pass', subject, `surveyed: ${valid.join(', ')} · ${r.survey.method}, ${r.survey.date}, ±${r.survey.accuracy}`));
+    else if (valid.length) out.push(finding(C, 'pass', subject, `surveyed tag admissible: ${valid.join(', ')} · ${r.survey.method}, ${r.survey.date}, stated ±${r.survey.accuracy}. Checked: file format, coordinates, location on the object and metadata present. NOT checked: that the measurement really happened or its stated accuracy — this is not an independent survey certification`));
   }
   for (const r of rows) for (const s of r.sources) {
     const f = s.split('#')[0];
@@ -138,7 +188,7 @@ export function run(S) {
   const unknownItems = Object.keys(cred.items).filter((id) => !(/^tree-(\d+)$/.test(id) && Number(id.slice(5)) < nTrees) && !S.campus.buildings.some((b) => b.id === id) && !(S.campus.sports || []).some((s) => s.id === id) && !(S.campus.tour || []).some((t) => t.id === id));
   for (const id of unknownItems) out.push(finding(C, 'warn', id, 'credibility item names nothing in campus data or the tour'));
   const count = {};
-  for (const r of rows) count[r.tag] = (count[r.tag] || 0) + 1;
+  for (const r of rows) count[primary(r.tag)] = (count[primary(r.tag)] || 0) + 1;
   if (!bad.length) out.push(finding(C, 'pass', 'coverage', `${rows.length} statements tagged across ${new Set(rows.map((r) => r.id)).size} subjects: ${TAGS.map((t) => `${t} ${count[t] || 0}`).join(', ')}`));
   if (!count.surveyed) out.push(finding(C, 'info', 'surveyed', 'no statement is tagged surveyed: the repository holds no raw survey data (the legacy KML no_project2.xml and its conversion script are missing)'));
 
@@ -153,6 +203,7 @@ export function run(S) {
   const claims = lintClaims(S.root);
   for (const h of claims) out.push(finding(C, 'warn', `${h.file}:${h.line}`, `wording claims measurement without qualification: “${h.text}”`));
   if (!claims.length) out.push(finding(C, 'pass', 'wording', 'no unqualified measurement claims found in campus data and visitor pages'));
+  out.push(finding(C, 'info', 'scope', 'twin/** (the high-fidelity reconstruction, PR #92) is not read by this audit: its GLBs and twin/data/buildings/*.json need their own adapter before they are covered. The tag vocabulary already accepts its photo-derived and combined a/b tags'));
   out.push(finding(C, 'info', 'scope', 'tags describe the evidence behind each statement; a tag is not an accuracy figure. Tree points are tagged one by one, but all 300 share the same invented basis: no individual tree has been traced to a real tree'));
   return { rows, count, history, claims, treeCount: (S.campus.trees || []).length, findings: out };
 }

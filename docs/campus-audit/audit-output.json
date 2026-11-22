@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-22T05:21:23.541Z",
+  "generated": "2026-11-22T08:11:46.617Z",
   "incomplete": false,
   "allowIncomplete": false,
   "missing": [],
@@ -7,7 +7,7 @@
     "error": 0,
     "warn": 17,
     "skip": 0,
-    "info": 15,
+    "info": 16,
     "pass": 20
   },
   "results": {
@@ -8587,7 +8587,7 @@
       "check": "credibility",
       "severity": "pass",
       "subject": "coverage",
-      "message": "806 statements tagged across 353 subjects: surveyed 0, public-map 10, estimated 143, invented 622, documented 31"
+      "message": "806 statements tagged across 353 subjects: surveyed 0, public-map 10, documented 31, photo-derived 0, estimated 143, invented 622"
     },
     {
       "check": "credibility",
@@ -8630,6 +8630,12 @@
       "severity": "warn",
       "subject": "assets/js/three-campus.js:1546",
       "message": "wording claims measurement without qualification: “// 多边形校道（来自 KML 实测形状）：铺设真实道路面，保留路网走向”"
+    },
+    {
+      "check": "credibility",
+      "severity": "info",
+      "subject": "scope",
+      "message": "twin/** (the high-fidelity reconstruction, PR #92) is not read by this audit: its GLBs and twin/data/buildings/*.json need their own adapter before they are covered. The tag vocabulary already accepts its photo-derived and combined a/b tags"
     },
     {
       "check": "credibility",
