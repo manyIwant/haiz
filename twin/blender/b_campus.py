@@ -181,7 +181,14 @@ def build(coll):
             hall(halls, pts, zg)
             continue
         if b['in_school']:
-            st, tag, basis = KNOWN.get(name, (4, 'invented', 'storey count not documented'))
+            if name in KNOWN:
+                st, tag, basis = KNOWN[name]
+            elif not name and P.area < 200:
+                # small unnamed machine-traced footprints: sheds, toilets, shelters or false detections (several
+                # sit on the basketball courts east of Teaching Block 1 on aerial_campus); one storey keeps them low
+                st, tag, basis = 1, 'invented', 'small unnamed footprint'
+            else:
+                st, tag, basis = 4, 'invented', 'storey count not documented'
             massing(school, pts, st * STOREY + 0.6, zg, 'wall.render.white', 'roof.flat.grey')
             tags['campus.massing.school'].append(f"{name or b['record'] or b['dataset']}: {st} storeys ({tag})")
         else:
