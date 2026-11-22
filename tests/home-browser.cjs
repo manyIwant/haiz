@@ -52,7 +52,10 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   const g5 = await page.evaluate(() => window.__haizHome.info().grow);
   assert(g5 > 0.97, 'full leaf at the end: ' + g5);
   results.push('End key walks to 06 工具 · 全部 in full leaf');
-  // a falling leaf can be caught and kept
+  // a falling leaf can be caught and kept. The leaf is placed in front of the camera, so the
+  // camera must have arrived first: End only switches the section, and on a slow software
+  // renderer the flight to 06 is still under way, which moves the leaf off the click point.
+  await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 5) < 1e-3, null, { timeout: 180000 });
   const pos = await page.evaluate(() => {
     const w = window.__haizHome.world, cam = w.camera;
     const p = cam.position.clone().add(cam.getWorldDirection(cam.position.clone()).multiplyScalar(6)); p.y += 0.8;
@@ -61,8 +64,18 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
     const v = L.p.clone().project(cam);
     return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight];
   });
+  const camBefore = await page.evaluate(() => window.__haizHome.info().cam);
   await page.mouse.click(pos[0], pos[1]);
-  await page.waitForSelector('#specimen[open]', { timeout: 60000 });
+  try {
+    await page.waitForSelector('#specimen[open]', { timeout: 60000 });
+  } catch (e) {
+    const diag = await page.evaluate(() => {
+      const w = window.__haizHome.world, info = window.__haizHome.info();
+      return { info, falling: w.litter.falling.length, leaf: w.litter.falling.map((L) => L.slow === 0.01 && L.p.toArray().map((n) => +n.toFixed(2))).filter(Boolean) };
+    }).catch((err) => 'page not inspectable: ' + err.message.split('\n')[0]);
+    console.error('[home-browser] leaf not caught', JSON.stringify({ clickedAt: pos.map(Math.round), camBefore, page: diag, errors }, null, 1));
+    throw e;
+  }
   await page.fill('#specNote', '测试：那天有风');
   await page.click('#specKeep');
   assert.strictEqual(await page.textContent('#bookCount'), '1');
