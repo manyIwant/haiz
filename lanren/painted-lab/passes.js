@@ -270,7 +270,8 @@ void main() {
     // and leaf cards standing a hand's width in front of each other don't draw
     float jump = log(far / d) * smoothstep(0.6, 2.0, (far - d) / max(1.0, d * 0.12));
     float crease = (abs(1.0 / dl + 1.0 / dr - 2.0 / d) + abs(1.0 / du + 1.0 / dd - 2.0 / d)) * d; // a fold (1/z is linear on a plane)
-    float line = smoothstep(0.06, 0.22, jump) + smoothstep(0.012, 0.04, crease) * 0.55;
+    // folds only near: at a distance, slatted roofs and window grids would turn into stripes and moiré
+    float line = smoothstep(0.06, 0.22, jump) + smoothstep(0.012, 0.04, crease) * 0.55 * (1.0 - smoothstep(8.0, 22.0, d));
     // the ground plane keeps soft edges (kerbs, paving, the lawn): painters leave the floor to tone
     vec4 vp = uProjInv * vec4(vUv * 2.0 - 1.0, texture2D(tDepth, vUv).x * 2.0 - 1.0, 1.0);
     vec3 wp = (uViewInv * vec4(vp.xyz / vp.w, 1.0)).xyz;

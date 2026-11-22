@@ -30,7 +30,7 @@ export const LABM = {
 };
 
 const HEAD = /* glsl */`
-uniform vec4 uLabMat; uniform float uBrushPx; uniform vec3 uLabFamily; uniform float uLabLight;
+uniform vec4 uLabMat; uniform float uBrushPx; uniform vec3 uLabFamily; uniform float uLabLight; uniform float uLabVeg;
 // anisotropic stroke noise: long along u, narrow across v; each stroke row is offset and slightly
 // tilted so the marks don't line up into a grid
 float labStroke(vec2 p) {
@@ -64,6 +64,17 @@ if (uLabLight > 0.001) {
   vec3 shadeSide = mix(outCol, v0 * uShadeHue * 1.4, 0.16);
   vec3 lc = mix(shadeSide, lightSide, ll);
   lc *= v0 / max(dot(lc, vec3(0.3, 0.59, 0.11)), 1e-4);
+  // vegetation: the V2 greens are close to pure; a painter mixes them down so the lawn and the
+  // crowns sit behind the architecture — less chroma, olive in the light, a little lower in value
+  float labVeg = uLabVeg;
+#ifdef LAB_LAWN
+  labVeg = lawn;   // the ground's own lawn mask (lanren/ruhua-stroll/ground.js)
+#endif
+  if (labVeg > 0.01) {
+    float vv = dot(lc, vec3(0.3, 0.59, 0.11));
+    vec3 veg = mix(vec3(vv), lc, 0.74) * mix(vec3(1.0), vec3(1.04, 1.0, 0.86), ll) * mix(1.0, 0.9, ll);
+    lc = mix(lc, veg, labVeg);
+  }
   outCol = mix(outCol, lc, uLabLight * step(0.01, uLabFamily.x));
 }
 if (uLabMat.w > 0.5) {
@@ -119,13 +130,14 @@ export function pairMaterials(root) {
       families[m.name || '?'] = f;
       const n = celLike(m, {
         key: 'lab1',
-        uniforms: { ...LABM, uLabFamily: { value: new THREE.Vector3(...f) } },
+        uniforms: { ...LABM, uLabFamily: { value: new THREE.Vector3(...f) }, uLabVeg: { value: /grass|blade|leaf|crown|foliage|canopy|palm|shrub|lanshu|banyan|kapok|flora|lawn/i.test(m.name || '') ? 1 : 0 } },
         fragment: { head: HEAD, after: AFTER },
       });
       // celLike keeps the program hooks; copy the material state cel() does not carry
       n.transparent = m.transparent; n.depthWrite = m.depthWrite; n.alphaTest = m.alphaTest; n.side = m.side;
       n.polygonOffset = m.polygonOffset; n.polygonOffsetFactor = m.polygonOffsetFactor; n.polygonOffsetUnits = m.polygonOffsetUnits;
       if (m.alphaToCoverage) n.alphaToCoverage = true;
+      if (m.name === 'ground') n.defines = { ...(n.defines || {}), LAB_LAWN: '' };
       lab.set(m, n);
     }
     return lab.get(m);
