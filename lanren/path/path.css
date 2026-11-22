@@ -33,15 +33,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .pw-tools button[aria-pressed="true"] { background: var(--light); color: var(--ink); text-shadow: none; border-color: var(--light); }
 
 /* captions: title cards, lower left, set in the light */
-.pw-caption { position: fixed; z-index: 5; left: max(28px, env(safe-area-inset-left)); bottom: 96px; max-width: min(560px, 80vw); pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity 1.2s ease, transform 1.6s cubic-bezier(.22,1,.36,1); }
-.pw-caption.on { opacity: 1; transform: none; }
+.pw-caption { position: fixed; z-index: 5; left: max(28px, env(safe-area-inset-left)); bottom: 96px; max-width: min(560px, 80vw); pointer-events: none; opacity: 0; }
 .pw-caption h2 { margin: 0; font: 400 clamp(30px, 4.6vw, 54px)/1.1 var(--serif); letter-spacing: .12em; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
 .pw-caption p { margin: 10px 0 0; color: rgba(246, 240, 226, .86); font-size: 13px; letter-spacing: .06em; text-shadow: 0 1px 8px rgba(0,0,0,.55); }
 .pw-caption[data-kind="handover"] h2 { font-size: clamp(22px, 3vw, 34px); }
 
 /* the photograph's record: a paper slip, upright, small */
-.pw-slip { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left)); bottom: 88px; width: min(340px, calc(100vw - 32px)); background: var(--paper); color: var(--ink); padding: 14px 16px 12px; border-radius: 3px; box-shadow: 0 10px 30px rgba(0,0,0,.28), inset 0 0 0 1px var(--paper-edge); font-size: 12.5px; animation: slip .7s cubic-bezier(.22,1,.36,1); }
-@keyframes slip { from { opacity: 0; transform: translateY(12px); } }
+.pw-slip { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left)); bottom: 88px; width: min(340px, calc(100vw - 32px)); background: var(--paper); color: var(--ink); padding: 14px 16px 12px; border-radius: 3px; box-shadow: 0 10px 30px rgba(0,0,0,.28), inset 0 0 0 1px var(--paper-edge); font-size: 12.5px; }
 .pw-slip-k { margin: 0; display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .1em; color: var(--ink-soft); }
 .pw-slip-k b { font-weight: 500; color: var(--clay); }
 .pw-slip h3 { margin: 4px 0 8px; font: 500 19px/1.3 var(--serif); }
@@ -86,4 +84,4 @@ body[data-mode="free"] .pw-now { opacity: .35; }
   .pw-line { left: 16px; right: 16px; }
   .pw-tools button { padding: 5px 9px; }
 }
-@media (prefers-reduced-motion: reduce) { .pw-caption, .pw-load, .pw-load em { transition: none; } .pw-slip { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pw-load, .pw-load em { transition: none; } }

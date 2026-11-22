@@ -106,16 +106,22 @@ export function createUI({ coarse, reduce }) {
     update(S, f) {
       const now = el.line.querySelector('.pw-now');
       if (now) now.style.left = (S.filmT / f.duration) * 100 + '%';
-      const cue = S.mode === 'film' ? f.shot(S.filmT).cue : null;   // shot() is pure; cheap
+      const cue = S.mode === 'film' ? f.cueAt(S.filmT) : null;
       if (cue !== lastCue) {
         lastCue = cue;
         if (cue && (cue.kind === 'place' || cue.kind === 'handover')) {
           el.caption.querySelector('h2').textContent = cue.text;
           el.caption.querySelector('p').textContent = cue.sub || '';
-          el.caption.classList.add('on');
           el.caption.dataset.kind = cue.kind;
-        } else el.caption.classList.remove('on');
+        }
       }
+      // captions are a function of film time (seekable, no CSS clock): 1.2 s in, 1 s out
+      let a = 0;
+      if (cue && (cue.kind === 'place' || cue.kind === 'handover')) a = Math.min(1, (S.filmT - cue.t0) / (reduce ? 0.3 : 1.2), (cue.t1 - S.filmT) / (reduce ? 0.3 : 1.0));
+      a = Math.max(0, a);
+      el.caption.style.opacity = a.toFixed(3);
+      el.caption.style.transform = `translateY(${((1 - a) * 10).toFixed(1)}px)`;
+      el.caption.classList.toggle('on', a > 0);
     },
     memory(st, what) {
       if (what === 'enter') showSlip(st, '显影中');
@@ -123,6 +129,8 @@ export function createUI({ coarse, reduce }) {
       else if (what === 'leave') showSlip(null);
     },
     hint(state, m) {
+      // the record is as present as the print it describes
+      if (!el.slip.hidden) el.slip.style.opacity = Math.min(1, (state.amt || 0) * 1.6 + (state.active ? 0.15 : 0)).toFixed(3);
       if (document.body.dataset.mode !== 'free') { el.hint.textContent = ''; return; }
       const st = m.near;
       let t = '';

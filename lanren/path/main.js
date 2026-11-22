@@ -93,7 +93,9 @@ async function main() {
   if (S.mode === 'free') { const sh = film.shot(S.filmT); walker.takeOver(sh.eye, sh.look); ui.mode('free'); }
 
   // the buildings stream in after the first frame
-  const buildings = world.loadBuildings().then(() => { memory.invalidate(); ui.status(''); }).catch((e) => { console.warn(e); ui.status('建筑模型未能载入：只显示地面、树与石'); });
+  const buildings = world.loadBuildings().then(() => { memory.invalidate(); ui.progress('buildings', 1); ui.status(''); }).catch((e) => { console.warn(e); ui.status('建筑模型未能载入：只显示地面、树与石'); });
+  // the film opens on the gate, which is part of the buildings: wait for them (at most 30 s, then go on without)
+  await Promise.race([buildings, new Promise((r) => setTimeout(r, 30000))]);
 
   // ---------------------------------------------------------------- frame
   const clock = new THREE.Clock();

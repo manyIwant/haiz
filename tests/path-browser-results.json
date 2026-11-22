@@ -1,0 +1,186 @@
+{
+ "date": "2026-11-21T12:44:23.511Z",
+ "renderer": "Chromium + SwiftShader (software)",
+ "checks": [
+  {
+   "name": "loads with buildings, film mode",
+   "ok": true,
+   "detail": "load 9.0 s (software GL)"
+  },
+  {
+   "name": "film deterministic",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "film continuous (max 1/30 s step < 0.15 m)",
+   "ok": true,
+   "detail": "0.118 m"
+  },
+  {
+   "name": "film never inside a solid",
+   "ok": true,
+   "detail": "min clearance 2.75 m at t=17.90,beimen"
+  },
+  {
+   "name": "film eye above the ground",
+   "ok": true,
+   "detail": "1.02 m"
+  },
+  {
+   "name": "station gate: develops and shows its record",
+   "ok": true,
+   "detail": "「海南中学」牌楼 · 转载授权待核"
+  },
+  {
+   "name": "station taihu: develops and shows its record",
+   "ok": true,
+   "detail": "太湖石「虎踞龙盘」 · 用户提供；公开再分发范围待登记"
+  },
+  {
+   "name": "station tree: develops and shows its record",
+   "ok": true,
+   "detail": "百年榄仁树 · 转载授权待核"
+  },
+  {
+   "name": "a key press hands the camera over without a jump",
+   "ok": true,
+   "detail": "free, moved 0.007 m in the first frame"
+  },
+  {
+   "name": "walking accelerates (not full speed in the first 0.25 s)",
+   "ok": true,
+   "detail": "0.85 m/s"
+  },
+  {
+   "name": "walking ~1.45 m/s",
+   "ok": true,
+   "detail": "4.09 m in 3 s"
+  },
+  {
+   "name": "the facade holds",
+   "ok": true,
+   "detail": "stopped at z 8.45, clearance 0.30 m"
+  },
+  {
+   "name": "the bed wall holds where there are no steps",
+   "ok": true,
+   "detail": "x 7.26"
+  },
+  {
+   "name": "the steps lead up onto the bed",
+   "ok": true,
+   "detail": "y -0.08 (bed top -0.08)"
+  },
+  {
+   "name": "free walk: standing on the ring and looking develops the photograph",
+   "ok": true,
+   "detail": "amount 1.00"
+  },
+  {
+   "name": "the director button resumes the film from the nearest point",
+   "ok": true,
+   "detail": "t = 78.45"
+  },
+  {
+   "name": "time toggle: Haikou now",
+   "ok": true,
+   "detail": "2026-11-21 20:47 · 太阳按校园真实位置计算"
+  },
+  {
+   "name": "no page errors (desktop)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "phone: no horizontal overflow, controls on screen",
+   "ok": true,
+   "detail": "{\"over\":false,\"out\":0,\"coarse\":true}"
+  },
+  {
+   "name": "phone: left-thumb joystick walks",
+   "ok": true,
+   "detail": "4.75 m"
+  },
+  {
+   "name": "phone: right-thumb drag looks around",
+   "ok": true,
+   "detail": "10.0°"
+  },
+  {
+   "name": "no page errors (phone)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "reduced motion: no breathing, prints develop quickly",
+   "ok": true,
+   "detail": "{\"yawErr\":0,\"developed\":true}"
+  },
+  {
+   "name": "no page errors (reduced motion)",
+   "ok": true,
+   "detail": ""
+  }
+ ],
+ "metrics": {
+  "desktop": {
+   "totalMB": 20.18,
+   "byType": {
+    "css": 0.01,
+    "js": 1.05,
+    "json": 0.05,
+    "svg": 0.01,
+    "glb": 15.66,
+    "bin": 0.67,
+    "png": 1.4,
+    "jpg": 1.34
+   },
+   "largest": [
+    {
+     "n": "lanren/assets/campus-v3/architecture.glb",
+     "kb": 11439
+    },
+    {
+     "n": "lanren/assets/tree.glb",
+     "kb": 4263
+    },
+    {
+     "n": "lanren/assets/leaf-normal-lo.png",
+     "kb": 741
+    },
+    {
+     "n": "lanren/assets/leaf-atlas-lo.png",
+     "kb": 691
+    },
+    {
+     "n": "lanren/assets/rosettes.bin",
+     "kb": 684
+    },
+    {
+     "n": "lanren/vendor/three/three.module.min.js",
+     "kb": 675
+    },
+    {
+     "n": "lanren/assets/bark-normal.jpg",
+     "kb": 665
+    },
+    {
+     "n": "assets/images/web/lanshu-1600.jpg",
+     "kb": 411
+    }
+   ],
+   "draw": {
+    "calls": 199,
+    "tris": 3199962,
+    "textures": 24,
+    "geometries": 184,
+    "programs": 35
+   },
+   "heapMB": 86.7,
+   "frameMsMedian": 4983.1,
+   "frameMsP90": 5899.8
+  }
+ },
+ "failed": 0
+}

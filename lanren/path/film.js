@@ -148,6 +148,7 @@ export function createFilm({ world, reduce }) {
 
   return {
     duration, keys: KEYS, cues: CUES, shot,
+    cueAt: (t) => CUES.find((c) => t >= c.t0 && t <= c.t1) || null,
     /** the film time whose place is nearest to p (for resuming the film from where you walked) */
     nearestT(p) {
       let best = 0, bd = Infinity;
