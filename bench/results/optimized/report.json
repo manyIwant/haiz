@@ -1,0 +1,479 @@
+{
+  "label": "optimized",
+  "date": "2026-11-22T05:03:56.753Z",
+  "commit": "b7ad45d+dirty",
+  "environment": {
+    "browser": "157.0.8103.78",
+    "gl": "SwiftShader (software)",
+    "viewport": "390x844",
+    "dpr": 3,
+    "cpuThrottle": 4,
+    "framesPerChapter": 8,
+    "cores": 4
+  },
+  "caveat": "Software WebGL on a CI CPU. Timings rank work and show deltas; they are not phone frame rates.",
+  "tiers": [
+    {
+      "quality": "low",
+      "load": {
+        "readyMs": 6088,
+        "requests": 90,
+        "bytes": 11069087
+      },
+      "chapters": [
+        {
+          "chapter": 0,
+          "ms": {
+            "n": 8,
+            "mean": 1658.25,
+            "p50": 1526,
+            "p90": 2369,
+            "max": 2369
+          },
+          "calls": 14,
+          "tris": 853870,
+          "bakesWhileStill": 0,
+          "programs": 28,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 929,
+            "0:ScenePass": 4010,
+            "1:AtmospherePass": 125,
+            "3:FinishOutputPass": 29
+          }
+        },
+        {
+          "chapter": 1,
+          "ms": {
+            "n": 8,
+            "mean": 2483.63,
+            "p50": 2225,
+            "p90": 3150,
+            "max": 3150
+          },
+          "calls": 15,
+          "tris": 854579,
+          "bakesWhileStill": 0,
+          "programs": 30,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1141,
+            "0:ScenePass": 2926,
+            "1:AtmospherePass": 60,
+            "2:ShaderPass": 256,
+            "3:FinishOutputPass": 15
+          }
+        },
+        {
+          "chapter": 2,
+          "ms": {
+            "n": 8,
+            "mean": 2995.75,
+            "p50": 2577,
+            "p90": 3978,
+            "max": 3978
+          },
+          "calls": 21,
+          "tris": 1673873,
+          "bakesWhileStill": 0,
+          "programs": 30,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1388,
+            "0:ScenePass": 3558,
+            "1:AtmospherePass": 86,
+            "2:ShaderPass": 252,
+            "3:FinishOutputPass": 15
+          }
+        },
+        {
+          "chapter": 3,
+          "ms": {
+            "n": 8,
+            "mean": 2780,
+            "p50": 2429,
+            "p90": 3967,
+            "max": 3967
+          },
+          "calls": 12,
+          "tris": 852850,
+          "bakesWhileStill": 0,
+          "programs": 30,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1495,
+            "0:ScenePass": 3890,
+            "1:AtmospherePass": 44,
+            "3:FinishOutputPass": 21
+          }
+        },
+        {
+          "chapter": 4,
+          "ms": {
+            "n": 8,
+            "mean": 3500.5,
+            "p50": 3051,
+            "p90": 4509,
+            "max": 4509
+          },
+          "calls": 18,
+          "tris": 1371809,
+          "bakesWhileStill": 0,
+          "programs": 41,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1436,
+            "0:ScenePass": 5103,
+            "1:AtmospherePass": 67,
+            "2:ShaderPass": 229,
+            "3:FinishOutputPass": 18
+          }
+        },
+        {
+          "chapter": 5,
+          "ms": {
+            "n": 8,
+            "mean": 4422.63,
+            "p50": 3968,
+            "p90": 5657,
+            "max": 5657
+          },
+          "calls": 22,
+          "tris": 2190382,
+          "bakesWhileStill": 0,
+          "programs": 41,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1594,
+            "0:ScenePass": 5388,
+            "1:AtmospherePass": 34,
+            "3:FinishOutputPass": 15
+          }
+        }
+      ],
+      "jsStep": {
+        "n": 61,
+        "mean": 5.72,
+        "p50": 2,
+        "p90": 12,
+        "max": 63
+      },
+      "scroll": {
+        "ms": {
+          "n": 41,
+          "mean": 3238.78,
+          "p50": 3091,
+          "p90": 4745,
+          "max": 6808
+        },
+        "bakes": 14,
+        "bakeMsTotal": 98,
+        "frames": 41
+      },
+      "memory": {
+        "geometries": 42,
+        "textures": 35,
+        "programs": 45,
+        "pixelRatio": 1.25,
+        "drawingBuffer": [
+          487,
+          1055
+        ],
+        "renderTargets": [
+          {
+            "name": "composer.read",
+            "w": 487.5,
+            "h": 1055,
+            "mb": 3.92
+          },
+          {
+            "name": "composer.write",
+            "w": 487.5,
+            "h": 1055,
+            "mb": 3.92
+          },
+          {
+            "name": "shadow",
+            "w": 2048,
+            "h": 2048,
+            "mb": 16
+          }
+        ],
+        "jsHeapMB": 11.3
+      },
+      "shots": [
+        "bench/results/optimized/low-ch1.png",
+        "bench/results/optimized/low-ch2.png",
+        "bench/results/optimized/low-ch3.png",
+        "bench/results/optimized/low-ch4.png",
+        "bench/results/optimized/low-ch5.png",
+        "bench/results/optimized/low-ch6.png"
+      ],
+      "errors": []
+    },
+    {
+      "quality": "medium",
+      "load": {
+        "readyMs": 5404,
+        "requests": 90,
+        "bytes": 14922521
+      },
+      "chapters": [
+        {
+          "chapter": 0,
+          "ms": {
+            "n": 8,
+            "mean": 6367.13,
+            "p50": 6801,
+            "p90": 7135,
+            "max": 7135
+          },
+          "calls": 44,
+          "tris": 3075895,
+          "bakesWhileStill": 0,
+          "programs": 44,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1476,
+            "0:ScenePass": 7044,
+            "1:AtmospherePass": 140,
+            "3:UnrealBloomPass": 1091,
+            "4:FinishOutputPass": 21
+          }
+        },
+        {
+          "chapter": 1,
+          "ms": {
+            "n": 8,
+            "mean": 7056.75,
+            "p50": 7685,
+            "p90": 8004,
+            "max": 8004
+          },
+          "calls": 39,
+          "tris": 2102206,
+          "bakesWhileStill": 0,
+          "programs": 46,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 1508,
+            "0:ScenePass": 5596,
+            "1:AtmospherePass": 81,
+            "2:ShaderPass": 336,
+            "3:UnrealBloomPass": 950,
+            "4:FinishOutputPass": 23
+          }
+        },
+        {
+          "chapter": 2,
+          "ms": {
+            "n": 8,
+            "mean": 7730.13,
+            "p50": 8737,
+            "p90": 9073,
+            "max": 9073
+          },
+          "calls": 45,
+          "tris": 3078020,
+          "bakesWhileStill": 0,
+          "programs": 46,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 2166,
+            "0:ScenePass": 8231,
+            "1:AtmospherePass": 72,
+            "2:ShaderPass": 353,
+            "3:UnrealBloomPass": 949,
+            "4:FinishOutputPass": 30
+          }
+        },
+        {
+          "chapter": 3,
+          "ms": {
+            "n": 8,
+            "mean": 10543.63,
+            "p50": 11440,
+            "p90": 12026,
+            "max": 12026
+          },
+          "calls": 34,
+          "tris": 2098749,
+          "bakesWhileStill": 0,
+          "programs": 46,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 2194,
+            "0:ScenePass": 9122,
+            "1:AtmospherePass": 32,
+            "3:UnrealBloomPass": 1064,
+            "4:FinishOutputPass": 23
+          }
+        },
+        {
+          "chapter": 4,
+          "ms": {
+            "n": 8,
+            "mean": 8149.25,
+            "p50": 8968,
+            "p90": 9838,
+            "max": 9838
+          },
+          "calls": 50,
+          "tris": 4111760,
+          "bakesWhileStill": 0,
+          "programs": 57,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "ShaderPass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 2199,
+            "0:ScenePass": 9197,
+            "1:AtmospherePass": 98,
+            "2:ShaderPass": 347,
+            "3:UnrealBloomPass": 914,
+            "4:FinishOutputPass": 20
+          }
+        },
+        {
+          "chapter": 5,
+          "ms": {
+            "n": 8,
+            "mean": 13590.13,
+            "p50": 14396,
+            "p90": 14851,
+            "max": 14851
+          },
+          "calls": 44,
+          "tris": 3136665,
+          "bakesWhileStill": 0,
+          "programs": 57,
+          "passes": [
+            "ScenePass",
+            "AtmospherePass:unspecified",
+            "UnrealBloomPass",
+            "FinishOutputPass:FinishOutputShader"
+          ],
+          "breakdownMs": {
+            "shadowMap": 2151,
+            "0:ScenePass": 12361,
+            "1:AtmospherePass": 47,
+            "3:UnrealBloomPass": 920,
+            "4:FinishOutputPass": 23
+          }
+        }
+      ],
+      "jsStep": {
+        "n": 61,
+        "mean": 6.67,
+        "p50": 3,
+        "p90": 16,
+        "max": 31
+      },
+      "scroll": {
+        "ms": {
+          "n": 41,
+          "mean": 9379.44,
+          "p50": 8842,
+          "p90": 12996,
+          "max": 16345
+        },
+        "bakes": 14,
+        "bakeMsTotal": 97,
+        "frames": 41
+      },
+      "memory": {
+        "geometries": 42,
+        "textures": 47,
+        "programs": 61,
+        "pixelRatio": 1.5,
+        "drawingBuffer": [
+          585,
+          1266
+        ],
+        "renderTargets": [
+          {
+            "name": "composer.read",
+            "w": 585,
+            "h": 1266,
+            "mb": 5.65
+          },
+          {
+            "name": "composer.write",
+            "w": 585,
+            "h": 1266,
+            "mb": 5.65
+          },
+          {
+            "name": "shadow",
+            "w": 2048,
+            "h": 2048,
+            "mb": 16
+          }
+        ],
+        "jsHeapMB": 12.3
+      },
+      "shots": [
+        "bench/results/optimized/medium-ch1.png",
+        "bench/results/optimized/medium-ch2.png",
+        "bench/results/optimized/medium-ch3.png",
+        "bench/results/optimized/medium-ch4.png",
+        "bench/results/optimized/medium-ch5.png",
+        "bench/results/optimized/medium-ch6.png"
+      ],
+      "errors": []
+    }
+  ]
+}
