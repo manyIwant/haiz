@@ -1,0 +1,58 @@
+{
+  "schema": "haiz-twin-building/1",
+  "id": "yihao",
+  "name": "一号教学楼",
+  "legacy_id": "yihao",
+  "osm": "way/1165596682 (1号教学楼)",
+  "frame": "Building-local: origin = portal centre on the central block's front wall at the ground-floor level (±0.00); +x campus east along the facade, +y out of the front facade (towards the North Gate), +z up. Placement in the twin frame: twin/data/site.json.",
+  "evidence": {
+    "tags": "surveyed | public-map | estimated | invented | documented (same vocabulary as data/campus-credibility.json)",
+    "sources": {
+      "esri": "assets/cinematic/aligned/courtyard.jpg (Esri World Imagery export, 0.55 m/px, capture date unknown). Roof outlines read in the twin frame; relief displacement of roofs removed with a per-metre-of-height shift of (+0.335, -0.53) m in twin x/y, calibrated so that the central roof and the two rear links are symmetric about the axis and the central front eave sits 1.2 m in front of the wall",
+      "osm": "OpenStreetMap via Overture 2026-11-18.0: building way 1165596682 (front edge at y = +1.3..+2.4, rotated +0.7 deg against the axis road), axis road, 太湖石 artwork polygon",
+      "aerial": "assets/images/campus/aerial_campus.jpg (school website, date unknown): bay counts (6 per wing), storey counts, roof forms, tower tops, porch roofs, forecourt",
+      "front": "assets/images/campus/campus_yihao.jpg: central block (3 bays), towers (granite to the 5th storey, arched window in the 6th), porch, plinth",
+      "portal": "assets/images/web/jiaoxuelou-1600.jpg (= campus/scenery_11.jpg): portal with 1923, stepped door frame, canopy on white columns, side porches with granite side portals, ground floor open through to the courtyard, wing colonnade, window design",
+      "flank": "assets/images/campus/scenery_13.jpg: granite colonnade of storeys 1-2 along the east wing, entablature, upper pilasters, hedge, side-plaza paving, overhanging Terminalia canopy"
+    }
+  },
+  "levels": {
+    "ground_floor": {"z": 0.0, "above_road_m": 1.05, "tag": "estimated", "basis": "3 risers porch->plaza and 4 risers plaza->forecourt road counted on jiaoxuelou-1600 / aerial, 0.15 m each (generic riser)"},
+    "storeys": {"f1": 4.5, "upper": 3.6, "tag": "estimated", "basis": "storey counts read from aerial_campus / campus_yihao (wings 6; central block and end pavilions 7); colonnade height vs bay width on jiaoxuelou-1600 suggests a tall ground storey; facade height/length ratio of the wing on the aerial (0.67 after foreshortening) agrees with 22.5 m / 32 m"}
+  },
+  "parts": {
+    "central":   {"x": [-12.1, 12.1], "front_visible_x": [-9.6, 9.6], "y": [-10.4, 0.0], "storeys": 7, "bays": 3, "tag": "public-map/estimated",
+                  "basis": "central roof 26.6 m x 12.5 m incl. eaves (Esri, lean-corrected, centred on the axis within 0.1 m); 3 bays of ~6.4 m between the towers on campus_yihao (tower:central = 0.31 on both campus_yihao and the aerial)"},
+    "towers":    {"x": [9.6, 16.0], "y": [-10.4, 0.6], "granite_top_storey": 5, "tag": "estimated",
+                  "basis": "tower front 0.31 x the visible central front on campus_yihao and aerial; outer face where the wing roofs stop (|x| = 16.3 on the Esri layer); granite shaft with one window per storey up to a cornice under the 6th storey, arched window in the 6th, white top with a louvred box"},
+    "wings":     {"x": [16.0, 48.0], "y": [-10.6, -0.3], "storeys": 6, "bays": 6, "tag": "public-map/estimated",
+                  "basis": "6 window bays per wing on all six white rows of the aerial (both wings), bay:tower = 0.83; wing roofs 11.5-12 m deep incl. eaves; rear wall line confirmed by the rear links starting at y = -10.6"},
+    "pavilions": {"x": [48.0, 57.0], "y": [-15.1, 0.0], "storeys": 7, "tag": "public-map/estimated",
+                  "basis": "end roofs 11.0-11.5 m wide x 18 m deep incl. eaves, ridge running front-back (Esri, aerial); overall roof length 116 m eave to eave; narrow front with one column of small windows (aerial)"}
+  },
+  "porch": {
+    "portal": {"x": [-4.8, 4.8], "front_y": 5.6, "pier_w": 2.0, "top_z": 8.6, "lintel": [6.1, 8.0], "text": "1923", "tag": "estimated", "basis": "jiaoxuelou-1600 and campus_yihao proportions against the 6.4 m central bays"},
+    "canopy": {"x": [-5.2, 5.2], "y": [0.4, 5.6], "eave_z": 12.0, "pitch": 28, "overhang": 0.8, "columns": 4, "tag": "estimated", "basis": "canopy eaves 12 m wide (aerial, campus_yihao corrected for depth); white square columns on the portal top"},
+    "side":   {"x_inner": 5.2, "x_outer": 9.6, "front_y": 4.2, "roof_z": [8.0, 7.1], "portal_top": 5.6, "tag": "estimated", "basis": "red shed roofs on short white columns above granite side portals with stepped heads (jiaoxuelou-1600)"},
+    "through_hall": {"x": [-7.2, 7.2], "tag": "estimated", "basis": "the courtyard and the next building are visible through the portal on jiaoxuelou-1600: open ground-floor passage"}
+  },
+  "links": {"x_centres": [-25.2, 25.2], "width": 5.4, "y": [-24.0, -10.6], "storeys": 6, "tag": "public-map/invented",
+            "basis": "two white flat-roofed links to the next building on the Esri layer, symmetric about the axis after lean correction; length beyond 13 m and their facades unknown"},
+  "rear": {"tag": "invented", "basis": "No photograph of the rear (courtyard) facades was available; a corridor facade with windows is assumed."},
+  "roofs": {
+    "central": {"pitch": 30, "overhang": 1.2, "concave": 0.10, "upturn": 0.55, "tag": "estimated", "basis": "aerial / campus_yihao: hipped, upturned corners, white fascia, ridges and curled ridge ends"},
+    "pavilion": {"pitch": 32, "overhang": 1.1, "concave": 0.10, "upturn": 0.45, "tag": "estimated"},
+    "wing": {"pitch": 22, "overhang": 1.0, "concave": 0.0, "upturn": 0.0, "tag": "estimated"}
+  },
+  "open_questions": [
+    "Long axis rotated +0.7 deg (OSM outline) to +1.2 deg (roof eaves) against the axis-road bearing; not applied.",
+    "OSM puts the front wall 1.3-2.4 m further north than the lean-corrected Esri reading used for the origin.",
+    "Storey heights are generic (4.5 / 3.6 m); a measured section or a single height would fix all levels.",
+    "Rear facades, link facades and the courtyard are not photographed."
+  ],
+  "materials": {
+    "upper_walls": "wall.render.white", "base": "stone.granite.dark", "roof": "roof.tile.red", "trim": "trim.white",
+    "glass": "glass.window", "frames": "frame.alu.white", "ground_floor_frames": "frame.alu.brown", "steps": "stone.granite.red",
+    "tag": "estimated", "basis": "colours read by eye from the photographs; PBR factors are reference values"
+  }
+}
