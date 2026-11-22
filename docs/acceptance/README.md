@@ -46,7 +46,7 @@ node tests/acceptance/run.mjs --only=cinematic-runtime,rings
 - **帧率和 GPU。** WebGL 在 SwiftShader（软件渲染）上运行；这里的耗时不是性能数据，性能交给基准测试。
 - **画面审美。** 没有截图比对；构图、材质、光线仍需人工看。
 - **后端。** `node --test backend/tests/*.test.mjs` 由现有的 `HAIZ authenticated backend` workflow 在后端文件变化时运行。
-- **六幕首页重型 WebGL 测试**（`tests/home-browser.cjs`）由 `rings-qa.yml` 负责；在慢机器上会超时。
+- **六幕首页重型 WebGL 测试**（`tests/home-browser.cjs`）由 `rings-qa.yml` 负责；在 GitHub 上约 5 分钟，在更慢的机器上可能超时。
 - **线上 haiz.space。** 从不访问；只在 127.0.0.1 上提供检出的文件。
 
 ## PR 流程 · PR flow

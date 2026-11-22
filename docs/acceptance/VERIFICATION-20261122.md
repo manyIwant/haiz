@@ -36,8 +36,26 @@ Mobile warnings worth a design look (not failures): the shared top navigation on
 1. **`tests/cinematic-runtime.cjs` failed on main** (part of `npm test`). The VM sandbox had no `navigator`, so `descent.js` threw at `navigator.connection`, quietly fell back to the non-WebGL view, and the test failed on `renders>0`. The test now provides `navigator` (with `saveData` so no remote imagery is requested), fails loudly if the WebGL path falls back, and covers both the campus handshake and the 14 s preload-timeout path.
 2. **`年轮 · add last week's days` weekly workflow failed** with HTTP 400. `scripts/rings/fetch-climate.mjs` asked for the Haikou calendar date as `end_date`; at the Monday 03:17 (UTC+8) cron that is already “tomorrow” for the archive. It now ends at UTC yesterday (ERA5 trails by about 5 days, so nothing is lost).
 
+## CI on this PR (GitHub Actions, ubuntu-latest)
+
+- `Core regression (no browser)` and `Mobile compatibility (webkit)` passed on the first push.
+- `Mobile compatibility (chromium)` caught `physics-lab.html` failing on 2 of 4 devices with an `atob`
+  error. The error came from the cross-origin Every Joule iframe (a third-party site), which loads
+  only when the network is available. The check now blocks third-party hosts, so it covers this
+  checkout only and gives the same result online and offline.
+- **Six-act home suite (`rings-qa.yml` → `tests/home-browser.cjs`), the red check on #84, #88 and #89.**
+  Two separate timing bugs in the test, both fixed in `tests/`:
+  1. *Leaf catch:* the test placed the leaf in front of the camera as soon as `End` switched the section,
+     but the camera flight to 06 was still running on SwiftShader. The leaf drifted off the click point.
+     The test now waits for the camera to arrive (p≈5), as the news step already did.
+  2. *Exit to news.html:* timeline added to the test. On CI the click returns at 68 s and the 'map' exit
+     reaches `location.href` at about 150 s, past the 120 s limit. Nothing was stuck. The step now waits
+     up to 300 s for the navigation to commit and prints the timeline on every run.
+  After both fixes the suite passed on CI (run 44990831008). PRs #84, #88 and #90 need these
+  `tests/home-browser.cjs` changes, either by merging this PR first or by taking the file.
+
 ## 报告给负责人 · Reported, not changed (outside this scope)
 
 1. **Descent play button waits for the campus.** `assets/cinematic/descent.js` says the campus “never gates the play button”, but `boot()` awaits the campus handshake or a 14 s timeout before enabling play. On a slow phone the opening can sit disabled for up to 14 s. The test now pins today's behaviour on both paths; whoever owns the descent should decide which is intended.
 2. **3 backend tests fail on main**: they request `/world/flow/`, which only exists on unmerged branches (e.g. `feat/haiz-campus-operations`). `haiz-backend.yml` runs only when backend files change, so this stays hidden until then.
-3. **`tests/home-browser.cjs` is resource-sensitive.** SwiftShader frames take 1.7–2.9 s here; clicks wait 40 s and the test times out. On PR #84 the same suite timed out at the `news.html` step although #84 only adds files under `lanren/multiplayer/`, so that red check is a timeout, not a regression from #84.
+3. **`tests/home-browser.cjs` is still slow on this container** (SwiftShader frames take 1.7–2.9 s, clicks take about 40 s), so it cannot finish here. The CI failures are explained and fixed above.
