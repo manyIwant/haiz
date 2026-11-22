@@ -77,11 +77,14 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
     throw e;
   }
   await page.fill('#specNote', '测试：那天有风');
-  // The dialog opens with a 0.55 s CSS animation over a blurred WebGL backdrop. On SwiftShader each
-  // frame takes seconds, so Playwright's "two identical frames" stability check outlasted the 30 s
-  // default on CI (#89). Wait for the animation to finish, and give the click the suite's 90 s budget.
-  await page.waitForFunction(() => !document.getAnimations().some((a) => a.playState === 'running' && a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest('#specimen')), null, { timeout: 90000 });
-  await page.click('#specKeep', { timeout: 90000 });
+  // The dialog opens with a 0.55 s CSS animation over a backdrop-filter blur of the live WebGL
+  // canvas. On SwiftShader that blur makes frames so slow that the animation can still be running
+  // 90 s later, and Playwright's "stable for two frames" check timed out on CI (#89) although the
+  // button was visible and enabled. Stability is not what this step tests: click it without the
+  // stability wait (the dialog is modal and on top), then wait for the book to count the leaf.
+  await page.waitForSelector('#specKeep', { state: 'visible', timeout: 90000 });
+  await page.click('#specKeep', { force: true, timeout: 90000 });
+  await page.waitForFunction(() => document.getElementById('bookCount').textContent === '1', null, { timeout: 90000 });
   assert.strictEqual(await page.textContent('#bookCount'), '1');
   results.push('a falling leaf is caught, annotated and kept in the book');
   // an entry leaves through the veil; coming back returns to that viewpoint
