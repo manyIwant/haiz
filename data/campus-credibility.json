@@ -1,0 +1,104 @@
+{
+  "schema": "haiz-campus-credibility/1",
+  "edition": "2026-11-22",
+  "baseline": "main@b7ad45d",
+  "purpose": "One credibility tag for every kind of spatial statement the digital campus makes. tools/campus-audit reads this file, expands it over every feature in assets/walk/campus.json and refuses any 'surveyed' tag that does not point at a raw survey file kept in the repository.",
+  "tags": {
+    "surveyed": "Measured on site (tape, total station, GNSS, laser scan, photogrammetry with ground control) and the raw measurement file is kept in this repository. Nothing currently qualifies.",
+    "public-map": "Read from public mapping or imagery (OSM, Esri World Imagery, official site plan) whose source, date and method are recorded; accuracy limited by that source.",
+    "estimated": "An interpretation: proportions read from photographs, generic dimensions (court sizes, storey heights), or legacy data whose origin cannot be checked any more. Plausible, not measured.",
+    "invented": "Created for the experience with no spatial evidence (interiors, door positions, tree positions in planted beds, character routes).",
+    "documented": "Non-spatial facts (names, dates, uses) taken from public documents; graded separately in lanren/roots/history.js for the history chapter."
+  },
+  "aspects": {
+    "identity": "That the feature exists and what it is called / used for",
+    "position": "Where its centre is on the campus",
+    "footprint": "Its outline size and shape",
+    "orientation": "Its bearing relative to true north",
+    "height": "Storeys, storey height and overall height",
+    "facade": "Materials, windows, roofs and other visible detail",
+    "interior": "Rooms and layout inside"
+  },
+  "global": {
+    "orientation": {
+      "tag": "public-map",
+      "basis": "Campus axis rotated about 41° anticlockwise from true north. The legacy note claims 41.4° from a three-point collinearity solve on the lost KML; the audit independently fits 6 landmarks on the Esri World Imagery layer in assets/cinematic/aligned (manifest.json) and the two legacy Amap anchors, and both agree within about 2°.",
+      "sources": ["assets/walk/campus.json#meta.source.plan", "assets/cinematic/aligned/manifest.json", "tools/campus-audit/control-points.json"]
+    },
+    "scale": {
+      "tag": "public-map",
+      "basis": "Plan pixels × 0.167 m. The imagery fit gives a model-to-ground scale near 1.03 (model about 3% small) with roughly 9 m RMS residual: good enough for orientation and neighbourhood layout, not for measurement.",
+      "sources": ["tools/campus-audit/control-points.json", "docs/campus-audit/REPORT.md"]
+    },
+    "georeference": {
+      "tag": "public-map",
+      "basis": "anchors.center / anchors.southGate are Amap GCJ-02 coordinates (docs/descent-review.md). Converted to WGS84 they sit about 500 m from their raw values; any use as WGS84 is wrong by that much.",
+      "sources": ["assets/walk/campus.json#anchors", "docs/descent-review.md"]
+    }
+  },
+  "defaults": {
+    "building": {
+      "identity": { "tag": "documented", "basis": "Names and uses follow the school's public pages and the project's photographs (building note fields)." },
+      "position": { "tag": "estimated", "basis": "Legacy KML conversion (no_project2.xml) whose raw file and conversion script are missing; independently corroborated against public imagery to about ±10 m where a landmark is visible (see control-points.json)." },
+      "footprint": { "tag": "estimated", "basis": "Axis-aligned rectangles in the campus frame from the same legacy conversion; real outlines are often L/U/courtyard shapes the rectangle does not capture." },
+      "orientation": { "tag": "estimated", "basis": "Snapped to the campus axis (rot 0) unless stated; the imagery shows most blocks follow it." },
+      "height": { "tag": "estimated", "basis": "floors × floorH from a project 'height rule' (teaching 19 m, science 23.4 m, dormitory 25.2 m, art centre 8 m); storey counts read from photographs, storey heights generic." },
+      "facade": { "tag": "estimated", "basis": "Photo-informed interpretation (data/architecture.json, assets/walk/review.js); proportions not measured." },
+      "interior": { "tag": "invented", "basis": "Interiors are not modelled or are original interpretations (assets/walk/interiors.js)." }
+    },
+    "corridor": {
+      "identity": { "tag": "estimated", "basis": "Covered links visible in photographs and imagery; names are project labels." },
+      "position": { "tag": "estimated", "basis": "Placed between the blocks they join; legacy KML-derived where noted." },
+      "footprint": { "tag": "estimated", "basis": "Width and length fitted between neighbouring blocks." },
+      "height": { "tag": "estimated", "basis": "Two storeys × 3.5 m, generic." }
+    },
+    "landscape": {
+      "identity": { "tag": "documented", "basis": "Official 校园景观简介 names (一池两馆三园, 凤栖堂, 衍林堂, 砚池, 百年榄仁树, 太湖石)." },
+      "position": { "tag": "estimated", "basis": "Legacy KML conversion; corroborated by imagery where visible." },
+      "footprint": { "tag": "estimated", "basis": "Rectangles approximating gardens, ponds and the field." }
+    },
+    "road": {
+      "position": { "tag": "estimated", "basis": "Rectilinear simplification of the legacy KML path skeleton ('源自 KML 校道骨架'); widths generic; curved and diagonal paths visible in imagery are not represented." }
+    },
+    "court": {
+      "position": { "tag": "estimated", "basis": "Footprint is the legacy court_* lawn rectangle; aerial review (data/campus-sports.json) confirms six basketball courts but not dimensions." },
+      "layout": { "tag": "estimated", "basis": "Court markings use generic regulation sizes." }
+    },
+    "tree": {
+      "position": { "tag": "invented", "basis": "300 legacy tree points; their origin is undocumented and earlier fixes found about 20% inside buildings or water (assets/js/three-campus.js v13). Species mix follows the official planting list; individual positions are not evidence." },
+      "form": { "tag": "invented", "basis": "Species-inspired procedural or photo-informed silhouettes (assets/walk/atlas-details.js, assets/walk/landscape.js)." }
+    },
+    "door": {
+      "position": { "tag": "invented", "basis": "lanren/life/places.js: 'the side of each building that faces the nearest path'; not observed entrances." }
+    },
+    "spot": {
+      "position": { "tag": "invented", "basis": "Staging points for characters and the camera." }
+    },
+    "view": {
+      "position": { "tag": "invented", "basis": "Camera presets." }
+    }
+  },
+  "items": {
+    "lanshu": {
+      "position": { "tag": "public-map", "basis": "A single very large crown sits between the science-tech block and Teaching Block 1 on the Esri imagery, where the model places the centenary Terminalia; residual about 8 m.", "sources": ["tools/campus-audit/control-points.json#lanshu"] },
+      "footprint": { "tag": "estimated", "basis": "Crown rectangle, not a measured canopy." }
+    },
+    "yihao": {
+      "position": { "tag": "public-map", "basis": "Long red-roofed block on the imagery; its length on the image (about 118 m) agrees with the model's 116 m.", "sources": ["tools/campus-audit/control-points.json#yihao"] }
+    },
+    "yundong": {
+      "position": { "tag": "public-map", "basis": "400 m track clearly visible on imagery; infield width on the image about 70 m.", "sources": ["tools/campus-audit/control-points.json#yundong"] },
+      "footprint": { "tag": "estimated", "basis": "173.5 × 94.8 m, within 3% of a standard 8-lane 400 m track (≈176.9 × 92.5 m)." }
+    },
+    "dorm_f": { "position": { "tag": "public-map", "basis": "Red courtyard block on imagery.", "sources": ["tools/campus-audit/control-points.json#dorm_f"] } },
+    "yishu": { "position": { "tag": "public-map", "basis": "Paired red courtyard blocks on imagery.", "sources": ["tools/campus-audit/control-points.json#yishu"] } },
+    "keji": {
+      "position": { "tag": "public-map", "basis": "White-roofed block near the north gate on imagery; only part of the roof is unambiguous.", "sources": ["tools/campus-audit/control-points.json#keji"] },
+      "orientation": { "tag": "estimated", "basis": "rot -0.267 rad in campus data; the Blender V3 GLB stores the opposite sign and lanren/map/campus-v3.js overrides it at load." }
+    },
+    "court_basket": { "layout": { "tag": "public-map", "basis": "Six basketball courts counted on public overhead imagery (data/campus-sports.json, reference HNZX-TUXUN @ b75786e).", "sources": ["data/campus-sports.json"] } },
+    "court_volley": { "layout": { "tag": "estimated", "basis": "Three volleyball courts are an inference that fits the footprint; not confirmed." } },
+    "taoranting": { "identity": { "tag": "documented", "basis": "Named in the tour text only; no geometry exists for it in campus data." } },
+    "siyuan": { "identity": { "tag": "documented", "basis": "Named in the tour text only; no geometry exists for it in campus data." } }
+  }
+}
