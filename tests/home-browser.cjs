@@ -73,7 +73,38 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // the camera has arrived (not just entered the section) before the slab is clicked
   await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 2) < 1e-3, null, { timeout: 180000 });
   await page.waitForTimeout(2500);
-  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 })]);
+  // Timeline of the exit (printed on success too) so a timeout says which phase stalled:
+  // the click itself, the veil animation before location.href, or news.html's load event.
+  const exitT0 = Date.now(), exitLog = [], pending = new Map();
+  const mark = (what) => exitLog.push(`${((Date.now() - exitT0) / 1000).toFixed(1)}s ${what}`);
+  const onNav = (f) => { if (f === page.mainFrame()) mark('navigated ' + f.url().replace(base, '')); };
+  const onReq = (r) => pending.set(r, r.url().replace(base, '')), onDone = (r) => pending.delete(r);
+  page.on('framenavigated', onNav); page.on('request', onReq); page.on('requestfinished', onDone); page.on('requestfailed', onDone);
+  await page.evaluate(() => {
+    const a = document.querySelector('#p-leaves a[href="news.html"]');
+    window.__exitTrace = [];
+    const t0 = performance.now(), note = (w) => window.__exitTrace.push(`${((performance.now() - t0) / 1000).toFixed(1)}s ${w}`);
+    a.addEventListener('click', (e) => note(`click on ${e.target.tagName} spatial=${document.body.classList.contains('spatial')}`), true);
+    addEventListener('beforeunload', () => note('beforeunload'));
+  });
+  try {
+    await Promise.all([
+      page.waitForURL(/news\.html$/, { timeout: 120000 }).then(() => mark('news.html load event')),
+      page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 }).then(() => mark('click returned')),
+    ]);
+  } catch (e) {
+    const diag = await page.evaluate(() => {
+      const v = document.getElementById('veil'), info = window.__haizHome && window.__haizHome.info();
+      return { href: location.href, trace: window.__exitTrace, body: document.body.className, active: info && info.active, p: info && info.p,
+        veil: v && { opacity: v.style.opacity, mask: v.style.maskSize, clip: v.style.clipPath, children: v.childElementCount },
+        tweens: window.gsap ? window.gsap.globalTimeline.getChildren(true, true, false).length : null,
+        specimenOpen: !!document.querySelector('#specimen[open]') };
+    }).catch((err) => 'page not inspectable: ' + err.message.split('\n')[0]);
+    console.error('[home-browser] exit to news.html stalled', JSON.stringify({ timeline: exitLog, page: diag, pending: [...pending.values()].slice(0, 15), errors }, null, 1));
+    throw e;
+  }
+  page.off('framenavigated', onNav); page.off('request', onReq); page.off('requestfinished', onDone); page.off('requestfailed', onDone);
+  console.log('[home-browser] exit timeline: ' + exitLog.join(' · '));
   results.push('entry click draws the veil and navigates to news.html');
   await page.goto(base + '/index.html?quality=low&test=1');
   await ready(page);
