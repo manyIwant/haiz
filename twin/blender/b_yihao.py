@@ -32,6 +32,10 @@ GRAN = 'stone.granite.dark'
 TRIM = 'trim.white'
 ROOF = 'roof.tile.red'
 STEP = 'stone.granite.red'
+CW = PARTS['central']['window']
+WW, WH, WSILL = PARTS['wings']['window']['w'], PARTS['wings']['window']['h'], PARTS['wings']['window']['sill']
+ARCH = PARTS['towers']['arch']
+ENT_H = PARTS['wings']['entablature_h']
 ENT_CAP = [(-0.45, 0.0), (-0.55, 0.05), (-0.55, 0.16), (0.0, 0.16)]     # cap moulding on the granite entablature
 # text/curve local frame -> building: reading direction along -x, glyph up = +z, face normal = +y (front)
 FACING_PLUS_Y = Matrix(((-1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
@@ -59,13 +63,14 @@ class Out:
 def protos(out: Out):
     W = arch.window_unit
     out.protos.update({
-        'w_up':        W(3.0, 1.9, cols=4, transom=0.68, curtain=0.5),
-        'w_f2':        W(3.0, 1.9, cols=4, transom=0.68, curtain=0.4),
-        'w_f1':        W(3.0, 2.5, cols=4, transom=0.76, frame_mat='frame.alu.brown', curtain=0.3),
-        'w_wide':      W(4.4, 1.95, cols=6, transom=0.62, curtain=0.5),
-        'w_wide_bars': W(4.4, 1.95, cols=6, transom=0.62, curtain=0.4, bars=0.62),
+        'w_up':        W(WW, WH, cols=4, transom=0.68, curtain=0.5),
+        'w_f2':        W(WW, WH, cols=4, transom=0.68, curtain=0.4),
+        'w_f1':        W(WW, 2.5, cols=4, transom=0.76, frame_mat='frame.alu.brown', curtain=0.3),
+        'w_wide':      W(CW['w'], CW['h'], cols=6, transom=0.62, curtain=0.5),
+        'w_wide_top':  W(CW['w'], CW['top_storey']['h'], cols=6, transom=0.70, curtain=0.5),
+        'w_wide_bars': W(CW['w'], CW['h'], cols=6, transom=0.62, curtain=0.4, bars=0.62),
         'w_tower':     W(1.4, 1.6, cols=2, transom=0.5, frame_mat='frame.alu.grey', sill_mat='stone.granite.grey'),
-        'w_arch':      W(1.6, 4.0, cols=3, arch=True, transom=None),
+        'w_arch':      W(ARCH['w'], ARCH['h'], cols=3, arch=True, transom=None),
         'w_pav':       W(1.6, 1.5, cols=2, transom=0.6),
         'w_side':      W(2.4, 1.8, cols=3, transom=0.68, curtain=0.4),
         'w_rear':      W(2.4, 1.6, cols=3, transom=0.68, curtain=0.3),
@@ -113,22 +118,22 @@ def wing(out: Out, s: int):
     out.geo(part, *tag_of('wings'))
     L = xb - xa
     bay = L / n
-    zent = lvl(3) - 0.7
+    zent = lvl(3) + 0.1 - ENT_H
     inset = 0.45
     ops = []
     for b in range(n):
         cx = (b + 0.5) * bay
         for st in range(3, 7):
-            zb = lvl(st) + 0.95
-            ops.append((cx - 1.5, cx + 1.5, zb, zb + 1.9, 'w_up'))
+            zb = lvl(st) + WSILL
+            ops.append((cx - WW / 2, cx + WW / 2, zb, zb + WH, 'w_up'))
     M, _ = facade(out, part, (xb, y1), (xa, y1), lvl(3) + 0.1, zt, ops, surround=TRIM)
 
     def front(g, L, M):
         ops2 = []
         for b in range(n):
             cx = (b + 0.5) * bay
-            ops2.append((cx - 1.5, cx + 1.5, 0.8, 0.8 + 2.5, 'w_f1'))
-            ops2.append((cx - 1.5, cx + 1.5, lvl(2) + 0.9, lvl(2) + 0.9 + 1.9, 'w_f2'))
+            ops2.append((cx - WW / 2, cx + WW / 2, 0.8, 0.8 + 2.5, 'w_f1'))
+            ops2.append((cx - WW / 2, cx + WW / 2, lvl(2) + WSILL, min(lvl(2) + WSILL + WH, zent - 0.15), 'w_f2'))
         arch.wall_with_openings(g, WALL, L, 0.5, zent, [o[:4] for o in ops2], t=0.25, y=inset)
         g.box(GRAN, (0, inset - 0.03, 0.0), (L, inset, 0.5), skip=('+y', '-z'))
         for x0_, x1_, zb, zt_, proto in ops2:
@@ -141,7 +146,7 @@ def wing(out: Out, s: int):
         arch.cornice(g, GRAN, 0, L, lvl(3) + 0.1, ENT_CAP)
         for b in range(n + 1):
             x = min(max(b * bay, 0.45), L - 0.45)
-            arch.pilaster(g, TRIM, x, 0.9 if b in (0, n) else 1.0, 0.15, lvl(3) + 0.26, zt - 0.02, cap=0.45)
+            arch.pilaster(g, TRIM, x, 0.9 if b in (0, n) else PARTS['wings']['pilaster_w'], 0.15, lvl(3) + 0.26, zt - 0.02, cap=0.45)
         arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_EAVE)
     local(out, part, (xb, y1), (xa, y1), front)
 
@@ -175,24 +180,25 @@ def tower(out: Out, s: int):
     y0, y1 = T['y']
     part = 'tower_' + ('w' if s < 0 else 'e')
     out.geo(part, *tag_of('towers'))
-    zg = lvl(T['granite_top_storey'] + 1)
+    zg = lvl(5) + 1.5                       # granite shaft top = cornice bottom (photo-derived)
     zc = lvl(8)
     ztop = zc + 0.75
     W = xb - xa
-    ops = [(W / 2 - 0.7, W / 2 + 0.7, lvl(st) + (1.4 if st == 1 else 1.0), lvl(st) + (1.4 if st == 1 else 1.0) + 1.6, 'w_tower')
-           for st in range(1, T['granite_top_storey'] + 1)]
+    # stair-landing windows sit ~0.4 storey below the floor windows (campus_yihao)
+    ops = [(W / 2 - 0.7, W / 2 + 0.7, lvl(st) - 0.35, lvl(st) + 1.25, 'w_tower') for st in range(2, 6)]
     M, L = facade(out, part, (xb, y1), (xa, y1), 0.0, zg, ops, mat=GRAN, t=0.3)
+    CORN = [(0.0, 0.0), (-0.12, 0.0), (-0.12, 0.40), (-0.38, 0.62), (-0.38, 1.00), (-0.30, 1.10), (0.0, 1.10)]
+    a_sill = lvl(5) + 2.9
 
     def upper(g, L, M):
-        arch.arched_opening_wall(g, WALL, L, zg, ztop, L / 2 - 0.8, 1.6, lvl(6) + 0.9, 4.0, y=0.12)
+        arch.arched_opening_wall(g, WALL, L, zg, ztop, L / 2 - ARCH['w'] / 2, ARCH['w'], a_sill, ARCH['h'], y=0.12)
         g.polyn(WALL, [(0, 0.0, zg), (0, 0.12, zg), (0, 0.12, ztop), (0, 0.0, ztop)], (-1, 0, 0))
         g.polyn(WALL, [(L, 0.0, zg), (L, 0.12, zg), (L, 0.12, ztop), (L, 0.0, ztop)], (1, 0, 0))
-        arch.cornice(g, GRAN, -0.35, L + 0.35, zg - 0.1,
-                     [(0.0, 0.0), (-0.12, 0.0), (-0.12, 0.25), (-0.35, 0.40), (-0.35, 0.62), (0.0, 0.62)])
+        arch.cornice(g, GRAN, -0.38, L + 0.38, zg, CORN)
         arch.louvre_box(g, L * 0.14, L * 0.86, ztop - 2.3, ztop - 0.35, depth=0.25, y=0.12)
         arch.cornice(g, TRIM, -0.05, L + 0.05, ztop - 0.3, [(0.0, 0.0), (-0.06, 0.0), (-0.06, 0.08), (-0.16, 0.16), (-0.16, 0.30), (0.0, 0.30)])
     local(out, part, (xb, y1), (xa, y1), upper)
-    out.window(part, 'w_arch', M @ Matrix.Translation((L / 2 - 0.8, 0.12, lvl(6) + 0.9)))
+    out.window(part, 'w_arch', M @ Matrix.Translation((L / 2 - ARCH['w'] / 2, 0.12, a_sill)))
 
     # side faces (granite below zg, white above) with the cornice returned along them
     g = out.geo(part)
@@ -204,7 +210,7 @@ def tower(out: Out, s: int):
         q0, q1 = ((xa, ylo), (xa, y1)) if nx < 0 else ((xb, y1), (xb, ylo))
         Ms, Ls = seg_frame(q0, q1)
         gs = Geo()
-        arch.cornice(gs, GRAN, 0, Ls, zg - 0.1, [(0.0, 0.0), (-0.12, 0.0), (-0.12, 0.25), (-0.35, 0.40), (-0.35, 0.62), (0.0, 0.62)], returns=False)
+        arch.cornice(gs, GRAN, 0, Ls, zg, CORN, returns=False)
         g.merge(gs, Ms)
     arch.flat_roof(g, [(xa, y0), (xb, y0), (xb, y1 - 0.12), (xa, y1 - 0.12)], ztop, parapet_h=0.0)
     # rear face outside the central block
@@ -223,19 +229,24 @@ def central(out: Out):
     out.geo(part, *tag_of('central'))
     zt = lvl(8)
     L = fb - fa
-    bay = L / C['bays']
+    bay = C['bay']
+    centres = [fb - x for x in (bay, 0.0, -bay)]            # local X of the window centres (east to west)
+    hw = CW['w'] / 2
     ops = []
-    for b in range(C['bays']):
-        cx = (b + 0.5) * bay
+    for cx in centres:
         for st in range(3, 8):
-            zb = lvl(st) + 0.9
-            ops.append((cx - 2.2, cx + 2.2, zb, zb + 1.95, 'w_wide_bars' if st == 3 else 'w_wide'))
+            if st == 7:
+                zb = lvl(st) + CW['top_storey']['sill']
+                ops.append((cx - hw, cx + hw, zb, zb + CW['top_storey']['h'], 'w_wide_top'))
+            else:
+                zb = lvl(st) + CW['sill']
+                ops.append((cx - hw, cx + hw, zb, zb + CW['h'], 'w_wide_bars' if st == 3 else 'w_wide'))
     M, _ = facade(out, part, (fb, y1), (fa, y1), lvl(3), zt, ops, surround=TRIM)
     hall_w = SPEC['porch']['through_hall']['x'][1]
 
     def deco(g, L, M):
-        for b in range(1, C['bays']):
-            arch.pilaster(g, TRIM, b * bay, 1.0, 0.18, lvl(3), zt - 0.05)
+        for x in (fb - bay / 2, fb + bay / 2):
+            arch.pilaster(g, TRIM, x, 1.0, 0.18, lvl(3), zt - 0.05)
         for st in range(4, 8):
             arch.band(g, TRIM, 0, L, lvl(st) - 0.06, lvl(st) + 0.10, 0.06)
         arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_DEEP, returns=False)
@@ -247,9 +258,8 @@ def central(out: Out):
         # storeys 1-2 behind the porch: granite skin, open through-hall in the middle
         hx0, hx1 = L / 2 - hall_w, L / 2 + hall_w
         ops2 = [(hx0, hx1, 0.0, 4.2, None)]
-        for b in range(C['bays']):
-            cx = (b + 0.5) * bay
-            ops2.append((cx - 2.2, cx + 2.2, lvl(2) + 0.9, lvl(2) + 0.9 + 1.95, 'w_wide'))
+        for cx in centres:
+            ops2.append((cx - hw, cx + hw, lvl(2) + CW['sill'], lvl(2) + CW['sill'] + CW['h'], 'w_wide'))
         for x0 in (0.6, L - 0.6 - 1.2):
             ops2.append((x0, x0 + 1.2, 0.0, 2.9, None))         # side doors into the towers' lobbies
         arch.wall_with_openings(g, GRAN, L, 0.0, lvl(3), [o[:4] for o in ops2], t=0.3)
@@ -292,7 +302,7 @@ def pavilion(out: Out, s: int):
     part = 'pav_' + ('w' if s < 0 else 'e')
     out.geo(part, *tag_of('pavilions'))
     zt = lvl(8)
-    zent = lvl(3) - 0.7
+    zent = lvl(3) + 0.1 - ENT_H
     Wd = xb - xa
     ops = [(Wd / 2 - 0.8, Wd / 2 + 0.8, lvl(st) + 1.0, lvl(st) + 2.5, 'w_pav') for st in range(3, 8)]
     M, _ = facade(out, part, (xb, y1), (xa, y1), lvl(3) + 0.1, zt, ops, surround=TRIM)
@@ -409,7 +419,7 @@ def porch(out: Out):
         sf = S['front_y']
         pt = S['portal_top']
         zr0, zr1 = S['roof_z']
-        wo, wi = 0.9, 0.8
+        wo = wi = ((xb - xa) - S['opening_w']) / 2
         pier_o = (xb - wo, xb) if side > 0 else (xa, xa + wo)
         pier_i = (xa, xa + wi) if side > 0 else (xb - wi, xb)
         for p in (pier_o, pier_i):
@@ -418,7 +428,7 @@ def porch(out: Out):
         g.box(GRAN, (xa - 0.12, sf - 0.85, pt - 0.3), (xb + 0.12, sf + 0.15, pt))
         ox0 = pier_i[1] if side > 0 else pier_o[1]
         ox1 = pier_o[0] if side > 0 else pier_i[0]
-        _stepped_head(g, GRAN, ox0, ox1, pt - 1.2, sf, depth=0.8, big=(0.4, 0.28), small=(0.2, 0.22))
+        _stepped_head(g, GRAN, ox0, ox1, pt - 1.2, sf, depth=0.8, big=(0.35, 0.25), small=(0.18, 0.2))
         g.box(GRAN, (xa, 0.0, pt - 0.5), (xb, sf - 0.8, pt), skip=('-y',))
         for cx in ((xa + 0.45), (xb - 0.45)):
             zroof = zr0 + (zr1 - zr0) * ((sf - 0.4) / (sf + 0.6)) - 0.3
@@ -458,9 +468,36 @@ def links(out: Out):
                 arch.square_column(g, WALL, x, y, 0.45, 0.0, lvl(7) - 0.4)
 
 
+def base_skirt(out: Out, depth=1.2):
+    """Granite base below +-0.00 round the whole footprint, so the block meets the lower site levels
+    (plaza 0.45 m below the floor at the front, general ground 0.9 m below at the back)."""
+    from shapely.geometry import box as sbox
+    from shapely.ops import unary_union
+    P = PARTS
+    rects = [sbox(P['central']['x'][0], P['central']['y'][0], P['central']['x'][1], P['central']['y'][1])]
+    for s in (-1, 1):
+        for key in ('towers', 'wings', 'pavilions'):
+            x0, x1 = P[key]['x']; y0, y1 = P[key]['y']
+            xa, xb = sorted((s * x0, s * x1))
+            rects.append(sbox(xa, y0, xb, y1))
+    fp = unary_union(rects).buffer(0.02, join_style='mitre')
+    g = out.geo('base', 'estimated', 'ground floor +-0.00 sits 1.05 m above the forecourt road; the base below it is assumed to be granite-clad')
+    ring = fp.exterior
+    pts = list(ring.coords)
+    if not ring.is_ccw:
+        pts.reverse()
+    for a, b in zip(pts[:-1], pts[1:]):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = (dx * dx + dy * dy) ** 0.5
+        if L < 1e-6:
+            continue
+        g.polyn(GRAN, [(a[0], a[1], -depth), (b[0], b[1], -depth), (b[0], b[1], 0.0), (a[0], a[1], 0.0)], (dy / L, -dx / L, 0.0))
+
+
 def build():
     out = Out()
     protos(out)
+    base_skirt(out)
     for s in (-1, 1):
         wing(out, s)
         tower(out, s)

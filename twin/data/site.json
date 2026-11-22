@@ -1,0 +1,589 @@
+{
+ "schema": "haiz-twin-site/1",
+ "frame": "Twin frame (twin/data/frame.json): metres, +x campus east along Teaching Block 1, +y campus north towards the North Gate, +z up; z = 0 at the forecourt road in front of Teaching Block 1.",
+ "evidence": {
+  "esri": "assets/cinematic/aligned/courtyard.jpg read through twin/tools/ortho.py (0.55 m/px). Ground-level edges are read directly; anything with height leans by (-0.335, +0.53) m per metre of height in twin x/y.",
+  "osm": "OpenStreetMap via Overture 2026-11-18.0: campus boundary, axis road and the street centreline north of the gate, artwork polygon of the rock.",
+  "photos": "jiaoxuelou-1600 (plinth, inscription, red granite steps, porch), campus_taihushi (rock from the north), hero-2560 (axis from the North Gate), scenery_13 (side plaza under the Terminalia canopy), aerial_campus (paving pattern, lawns)."
+ },
+ "levels": {
+  "road": 0.0,
+  "ground": 0.15,
+  "lawn": 0.15,
+  "plaza": 0.6,
+  "floor": 1.05,
+  "tag": "estimated",
+  "basis": "Four 0.15 m risers between the forecourt road and the plaza and three between the plaza and the porch counted on jiaoxuelou-1600; three to four risers from the side plazas down to the lawns (lanshu-1600, aerial_campus); kerbs assumed 0.15 m. No levelling survey."
+ },
+ "extent": [
+  -78.0,
+  -40.0,
+  78.0,
+  136.0
+ ],
+ "zones": [
+  {
+   "id": "gate_outer",
+   "group": "gate",
+   "geom": {
+    "box": [
+     -9.0,
+     106.75,
+     9.0,
+     121.0
+    ]
+   },
+   "level": "road",
+   "mat": "paving.granite.grey",
+   "tag": "public-map/estimated",
+   "basis": "light paved apron between the gate and the street on the Esri layer (x -7..+5); width widened to the gate piers; flush with the road (assumed)"
+  },
+  {
+   "id": "street_sidewalk",
+   "group": "street",
+   "geom": {
+    "line": [
+     [
+      -80.0,
+      146.0
+     ],
+     [
+      -13.6,
+      131.6
+     ],
+     [
+      1.1,
+      128.2
+     ],
+     [
+      86.1,
+      107.8
+     ],
+     [
+      95.0,
+      105.7
+     ]
+    ],
+    "width": 17.0
+   },
+   "level": "ground",
+   "mat": "paving.concrete",
+   "tag": "public-map/estimated",
+   "basis": "OSM centreline of the street north of the gate; 10 m carriageway and 3.5 m footways assumed"
+  },
+  {
+   "id": "street_road",
+   "group": "street",
+   "geom": {
+    "line": [
+     [
+      -80.0,
+      146.0
+     ],
+     [
+      -13.6,
+      131.6
+     ],
+     [
+      1.1,
+      128.2
+     ],
+     [
+      86.1,
+      107.8
+     ],
+     [
+      95.0,
+      105.7
+     ]
+    ],
+    "width": 10.0
+   },
+   "level": "road",
+   "mat": "paving.asphalt",
+   "tag": "public-map/estimated",
+   "basis": "OSM centreline; carriageway width assumed"
+  },
+  {
+   "id": "lawn_paths",
+   "group": "forecourt.paths",
+   "geom": {
+    "union": [
+     {
+      "box": [
+       -66.0,
+       40.5,
+       66.0,
+       42.6
+      ]
+     },
+     {
+      "box": [
+       63.5,
+       9.0,
+       66.0,
+       42.6
+      ]
+     },
+     {
+      "box": [
+       -66.0,
+       9.0,
+       -63.5,
+       42.6
+      ]
+     },
+     {
+      "box": [
+       12.5,
+       37.0,
+       16.0,
+       40.6
+      ]
+     },
+     {
+      "box": [
+       -16.0,
+       37.0,
+       -12.5,
+       40.6
+      ]
+     }
+    ]
+   },
+   "level": "ground",
+   "mat": "paving.concrete",
+   "tag": "public-map",
+   "basis": "light footpath round the two lawn blocks (north edge y 40.5..42.6, east edge x 63.5..66 down to y 15) on the Esri layer; the west branch is hidden under canopy and mirrored (invented)"
+  },
+  {
+   "id": "north_sidewalk",
+   "group": "forecourt.paths",
+   "geom": {
+    "box": [
+     -78.0,
+     50.2,
+     78.0,
+     52.6
+    ]
+   },
+   "level": "ground",
+   "mat": "paving.concrete",
+   "tag": "public-map/estimated",
+   "basis": "light strip north of the parked cars (y 51.9..54.6 read, kept narrower)"
+  },
+  {
+   "id": "lawn_e",
+   "group": "forecourt.lawns",
+   "geom": {
+    "box": [
+     12.5,
+     9.0,
+     63.5,
+     40.5
+    ],
+    "round": 2.6
+   },
+   "level": "lawn",
+   "mat": "ground.lawn",
+   "tag": "public-map",
+   "basis": "lawn block east of the plaza: inner edge x 12.3..12.5, north edge y 40.0..40.5, rounded corners (kerb curve r ~2.5 m) on the Esri layer; open lawn on aerial_campus; level with the footpaths"
+  },
+  {
+   "id": "lawn_w",
+   "group": "forecourt.lawns",
+   "geom": {
+    "box": [
+     -63.5,
+     9.0,
+     -12.5,
+     40.5
+    ],
+    "round": 2.6
+   },
+   "level": "lawn",
+   "mat": "ground.lawn",
+   "tag": "public-map",
+   "basis": "lawn block west of the plaza, mirrored where hidden under the west canopy"
+  },
+  {
+   "id": "forecourt_road",
+   "group": "forecourt.road",
+   "geom": {
+    "box": [
+     -78.0,
+     42.6,
+     78.0,
+     50.2
+    ]
+   },
+   "level": "road",
+   "mat": "paving.asphalt",
+   "tag": "public-map",
+   "basis": "dark carriageway y 42.6..47.4 plus a parallel-parking lane on the north side (cars 5.5 x 2.4 m at y 47.4..50.0) on the Esri layer"
+  },
+  {
+   "id": "axis_road",
+   "group": "axis.road",
+   "geom": {
+    "box": [
+     -6.0,
+     50.2,
+     6.0,
+     96.0
+    ]
+   },
+   "level": "road",
+   "mat": "paving.asphalt",
+   "tag": "public-map",
+   "basis": "kerb-to-kerb width about 13 m read on hero-2560 at y ~80 (scale checked on the 25 m apron at the far end); the Esri layer shows only the 8 m strip between overhanging canopies; 12 m adopted; OSM centreline on x = 0"
+  },
+  {
+   "id": "gate_inner",
+   "group": "gate",
+   "geom": {
+    "box": [
+     -7.15,
+     96.0,
+     7.15,
+     106.75
+    ]
+   },
+   "level": "road",
+   "mat": "paving.granite.grey",
+   "tag": "estimated",
+   "basis": "paved entry inside the gate, gate width from hero-2560 (14.3 m between the outer piers)"
+  },
+  {
+   "id": "apron",
+   "group": "forecourt.road",
+   "geom": {
+    "box": [
+     -12.5,
+     29.8,
+     12.5,
+     42.6
+    ]
+   },
+   "level": "road",
+   "mat": "paving.asphalt",
+   "tag": "public-map",
+   "basis": "dark apron between the lawn blocks from the road down to the plaza steps (plaza edge y 29.8) on the Esri layer"
+  },
+  {
+   "id": "wingfront_e",
+   "group": "forecourt.side",
+   "geom": {
+    "box": [
+     52.0,
+     -0.3,
+     57.0,
+     9.0
+    ]
+   },
+   "level": "plaza",
+   "mat": "paving.granite.dark",
+   "pattern": "stagger_light",
+   "tag": "estimated",
+   "basis": "paving along the east wing under the Terminalia canopy (scenery_13); extent hidden on the Esri layer"
+  },
+  {
+   "id": "wingfront_w",
+   "group": "forecourt.side",
+   "geom": {
+    "box": [
+     -57.0,
+     -0.3,
+     -36.0,
+     9.0
+    ]
+   },
+   "level": "plaza",
+   "mat": "paving.granite.dark",
+   "pattern": "stagger_light",
+   "tag": "invented",
+   "basis": "mirrored from the east side; the west side is hidden under canopy and roof lean"
+  },
+  {
+   "id": "side_e",
+   "group": "forecourt.side",
+   "geom": {
+    "box": [
+     14.5,
+     -0.3,
+     52.0,
+     20.5
+    ]
+   },
+   "level": "plaza",
+   "mat": "paving.granite.dark",
+   "pattern": "stagger_light",
+   "tag": "photo-derived/public-map",
+   "basis": "dark paving with light squares east of the plaza, from the building to y ~21 and east to x ~50-55 (aerial_campus through a 4-point homography, edge distortion uncorrected; Esri patch x 15..24, y 16..20); pattern from scenery_13 and lanshu-1600",
+   "nodrop": [
+    {
+     "box": [
+      14.5,
+      20.4,
+      52.0,
+      20.6
+     ]
+    }
+   ]
+  },
+  {
+   "id": "side_w",
+   "group": "forecourt.side",
+   "geom": {
+    "box": [
+     -36.0,
+     -0.3,
+     -14.5,
+     20.5
+    ]
+   },
+   "level": "plaza",
+   "mat": "paving.granite.dark",
+   "pattern": "stagger_light",
+   "tag": "photo-derived/public-map",
+   "basis": "dark paving with light squares west of the plaza to x ~-30..-36 (aerial_campus homography; Esri patch x -24..-15, y 16..20)",
+   "nodrop": [
+    {
+     "box": [
+      -36.0,
+      20.4,
+      -14.5,
+      20.6
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plaza",
+   "group": "forecourt.plaza",
+   "geom": {
+    "union": [
+     {
+      "box": [
+       -14.5,
+       -0.3,
+       14.5,
+       20.5
+      ]
+     },
+     {
+      "box": [
+       -12.5,
+       20.5,
+       12.5,
+       29.8
+      ]
+     }
+    ]
+   },
+   "level": "plaza",
+   "mat": "paving.granite.light",
+   "pattern": "diamond_dots",
+   "tag": "public-map",
+   "basis": "light plaza x +/-12.5 for y 20..29.8 and x +/-14.7 for y 13..20 on the Esri layer (south of y 13 hidden by the roof lean, assumed to run to the building); dot grid from aerial_campus",
+   "nodrop": [
+    {
+     "box": [
+      -12.5,
+      29.7,
+      -4.8,
+      29.9
+     ]
+    },
+    {
+     "box": [
+      4.8,
+      29.7,
+      12.5,
+      29.9
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lanren_bed",
+   "group": "trees.lanren_bed",
+   "geom": {
+    "poly": [
+     [
+      27.6,
+      11.0
+     ],
+     [
+      29.4,
+      9.6
+     ],
+     [
+      32.4,
+      9.8
+     ],
+     [
+      34.6,
+      11.4
+     ],
+     [
+      34.8,
+      14.2
+     ],
+     [
+      33.0,
+      16.4
+     ],
+     [
+      30.0,
+      16.6
+     ],
+     [
+      27.8,
+      15.0
+     ]
+    ]
+   },
+   "level": "plaza",
+   "mat": "ground.mulch",
+   "raise": 0.12,
+   "tag": "photo-derived/estimated",
+   "basis": "planting bed with ground cover and set stones round the trunk, flush-to-low edge (lanshu-1600, aerial_campus dark blob at (27..31, 14)); outline estimated"
+  }
+ ],
+ "hedges": [
+  {
+   "box": [
+    16.8,
+    0.0,
+    47.7,
+    0.9
+   ],
+   "level": "plaza",
+   "height": 0.6,
+   "tag": "photo-derived",
+   "basis": "low clipped hedge in a planter along the east colonnade (scenery_13, aerial_campus)"
+  },
+  {
+   "box": [
+    -47.7,
+    0.0,
+    -16.8,
+    0.9
+   ],
+   "level": "plaza",
+   "height": 0.6,
+   "tag": "photo-derived",
+   "basis": "hedge along the west colonnade (jiaoxuelou-1600, aerial_campus)"
+  }
+ ],
+ "taihu": {
+  "plinth": [
+   -4.8,
+   26.0,
+   4.8,
+   31.6
+  ],
+  "plinth_top": 0.75,
+  "panel": [
+   -3.3,
+   1.7,
+   0.16,
+   0.6
+  ],
+  "panel2": [
+   2.6,
+   4.3,
+   0.16,
+   0.6
+  ],
+  "inscription": "虎踞龍盤捷報頻傳",
+  "rock_xy": [
+   0.3,
+   28.4
+  ],
+  "rock_rot_deg": 0.0,
+  "tag": "photo-derived",
+  "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width from the step runs; depth from the rock's footprint on the Esri layer (dark mass y 26.3..29.5 including the northward lean of its top). OSM puts the artwork 4-5 m further south (y 20.3..24.5).",
+  "inscription_tag": "documented",
+  "inscription_basis": "text read on jiaoxuelou-1600 (running-script calligraphy, 8 characters, signed); typeface substituted. The second panel (alumni donation, 2012) is modelled blank.",
+  "rock_tag": "photo-derived/invented",
+  "rock_basis": "overall size and silhouette (about 7.6 x 3 x 2.9 m; tall perforated east end standing on legs, long low west end with a raised head) from jiaoxuelou-1600 and campus_taihushi; individual holes and crags are procedural (seeded) and not the real ones"
+ },
+ "placements": {
+  "yihao": {
+   "xyz": [
+    0.0,
+    0.0,
+    1.05
+   ],
+   "rot_deg": 0.0,
+   "tag": "estimated",
+   "basis": "origin = portal centre on the central front wall; ground floor 1.05 m above the forecourt road"
+  }
+ },
+ "open_questions": [
+  "No levelling survey: every level in 'levels' is counted from risers or assumed.",
+  "The Esri layer shows continuous canopy over the east lawn while aerial_campus shows open lawn with one small tree; the photographs are of different (unknown) dates. The Terminalia crown is modelled from the photographs (trunk, limb, boulder) with its extent limited to what both sources allow.",
+  "Axis road width: about 13 m kerb to kerb on hero-2560 against an 8 m visible strip on the Esri layer.",
+  "The street north of the gate: width and level relative to the campus are assumed.",
+  "Rock plinth depth and the rock's exact position along the axis rest on one ortho reading (+/- 1.5 m); OSM differs by 4-5 m."
+ ],
+ "steps": [
+  {
+   "id": "plaza_n",
+   "runs": [
+    [
+     -12.5,
+     -4.8
+    ],
+    [
+     4.8,
+     12.5
+    ]
+   ],
+   "y_edge": 29.8,
+   "from": "plaza",
+   "to": "road",
+   "risers": 4,
+   "tread": 0.4,
+   "direction": 1,
+   "tag": "photo-derived",
+   "basis": "four red granite risers either side of the rock plinth (jiaoxuelou-1600, aerial_campus); tread assumed"
+  },
+  {
+   "id": "side_e_n",
+   "runs": [
+    [
+     14.5,
+     52.0
+    ]
+   ],
+   "y_edge": 20.5,
+   "from": "plaza",
+   "to": "lawn",
+   "risers": 3,
+   "tread": 0.35,
+   "direction": 1,
+   "tag": "photo-derived/estimated",
+   "basis": "steps down from the side plaza in the foreground of lanshu-1600; light strip along the side plaza's north edge on aerial_campus; full-length flight assumed"
+  },
+  {
+   "id": "side_w_n",
+   "runs": [
+    [
+     -36.0,
+     -14.5
+    ]
+   ],
+   "y_edge": 20.5,
+   "from": "plaza",
+   "to": "lawn",
+   "risers": 3,
+   "tread": 0.35,
+   "direction": 1,
+   "tag": "estimated",
+   "basis": "mirrored from the east side"
+  }
+ ]
+}

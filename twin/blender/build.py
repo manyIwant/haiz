@@ -19,6 +19,11 @@ import bpy
 from mathutils import Matrix, Vector
 import kit
 
+# builders import helpers with `from build import ...`; make that resolve to this module even when
+# it runs as __main__ (otherwise Python would load a second copy of it)
+sys.modules.setdefault('build', sys.modules[__name__])
+CJK_FONT = '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc'
+
 SITE = json.loads((TWIN / 'data/site.json').read_text()) if (TWIN / 'data/site.json').exists() else {}
 
 
@@ -42,6 +47,10 @@ def collection(name, parent=None):
 
 def text_mesh(req, name):
     cu = bpy.data.curves.new(name + '.curve', 'FONT')
+    if req.get('font') == 'cjk' and Path(CJK_FONT).exists():
+        f = bpy.data.fonts.get('cjk') or bpy.data.fonts.load(CJK_FONT)
+        f.name = 'cjk'
+        cu.font = f
     cu.body = req['text']
     cu.size = req['size']
     cu.extrude = req['extrude']
@@ -173,6 +182,10 @@ CAMERAS = {
     'oblique_ne':((95.0, 70.0, 45.0), (5.0, -2.0, 8.0), 35.0),
     'oblique_nw':((-90.0, 75.0, 40.0), (-5.0, -2.0, 8.0), 35.0),
     'top':       ((0.0, 10.0, 260.0), (0.0, 10.0, 0.0), 50.0),
+    # approximate viewpoints of reference photographs (refined by the calibration tool later)
+    'lanshu':    ((45.0, 18.5, 2.25), (30.0, 7.0, 5.0), 16.0),
+    'taihushi':  ((0.6, 41.0, 1.7), (0.3, 28.4, 1.9), 30.0),
+    'gate_n':    ((0.0, 119.8, 1.52), (0.0, 0.0, 1.52), 36.0 * 2036 / 2560),
 }
 
 

@@ -1,0 +1,62 @@
+{
+  "schema": "haiz-twin-trees/1",
+  "frame": "Twin frame; all coordinates in metres, z absolute (z = 0 at the forecourt road).",
+  "lanren": {
+    "name": "百年榄仁树",
+    "species": "Terminalia catappa (榄仁)",
+    "trunk_xy": [31.0, 13.0],
+    "ground_z": 0.72,
+    "tag": "photo-derived/estimated",
+    "basis": "Trunk position: planting bed in the east side plaza on aerial_campus (dark blob mapped to x 27..31, y 14 through a 4-point homography) and the view geometry of lanshu-1600 (camera on the side plaza near its north steps looking south-west: trunk right of centre, the long low limb running left and towards the camera onto a tall boulder, the wing receding behind). Limb shapes are drawn to match lanshu-1600 (fork at about 4 m, main limb descending from about 3.8 m to rest on the boulder at about 2.7-2.9 m, then turning up) and scenery_13 (canopy overhanging the paving along the wing). Crown extent: Esri canopy corrected for lean, limited to 0.8 m in front of the wing facade. Secondary branches, twigs and leaves are procedural (seeded): they reproduce the habit (horizontal tiers, rosettes of large leaves at the twig ends), not the real branches.",
+    "envelope": {
+      "poly": [[21.0, 8.0], [23.0, 3.0], [28.0, 0.8], [36.0, 0.8], [44.0, 0.8], [51.0, 2.0], [55.0, 8.0], [56.0, 14.0], [54.0, 21.0], [49.0, 27.0], [42.0, 31.0], [34.0, 31.5], [27.0, 28.0], [22.5, 22.0], [21.0, 15.0]],
+      "z_bottom": 3.2, "z_top_centre": 15.5, "z_top_edge": 9.5, "centre": [36.0, 14.0]
+    },
+    "limbs": [
+      {"id": "trunk", "pts": [[31.0, 13.0, 0.5, 0.82], [31.05, 13.05, 1.5, 0.70], [31.25, 13.15, 2.8, 0.63], [31.5, 13.3, 3.9, 0.58]]},
+      {"id": "A_main_limb_to_boulder", "pts": [[31.6, 13.2, 3.75, 0.47], [34.0, 12.6, 3.7, 0.43], [37.0, 12.0, 3.45, 0.39], [40.0, 11.4, 3.2, 0.35], [43.0, 10.9, 3.0, 0.31], [45.6, 10.6, 2.97, 0.29], [46.6, 10.5, 3.05, 0.28], [47.6, 10.6, 3.6, 0.25], [48.6, 11.0, 4.8, 0.22], [49.8, 11.8, 6.4, 0.18], [51.3, 12.8, 8.0, 0.14], [53.0, 14.0, 9.3, 0.10]]},
+      {"id": "A2_up_from_limb", "pts": [[38.5, 11.7, 3.35, 0.22], [39.4, 13.0, 5.2, 0.19], [40.2, 14.6, 7.2, 0.15], [41.0, 16.4, 9.0, 0.11], [41.8, 18.2, 10.5, 0.08]]},
+      {"id": "A3_south_from_limb", "pts": [[42.0, 11.1, 3.05, 0.18], [43.0, 8.5, 4.2, 0.15], [44.0, 5.8, 5.4, 0.12], [45.0, 3.0, 6.4, 0.09]]},
+      {"id": "B_up_west", "pts": [[31.4, 13.3, 3.9, 0.40], [30.6, 13.9, 5.6, 0.36], [29.4, 14.6, 7.4, 0.30], [27.8, 15.4, 9.0, 0.24], [26.0, 16.2, 10.4, 0.18], [24.4, 17.0, 11.4, 0.13]]},
+      {"id": "C_north", "pts": [[31.6, 13.5, 3.9, 0.40], [32.4, 15.5, 5.4, 0.35], [33.4, 18.0, 6.8, 0.30], [34.6, 20.8, 8.0, 0.25], [35.8, 23.6, 9.0, 0.19], [37.0, 26.4, 9.8, 0.14], [38.0, 29.0, 10.2, 0.10]]},
+      {"id": "D_south_to_wing", "pts": [[31.5, 13.1, 3.9, 0.38], [31.8, 11.0, 5.6, 0.33], [32.2, 8.6, 7.2, 0.28], [32.8, 6.0, 8.6, 0.22], [33.4, 3.4, 9.8, 0.16], [34.0, 1.4, 10.6, 0.11]]},
+      {"id": "E_up_east", "pts": [[31.7, 13.3, 3.95, 0.36], [33.0, 13.6, 6.0, 0.32], [34.8, 13.9, 8.0, 0.27], [37.0, 14.2, 10.0, 0.21], [39.6, 14.6, 11.8, 0.15], [42.6, 15.0, 13.0, 0.10]]},
+      {"id": "F_from_C_northeast", "pts": [[34.0, 19.6, 7.4, 0.20], [36.4, 20.6, 8.4, 0.17], [39.0, 21.8, 9.4, 0.14], [42.0, 23.0, 10.0, 0.10]]},
+      {"id": "G_low_west", "pts": [[31.2, 13.0, 3.4, 0.28], [29.4, 12.4, 4.2, 0.25], [27.4, 11.8, 5.2, 0.21], [25.2, 11.2, 6.2, 0.16], [23.0, 10.8, 7.0, 0.11]]},
+      {"id": "H_leader", "pts": [[31.5, 13.3, 3.95, 0.34], [31.6, 13.6, 6.5, 0.30], [31.8, 14.0, 9.0, 0.24], [32.0, 14.3, 11.5, 0.17], [32.2, 14.6, 13.6, 0.11]]}
+    ],
+    "boulders": [
+      {"xy": [46.6, 10.5], "z": 0.6, "size": [1.5, 1.2, 2.15], "rot_deg": 25, "seed": 11, "lean": [0.04, -0.02],
+       "tag": "photo-derived", "basis": "tall upright boulder under the main limb, about 2.1 m high (lanshu-1600, scaled against the trunk and paving)"},
+      {"xy": [47.6, 9.5], "z": 0.6, "size": [1.2, 1.0, 0.85], "rot_deg": -10, "seed": 12, "lean": [0.0, 0.0],
+       "tag": "photo-derived", "basis": "low rounded stone beside the tall boulder (lanshu-1600)"}
+    ]
+  },
+  "broadleaf": [
+    {"id": "east_big", "trunk_xy": [51.5, 4.0], "ground_z": 0.6, "crown_r": 8.0, "height": 13.0, "trunk_h": 3.2, "seed": 21,
+     "tag": "photo-derived/invented", "basis": "dense crown near the east pavilion on aerial_campus and continuous canopy on the Esri layer; species, trunk position (+/- 4 m) and form unknown"},
+    {"id": "east_lawn_small", "trunk_xy": [44.0, 30.0], "ground_z": 0.15, "crown_r": 2.6, "height": 6.0, "trunk_h": 1.8, "seed": 22,
+     "tag": "photo-derived/estimated", "basis": "small tree on the east lawn casting a short shadow on aerial_campus (homography with edge correction, +/- 3 m)"},
+    {"id": "west_big", "trunk_xy": [-44.0, 20.0], "ground_z": 0.15, "crown_r": 13.0, "height": 16.0, "trunk_h": 3.5, "seed": 23,
+     "tag": "photo-derived/invented", "basis": "very large bright-green crown over the west lawn on aerial_campus and canopy x -70..-25 on the Esri layer; species and form unknown"},
+    {"id": "west_far", "trunk_xy": [-63.0, 12.0], "ground_z": 0.15, "crown_r": 8.0, "height": 13.0, "trunk_h": 3.0, "seed": 24,
+     "tag": "public-map/invented", "basis": "canopy continues to x -70 on the Esri layer; tree invented to fill it"},
+    {"id": "axis_e", "trunk_xy": [12.0, 78.0], "ground_z": 0.15, "crown_r": 7.0, "height": 12.0, "trunk_h": 3.0, "seed": 25,
+     "tag": "photo-derived/invented", "basis": "spreading broadleaf overhanging the east side of the axis road on hero-2560; position invented"},
+    {"id": "axis_w", "trunk_xy": [-11.5, 68.0], "ground_z": 0.15, "crown_r": 4.5, "height": 8.5, "trunk_h": 2.2, "seed": 26,
+     "tag": "photo-derived/invented", "basis": "smaller broadleaf on the west side of the axis road on hero-2560; position invented"}
+  ],
+  "palms": {
+    "species": "Roystonea regia (大王椰)",
+    "groups": [
+      {"id": "axis", "xs": [-7.2, 7.2], "y0": 53.5, "dy": 6.2, "n": 7, "ground_z": 0.15, "height": [12.0, 14.0],
+       "tag": "photo-derived/estimated", "basis": "two rows of royal palms with white-painted trunk bases flanking the axis road on hero-2560; spacing about 6 m from the trunk positions; distance from the kerb and the first/last palm estimated (+/- 3 m along the road). The Esri layer shows no palm crowns over the forecourt apron, so the rows stop at the forecourt road."},
+      {"id": "west_end", "xs": [-62.0], "y0": -12.0, "dy": 6.0, "n": 4, "ground_z": 0.15, "height": [13.0, 15.0],
+       "tag": "photo-derived/estimated", "basis": "royal palms west of the building on aerial_campus (left edge); positions estimated"}
+    ]
+  },
+  "araucaria": [
+    {"id": "plaza_w", "xy": [-15.0, 25.0], "ground_z": 0.15, "height": 20.0, "seed": 31,
+     "tag": "photo-derived/estimated", "basis": "Norfolk Island pine left of the plinth on jiaoxuelou-1600 (reaching about the 6th storey) and a narrow dark crown west of the plaza on aerial_campus; position +/- 3 m"}
+  ]
+}

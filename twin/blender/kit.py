@@ -164,6 +164,32 @@ class Geo:
             self.poly(mat, list(reversed(rings[0])))
             self.poly(mat, rings[-1])
 
+    def add_indexed(self, mat, verts, faces, uv_scale: float = 1.0):
+        """Shared-vertex mesh (e.g. marching cubes, tubes, leaf batches).  verts: (N, 3) array-like,
+        faces: sequence of index tuples into verts; mat: one name or a per-face sequence."""
+        import numpy as np
+        V3 = np.asarray(verts, dtype=float)
+        base = len(self.verts)
+        self.verts.extend(Vector(v) for v in V3)
+        F = [tuple(int(i) for i in f) for f in faces]
+        self.faces.extend(tuple(base + i for i in f) for f in F)
+        if isinstance(mat, str):
+            self.fmat.extend([mat] * len(F))
+        else:
+            self.fmat.extend(mat)
+        # planar box UVs per face from the dominant axis of the face normal
+        for f in F:
+            P = V3[list(f)]
+            n = np.cross(P[1] - P[0], P[2] - P[0])
+            ax = int(np.argmax(np.abs(n)))
+            if ax == 2:
+                uv = P[:, [0, 1]]
+            elif ax == 0:
+                uv = P[:, [1, 2]]
+            else:
+                uv = P[:, [0, 2]]
+            self.fuv.append([tuple(c * uv_scale) for c in uv])
+
     # -- composition -----------------------------------------------------------------
     def merge(self, other: 'Geo', M: Matrix | None = None):
         base = len(self.verts)
@@ -241,13 +267,13 @@ MATERIALS = {
     'wall.render.pink':      ((0.86, 0.74, 0.72), 0.85, 0.0, {}),
     'wall.tile.white':       ((0.88, 0.88, 0.86), 0.45, 0.0, {}),
     'trim.white':            ((0.92, 0.92, 0.90), 0.6, 0.0, {}),
-    'stone.granite.dark':    ((0.27, 0.30, 0.29), 0.38, 0.0, {}),
+    'stone.granite.dark':    ((0.25, 0.26, 0.25), 0.38, 0.0, {}),
     'stone.granite.grey':    ((0.52, 0.52, 0.50), 0.5, 0.0, {}),
     'stone.granite.red':     ((0.55, 0.27, 0.22), 0.45, 0.0, {}),
     'stone.granite.white':   ((0.80, 0.79, 0.76), 0.4, 0.0, {}),
     'stone.limestone.taihu': ((0.58, 0.58, 0.56), 0.75, 0.0, {}),
     'stone.rock.boulder':    ((0.47, 0.44, 0.40), 0.85, 0.0, {}),
-    'roof.tile.red':         ((0.72, 0.24, 0.17), 0.55, 0.0, {}),
+    'roof.tile.red':         ((0.78, 0.20, 0.13), 0.55, 0.0, {}),
     'roof.tile.green':       ((0.18, 0.40, 0.30), 0.35, 0.0, {}),
     'roof.flat.white':       ((0.80, 0.80, 0.78), 0.8, 0.0, {}),
     'roof.flat.grey':        ((0.45, 0.46, 0.45), 0.9, 0.0, {}),
@@ -266,21 +292,29 @@ MATERIALS = {
     'paint.gold':            ((0.80, 0.60, 0.25), 0.35, 0.8, {}),
     'paint.green.fret':      ((0.13, 0.42, 0.33), 0.5, 0.0, {}),
     'paint.ochre.fret':      ((0.78, 0.50, 0.22), 0.5, 0.0, {}),
+    'paving.granite.light':  ((0.72, 0.70, 0.66), 0.7, 0.0, {}),
     'paving.granite.grey':   ((0.55, 0.55, 0.53), 0.75, 0.0, {}),
     'paving.granite.dark':   ((0.35, 0.36, 0.36), 0.75, 0.0, {}),
     'paving.brick.red':      ((0.55, 0.28, 0.22), 0.85, 0.0, {}),
     'paving.asphalt':        ((0.20, 0.20, 0.20), 0.92, 0.0, {}),
     'paving.concrete':       ((0.62, 0.61, 0.58), 0.9, 0.0, {}),
     'kerb.granite':          ((0.62, 0.62, 0.60), 0.7, 0.0, {}),
-    'ground.lawn':           ((0.20, 0.36, 0.10), 0.95, 0.0, {}),
+    'ground.lawn':           ((0.24, 0.34, 0.13), 0.95, 0.0, {}),
+    'ground.context':        ((0.33, 0.36, 0.26), 0.95, 0.0, {}),
     'ground.soil':           ((0.36, 0.27, 0.18), 0.95, 0.0, {}),
     'ground.mulch':          ((0.28, 0.22, 0.15), 0.95, 0.0, {}),
     'water.pond':            ((0.12, 0.20, 0.16), 0.03, 0.0, {}),
     'plant.hedge':           ((0.12, 0.30, 0.08), 0.8, 0.0, {}),
     'bark.terminalia':       ((0.30, 0.25, 0.20), 0.9, 0.0, {}),
     'leaf.terminalia':       ((0.17, 0.33, 0.09), 0.6, 0.0, {'subsurface': 0.1}),
-    'bark.palm':             ((0.58, 0.56, 0.52), 0.85, 0.0, {}),
-    'leaf.palm':             ((0.20, 0.35, 0.12), 0.6, 0.0, {}),
+    'bark.palm':             ((0.60, 0.59, 0.55), 0.8, 0.0, {}),
+    'paint.white.trunk':     ((0.88, 0.88, 0.85), 0.8, 0.0, {}),
+    'palm.crownshaft':       ((0.36, 0.50, 0.20), 0.45, 0.0, {}),
+    'leaf.palm':             ((0.22, 0.36, 0.13), 0.6, 0.0, {}),
+    'bark.araucaria':        ((0.36, 0.30, 0.25), 0.9, 0.0, {}),
+    'leaf.araucaria':        ((0.12, 0.26, 0.10), 0.7, 0.0, {}),
+    'leaf.terminalia.old':   ((0.55, 0.30, 0.10), 0.6, 0.0, {}),
+    'leaf.terminalia.young': ((0.30, 0.45, 0.12), 0.55, 0.0, {}),
     'bark.generic':          ((0.33, 0.28, 0.22), 0.9, 0.0, {}),
     'leaf.generic':          ((0.15, 0.30, 0.09), 0.6, 0.0, {}),
     'track.rubber.red':      ((0.55, 0.20, 0.14), 0.9, 0.0, {}),
@@ -340,3 +374,56 @@ def seg_frame(p0, p1, z=0.0):
     ux, uy = dx / L, dy / L
     M = Matrix(((ux, -uy, 0.0, p0[0]), (uy, ux, 0.0, p0[1]), (0.0, 0.0, 1.0, z), (0.0, 0.0, 0.0, 1.0)))
     return M, L
+
+
+# ---------------------------------------------------------------------------------------
+# ground helpers (shapely polygons in the twin XY plane)
+# ---------------------------------------------------------------------------------------
+
+def iter_polys(geom):
+    if geom is None or geom.is_empty:
+        return
+    if geom.geom_type == 'Polygon':
+        yield geom
+    elif hasattr(geom, 'geoms'):
+        for g in geom.geoms:
+            yield from iter_polys(g)
+
+
+def area(g: Geo, mat: str, geom, z: float):
+    """Flat, upward-facing surface over a shapely (Multi)Polygon with holes (constrained Delaunay)."""
+    import shapely
+    for poly in iter_polys(geom):
+        if poly.area < 1e-4:
+            continue
+        tris = shapely.constrained_delaunay_triangles(poly)
+        for t in tris.geoms:
+            c = list(t.exterior.coords)[:3]
+            g.polyn(mat, [(x, y, z) for x, y in c], (0, 0, 1))
+
+
+def drops(g: Geo, mat: str, geom, z: float, level_at, step: float = 1.0):
+    """Vertical faces around a raised (Multi)Polygon at height z down to whatever level lies
+    outside each edge (level_at(x, y) -> z).  Outward-facing; segments of <= step metres."""
+    for poly in iter_polys(geom):
+        rings = [poly.exterior] + list(poly.interiors)
+        for k, ring in enumerate(rings):
+            pts = list(ring.coords)
+            # exterior CCW -> outward normal is the right-hand normal; holes CW -> same rule
+            ccw = ring.is_ccw
+            for a, b in zip(pts[:-1], pts[1:]):
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                L = math.hypot(dx, dy)
+                if L < 1e-6:
+                    continue
+                nx, ny = (dy / L, -dx / L)
+                if (k == 0 and not ccw) or (k > 0 and ccw):
+                    nx, ny = -nx, -ny
+                n = max(1, int(math.ceil(L / step)))
+                for i in range(n):
+                    p = (a[0] + dx * i / n, a[1] + dy * i / n)
+                    q = (a[0] + dx * (i + 1) / n, a[1] + dy * (i + 1) / n)
+                    m = ((p[0] + q[0]) / 2 + nx * 0.05, (p[1] + q[1]) / 2 + ny * 0.05)
+                    zo = level_at(*m)
+                    if zo < z - 1e-3:
+                        g.polyn(mat, [(p[0], p[1], zo), (q[0], q[1], zo), (q[0], q[1], z), (p[0], p[1], z)], (nx, ny, 0))
