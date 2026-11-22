@@ -191,6 +191,40 @@ class FinishOutputPass extends OutputPass {
   }
 }
 
+// three r170's PMREMGenerator.fromScene() allocates a new 768×1024 half-float
+// target on every call (no public option to pass one in; later releases add
+// `renderTarget`). The sky changes nearly every frame while the reader scrolls,
+// so the page used to allocate and free one per frame. This keeps one target
+// and bakes into it again, so the same texture stays bound as scene.environment.
+// It relies on a private method, so it is guarded: only on the three.js revision
+// it was verified with, only while the generator's own working size still matches
+// the kept target, and it lets go of a target someone disposed. Anything else
+// falls back to the stock per-bake allocation. bench/env-stability.cjs checks
+// the lifecycle (repeated bakes, resizes, stale-environment, texture count).
+const PMREM_REUSE_REVISION = '170';
+function reusePMREMTarget(pmrem) {
+  const stats = { active: false, allocations: 0, bakes: 0, reason: '' };
+  const allocate = pmrem._allocateTargets;
+  if (THREE.REVISION !== PMREM_REUSE_REVISION) { stats.reason = `three r${THREE.REVISION}: stock allocation`; return stats; }
+  if (typeof allocate !== 'function') { stats.reason = 'no _allocateTargets: stock allocation'; return stats; }
+  let kept = null;
+  const release = () => { kept = null; };
+  pmrem._allocateTargets = function () {
+    const out = allocate.call(this);   // sizes the generator's ping-pong target as a side effect
+    if (kept && kept.width === out.width && kept.height === out.height && kept.texture.mapping === out.texture.mapping) {
+      out.dispose();                   // never uploaded: frees nothing on the GPU, nothing allocated there
+      return kept;
+    }
+    if (kept) { kept.removeEventListener('dispose', release); kept.dispose(); }
+    kept = out;
+    kept.addEventListener('dispose', release);
+    stats.allocations++;
+    return kept;
+  };
+  stats.active = true;
+  return stats;
+}
+
 export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const tier = TIERS[tierName];
   installPCSS({ frustumWidth: SHADOW_HALF * 2, depthRange: SHADOW_FAR - 1, blocker: tier.blocker, pcf: tier.pcf });
@@ -264,15 +298,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   envSky.frustumCulled = false;
   envScene.add(envSky);
   let envRT = null;
-  // three r170's fromScene() allocates a new 768×1024 half-float target on every
-  // call. The sky changes nearly every frame while the reader scrolls, so the
-  // page used to allocate (and free) one per frame. Keep a single target and
-  // bake into it again: the same texture stays bound as scene.environment.
-  const allocate = pmrem._allocateTargets;
-  if (typeof allocate === 'function') {
-    let kept = null;
-    pmrem._allocateTargets = function () { return kept || (kept = allocate.call(this)); };
-  }
+  const envReuse = reusePMREMTarget(pmrem);
   let lastBake = -Infinity, stageNo = 0;
 
   // ---------------------------------------------------------------- tree
@@ -443,8 +469,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
       state.envKey = key;
       lastBake = stageNo;
       const baked = pmrem.fromScene(envScene, 0, 1, 1000);
-      if (envRT && envRT !== baked) envRT.dispose();
+      if (envRT && envRT !== baked) envRT.dispose();   // the stock path: a new target per bake
       envRT = baked;
+      envReuse.bakes++;
       scene.environment = envRT.texture;
     }
   }
@@ -484,6 +511,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   return {
     renderer, scene, camera, sun, canopy, bark, island, water, grass, litter, meta, rosettes, stride,
-    heightAt, inIsland, setStage, resize, render, tier, composer
+    heightAt, inIsland, setStage, resize, render, tier, composer,
+    /** diagnostics for bench/: is the environment target reused, how often baked and allocated */
+    get envStats() { return { ...envReuse, target: envRT }; }
   };
 }
