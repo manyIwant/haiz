@@ -43,7 +43,7 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   assert.match(await page.evaluate(() => location.hash), /#leaves/);
   results.push(`native scroll to 03 青春 · 生长 activates the details shot (#leaves), growth ${g2.toFixed(2)}`);
   // the orbit navigator jumps to a viewpoint
-  await page.click('#orbitDots .dot:nth-of-type(5)');
+  await page.click('#orbitDots .dot:nth-of-type(5)', { timeout: 90000 });   // input waits on multi-second SwiftShader frames
   await page.waitForFunction(() => window.__haizHome.info().active === 4, null, { timeout: 180000 });
   results.push('path navigator station walks to 05 日子 · 创作 (looking forward)');
   // keyboard: End reaches the last viewpoint
