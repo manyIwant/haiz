@@ -222,7 +222,8 @@ export function createRide(ctx) {
     const target = inp.ay > 0.1 ? (stand ? BIKE.sprint : BIKE.cruise) * Math.min(1, inp.ay * 1.15) * (surf === 'lawn' ? 0.72 : 1) : 0;
     let a = -rolling - 0.004 * S.speed * S.speed;
     S.pedalling = damp(S.pedalling, inp.ay > 0.1 && S.speed < target + 0.3 ? 1 : 0, 6, dt);
-    if (inp.ay > 0.1 && S.speed < target) a += BIKE.accel * (stand ? 1.45 : 1) * (1 - S.speed / Math.max(target, 0.1)) + 0.4;
+    // a push on the pedals: firm from a standstill, easing off as the cadence reaches the cruise
+    if (inp.ay > 0.1 && S.speed < target) a += Math.min(BIKE.accel, (target - S.speed) * 1.3 + 0.35) * (stand ? 1.45 : 1) + rolling;
     if (inp.brake && inp.ay < -0.1) a -= BIKE.brake * Math.min(1, -inp.ay * 1.3);
     if (S.phase === 'stop') a -= BIKE.brake;
     S.speed = clamp(S.speed + a * dt, 0, BIKE.max);
@@ -235,7 +236,7 @@ export function createRide(ctx) {
     S.turnRate = S.speed * kappa;
     S.yaw = wrap(S.yaw + S.turnRate * dt);
     // the lean that balances the turn, reached a moment late
-    const leanT = clamp(-Math.atan(S.speed * S.speed * kappa / G), -0.62, 0.62);
+    const leanT = clamp(-Math.atan(S.speed * S.speed * kappa / G), -0.5, 0.5);
     S.lean = damp(S.lean, leanT, 5.5, dt);
     // moving: slide along walls
     const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw);
@@ -323,8 +324,13 @@ export function createRide(ctx) {
       g.add(_d.set(sd === 'L' ? -0.025 : 0.025, 0.025, -0.05));
       hands[sd] = { at: toWorld(body, g, new THREE.Vector3()), pole: _b.set(sd === 'L' ? 0.75 : -0.75, -0.5, -0.6).applyQuaternion(bq).clone() };
     }
-    rig.pose({ frame: frameQ, hips, pitch: [lean * 0.4, lean * 0.35, lean * 0.3], twist: [S.steer * 0.25 + st * Math.sin(S.crank) * 0.12, -st * Math.sin(S.crank) * 0.1], side: -S.roll * 0.25,
+    const spec = (l) => ({ frame: frameQ, hips, pitch: [l * 0.4, l * 0.35, l * 0.3], twist: [S.steer * 0.25 + st * Math.sin(S.crank) * 0.12, -st * Math.sin(S.crank) * 0.1], side: -S.roll * 0.25,
       look: -0.04 + st * 0.15, headYaw: S.steer * 0.9, feet, hands, curl: 0.8 });
+    rig.pose(spec(lean));
+    // the hands must reach the bars: if the shoulders are too far from the grips, lean in until they are
+    const reach = Math.max(rig.where('upperarm.L', _a).distanceTo(hands.L.at), rig.where('upperarm.R', _b).distanceTo(hands.R.at));
+    const extra = clamp((reach - D.arm * 0.95) / 0.42, 0, 0.6);
+    if (extra > 0.01) { S.reachLean = damp(S.reachLean || 0, extra, 8, 1 / 30); rig.pose(spec(lean + S.reachLean)); }
   }
 
   // ---------------------------------------------------------------- the skateboard
@@ -496,7 +502,10 @@ export function createRide(ctx) {
     }
     if (inp.up || inp.down) S.holdAgl = -1;
     // a soft ceiling: the wind lets you go no higher than the campus can be seen from
-    if (S.agl > BROOM.ceiling - 10 && vyT > 0) vyT *= clamp((BROOM.ceiling - S.agl) / 10, 0, 1);
+    // (measured from the ground, not from a roof one happens to be over)
+    const above = S.pos.y - ground(S.pos.x, S.pos.z);
+    if (above > BROOM.ceiling - 10 && vyT > 0) vyT *= clamp((BROOM.ceiling - above) / 10, 0, 1);
+    if (above > BROOM.ceiling + 1) vyT = Math.min(vyT, -1);
     S.vy = damp(S.vy, vyT, 3.2, dt);
     // move
     const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw);

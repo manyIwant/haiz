@@ -38,12 +38,18 @@ const clearance = (p) => p.evaluate(async () => { const R = window.__ruhua, f = 
   // ---- each way of moving: on, along, turning, off
   const EXPECT = { bike: { key: 'Digit2', v: [4.3, 6.2] }, board: { key: 'Digit3', v: [2.0, 6.8] }, broom: { key: 'Digit4', v: [7.5, 11] } };
   for (const [mode, E] of Object.entries(EXPECT)) {
-    await place(-60, -22, Math.PI / 2); await still(p, 0.5);
+    // the paved forecourt north of 一号楼 (lawns are slow by design: a board barely rolls on grass)
+    await place(-30, -18, 0.6); await still(p, 0.5);
     await tap(p, E.key); await still(p, 1.4);
     let s = await snap(p);
     check(`${mode}: summoned and mounted`, s.mode === mode && s.phase === 'ride', { phase: s.phase });
+    await keys(p, mode === 'broom' ? ['KeyW', 'Space'] : ['KeyW']);
+    await still(p, 1.0); await keys(p, [], ['Space']);
+    await still(p, 2.2);
+    s = await snap(p);
+    check(`${mode}: cruising speed ${E.v[0]}–${E.v[1]} m/s`, s.v >= E.v[0] && s.v <= E.v[1], { v: +s.v.toFixed(2) });
     if (mode === 'bike') {
-      // the body reaches the machine: ankles over the pedals, wrists at the grips
+      // riding, the body reaches the machine: ankles over the pedals, wrists at the grips
       const ik = await p.evaluate(() => {
         const f = window.__ruhua.free, b = f.ride.machines.bike, rig = f.rig;
         const d = (a, bb) => a.distanceTo(bb);
@@ -56,11 +62,6 @@ const clearance = (p) => p.evaluate(async () => { const R = window.__ruhua, f = 
       });
       check('bike: ankles within 12 cm of the pedals, wrists within 12 cm of the grips', Math.max(ik.footL, ik.footR, ik.handL, ik.handR) < 0.12, ik);
     }
-    await keys(p, mode === 'broom' ? ['KeyW', 'Space'] : ['KeyW']);
-    await still(p, 1.0); await keys(p, [], ['Space']);
-    await still(p, 2.2);
-    s = await snap(p);
-    check(`${mode}: cruising speed ${E.v[0]}–${E.v[1]} m/s`, s.v >= E.v[0] && s.v <= E.v[1], { v: +s.v.toFixed(2) });
     await keys(p, ['KeyD']); await still(p, 0.9);
     s = await snap(p);
     const leanRight = mode === 'board' ? await p.evaluate(() => window.__ruhua.free.ride.state.carve < -0.05) : s.roll > 0.05;
