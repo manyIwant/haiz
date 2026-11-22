@@ -56,6 +56,14 @@ def sdf_rock(blobs, bounds, res, seed, noise=0.2, ridges=0.0, tunnels=(), k=0.35
         tube = np.linalg.norm(Q, axis=-1) - r * wob
         d = np.maximum(d, -tube)
     d = np.maximum(d, -(Z - floor_z))
+    return mesh_field(d, (X0, Y0, Z0), res, floor_z, mat)
+
+
+def mesh_field(d, origin, res, floor_z, mat):
+    """Polygonise a signed-distance grid (negative inside, axis-aligned, spacing res, first sample at
+    origin) with marching cubes; the flat underside at floor_z is dropped."""
+    from skimage import measure
+    X0, Y0, Z0 = origin
     verts, faces, normals, _ = measure.marching_cubes(d, level=0.0, spacing=(res, res, res), gradient_direction='ascent')
     verts = verts + np.array([X0, Y0, Z0])
     # make the winding agree with the outward SDF gradient (one global check)

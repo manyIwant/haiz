@@ -178,12 +178,20 @@ def build(coll):
     FACING_PLUS_Y = Matrix(((-1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
     texts = [dict(text=P['inscription'], size=0.34, extrude=0.006, mat='trim.white', font='cjk',
                   M=Matrix.Translation(((px0 + px1) / 2, y1 + 0.03, (pz0 + pz1) / 2)) @ FACING_PLUS_Y)]
-    rock = nature.taihu_rock()
-    rx, ry = P['rock_xy']
-    sx, sy, sz = P.get('rock_scale', (1.0, 1.0, 1.0))
-    M = (Matrix.Translation((rx, ry, zt - 0.05)) @ Matrix.Rotation(math.radians(P.get('rock_rot_deg', 0.0)), 4, 'Z')
-         @ Matrix.Diagonal((sx, sy, sz, 1.0)))
-    groups['taihu.rock'] = [rock.transformed(M), P['rock_tag'], P['rock_basis'], 50.0]
+    if 'rock_silhouettes' in P:                  # carved from calibrated photographs (tools/taihu_carve.py)
+        import sys
+        sys.path.insert(0, str(TWIN / 'tools'))
+        import taihu_carve
+        spec = json.loads((TWIN / P['rock_silhouettes']).read_text())
+        d, origin, res = taihu_carve.field(spec, res=P.get('rock_res', 0.035), floor_z=zt - 0.05)
+        rock = nature.mesh_field(d, origin, res, zt - 0.05, 'stone.limestone.taihu')
+    else:                                        # phase-1 procedural stone placed by rock_xy / rock_scale
+        rock = nature.taihu_rock()
+        rx, ry = P['rock_xy']
+        sx, sy, sz = P.get('rock_scale', (1.0, 1.0, 1.0))
+        rock = rock.transformed(Matrix.Translation((rx, ry, zt - 0.05)) @ Matrix.Rotation(math.radians(P.get('rock_rot_deg', 0.0)), 4, 'Z')
+                                @ Matrix.Diagonal((sx, sy, sz, 1.0)))
+    groups['taihu.rock'] = [rock, P['rock_tag'], P['rock_basis'], 50.0]
 
     nface = 0
     for name, (g, tag, basis, smooth) in groups.items():

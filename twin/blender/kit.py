@@ -271,7 +271,7 @@ MATERIALS = {
     'stone.granite.grey':    ((0.52, 0.52, 0.50), 0.5, 0.0, {}),
     'stone.granite.red':     ((0.55, 0.27, 0.22), 0.45, 0.0, {}),
     'stone.granite.white':   ((0.80, 0.79, 0.76), 0.4, 0.0, {}),
-    'stone.limestone.taihu': ((0.42, 0.42, 0.40), 0.8, 0.0, {}),
+    'stone.limestone.taihu': ((0.30, 0.30, 0.285), 0.75, 0.0, {}),
     'stone.rock.boulder':    ((0.38, 0.34, 0.29), 0.85, 0.0, {}),
     'roof.tile.red':         ((0.78, 0.20, 0.13), 0.55, 0.0, {}),
     'roof.tile.green':       ((0.11, 0.30, 0.22), 0.35, 0.0, {}),

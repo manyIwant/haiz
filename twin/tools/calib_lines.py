@@ -17,7 +17,8 @@ sub-pixel edge fitting; each one is tied to a model line:
 Camera: pinhole with radial distortion k1, principal point fixed at the centre of the picture
 area; free position, yaw (azimuth of the view direction, from +x towards +y), pitch (up
 positive), roll and focal length.  Structure parameters (window width, heights of window heads
-and transoms, ...) are fitted together with the camera; heights need one anchor (fixed z).
+and transoms, ...) are fitted together with the camera; heights need one anchor (fixed z).  "fixed"
+holds camera values kept constant (e.g. {"k1": 0} when the lines cannot separate distortion).
 The report gives the solution, formal standard deviations, per-feature residuals, a profile
 of the cost against a fixed focal length, and alternative solutions with features left out,
 so that the real uncertainty can be judged.
@@ -155,7 +156,8 @@ def main():
     spec = json.load(open(a.calib))
     model = Model(spec)
     starts = starts_for(spec)
-    q, sd, rr, cost = solve(model, starts[0], starts=starts)
+    fixed = {model.names.index(k): float(v) for k, v in spec.get('fixed', {}).items()}
+    q, sd, rr, cost = solve(model, starts[0], fixed=fixed, starts=starts)
     R, U, F = basis(q[3], q[4], q[5])
     rep = {
         'image': spec['image'], 'image_size': spec['image_size'],
@@ -177,14 +179,14 @@ def main():
     prof = []
     fi = model.names.index('f')
     for fv in spec.get('profile_f', []):
-        qq, _, r2, c2 = solve(model, q, fixed={fi: float(fv)}, starts=[q.copy()])
+        qq, _, r2, c2 = solve(model, q, fixed={**fixed, fi: float(fv)}, starts=[q.copy()])
         prof.append({'f_px': fv, 'cost': round(float(c2), 3), 'rms_px': round(float(np.sqrt(np.mean(r2 ** 2))), 3),
                      'camera_xyz': [round(float(v), 2) for v in qq[:3]], 'pitch_deg': round(math.degrees(qq[4]), 2)})
     rep['profile_f'] = prof
     alts = []
     for drop in spec.get('alternatives', []):
         m2 = Model(spec, drop=tuple(drop))
-        q2, sd2, r2, c2 = solve(m2, q, starts=[q.copy()] + starts[:2])
+        q2, sd2, r2, c2 = solve(m2, q, fixed=fixed, starts=[q.copy()] + starts[:2])
         alts.append({'left_out': drop, 'camera_xyz': [round(float(v), 2) for v in q2[:3]], 'f_px': round(float(q2[6]), 1),
                      'pitch_deg': round(math.degrees(q2[4]), 2), 'roll_deg': round(math.degrees(q2[5]), 2),
                      'rms_px': round(float(np.sqrt(np.mean(r2 ** 2))), 3)})

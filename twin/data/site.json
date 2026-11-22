@@ -490,34 +490,26 @@
   ],
   "plinth_top": 0.75,
   "panel": [
-   -3.0,
-   1.0,
+   -1.52,
+   1.38,
    0.16,
    0.6
   ],
   "panel2": [
-   1.6,
-   3.1,
+   -3.95,
+   -3.3,
    0.16,
    0.6
   ],
   "inscription": "虎踞龍盤捷報頻傳",
-  "rock_xy": [
-   -0.15,
-   28.4
-  ],
-  "rock_rot_deg": 0.0,
   "tag": "photo-derived",
-  "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width 7.5 m and a 0.25 m westward offset from the hero-2560 camera fit (corner residuals of the earlier 9.6 m plinth: -30 / +19 px at 0.043 m/px); depth from the rock's footprint on the Esri layer. OSM puts the artwork 4-5 m further south (y 20.3..24.5).",
+  "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width 7.5 m and a 0.25 m westward offset from the hero-2560 camera fit (corner residuals of the earlier 9.6 m plinth: -30 / +19 px at 0.043 m/px); depth from the rock's footprint on the Esri layer. OSM puts the artwork 4-5 m further south (y 20.3..24.5). Checked on jiaoxuelou-1600 with its calibrated camera: with the plinth 7.5 m long at this position its height comes out 0.78 +/- 0.05 m (model 0.75).",
   "inscription_tag": "documented",
-  "inscription_basis": "text read on jiaoxuelou-1600 (running-script calligraphy, 8 characters, signed); typeface substituted. The second panel (alumni donation, 2012) is modelled blank.",
-  "rock_tag": "photo-derived/invented",
-  "rock_basis": "overall size and silhouette (about 7.6 x 3 x 2.9 m; tall perforated east end standing on legs, long low west end with a raised head) from jiaoxuelou-1600 and campus_taihushi; individual holes and crags are procedural (seeded) and not the real ones; length scaled to about 7.3 m and centre moved 0.4 m west after the hero-2560 camera fit",
-  "rock_scale": [
-   0.9,
-   1.0,
-   1.0
-  ]
+  "inscription_basis": "text read on jiaoxuelou-1600 (running-script calligraphy, 8 characters, signed); typeface substituted. Panels placed with the calibrated jiaoxuelou-1600 camera: the inscription on the raised middle slab (x -1.5..1.4), the alumni donation (2012) on the west end slab (x -3.95..-3.3), modelled blank; the phase-1 model had them the other way round.",
+  "rock_tag": "photo-derived/estimated",
+  "rock_basis": "carved from its outlines on two calibrated photographs (jiaoxuelou-1600: camera fitted on 11 lines of the portal, tower and plinth, 1.6 px rms; hero-2560), twin/evidence/calibration/taihu-silhouettes.json and tools/taihu_carve.py: outline seen from the north within about 0.05 m (overlap with the traced outlines 0.93 and 0.86), seven photographed holes and caves drilled where they are on jiaoxuelou-1600; depth (about 3 m) is an inflation of the outline about the middle of the bed, not observed; the division into rounded masses (seeded Voronoi cells with crevices), lumps, creases and pits are procedural and not the real ones. About 7.7 x 3.1 x 3.1 m above the lawn.",
+  "rock_silhouettes": "evidence/calibration/taihu-silhouettes.json",
+  "rock_res": 0.035
  },
  "placements": {
   "yihao": {

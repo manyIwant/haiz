@@ -187,6 +187,7 @@ CAMERAS = {
     # cameras (CALIBRATED) when the calibration report exists
     'lanshu':    ((49.8, 22.75, 1.27), (31.9, 5.7, 4.6), 26.0),
     'taihushi':  ((0.6, 41.0, 1.7), (0.3, 28.4, 1.9), 30.0),
+    'jiaoxuelou':((-5.0, 41.7, 1.78), (0.0, 28.0, 2.5), 30.0),
     'gate_n':    ((0.0, 119.8, 1.52), (0.0, 0.0, 1.52), 36.0 * 2036 / 2560),
     'gate_obl':  ((-14.0, 128.0, 4.5), (0.0, 106.0, 4.5), 30.0),
     'yanchi':    ((28.0, -105.0, 1.75), (50.0, -121.0, 2.5), 22.0),
@@ -195,7 +196,8 @@ CAMERAS = {
 # principal-point offsets (Blender shift_x, shift_y) for cameras matched to cropped photographs
 CAMERA_SHIFT = {'gate_n': (0.0, (1075 - 673.5) / 2560)}
 # cameras recovered from photographs by twin/tools/calib.py; they replace the approximate entries above
-CALIBRATED = {'gate_n': 'evidence/calibration/hero-2560', 'lanshu': 'evidence/calibration/lanshu-1600'}
+CALIBRATED = {'gate_n': 'evidence/calibration/hero-2560', 'lanshu': 'evidence/calibration/lanshu-1600',
+              'jiaoxuelou': 'evidence/calibration/jiaoxuelou-1600'}
 
 
 def calibrated_camera(sc, name, stem, sensor=36.0):
