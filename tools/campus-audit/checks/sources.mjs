@@ -51,6 +51,8 @@ export function run(S) {
   if (!bad) out.push(finding(C, 'pass', 'derived fields', `size, _u/_v/_w/_d and floors×floorH agree with the plan rect for all ${c.buildings.length} buildings (±0.15 m)`));
 
   // Blender V3 GLB anchors (SITE_<id>) are placed at campus-metre centres
+  if (!S.campusJs || !S.buildings) out.push(finding(C, 'skip', 'copies', 'copy comparison not run for a missing copy (see load)'));
+  if (!S.glb) out.push(finding(C, 'skip', 'glb', 'Blender V3 anchor check not run: GLB missing (see load)'));
   if (S.glb) {
     const sites = S.glb.filter((n) => n.name.startsWith('SITE_'));
     let ok = 0;
@@ -71,6 +73,7 @@ export function run(S) {
   }
 
   // collider dump used by the life tests
+  if (!S.colliders) out.push(finding(C, 'skip', 'colliders', 'collider cross-check not run: fixture missing'));
   if (S.colliders) {
     const pv = (() => { const t = c.buildings.find((b) => b.id === 'lanshu'); const f = rectToFootprint(t.rect, tf); return { x: f.cx, z: f.cz }; })();
     let far = 0, n = 0;

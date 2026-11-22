@@ -2,6 +2,8 @@
 
 2026-11-22 · 审计基线 `main@b7ad45d` · 工具 [`tools/campus-audit/`](../../tools/campus-audit/README.md) · 机器输出 [`audit-output.md`](audit-output.md)
 
+> **适用范围：** 本报告是对仓库内数据的一致性和证据标注审查，**不是实地测绘验收**。目前只有 6 个影像控制点，RMS 为 8.9 m，影像拍摄日期也不明，这些依据**不足以支持“1:1 精确复刻”的说法**。具体误差和不确定性见第三节。
+
 ## 一、结论
 
 1. **仓库里没有任何实测数据。** 校园平面声称来自“UTM Measure 实测平面图导出 KML（no_project2.xml）”，但这份 KML 和坐标转换脚本都不在仓库中，`meta.verification.status` 也早已写明 `legacy-derived-unverified`。因此本审计没有给任何空间内容打 `surveyed` 标签，工具也会拒绝任何缺少原始文件的“实测”标注。
@@ -24,7 +26,7 @@
 | `assets/cinematic/aligned/*` | 六级 Esri 影像，以及高德坐标的 WGS84 近似反算 | Esri World Imagery；OSM way 1127981105 交叉核对 | **public-map**（拍摄日期不明） |
 | `lanren/roots/history.js` | 校史节点和照片 | 新闻、维基、百科、官网 | 每个节点自带分级 |
 
-完整的逐项标签见 [`audit-output.md`](audit-output.md) 末尾的可信度表（208 条，分属 54 个对象：public-map 10、estimated 143、invented 24、documented 31、surveyed 0）。标注规则保存在 [`data/campus-credibility.json`](../../data/campus-credibility.json)。
+完整的逐项标签见 [`audit-output.md`](audit-output.md) 末尾的可信度表（806 条，分属 353 个对象：public-map 10、estimated 143、invented 622、documented 31、surveyed 0）。300 个树点逐点各占一行，在 `audit-output.json` 中逐条列出，Markdown 表里按标签合并显示。它们共用同一条 invented 依据，**没有任何一个树点被追溯到真实的树**。标注规则保存在 [`data/campus-credibility.json`](../../data/campus-credibility.json)。
 
 ## 三、与公开影像比对
 
@@ -79,15 +81,17 @@
 2. **增加控制点。** 现在只有 6 个点。在影像上再判读 10–15 个低层建筑的角点（而不是中心），RMS 能更真实地反映误差，比例也能确定到 ±1%。
 3. **引入 OSM 建筑轮廓。** 当前环境访问 Overpass 和 OSM API 被网络策略拒绝。有网络时可以下载 way 1127981105 周边的建筑轮廓（ODbL），作为第二个公开来源。轮廓保存为 `data/reference/osm-*.geojson`，比较方法与控制点相同，并注明署名。
 4. **处理第四节的问题 1–3**（砚池、球场、连廊）。每项都应附上影像或照片截图作为依据，修改后重新运行审计。
-5. **把审计接入 CI。** 推荐运行 `node tools/campus-audit/audit.mjs`（有 error 时失败）和 `node --test tools/campus-audit/test/*.test.mjs`。这一步由负责测试和工作流的线程决定，本线程没有修改 `package.json` 或 workflow 文件。
+5. **CI 已接入**（审查后补充）。新增独立的 `.github/workflows/campus-audit.yml`，只在相关路径发生改动时触发，依次运行单元测试和审计；缺少必需数据源同样会失败。没有修改任何已有的 workflow 或 `package.json`。
 6. **新的三维重建应沿用这套标签。** 新模型的每栋楼都应在 `data/campus-credibility.json` 里登记位置、占地、高度、立面各自的依据。
+7. **继续提高 `surveyed` 的门槛。** 目前要求原始文件能被解析，并附带 method、date、surveyor、accuracy 四项元数据。以后可以进一步要求注明坐标参考系（CRS），并且用控制点复核测量结果。
 
 ## 七、验证记录
 
 **实际执行过的验证**（2026-11-22，云端容器，Node v22.23.5）：
 
-- `node tools/campus-audit/audit.mjs`：0 error、17 warning、14 info、19 pass，退出码 0。
-- `node --test tools/campus-audit/test/*.test.mjs`：11 项全部通过。其中包括用合成数据验证重叠、断网、树点穿墙、缺少原始文件的 surveyed 标注、未知标签和措辞扫描都会被正确识别，也包括对真实仓库运行一遍无 error。
+- `node tools/campus-audit/audit.mjs`：0 error、17 warning、0 skip、15 info、20 pass，退出码 0。
+- `node --test tools/campus-audit/test/*.test.mjs`：14 项全部通过。合成数据用例验证了以下情况都会被正确识别：建筑重叠、路网断开、树点穿墙、缺少原始文件的 surveyed 标注、空 `{}` 冒充测量文件、缺少测量元数据、未知标签、措辞问题。fail closed 用例验证了：缺少任一必需数据源会报 error；`--allow-incomplete` 模式下结果标为 INCOMPLETE；从真实仓库复制一份、删掉 V3 GLB 或某一张影像后都会报 error。最后对真实仓库运行一遍，没有 error。
+- 审查后补充（fail closed、CI、逐树标注、surveyed 格式校验）：已在本地运行审计和全部测试。新 workflow 在 GitHub 上的运行结果以 PR 页面的检查结果为准。
 - `node tools/campus-audit/capture.mjs`：用 Playwright 和 Chromium 生成两张叠加截图，页面没有报错。
 - GCJ-02 反算结果与 `manifest.json` 中已有的 WGS84 取景点相差 1.4 m，两次独立推导互相印证。
 

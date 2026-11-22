@@ -18,6 +18,7 @@ export function run(S) {
   // 1. Two legacy anchors (GCJ-02). Only their relative geometry is used.
   const A = c.anchors;
   const south = c.buildings.find((b) => b.id === 'nanmen');
+  if (!(A?.center && A?.southGate && south)) out.push(finding(C, 'warn', 'anchors', 'anchor comparison not run: campus.json has no anchors.center / anchors.southGate or no nanmen'));
   if (A?.center && A?.southGate && south) {
     const w0 = gcjToWgs(A.center), w1 = gcjToWgs(A.southGate);
     const shift = distance(A.center, w0);
@@ -32,7 +33,11 @@ export function run(S) {
 
   // 2. Control points on the imagery tile
   const cp = S.controlPoints, man = S.imagery;
+  if (!cp || !man) out.push(finding(C, 'skip', 'imagery', 'imagery fit not run: control points or imagery manifest missing (see load)'));
   if (cp && man) {
+    if (!man.layers.some((l) => l.name === cp.layer)) out.push(finding(C, 'error', 'imagery', `control points name layer '${cp.layer}', which the manifest does not have`));
+  }
+  if (cp && man && man.layers.some((l) => l.name === cp.layer)) {
     const layer = man.layers.find((l) => l.name === cp.layer);
     const src = [], dst = [], used = [];
     for (const p of cp.points) {
@@ -42,6 +47,7 @@ export function run(S) {
       const g = imagePixelToGround(p.u, p.v, layer.bounds, layer.pixels);
       src.push(modelEN(f.cx, f.cz)); dst.push([g.e, g.n]); used.push(p);
     }
+    if (used.length < 3) out.push(finding(C, 'error', 'imagery', `only ${used.length} usable control points; a similarity fit with residuals needs at least 3`));
     if (used.length >= 3) {
       const fit = fitSimilarity(src, dst);
       const rotDeg = (fit.rot * 180) / Math.PI;

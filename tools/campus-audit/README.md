@@ -7,6 +7,7 @@ node tools/campus-audit/audit.mjs            # 打印检查结果；有 error �
 node tools/campus-audit/audit.mjs --strict   # warning 也会让退出码为 1
 node tools/campus-audit/audit.mjs --write    # 写入 docs/campus-audit/audit-output.{md,json}
 node tools/campus-audit/audit.mjs --json     # 输出机器可读的完整结果
+node tools/campus-audit/audit.mjs --allow-incomplete   # 缺少必需数据源时仍继续运行：结果标为 INCOMPLETE，退出码不为 0
 node --test tools/campus-audit/test/*.test.mjs   # 单元测试，同时对当前仓库跑一遍校验
 node tools/campus-audit/capture.mjs          # 用 Playwright 生成影像叠加截图（需要 Chromium）
 ```
@@ -24,6 +25,12 @@ node tools/campus-audit/capture.mjs          # 用 Playwright 生成影像叠加
 | `georef` | 旧的高德（GCJ-02）锚点与模型的距离和方位；用人工判读的影像控制点做最小二乘相似变换拟合，求旋转、比例、残差，并做留一法检验 | `assets/cinematic/aligned/manifest.json`、`control-points.json` |
 | `credibility` | 把 `data/campus-credibility.json` 展开到每一个要素；没有在仓库中引用原始测绘文件就标为 `surveyed` 的条目一律判为 **error**；检查引用的文件是否存在；扫描访客页面和数据中未加限定的“实测 / 测绘 / surveyed / measured”措辞 | `data/campus-credibility.json`、若干页面 |
 
+**缺少必需数据时直接失败（fail closed）。** 以下数据源是必需的：`campus.json`、`campus-data.js`、`data/buildings.json`、`data/campus-sports.json`、`lanren/life/places.js`、Blender V3 GLB、影像 manifest 及其引用的每一张影像、`control-points.json`、`data/campus-credibility.json`。其中任何一个读取失败都会报 `error`，依赖它的检查会显示为 `skip`，不会悄悄跳过。碰撞体样本和校史数据是可选数据源，缺失时只报 `warn`。
+
+**适用范围。** 这是对仓库内数据的一致性和证据标注审查，**不是实地测绘验收**。通过审查不代表模型与校园 1:1 吻合。
+
+CI：`.github/workflows/campus-audit.yml` 只在相关路径发生改动时触发，会依次运行单元测试和审计，出现任何 error 都会失败。
+
 严重程度说明：`error` 表示数据自相矛盾，或把内容冒充为实测；`warn` 表示需要人工核实；`info` 表示背景说明；`pass` 表示检查通过。
 
 ## 可信度标签
@@ -36,7 +43,12 @@ node tools/campus-audit/capture.mjs          # 用 Playwright 生成影像叠加
 | `invented` | 为体验而创作，没有空间依据 |
 | `documented` | 名称、用途等非空间事实，来自公开文献 |
 
-以后如果加入真实测绘，请先把原始文件提交到仓库，例如 `data/survey/…`，再在 `data/campus-credibility.json` 中把对应条目改为 `surveyed`，并在 `sources` 里写明该文件的路径。
+以后如果加入真实测绘，请先把原始文件提交到仓库，例如 `data/survey/…`，再在 `data/campus-credibility.json` 中把对应条目改为 `surveyed`，并同时满足以下两点：
+
+- 在 `sources` 里写明该文件的路径。文件必须能被解析为测量数据：GeoJSON 或 KML 中要有数值坐标，CSV 至少要有两行数值，LAS、E57、PLY、DWG 要带有各自的格式签名。空的 `{}` 不算测量数据。
+- 写上 `"survey": {"method", "date", "surveyor", "accuracy"}`，缺少任何一项都会报 error。
+
+树点按每个点单独展开（`tree-0` 到 `tree-299`），所以可以对单个树点单独覆盖标签。但目前 300 个点共用同一条依据（invented），没有任何一棵树与真实的树一一对应过。
 
 ## 控制点
 

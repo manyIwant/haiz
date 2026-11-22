@@ -21,6 +21,14 @@ export const SOURCES = {
   controlPoints: 'tools/campus-audit/control-points.json'
 };
 
+/**
+ * Sources an acceptance-level audit cannot do without. If one is missing the audit reports an
+ * error (fail closed) unless it is run with { allowIncomplete: true }, which marks the whole
+ * result INCOMPLETE. The rest only add cross-checks.
+ */
+export const REQUIRED = ['campus', 'campusJs', 'buildings', 'sports', 'places', 'glb', 'imagery', 'controlPoints', 'credibility'];
+export const OPTIONAL = ['colliders', 'history'];
+
 export function readJson(rel, root = ROOT) {
   return JSON.parse(fs.readFileSync(p(rel, root), 'utf8'));
 }
@@ -55,16 +63,21 @@ export async function importModule(rel, root = ROOT) {
 export async function loadAll(root = ROOT) {
   const out = { root, missing: [] };
   const opt = async (key, fn) => {
-    try { out[key] = await fn(); } catch (e) { out[key] = null; out.missing.push({ source: SOURCES[key], error: String(e.message || e) }); }
+    try { out[key] = await fn(); } catch (e) { out[key] = null; out.missing.push({ key, source: SOURCES[key], required: REQUIRED.includes(key), error: String(e.message || e) }); }
   };
-  out.campus = readJson(SOURCES.campus, root);
+  await opt('campus', () => readJson(SOURCES.campus, root));
   await opt('campusJs', () => readCampusJs(SOURCES.campusJs, root));
   await opt('buildings', () => readJson(SOURCES.buildings, root));
   await opt('sports', () => readJson(SOURCES.sports, root));
   await opt('places', () => importModule(SOURCES.places, root));
   await opt('glb', () => readGlbNodes(SOURCES.glb, root));
   await opt('colliders', () => readJson(SOURCES.colliders, root));
-  await opt('imagery', () => readJson(SOURCES.imagery, root));
+  await opt('imagery', () => {
+    const m = readJson(SOURCES.imagery, root);
+    // the manifest is useless without the imagery it describes
+    for (const l of m.layers || []) if (!exists(l.path, root)) throw new Error('imagery layer file missing: ' + l.path);
+    return m;
+  });
   await opt('history', () => importModule(SOURCES.history, root));
   await opt('credibility', () => readJson(SOURCES.credibility, root));
   await opt('controlPoints', () => readJson(SOURCES.controlPoints, root));
