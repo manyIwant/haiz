@@ -50,7 +50,7 @@ def triggers(doc):
 
 
 def check(path):
-    rel = str(path.relative_to(ROOT))
+    rel = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
     out = {"file": rel, "failures": [], "warnings": []}
     try:
         doc = yaml.safe_load(path.read_text(encoding="utf-8"))
