@@ -148,8 +148,9 @@ def build(coll):
         g = G('steps.' + st['id'], st['tag'], st['basis'])
         zt, zb = LV[st['from']], LV[st['to']]
         for x0, x1 in st['runs']:
-            arch.stairs(g, 'stone.granite.red', x0, x1, st['y_edge'], zb, zt, n=st['risers'], tread=st['tread'],
-                        direction=st.get('direction', 1), side_mat='stone.granite.red')
+            mat = st.get('mat', 'stone.granite.red')
+            arch.stairs(g, mat, x0, x1, st['y_edge'], zb, zt, n=st['risers'], tread=st['tread'],
+                        direction=st.get('direction', 1), side_mat=mat)
 
     # planters + hedges along the wing fronts
     for h in SITE['hedges']:

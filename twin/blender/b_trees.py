@@ -25,13 +25,16 @@ def lanren():
     env = nature.Envelope(L['envelope']['poly'], L['envelope']['z_bottom'], L['envelope']['z_top_centre'],
                           L['envelope']['z_top_edge'], centre=L['envelope'].get('centre'))
     tree = nature.BroadleafTree(L['limbs'], env, seed=1923, habit='tiered', leaf_mats=TERMINALIA_LEAVES,
-                                bark='bark.terminalia', spacing=1.05, twig_spacing=0.32, rosette_step=0.2,
-                                leaf_len=0.27, leaf_w=0.15, n_leaves=6, min_spawn_z=3.0).grow()
+                                bark='bark.terminalia', spacing=0.9, twig_spacing=0.26, rosette_step=0.16,
+                                leaf_len=0.27, leaf_w=0.15, n_leaves=7, min_spawn_z=2.4,
+                                sec_max=6.0, wiggle=0.6).grow()
     tx, ty = L['trunk_xy']
     wood, leaves = tree.geo(flare=nature.buttress(L['ground_z'], amount=0.6, height=0.9, seed=3))
     parts = {'lanren.wood': (wood, L['tag'], L['basis'], 60.0), 'lanren.leaves': (leaves, L['tag'], 'procedural leaf rosettes (seeded) inside the mapped crown; habit from lanshu-1600', None)}
     for i, b in enumerate(L['boulders']):
-        g = nature.boulder(b['seed'], tuple(b['size']), lean=tuple(b.get('lean', (0, 0))))
+        s = min(b['size'])            # finer voxels, blend radius and noise for small stones
+        g = nature.boulder(b['seed'], tuple(b['size']), res=min(0.05, max(0.015, s / 14)), lean=tuple(b.get('lean', (0, 0))),
+                           foot=b.get('foot', 1.1), k=min(0.25, 0.3 * s), noise=0.05 * min(1.0, s))
         M = Matrix.Translation((b['xy'][0], b['xy'][1], b['z'] - 0.03)) @ Matrix.Rotation(math.radians(b.get('rot_deg', 0)), 4, 'Z')
         parts[f'lanren.boulder.{i}'] = (g.transformed(M), b['tag'], b['basis'], 50.0)
     return parts, tree.stats()

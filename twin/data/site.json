@@ -411,44 +411,48 @@
    "geom": {
     "poly": [
      [
-      27.6,
-      11.0
+      35.8,
+      16.0
      ],
      [
-      29.4,
-      9.6
+      37.0,
+      14.8
      ],
      [
-      32.4,
-      9.8
+      39.4,
+      14.6
      ],
      [
-      34.6,
-      11.4
+      41.6,
+      15.4
      ],
      [
-      34.8,
-      14.2
+      42.4,
+      17.2
      ],
      [
-      33.0,
-      16.4
+      41.8,
+      19.4
      ],
      [
-      30.0,
-      16.6
+      39.6,
+      20.1
      ],
      [
-      27.8,
-      15.0
+      37.0,
+      19.8
+     ],
+     [
+      35.7,
+      18.4
      ]
     ]
    },
    "level": "plaza",
-   "mat": "ground.mulch",
+   "mat": "plant.groundcover",
    "raise": 0.12,
    "tag": "photo-derived/estimated",
-   "basis": "planting bed with ground cover and set stones round the trunk, flush-to-low edge (lanshu-1600, aerial_campus dark blob at (27..31, 14)); outline estimated"
+   "basis": "planting bed with ground cover, moss and set stones round the trunk (lanshu-1600: ground cover from the root flare to the right edge of the picture, while the boulders to the east stand on paving); centred on the trunk position calibrated on lanshu-1600, kept clear of the side-plaza steps at y 20.5; outline estimated"
   }
  ],
  "hedges": [
@@ -571,7 +575,8 @@
    "tread": 0.35,
    "direction": 1,
    "tag": "photo-derived/estimated",
-   "basis": "steps down from the side plaza in the foreground of lanshu-1600; light strip along the side plaza's north edge on aerial_campus; full-length flight assumed"
+   "basis": "steps down from the side plaza in the foreground of lanshu-1600 (grey stone, three risers); light strip along the side plaza's north edge on aerial_campus; full-length flight assumed. Back-projected with the calibrated lanshu-1600 camera the top nosing lies at y 19.8-20.2 (if the plaza is at z 0.60) and the treads look 0.2-0.3 m deep; at this grazing angle 0.1 m of level error moves the edge by about 0.7 m, so the edge is left at y 20.5 and listed for checking",
+   "mat": "stone.granite.grey"
   },
   {
    "id": "side_w_n",
@@ -588,7 +593,8 @@
    "tread": 0.35,
    "direction": 1,
    "tag": "estimated",
-   "basis": "mirrored from the east side"
+   "basis": "mirrored from the east side",
+   "mat": "stone.granite.grey"
   }
  ]
 }

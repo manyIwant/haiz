@@ -93,15 +93,17 @@ def taihu_rock(seed=1923, res=0.05):
                     k=0.28, mat='stone.limestone.taihu')
 
 
-def boulder(seed, size=(1.5, 1.2, 2.1), res=0.05, mat='stone.rock.boulder', lean=(0.0, 0.0)):
-    """Rounded upright field boulder centred on the origin, base at z = 0."""
+def boulder(seed, size=(1.5, 1.2, 2.1), res=0.05, mat='stone.rock.boulder', lean=(0.0, 0.0), foot=1.1, k=0.25, noise=0.05):
+    """Rounded upright field boulder centred on the origin, base at z = 0.  foot scales the width of
+    the lowest lobe (above 1: spreading base; below 1: bulging body on a narrower foot).  For small
+    stones pass a finer res and proportionally smaller k (blend radius) and noise."""
     sx, sy, sz = size
     rng = np.random.default_rng(seed)
     blobs = [(0.0, 0.0, sz * 0.42, sx * 0.5, sy * 0.5, sz * 0.45),
              (lean[0] * sz, lean[1] * sz, sz * 0.7, sx * 0.4, sy * 0.42, sz * 0.32),
-             (rng.uniform(-0.1, 0.1) * sx, rng.uniform(-0.1, 0.1) * sy, sz * 0.2, sx * 0.55, sy * 0.5, sz * 0.25)]
+             (rng.uniform(-0.1, 0.1) * sx, rng.uniform(-0.1, 0.1) * sy, sz * 0.2, sx * 0.5 * foot, sy * 0.45 * foot, sz * 0.25)]
     m = max(sx, sy) * 0.8
-    return sdf_rock(blobs, (-m, m, -m, m, -0.05, sz * 1.15), res, seed, noise=0.05, ridges=0.0, k=0.25, mat=mat)
+    return sdf_rock(blobs, (-m, m, -m, m, -0.05, sz * 1.15), res, seed, noise=noise, ridges=0.0, k=k, mat=mat)
 
 
 # ======================================================================================
@@ -278,7 +280,7 @@ class BroadleafTree:
 
     def __init__(self, limbs, envelope: Envelope, seed=1, habit='tiered', leaf_mats=None, bark='bark.generic',
                  spacing=1.2, twig_spacing=0.55, rosette_step=0.38, leaf_len=0.24, leaf_w=0.13, n_leaves=7,
-                 min_spawn_z=2.6):
+                 min_spawn_z=2.6, sec_max=8.0, wiggle=1.0):
         self.limbs = limbs
         self.env = envelope
         self.rng = np.random.default_rng(seed)
@@ -289,6 +291,7 @@ class BroadleafTree:
         self.spacing, self.twig_spacing, self.rosette_step = spacing, twig_spacing, rosette_step
         self.leaf_len, self.leaf_w, self.n_leaves = leaf_len, leaf_w, n_leaves
         self.min_spawn_z = min_spawn_z
+        self.sec_max, self.wiggle = sec_max, wiggle     # longest secondary limb (m); scale of the sideways bow
         self.branches = []           # list of (nodes (N,4), level)
         self.leaf_pts, self.leaf_up = [], []
 
@@ -304,8 +307,8 @@ class BroadleafTree:
         hn = np.linalg.norm(horiz)
         horiz = horiz / hn if hn > 1e-6 else np.array([1.0, 0.0, 0.0])
         side = np.cross([0, 0, 1.0], horiz)
-        wig = self.rng.uniform(-0.15, 0.15)
-        w2, w3 = self.rng.uniform(-0.06, 0.06, 2)
+        wig = self.rng.uniform(-0.15, 0.15) * self.wiggle
+        w2, w3 = self.rng.uniform(-0.06, 0.06, 2) * self.wiggle
         for i in range(n):
             t = i / (n - 1)
             p = p0 + d * L * t
@@ -389,7 +392,7 @@ class BroadleafTree:
             dd = self._dir(az, el)
             reach = self.env.reach(p[:3], dd, 9.0)
             if reach > 1.2:
-                Lb = min(reach * self.rng.uniform(0.75, 0.98), 8.0)
+                Lb = min(reach * self.rng.uniform(0.75, 0.98), self.sec_max)
                 r0 = max(0.025, min(p[3] * 0.5, 0.025 + 0.016 * Lb))
                 Q = self._grow(p[:3], dd, Lb, r0, level + 1, upturn=0.25 if self.habit == 'tiered' else 0.1,
                                sag=0.06 if Lb > 4 else 0.0)
