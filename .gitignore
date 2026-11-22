@@ -67,3 +67,4 @@ backend/cloudflare/.generated/
 /docs/lanren/**/frames/
 /docs/lanren/**/raw-frames/
 
+/test-results/

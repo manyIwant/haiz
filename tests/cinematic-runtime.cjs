@@ -11,7 +11,7 @@ async function run({reduced=false,noWebGL=false,handshake=true}={}){
   const context={window,document,console:{...console,warn(){}},THREE:{...Base,WebGLRenderer:Renderer,TextureLoader:class{load(path,done){assert(fs.existsSync(path),path);done(new Base.DataTexture(new Uint8Array([1,2,3,255]),1,1));}}},
     location:{origin:'https://test.invalid',search:'',href:''},parent:{},matchMedia:()=>({matches:reduced}),
     // Browsers always expose navigator; saveData keeps this run on the six bundled layers (no network).
-    navigator:{connection:{saveData:true,effectiveType:'4g'}},innerWidth:1440,innerHeight:900,devicePixelRatio:1,performance:{now:()=>now},URLSearchParams,setTimeout:(fn,ms,...a)=>(!handshake&&ms>=14000?setImmediate(fn,...a):setTimeout(fn,ms,...a)),clearTimeout:t=>{clearTimeout(t);clearImmediate(t);},requestAnimationFrame:fn=>raf.push(fn)};
+    navigator:{connection:{saveData:true,effectiveType:'4g'}},innerWidth:1440,innerHeight:900,devicePixelRatio:1,performance:{now:()=>now},URLSearchParams,setTimeout:(fn,ms,...a)=>{if(!handshake&&ms>=14000)return setImmediate(fn,...a);const t=setTimeout(fn,ms,...a);if(ms>=14000)t.unref();return t;},clearTimeout:t=>{clearTimeout(t);clearImmediate(t);},requestAnimationFrame:fn=>raf.push(fn)};
   vm.createContext(context);for(const path of ['assets/cinematic/aligned/manifest.js','assets/cinematic/descent-core.js','assets/cinematic/descent.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
   const $=id=>document.getElementById(id);
