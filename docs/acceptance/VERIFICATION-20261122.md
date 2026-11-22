@@ -44,18 +44,30 @@ Mobile warnings worth a design look (not failures): the shared top navigation on
   only when the network is available. The check now blocks third-party hosts, so it covers this
   checkout only and gives the same result online and offline.
 - **Six-act home suite (`rings-qa.yml` → `tests/home-browser.cjs`), the red check on #84, #88 and #89.**
-  Two separate timing bugs in the test, both fixed in `tests/`:
-  1. *Leaf catch:* the test placed the leaf in front of the camera as soon as `End` switched the section,
-     but the camera flight to 06 was still running on SwiftShader. The leaf drifted off the click point.
-     The test now waits for the camera to arrive (p≈5), as the news step already did.
-  2. *Exit to news.html:* timeline added to the test. On CI the click returns at 68 s and the 'map' exit
-     reaches `location.href` at about 150 s, past the 120 s limit. Nothing was stuck. The step now waits
-     up to 300 s for the navigation to commit and prints the timeline on every run.
-  After both fixes the suite passed on CI (run 44990831008). PRs #84, #88 and #90 need these
-  `tests/home-browser.cjs` changes, either by merging this PR first or by taking the file.
+  It failed at a different step on almost every run. Each step was traced (timeline/diagnostic
+  output was added to the test) and fixed in `tests/` only:
+  1. *End key never reached 06.* Reproduced locally: `scrollY` stayed frozen for 140 s. Chrome animates
+     keyboard scrolling frame by frame. At SwiftShader's multi-second frames, ScrollTrigger's snap
+     (0.1 s delay) treats every pause as the end of the scroll and snaps back to 05. Launching with
+     `--disable-smooth-scrolling` makes End land on 06 at once. The page's own snapping is unchanged.
+  2. *Leaf catch at 06.* The test released the leaf 6 m in front of the camera. At 06 the litter's
+     ground heightfield reads 25.6 m at the camera and 13.6 m at that point, so the leaf "landed" on
+     its first frame (falling 0, settled 1, on CI and locally). The test now releases the leaf at the
+     first point along the view that is above that surface, holds it still, and waits for the camera
+     to arrive first.
+  3. *Keeping the leaf.* `#specKeep` never passed Playwright's "stable" check (the dialog's open
+     animation over a blurred WebGL backdrop). The test now clicks the visible, modal button with
+     `force` and waits for the book count.
+  4. *Exit to news.html.* On CI the click returns at 68 s and `location.href` fires at about 150 s,
+     past the old 120 s limit. Nothing was stuck. The test now waits up to 300 s for the navigation
+     to commit. Locally it took 38 s.
+  5. The orbit-dot click got the suite's 90 s click budget (it took 40 s locally against a 30 s default).
+  **The whole suite passes in this 4-CPU cloud container** (`PASS home-browser`, all 8 steps), which it
+  never did before. PRs #84, #88 and #90 need this file, either by merging #89 first or by taking
+  `tests/home-browser.cjs` from it.
 
 ## 报告给负责人 · Reported, not changed (outside this scope)
 
 1. **Descent play button waits for the campus.** `assets/cinematic/descent.js` says the campus “never gates the play button”, but `boot()` awaits the campus handshake or a 14 s timeout before enabling play. On a slow phone the opening can sit disabled for up to 14 s. The test now pins today's behaviour on both paths; whoever owns the descent should decide which is intended.
 2. **3 backend tests fail on main**: they request `/world/flow/`, which only exists on unmerged branches (e.g. `feat/haiz-campus-operations`). `haiz-backend.yml` runs only when backend files change, so this stays hidden until then.
-3. **`tests/home-browser.cjs` is still slow on this container** (SwiftShader frames take 1.7–2.9 s, clicks take about 40 s), so it cannot finish here. The CI failures are explained and fixed above.
+3. **Possible low-frame-rate product issue (for the homepage owner):** at a few frames per second, ScrollTrigger's 0.1 s snap delay can undo keyboard scrolling (End / PageDown), as item 1 above shows. It is unlikely on normal devices, but a very slow phone could hit it.
