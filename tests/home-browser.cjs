@@ -20,7 +20,11 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
 (async () => {
   await new Promise((r) => server.listen(0, r));
   const base = 'http://127.0.0.1:' + server.address().port;
-  const browser = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
+  // --disable-smooth-scrolling: Chrome animates keyboard/smooth scrolls frame by frame. At SwiftShader's
+  // multi-second frames ScrollTrigger reads each pause as "scroll ended" and snaps back to the
+  // current station, so End never reached 06 (reproduced locally: scrollY frozen for 140 s; with
+  // the flag End lands on 06 at once). The page's own snapping and camera flights are unchanged.
+  const browser = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--disable-smooth-scrolling'] });
   const results = [];
   const errors = [];
   const ready = (page) => page.waitForFunction(() => document.body.classList.contains('ready'), null, { timeout: 240000 });
