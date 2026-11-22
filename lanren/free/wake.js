@@ -114,7 +114,7 @@ export function createWake({ renderer, world, layer }) {
   // grass: lean with the wake, flutter where it is agitated
   for (const L of world.grass.layers) {
     patch(L.mesh.material, 'grass', (sh) => {
-      const mark = 'lean += away / max(pd, 0.01) * smoothstep(0.9, 0.12, pd) * 1.7;';   // (an anchor in lanren/ruhua-stroll/grass.js, matched verbatim)
+      const mark = 'lean += away / max(pd, 0.01) * (1.0 - smoothstep(0.12, 0.9, pd)) * 1.7;';   // (an anchor in lanren/ruhua-stroll/grass.js, matched verbatim)
       if (!sh.vertexShader.includes(mark)) return;
       sh.vertexShader = inject(sh.vertexShader).replace(mark, mark + `
 {
