@@ -102,7 +102,10 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   });
   try {
     await Promise.all([
-      page.waitForURL(/news\.html$/, { timeout: 120000 }).then(() => mark('news.html load event')),
+      // Budget measured on GitHub's runner (#89, SwiftShader): click 68 s, veil + 'map' exit flight
+      // until location.href 81 s more, i.e. navigation at ~150 s; the old 120 s limit cut it off.
+      // 'commit' is the navigation this step is about; news.html's own load is covered by site tests.
+      page.waitForURL(/news\.html$/, { timeout: 300000, waitUntil: 'commit' }).then(() => mark('navigation to news.html committed')),
       page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 }).then(() => mark('click returned')),
     ]);
   } catch (e) {
