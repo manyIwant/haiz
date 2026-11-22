@@ -25,6 +25,12 @@ STOREY = 3.4
 
 # buildings modelled in detail elsewhere (Teaching Block 1 and its two links)
 SKIP = {'w1165596682@1', 'w1165596684@1', 'w1165596685@1'}
+# footprints left out because they contradict other evidence (recorded in the massing basis)
+DOUBTFUL = {
+    'w1444498512@1': 'OSM way 1444498512 (x 15..75, y 89..116) lies across the street and the campus boundary east of the '
+                     'North Gate, where the Esri layer shows street and trees; a large light roof or paved court that is not '
+                     'in OSM lies about 13 m further south (x 20..80, y 75..103). Left out until identified.',
+}
 # storey counts read on photographs (others: invented)
 KNOWN = {
     '2号教学楼': (5, 'photo-derived', 'five storeys of corridors on campus_erhao'),
@@ -159,20 +165,17 @@ def build(coll):
     import bpy
     from build import text_mesh
     zg = SITE['levels']['ground']
-    ext = box(*SITE['extent'])
     groups = {}
     school = Geo(); halls = Geo(); other = Geo()
     tags = {'campus.massing.school': [], 'campus.massing.context': []}
     n = 0
     for b in C['buildings']:
-        if b['record'] in SKIP:
+        if b['record'] in SKIP or b['record'] in DOUBTFUL:
             continue
         pts = ccw(b['poly'])
         P = Polygon(pts)
         if P.area < 15 or not P.is_valid:
             continue
-        if P.intersection(ext).area > 0.5 * P.area:
-            continue           # inside the detailed forecourt area (none expected)
         name = b.get('name')
         if name in HALLS:
             hall(halls, pts, zg)
@@ -186,7 +189,8 @@ def build(coll):
         n += 1
     groups['campus.massing.school'] = (school, 'public-map/invented', 'footprints from OSM / ODbL footprint dataset; heights: ' + '; '.join(tags['campus.massing.school'][:40]), None)
     groups['campus.halls'] = (halls, 'public-map/estimated', '凤栖堂 and 衍林堂: OSM footprints, single-storey green-roofed halls (campus_fengqitang); detail generic', None)
-    groups['campus.massing.context'] = (other, 'public-map/invented', 'buildings outside the school polygon: footprints only, 7 storeys assumed, neutral material', None)
+    groups['campus.massing.context'] = (other, 'public-map/invented', 'buildings outside the school polygon: footprints only, 7 storeys assumed, neutral material. Left out: '
+                                        + ' '.join(DOUBTFUL.values()), None)
     text = pond(groups)
     nf = 0
     for name, (g, tag, basis, smooth) in groups.items():
