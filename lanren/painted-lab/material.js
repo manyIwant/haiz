@@ -17,7 +17,8 @@
 //
 // Strength is per surface family (walls carry the most paint, foliage and grass the least: the leaf
 // atlas and the blades already carry their own marks). Everything here is visual; the geometry, the
-// surveyed anchors and the colliders are untouched.
+// campus data's place anchors (approximate, not a survey — see the spatial audit) and the colliders
+// are untouched.
 import * as THREE from 'three';
 import { celLike } from '../ruhua-stroll/atmos.js';
 
