@@ -227,3 +227,39 @@ test('tag vocabulary: photo-derived and combined a/b tags are valid, nonsense is
   assert.ok(validTag('photo-derived') && validTag('photo-derived/estimated') && validTag('photo-derived/public-map'));
   assert.ok(!validTag('photo') && !validTag('estimated/maybe') && !validTag(undefined));
 });
+
+// ------------------------------------------------------------- combined tags cannot dodge the survey checks
+for (const tag of ['surveyed/estimated', 'photo-derived/surveyed', 'public-map/surveyed/invented']) {
+  test(`combined tag ${tag}: no source, no metadata or the wrong object are errors (non-zero exit)`, async () => {
+    let R = await partial(fixture((c, cred) => { cred.items.a = { position: { tag, sources: [] } }; }));
+    assert.ok(has(R, 'credibility', 'error', /a\.position.*no raw survey file/), 'no cited file');
+    assert.ok(R.counts.error > 0);
+    R = await auditSurvey(await surveyPolygonAt('yihao'), { tag });
+    assert.ok(has(R, 'credibility', 'error', /yihao\.position.*without survey metadata/), 'missing metadata');
+    R = await auditSurvey(await surveyPolygonAt('canteen1'), { tag, survey: META });
+    assert.ok(has(R, 'credibility', 'error', /yihao\.position.*does not measure this object/), 'wrong object');
+    assert.ok(!has(R, 'credibility', 'pass', /yihao\.position/));
+    R = await auditSurvey('{}', { tag, survey: META });
+    assert.ok(has(R, 'credibility', 'error', /yihao\.position.*not usable survey data/), 'empty file');
+  });
+}
+
+test('combined tag with verifiable survey evidence is admissible, still with the not-a-certification note', async () => {
+  const R = await auditSurvey(await surveyPolygonAt('yihao'), { tag: 'photo-derived/surveyed', survey: META });
+  assert.equal(R.counts.error, 0);
+  const pass = R.findings.find((f) => f.check === 'credibility' && f.severity === 'pass' && /yihao\.position/.test(f.subject));
+  assert.ok(pass && /not an independent survey certification/.test(pass.message));
+});
+
+test('CLI exits non-zero for a combined surveyed tag without evidence', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const dir = copy(null);
+  const credFile = path.join(dir, 'data/campus-credibility.json');
+  const cred = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+  cred.items.yihao = { ...cred.items.yihao, position: { tag: 'surveyed/estimated', basis: 'claimed without evidence' } };
+  fs.writeFileSync(credFile, JSON.stringify(cred));
+  const cli = path.join(ROOT, 'tools/campus-audit/audit.mjs');
+  assert.equal(spawnSync(process.execPath, [cli, '--root', dir], { encoding: 'utf8' }).status, 1);
+  const clean = copy(null);
+  assert.equal(spawnSync(process.execPath, [cli, '--root', clean], { encoding: 'utf8' }).status, 0, 'the unmodified copy exits 0');
+});

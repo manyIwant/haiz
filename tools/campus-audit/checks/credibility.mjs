@@ -52,6 +52,8 @@ export function validateSurveyFile(file) {
 export const TAGS = ['surveyed', 'public-map', 'documented', 'photo-derived', 'estimated', 'invented'];
 export const validTag = (t) => typeof t === 'string' && t.split('/').every((p) => TAGS.includes(p.trim()));
 const primary = (t) => String(t).split('/')[0].trim();
+/** Any tag with a 'surveyed' part (surveyed, surveyed/estimated, photo-derived/surveyed …) claims measurement and gets the full survey checks. */
+export const claimsSurveyed = (t) => typeof t === 'string' && t.split('/').some((p) => p.trim() === 'surveyed');
 
 /** WGS84 [lat, lon] points in a GeoJSON / KML / GPX survey file, or null for formats that carry no geodetic coordinates we can read. */
 export function surveyLatLons(file) {
@@ -163,7 +165,7 @@ export function run(S) {
   for (const r of bad) out.push(finding(C, 'error', `${r.id}.${r.aspect}`, `unknown or missing tag '${r.tag}'`));
   // the one hard rule: "surveyed" needs a raw survey file in the repo that parses as survey data,
   // plus survey metadata (method, date, surveyor, accuracy) on the statement itself
-  for (const r of rows.filter((x) => x.tag === 'surveyed')) {
+  for (const r of rows.filter((x) => claimsSurveyed(x.tag))) {
     const subject = `${r.id}.${r.aspect}`;
     const cited = (r.sources || []).map((s) => s.split('#')[0]).filter((f) => SURVEY_EXT.test(f));
     if (!cited.length) { out.push(finding(C, 'error', subject, 'tagged surveyed but no raw survey file (kml/gpx/geojson/csv/dxf/las…) is cited; tag it estimated or public-map until the measurement is committed')); continue; }
@@ -190,7 +192,9 @@ export function run(S) {
   const count = {};
   for (const r of rows) count[primary(r.tag)] = (count[primary(r.tag)] || 0) + 1;
   if (!bad.length) out.push(finding(C, 'pass', 'coverage', `${rows.length} statements tagged across ${new Set(rows.map((r) => r.id)).size} subjects: ${TAGS.map((t) => `${t} ${count[t] || 0}`).join(', ')}`));
-  if (!count.surveyed) out.push(finding(C, 'info', 'surveyed', 'no statement is tagged surveyed: the repository holds no raw survey data (the legacy KML no_project2.xml and its conversion script are missing)'));
+  const anySurveyed = rows.filter((r) => claimsSurveyed(r.tag)).length;
+  if (anySurveyed && !count.surveyed) out.push(finding(C, 'info', 'surveyed', `${anySurveyed} statements carry surveyed only as a secondary part of a combined tag; each was checked as strictly as a plain surveyed tag`));
+  if (!anySurveyed) out.push(finding(C, 'info', 'surveyed', 'no statement is tagged surveyed: the repository holds no raw survey data (the legacy KML no_project2.xml and its conversion script are missing)'));
 
   // history chapter grades (already graded at source; summarised here)
   let history = null;

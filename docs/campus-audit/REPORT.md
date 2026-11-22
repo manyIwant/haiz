@@ -91,7 +91,7 @@
 **实际执行过的验证**（2026-11-22，云端容器，Node v22.23.5）：
 
 - `node tools/campus-audit/audit.mjs`：0 error、17 warning、0 skip、15 info、20 pass，退出码 0。
-- `node --test tools/campus-audit/test/*.test.mjs`：20 项全部通过（第二轮复审后新增：用别的建筑的测量文件不能让该建筑获得实测约束、无法核对的坐标参考系不予认可、通过时的提示写明哪些内容没有检查、photo-derived 和组合标签可以识别）。合成数据用例验证了以下情况都会被正确识别：建筑重叠、路网断开、树点穿墙、缺少原始文件的 surveyed 标注、空 `{}` 冒充测量文件、缺少测量元数据、未知标签、措辞问题。fail closed 用例验证了：缺少任一必需数据源会报 error；`--allow-incomplete` 模式下结果标为 INCOMPLETE；从真实仓库复制一份、删掉 V3 GLB 或某一张影像后都会报 error。最后对真实仓库运行一遍，没有 error。
+- `node --test tools/campus-audit/test/*.test.mjs`：25 项全部通过（第三轮复审后新增：组合标签中只要含 surveyed，就和单独的 surveyed 一样接受全部测绘检查，CLI 会以非零状态退出；第二轮复审后新增：用别的建筑的测量文件不能让该建筑获得实测约束、无法核对的坐标参考系不予认可、通过时的提示写明哪些内容没有检查、photo-derived 和组合标签可以识别）。合成数据用例验证了以下情况都会被正确识别：建筑重叠、路网断开、树点穿墙、缺少原始文件的 surveyed 标注、空 `{}` 冒充测量文件、缺少测量元数据、未知标签、措辞问题。fail closed 用例验证了：缺少任一必需数据源会报 error；`--allow-incomplete` 模式下结果标为 INCOMPLETE；从真实仓库复制一份、删掉 V3 GLB 或某一张影像后都会报 error。最后对真实仓库运行一遍，没有 error。
 - 审查后补充（fail closed、CI、逐树标注、surveyed 格式校验）：已在本地运行审计和全部测试。新 workflow 在 GitHub 上的运行结果以 PR 页面的检查结果为准。
 - `node tools/campus-audit/capture.mjs`：用 Playwright 和 Chromium 生成两张叠加截图，页面没有报错。
 - GCJ-02 反算结果与 `manifest.json` 中已有的 WGS84 取景点相差 1.4 m，两次独立推导互相印证。
