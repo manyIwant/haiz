@@ -12,14 +12,14 @@
   "site": {
    "file": "site.glb",
    "objects": 18,
-   "mb": 0.49,
-   "mb_uncompressed": 5.21
+   "mb": 0.79,
+   "mb_uncompressed": 8.72
   },
   "trees": {
    "file": "trees.glb",
-   "objects": 19,
-   "mb": 10.09,
-   "mb_uncompressed": 91.6
+   "objects": 21,
+   "mb": 11.55,
+   "mb_uncompressed": 105.36
   },
   "gate": {
    "file": "gate.glb",
@@ -31,7 +31,7 @@
    "file": "campus.glb",
    "objects": 10,
    "mb": 1.38,
-   "mb_uncompressed": 15.8
+   "mb_uncompressed": 15.78
   }
  }
 }

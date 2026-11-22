@@ -89,14 +89,22 @@ def instantiate(name: str, out, coll, root: Matrix, tag: dict | None = None):
         ob['haiz_basis'] = t.get('basis', '')
         n_faces += len(g.faces)
     meshes = {k: v.to_mesh(f'{name}.win.{k}') for k, v in out.protos.items()}
+    def tag_of(part):
+        t = out.tags.get(part) or {}
+        if t.get('tag'):
+            return t['tag'], t.get('basis', '')
+        return 'photo-derived/estimated', 'window units and lettering placed on the facade parts; see the tags of those parts'
+
     wins = bpy.data.objects.new(f'{name}.windows', None)
     coll.objects.link(wins)
     wins.parent = rootob
+    wins['haiz_tag'], wins['haiz_basis'] = tag_of('windows')
     for i, (proto, M, part) in enumerate(out.inst):
         ob = bpy.data.objects.new(f'{name}.{part}.{proto}.{i:03d}', meshes[proto])
         coll.objects.link(ob)
         ob.parent = wins
         ob.matrix_basis = M
+        ob['haiz_tag'], ob['haiz_basis'] = tag_of(part)
         n_faces += len(out.protos[proto].faces)
     for i, req in enumerate(getattr(out, 'texts', [])):
         me = text_mesh(req, f'{name}.text.{i}')
@@ -105,6 +113,7 @@ def instantiate(name: str, out, coll, root: Matrix, tag: dict | None = None):
         ob.parent = rootob
         ob.matrix_basis = req['M']
         ob['haiz_text'] = req['text']
+        ob['haiz_tag'], ob['haiz_basis'] = tag_of(req['part'])
     return rootob, n_faces
 
 
