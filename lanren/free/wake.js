@@ -38,7 +38,7 @@ vec4 wakeAt(vec2 xz) {
   vec2 uv = (xz - uWakeO) / uWakeS;
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return vec4(0.0, 0.0, 0.0, -1e4);
   vec4 w = texture2D(uWake, uv);
-  float edge = smoothstep(0.0, 0.06, uv.x) * smoothstep(1.0, 0.94, uv.x) * smoothstep(0.0, 0.06, uv.y) * smoothstep(1.0, 0.94, uv.y);
+  float edge = smoothstep(0.0, 0.06, uv.x) * (1.0 - smoothstep(0.94, 1.0, uv.x)) * smoothstep(0.0, 0.06, uv.y) * (1.0 - smoothstep(0.94, 1.0, uv.y));
   return vec4(w.xyz * edge, w.w);
 }
 `;
@@ -114,7 +114,7 @@ export function createWake({ renderer, world, layer }) {
   // grass: lean with the wake, flutter where it is agitated
   for (const L of world.grass.layers) {
     patch(L.mesh.material, 'grass', (sh) => {
-      const mark = 'lean += away / max(pd, 0.01) * smoothstep(0.9, 0.12, pd) * 1.7;';
+      const mark = 'lean += away / max(pd, 0.01) * smoothstep(0.9, 0.12, pd) * 1.7;';   // (an anchor in lanren/ruhua-stroll/grass.js, matched verbatim)
       if (!sh.vertexShader.includes(mark)) return;
       sh.vertexShader = inject(sh.vertexShader).replace(mark, mark + `
 {
@@ -150,7 +150,7 @@ export function createWake({ renderer, world, layer }) {
     wpv = modelMatrix * instanceMatrix * vec4(position, 1.0);
   #endif
   vec4 wk = wakeAt(wpv.xz);
-  float wnear = min(wk.z, 2.5) * smoothstep(5.0, 1.0, abs(wpv.y - wk.w));
+  float wnear = min(wk.z, 2.5) * (1.0 - smoothstep(1.0, 5.0, abs(wpv.y - wk.w)));
   gust += wnear * 0.9;
   transformed.xz += wk.xy * wnear * 0.05 * (0.4 + aData.g);
   transformed.y += sin(uTime * 19.0 + position.x * 7.0 + position.z * 5.0) * wnear * 0.04 * aData.g;`);

@@ -212,6 +212,7 @@ export function createRide(ctx) {
   }
 
   // ---------------------------------------------------------------- the bicycle
+  const BIKE_ROLL_MAX = 0.5;                                       // the bike body never rolls past 29°
   const BIKE = { cruise: 5.4, sprint: 8.0, max: 10, accel: 1.9, brake: 4.8, gear: 2.3 };
   function stepBike(dt, inp) {
     const col = getColliders();
@@ -236,7 +237,7 @@ export function createRide(ctx) {
     S.turnRate = S.speed * kappa;
     S.yaw = wrap(S.yaw + S.turnRate * dt);
     // the lean that balances the turn, reached a moment late
-    const leanT = clamp(-Math.atan(S.speed * S.speed * kappa / G), -0.5, 0.5);
+    const leanT = clamp(-Math.atan(S.speed * S.speed * kappa / G), -BIKE_ROLL_MAX, BIKE_ROLL_MAX);
     S.lean = damp(S.lean, leanT, 5.5, dt);
     // moving: slide along walls
     const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw);
@@ -275,7 +276,9 @@ export function createRide(ctx) {
     const rock = S.stand * Math.sin(S.crank) * 0.13 * Math.min(1, S.speed / 2);
     // stopped: a foot comes down and the bike leans onto it
     S.footDown = damp(S.footDown, S.speed < 0.35 && S.phase !== 'stop' ? 1 : 0, 7, dt);
-    S.roll = S.lean + rock - S.footDown * 0.12;
+    // the whole roll the rider sees (balance lean + the rock of standing on the pedals + the lean onto a
+    // foot) stays within ±0.5 rad (29°), not only the balance lean
+    S.roll = clamp(S.lean + rock - S.footDown * 0.12, -BIKE_ROLL_MAX, BIKE_ROLL_MAX);
     if (inp.bell) ctx.onEvent?.('bell', { x: S.pos.x, z: S.pos.z });
     S.vel.set(fx * S.speed, 0, fz * S.speed);
     // the machine

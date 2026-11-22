@@ -25,7 +25,7 @@ void main() {
   vec2 p = vUv * 2.0 - 1.0;
   // a stroke: wider at its head (+y), tapering to a dry tail
   float w = mix(0.35, 0.95, smoothstep(-1.0, 0.6, p.y));
-  float body = smoothstep(1.0, 0.75, abs(p.x) / w) * smoothstep(-1.0, -0.6, p.y) * smoothstep(1.0, 0.82, p.y);
+  float body = (1.0 - smoothstep(0.75, 1.0, abs(p.x) / w)) * smoothstep(-1.0, -0.6, p.y) * (1.0 - smoothstep(0.82, 1.0, p.y));
   float bristle = n(vec2(p.x * 9.0 + vSeed * 13.0, p.y * 1.5)) * 0.6 + n(vec2(p.x * 23.0, p.y * 4.0 + vSeed)) * 0.4;
   float a = body * smoothstep(0.2 + (1.0 - p.y) * 0.25, 0.55 + (1.0 - p.y) * 0.25, bristle + 0.3);
   // the pulse running toward the destination
@@ -61,7 +61,7 @@ void main() {
   float x = abs(vUv.x * 2.0 - 1.0);
   float core = exp(-x * x * 9.0);
   float streak = n(vec2(vUv.x * 7.0, vUv.y * 3.0 - uTime * 0.25)) * 0.5 + 0.5;
-  float top = smoothstep(1.0, 0.55, vUv.y) * smoothstep(0.0, 0.04, vUv.y);
+  float top = (1.0 - smoothstep(0.55, 1.0, vUv.y)) * smoothstep(0.0, 0.04, vUv.y);
   gl_FragColor = vec4(vec3(1.0, 0.55, 0.35) * core * streak * top * uFade * 0.75, 1.0);
 }`,
   });

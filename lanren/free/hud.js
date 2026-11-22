@@ -164,7 +164,8 @@ export function createHud({ world, nav, life, root, coarse, onRoute }) {
     const show = want || H.t - (H.lastWant ?? -99) < 2.5 ? 1 : 0;
     H.show += (show - H.show) * (1 - Math.exp(-dt * (show ? 4 : 1.5)));
     el.root.style.opacity = H.show.toFixed(3);
-    el.root.style.pointerEvents = H.show > 0.3 ? '' : 'none';
+    // only the compass itself takes a tap: the readings beside it must not swallow a thumb reaching for the stick
+    el.canvas.style.pointerEvents = H.show > 0.3 ? 'auto' : 'none';
     if (H.show < 0.01) return;
     // ---- route: replanned when you leave it (ground) or every second (air)
     if (H.dest) {
@@ -191,7 +192,7 @@ export function createHud({ world, nav, life, root, coarse, onRoute }) {
     else line = s.speed > 2.6 ? '跑' : s.speed > 0.3 ? '走' : '';
     el.line.textContent = line;
     el.alt.hidden = s.mode !== 'broom';
-    if (s.mode === 'broom') el.alt.style.setProperty('--alt', Math.min(1, Math.max(0, s.agl / 70)).toFixed(3));
+    if (s.mode === 'broom') el.alt.style.setProperty('--alt', Math.min(1, Math.max(0, s.agl / 56)).toFixed(3));   // the scale ends at the broom's ceiling
     H.placeT -= 1 / 30;
     if (H.placeT <= 0) { H.placeT = 0.6; el.place.textContent = placeName(s.pos, s.mode === 'broom' ? s.agl : 0); }
     el.dest.textContent = H.dest ? `去 ${H.dest.label} · ${fmt(remaining(s.pos))}` : (H.t - H.arrived < 3 ? '到了' : '');
