@@ -15,6 +15,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { Grade } from '../ruhua-stroll/post.js';
 import { U, GLSL } from '../ruhua-stroll/atmos.js';
 import { PAINT, PAINT_GLSL } from '../ruhua/paintfield.js';
+import { createFinish } from '../painted/finish.js';
 
 const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
 
@@ -149,12 +150,17 @@ function mat(def) {
   return new THREE.ShaderMaterial({ uniforms: THREE.UniformsUtils.clone(def.uniforms), vertexShader: VERT, fragmentShader: def.fragmentShader, depthTest: false, depthWrite: false });
 }
 
-export function createPipeline(renderer, { samples = 4 } = {}) {
-  const sceneRT = () => {
+// art (lanren/painted, the six-layer painted campus): the painted world is drawn into two attachments —
+// colour, and what each pixel is (lanren/painted/art.js writeInfo) — and finished by finish.js, which
+// also does the grade. Without it (the default) everything below is as it was.
+export function createPipeline(renderer, { samples = 4, art = null } = {}) {
+  const sceneRT = (count = 1) => {
     const d = new THREE.DepthTexture(1, 1); d.type = THREE.UnsignedIntType;
-    return new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples, depthTexture: d });
+    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples, depthTexture: d, count });
+    if (count > 1) { rt.textures[1].type = THREE.UnsignedByteType; rt.textures[1].name = 'info'; }
+    return rt;
   };
-  const rtA = sceneRT(), rtB = sceneRT();
+  const rtA = sceneRT(), rtB = sceneRT(art ? 2 : 1);
   const ldrA = new THREE.WebGLRenderTarget(1, 1), ldrB = new THREE.WebGLRenderTarget(1, 1);
   const tmpB = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
   const bloomB = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.2, 0.6, 1.7);
@@ -164,11 +170,21 @@ export function createPipeline(renderer, { samples = 4 } = {}) {
   // the paint uniforms are shared, not cloned
   for (const k of Object.keys(PAINT)) comp.uniforms[k] = PAINT[k];
   for (const k of Object.keys(U)) pud.uniforms[k] = U[k];
+  const finish = art ? createFinish({ tier: art.tier }) : null;
+  if (finish) {
+    // one grade: the finish reads the same uniform objects setGrade() writes
+    for (const k of ['uExposure', 'uSat', 'uShadowTone', 'uHighTone', 'uVignette', 'uTime']) finish.uniforms[k] = gradeB.uniforms[k];
+    finish.material.uniforms = finish.uniforms;
+    // bloom is read by the finish, not blended back into the scene target (which holds the info attachment)
+    bloomB.blendMaterial.visible = false;
+  }
   const LAYER_REAL = 1, LAYER_PAINT = 2;
   let scale = 1, base = renderer.getPixelRatio(), time = 0;
 
   const api = {
-    LAYER_REAL, LAYER_PAINT, rtA, rtB, gradeA, gradeB, bloomA, bloomB, pud,
+    LAYER_REAL, LAYER_PAINT, rtA, rtB, gradeA, gradeB, bloomA, bloomB, pud, finish,
+    /** called before the painted layer is drawn (art: make sure every material writes the info attachment) */
+    beforePainted: null,
     get scale() { return scale; },
     setSize(w, h) {
       renderer.setPixelRatio(base * scale);
@@ -177,6 +193,7 @@ export function createPipeline(renderer, { samples = 4 } = {}) {
       for (const rt of [rtA, rtB, ldrA, ldrB, tmpB]) rt.setSize(px.x, px.y);
       bloomA.setSize(px.x, px.y); bloomB.setSize(px.x, px.y);
       comp.uniforms.uTexel.value.set(1 / px.x, 1 / px.y);
+      if (finish) { finish.uniforms.uTexel.value.set(1 / px.x, 1 / px.y); finish.uniforms.uLineScale.value = Math.max(1, Math.round(px.y / 1100)); }
     },
     setScale(s) { s = Math.min(1, Math.max(0.5, s)); if (Math.abs(s - scale) < 0.01) return; scale = s; api.setSize(innerWidth, innerHeight); },
     setBase(pr) { base = pr; api.setSize(innerWidth, innerHeight); },
@@ -195,7 +212,9 @@ export function createPipeline(renderer, { samples = 4 } = {}) {
     },
     renderPainted(scene, camera, target = null) {
       camera.layers.set(LAYER_PAINT);
+      api.beforePainted?.(scene, camera);
       renderer.setRenderTarget(rtB); renderer.clear(); renderer.render(scene, camera);
+      if (finish) return api.finishPainted(camera, target);
       let src = rtB.texture;
       if (U.uPuddle.value > 0.01 || U.uWet.value > 0.05) {
         const u = pud.uniforms;
@@ -208,6 +227,28 @@ export function createPipeline(renderer, { samples = 4 } = {}) {
       } else bloomB.render(renderer, null, rtB, 0, false);
       gradeB.uniforms.tDiffuse.value = src; gradeB.uniforms.uTime.value = time % 100;
       quad.material = gradeB; renderer.setRenderTarget(target); quad.render(renderer);
+    },
+    /** art: puddles, bloom (kept apart), then the layered finish + grade */
+    finishPainted(camera, target) {
+      let src = rtB;
+      if (U.uPuddle.value > 0.01 || U.uWet.value > 0.05) {
+        const u = pud.uniforms;
+        u.tDiffuse.value = rtB.texture; u.tDepth.value = rtB.depthTexture;
+        u.uProj.value.copy(camera.projectionMatrix); u.uProjInv.value.copy(camera.projectionMatrixInverse);
+        u.uView.value.copy(camera.matrixWorldInverse); u.uViewInv.value.copy(camera.matrixWorld); u.uCam.value.copy(camera.position);
+        quad.material = pud; renderer.setRenderTarget(tmpB); quad.render(renderer);
+        src = tmpB;
+      }
+      const f = finish.uniforms;
+      f.uBloomOn.value = bloomB.strength > 0.001 ? 1 : 0;
+      if (f.uBloomOn.value) bloomB.render(renderer, null, src, 0, false);
+      f.tColor.value = src.texture; f.tInfo.value = rtB.textures[1]; f.tDepth.value = rtB.depthTexture;
+      f.tBloom.value = bloomB.renderTargetsHorizontal[0].texture;
+      f.uNear.value = camera.near; f.uFar.value = camera.far;
+      const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+      f.uTan.value.set(tan * camera.aspect, tan);
+      f.uTime.value = time % 100;
+      quad.material = finish.material; renderer.setRenderTarget(target); quad.render(renderer);
     },
     /** both worlds, then one picture */
     renderBoth(scene, camera) {

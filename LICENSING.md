@@ -50,6 +50,7 @@ HAIZ 希望将**经权利人确认属于原创且可授权的美术作品**按�
 | [`windowsill/`](windowsill/SOURCE.md) | 改编自 qiaosi 的独立 AGPL-3.0 应用及相应 HAIZ 修改，遵守其原有 [AGPL 许可](windowsill/LICENSE) |
 | `windowsill/vendor/` | 包含 MIT、Three.js 及其他独立上游许可，按各文件声明 |
 | `lanren/vendor/` | Three.js / GSAP 等按自己的许可证，保留原始文本与来源 |
+| [`lanren/painted/`](lanren/painted/NOTICE.md) 中改编自 Painted Valley 的算法部分 | MIT（Copyright (c) 2026 Patch），保留原许可文本，见该目录 `NOTICE.md` |
 | [`assets/walk/models/potted-plant.glb`](assets/walk/models/NOTICE.md) | 包含 CC0 与 CC BY 4.0 的上游部分，保留署名及修改记录 |
 | `assets/walk/models/campus-limestone.glb` | 已明确以 CC0 提供的原创模型，继续遵循 CC0 |
 | Flutter、字体、图标、iframe、WASM、PWA 构建包 | 各自许可证和权利状态，不随本仓库 LICENSE 自动变更 |

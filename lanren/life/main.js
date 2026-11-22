@@ -38,6 +38,7 @@ import { createHabitat, createEcosystem } from '../ruhua/eco/habitat.js';
 import { createFlowers } from '../ruhua/eco/flowers.js';
 import { createButterflies } from '../ruhua/eco/butterflies.js';
 import { createCat } from '../ruhua/eco/cat.js';
+import { createArt } from '../painted/index.js';
 
 const Q = new URLSearchParams(location.search);
 const ROOT = new URL('../', import.meta.url);
@@ -53,6 +54,9 @@ const TIERS = {
 const tierName = TIERS[Q.get('quality')] ? Q.get('quality') : 'high';
 const tier = TIERS[tierName];
 const LAYER_REAL = 1, LAYER_PAINT = 2;
+// the six-layer painted campus (lanren/painted): ruhua-painted.html turns it on (body data-art="painted"),
+// ?art=painted on any 入画 page, ?art=0 turns it off for comparison
+const ART_ON = Q.get('art') === 'painted' || (document.body.dataset.art === 'painted' && Q.get('art') !== '0');
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 const smoother = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
 // the transition's clock, relative to the moment the walker steps aside
@@ -85,7 +89,8 @@ async function main() {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 6000);
   const followCam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 6000);
-  const pipeline = createPipeline(renderer, { samples: tier.samples });
+  // (touch devices get the finish's narrower brush: the same look at a third of its taps — see the doc's measurements)
+const pipeline = createPipeline(renderer, { samples: tier.samples, art: ART_ON ? { tier: coarse || tierName === 'low' ? 'low' : tierName } : null });
   pipeline.setBase(tier.pr);
   pipeline.setSize(innerWidth, innerHeight);
 
@@ -165,6 +170,16 @@ async function main() {
   world.group.traverse((o) => o.layers.set(LAYER_PAINT));
   real.bakeEnv(renderer, scene);
   pipeline.setGround(world.ground);
+
+  // ---------------------------------------------------------------- the six-layer painted campus (before the twins are made)
+  let art = null;
+  if (ART_ON) {
+    ui.say('调色、铺笔触…');
+    art = createArt({ renderer, world, pipeline, layer: LAYER_PAINT });
+    art.people(student.root); art.people(people.group);
+    if (/^[0-5]$/.test(Q.get('paintdebug') || '')) art.debug(Number(Q.get('paintdebug')));
+    console.info('painted campus', art.report, art.ms + ' ms');
+  }
 
   // ---------------------------------------------------------------- every painted surface, twice: as it is, and gated by the paint
   const swaps = [];
@@ -377,6 +392,8 @@ async function main() {
     if (act === 'day') { const on = map.toggleDay(); e.target.closest('[data-life]').setAttribute('aria-pressed', String(on)); }
   });
   addEventListener('keydown', (e) => {
+    if (art && e.code === 'F9') { e.preventDefault(); const n = art.debug(); console.info('painted: debug view', ['final', 'raw', 'depth', 'info', 'lines', 'paint only'][n]); }
+    if (art && e.code === 'F10') { e.preventDefault(); console.info('painted:', art.setEnabled(!art.enabled) ? 'on' : 'off'); }
     if (e.code === 'KeyM' && !/INPUT|TEXTAREA/.test(e.target.tagName || '')) { map.isOpen ? closeMap() : openMap(); }
     if (e.code === 'Escape' && map.isOpen) closeMap();
   });
@@ -419,7 +436,8 @@ async function main() {
   const v4wind = new THREE.Vector3();
   function applyWeather(dt) {
     const S = weather.update(dt);
-    const P = S.pal, C = S.cur;
+    const P = art ? art.palette(S.pal, S) : S.pal, C = S.cur;
+    S.art = P;
     world.day.applyParams(P);
     U.uCloudCover.value = C.cover;
     SKY.uCardCover.value = Math.min(1, Math.max(0.08, C.cover * 1.45));
@@ -530,6 +548,17 @@ async function main() {
         if (Math.abs(camera.fov - followCam.fov) > 0.01) { camera.fov = followCam.fov; camera.updateProjectionMatrix(); }
       }
     }
+    // ---- the painted layers mature in turn as the painting spreads: the ground's marks first, then the
+    // leaves gather into masses, then the buildings' shade takes its rhythm and lines; the walker is inked
+    // last, as the eye leaves the body (before the painting leaves the canvas, all at full: the painter's
+    // reference is the finished picture)
+    if (art) {
+      const st = D.stage === 'stroll' && D.finishing ? 'stroll-finishing' : D.stage;
+      art.setRamps(...art.layerRamps(st, D.clock - D.departAt, D.t / T.enterDur, T));
+      D.artT = (D.artT || 0) - dt;
+      if (D.artT <= 0) { D.artT = 1; art.people(people.group); }
+      if (player) art.figures.setVelocity(student.root, player.state.vel.x, player.state.vel.y);
+    }
     // ---- the world
     const feet = player && (D.stage === 'enter' || D.stage === 'stroll') ? player.state.pos : tmpV.set(camera.position.x, world.geo.frame.ground, camera.position.z);
     focus.copy(feet);
@@ -557,7 +586,8 @@ async function main() {
     D.shadeT -= dt;
     if (D.shadeT <= 0) { D.shadeT = 0.2; D.shade = shadeAt(world, feet); }
     D.adapt += (1 + 0.18 * D.shade - D.adapt) * (1 - Math.exp(-dt * 1.1));
-    pipeline.setGrade(S.pal.exposure * D.adapt, S.pal.sat, S.pal.bloom);
+    const PG = S.art || S.pal;
+    pipeline.setGrade(PG.exposure * D.adapt, PG.sat, PG.bloom);
     ui.weather(weather.caption(), S);
   }
   function render() {
@@ -594,10 +624,11 @@ async function main() {
 
   window.__ruhua = {
     nav, life, people, get map() { return map; }, openMap, closeMap,
-    D, PAINT, weather, world, real, easel, pipeline, renderer, scene, camera, U, SKY, eco, cat, butterflies, flowers, habitat,
+    D, PAINT, weather, world, real, easel, pipeline, renderer, scene, camera, U, SKY, eco, cat, butterflies, flowers, habitat, art,
     get player() { return player; },
     get student() { return student; },
     get stage() { return D.stage; },
+    T,
     paint: startPainting, depart, skip, replay: resetToHold,
     /** review: hold the camera somewhere in the walk (null hands it back) */
     look(eye, at, fov = 40) { D.override = eye ? { eye, at, fov } : null; },
@@ -610,7 +641,7 @@ async function main() {
     paintAll() { const S = easel.state; S.layers.forEach((L, li) => L.forEach((st) => { if (!st.shown) { st.shown = true; S.rib.reveal(st.k, D.clock - 1); S.revealed[li]++; } })); S.cur = S.layers.length; S.stage = 'seal'; S.stageT = 0; },
     info: () => ({ stage: D.stage, clock: +D.clock.toFixed(2), tier: tierName, scale: pipeline.scale, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, ms: +frameMs.toFixed(1),
       weather: weather.caption(), origin: weather.state.origin, progress: easel.progress, player: player ? [+player.state.pos.x.toFixed(2), +player.state.pos.z.toFixed(2)] : null,
-      cat: cat.describe(), butterflies: butterflies.stats() }),
+      cat: cat.describe(), butterflies: butterflies.stats(), art: art ? { on: art.enabled, ramps: art.ramps, key: art.key } : null }),
   };
 }
 

@@ -1,0 +1,61 @@
+{
+ "when": "2026-11-22T05:02:07.240Z",
+ "renderer": "Chromium + SwiftShader (software)",
+ "passed": 11,
+ "total": 11,
+ "results": [
+  {
+   "name": "the walk starts with the six layers on and no shader errors",
+   "ok": true,
+   "note": "173 crown meshes, 3 grass rings, 12 building materials"
+  },
+  {
+   "name": "the info attachment says what each pixel is",
+   "ok": true,
+   "note": "foliage 28% · structure 27% of the frame"
+  },
+  {
+   "name": "every painted-layer material writes the info attachment",
+   "ok": true,
+   "note": "562 drawn materials"
+  },
+  {
+   "name": "the A/B switch and the debug views change the picture",
+   "ok": true,
+   "note": "on/off Δ 6.0 · views Δ 2/76/119/95/2"
+  },
+  {
+   "name": "the art keys follow the sun: 正午 → 午后 → 黄金时刻 → 日落, weaker under cloud",
+   "ok": true,
+   "note": "正午 0.54 · 午后 0.59 · 黄金时刻 0.7 · 日落 0.74 · 午后 0.13"
+  },
+  {
+   "name": "the campus's people are painted and inked as they arrive",
+   "ok": true,
+   "note": "6/6 body meshes painted, 6 hull outlines retired"
+  },
+  {
+   "name": "walking, a wall and the first-person eye still work",
+   "ok": true,
+   "note": "walked 5.4 m, stopped outside the wall; first person on/off"
+  },
+  {
+   "name": "the transition raises the layers in turn: ground, plants, buildings, then the walker",
+   "ok": true,
+   "note": "0.01/0/0 → 0.57/0.01/0 → 1/0.44/0.06 → 1/0.96/0.56 → 1/1/1 · walker inked 0/0.35/1"
+  },
+  {
+   "name": "no page errors on the painted page",
+   "ok": true
+  },
+  {
+   "name": "phone, upright: painted walk starts with the narrow brush",
+   "ok": true,
+   "note": "brush radius 1, 352 draws"
+  },
+  {
+   "name": "ruhua-alive.html is untouched: no art, one attachment",
+   "ok": true
+  }
+ ]
+}
