@@ -15,8 +15,9 @@ const { chromium } = require('playwright');
 const [aDir, bDir] = process.argv.slice(2).filter((x) => !x.startsWith('--'));
 const outIdx = process.argv.indexOf('--out');
 if (!aDir || !bDir) { console.error('usage: compare.cjs <before-dir> <after-dir> [--out file.md]'); process.exit(2); }
-const A = JSON.parse(fs.readFileSync(path.join(aDir, 'report.json')));
-const B = JSON.parse(fs.readFileSync(path.join(bDir, 'report.json')));
+// a full bench report, or only stills (bench/stills.cjs)
+const read = (d) => JSON.parse(fs.readFileSync(path.join(d, fs.existsSync(path.join(d, 'report.json')) && !process.argv.includes('--stills') ? 'report.json' : 'stills.json')));
+const A = read(aDir), B = read(bDir);
 const out = outIdx > 0 ? process.argv[outIdx + 1] : path.join(bDir, 'compare.md');
 
 const pct = (a, b) => (a ? ((b - a) / a * 100).toFixed(1) + '%' : 'n/a');
@@ -27,12 +28,13 @@ const dataUrl = (f) => 'data:image/png;base64,' + fs.readFileSync(f).toString('b
   const page = await browser.newPage();
   const lines = [];
   lines.push(`# Homepage bench: \`${A.label}\` (${A.commit}) → \`${B.label}\` (${B.commit})`, '');
-  lines.push(`Environment: ${B.environment.gl}, ${B.environment.viewport} @${B.environment.dpr}x, CPU throttle ${B.environment.cpuThrottle}×, ${B.environment.cores} cores.`);
-  lines.push('', `> ${B.caveat}`, '');
+  if (B.environment) lines.push(`Environment: ${B.environment.gl}, ${B.environment.viewport} @${B.environment.dpr}x, CPU throttle ${B.environment.cpuThrottle}×, ${B.environment.cores} cores.`);
+  if (B.caveat) lines.push('', `> ${B.caveat}`, '');
   for (const tb of B.tiers) {
     const ta = A.tiers.find((t) => t.quality === tb.quality);
     if (!ta) continue;
     lines.push(`## Tier \`${tb.quality}\``, '');
+    if (ta.load && tb.load) {
     lines.push('| | before | after | Δ |', '|---|---:|---:|---:|');
     lines.push(`| time to ready (ms) | ${ta.load.readyMs} | ${tb.load.readyMs} | ${pct(ta.load.readyMs, tb.load.readyMs)} |`);
     lines.push(`| scroll frame p50 (ms) | ${ta.scroll.ms.p50} | ${tb.scroll.ms.p50} | ${pct(ta.scroll.ms.p50, tb.scroll.ms.p50)} |`);
@@ -49,6 +51,7 @@ const dataUrl = (f) => 'data:image/png;base64,' + fs.readFileSync(f).toString('b
       lines.push(`| ${cb.chapter + 1} | ${ca.ms.p50} | ${cb.ms.p50} | ${pct(ca.ms.p50, cb.ms.p50)} | ${ca.calls} → ${cb.calls} | ${ca.passes.length} → ${cb.passes.length} |`);
     }
     lines.push('');
+    }
     if (tb.shots?.length && ta.shots?.length) {
       var sheet = [];
       lines.push('| still | PSNR (dB) | mean abs error (levels) | px > 2 levels | px > 8 levels |', '|---|---:|---:|---:|---:|');

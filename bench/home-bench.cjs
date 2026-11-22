@@ -2,7 +2,7 @@
 // HAIZ homepage (index.html → lanren/js) phone rendering benchmark.
 //
 //   node bench/home-bench.cjs [--label NAME] [--quality low|medium|high]
-//        [--dpr 3] [--cpu 4] [--frames 24] [--no-shots] [--out DIR]
+//        [--dpr 3] [--cpu 4] [--frames 8] [--scroll 60] [--site DIR] [--out DIR]
 //
 // What it measures, per quality tier, in an emulated phone (390×844 CSS px,
 // touch, isMobile, CPU throttled through CDP):
@@ -12,8 +12,7 @@
 //   scroll    a continuous 0 → 5 walk (as when the reader scrolls): frame
 //             times and how many environment (PMREM) bakes it triggers
 //   memory    renderer.info.memory, JS heap, a render-target byte estimate
-//   shots     deterministic stills of every chapter (Math.random seeded,
-//             clock fixed) for before/after image comparison (bench/compare.cjs)
+// Stills for image comparison come from bench/stills.cjs (fresh page per still).
 //
 // IMPORTANT: this runs on SwiftShader (software WebGL on the CI CPU). Absolute
 // milliseconds are NOT phone FPS; they are a repeatable proxy that ranks work
@@ -38,7 +37,6 @@ const cpu = +arg('cpu', 4);
 const frames = +arg('frames', 8);
 const scrollSteps = +arg('scroll', 60);
 const outDir = path.resolve(arg('out', path.join(repo, 'bench/results', label)));
-const shots = !flag('no-shots');
 fs.mkdirSync(outDir, { recursive: true });
 
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
@@ -185,19 +183,8 @@ async function runTier(browser, base, quality) {
   const perf = await cdp.send('Performance.getMetrics');
   memory.jsHeapMB = +(perf.metrics.find((m) => m.name === 'JSHeapUsedSize').value / 1048576).toFixed(1);
 
-  const shotFiles = [];
-  if (shots) {
-    if (cpu > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-    for (let i = 0; i < 6; i++) {
-      // identical history for every run: reset time-dependent state, then a fixed number of fixed steps
-      await page.evaluate((i) => { const H = window.__haizHome; H.go(i); window.__bench.settle(2); H.still(1 / 30, 30); }, i);
-      const f = path.join(outDir, `${quality}-ch${i + 1}.png`);
-      await page.locator('#world').screenshot({ path: f });
-      shotFiles.push(path.relative(repo, f));
-    }
-  }
   await ctx.close();
-  return { quality, load, chapters, jsStep: stats(jsStep), scroll: { ms: stats(scroll.ms), bakes: scroll.bakes, bakeMsTotal: +scroll.bakeMs.toFixed(1), frames: scroll.ms.length }, memory, shots: shotFiles, errors };
+  return { quality, load, chapters, jsStep: stats(jsStep), scroll: { ms: stats(scroll.ms), bakes: scroll.bakes, bakeMsTotal: +scroll.bakeMs.toFixed(1), frames: scroll.ms.length }, memory, errors };
 }
 
 (async () => {
