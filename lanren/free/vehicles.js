@@ -165,6 +165,11 @@ export function createBike({ saddleH = 0.98 } = {}) {
     inner.add(new THREE.Mesh(merge([tube([0, 0.97, 0.47], [0, 0.94, 0.64], 0.007), tube([0.03, R + 0.04, FA[2] + 0.02], [0.03, by0, 0.70], 0.006)]), M(CHROME, 0.05)));
   }
   const front = wheel(); front.position.set(...FA); inner.add(front);
+  // ---- the lamp: a small round headlamp on the basket's front, and at night a pool of warm light on the
+  // paving ahead (a painted wash, not a shadow-casting light: it costs one transparent quad and a halo)
+  const lamp = createLamp(M, CHROME);
+  lamp.head.position.set(0, 0.80, 0.935); inner.add(lamp.head);
+  group.add(lamp.pool);
   // the steering axis seen from the bike's frame: wheels touch the ground where?
   finish(group, 0.0035, uFade);
   group.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
@@ -177,8 +182,80 @@ export function createBike({ saddleH = 0.98 } = {}) {
       out.copy(grips[side]).sub(axisBot).applyAxisAngle(axisDir, angle).add(axisBot);
       return out;
     },
-    setSteer(a) { steer.rotation.y = a; },
+    setSteer(a) { steer.rotation.y = a; lamp.pool.rotation.y = a * 0.85; },
+    /** k: 0 (off) … 1 (lit), the pool fades in with it; lean tilts the pool a little toward the turn */
+    setLamp(k, lean = 0) { lamp.set(k, lean); },
+    get lamp() { return lamp.k; },
   };
+}
+
+// the headlamp (housing, glass, halo) and the light it throws on the ground, in bike space
+function createLamp(M, CHROME) {
+  const head = new THREE.Group();
+  const housing = new THREE.CylinderGeometry(0.036, 0.03, 0.06, 14); housing.rotateX(Math.PI / 2);
+  head.add(new THREE.Mesh(housing, M(CHROME, 0.05)));
+  const glassMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.42, 0.38, 0.3), toneMapped: false });
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(0.031, 16), glassMat);
+  glass.position.z = 0.031; glass.userData.noOutline = true; head.add(glass);
+  // a soft halo facing the camera (sprite-like; additive, so it only ever brightens)
+  const haloMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uK: { value: 0 } },
+    vertexShader: /* glsl */`
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+  mv.xy += position.xy;
+  gl_Position = projectionMatrix * mv;
+}`,
+    fragmentShader: /* glsl */`
+uniform float uK; varying vec2 vUv;
+void main() {
+  float r = length(vUv * 2.0 - 1.0);
+  float a = exp(-r * r * 9.0) + 0.25 * exp(-r * r * 2.5);
+  gl_FragColor = vec4(vec3(1.0, 0.82, 0.55) * a * uK * 0.9, 1.0);
+}`,
+  });
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), haloMat);
+  halo.position.z = 0.05; halo.userData.noOutline = true; halo.renderOrder = 5; halo.frustumCulled = false;
+  head.add(halo);
+  // the pool: a fan of light 1 … 9 m ahead, brightest a couple of metres out, breaking up at its edges the
+  // way a wash does on rough paper; additive and depth-tested so it lies on the paving, not over walls
+  const poolMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    uniforms: { uK: { value: 0 }, uLean: { value: 0 } },
+    vertexShader: /* glsl */`
+varying vec2 vP; varying vec3 vW;
+void main() { vP = position.xz; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: /* glsl */`
+uniform float uK; uniform float uLean; varying vec2 vP; varying vec3 vW;
+float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+void main() {
+  float z = vP.y - 0.75;                              // distance ahead of the lamp
+  float x = vP.x + uLean * z * 0.35;
+  float spread = 0.32 + z * 0.3;                       // the beam widens with distance
+  float across = 1.0 - smoothstep(0.35, 1.0, abs(x) / spread);
+  float along = smoothstep(0.0, 1.4, z) * (1.0 - smoothstep(3.0, 9.0, z));
+  float paper = n(vW.xz * 2.3) * 0.6 + n(vW.xz * 7.1) * 0.4;
+  float a = across * along * smoothstep(0.08, 0.5, paper * 0.7 + across * 0.5);
+  float fall = 1.0 / (1.0 + z * z * 0.06);
+  gl_FragColor = vec4(vec3(1.0, 0.78, 0.48) * a * fall * uK * 0.42, 1.0);
+}`,
+  });
+  const poolG = new THREE.PlaneGeometry(7, 9.5, 1, 1).rotateX(-Math.PI / 2).translate(0, 0.035, 0.75 + 4.75);
+  const pool = new THREE.Mesh(poolG, poolMat);
+  pool.userData.noOutline = true; pool.renderOrder = 2; pool.frustumCulled = false; pool.visible = false;
+  pool.castShadow = pool.receiveShadow = false;
+  const L = { head, pool, k: 0 };
+  L.set = (k, lean) => {
+    L.k = k;
+    haloMat.uniforms.uK.value = k; poolMat.uniforms.uK.value = k; poolMat.uniforms.uLean.value = lean;
+    halo.visible = pool.visible = k > 0.01;
+    glassMat.color.setRGB(0.42 + 2.2 * k, 0.38 + 1.6 * k, 0.3 + 0.9 * k);
+  };
+  return L;
 }
 
 // ======================================================================== the skateboard

@@ -108,7 +108,7 @@ export function createFree(ctx) {
     };
   }
   // ---- a word from someone you ride past (rate-limited; never more than one at a time)
-  let lastWord = -99, clock = 0;
+  let lastWord = -99, clock = 0, lampK = 0;
   const said = new Map();
   function react(kind) {
     if (clock - lastWord < 9) return;
@@ -201,6 +201,13 @@ export function createFree(ctx) {
     update(dt) {
       ride.update(dt);
       syncBar();
+      // the bike's lamp comes on with the dark while someone rides it (a parked bike's lamp is off)
+      {
+        const night = ctx.weather.state.pal?.night ?? 0, bk = ride.machines.bike;
+        const on = ride.riding && ride.mode === 'bike' && ride.phase !== 'dismount' ? Math.min(1, Math.max(0, (night - 0.3) / 0.4)) : 0;
+        lampK += (on - lampK) * (1 - Math.exp(-dt * (on > lampK ? 5 : 2.5)));
+        bk.setLamp(lampK < 0.005 ? 0 : lampK, ride.state.roll || 0);
+      }
       // a prompt by the parked bike
       if (prompt) {
         const P = ctx.player().state;
