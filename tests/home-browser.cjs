@@ -77,7 +77,11 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
     throw e;
   }
   await page.fill('#specNote', '测试：那天有风');
-  await page.click('#specKeep');
+  // The dialog opens with a 0.55 s CSS animation over a blurred WebGL backdrop. On SwiftShader each
+  // frame takes seconds, so Playwright's "two identical frames" stability check outlasted the 30 s
+  // default on CI (#89). Wait for the animation to finish, and give the click the suite's 90 s budget.
+  await page.waitForFunction(() => !document.getAnimations().some((a) => a.playState === 'running' && a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest('#specimen')), null, { timeout: 90000 });
+  await page.click('#specKeep', { timeout: 90000 });
   assert.strictEqual(await page.textContent('#bookCount'), '1');
   results.push('a falling leaf is caught, annotated and kept in the book');
   // an entry leaves through the veil; coming back returns to that viewpoint
