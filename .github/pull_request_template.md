@@ -12,11 +12,19 @@
 `HAIZ PR acceptance` 会自动运行核心回归和移动端兼容性检查，结果在 Actions 的 job summary 里。
 The `HAIZ PR acceptance` workflow runs automatically; its summary lists what ran and what did not.
 
+> **这道门禁的边界 · What the gate does NOT prove**
+> 移动端兼容性检查是 **smoke**：页面能加载、自身脚本/样式不 404、没有未捕获异常、手机宽度下不横向溢出。
+> 它**不**验证触摸玩法、手势、GPU 帧率/发热、画面质量，也不等于第六幕等专门体验的完整验收。
+> 新增业务页或交互请附带它自己的交互测试（参考 `tests/rings-browser.cjs`、`tests/home-browser.cjs`）。
+> The mobile check is a smoke test (loads, own assets, no uncaught errors, no sideways overflow). It does not
+> verify touch interactions, GPU frame rate or heat, visual quality, or full acceptance of a feature. New pages
+> or interactions should bring their own interaction test.
+
 本地可复现 / Reproduce locally:
 
 ```bash
 npm ci
-node tests/acceptance/run.mjs              # core: no browser
+node tests/acceptance/run.mjs              # core: no browser (add --require-all to fail on skipped suites)
 node tests/acceptance/run.mjs --tier=browser   # Chromium (and WebKit if installed)
 ```
 

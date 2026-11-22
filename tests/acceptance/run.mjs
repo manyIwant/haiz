@@ -7,9 +7,11 @@
 //   node tests/acceptance/run.mjs --tier=all
 //   node tests/acceptance/run.mjs --only=cinematic-runtime,rings
 //   node tests/acceptance/run.mjs --keep-results  keep the tracked *-results.json files the suites rewrite
+//   node tests/acceptance/run.mjs --require-all   gate mode: a suite that could not run also fails the run
 //
 // Output: test-results/acceptance-<tier>.json and .md (untracked). In GitHub Actions the Markdown
-// is also appended to the job summary. Exit code 1 if any suite that ran failed.
+// is also appended to the job summary. Exit code 1 if any suite that ran failed, or (with
+// --require-all) if any selected suite could not run.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -26,6 +28,9 @@ const arg = (name, fallback) => {
 const tier = arg('tier', 'core');
 const only = arg('only', '') ? new Set(arg('only', '').split(',')) : null;
 const keepResults = process.argv.includes('--keep-results');
+// Gate mode: a selected suite that could not run (missing browser, PyYAML, …) fails the run too,
+// so "nothing executed" can never read as green. CI passes this; local runs default to report-only.
+const requireAll = process.argv.includes('--require-all');
 
 // ---- environment probes: a suite whose needs are missing is reported as NOT RUN with the reason
 function probeChromium() {
@@ -93,6 +98,8 @@ const SUITES = [
 const NOT_COVERED = [
   'Real phones and tablets: every browser check here is emulation (viewport, touch, DPR, UA) on Linux. iOS Safari and Android Chrome on real hardware GPUs are not exercised.',
   'Frame rate and GPU behaviour: WebGL runs on SwiftShader (software). Timings here are not performance numbers; performance belongs to the benchmark suite.',
+  'Mobile compatibility is a smoke check (load, own assets, uncaught errors, sideways overflow); touch interactions and full feature acceptance need their own tests.',
+  'Real navigation timing: browser-test wait budgets (e.g. 300 s for the home → news.html exit) are sized for SwiftShader, not user experience; measure real timings on hardware GPUs.',
   'Visual/artistic review: no screenshot diffing. Composition, materials and light still need a human look.',
   'Backend (`node --test backend/tests/*.test.mjs`): covered by the existing `HAIZ authenticated backend` workflow when backend files change.',
   'Heavy six-act home WebGL suite (`tests/home-browser.cjs`): covered by `rings-qa.yml`; it needs a fast runner and times out on slow machines.',
@@ -157,12 +164,12 @@ const commit = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT, e
 const report = {
   tier, commit, at: new Date().toISOString(), node: process.version, platform: `${os.platform()} ${os.arch()}`, cpus: os.cpus().length,
   ci: Boolean(process.env.GITHUB_ACTIONS), browsers: { chromium: probes.chromium, webkit: probes.webkit },
-  passed: count('passed'), failed: count('failed'), notRun: count('not-run'), results, notCovered: NOT_COVERED, restoredResultFiles: restored,
+  passed: count('passed'), failed: count('failed'), notRun: count('not-run'), requireAll, results, notCovered: NOT_COVERED, restoredResultFiles: restored,
 };
 const md = [
   `## HAIZ acceptance · ${tier} · \`${commit}\``,
   '',
-  `**${report.passed} passed · ${report.failed} failed · ${report.notRun} not run** — ${report.ci ? 'GitHub Actions' : 'local'} · ${report.platform} · ${report.cpus} CPU · node ${report.node}`,
+  `**${report.passed} passed · ${report.failed} failed · ${report.notRun} not run**${requireAll ? ' (gate mode: not run counts as failure)' : ''} — ${report.ci ? 'GitHub Actions' : 'local'} · ${report.platform} · ${report.cpus} CPU · node ${report.node}`,
   '',
   '| | Suite | What it checks | Time |',
   '|---|---|---|---|',
@@ -179,4 +186,6 @@ writeFileSync(path.join(ROOT, 'test-results', `acceptance-${tier}.json`), JSON.s
 writeFileSync(path.join(ROOT, 'test-results', `acceptance-${tier}.md`), md);
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + '\n');
 console.log(`\n${report.passed} passed · ${report.failed} failed · ${report.notRun} not run → test-results/acceptance-${tier}.md`);
-process.exitCode = report.failed ? 1 : 0;
+const blocked = report.failed || (requireAll && report.notRun);
+if (requireAll && report.notRun) console.log(`gate mode: ${report.notRun} required suite(s) did not run → failing`);
+process.exitCode = blocked ? 1 : 0;

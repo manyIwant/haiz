@@ -34,7 +34,7 @@ jobs:
       - name: Install PyYAML for the workflow policy check
         run: python3 -c 'import yaml' 2>/dev/null || python3 -m pip install --quiet pyyaml
       - name: Core acceptance suites
-        run: node tests/acceptance/run.mjs --tier=core
+        run: node tests/acceptance/run.mjs --tier=core --require-all
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,9 +69,9 @@ jobs:
         # phone/no-WebGL checks; the webkit leg is the iOS rendering engine on Linux (not a real iPhone).
         run: |
           if [ "${{ matrix.engine }}" = chromium ]; then
-            node tests/acceptance/run.mjs --tier=browser --only=mobile-compat-selftest,mobile-compat-chromium,rings-browser
+            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-selftest,mobile-compat-chromium,rings-browser
           else
-            node tests/acceptance/run.mjs --tier=browser --only=mobile-compat-webkit
+            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-webkit
           fi
       - name: Keep the report
         if: always()

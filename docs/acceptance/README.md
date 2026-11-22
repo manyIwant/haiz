@@ -14,7 +14,7 @@ node tests/acceptance/run.mjs --only=cinematic-runtime,rings
 ```
 
 报告写到 `test-results/acceptance-<tier>.md` 和 `.json`（不进 git）。在 GitHub Actions 里，同一份 Markdown 会出现在 job summary。
-有任何已执行的套件失败时退出码为 1。缺少运行条件的套件（例如没装 WebKit）标为 **not run** 并写明原因，不算通过也不算失败。
+有任何已执行的套件失败时退出码为 1。缺少运行条件的套件（例如没装 WebKit）标为 **not run** 并写明原因。加 `--require-all`（门禁模式，CI 默认使用）时，任何被选中却没跑成的套件也让退出码为 1，避免“什么都没执行却是绿色”。
 
 测试会改写仓库里已跟踪的 `tests/*-results.json` 证据文件；运行器结束时会把运行前是干净的那些文件还原。需要保留新证据时加 `--keep-results`。
 
@@ -43,6 +43,8 @@ node tests/acceptance/run.mjs --only=cinematic-runtime,rings
 ## 这套验收不覆盖什么 · Not covered
 
 - **真机。** 所有浏览器检查都是 Linux 上的模拟（视口、触控、DPR、UA）。真实 iPhone Safari 和 Android Chrome 的硬件 GPU 没有被测试。
+- **移动端检查只是 smoke。** 它不验证触摸玩法、手势或某个体验（如第六幕）的完整验收；新增业务页应带自己的交互测试。
+- **真实跳转耗时。** `tests/home-browser.cjs` 的等待时间（例如进入 news.html 最长 300 s）是按 SwiftShader 软件渲染定的预算，不是用户体验指标；真实耗时需要在有硬件 GPU 的设备上另测。
 - **帧率和 GPU。** WebGL 在 SwiftShader（软件渲染）上运行；这里的耗时不是性能数据，性能交给基准测试。
 - **画面审美。** 没有截图比对；构图、材质、光线仍需人工看。
 - **后端。** `node --test backend/tests/*.test.mjs` 由现有的 `HAIZ authenticated backend` workflow 在后端文件变化时运行。
