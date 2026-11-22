@@ -4,7 +4,7 @@
 
 目标是**真实的府城校区**，不是“像海中的校园”。每个对象都带可信度标签和依据（写在数据文件里，导出后在 glTF 节点的 `extras.haiz_tag` / `extras.haiz_basis` 中），照片推断的尺寸一律按估计值标注，不当作测绘数据。
 
-阶段报告：[`docs/PHASE1.md`](docs/PHASE1.md) · 资料来源库：[`evidence/sources.json`](evidence/sources.json)
+阶段报告：[`docs/PHASE1.md`](docs/PHASE1.md)、[`docs/PHASE2.md`](docs/PHASE2.md)（按标定照片重画榄仁树、重塑太湖石）· 资料来源库：[`evidence/sources.json`](evidence/sources.json)
 
 ## 目录
 
@@ -18,12 +18,16 @@
 | `data/yanchi.json` | 砚池：水位、岸石、叠石跌水、题石、椰子树 |
 | `data/campus.json` | 由 Overture/OSM 转换的全校建筑轮廓、水体、用地（`tools/osm_campus.py` 生成） |
 | `blender/` | 生成器：`build.py`（总控）、`b_yihao.py`、`b_site.py`、`b_trees.py`、`b_gate.py`、`b_campus.py`、`nature.py`（岩石/树/棕榈）、`arch.py`、`kit.py` |
-| `tools/calib.py` | 用照片特征点反求相机，并给出检查点残差 |
+| `tools/calib.py` | 用照片特征点反求水平相机，并给出检查点残差（hero-2560） |
+| `tools/calib_lines.py` | 用照片上的直边反求可俯仰、横滚、带径向畸变的相机，结构参数一起拟合（lanshu-1600、jiaoxuelou-1600） |
+| `tools/lanren_backproject.py` | 按标定相机把榄仁树的像素描线反投影成三维骨架，写入 `data/trees.json` |
+| `tools/taihu_carve.py` | 按两张标定照片上的轮廓雕刻太湖石（构建时由 `b_site.py` 调用） |
+| `tests/check_twin.py` | 轻量自检：数据与标签、标定残差、GLB 容器与标签、坐标锚点 |
 | `tools/ortho.py` | 把仓库里的 Esri 影像重采样成孪生坐标系正射图（研究用，不入库） |
 | `tools/osm_campus.py` | Overture 提取 → `data/campus.json` |
 | `evidence/` | 资料来源库、相机标定点与残差报告 |
 | `assets/phase1/` | 导出的分部件 GLB（Draco 压缩）与 `manifest.json` |
-| `renders/phase1/` | 多视角验证渲染与构建统计 |
+| `renders/phase1/`、`renders/phase2/` | 各阶段的多视角验证渲染与构建统计 |
 
 ## 坐标系
 
@@ -66,7 +70,23 @@ export HAIZ_GLTF_TRANSFORM=~/.gltf-transform/node_modules/.bin/gltf-transform
 # 相机标定与残差
 ~/.venv-twin/bin/python twin/tools/calib.py twin/evidence/calibration/hero-2560.json \
     --out twin/evidence/calibration/hero-2560.report.json
+~/.venv-twin/bin/python twin/tools/calib_lines.py twin/evidence/calibration/lanshu-1600.json \
+    --out twin/evidence/calibration/lanshu-1600.report.json
+~/.venv-twin/bin/python twin/tools/calib_lines.py twin/evidence/calibration/jiaoxuelou-1600.json \
+    --out twin/evidence/calibration/jiaoxuelou-1600.report.json
+
+# 榄仁树骨架：像素描线 -> 三维枝条，写回 data/trees.json
+~/.venv-twin/bin/python twin/tools/lanren_backproject.py twin/evidence/calibration/lanshu-1600.tree.json \
+    --write --out twin/evidence/calibration/lanshu-1600.tree.report.json
+
+# 太湖石轮廓检查（构建时会自动雕刻）
+~/.venv-twin/bin/python twin/tools/taihu_carve.py twin/evidence/calibration/taihu-silhouettes.json
+
+# 自检（几秒；--carve 另外重算太湖石轮廓，约 20 秒）
+~/.venv-twin/bin/python twin/tests/check_twin.py --carve
 ```
+
+`lanshu`、`jiaoxuelou`、`gate_n` 三个视角使用标定出的相机（`build.py` 的 `CALIBRATED`），以 1600×1280 / 1280×674 的比例渲染即与原照片逐像素对应。
 
 全量构建与导出约 2 分钟，每张 1600×1000、48 采样的 Cycles CPU 渲染约 1.5–4 分钟。所有程序化细节（次级枝、叶、岩石孔洞）都用固定种子，重复运行结果一致。
 
