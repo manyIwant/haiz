@@ -22,6 +22,7 @@
 import * as THREE from 'three';
 import { PLACES, SPOTS } from '../life/places.js';
 import { INKS } from '../life/map.js';
+import { createWheelPath } from './wheelpath.js';
 
 const FONT_HAND = '"Kaiti SC","STKaiti","KaiTi","Noto Serif SC","Songti SC",serif';
 const FONT_SERIF = '"Songti SC","Noto Serif SC","Source Han Serif SC","STSong",serif';
@@ -47,6 +48,7 @@ export const DESTS = [
 const WHERE = { road: '校道', court: '球场', field: '操场', corridor: '连廊', pavilion: '亭下', gate: '校门', garden: '园中小径', botanic: '植物园', open: '', water: '水边' };
 
 export function createHud({ world, nav, life, root, coarse, onRoute }) {
+  const wheel = createWheelPath(nav);
   const el = {
     root, canvas: root.querySelector('canvas'), speed: root.querySelector('[data-hud="speed"]'), unit: root.querySelector('[data-hud="unit"]'),
     line: root.querySelector('[data-hud="line"]'), place: root.querySelector('[data-hud="place"]'), dest: root.querySelector('[data-hud="dest"]'),
@@ -141,10 +143,11 @@ export function createHud({ world, nav, life, root, coarse, onRoute }) {
     H.dest = { key, label: d[1], x: p[0], z: p[1] };
     H.route = null; H.routeAt = -99; H.arrived = 0;
   }
-  function plan2(from, air) {
+  function plan2(from, air, wheels) {
     if (!H.dest) return null;
     if (air) return { points: [{ x: from.x, z: from.z }, { x: H.dest.x, z: H.dest.z }], air: true };
-    const r = nav.path(from.x, from.z, H.dest.x, H.dest.z);
+    // on a bike or a board the way keeps to the paving; on foot it is the campus's own walking way
+    const r = (wheels && wheel.path(from.x, from.z, H.dest.x, H.dest.z)) || nav.path(from.x, from.z, H.dest.x, H.dest.z);
     return r ? { points: r.points, air: false, length: r.length } : { points: [{ x: from.x, z: from.z }, { x: H.dest.x, z: H.dest.z }], air: true };
   }
 
@@ -166,10 +169,11 @@ export function createHud({ world, nav, life, root, coarse, onRoute }) {
     // ---- route: replanned when you leave it (ground) or every second (air)
     if (H.dest) {
       const air = s.mode === 'broom' && s.agl > 2;
+      const wheels = s.mode === 'bike' || s.mode === 'board';
       const far = Math.hypot(H.dest.x - s.pos.x, H.dest.z - s.pos.z);
       if (far < (air ? 10 : 6)) { H.arrived = H.t; const label = H.dest.label; setDest(null); onRoute?.({ arrived: label }); }
-      else if (!H.route || H.route.air !== air || H.t - H.routeAt > (air ? 0.5 : 4) || offRoute(s.pos)) {
-        H.route = plan2(s.pos, air); H.routeAt = H.t;
+      else if (!H.route || H.route.air !== air || !!H.route.wheels !== wheels || H.t - H.routeAt > (air ? 0.5 : 4) || offRoute(s.pos)) {
+        H.route = plan2(s.pos, air, wheels); if (H.route) H.route.wheels = wheels; H.routeAt = H.t;
         onRoute?.(H.route ? { points: H.route.points, air, dest: H.dest } : null);
       }
     }
@@ -324,6 +328,7 @@ export function createHud({ world, nav, life, root, coarse, onRoute }) {
     update, setDest, toggleSlip,
     get dest() { return H.dest; },
     get route() { return H.route; },
+    wheel,
     get shown() { return H.show; },
   };
 }
