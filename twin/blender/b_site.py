@@ -136,7 +136,12 @@ def build(coll):
     area(g, 'ground.lawn', base, LV['ground'])
     drops(g, 'kerb.granite', base, LV['ground'], lambda x, y: Z.level_at(x, y) if ext.contains(Point(x, y)) else LV['ground'])
     g = G('ground.context', 'invented', 'neutral ground outside the modelled extent (not the real surroundings)')
-    area(g, 'ground.context', box(-1500, -1500, 1500, 1500).difference(ext), LV['ground'] - 0.02)
+    ctx = box(-1500, -1500, 1500, 1500).difference(ext)
+    cj = TWIN / 'data/campus.json'
+    if cj.exists():
+        for w in json.loads(cj.read_text()).get('water', []):
+            ctx = ctx.difference(Polygon(w['poly']))      # ponds are cut out and built by b_campus
+    area(g, 'ground.context', ctx, LV['ground'] - 0.02)
 
     # flights of steps
     for st in SITE['steps']:
@@ -174,7 +179,9 @@ def build(coll):
                   M=Matrix.Translation(((px0 + px1) / 2, y1 + 0.03, (pz0 + pz1) / 2)) @ FACING_PLUS_Y)]
     rock = nature.taihu_rock()
     rx, ry = P['rock_xy']
-    M = Matrix.Translation((rx, ry, zt - 0.05)) @ Matrix.Rotation(math.radians(P.get('rock_rot_deg', 0.0)), 4, 'Z')
+    sx, sy, sz = P.get('rock_scale', (1.0, 1.0, 1.0))
+    M = (Matrix.Translation((rx, ry, zt - 0.05)) @ Matrix.Rotation(math.radians(P.get('rock_rot_deg', 0.0)), 4, 'Z')
+         @ Matrix.Diagonal((sx, sy, sz, 1.0)))
     groups['taihu.rock'] = [rock.transformed(M), P['rock_tag'], P['rock_basis'], 50.0]
 
     nface = 0

@@ -178,12 +178,12 @@
     ],
     "width": 5.4,
     "y": [
-      -24.0,
+      -44.0,
       -10.6
     ],
     "storeys": 6,
     "tag": "public-map/invented",
-    "basis": "two white flat-roofed links to the next building on the Esri layer, symmetric about the axis after lean correction; length beyond 13 m and their facades unknown"
+    "basis": "two white flat-roofed links on the Esri layer, symmetric about the axis after lean correction; OSM ways 1165596684/1165596685 run from the rear of Teaching Block 1 to the front of Teaching Block 2 (y -44); their facades are unknown"
   },
   "rear": {
     "tag": "invented",

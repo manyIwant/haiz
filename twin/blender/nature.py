@@ -85,12 +85,12 @@ def taihu_rock(seed=1923, res=0.05):
     tunnels = [(2.15, 0.0, 0.55, 0.15, 1.0, 0.0, 0.55),       # hollow under the high end ('legs')
                (0.6, 0.0, 0.5, 0.1, 1.0, 0.2, 0.32)]
     rng = np.random.default_rng(seed + 7)
-    for _ in range(14):
-        c = (rng.uniform(-3.5, 3.0), rng.uniform(-0.5, 0.5), rng.uniform(0.7, 2.5))
+    for _ in range(26):
+        c = (rng.uniform(-3.6, 3.2), rng.uniform(-0.6, 0.6), rng.uniform(0.6, 2.6))
         a = rng.standard_normal(3); a[2] *= 0.5
-        tunnels.append((*c, *a, rng.uniform(0.10, 0.30)))
-    return sdf_rock(blobs, (-4.5, 4.2, -1.9, 1.9, -0.1, 3.3), res, seed, noise=0.20, ridges=0.10, tunnels=tunnels,
-                    mat='stone.limestone.taihu')
+        tunnels.append((*c, *a, rng.uniform(0.12, 0.36)))
+    return sdf_rock(blobs, (-4.5, 4.2, -1.9, 1.9, -0.1, 3.3), res, seed, noise=0.24, ridges=0.2, tunnels=tunnels,
+                    k=0.28, mat='stone.limestone.taihu')
 
 
 def boulder(seed, size=(1.5, 1.2, 2.1), res=0.05, mat='stone.rock.boulder', lean=(0.0, 0.0)):
@@ -305,11 +305,12 @@ class BroadleafTree:
         horiz = horiz / hn if hn > 1e-6 else np.array([1.0, 0.0, 0.0])
         side = np.cross([0, 0, 1.0], horiz)
         wig = self.rng.uniform(-0.15, 0.15)
+        w2, w3 = self.rng.uniform(-0.06, 0.06, 2)
         for i in range(n):
             t = i / (n - 1)
             p = p0 + d * L * t
-            p = p + np.array([0, 0, 1.0]) * (upturn * L * t ** 2.2 - sag * L * math.sin(math.pi * t))
-            p = p + side * wig * L * math.sin(math.pi * t)
+            p = p + np.array([0, 0, 1.0]) * (upturn * L * t ** 2.2 - sag * L * math.sin(math.pi * t) + w3 * L * math.sin(2 * math.pi * t))
+            p = p + side * (wig * L * math.sin(math.pi * t) + w2 * L * math.sin(3 * math.pi * t))
             r = r0 * (1.0 - 0.8 * t) + 0.006
             pts.append([p[0], p[1], p[2], r])
         P = np.array(pts)
@@ -356,11 +357,11 @@ class BroadleafTree:
             az = math.atan2(d[1], d[0]) + sign * self.rng.uniform(0.7, 1.3)
             el = self.rng.uniform(-0.05, 0.35) if self.habit == 'tiered' else self.rng.uniform(0.1, 0.7)
             dd = self._dir(az, el)
-            Lt = self.rng.uniform(0.5, 1.4) * (1.0 - 0.4 * t / L)
+            Lt = self.rng.uniform(0.4, 1.1) * (1.0 - 0.4 * t / L)
             Q = self._grow(p[:3], dd, Lt, max(0.012, p[3] * 0.45), level + 1, upturn=0.45 if self.habit == 'tiered' else 0.15)
             if len(Q) >= 2:
                 self.branches.append((Q, level + 1))
-                self._leaves_along(Q, start=0.35)
+                self._leaves_along(Q, start=0.2)
             sign = -sign
         self._leaves_along(P, start=0.7)
 
@@ -389,7 +390,7 @@ class BroadleafTree:
             reach = self.env.reach(p[:3], dd, 9.0)
             if reach > 1.2:
                 Lb = min(reach * self.rng.uniform(0.75, 0.98), 8.0)
-                r0 = max(0.03, min(p[3] * 0.6, 0.03 + 0.022 * Lb))
+                r0 = max(0.025, min(p[3] * 0.5, 0.025 + 0.016 * Lb))
                 Q = self._grow(p[:3], dd, Lb, r0, level + 1, upturn=0.25 if self.habit == 'tiered' else 0.1,
                                sag=0.06 if Lb > 4 else 0.0)
                 if len(Q) >= 2:
@@ -479,6 +480,58 @@ def buttress(base_z, amount=0.55, height=1.1, lobes=5, seed=0):
 # ======================================================================================
 # royal palm (Roystonea regia)
 # ======================================================================================
+
+def coconut_palm(x, y, z0, height=11.0, seed=0, lean=(0.08, 0.0), n_fronds=20):
+    """Coconut palm (Cocos nucifera): slender ringed grey-brown trunk with a pronounced curving
+    lean, no crownshaft, a full crown of long drooping fronds and a cluster of nuts."""
+    rng = np.random.default_rng(seed)
+    g = Geo()
+    H = height
+    nodes = []
+    for t in np.linspace(0, 1, 20):
+        bend = t ** 1.6
+        r = 0.2 - 0.05 * t + 0.1 * math.exp(-t * H / 0.4)
+        nodes.append([x + lean[0] * H * bend, y + lean[1] * H * bend, z0 + H * t * (1 - 0.5 * (lean[0] ** 2 + lean[1] ** 2)), r])
+    nodes = np.array(nodes)
+    v, f = tube(nodes, sides=10, bark_noise=0.03, seed=seed)
+    g.add_indexed('bark.coconut', v, f)
+    apex = nodes[-1, :3] + np.array([0, 0, 0.3])
+    for k in range(5):
+        a = rng.uniform(0, 2 * math.pi)
+        c = apex + np.array([0.25 * math.cos(a), 0.25 * math.sin(a), -0.35])
+        v, f = tube(np.array([[*c, 0.11], [*(c + [0, 0, 0.001]), 0.11], [*(c + [0, 0, -0.2]), 0.0]]), sides=8)
+        g.add_indexed('palm.coconut.nut', v, f)
+    for i in range(n_fronds):
+        az = i * 2.39996 + rng.uniform(-0.2, 0.2)
+        age = i / n_fronds
+        el = math.radians(60 - 95 * age + rng.uniform(-10, 10))
+        Lr = rng.uniform(4.0, 5.0)
+        dvec = np.array([math.cos(el) * math.cos(az), math.cos(el) * math.sin(az), math.sin(el)])
+        pts = np.array([apex + dvec * Lr * t + np.array([0, 0, -1.9 * Lr * 0.35 * t * t]) for t in np.linspace(0, 1, 12)])
+        rach = np.hstack([pts, np.linspace(0.05, 0.01, len(pts))[:, None]])
+        v, f = tube(rach, sides=4)
+        g.add_indexed('leaf.coconut', v, f)
+        T = np.gradient(pts, axis=0); T /= np.linalg.norm(T, axis=1, keepdims=True)
+        side = np.cross(T, [0, 0, 1.0]); side /= np.linalg.norm(side, axis=1, keepdims=True) + 1e-9
+        upv = np.cross(side, T)
+        Vs, Fs = [], []
+        for j in range(40):
+            t = 0.1 + 0.88 * j / 39
+            kf = t * (len(pts) - 1); a0 = int(kf); b0 = min(a0 + 1, len(pts) - 1); w = kf - a0
+            p = pts[a0] * (1 - w) + pts[b0] * w
+            ll = 0.9 * math.sin(math.pi * min(1.0, 0.2 + t)) + 0.15
+            for sgn in (1, -1):
+                d1 = sgn * side[a0] * 0.8 + T[a0] * 0.45 - upv[a0] * 0.35          # leaflets in one plane, V-drooping
+                d1 /= np.linalg.norm(d1)
+                q1 = p + d1 * ll * 0.5 + np.array([0, 0, -0.08 * ll]); q2 = p + d1 * ll + np.array([0, 0, -0.3 * ll])
+                wv = np.cross(d1, upv[a0]); wv /= np.linalg.norm(wv) + 1e-9
+                hw = 0.03
+                bi = len(Vs)
+                Vs += [p - wv * hw * 0.5, p + wv * hw * 0.5, q1 + wv * hw, q1 - wv * hw, q2]
+                Fs += [(bi, bi + 1, bi + 2, bi + 3), (bi + 3, bi + 2, bi + 4)]
+        g.add_indexed('leaf.coconut', np.array(Vs), Fs)
+    return g
+
 
 def royal_palm(x, y, z0, height=13.0, seed=0, lean=(0.0, 0.0), white_base=1.2, n_fronds=15):
     """Smooth grey columnar trunk with a mid-height swelling, white-painted base, glossy green
@@ -578,18 +631,18 @@ def araucaria(x, y, z0, height=21.0, seed=0, base_spread=4.2):
             g.add_indexed('bark.araucaria', v, f)
             # branchlets: hanging ropes of foliage on both sides
             side = np.array([-d[1], d[0], 0.0])
-            for t in np.linspace(0.15, 1.0, max(3, int(L / 0.35))):
+            for t in np.linspace(0.1, 1.0, max(4, int(L / 0.17))):
                 p = np.array([x + d[0] * L * t, y + d[1] * L * t, z + 0.25 * L * t * t - 0.1 * L * t])
-                for sgn in (1, -1):
-                    ln = 0.55 * (1.1 - 0.6 * t) * (1 - 0.4 * frac)
-                    q1 = p + side * sgn * ln * 0.5 + np.array([0, 0, -ln * 0.35]) + d * 0.1
-                    q2 = p + side * sgn * ln * 0.8 + np.array([0, 0, -ln * 0.75]) + d * 0.15
-                    w = 0.05
+                for sgn, dz in ((1, 0.35), (-1, 0.35), (1, 0.8), (-1, 0.8)):
+                    ln = 0.6 * (1.1 - 0.6 * t) * (1 - 0.4 * frac) * rng.uniform(0.8, 1.2)
+                    q1 = p + side * sgn * ln * 0.5 + np.array([0, 0, -ln * dz * 0.5]) + d * 0.1
+                    q2 = p + side * sgn * ln * 0.8 + np.array([0, 0, -ln * dz]) + d * 0.15
+                    w = 0.075
                     up = np.array([0, 0, 1.0])
                     bi = len(Vs)
                     Vs += [p - d * w, p + d * w, q1 + d * w, q1 - d * w, q2]
                     Fs += [(bi, bi + 1, bi + 2, bi + 3), (bi + 3, bi + 2, bi + 4)]
-        z += rng.uniform(0.9, 1.15)
+        z += rng.uniform(0.75, 0.95)
         k += 1
     g.add_indexed('leaf.araucaria', np.array(Vs), Fs)
     return g

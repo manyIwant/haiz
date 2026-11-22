@@ -8,7 +8,7 @@ Scene frame = twin frame (metres; +x campus east, +y campus north towards the No
 conversion maps twin (x, y, z) to glTF (x, z, -y), so -Z in three.js points to the North Gate.
 """
 from __future__ import annotations
-import sys, json, math, argparse, time, datetime
+import os, sys, json, math, argparse, time, datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -183,10 +183,46 @@ CAMERAS = {
     'oblique_nw':((-90.0, 75.0, 40.0), (-5.0, -2.0, 8.0), 35.0),
     'top':       ((0.0, 10.0, 260.0), (0.0, 10.0, 0.0), 50.0),
     # approximate viewpoints of reference photographs (refined by the calibration tool later)
-    'lanshu':    ((45.0, 18.5, 2.25), (30.0, 7.0, 5.0), 16.0),
+    'lanshu':    ((42.6, 16.2, 2.2), (31.9, 5.7, 4.6), 21.0),
     'taihushi':  ((0.6, 41.0, 1.7), (0.3, 28.4, 1.9), 30.0),
     'gate_n':    ((0.0, 119.8, 1.52), (0.0, 0.0, 1.52), 36.0 * 2036 / 2560),
+    'gate_obl':  ((-14.0, 128.0, 4.5), (0.0, 106.0, 4.5), 30.0),
+    'yanchi':    ((28.0, -105.0, 1.75), (50.0, -121.0, 2.5), 22.0),
+    'campus_n':  ((40.0, 260.0, 210.0), (10.0, -60.0, 0.0), 30.0),
 }
+# principal-point offsets (Blender shift_x, shift_y) for cameras matched to cropped photographs
+CAMERA_SHIFT = {'gate_n': (0.0, (1075 - 673.5) / 2560)}
+# cameras recovered from photographs by twin/tools/calib.py; they replace the approximate entries above
+CALIBRATED = {'gate_n': 'evidence/calibration/hero-2560'}
+
+
+def calibrated_camera(sc, name, stem, sensor=36.0):
+    """Camera from a calib.py report: position, yaw, roll and focal length fitted on the photograph, principal
+    point as Blender shift.  calib.py convention: at yaw 0 the camera looks along -y; image x to the right."""
+    rep = json.loads((TWIN / f'{stem}.report.json').read_text())
+    W, H = json.loads((TWIN / f'{stem}.json').read_text())['image_size']
+    c = rep['camera']
+    yaw, roll = math.radians(c['yaw_deg']), math.radians(c['roll_deg'])
+    fwd = Vector((-math.sin(yaw), -math.cos(yaw), 0.0))
+    right0 = Vector((-math.cos(yaw), math.sin(yaw), 0.0)); up0 = Vector((0.0, 0.0, 1.0))
+    right = right0 * math.cos(roll) + up0 * math.sin(roll)
+    up = up0 * math.cos(roll) - right0 * math.sin(roll)
+    cam = bpy.data.cameras.new(name)
+    cam.sensor_fit = 'HORIZONTAL'
+    cam.sensor_width = sensor
+    cam.lens = c['f_px'] * sensor / W
+    cam.clip_start, cam.clip_end = 0.1, 3000
+    px, py = c['principal_point']
+    cam.shift_x = -(px - W / 2) / W            # Blender shift is in units of the larger image side
+    cam.shift_y = (py - H / 2) / W
+    ob = bpy.data.objects.new('cam.' + name, cam)
+    sc.collection.objects.link(ob)
+    ob.matrix_world = Matrix((
+        (right.x, up.x, -fwd.x, c['x']),
+        (right.y, up.y, -fwd.y, c['y']),
+        (right.z, up.z, -fwd.z, c['z']),
+        (0.0, 0.0, 0.0, 1.0)))
+    return ob
 
 
 def add_camera(sc, name, loc, look, lens, sensor=36.0):
@@ -260,6 +296,75 @@ def export_glb(path, gpu_instances=True):
         bpy.ops.export_scene.gltf(**kw)
 
 
+def _blender_draco_available():
+    try:
+        from io_scene_gltf2.io.com.library import dll_path
+        return dll_path('bf_intern_draco_bridge', 'Draco').exists()
+    except Exception:
+        return False
+
+
+def _gltf_transform():
+    """The gltf-transform CLI (npm @gltf-transform/cli), used for Draco when Blender's own encoder is missing
+    (the pip 'bpy' wheel ships without libbf_intern_draco_bridge)."""
+    import shutil
+    exe = os.environ.get('HAIZ_GLTF_TRANSFORM') or shutil.which('gltf-transform')
+    return exe if exe and Path(exe).exists() else None
+
+
+def export_split(outdir, draco=True):
+    """One GLB per top-level collection (yihao, site, trees, gate, campus) plus a manifest.
+    Meshes are Draco-compressed (KHR_draco_mesh_compression) by Blender when its encoder is present,
+    otherwise by gltf-transform when it is installed; node extras (haiz_tag / haiz_basis) survive both."""
+    import subprocess
+    outdir = Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
+    use_blender = draco and _blender_draco_available()
+    gt = None if (use_blender or not draco) else _gltf_transform()
+    method = ('blender' if use_blender else 'gltf-transform' if gt else 'none')
+    manifest = {'frame': 'glTF +Y up; twin (x, y, z) -> glTF (x, z, -y); metres; z = 0 at the forecourt road',
+                'compression': {'blender': 'KHR_draco_mesh_compression (Blender encoder)',
+                                'gltf-transform': 'KHR_draco_mesh_compression (gltf-transform draco, edgebreaker, '
+                                                  'position 14 / normal 10 / texcoord 12 bits)',
+                                'none': 'none'}[method],
+                'loader': 'three.js GLTFLoader + DRACOLoader' if method != 'none' else 'three.js GLTFLoader',
+                'parts': {}}
+    for coll in bpy.context.scene.collection.children:
+        if coll.name == 'debug':
+            continue
+        bpy.ops.object.select_all(action='DESELECT')
+        n = 0
+        for ob in coll.all_objects:
+            ob.select_set(True); n += 1
+        if not n:
+            continue
+        path = outdir / f'{coll.name}.glb'
+        kw = dict(filepath=str(path), export_format='GLB', export_yup=True, export_extras=True, export_apply=False,
+                  export_cameras=False, export_lights=False, export_materials='EXPORT', use_selection=True)
+        if use_blender:
+            kw.update(export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6,
+                      export_draco_position_quantization=14, export_draco_normal_quantization=10,
+                      export_draco_texcoord_quantization=12)
+        try:
+            bpy.ops.export_scene.gltf(export_gpu_instances=True, **kw)
+        except TypeError:
+            bpy.ops.export_scene.gltf(**kw)
+        raw_mb = round(path.stat().st_size / 1e6, 2)
+        if gt:
+            tmp = path.with_suffix('.raw.glb')
+            path.replace(tmp)
+            r = subprocess.run([gt, 'draco', str(tmp), str(path), '--method', 'edgebreaker', '--quantize-position', '14',
+                                '--quantize-normal', '10', '--quantize-texcoord', '12'], capture_output=True, text=True)
+            if r.returncode != 0 or not path.exists():
+                print('gltf-transform failed, keeping the uncompressed file:', r.stderr[-400:])
+                tmp.replace(path)
+            else:
+                tmp.unlink()
+        manifest['parts'][coll.name] = dict(file=path.name, objects=n, mb=round(path.stat().st_size / 1e6, 2), mb_uncompressed=raw_mb)
+        print('glb', coll.name, manifest['parts'][coll.name])
+    (outdir / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
+    return manifest
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--only', nargs='*')
@@ -271,6 +376,7 @@ def main(argv=None):
     ap.add_argument('--res', nargs=2, type=int, default=[1600, 1000])
     ap.add_argument('--when', default='2026-06-21T16:30')
     ap.add_argument('--stats')
+    ap.add_argument('--glb-split', help='directory for one GLB per collection')
     ap.add_argument('--ground', action='store_true', help='debug: flat ground plane at z = 0')
     a = ap.parse_args(argv)
     sc = reset_scene()
@@ -287,6 +393,10 @@ def main(argv=None):
         export_glb(a.glb)
         stats['glb'] = dict(path=a.glb, mb=round(Path(a.glb).stat().st_size / 1e6, 2), seconds=round(time.time() - t0, 1))
         print('glb', stats['glb'])
+    if a.glb_split:
+        t0 = time.time()
+        stats['glb_split'] = export_split(a.glb_split)
+        stats['glb_split']['seconds'] = round(time.time() - t0, 1)
     if a.blend:
         bpy.ops.wm.save_as_mainfile(filepath=str(Path(a.blend).resolve()), compress=True)
         stats['blend'] = dict(path=a.blend, mb=round(Path(a.blend).stat().st_size / 1e6, 2))
@@ -294,8 +404,13 @@ def main(argv=None):
         setup_render(sc, a.samples, tuple(a.res))
         Path(a.renders).mkdir(parents=True, exist_ok=True)
         for name in a.render:
-            loc, look, lens = CAMERAS[name]
-            cam = add_camera(sc, name, loc, look, lens)
+            if name in CALIBRATED and (TWIN / f'{CALIBRATED[name]}.report.json').exists():
+                cam = calibrated_camera(sc, name, CALIBRATED[name])
+            else:
+                loc, look, lens = CAMERAS[name]
+                cam = add_camera(sc, name, loc, look, lens)
+                sx, sy = CAMERA_SHIFT.get(name, (0.0, 0.0))
+                cam.data.shift_x, cam.data.shift_y = sx, sy
             sc.camera = cam
             sc.render.filepath = str(Path(a.renders) / f'{name}.jpg')
             t0 = time.time()

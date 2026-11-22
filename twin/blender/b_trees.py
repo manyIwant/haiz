@@ -25,8 +25,8 @@ def lanren():
     env = nature.Envelope(L['envelope']['poly'], L['envelope']['z_bottom'], L['envelope']['z_top_centre'],
                           L['envelope']['z_top_edge'], centre=L['envelope'].get('centre'))
     tree = nature.BroadleafTree(L['limbs'], env, seed=1923, habit='tiered', leaf_mats=TERMINALIA_LEAVES,
-                                bark='bark.terminalia', spacing=1.15, twig_spacing=0.5, rosette_step=0.34,
-                                leaf_len=0.24, leaf_w=0.13, n_leaves=7, min_spawn_z=3.0).grow()
+                                bark='bark.terminalia', spacing=1.05, twig_spacing=0.32, rosette_step=0.2,
+                                leaf_len=0.27, leaf_w=0.15, n_leaves=6, min_spawn_z=3.0).grow()
     tx, ty = L['trunk_xy']
     wood, leaves = tree.geo(flare=nature.buttress(L['ground_z'], amount=0.6, height=0.9, seed=3))
     parts = {'lanren.wood': (wood, L['tag'], L['basis'], 60.0), 'lanren.leaves': (leaves, L['tag'], 'procedural leaf rosettes (seeded) inside the mapped crown; habit from lanshu-1600', None)}
@@ -57,7 +57,7 @@ def generic(spec):
         limbs.append({'id': f'p{i}', 'pts': pts})
     env = nature.Envelope(circle(x, y, R), z0 + th, z0 + H, z0 + H - 0.45 * R)
     tree = nature.BroadleafTree(limbs, env, seed=spec['seed'], habit='rounded', leaf_mats=[('leaf.generic', 0.85), ('leaf.terminalia.young', 0.15)],
-                                bark='bark.generic', spacing=1.0, twig_spacing=0.5, rosette_step=0.3, leaf_len=0.15, leaf_w=0.07,
+                                bark='bark.generic', spacing=0.9, twig_spacing=0.3, rosette_step=0.18, leaf_len=0.17, leaf_w=0.08,
                                 n_leaves=8, min_spawn_z=z0 + th * 0.9).grow()
     wood, leaves = tree.geo(flare=nature.buttress(z0, amount=0.3, height=0.6, seed=spec['seed']))
     return wood, leaves, tree.stats()

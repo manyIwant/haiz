@@ -391,13 +391,13 @@
      "box": [
       -12.5,
       29.7,
-      -4.8,
+      -4.0,
       29.9
      ]
     },
     {
      "box": [
-      4.8,
+      3.5,
       29.7,
       12.5,
       29.9
@@ -479,36 +479,41 @@
  ],
  "taihu": {
   "plinth": [
-   -4.8,
+   -4.0,
    26.0,
-   4.8,
+   3.5,
    31.6
   ],
   "plinth_top": 0.75,
   "panel": [
-   -3.3,
-   1.7,
+   -3.0,
+   1.0,
    0.16,
    0.6
   ],
   "panel2": [
-   2.6,
-   4.3,
+   1.6,
+   3.1,
    0.16,
    0.6
   ],
   "inscription": "虎踞龍盤捷報頻傳",
   "rock_xy": [
-   0.3,
+   -0.15,
    28.4
   ],
   "rock_rot_deg": 0.0,
   "tag": "photo-derived",
-  "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width from the step runs; depth from the rock's footprint on the Esri layer (dark mass y 26.3..29.5 including the northward lean of its top). OSM puts the artwork 4-5 m further south (y 20.3..24.5).",
+  "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width 7.5 m and a 0.25 m westward offset from the hero-2560 camera fit (corner residuals of the earlier 9.6 m plinth: -30 / +19 px at 0.043 m/px); depth from the rock's footprint on the Esri layer. OSM puts the artwork 4-5 m further south (y 20.3..24.5).",
   "inscription_tag": "documented",
   "inscription_basis": "text read on jiaoxuelou-1600 (running-script calligraphy, 8 characters, signed); typeface substituted. The second panel (alumni donation, 2012) is modelled blank.",
   "rock_tag": "photo-derived/invented",
-  "rock_basis": "overall size and silhouette (about 7.6 x 3 x 2.9 m; tall perforated east end standing on legs, long low west end with a raised head) from jiaoxuelou-1600 and campus_taihushi; individual holes and crags are procedural (seeded) and not the real ones"
+  "rock_basis": "overall size and silhouette (about 7.6 x 3 x 2.9 m; tall perforated east end standing on legs, long low west end with a raised head) from jiaoxuelou-1600 and campus_taihushi; individual holes and crags are procedural (seeded) and not the real ones; length scaled to about 7.3 m and centre moved 0.4 m west after the hero-2560 camera fit",
+  "rock_scale": [
+   0.9,
+   1.0,
+   1.0
+  ]
  },
  "placements": {
   "yihao": {
@@ -535,10 +540,10 @@
    "runs": [
     [
      -12.5,
-     -4.8
+     -4.0
     ],
     [
-     4.8,
+     3.5,
      12.5
     ]
    ],
