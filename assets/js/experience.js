@@ -87,5 +87,7 @@ if(!reduced&&!matchMedia('(pointer:coarse)').matches){
   }
 }
 passport();
+// the thread back to the tree (arrival veil + return line); same folder as this script
+if(!document.body.classList.contains('home')){const src=document.currentScript?.src||[...document.scripts].map(s=>s.src).find(u=>/experience\.js/.test(u));if(src){const l=document.createElement('link');l.rel='stylesheet';l.href=new URL('../css/thread.css?v=1',src).href;document.head.append(l);const t=document.createElement('script');t.src=new URL('thread.js?v=1',src).href;t.defer=true;document.head.append(t);}}
 window.HaizExperience={open,close,visit:mark,clearPassport,setSound,get visited(){return visited.slice();},get sound(){return enabled;}};
 })();
