@@ -13,7 +13,8 @@
 // Ownership of camera and input goes through lanren/world/state.js (W.claim). The page never
 // scrolls while the walk has the input, and the wheel never moves the walker.
 import * as THREE from 'three';
-import { shot, isPortrait, poseAt, CHAPTERS } from '../js/chapters.js';
+import { shot, isPortrait, poseAt, CHAPTERS, LIGHT } from '../js/chapters.js';
+const SUN6_OFF = 46;   // degrees from straight behind the walker, to the left
 import { makeFilm, railOf, BEATS, FOV_WALK, yawOf, STRIDE } from './film.js';
 import { createBody } from './body.js';
 import { eyeOffset } from './skeleton.js';
@@ -102,11 +103,12 @@ export function attachWorld(ctx) {
   ui.className = 'wd';
   ui.innerHTML = `
     <div class="wd-hold" hidden>
-      <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，由你自己走' : '你已站在校园里。再向前一步，由你自己走'}</span></p>
-      <button type="button" class="wd-go" data-w="go">走进校园 <i aria-hidden="true">→</i></button>
+      <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，走进画里' : '你已站在校园里。再向前一步，走进画里'}</span></p>
+      <a class="wd-ruhua" href="ruhua-alive.html" title="入画：同一棵树，走进按海口此刻的天光画成的校园">走进入画 <i aria-hidden="true">→</i></a>
+      <button type="button" class="wd-go" data-w="go">或者，就在这里走走</button>
       <button type="button" class="wd-resume" data-w="resume" hidden>回到上次站的地方</button>
       <p class="wd-hold-dest" hidden></p>
-      <p class="wd-hold-h">${coarse ? '再向上滑一次或点按钮 · 向下滑回到第五幕' : '再向下滚动一次 · ↓ / Enter · 或点按钮；向上滚动回到第五幕'}</p>
+      <p class="wd-hold-h">${coarse ? '点「走进入画」进入画中的校园 · 再向上滑一次就在这里走走 · 向下滑回到第五幕' : '点「走进入画」进入画中的校园 · 再向下滚动一次（↓ / Enter）就在这里走走 · 向上滚动回到第五幕'}</p>
     </div>
     <p class="wd-rotate-chip" hidden><i aria-hidden="true"></i><span>落地了。横过手机，接下来可以自己走（可选）</span></p>
     <div class="wd-rotate" role="dialog" aria-modal="true" aria-labelledby="wdRotT" hidden>
@@ -165,6 +167,10 @@ export function attachWorld(ctx) {
     </div>
     <p class="wd-live" role="status" aria-live="polite"></p>`;
   body.append(ui);
+  // 入画 picks up 06's leaving (assets/js/thread.js): a dark fade, and its home mark leads back to 06
+  ui.querySelector('.wd-ruhua')?.addEventListener('click', () => {
+    try { sessionStorage.setItem('haiz.thread', JSON.stringify({ i: 5, kind: 'pull', colour: '#0b1310', href: 'ruhua-alive.html', t: Date.now() })); } catch { /* storage blocked */ }
+  });
   const $ = (q) => ui.querySelector(q), $$ = (q) => [...ui.querySelectorAll(q)];
   const say = (t) => { $('.wd-live').textContent = t; };
   // 05's note: with the campus standing in 05 (composition b), the far view is the campus model, not the lagoon
@@ -703,11 +709,12 @@ export function attachWorld(ctx) {
     // 05's depth of field belongs to the view out of the crown: once the camera is a person the near world is sharp
     if (p > 4 && (W.owner === 'scroll' || W.owner === 'hold')) L.aperture *= 1 - smooth((p - 4.03) / 0.1);
     if (WALKING.has(W.owner)) L.aperture = 0;
-    // composition a: 06's sun turns with its new view (sun 77° to the right of the gaze, as in V4)
-    const s6 = W.compose.sun6;
-    if (s6 != null && p > 4) {
-      const f = clamp(p - 4, 0, 1), t = f * f * f * (f * (f * 6 - 15) + 10);
-      L.sunAz += wrap(s6 - 58) * t;
+    // 06 回望: turning back, the walker has the low sun behind the left shoulder (it set in front of
+    // 05's view); whatever the composition, the tree is lit three-quarter from the front
+    if (p > 4) {
+      const f6 = frame6(), f = clamp(p - 4, 0, 1), t = f * f * f * (f * (f * 6 - 15) + 10);
+      const target = yawOf(f6.lx - f6.ex, f6.lz - f6.ez) + 180 - SUN6_OFF;
+      L.sunAz += wrap(target - LIGHT[5].sun[0]) * t;
     }
     return L;
   }
