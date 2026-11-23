@@ -53,3 +53,17 @@ for name,eye,look,lens in [
     sc.camera=build.add_camera(sc,name,eye,look,lens)
     sc.render.filepath=str(out/(name+'.jpg'))
     bpy.ops.render.render(write_still=True)
+
+# The late-afternoon master puts the west bank in the arts centre's shadow.
+# Compare the same surfaces in tropical morning sun from across the water.
+if not requested or 'pond_daylight' in requested:
+    for ob in list(sc.objects):
+        if ob.type=='LIGHT' and ob.data.type=='SUN':
+            bpy.data.objects.remove(ob,do_unlink=True)
+    build.sun_and_sky(sc,'2026-05-22T09:45',strength=3.6)
+    sun=next(ob.data for ob in sc.objects if ob.type=='LIGHT' and ob.data.type=='SUN')
+    sun.color=(1,.947,.844)
+    sun.angle=math.radians(.86)
+    sc.camera=build.add_camera(sc,'pond_daylight',(53.8,-130.45,1.86),(41.65,-121.95,1.25),34)
+    sc.render.filepath=str(out/'pond_daylight.jpg')
+    bpy.ops.render.render(write_still=True)

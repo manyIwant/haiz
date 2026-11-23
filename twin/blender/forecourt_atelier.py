@@ -21,6 +21,7 @@ from mathutils import Matrix, Vector
 import numpy as np
 import build
 import b_yihao
+import atelier_pond
 import atelier_arts
 import atelier_south
 import atelier_science
@@ -37,6 +38,10 @@ P = build.SITE['taihu']
 OUT = TWIN/'assets/atelier'
 RENDERS = TWIN/'renders/atelier'
 VIEWS = {
+    'pond_bank': ((51.2,-130.8,1.77),(41.3,-122,1.10),29),
+    'pond_stone': ((44.3,-131.2,1.65),(40.0,-125.65,1.55),33),
+    'pond_falls': ((49.6,-124.2,1.38),(42,-120.2,.52),43),
+    'pond_overview': ((70,-137,16),(48,-119,1.0),32),
     'precinct_overview': ((-235,-207,145),(1,-105,4),32),
     'arts_roof': ((-56,-82,82),(21,-157,4),35),
     'arts_photo': ((1,-103.5,23),(29.5,-124,5.7),34),
@@ -313,19 +318,8 @@ def main(args):
                 bpy.data.objects.remove(ob,do_unlink=True)
             else:
                 move(ob,context)
-    # Restore the inherited basin below the hole already cut for it in the context plane.
     pond = build.collection('yanchi')
-    existing=set(sc.objects)
-    bpy.ops.import_scene.gltf(filepath=str(TWIN/'assets/phase1/campus.glb'))
-    imported=set(sc.objects)-existing
-    keep={ob for ob in imported if 'yanchi.' in ob.name}
-    for ob in keep:
-        world=ob.matrix_world.copy()
-        ob.parent=None
-        ob.matrix_world=world
-        move(ob,pond)
-    for ob in imported-keep:
-        bpy.data.objects.remove(ob,do_unlink=True)
+    atelier_pond.build_pond(pond)
     arts=import_arts(sc)
     if not args.draft:
         export(arts,'arts.glb')
@@ -348,7 +342,7 @@ if __name__=='__main__':
     parser.add_argument('--draft',action='store_true', help='Only render, leave checked-in GLBs alone')
     parser.add_argument('--cache',type=Path, help='Optional local NPZ of this sculpt; omit after changing relief data')
     parser.add_argument('--blend',type=Path)
-    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group','yihao_oblique','arts_entrance','arts_court','arts_photo','arts_roof','precinct_overview'])
+    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group','yihao_oblique','arts_entrance','arts_court','arts_photo','arts_roof','precinct_overview','pond_bank','pond_falls','pond_stone','pond_overview'])
     parser.add_argument('--width',type=int,default=1440)
     parser.add_argument('--samples',type=int,default=32)
     parser.add_argument('--when',default='2026-06-21T16:30')

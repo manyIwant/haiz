@@ -170,3 +170,27 @@ for palm in palms:
                   for a,b in zip(boundary,boundary[1:]))
     assert crossings%2==0,pt
 print('Arts Center: four red roof chains, portico, crest elevations and five dry-land palm roots verified.')
+
+# All probes run on the decoded GLB in the shared campus, including adjoining buildings.
+def top_at(x,y):
+    hit,point,_,_,obj,_=bpy.context.scene.ray_cast(deps,Vector((x,y,4.2)),Vector((0,0,-1)),distance=6)
+    assert hit,(x,y)
+    return obj.name,point.z
+
+basin,upper_z=top_at(42.8,-120.8)
+open_water,lower_z=top_at(50.75,-119.6)
+assert basin=='yanchi.spillway' and open_water=='yanchi.water',(basin,open_water)
+assert .54<upper_z-lower_z<.68,(upper_z,lower_z)
+for y in (-119,-122.9):
+    steps=[top_at(61.86+i*.43,y) for i in range(4)]
+    assert all(name=='yanchi.basin_and_walks' for name,z in steps),steps
+    assert all(.134<hi[1]-lo[1]<.148 for lo,hi in zip(steps,steps[1:])),steps
+stele=bpy.data.objects['yanchi.inscribed_stone']
+lo,hi=bounds(stele)
+assert 2.96<hi[2]-lo[2]<3.30 and lo[0]>38 and hi[0]<42
+assert any('vermilion' in mat.name.lower() for mat in stele.data.materials)
+water=bpy.data.objects['yanchi.water']
+z=[v.co.z for v in water.data.vertices]
+assert max(z)-min(z)>.039 and len(z)>15000
+assert all(bpy.data.objects.get('yanchi.'+s) for s in ['fall_and_contact','shelf.00','garden_walk','coconut_bank','bank_foliage'])
+print('Pond replacement verified: real water relief, carved marker, four bank steps and %.2f m spill.'%(upper_z-lower_z))
