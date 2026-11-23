@@ -1,0 +1,83 @@
+name: HAIZ PR acceptance
+
+# One acceptance gate for every pull request. It only reads the repository: it never pushes,
+# deploys, requests a Pages build or touches haiz.space. Pages are served from the checkout on
+# 127.0.0.1. The job summary separates suites that ran from suites that could not run, and lists
+# what this gate does not cover (real phones, real GPUs, visual review).
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-acceptance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core regression (no browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install PyYAML for the workflow policy check
+        run: python3 -c 'import yaml' 2>/dev/null || python3 -m pip install --quiet pyyaml
+      - name: Core acceptance suites
+        run: node tests/acceptance/run.mjs --tier=core --require-all
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-core
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  mobile:
+    name: Mobile compatibility (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install ${{ matrix.engine }}
+        run: npx playwright install --with-deps ${{ matrix.engine }}
+      - name: Browser acceptance suites
+        # The chromium leg also proves the checker still catches broken pages and runs the 年轮
+        # phone/no-WebGL checks; the webkit leg is the iOS rendering engine on Linux (not a real iPhone).
+        run: |
+          if [ "${{ matrix.engine }}" = chromium ]; then
+            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-selftest,mobile-compat-chromium,rings-browser
+          else
+            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-webkit
+          fi
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-mobile-${{ matrix.engine }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14

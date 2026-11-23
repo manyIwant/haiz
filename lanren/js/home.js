@@ -3,6 +3,8 @@
 // the six viewpoints) drives the camera, the tree's growth, the light of the
 // day and which part of HAIZ is open.
 import * as THREE from 'three';
+import { stageAir } from '../map/air.js';
+import { GROUND_Y as GROUND_Y_AIR } from '../map/geo.js';
 import { CHAPTERS, LIGHT, STAGES, shot, poseAt, growAt, lightAt, retarget, setPortrait, AXIS } from './chapters.js';
 import { DwellCamera } from './camera.js';
 import { nearestSnap } from './mobile-gesture.js';
@@ -331,6 +333,8 @@ function placeSlab(settle) {
   // once the shot has rested a moment, the slab is frozen until the camera moves again
   if (settle > 0.995 && slabPos.init) { if (++slabPos.rest > 20) return; } else slabPos.rest = 0;
   const mode = CHAPTERS[active].ui.slab;
+  // 06's index lies along the foot of the frame (CSS); it is not carried by the scene
+  if (mode === 'index') { leader.style.opacity = '0'; return; }
   const W = innerWidth, H = innerHeight;
   const sw = slab.offsetWidth, sh = slab.offsetHeight;
   const v = tmpV.copy(ANCHORS[active]).project(world.camera);
@@ -423,6 +427,11 @@ function leave(href, dark, x, y, anchor) {
   veil.style.setProperty('--veil', colour);
   veil.replaceChildren();
   const g = window.gsap;
+  // the page picks this veil up and finishes the move (assets/js/thread.js)
+  try {
+    sessionStorage.setItem('haiz.thread', JSON.stringify({ i: active, kind, colour, href, t: Date.now(),
+      contours: kind === 'map' ? (crownContours() || []).slice(0, 6) : undefined }));
+  } catch { /* storage blocked */ }
   const go = () => { location.href = href; };
   if (!g || reduceMotion) return go();
   if (kind === 'shade') {
@@ -740,6 +749,8 @@ function step(dt, wallDt = dt) {
   const L = lightAt(p);
   life?.light(L, p);
   map?.light(L);
+  // the campus takes the tree's light from the walk down into 06 (and stays in it while walking)
+  stageAir(L, (p - 4.2) / 0.6, GROUND_Y_AIR);
   roots?.light(L, p);
   canopy?.light(L);
   if (ring) Object.assign(L, ring.L);

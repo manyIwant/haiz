@@ -244,7 +244,11 @@ varying float vAge; varying float vYoung; varying float vVar; varying float vOcc
       .replace('#include <uv_vertex>', `#include <uv_vertex>
 ${loose
     ? 'float variant = aLoose.y; float age = aLoose.x; float scl = 1.0; float young = 0.0; float fold = 0.0; float erect = 0.0; float uu = 1.0;'
-    : 'float variant = aLeaf.z; float uu, scl, young, fold, erect, age; leafGrow(aLeaf.x, aLeaf.y, uu, scl, young, fold, erect, age);'}
+    : `float variant = aLeaf.z; float uu, scl, young, fold, erect, age; leafGrow(aLeaf.x, aLeaf.y, uu, scl, young, fold, erect, age);
+// a bud not yet broken (or a leaf already fallen) collapses to one point, which
+// draws nothing: skip its wind, touch and lighting set-up and park it outside the
+// clip volume. Most of the crown is in this state through the first chapters.
+if (scl == 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }`}
 #ifdef USE_MAP
   vMapUv.x = (variant + vMapUv.x) * 0.25;
 #endif

@@ -1,0 +1,124 @@
+{
+  "date": "2026-11-22T08:22:51.998Z",
+  "renderer": "Chromium + SwiftShader, emulated 390×844 touch",
+  "passed": 15,
+  "total": 15,
+  "results": [
+    {
+      "name": "phone: tapping 骑 on the mode bar mounts the bike",
+      "ok": true,
+      "detail": {
+        "phase": "ride"
+      }
+    },
+    {
+      "name": "phone: the stick (pushed up) pedals the bike forward",
+      "ok": true,
+      "detail": {
+        "v": 3.3,
+        "stickShown": true,
+        "at": {
+          "x": 68,
+          "y": 586
+        },
+        "hit": "CANVAS"
+      }
+    },
+    {
+      "name": "bike: total roll stays within 0.5 rad (29°) on a hard sprinting turn",
+      "ok": true,
+      "detail": {
+        "maxRoll": 0.318
+      }
+    },
+    {
+      "name": "phone: 铃 rings the bell",
+      "ok": true,
+      "detail": {
+        "rang": 1
+      }
+    },
+    {
+      "name": "phone: tapping 步 gets off and walks",
+      "ok": true,
+      "detail": {
+        "mode": "walk",
+        "phase": "free"
+      }
+    },
+    {
+      "name": "phone: tapping 飞 mounts the broom",
+      "ok": true,
+      "detail": {
+        "phase": "ride"
+      }
+    },
+    {
+      "name": "phone: the HUD readings do not block touches (only the compass takes a tap)",
+      "ok": true,
+      "detail": {
+        "under": "rh-canvas"
+      }
+    },
+    {
+      "name": "phone: holding 升 climbs, holding 降 comes down",
+      "ok": true,
+      "detail": {
+        "start": 1,
+        "afterUp": 9.5,
+        "afterDown": 1.9
+      }
+    },
+    {
+      "name": "phone: two fingers (stick + 升) fly forward and climb together",
+      "ok": true,
+      "detail": {
+        "v": 5.07,
+        "agl": 7
+      }
+    },
+    {
+      "name": "phone: 榄仁听风 opens in the crown and shows 画下来",
+      "ok": true,
+      "detail": {
+        "id": "crown",
+        "shown": true
+      }
+    },
+    {
+      "name": "phone: tapping 画下来 keeps a sketch in this browser",
+      "ok": true,
+      "detail": {
+        "bytes": 41783
+      }
+    },
+    {
+      "name": "phone: the sketchbook is still there after a reload",
+      "ok": true,
+      "detail": {
+        "pages": [
+          "crown"
+        ],
+        "bytes": 41783
+      }
+    },
+    {
+      "name": "no page errors (phone, touch)",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "route: brush dabs are laid on the path and the beacon stands over the library",
+      "ok": true,
+      "detail": {
+        "dabs": 37,
+        "beacon": true
+      }
+    },
+    {
+      "name": "no page errors (desktop, route)",
+      "ok": true,
+      "detail": []
+    }
+  ]
+}

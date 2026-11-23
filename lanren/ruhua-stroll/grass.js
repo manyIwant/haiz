@@ -135,7 +135,7 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   vec2 lean = wd * (0.18 + 0.95 * gust) * mix(1.0, sw, 0.8) + vec2(-face.y, face.x) * (aRnd.z - 0.5) * 0.6;
   lean += wd * sin(uTime * (1.7 + aRnd.z) + aRnd.w * 5.0 + dot(root, wd) * 0.7) * (0.08 + 0.14 * gust) * sw;
   vec2 away = root - uPlayer.xz; float pd = length(away);
-  lean += away / max(pd, 0.01) * smoothstep(0.9, 0.12, pd) * 1.7;
+  lean += away / max(pd, 0.01) * (1.0 - smoothstep(0.12, 0.9, pd)) * 1.7;
   float bl = min(length(lean), 1.6);
   vec3 p = vec3(root.x, uGroundY, root.y);
   float wdt = uW * (0.75 + 0.5 * aRnd.z) * (1.0 - pow(t, 1.4) * 0.88);

@@ -1,0 +1,68 @@
+# Campus data-consistency audit (tools/campus-audit).
+# This checks that the repository's campus data agree with each other and are honestly labelled.
+# It is NOT a field-survey acceptance: passing says nothing about 1:1 accuracy on the ground.
+name: Campus data audit
+
+on:
+  pull_request:
+    paths:
+      - 'tools/campus-audit/**'
+      - 'data/campus-credibility.json'
+      - 'data/buildings.json'
+      - 'data/campus-sports.json'
+      - 'data/architecture.json'
+      - 'assets/walk/campus.json'
+      - 'assets/walk/campus-data.js'
+      - 'assets/walk/world.js'
+      - 'assets/js/three-campus.js'
+      - 'assets/cinematic/aligned/**'
+      - 'lanren/assets/campus-v3/**'
+      - 'lanren/life/places.js'
+      - 'lanren/roots/history.js'
+      - 'tests/fixtures/life-colliders.json'
+      - 'campus-3d.html'
+      - 'campus-stroll*.html'
+      - 'index.html'
+      - 'README.md'
+      - 'START-HERE.md'
+      - '.github/workflows/campus-audit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/campus-audit/**'
+      - 'data/campus-credibility.json'
+      - 'assets/walk/campus.json'
+      - 'lanren/assets/campus-v3/**'
+      - '.github/workflows/campus-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Campus data audit (consistency, not field survey)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # No npm install: the tool and its tests use only Node built-ins.
+      - name: Unit and regression tests
+        run: node --test tools/campus-audit/test/*.test.mjs
+      - name: Audit (fails on any error, including a missing required source)
+        run: node tools/campus-audit/audit.mjs --write
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f docs/campus-audit/audit-output.md ]; then
+            head -n 12 docs/campus-audit/audit-output.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: campus-audit-output
+          path: docs/campus-audit/audit-output.*
+          if-no-files-found: warn

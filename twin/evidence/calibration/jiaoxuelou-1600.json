@@ -1,0 +1,403 @@
+{
+ "schema": "haiz-twin-calibration/2",
+ "image": "assets/images/web/jiaoxuelou-1600.jpg",
+ "image_size": [
+  1600,
+  1280
+ ],
+ "picture_area": [
+  55,
+  212,
+  1543,
+  1095
+ ],
+ "principal_point": [
+  799.0,
+  653.5
+ ],
+ "note": "Edge segments measured on the repo image with sub-pixel edge fitting along hand-placed search segments (no pixels of the photograph are stored here). The photograph (区大伟) is framed by a white border; the picture area 1488 x 883 px is taken as uncropped and its centre as the principal point. World lines: the 1923 portal and the towers of Teaching Block 1 (data/buildings/yihao.json, porch.portal, parts.towers) and the rock plinth (data/site.json, taihu.plinth: north face y 31.6, top z 0.75, foot on the road at z 0). The plinth's north-west corner reads 7 deg off vertical on the photograph (chipped arris or edge halo) and has a low weight. A west-tower corner under the side-porch roof (edge fit rms 3.2 px) was tried and dropped: it disagreed by 15-17 px with every other feature, most likely because it is a side-porch pier, not the tower. With the plinth's length (7.5 m) and position taken from hero-2560 and the steps, its height comes out 0.78 m (model 0.75) and the portal 9.5 m wide over the piers (model 8.8 m). Letting the plinth's y float as well moves it 2-4 m south with a loosely determined value (y 27.3-29.4) and a barely better fit, so the steps/Esri position (north face y 31.6) is kept.",
+ "camera_model": "pinhole with radial distortion k1; principal point fixed at the centre of the picture area; free position, yaw, pitch, roll, focal length, k1",
+ "structure_params": {
+  "plinth_top": {
+   "init": 0.75,
+   "desc": "height of the plinth cap above its foot on the road (site.json taihu.plinth_top 0.75, estimated)"
+  },
+  "portal_hw": {
+   "init": 4.4,
+   "desc": "half width of the portal over the piers (yihao.json porch.portal x +/-4.4)"
+  }
+ },
+ "init": {
+  "x": -6.0,
+  "y": 42.0,
+  "z": 2.0,
+  "yaw": -78.0,
+  "pitch": 0.0,
+  "roll": 0.0,
+  "f": 1500.0,
+  "k1": 0.0
+ },
+ "init_spread": [
+  [
+   0,
+   0,
+   1.0
+  ],
+  [
+   3,
+   -4,
+   0.8
+  ],
+  [
+   -3,
+   4,
+   1.25
+  ],
+  [
+   0,
+   8,
+   1.6
+  ]
+ ],
+ "profile_f": [
+  1100,
+  1300,
+  1500,
+  1700,
+  1900,
+  2200
+ ],
+ "alternatives": [
+  [
+   "tower"
+  ],
+  [
+   "portal_top"
+  ],
+  [
+   "plinth_E_corner",
+   "plinth_W_corner"
+  ],
+  [
+   "plinth_bot_L",
+   "plinth_bot_R"
+  ]
+ ],
+ "features": [
+  {
+   "id": "portal_E_outer",
+   "type": "vline",
+   "group": "portal",
+   "px": [
+    [
+     809.54,
+     495
+    ],
+    [
+     809.55,
+     562
+    ],
+    [
+     809.56,
+     630
+    ]
+   ],
+   "x": [
+    0.0,
+    "portal_hw",
+    1
+   ],
+   "y": 5.6,
+   "z_range": [
+    2,
+    8
+   ],
+   "weight": 1.0,
+   "desc": "east pier of the 1923 portal, outer edge (porch.portal x 4.4, front y 5.6)"
+  },
+  {
+   "id": "portal_W_inner",
+   "type": "vline",
+   "group": "portal",
+   "px": [
+    [
+     1119.85,
+     545
+    ],
+    [
+     1122.32,
+     672
+    ],
+    [
+     1124.79,
+     800
+    ]
+   ],
+   "x": [
+    1.9,
+    "portal_hw",
+    -1
+   ],
+   "y": 5.6,
+   "z_range": [
+    2,
+    8
+   ],
+   "weight": 1.0,
+   "desc": "west pier, inner edge (x -4.4 + pier 1.9)"
+  },
+  {
+   "id": "portal_W_outer",
+   "type": "vline",
+   "group": "portal",
+   "px": [
+    [
+     1205.42,
+     490
+    ],
+    [
+     1209.18,
+     645
+    ],
+    [
+     1212.94,
+     800
+    ]
+   ],
+   "x": [
+    0.0,
+    "portal_hw",
+    -1
+   ],
+   "y": 5.6,
+   "z_range": [
+    2,
+    8
+   ],
+   "weight": 1.0,
+   "desc": "west pier, outer edge"
+  },
+  {
+   "id": "tower_E_corner",
+   "type": "vline",
+   "group": "tower",
+   "px": [
+    [
+     476.73,
+     300
+    ],
+    [
+     476.18,
+     470
+    ],
+    [
+     475.62,
+     640
+    ]
+   ],
+   "x": 16.5,
+   "y": 0.6,
+   "z_range": [
+    5,
+    20
+   ],
+   "weight": 0.5,
+   "desc": "east tower, north-east corner (granite shaft; edge fit rms 1.6 px)"
+  },
+  {
+   "id": "plinth_E_corner",
+   "type": "vline",
+   "group": "plinth",
+   "px": [
+    [
+     88.14,
+     900
+    ],
+    [
+     89.73,
+     937.5
+    ],
+    [
+     91.32,
+     975
+    ]
+   ],
+   "x": 3.5,
+   "y": 31.6,
+   "z_range": [
+    0.0,
+    0.75
+   ],
+   "weight": 0.7,
+   "desc": "rock plinth, north-east corner"
+  },
+  {
+   "id": "plinth_top_L",
+   "type": "xline",
+   "group": "plinth",
+   "px": [
+    [
+     100,
+     885.42
+    ],
+    [
+     320,
+     893.76
+    ]
+   ],
+   "y": 31.6,
+   "z": "plinth_top",
+   "x_range": [
+    3.5,
+    -4.0
+   ],
+   "weight": 1.0,
+   "desc": "plinth cap, front top edge, east part"
+  },
+  {
+   "id": "plinth_top_M",
+   "type": "xline",
+   "group": "plinth",
+   "px": [
+    [
+     560,
+     903.0
+    ],
+    [
+     860,
+     912.56
+    ]
+   ],
+   "y": 31.6,
+   "z": "plinth_top",
+   "x_range": [
+    3.5,
+    -4.0
+   ],
+   "weight": 1.0,
+   "desc": "plinth cap, front top edge, middle"
+  },
+  {
+   "id": "plinth_top_R",
+   "type": "xline",
+   "group": "plinth",
+   "px": [
+    [
+     880,
+     913.19
+    ],
+    [
+     1055,
+     917.84
+    ]
+   ],
+   "y": 31.6,
+   "z": "plinth_top",
+   "x_range": [
+    3.5,
+    -4.0
+   ],
+   "weight": 1.0,
+   "desc": "plinth cap, front top edge, west part"
+  },
+  {
+   "id": "plinth_bot_L",
+   "type": "xline",
+   "group": "plinth",
+   "px": [
+    [
+     100,
+     990.15
+    ],
+    [
+     320,
+     992.01
+    ]
+   ],
+   "y": 31.6,
+   "z": 0.0,
+   "x_range": [
+    3.5,
+    -4.0
+   ],
+   "weight": 0.5,
+   "desc": "plinth foot on the road, east part (edge fit rms 2.1 px)"
+  },
+  {
+   "id": "plinth_bot_R",
+   "type": "xline",
+   "group": "plinth",
+   "px": [
+    [
+     880,
+     1035.03
+    ],
+    [
+     1050,
+     1040.03
+    ]
+   ],
+   "y": 31.6,
+   "z": 0.0,
+   "x_range": [
+    3.5,
+    -4.0
+   ],
+   "weight": 0.5,
+   "desc": "plinth foot on the road, west part (edge fit rms 3.0 px)"
+  },
+  {
+   "id": "portal_top",
+   "type": "xline",
+   "group": "portal",
+   "px": [
+    [
+     830,
+     462.25
+    ],
+    [
+     1190,
+     459.79
+    ]
+   ],
+   "y": 5.6,
+   "z": 9.05,
+   "x_range": [
+    4.4,
+    -4.4
+   ],
+   "weight": 0.3,
+   "desc": "top edge of the portal cap (porch.portal top_z 8.0 above the floor at z 1.05; cap overhang ignored; edge fit rms 3.8 px)"
+  },
+  {
+   "id": "plinth_W_corner",
+   "type": "vline",
+   "group": "plinth",
+   "px": [
+    [
+     1069.1,
+     936
+    ],
+    [
+     1063.3,
+     983
+    ],
+    [
+     1057.49,
+     1030
+    ]
+   ],
+   "x": -4.0,
+   "y": 31.6,
+   "z_range": [
+    0,
+    0.75
+   ],
+   "weight": 0.5,
+   "desc": "rock plinth, north-west corner (x -4.0 from the hero-2560 fit of the 7.5 m plinth); the arris reads 7 deg off vertical on this photograph (chipped edge or halo), so only its mean position is informative"
+  }
+ ],
+ "fixed": {
+  "k1": 0.0
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "label": "optimized",
+  "site": ".",
+  "date": "2026-11-22T06:22:04.279Z",
+  "dpr": 3,
+  "tiers": [
+    {
+      "quality": "low",
+      "shots": [
+        "bench/results/optimized/low-ch1.png",
+        "bench/results/optimized/low-ch2.png",
+        "bench/results/optimized/low-ch3.png",
+        "bench/results/optimized/low-ch4.png",
+        "bench/results/optimized/low-ch5.png",
+        "bench/results/optimized/low-ch6.png"
+      ],
+      "errors": []
+    },
+    {
+      "quality": "medium",
+      "shots": [
+        "bench/results/optimized/medium-ch1.png",
+        "bench/results/optimized/medium-ch2.png",
+        "bench/results/optimized/medium-ch3.png",
+        "bench/results/optimized/medium-ch4.png",
+        "bench/results/optimized/medium-ch5.png",
+        "bench/results/optimized/medium-ch6.png"
+      ],
+      "errors": []
+    }
+  ]
+}

@@ -71,12 +71,16 @@ export const CHAPTERS = [
     ]
   },
   {
-    id: 'whole', index: '06', label: '全盛 · 共同生长', en: ['Growing', 'Together'], zh: '工具 · 全部',
-    lede: '它终于枝繁叶茂，整个 HAIZ 都长在这棵树上：课间的小工具、随身的 Pocket、你在树下接住的叶子，和全站的每一个入口。',
+    // 06 回望: the film's last frame. Landed, turned round: the tree met from outside in 01 is now
+    // seen from inside its campus, in the last light (LIGHT[5]). The frame holds; its doors are
+    // a quiet index along the foot of the picture rather than a panel over it.
+    id: 'whole', index: '06', label: '落地回头 · 回望', en: ['Looking', 'Back'], zh: '回望 · 去处',
+    lede: '落地，回头。第一幕从外面遇见的那棵树，现在你站在它的校园里看它。最后一段光从你身后照过来；再向前一步，校园就交给你自己走。',
     note: '落叶前转红、春季抽新叶，见植物学资料；书页只保存在这台设备上',
-    ui: { slab: 'grid', anchor: [-2.2, 9.8, 1.2], exit: 'pull' },
+    ui: { slab: 'index', anchor: [-2.2, 9.8, 1.2], exit: 'pull' },
     entries: [
       { href: 'windowsill/index.html', title: '课间窗台', en: 'Windowsill', note: '便签、专注、书信与本机留声', dark: true, primary: true },
+      { href: 'lab/', title: 'HAIZ 实验册', en: 'Lab Book · 34 Experiments', note: '物理、化学、生物、数学等七科互动实验', dark: true },
       { href: 'physics-lab.html', title: '物理实验室', en: 'Physics lab', note: 'Every Joule 原版与自制练习', dark: true },
       { href: 'pocket/index.html', title: 'HAIZ Pocket', en: 'Pocket', note: '移动端应用，可安装的 PWA', dark: true },
       { href: 'login/index.html', title: '登录', en: 'Sign in', note: 'Pocket 账户 · 登录与注册', dark: true },
@@ -135,9 +139,12 @@ export const LIGHT = [
   // 05 golden hour seen from inside the crown
   { sun: [302, 12], sunCol: [1.0, 0.68, 0.40], I: 3.4, zenith: [0.14, 0.18, 0.32], horizon: [0.95, 0.62, 0.40], glow: [1.5, 0.74, 0.34],
     fog: [0.80, 0.58, 0.42], density: 0.0014, mist: 0.05, rays: 0.6, exposure: 0.95, warm: 0.85, cloud: 0.4, aperture: 0.16, focus: 0, sat: 1.06, contrast: 1.05 },
-  // 06 full day: deep blue sky, white clouds, warm sun across the crown from the right
-  { sun: [58, 40], sunCol: [1.0, 0.9, 0.72], I: 5.6, zenith: [0.025, 0.11, 0.46], horizon: [0.36, 0.54, 0.80], glow: [0.95, 0.8, 0.6],
-    fog: [0.42, 0.56, 0.74], density: 0.0010, mist: 0.03, rays: 0.0, exposure: 1.08, warm: 0.55, cloud: 0.66, aperture: 0, focus: 0, sat: 1.16, contrast: 1.12 }
+  // 06 回望 · the last light of the same evening. 05 watched the sun go down from inside the crown;
+  // on the ground, turning back, the low sun now comes from over the walker's shoulder and lays the
+  // whole tree in warm light against a cooling sky, while the campus steps back into the evening
+  // haze (painters' aerial perspective: distance loses darks and saturation, never detail).
+  { sun: [268, 12], sunCol: [1.0, 0.76, 0.52], I: 4.8, zenith: [0.03, 0.12, 0.31], horizon: [0.92, 0.68, 0.44], glow: [1.4, 0.82, 0.42],
+    fog: [0.70, 0.60, 0.48], density: 0.0017, mist: 0.04, rays: 0.3, exposure: 0.97, warm: 0.7, cloud: 0.42, aperture: 0, focus: 0, sat: 1.1, contrast: 1.12 }
 ];
 
 // ---------------------------------------------------------------- interpolation

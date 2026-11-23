@@ -1,0 +1,189 @@
+{
+ "schema": "haiz-twin-gate/1",
+ "id": "north_gate",
+ "name": "北门（海南中學牌坊）",
+ "frame": "Twin frame. x across the gate (campus east +), y along the axis (+ towards the street), z up from the road (0).",
+ "evidence": {
+  "hero": "assets/images/web/hero-2560.jpg: frontal view from the street. Camera recovered from the scene: level (horizon row 1075 from the converging kerbs), principal column 1280, f ~2036 px, eye 1.52 m, about 13.8 m in front of the gate face. Gate-plane scale 6.78 mm/px; elements in front of the gate (lions) at ~12.5 m: 6.14 mm/px.",
+  "osm": "campus boundary vertex on the axis at y 105.7 (OpenStreetMap via Overture 2026-11-18.0); the gate is placed with its centre plane at y = 106.0 on the axis. The 0.4 m parallax between the gate centre and the Teaching Block 1 portal on hero-2560 is within the uncertainty.",
+  "landscape_intro": "assets/images/campus/landscape_intro.jpg: same gate, slightly wider, confirms bay rhythm, lions, walls"
+ },
+ "tag": "photo-derived",
+ "basis": "All heights and widths measured on hero-2560 in the gate plane (focal-length independent ratios checked against ground-contact back-projection); depth (front-back) of piers and roofs is not visible and is estimated.",
+ "centre_y": 106.0,
+ "depth": 1.2,
+ "piers": {
+  "inner": {
+   "x": [
+    2.37,
+    3.93
+   ],
+   "top": 7.25
+  },
+  "outer": {
+   "x": [
+    5.49,
+    7.22
+   ],
+   "top": 5.15
+  },
+  "base_h": 0.6,
+  "bands_z": [
+   1.78,
+   2.95,
+   4.1
+  ],
+  "band_h": 0.06
+ },
+ "central_bay": {
+  "opening_top": 4.33,
+  "beam": [
+   4.33,
+   4.9
+  ],
+  "fret_low": [
+   4.9,
+   5.2
+  ],
+  "plaque": [
+   5.35,
+   6.57
+  ],
+  "plaque_x": [
+   -2.2,
+   2.2
+  ],
+  "fret_high": [
+   6.75,
+   7.0
+  ],
+  "text": "學中南海",
+  "text_note": "displayed left to right as 學中南海, read right to left as 海南中學",
+  "bracket": {
+   "w": 0.75,
+   "h": 0.65
+  }
+ },
+ "side_bay": {
+  "opening_top": 3.59,
+  "fret_low": [
+   3.95,
+   4.22
+  ],
+  "beam": [
+   4.22,
+   4.6
+  ],
+  "fret_high": [
+   4.6,
+   4.85
+  ],
+  "bracket": {
+   "w": 0.45,
+   "h": 0.42
+  }
+ },
+ "roofs": {
+  "central": {
+   "eave_x": 5.0,
+   "eave_y": 1.55,
+   "eave_z": 7.45,
+   "pitch": 35,
+   "upturn": 0.6,
+   "kick": 0.35,
+   "ridge_ends": 0.45,
+   "basis": "eave board bottom row 200 px (7.45 m), ridge row 76 px (8.3 m), eave span 10.8 m in the photo reduced for the eaves' projection towards the camera"
+  },
+  "side": {
+   "x_in": 2.6,
+   "x_out": 8.55,
+   "eave_y": 1.35,
+   "eave_z": 5.6,
+   "pitch": 32,
+   "upturn": 0.45,
+   "kick": 0.25,
+   "basis": "eave row 476 px (5.6 m), ridge row 370 px (6.3 m), outer eave about 1.3 m beyond the outer pier"
+  }
+ },
+ "lions": {
+  "x": [
+   -6.35,
+   -3.15,
+   3.15,
+   6.35
+  ],
+  "y": 107.55,
+  "pedestal": {
+   "w": 0.8,
+   "d": 0.8,
+   "h": 0.95
+  },
+  "height": 1.1,
+  "tag": "photo-derived",
+  "basis": "four white stone lions on square pedestals in front of the piers (hero-2560: pedestal top 0.94 m, lion top 2.04 m); carving simplified"
+ },
+ "walls": {
+  "west": [
+   [
+    -12.6,
+    106.6
+   ],
+   [
+    -18.4,
+    112.4
+   ],
+   [
+    -30.0,
+    114.9
+   ]
+  ],
+  "east": [
+   [
+    7.22,
+    106.0
+   ],
+   [
+    10.9,
+    108.6
+   ],
+   [
+    29.8,
+    100.5
+   ]
+  ],
+  "h": 2.5,
+  "coping_h": 0.45,
+  "tag": "public-map/estimated",
+  "basis": "line of the OSM campus boundary; white rendered wall with green glazed-tile coping and a notice board east of the gate (left edge of hero-2560); height estimated"
+ },
+ "gatehouse": {
+  "x": [
+   -12.6,
+   -7.4
+  ],
+  "y": [
+   102.6,
+   106.6
+  ],
+  "h": 3.3,
+  "tag": "photo-derived/estimated",
+  "basis": "white building with a green-tiled hip roof west of the gate (right edge of hero-2560, camera facing south); footprint estimated"
+ },
+ "booth": {
+  "x": [
+   -5.1,
+   -4.0
+  ],
+  "y": [
+   106.65,
+   107.6
+  ],
+  "h": 2.1,
+  "tag": "photo-derived",
+  "basis": "guard booth and turnstiles in the west side opening (right-hand opening seen from the street, hero-2560)"
+ },
+ "open_questions": [
+  "Gate depth (piers and roofs front to back) and the south face are not photographed; the south face repeats the north face with a blank plaque (invented).",
+  "Exact position along the axis rests on the OSM boundary (y 105.7); the photo puts the camera 13.8 m in front of the gate, which is consistent but not independent."
+ ]
+}

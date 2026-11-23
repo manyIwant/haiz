@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-22T08:21:25.689Z",
+  "site": ".",
+  "quality": "low",
+  "passed": true,
+  "checks": [
+    {
+      "name": "repeated bakes reuse one target",
+      "detail": "120 bakes over 3 scroll sweeps, 1 allocation, textures 17 → 17, environment always bound"
+    },
+    {
+      "name": "environment follows the sky and comes back",
+      "detail": "mean texel change 0.1156 at p 3.5, 0.00049 back at p 0 (0.42% — within one key step)"
+    },
+    {
+      "name": "resize and pixel-ratio drop keep the target working",
+      "detail": "same target, 12288 values change on the next sky"
+    },
+    {
+      "name": "context loss and restore",
+      "detail": "bakes resume into the kept target (12288 values change), still bound"
+    },
+    {
+      "name": "no page or WebGL errors"
+    }
+  ],
+  "start": {
+    "active": true,
+    "reason": "",
+    "allocations": 1,
+    "bakes": 1,
+    "textures": 17,
+    "bound": true,
+    "targetId": "3b132280-32ad-4a00-92fd-a3e20de10c8b",
+    "size": [
+      768,
+      1024
+    ]
+  },
+  "afterSweeps": {
+    "active": true,
+    "reason": "",
+    "allocations": 1,
+    "bakes": 121,
+    "textures": 17,
+    "bound": true,
+    "targetId": "3b132280-32ad-4a00-92fd-a3e20de10c8b",
+    "size": [
+      768,
+      1024
+    ],
+    "distinctTargets": 1
+  },
+  "stale": {
+    "changed": 12288,
+    "n": 16384,
+    "away": 0.11555989583333333,
+    "back": 0.00048828125
+  },
+  "resized": {
+    "active": true,
+    "reason": "",
+    "allocations": 1,
+    "bakes": 143,
+    "textures": 19,
+    "bound": true,
+    "targetId": "3b132280-32ad-4a00-92fd-a3e20de10c8b",
+    "size": [
+      768,
+      1024
+    ],
+    "changed": 12288
+  },
+  "lost": {
+    "events": [
+      "lost",
+      "restored"
+    ],
+    "lost": false,
+    "changed": 12288,
+    "nonzero": true,
+    "active": true,
+    "reason": "",
+    "allocations": 1,
+    "bakes": 159,
+    "textures": 28,
+    "bound": true,
+    "targetId": "3b132280-32ad-4a00-92fd-a3e20de10c8b",
+    "size": [
+      768,
+      1024
+    ]
+  }
+}

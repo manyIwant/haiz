@@ -1,0 +1,32 @@
+{
+  "label": "guarded",
+  "site": ".",
+  "date": "2026-11-22T08:25:03.983Z",
+  "dpr": 3,
+  "tiers": [
+    {
+      "quality": "low",
+      "shots": [
+        "bench/results/guarded/low-ch1.png",
+        "bench/results/guarded/low-ch2.png",
+        "bench/results/guarded/low-ch3.png",
+        "bench/results/guarded/low-ch4.png",
+        "bench/results/guarded/low-ch5.png",
+        "bench/results/guarded/low-ch6.png"
+      ],
+      "errors": []
+    },
+    {
+      "quality": "medium",
+      "shots": [
+        "bench/results/guarded/medium-ch1.png",
+        "bench/results/guarded/medium-ch2.png",
+        "bench/results/guarded/medium-ch3.png",
+        "bench/results/guarded/medium-ch4.png",
+        "bench/results/guarded/medium-ch5.png",
+        "bench/results/guarded/medium-ch6.png"
+      ],
+      "errors": []
+    }
+  ]
+}

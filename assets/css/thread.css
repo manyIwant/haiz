@@ -1,0 +1,33 @@
+/* The thread back to the tree (assets/js/thread.js). Not a toolbar: one line in each page's own paper and ink. */
+.thread-back { position: fixed; z-index: 119; left: max(18px, env(safe-area-inset-left)); bottom: max(22px, env(safe-area-inset-bottom));
+  display: inline-flex; align-items: center; gap: 9px; padding: 8px 13px 8px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--thread-bg, #f7f3eb) 88%, transparent); color: var(--thread-ink, #292e2a);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--thread-ink, #292e2a) 14%, transparent), 0 8px 26px rgba(16, 28, 22, .12);
+  font: 400 13px/1 "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif; letter-spacing: .1em; text-decoration: none;
+  transition: transform .7s cubic-bezier(.22, 1, .36, 1), opacity .5s, box-shadow .3s; }
+.thread-back svg { width: 11px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; }
+.thread-back svg path:first-child { fill: color-mix(in srgb, #6f8a4e 30%, transparent); }
+.thread-back b { font: 400 14px/1 "Cormorant Garamond", "Iowan Old Style", Georgia, serif; letter-spacing: .02em; margin-right: 2px; }
+.thread-back em { font-style: normal; font-size: 12px; opacity: .6; max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .6s cubic-bezier(.22, 1, .36, 1), opacity .4s; }
+.thread-back:hover em, .thread-back:focus-visible em { max-width: 7em; opacity: .85; }
+.thread-back:hover, .thread-back:focus-visible { box-shadow: 0 0 0 1px color-mix(in srgb, var(--thread-ink, #292e2a) 34%, transparent), 0 10px 30px rgba(16, 28, 22, .16); }
+.thread-back.is-away { transform: translateY(calc(100% + 30px)); opacity: 0; }
+@media (max-width: 650px) { .thread-back { left: 14px; bottom: 18px; padding: 9px 12px 9px 10px; } }
+
+/* arrival: the tree's leaving veil, finished on this side */
+.thread-veil { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; background: var(--veil);
+  animation: thread-fade .9s cubic-bezier(.22, 1, .36, 1) .08s both; }
+.thread-veil[data-kind="shade"] { animation-name: thread-lift; animation-duration: 1s; }        /* 02: the curtain that rose out of the trunk keeps rising */
+.thread-veil[data-kind="light"] { background: radial-gradient(circle at 50% 42%, #fffaf0, #fbf3e2 60%, #f3e6cc); animation-name: thread-dawn; animation-duration: 1.2s; } /* 05: eyes adjusting after the light */
+.thread-veil[data-kind="pull"] { animation-duration: 1.1s; }
+.thread-veil[data-kind="map"] { animation-duration: 1.3s; animation-delay: .35s; }
+.thread-veil svg { position: absolute; left: 50%; top: 50%; width: min(88vmin, 820px); height: min(88vmin, 820px); transform: translate(-50%, -50%); overflow: visible;
+  animation: thread-map 1.4s cubic-bezier(.22, 1, .36, 1) both; }
+.thread-veil svg path { fill: none; stroke: #5d6a52; stroke-width: 1.1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.thread-veil svg path:first-child { stroke: #2f3a2a; stroke-width: 2; }
+@keyframes thread-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes thread-lift { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 100% 0); } }
+@keyframes thread-dawn { 0% { opacity: 1; } 35% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes thread-map { from { transform: translate(-50%, -50%) scale(1); opacity: 1; } to { transform: translate(-50%, -50%) scale(1.18); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .thread-veil { display: none; } .thread-back, .thread-back em { transition: none; } }
+@media print { .thread-back, .thread-veil { display: none; } }

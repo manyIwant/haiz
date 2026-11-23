@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-22T04:56:15.905Z",
+  "renderer": "Chromium + SwiftShader",
+  "passed": 23,
+  "total": 23,
+  "results": [
+    {
+      "name": "wake readers patched (grass, lawn, crowns)",
+      "ok": true,
+      "detail": {
+        "grass": 9,
+        "lawn": 3,
+        "crowns": 363,
+        "active": false,
+        "count": 0
+      }
+    },
+    {
+      "name": "bike: summoned and mounted",
+      "ok": true,
+      "detail": {
+        "phase": "ride"
+      }
+    },
+    {
+      "name": "bike: cruising speed 4.3–6.2 m/s",
+      "ok": true,
+      "detail": {
+        "v": 5.21
+      }
+    },
+    {
+      "name": "bike: ankles within 12 cm of the pedals, wrists within 12 cm of the grips",
+      "ok": true,
+      "detail": {
+        "footL": 0.083,
+        "footR": 0.083,
+        "handL": 0.061,
+        "handR": 0.061
+      }
+    },
+    {
+      "name": "bike: a right turn leans right",
+      "ok": true,
+      "detail": {
+        "roll": 0.555
+      }
+    },
+    {
+      "name": "bike: off again, walking, clear of every wall",
+      "ok": true,
+      "detail": {
+        "phase": "free",
+        "clearance": 7.82
+      }
+    },
+    {
+      "name": "board: summoned and mounted",
+      "ok": true,
+      "detail": {
+        "phase": "ride"
+      }
+    },
+    {
+      "name": "board: cruising speed 2–6.8 m/s",
+      "ok": true,
+      "detail": {
+        "v": 4.44
+      }
+    },
+    {
+      "name": "board: a right turn leans right",
+      "ok": true,
+      "detail": {
+        "roll": 0
+      }
+    },
+    {
+      "name": "board: off again, walking, clear of every wall",
+      "ok": true,
+      "detail": {
+        "phase": "free",
+        "clearance": 8.58
+      }
+    },
+    {
+      "name": "broom: summoned and mounted",
+      "ok": true,
+      "detail": {
+        "phase": "ride"
+      }
+    },
+    {
+      "name": "broom: cruising speed 7.5–11 m/s",
+      "ok": true,
+      "detail": {
+        "v": 9.86
+      }
+    },
+    {
+      "name": "broom: a right turn leans right",
+      "ok": true,
+      "detail": {
+        "roll": 0.693
+      }
+    },
+    {
+      "name": "broom: off again, walking, clear of every wall",
+      "ok": true,
+      "detail": {
+        "phase": "free",
+        "clearance": 1.01
+      }
+    },
+    {
+      "name": "bike against the walls: never inside a building",
+      "ok": true,
+      "detail": {
+        "minClearance": 0.47
+      }
+    },
+    {
+      "name": "broom: below the ceiling (56 m) and within the campus",
+      "ok": true,
+      "detail": {
+        "maxAgl": 56,
+        "outside": 0
+      }
+    },
+    {
+      "name": "broom: comes down onto a roof, not through it",
+      "ok": true,
+      "detail": {
+        "y": 19.1,
+        "roof": 18.15
+      }
+    },
+    {
+      "name": "vista: 榄仁听风 opens inside the crown",
+      "ok": true,
+      "detail": {
+        "vista": "crown"
+      }
+    },
+    {
+      "name": "vista: the sketch is drawn and kept in this browser",
+      "ok": true,
+      "detail": {
+        "bytes": 56995,
+        "when": "11 月 22 日 16:31 · 海口 晴 26°"
+      }
+    },
+    {
+      "name": "route: found on the campus paths and written in the margin",
+      "ok": true,
+      "detail": {
+        "n": 4,
+        "air": false,
+        "dest": "图书馆",
+        "text": "去 图书馆 · 70 米"
+      }
+    },
+    {
+      "name": "no page errors (desktop)",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "phone: on the bike the bell and 疾 buttons are shown",
+      "ok": true,
+      "detail": {
+        "mode": "bike",
+        "shown": "grid",
+        "bell": "grid"
+      }
+    },
+    {
+      "name": "no page errors (phone)",
+      "ok": true,
+      "detail": []
+    }
+  ]
+}

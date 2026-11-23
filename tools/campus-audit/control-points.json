@@ -1,0 +1,16 @@
+{
+  "schema": "haiz-campus-control-points/1",
+  "read": "2026-11-22, by eye at 3× zoom with a 20 px grid",
+  "layer": "courtyard",
+  "imagery": "assets/cinematic/aligned/manifest.json",
+  "imageryNote": "Esri World Imagery export kept in the repo (600 Web Mercator metres ≈ 564 ground metres across 1024 px, ≈ 0.55 m per pixel). Capture date unknown. Roofs of tall blocks lean away from the image centre (relief displacement), so roof centres can sit several metres off their footprints.",
+  "method": "Each point pairs the centre of a feature in campus data (footprint centre) with the centre of the same feature as read on the image. These are human image readings, not survey: sigma is the reader's honest uncertainty in metres.",
+  "points": [
+    { "id": "yundong", "u": 130, "v": 498, "sigma": 6, "what": "Centre of the track infield: mean of the four grass-rectangle corners (153,397) (250,480) (20,507) (97,607)." },
+    { "id": "yihao", "u": 495, "v": 445, "sigma": 5, "what": "Midpoint of the long red-roofed block between its ends (410,510) and (580,380)." },
+    { "id": "keji", "u": 424, "v": 246, "sigma": 10, "what": "Centre of the white roof (372,257) (463,212) (477,237) (383,280). A dark band to its north-west may be a lower wing or shadow, so the building's true extent is uncertain." },
+    { "id": "lanshu", "u": 490, "v": 340, "sigma": 8, "what": "Centre of the single large crown between the white-roofed block and the red-roofed block. Identification as the centenary tree is an inference from position." },
+    { "id": "dorm_f", "u": 456, "v": 689, "sigma": 6, "what": "Centre of the red courtyard block south-west of the teaching blocks: corners (468,633) (400,687) (443,747) (513,690)." },
+    { "id": "yishu", "u": 692, "v": 620, "sigma": 8, "what": "Centre of the paired red courtyard complex: extremes (615,618) (703,543) (780,613) (670,707)." }
+  ]
+}

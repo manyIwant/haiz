@@ -1,0 +1,32 @@
+{
+  "label": "baseline",
+  "site": "../haiz-base",
+  "date": "2026-11-22T06:16:38.574Z",
+  "dpr": 3,
+  "tiers": [
+    {
+      "quality": "low",
+      "shots": [
+        "bench/results/baseline/low-ch1.png",
+        "bench/results/baseline/low-ch2.png",
+        "bench/results/baseline/low-ch3.png",
+        "bench/results/baseline/low-ch4.png",
+        "bench/results/baseline/low-ch5.png",
+        "bench/results/baseline/low-ch6.png"
+      ],
+      "errors": []
+    },
+    {
+      "quality": "medium",
+      "shots": [
+        "bench/results/baseline/medium-ch1.png",
+        "bench/results/baseline/medium-ch2.png",
+        "bench/results/baseline/medium-ch3.png",
+        "bench/results/baseline/medium-ch4.png",
+        "bench/results/baseline/medium-ch5.png",
+        "bench/results/baseline/medium-ch6.png"
+      ],
+      "errors": []
+    }
+  ]
+}

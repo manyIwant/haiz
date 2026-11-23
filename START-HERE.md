@@ -43,6 +43,7 @@ npm run test:browser
 | 独立 Node 后端 | [backend/README](backend/README.md) | GitHub Pages **不能运行** Node + SQLite 登录服务；公开站点不等于服务端已经上线 |
 | Flutter Pocket | [app/README](app/README.md) | 安卓安装包见 [GitHub Releases](https://github.com/manyIwant/haiz/releases)，不要误装过时预览版 |
 | 课间窗台 | [windowsill/SOURCE](windowsill/SOURCE.md) | 独立 AGPL-3.0 应用，与其他页面不同许可范围 |
+| 入画 · 自由共游（预览分支） | [ruhua-free.html](ruhua-free.html) · [docs/free-20261122](docs/free-20261122.md) | 步行、单车、滑板、竹扫帚；独立页面，不改动入画与六幕 |
 | 技术与美术记录 | [docs/](docs/) · [DESIGN.md](DESIGN.md) | 先阅读当前设计，旧实施进度可能过时 |
 
 ## 权利、真实性与安全边界
