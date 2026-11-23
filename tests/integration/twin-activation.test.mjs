@@ -30,5 +30,5 @@ test('chapter 04 and both painted campus worlds use one twin-aware V3 loader', (
 test('V4 film tree and rock are not silently duplicated by the landmark bridge', () => {
   const upgrade = read('lanren/map/twin-phase2.js');
   assert.doesNotMatch(upgrade, /PARTS\s*=.*trees\.glb/);
-  assert.match(upgrade, /remain.*V4/);
+  assert.match(upgrade, /stay with V4/);
 });
