@@ -8,7 +8,7 @@
     },
     "yihao": {
       "file": "yihao.glb",
-      "objects": 320
+      "objects": 321
     },
     "forecourt": {
       "file": "forecourt.glb",
@@ -33,6 +33,10 @@
     "yanchi": {
       "file": "yanchi.glb",
       "objects": 7
+    },
+    "arts": {
+      "file": "arts.glb",
+      "objects": 670
     }
   },
   "silhouette_overlap": [
