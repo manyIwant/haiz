@@ -39,7 +39,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const BASE = new URLSearchParams(location.search).get('base') || '../assets/phase1/';
-const PARTS = ['yihao', 'site', 'trees', 'gate', 'campus'];
+const atelier = new URLSearchParams(location.search).get('edition') === 'atelier';
+const PARTS = atelier ? ['landmark', 'forecourt', 'yihao', 'erhao', 'terminalia', 'trees', 'gate'] : ['yihao', 'site', 'trees', 'gate', 'campus'];
+const atelierParts = new Set(['landmark', 'forecourt', 'yihao', 'erhao', 'terminalia']);
+if (atelier) document.querySelector('h1').textContent = '府城校区 · 太湖石与教学楼前庭';
 // twin (x, y, z) -> glTF (x, z, -y)
 const tw = (x, y, z) => new THREE.Vector3(x, z, -y);
 
@@ -92,9 +95,13 @@ function tagOf(o) {
 }
 
 for (const part of PARTS) {
-  loader.load(BASE + part + '.glb', (g) => {
+  const folder = atelier && atelierParts.has(part) ? '../assets/atelier/' : BASE;
+  loader.load(folder + part + '.glb', (g) => {
     const root = g.scene;
     root.traverse((o) => {
+      // The edition has a complete replacement for the calibrated tree and its rocks.
+      const name = o.userData.name || o.name;
+      if (atelier && part === 'trees' && (name.startsWith('trees.lanren.') || name.startsWith('treeslanren'))) o.visible = false;
       if (o.isMesh) {
         o.castShadow = o.receiveShadow = true;
         original.set(o, o.material);
@@ -133,7 +140,10 @@ const ray = new THREE.Raycaster();
 renderer.domElement.addEventListener('click', (e) => {
   const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(p, camera);
-  const hit = ray.intersectObjects(scene.children, true).find((h) => h.object.visible);
+  const hit = ray.intersectObjects(scene.children, true).find((h) => {
+    for (let node=h.object; node; node=node.parent) if (!node.visible) return false;
+    return true;
+  });
   const info = document.getElementById('info');
   if (!hit) { info.textContent = '点击任一对象查看名称、标签和依据。'; return; }
   const holder = tagOf(hit.object);
@@ -142,6 +152,7 @@ renderer.domElement.addEventListener('click', (e) => {
 });
 
 const view = new URLSearchParams(location.search).get('view');
+if (atelier && !view) { camera.position.copy(tw(-5, 41.7, 2.1)); controls.target.copy(tw(0, 24, 3.3)); controls.update(); }
 if (view === 'gate') { camera.position.copy(tw(0.44, 120.3, 1.5)); controls.target.copy(tw(0.0, 0.0, 1.5)); camera.fov = 36; camera.updateProjectionMatrix(); controls.update(); }
 if (view === 'top') { camera.position.copy(tw(0, 0, 420)); controls.target.copy(tw(0, 1, 0)); controls.update(); }
 

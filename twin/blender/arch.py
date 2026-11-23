@@ -316,7 +316,7 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
              overhang: float = 0.8, mat='roof.tile.red', fascia_mat='trim.white', fascia_h=0.35,
              concave: float = 0.0, upturn: float = 0.0, upturn_len: float = 3.0, kick: float = 0.0,
              ridge_mat: str | None = 'trim.white', ridge_w=0.28, ridge_h=0.22, nseg=10, tiles=True,
-             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None):
+             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None, hip_run=None):
     """Hip roof over the axis-aligned rectangle [x0,x1]x[y0,y1] (walls), with eave overhang.
 
     concave: 0 = straight slopes; >0 = traditional sag (surface lowered mid-slope by that
@@ -332,10 +332,11 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
     rise = half * math.tan(math.radians(pitch_deg))
     zr = z_eave + rise
     cx, cy = (X0 + X1) / 2, (Y0 + Y1) / 2
+    end_run = half if hip_run is None else hip_run
     if long_x:
-        ra = (X0 + half, cy); rb = (X1 - half, cy)
+        ra = (X0 + end_run, cy); rb = (X1 - end_run, cy)
     else:
-        ra = (cx, Y0 + half); rb = (cx, Y1 - half)
+        ra = (cx, Y0 + end_run); rb = (cx, Y1 - end_run)
     corners = [(X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)]
 
     def eave_pt(p, sa, sb, outward):

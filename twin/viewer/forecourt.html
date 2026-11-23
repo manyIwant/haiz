@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>虎踞龍盤 · 一号楼前庭 | HAIZ</title>
+<style>
+* { box-sizing: border-box }
+html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#c8cfca; color:#273b33; font:14px/1.5 system-ui,sans-serif }
+canvas { display:block; touch-action:none }
+header,footer { position:absolute; left:clamp(12px,3vw,44px); max-width:calc(100vw - 24px); z-index:1; background:#f8f6efed; box-shadow:0 2px 20px #15201818; border:1px solid #bcc2b6; padding:12px 16px }
+header { top:16px }
+h1 { margin:0; font:600 23px/1.35 Georgia,"Songti SC",serif }
+#status { margin-top:3px; font-size:12px; color:#4d5c52 }
+footer { bottom:16px; display:flex; flex-wrap:wrap; align-items:center; gap:10px }
+button,select { color:inherit; border:1px solid #a8afa3; background:#fffefa; border-radius:3px; padding:7px 10px; font:inherit }
+button { cursor:pointer } :focus-visible { outline:3px solid #286048 }
+</style>
+<header><h1>虎踞龍盤 · 一号楼前庭</h1><div id="status" role="status">正在载入三维资产…</div></header>
+<footer><label>机位 <select id="view"><option value="front">实拍对照</option><option value="surface">石腹近看</option><option value="back">台座背面</option><option value="portal">门廊檐下</option><option value="wing">东侧柱廊</option><option value="quadrangle">二号楼内院</option><option value="tree">榄仁树低枝</option><option value="crown">树冠全貌</option></select></label><button id="reset">复位</button><label><input type="checkbox" id="single"> 单看太湖石</label></footer>
+<script src="../../assets/vendor/three.min.js"></script>
+<script src="../../assets/vendor/OrbitControls.js"></script>
+<script src="../../assets/vendor/GLTFLoader.js"></script>
+<script>
+(async () => {
+  const status = document.querySelector('#status');
+  try {
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.physicallyCorrectLights = true;
+    renderer.toneMappingExposure = 0.97;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    document.body.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xd1d9d7);
+    // A neutral sky/ground reflection field for the glass when orbiting offline.
+    const sky = document.createElement('canvas');
+    sky.width=256; sky.height=128;
+    const ctx=sky.getContext('2d'), gradient=ctx.createLinearGradient(0,0,0,128);
+    [[0,'#80a8bd'],[0.45,'#e8ede7'],[0.50,'#d9e1d8'],[0.54,'#788779'],[1,'#96927c']].forEach(([t,c])=>gradient.addColorStop(t,c));
+    ctx.fillStyle=gradient;ctx.fillRect(0,0,256,128);
+    const skyTexture=new THREE.CanvasTexture(sky);
+    skyTexture.encoding=THREE.sRGBEncoding;
+    const pmrem=new THREE.PMREMGenerator(renderer);
+    scene.environment=pmrem.fromEquirectangular(skyTexture).texture;
+    pmrem.dispose();skyTexture.dispose();
+    const camera = new THREE.PerspectiveCamera(40,1,0.08,3300);
+    const orbit = new THREE.OrbitControls(camera,renderer.domElement);
+    orbit.minDistance = 0.3;
+    orbit.maxDistance = 175;
+    orbit.maxPolarAngle = Math.PI*0.515;
+    const tw = ([x,y,z]) => new THREE.Vector3(x,z,-y);
+    scene.add(new THREE.HemisphereLight(0xfff5dd,0xb8baaa,0.80));
+    const sun = new THREE.DirectionalLight(0xffedce,2.75);
+    sun.position.copy(tw([28,52,36]));
+    sun.target.position.copy(tw([2,17,1]));
+    scene.add(sun,sun.target);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048,2048);
+    Object.assign(sun.shadow.camera,{left:-35,right:35,top:32,bottom:-32,near:1,far:110});
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.normalBias=0.016;
+    const select = document.querySelector('#view');
+    const single = document.querySelector('#single');
+    const report = window.forecourtBundle?.camera || await (await fetch('../evidence/calibration/jiaoxuelou-1600.report.json')).json();
+    const c = report.camera;
+    const pos = [c.x,c.y,c.z];
+    const target = pos.map((v,i)=>v+13*c.basis.forward[i]);
+    const views = {front:[pos,target,36*c.f_px/1600],surface:[[-3.9,32.5,2.25],[-1.75,28.85,2.14],62],
+      back:[[-9,20,4.4],[-0.2,28.8,1.8],44],portal:[[6.6,17.7,2.25],[0,4,7.4],36],
+      wing:[[31.5,12,2],[12.4,0,6.4],29],quadrangle:[[-13.3,-17.6,2.05],[12.2,-44,8.2],27],
+      tree:[[49.8,22.7,1.27],[39.3,17.8,3.26],29],crown:[[67,49,7.8],[41.5,15.8,7.4],39]};
+    function resize(){
+      renderer.setSize(innerWidth,innerHeight);
+      camera.aspect = innerWidth/innerHeight;
+      const lens = views[select.value][2];
+      // Preserve the horizontal lens on wide screens; allow more height in portrait.
+      camera.fov = THREE.MathUtils.radToDeg(2*Math.atan(36/(2*lens*Math.min(camera.aspect,1.8))));
+      camera.updateProjectionMatrix();
+      draw();
+    }
+    let pending = false;
+    function draw(){
+      if(pending) return;
+      pending=true;
+      requestAnimationFrame(()=>{pending=false;renderer.render(scene,camera);});
+    }
+    function reset(){
+      const [eye,look] = views[select.value];
+      camera.position.copy(tw(eye));
+      orbit.target.copy(tw(look));
+      orbit.update();
+      resize();
+    }
+    const parts = {};
+    orbit.addEventListener('change',draw);
+    addEventListener('resize',resize);
+    select.onchange = () => {if(['portal','wing','quadrangle','tree','crown'].includes(select.value)){single.checked=false;isolate();} reset();};
+    document.querySelector('#reset').onclick = reset;
+    function isolate(){
+      renderer.shadowMap.needsUpdate = true;
+      for(const [key,part] of Object.entries(parts)) part.visible = key==='landmark'||!single.checked;
+      draw();
+    }
+    single.onchange=()=>{if(single.checked && ['portal','wing','quadrangle','tree','crown'].includes(select.value)){select.value='front';reset();} isolate();};
+    reset();
+    const loader = new THREE.GLTFLoader();
+    let loaded = 0;
+    await Promise.all(['landmark','yihao','forecourt','erhao','terminalia'].map(async key=>{
+      let model;
+      if (window.forecourtBundle) {
+        const binary = atob(window.forecourtBundle.parts[key]);
+        const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+        model = await new Promise((resolve,reject)=>loader.parse(bytes.buffer,'',resolve,reject));
+        delete window.forecourtBundle.parts[key];
+      } else {
+        model = await loader.loadAsync('../assets/atelier/'+key+'.glb');
+      }
+      const part = model.scene;
+      part.traverse(obj=>{
+        if(!obj.isMesh) return;
+        obj.castShadow = !obj.name.startsWith('siteground');
+        obj.receiveShadow = true;
+        for(const mat of [].concat(obj.material)) if(mat.map) mat.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+      });
+      parts[key]=part; scene.add(part); isolate();
+      status.textContent = '已加载 '+(++loaded)+' / 5';
+    }));
+    status.textContent = '拖动旋转 · 滚轮或双指缩放 · 右键平移';
+    window.__forecourtReady = true;
+  } catch(error) {
+    document.querySelector('#status').textContent = '预览加载失败 · '+error.message;
+    console.error(error);
+  }
+})();
+</script></html>

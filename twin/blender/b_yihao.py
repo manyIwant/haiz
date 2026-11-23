@@ -375,7 +375,7 @@ def _stepped_head(g, mat, x0, x1, z_top, y_front, depth=0.35, big=(0.6, 0.35), s
         g.box(mat, (bx0, y_front - depth, z_top - bh - sh), (bx1, y_front, z_top - bh), skip=('+z',))
 
 
-def porch(out: Out):
+def porch(out: Out, detailed=False):
     Pp = SPEC['porch']
     part = 'porch'
     g = out.geo(part, Pp['portal']['tag'], Pp['portal']['basis'])
@@ -409,8 +409,32 @@ def porch(out: Out):
     for (a0, a1) in (((xL, yF - 0.6), (xR, yF)), ((xL, yB), (xR, yB + 0.6)), ((xL, yB), (xL + 0.6, yF)), ((xR - 0.6, yB), (xR, yF))):
         g.box(TRIM, (a0[0], a0[1], zc - 0.65), (a1[0], a1[1], zc - 0.3))
     g.polyn(TRIM, [(xL, yB, zc - 0.3), (xR, yB, zc - 0.3), (xR, yF, zc - 0.3), (xL, yF, zc - 0.3)], (0, 0, -1))
-    arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang'], concave=0.08,
-                  upturn=0.45, upturn_len=2.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.35, tiles=True)
+    if detailed:
+        # The front photo shows a long red ridge above a pale shelf and layered fascia.
+        # The slope behind the crest and the underside profiles are inferred.
+        arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang']-0.16,
+                      concave=0.095, upturn=0.18, upturn_len=1.2, kick=0.04, ridge_mat=TRIM,
+                      hip_run=1.37, ridge_w=0.18, ridge_h=0.12, ridge_ends=0.15,
+                      fascia_h=0.16, tile_pitch=0.19)
+        # A continuous shelf returns around the sides. Its visible front corners rise gently.
+        over = C['overhang']
+        x0, x1, y0, y1 = ca-over, cb+over, cy0-over, cy1+over
+        path = []
+        for start,end in (((x0,y0),(x1,y0)),((x1,y0),(x1,y1)),
+                          ((x1,y1),(x0,y1)),((x0,y1),(x0,y0))):
+            length = math.dist(start,end)
+            for i in range(math.ceil(length/0.31)):
+                t = i/math.ceil(length/0.31)
+                rise = 0.16*max(0,1-min(t,1-t)*length/1.25)**2
+                path.append((start[0]+(end[0]-start[0])*t,start[1]+(end[1]-start[1])*t,zc+rise))
+        g.sweep(TRIM,[(-0.32,-0.11),(0.04,-0.11),(0.13,-0.14),(0.13,-0.22),
+                      (0.015,-0.25),(0.015,-0.32),(-0.10,-0.39),(-0.32,-0.39)],path,closed=True)
+        for x in (ca+1.18,cb-1.18):
+            g.box('frame.alu.grey',(x-0.22,fy-0.77,zc-0.68),(x+0.22,fy-0.49,zc-0.642))
+            g.box('trim.white',(x-0.19,fy-0.74,zc-0.69),(x+0.19,fy-0.52,zc-0.68))
+    else:
+        arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang'], concave=0.08,
+                      upturn=0.45, upturn_len=2.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.35, tiles=True)
     # side porches: granite side portals with stepped heads, slabs, short white columns, shed roofs
     S = Pp['side']
     for side in (-1, 1):
@@ -446,7 +470,7 @@ def porch(out: Out):
                      mat='metal.steel.white', bars=0.0, post=0.7)
 
 
-def links(out: Out):
+def links(out: Out, storeys=6):
     """Covered links towards the next building (white flat roofs on the Esri layer)."""
     Lk = SPEC['links']
     part = 'links'
@@ -454,18 +478,18 @@ def links(out: Out):
     ya, yb = Lk['y']
     for xc in Lk['x_centres']:
         x0, x1 = xc - Lk['width'] / 2, xc + Lk['width'] / 2
-        for st in range(2, 8):
+        for st in range(2, storeys + 2):
             z = lvl(st)
             g.box(WALL, (x0, ya, z - 0.4), (x1, yb, z))
-            if st < 7:
+            if st <= storeys:
                 arch.railing(g, [(x0 + 0.1, ya, z), (x0 + 0.1, yb, z)], h=1.05, mat=TRIM, bars=0.0, posts=False)
                 arch.railing(g, [(x1 - 0.1, yb, z), (x1 - 0.1, ya, z)], h=1.05, mat=TRIM, bars=0.0, posts=False)
                 g.box(WALL, (x0, ya, z), (x0 + 0.2, yb, z + 1.05), skip=('-z',))
                 g.box(WALL, (x1 - 0.2, ya, z), (x1, yb, z + 1.05), skip=('-z',))
-        g.box('roof.flat.white', (x0 - 0.3, ya, lvl(7) - 0.4), (x1 + 0.3, yb, lvl(7) + 0.3))
+        g.box('roof.flat.white', (x0 - 0.3, ya, lvl(storeys + 1) - 0.4), (x1 + 0.3, yb, lvl(storeys + 1) + 0.3))
         for x in (x0 + 0.25, x1 - 0.25):
             for y in (ya + 0.3, (ya + yb) / 2):
-                arch.square_column(g, WALL, x, y, 0.45, 0.0, lvl(7) - 0.4)
+                arch.square_column(g, WALL, x, y, 0.45, 0.0, lvl(storeys + 1) - 0.4)
 
 
 def base_skirt(out: Out, depth=1.2):
@@ -494,7 +518,7 @@ def base_skirt(out: Out, depth=1.2):
         g.polyn(GRAN, [(a[0], a[1], -depth), (b[0], b[1], -depth), (b[0], b[1], 0.0), (a[0], a[1], 0.0)], (dy / L, -dx / L, 0.0))
 
 
-def build():
+def build(detailed_porch=False):
     out = Out()
     protos(out)
     base_skirt(out)
@@ -503,6 +527,6 @@ def build():
         tower(out, s)
         pavilion(out, s)
     central(out)
-    porch(out)
-    links(out)
+    porch(out, detailed_porch)
+    links(out, storeys=5 if detailed_porch else 6)
     return out
