@@ -63,7 +63,10 @@ function rowsOf(json) {
 async function main() {
   const update = process.argv.includes('--update');
   const today = new Date(Date.now() + 8 * 3600000);   // Haikou calendar date
-  const end = iso(today);
+  // The archive only accepts end_date up to its own "yesterday" (UTC). Asking for the Haikou
+  // calendar date fails with HTTP 400 between 00:00 and 08:00 UTC+8 — which is exactly when the
+  // weekly cron runs. ERA5 trails by ~5 days anyway, so ending at UTC yesterday loses nothing.
+  const end = iso(new Date(Date.now() - 86400000));
   let rows = [];
   let grid = null;
   if (update) {

@@ -20,7 +20,11 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
 (async () => {
   await new Promise((r) => server.listen(0, r));
   const base = 'http://127.0.0.1:' + server.address().port;
-  const browser = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
+  // --disable-smooth-scrolling: Chrome animates keyboard/smooth scrolls frame by frame. At SwiftShader's
+  // multi-second frames ScrollTrigger reads each pause as "scroll ended" and snaps back to the
+  // current station, so End never reached 06 (reproduced locally: scrollY frozen for 140 s; with
+  // the flag End lands on 06 at once). The page's own snapping and camera flights are unchanged.
+  const browser = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--disable-smooth-scrolling'] });
   const results = [];
   const errors = [];
   const ready = (page) => page.waitForFunction(() => document.body.classList.contains('ready'), null, { timeout: 240000 });
@@ -28,6 +32,9 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // ---- desktop: scroll, orbit navigator, keyboard, catching a leaf, leaving and returning
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
+  // Every action gets the suite's 90 s budget: on SwiftShader each input or fill waits on frames
+  // that take seconds, and Playwright's 30 s default was the most common way this suite timed out.
+  page.setDefaultTimeout(90000);
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await page.goto(base + '/index.html?quality=low&test=1');
@@ -43,7 +50,7 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   assert.match(await page.evaluate(() => location.hash), /#leaves/);
   results.push(`native scroll to 03 青春 · 生长 activates the details shot (#leaves), growth ${g2.toFixed(2)}`);
   // the orbit navigator jumps to a viewpoint
-  await page.click('#orbitDots .dot:nth-of-type(5)');
+  await page.click('#orbitDots .dot:nth-of-type(5)', { timeout: 90000 });   // input waits on multi-second SwiftShader frames
   await page.waitForFunction(() => window.__haizHome.info().active === 4, null, { timeout: 180000 });
   results.push('path navigator station walks to 05 日子 · 创作 (looking forward)');
   // keyboard: End reaches the last viewpoint
@@ -52,19 +59,50 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   const g5 = await page.evaluate(() => window.__haizHome.info().grow);
   assert(g5 > 0.97, 'full leaf at the end: ' + g5);
   results.push('End key walks to 06 工具 · 全部 in full leaf');
-  // a falling leaf can be caught and kept
+  // a falling leaf can be caught and kept. The leaf is placed in front of the camera, so the
+  // camera must have arrived first: End only switches the section, and on a slow software
+  // renderer the flight to 06 is still under way, which moves the leaf off the click point.
+  await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 5) < 1e-3, null, { timeout: 180000 });
   const pos = await page.evaluate(() => {
-    const w = window.__haizHome.world, cam = w.camera;
-    const p = cam.position.clone().add(cam.getWorldDirection(cam.position.clone()).multiplyScalar(6)); p.y += 0.8;
+    const w = window.__haizHome.world, cam = w.camera, dir = cam.getWorldDirection(cam.position.clone());
+    // At 06 the camera stands at (-21.5, 0.79, 29.5), where the litter's ground heightfield
+    // reads 25.6 m and is still 13.6 m six metres ahead (measured locally). A leaf released 6 m
+    // ahead is "under the ground", settles on the first frame and there is nothing to catch
+    // (falling 0, settled 1 — seen on CI and locally). Take the nearest distance along the view
+    // whose release point is above that surface (≈15–20 m here; picking scales with distance),
+    // and hold the leaf still: this step is about catching, not about how leaves fall.
+    let p = null;
+    for (const d of [6, 5, 7, 4, 8, 10, 12, 14, 16, 18, 20, 24]) {
+      const q = cam.position.clone().add(dir.clone().multiplyScalar(d)); q.y += 0.8;
+      if (q.y - 0.1 > w.litter.heightAt(q.x, q.z) + 0.3) { p = q; break; }
+    }
+    if (!p) throw new Error('no point in front of the camera is above the ground to release a leaf');
     w.litter.falling.length = 0;
-    const L = w.litter.release(p, 0.8, 0.2, true); L.slow = 0.01;
+    const L = w.litter.release(p, 0.8, 0.2, true); L.slow = 0;
     const v = L.p.clone().project(cam);
     return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight];
   });
+  const camBefore = await page.evaluate(() => window.__haizHome.info().cam);
   await page.mouse.click(pos[0], pos[1]);
-  await page.waitForSelector('#specimen[open]', { timeout: 60000 });
+  try {
+    await page.waitForSelector('#specimen[open]', { timeout: 60000 });
+  } catch (e) {
+    const diag = await page.evaluate(() => {
+      const w = window.__haizHome.world, info = window.__haizHome.info();
+      return { info, settled: w.litter.settled.slice(-2).map((g) => [g.x, g.y, g.z].map((n) => +n.toFixed(2))), falling: w.litter.falling.length, leaf: w.litter.falling.map((L) => L.slow === 0 && L.p.toArray().map((n) => +n.toFixed(2))).filter(Boolean) };
+    }).catch((err) => 'page not inspectable: ' + err.message.split('\n')[0]);
+    console.error('[home-browser] leaf not caught', JSON.stringify({ clickedAt: pos.map(Math.round), camBefore, page: diag, errors }, null, 1));
+    throw e;
+  }
   await page.fill('#specNote', '测试：那天有风');
-  await page.click('#specKeep');
+  // The dialog opens with a 0.55 s CSS animation over a backdrop-filter blur of the live WebGL
+  // canvas. On SwiftShader that blur makes frames so slow that the animation can still be running
+  // 90 s later, and Playwright's "stable for two frames" check timed out on CI (#89) although the
+  // button was visible and enabled. Stability is not what this step tests: click it without the
+  // stability wait (the dialog is modal and on top), then wait for the book to count the leaf.
+  await page.waitForSelector('#specKeep', { state: 'visible', timeout: 90000 });
+  await page.click('#specKeep', { force: true, timeout: 90000 });
+  await page.waitForFunction(() => document.getElementById('bookCount').textContent === '1', null, { timeout: 90000 });
   assert.strictEqual(await page.textContent('#bookCount'), '1');
   results.push('a falling leaf is caught, annotated and kept in the book');
   // an entry leaves through the veil; coming back returns to that viewpoint
@@ -73,7 +111,48 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // the camera has arrived (not just entered the section) before the slab is clicked
   await page.waitForFunction(() => Math.abs(window.__haizHome.info().p - 2) < 1e-3, null, { timeout: 180000 });
   await page.waitForTimeout(2500);
-  await Promise.all([page.waitForURL(/news\.html$/, { timeout: 120000 }), page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 })]);
+  // Timeline of the exit (printed on success too) so a timeout says which phase stalled:
+  // the click itself, the veil animation before location.href, or news.html's load event.
+  const exitT0 = Date.now(), exitLog = [], pending = new Map();
+  const mark = (what) => exitLog.push(`${((Date.now() - exitT0) / 1000).toFixed(1)}s ${what}`);
+  const onNav = (f) => { if (f === page.mainFrame()) mark('navigated ' + f.url().replace(base, '')); };
+  const onReq = (r) => pending.set(r, r.url().replace(base, '')), onDone = (r) => pending.delete(r);
+  page.on('framenavigated', onNav); page.on('request', onReq); page.on('requestfinished', onDone); page.on('requestfailed', onDone);
+  await page.evaluate(() => {
+    const a = document.querySelector('#p-leaves a[href="news.html"]');
+    window.__exitTrace = [];
+    const t0 = performance.now(), note = (w) => window.__exitTrace.push(`${((performance.now() - t0) / 1000).toFixed(1)}s ${w}`);
+    a.addEventListener('click', (e) => note(`click on ${e.target.tagName} spatial=${document.body.classList.contains('spatial')}`), true);
+    addEventListener('beforeunload', () => note('beforeunload'));
+  });
+  try {
+    await Promise.all([
+      // Budget measured on GitHub's runner (#89, SwiftShader): click 68 s, veil + 'map' exit flight
+      // until location.href 81 s more, i.e. navigation at ~150 s; the old 120 s limit cut it off.
+      // 'commit' is the navigation this step is about; news.html's own load is covered by site tests.
+      // This is a software-rendering budget, not a UX target: real exit timing needs a hardware GPU.
+      page.waitForURL(/news\.html$/, { timeout: 300000, waitUntil: 'commit' }).then(() => mark('navigation to news.html committed')),
+      // The slab is pinned to a projected 3D anchor and the camera "breathes" (camera.js), so on a
+      // fast runner the link can move a fraction of a pixel every frame and never pass Playwright's
+      // "stable" check (CI re-run on 522e32b: 90 s waiting for stable). Click the visible link
+      // without that wait; the click handler, veil and navigation under test are unchanged.
+      page.waitForSelector('#p-leaves a[href="news.html"]', { state: 'visible', timeout: 90000 })
+        .then(() => page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, force: true, timeout: 90000 }))
+        .then(() => mark('click returned')),
+    ]);
+  } catch (e) {
+    const diag = await page.evaluate(() => {
+      const v = document.getElementById('veil'), info = window.__haizHome && window.__haizHome.info();
+      return { href: location.href, trace: window.__exitTrace, body: document.body.className, active: info && info.active, p: info && info.p,
+        veil: v && { opacity: v.style.opacity, mask: v.style.maskSize, clip: v.style.clipPath, children: v.childElementCount },
+        tweens: window.gsap ? window.gsap.globalTimeline.getChildren(true, true, false).length : null,
+        specimenOpen: !!document.querySelector('#specimen[open]') };
+    }).catch((err) => 'page not inspectable: ' + err.message.split('\n')[0]);
+    console.error('[home-browser] exit to news.html stalled', JSON.stringify({ timeline: exitLog, page: diag, pending: [...pending.values()].slice(0, 15), errors }, null, 1));
+    throw e;
+  }
+  page.off('framenavigated', onNav); page.off('request', onReq); page.off('requestfinished', onDone); page.off('requestfailed', onDone);
+  console.log('[home-browser] exit timeline: ' + exitLog.join(' · '));
   results.push('entry click draws the veil and navigates to news.html');
   await page.goto(base + '/index.html?quality=low&test=1');
   await ready(page);

@@ -1,0 +1,5 @@
+name: bad · pull_request_target
+on: pull_request_target
+permissions: { contents: write }
+jobs:
+  x: { runs-on: ubuntu-latest, timeout-minutes: 5, steps: [ { uses: actions/checkout@v4 } ] }

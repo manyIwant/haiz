@@ -1,0 +1,9 @@
+name: bad · pushes from a PR run
+on: [pull_request, push]
+permissions: { contents: write }
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: git push origin HEAD:main
