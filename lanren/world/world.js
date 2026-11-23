@@ -104,7 +104,7 @@ export function attachWorld(ctx) {
   ui.innerHTML = `
     <div class="wd-hold" hidden>
       <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，走进画里' : '你已站在校园里。再向前一步，走进画里'}</span></p>
-      <a class="wd-ruhua" href="ruhua-free.html" title="入画 · 自由共游：同一棵树，走进可以漫步、骑行与飞行的绘画校园">走进入画 <i aria-hidden="true">→</i></a>
+      <a class="wd-ruhua" href="ruhua-free.html?stage=stroll" title="入画 · 自由共游：同一棵树，走进可以漫步、骑行与飞行的绘画校园">走进入画 <i aria-hidden="true">→</i></a>
       <button type="button" class="wd-go" data-w="go">或者，就在这里走走</button>
       <button type="button" class="wd-resume" data-w="resume" hidden>回到上次站的地方</button>
       <p class="wd-hold-dest" hidden></p>
@@ -169,7 +169,7 @@ export function attachWorld(ctx) {
   body.append(ui);
   // 入画自由共游 picks up 06's leaving (assets/js/thread.js): a dark fade, and its home mark leads back to 06
   ui.querySelector('.wd-ruhua')?.addEventListener('click', () => {
-    try { sessionStorage.setItem('haiz.thread', JSON.stringify({ i: 5, kind: 'pull', colour: '#0b1310', href: 'ruhua-free.html', t: Date.now() })); } catch { /* storage blocked */ }
+    try { sessionStorage.setItem('haiz.thread', JSON.stringify({ i: 5, kind: 'pull', colour: '#0b1310', href: 'ruhua-free.html?stage=stroll', t: Date.now() })); } catch { /* storage blocked */ }
   });
   const $ = (q) => ui.querySelector(q), $$ = (q) => [...ui.querySelectorAll(q)];
   const say = (t) => { $('.wd-live').textContent = t; };
