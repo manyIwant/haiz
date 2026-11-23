@@ -69,7 +69,7 @@ jobs:
         # phone/no-WebGL checks; the webkit leg is the iOS rendering engine on Linux (not a real iPhone).
         run: |
           if [ "${{ matrix.engine }}" = chromium ]; then
-            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-selftest,mobile-compat-chromium,rings-browser
+            node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-selftest,mobile-compat-chromium,rings-browser,twin-browser
           else
             node tests/acceptance/run.mjs --tier=browser --require-all --only=mobile-compat-webkit
           fi
