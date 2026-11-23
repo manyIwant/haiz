@@ -6,12 +6,13 @@ const read = (p) => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
 test('06 enters the real free-roam variant, not the former living-only preview', () => {
   const world = read('lanren/world/world.js');
   const free = read('ruhua-free.html');
-  assert.match(world, /class="wd-ruhua" href="ruhua-free\.html"/);
-  assert.match(world, /href: 'ruhua-free\.html'/);
+  assert.match(world, /class="wd-ruhua" href="ruhua-free\.html\?stage=stroll"/);
+  assert.match(world, /href: 'ruhua-free\.html\?stage=stroll'/);
   assert.match(free, /src="lanren\/free\/main\.js/);
   assert.match(free, /data-thread="mark"/);
   assert.match(free, /src="assets\/js\/thread\.js/);
   assert.match(read('lanren/free/main.js'), /createFree/);
+  assert.match(read('lanren/free/main.js'), /Q.get\('stage'\) === 'stroll'/);
 });
 
 test('chapter 04 and both painted campus worlds use one twin-aware V3 loader', () => {
