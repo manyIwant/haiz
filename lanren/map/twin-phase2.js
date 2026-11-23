@@ -28,7 +28,13 @@ async function load(part) {
     const loader = new GLTFLoader().setDRACOLoader(dracoLoader);
     return (await loader.loadAsync(new URL(part + '.glb', ASSETS).href)).scene;
   })());
-  return assets.get(part);
+  let timer;
+  try {
+    return await Promise.race([
+      assets.get(part),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Twin load deadline for ' + part)), 20000); })
+    ]);
+  } finally { clearTimeout(timer); }
 }
 
 /** Replaces V3 geometry, never its positioned anchor, collider or state. */
