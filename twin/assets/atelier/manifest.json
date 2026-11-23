@@ -8,7 +8,7 @@
     },
     "yihao": {
       "file": "yihao.glb",
-      "objects": 326
+      "objects": 320
     },
     "forecourt": {
       "file": "forecourt.glb",
@@ -16,11 +16,23 @@
     },
     "erhao": {
       "file": "erhao.glb",
-      "objects": 295
+      "objects": 297
     },
     "terminalia": {
       "file": "terminalia.glb",
       "objects": 8
+    },
+    "science": {
+      "file": "science.glb",
+      "objects": 524
+    },
+    "south_classrooms": {
+      "file": "south_classrooms.glb",
+      "objects": 532
+    },
+    "yanchi": {
+      "file": "yanchi.glb",
+      "objects": 7
     }
   },
   "silhouette_overlap": [
