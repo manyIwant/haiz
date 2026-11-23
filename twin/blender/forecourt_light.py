@@ -30,3 +30,20 @@ for name,eye,look,lens in [
     sc.camera=build.add_camera(sc,name,eye,look,lens)
     sc.render.filepath=str(out/(name+'.jpg'))
     bpy.ops.render.render(write_still=True)
+
+# Same architecture under lower summer sun, when light reaches the north-facing court.
+for ob in list(sc.objects):
+    if ob.type=='LIGHT' and ob.data.type=='SUN':
+        bpy.data.objects.remove(ob,do_unlink=True)
+build.sun_and_sky(sc,'2026-06-18T07:12',strength=3.55)
+sun=next(ob.data for ob in sc.objects if ob.type=='LIGHT' and ob.data.type=='SUN')
+sun.color=(1.0,0.85,0.68)
+sun.angle=math.radians(1.0)
+sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value=0.21
+for name,eye,look,lens in [
+    ('court_morning',(-8,-23,2.15),(-19.5,-42,6.15),27),
+    ('south_morning',(-59,-133,2.65),(-35,-143,5.7),27),
+]:
+    sc.camera=build.add_camera(sc,name,eye,look,lens)
+    sc.render.filepath=str(out/(name+'.jpg'))
+    bpy.ops.render.render(write_still=True)

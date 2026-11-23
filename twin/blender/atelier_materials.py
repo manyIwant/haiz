@@ -28,7 +28,7 @@ def rgb_image(directory, name, values, linear_data=False):
 
 def build_maps(directory, name, kind, palette, repeat, grid=None):
     """Rows run top-to-bottom in PNG. For normal maps, tangent V points up."""
-    rng = np.random.default_rng({'limestone':1923, 'slab':1932, 'paving':2003,'road':1988}[kind])
+    rng = np.random.default_rng({'limestone':1923, 'slab':1932, 'paving':2003,'road':1988,'lawn':2010}[kind])
     row, col = np.indices((SIZE, SIZE))
     coarse = smooth_noise(rng, 146)
     mid = smooth_noise(rng, 34)
@@ -46,6 +46,10 @@ def build_maps(directory, name, kind, palette, repeat, grid=None):
         tone += 0.16*calcite - 0.09*fracture + 0.043*mid + 0.027*small
         relief += 0.0022*mid + 0.0013*small + 0.0016*calcite - 0.002*fracture
         rough = 0.76 + 0.08*small - 0.13*calcite
+    elif kind == 'lawn':
+        tone=0.12*coarse+0.06*mid+0.09*small+0.10*grit
+        relief=0.0018*small+0.00048*grit
+        rough=0.88+0.025*coarse
     elif kind == 'road':
         tone = 0.025*coarse + 0.025*mid + 0.05*small + 0.065*grit
         relief += 0.0007*small
@@ -67,6 +71,10 @@ def build_maps(directory, name, kind, palette, repeat, grid=None):
         rough += 0.23*seam
         if kind == 'paving':
             rough += 0.13
+    if kind == 'slab' and grid and grid[0] > 20:
+        # Fine ceramic mosaic stays quiet at a distance. Preserve the relief of the grout.
+        tone = 0.17*tone - 0.045*seam
+        base = np.array(palette)*0.80 + 0.20*base
     rgb = base*(1+tone[:,:,None])
     dx = (np.roll(relief,-1,1)-np.roll(relief,1,1)) * SIZE/(2*repeat)
     dy = (np.roll(relief,-1,0)-np.roll(relief,1,0)) * SIZE/(2*repeat)

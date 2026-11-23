@@ -65,6 +65,10 @@ def unit(w, h, cols, state, ground=False, guard=False):
 
 def dress(out, building):
     types = {
+        'w_side': (2.4,1.8,3),
+        'w_pav': (1.6,1.5,2),
+        'w_tower': (1.4,1.6,2),
+        'w_rear': (2.4,1.6,3),
         'w_up': (building.WW,building.WH,3),
         'w_f1': (building.WW,2.5,3),
         'w_f2': (building.WW, min(building.WH, building.lvl(3)+0.1-building.ENT_H-0.15 -
@@ -74,10 +78,12 @@ def dress(out, building):
         'w_wide_bars': (building.CW['w'],building.CW['h'],5),
     }
     for i,(proto,transform,part) in enumerate(out.inst):
-        if proto not in types or 'rear' in part:
+        if proto not in types:
             continue
         state = (i*7+i//4)%5
         state = 0 if state<2 else (1 if state<4 else 2)
+        if types[proto][2] == 2:
+            state = 0  # A two-light unit has no third bay to receive the sliding leaf.
         key = f'{proto}.track{state}'
         if key not in out.protos:
             out.protos[key] = unit(*types[proto],state,ground=proto=='w_f1',guard=proto=='w_wide_bars')

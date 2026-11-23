@@ -6,6 +6,7 @@ from pathlib import Path
 
 from mathutils import Matrix
 import arch
+import atelier_court as court_detail
 import b_yihao
 import build
 import kit
@@ -30,14 +31,23 @@ def build_block(coll):
     for name,col,r in [(WALL,(0.70,0.675,0.63),0.75),(EDGE,(0.74,0.73,0.68),0.62),
                        (SHADE,(0.36,0.35,0.32),0.84),('atelier.ac',(0.64,0.64,0.57),0.62)]:
         kit.MATERIALS[name]=(col,r,0,{})
+    court_detail.register()
     out = b_yihao.Out()
     base = 1.05
     floors = [0,4,7.39,10.78,14.17,17.56]
     ztop = floors[-1]
     shell = out.geo('roof','public-map/estimated','Roof perimeter from OSM w1165596683@1. Flat dark roof, parapets and raised link heads visible on aerial_campus; dimensions inferred.')
-    arch.flat_roof(shell,poly,ztop,parapet_h=0.57)
+    kit.MATERIALS['atelier.erhao.roof'] = ((0.25,0.245,0.223),0.90,0,{})
+    arch.flat_roof(shell,poly,ztop,parapet_h=0.57,mat='atelier.erhao.roof')
+    for i in range(1,11):
+        x=west+(east-west)*i/11
+        shell.box(SHADE,(x-0.012,rear+0.28,ztop+0.003),(x+0.012,front(x)-0.28,ztop+0.012))
     out.protos['room'] = arch.window_unit(2.2,1.63,cols=3,frame_mat='frame.alu.grey',
         glass_mat='atelier.glass.shadow',bars=0.94,transom=0.72,frame=0.045,mull=0.028)
+    # Fine dark grille rods on two horizontal ties; the window stays legible through them.
+    room=out.protos['room']
+    room.fmat=[court_detail.SEAM if m=='metal.steel.white' else m for m in room.fmat]
+    room.box(court_detail.SEAM,(0.04,0.025,0.70),(2.16,0.045,0.725))
     out.protos['landing'] = arch.window_unit(1.24,1.85,cols=2,frame_mat='frame.alu.grey',
         glass_mat='atelier.glass.sea',transom=0.70)
     out.protos['service'] = arch.window_unit(1.5,1.45,cols=2,frame_mat='frame.alu.grey',
@@ -54,26 +64,13 @@ def build_block(coll):
         holes = []
         for i in range(count):
             x = (i+0.5)*spacing
-            for level,z in enumerate(floors[:-1]):
-                is_door = level == 0 and i%3 == 1
-                if is_door:
-                    holes.append((x-0.725,x+0.725,0,2.25,'door'))
-                    door_x = right-x
-                    y_front = front(door_x)
-                    fittings.box(EDGE,(door_x-1.26,y_front,2.49),(door_x+1.26,y_front+0.91,2.64))
-                    for j in range(5):
-                        run = (5-j)*0.31
-                        fittings.box(EDGE,(door_x-1.17,y_front,-0.90+j*0.18),
-                                     (door_x+1.17,y_front+run,-0.72+j*0.18))
-                else:
-                    holes.append((x-1.1,x+1.1,z+0.85,z+2.48,'room'))
-                if level > 0 and (i+level)%3:
-                    cx,cy,cz = right-x+0.77,front(right-x)+0.22,z+0.49
-                    fittings.box('atelier.ac',(cx-0.36,cy-0.21,cz-0.24),(cx+0.36,cy+0.17,cz+0.24))
-                    for j in range(6):
-                        fittings.box(SHADE,(cx-0.31,cy+0.17,cz-0.17+j*0.062),
-                                     (cx+0.14,cy+0.185,cz-0.149+j*0.062))
-        b_yihao.facade(out,'classrooms',(right,front(right)),(left,front(left)),0,ztop,holes,mat=WALL,t=0.28)
+            for level,z in enumerate(floors[1:-1],1):
+                holes.append((x-1.1,x+1.1,z+0.85,z+2.48,'room'))
+                if (i+level)%3:
+                    cx=right-x+0.65
+                    court_detail.condenser(fittings,cx,front(cx)+0.24,z+0.47)
+        b_yihao.facade(out,'classrooms',(right,front(right)),(left,front(left)),floors[1],ztop,holes,mat=WALL,t=0.28)
+        court_detail.ground_arcade(out,left,right,front,count)
         for i in range(count+1):
             x=left+spacing*i
             if i%3==0 and i<count:
@@ -114,7 +111,9 @@ def build_block(coll):
         if x==west: start,end=end,start
         holes=[(3.0,4.5,z+0.88,z+2.33,'service') for z in floors[:-1]]
         b_yihao.facade(out,rearpart,start,end,0,ztop,holes,mat=WALL)
-    shell.prism(SHADE,poly,-0.92,0)
+    shell.prism(SHADE,poly,-0.95,-0.88)
+    gallery.box(SHADE,(west,rear,-0.88),(east,rear+2.34,-0.16))
+    court_detail.landscape(out)
     court = out.geo('court_surface','public-map/estimated','Court between the mapped bars and link centrelines, visible on aerial_campus. Pavement extents, joints and surface colour estimated.')
     court.polyn('atelier.court.paving',[(west,front(west),-0.895),(east,front(east),-0.895),
                 (east,-10.62,-0.895),(west,-10.62,-0.895)],(0,0,1))

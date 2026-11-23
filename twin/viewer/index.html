@@ -40,8 +40,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const BASE = new URLSearchParams(location.search).get('base') || '../assets/phase1/';
 const atelier = new URLSearchParams(location.search).get('edition') === 'atelier';
-const PARTS = atelier ? ['landmark', 'forecourt', 'yihao', 'erhao', 'terminalia', 'trees', 'gate'] : ['yihao', 'site', 'trees', 'gate', 'campus'];
-const atelierParts = new Set(['landmark', 'forecourt', 'yihao', 'erhao', 'terminalia']);
+const PARTS = atelier ? ['landmark', 'forecourt', 'yihao', 'erhao', 'science', 'south_classrooms', 'yanchi', 'terminalia', 'trees', 'gate'] : ['yihao', 'site', 'trees', 'gate', 'campus'];
+const atelierParts = new Set(['landmark', 'forecourt', 'yihao', 'erhao', 'science', 'south_classrooms', 'yanchi', 'terminalia']);
 if (atelier) document.querySelector('h1').textContent = '府城校区 · 太湖石与教学楼前庭';
 // twin (x, y, z) -> glTF (x, z, -y)
 const tw = (x, y, z) => new THREE.Vector3(x, z, -y);

@@ -21,6 +21,9 @@ from mathutils import Matrix, Vector
 import numpy as np
 import build
 import b_yihao
+import atelier_south
+import atelier_science
+import atelier_yihao
 import kit
 from atelier_materials import apply_maps, build_maps, lithology
 from atelier_tree import tree
@@ -33,6 +36,16 @@ P = build.SITE['taihu']
 OUT = TWIN/'assets/atelier'
 RENDERS = TWIN/'renders/atelier'
 VIEWS = {
+    'south_court': ((-61,-132,3.05),(-36,-143,6.2),25),
+    'teaching_group': ((-158,-155,103),(0,-88,7),34),
+    'science_gallery': ((7,-60,3.4),(30,-85,10.2),26),
+    'court_arcade': ((11,-27,2.6),(-7,-44,5.7),31),
+    'teaching_court': ((-36,-4,36),(5,-52,5.6),32),
+    'roofscape': ((-10,119,77),(0,-13,10),34),
+    'west_end': ((-86,53,24),(-31,-4,13),38),
+    'upper_facade': ((28,43,23),(0,0,21),55),
+    'south_wing': ((4,-41,14),(-25,-10.6,12),34),
+    'hall': ((-1.1,-0.65,2.62),(3.2,-10.3,2.5),24),
     'avenue': ((12.3,49.8,2.15), (0.2,13.3,6.7), 35),
     'fork': ((44.4,22.5,2.25),(39.4,17.8,3.15),37),
     'crown': ((67,49,7.8),(41.5,15.8,7.4),39),
@@ -141,6 +154,7 @@ def turf(coll):
 def school(coll):
     out = b_yihao.build(detailed_porch=True)
     dress(out,b_yihao)
+    atelier_yihao.enrich(out,b_yihao)
     for text in out.texts:
         if text['text']=='1923':
             kit.MATERIALS['atelier.patinated.numerals'] = ((0.26,0.17,0.14),0.46,0.32,{})
@@ -152,7 +166,7 @@ def school(coll):
         if ob.name == 'yihao.porch':
             ob['haiz_tag'] = 'photo-derived/estimated'
             ob['haiz_basis'] += ' Ridge length and fascia from campus_yihao and jiaoxuelou. Eave returns, soffit fixtures and tile courses interpreted.'
-        if '.track' in ob.name:
+        if '.track' in ob.name and 'rear' not in ob.name and 'end.' not in ob.name:
             ob['haiz_basis'] += ' Sliding sashes, transoms, sill, track and interior folds interpreted from scenery_13 and campus_yihao; open states are illustrative.'
 
 
@@ -228,6 +242,10 @@ def main(args):
     school(yihao)
     erhao = build.collection('erhao')
     build_block(erhao)
+    science = build.collection('science')
+    atelier_science.build_block(science)
+    south = build.collection('south_classrooms')
+    atelier_south.build_block(south)
     for key,tint in (('sea',(0.67,0.77,0.76)),('sky',(0.75,0.82,0.84)),('shadow',(0.57,0.68,0.68))):
         glass = kit.get_material('atelier.glass.'+key)
         bs = glass.node_tree.nodes.get('Principled BSDF')
@@ -245,6 +263,7 @@ def main(args):
         for material,kind,col,repeat,grid in (
             ('stone.granite.dark','slab',(0.255,0.264,0.231),4.8,(6,8)),
             ('atelier.erhao.ceramic','slab',(0.69,0.675,0.64),4.8,(40,72)),
+            ('atelier.court.lawn','lawn',(0.31,0.41,0.18),3.80,None),
             ('atelier.court.paving','paving',(0.53,0.52,0.47),4.8,(6,8)),
             ('paving.asphalt','road',(0.34,0.321,0.288),3.8,None),
             ('paving.granite.light','paving',(0.70,0.68,0.63),4.8,(8,8)),
@@ -265,12 +284,25 @@ def main(args):
                 bpy.data.objects.remove(ob,do_unlink=True)
             else:
                 move(ob,context)
+    # Restore the inherited basin below the hole already cut for it in the context plane.
+    pond = build.collection('yanchi')
+    existing=set(sc.objects)
+    bpy.ops.import_scene.gltf(filepath=str(TWIN/'assets/phase1/campus.glb'))
+    imported=set(sc.objects)-existing
+    keep={ob for ob in imported if 'yanchi.' in ob.name}
+    for ob in keep:
+        world=ob.matrix_world.copy()
+        ob.parent=None
+        ob.matrix_world=world
+        move(ob,pond)
+    for ob in imported-keep:
+        bpy.data.objects.remove(ob,do_unlink=True)
     if not args.draft:
-        for coll in (stone,yihao,site,erhao,terminalia):
+        for coll in (stone,yihao,site,erhao,terminalia,science,south,pond):
             export(coll)
         manifest = {'baseline':'49ed015be7b155186aea06abdbb00e6d22965aaa',
                     'frame':'metres, twin (x,y,z) -> glTF (x,z,-y)',
-                    'parts':{c.name:{'file':c.name+'.glb','objects':len(c.all_objects)} for c in (stone,yihao,site,erhao,terminalia)},
+                    'parts':{c.name:{'file':c.name+'.glb','objects':len(c.all_objects)} for c in (stone,yihao,site,erhao,terminalia,science,south,pond)},
                     'silhouette_overlap':overlap}
         (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     build.sun_and_sky(sc,args.when,strength=3.1)
@@ -284,7 +316,7 @@ if __name__=='__main__':
     parser.add_argument('--draft',action='store_true', help='Only render, leave checked-in GLBs alone')
     parser.add_argument('--cache',type=Path, help='Optional local NPZ of this sculpt; omit after changing relief data')
     parser.add_argument('--blend',type=Path)
-    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown'])
+    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group'])
     parser.add_argument('--width',type=int,default=1440)
     parser.add_argument('--samples',type=int,default=32)
     parser.add_argument('--when',default='2026-06-21T16:30')

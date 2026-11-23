@@ -316,7 +316,7 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
              overhang: float = 0.8, mat='roof.tile.red', fascia_mat='trim.white', fascia_h=0.35,
              concave: float = 0.0, upturn: float = 0.0, upturn_len: float = 3.0, kick: float = 0.0,
              ridge_mat: str | None = 'trim.white', ridge_w=0.28, ridge_h=0.22, nseg=10, tiles=True,
-             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None, hip_run=None):
+             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None, hip_run=None, closed_corners=False):
     """Hip roof over the axis-aligned rectangle [x0,x1]x[y0,y1] (walls), with eave overhang.
 
     concave: 0 = straight slopes; >0 = traditional sag (surface lowered mid-slope by that
@@ -343,7 +343,12 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
         dmin = min(sa, sb)
         f = max(0.0, 1.0 - dmin / upturn_len) if upturn_len > 0 else 0.0
         f = f * f
-        return Vector((p[0] + outward[0] * kick * f, p[1] + outward[1] * kick * f, z_eave + upturn * f))
+        if not closed_corners:
+            return Vector((p[0]+outward[0]*kick*f,p[1]+outward[1]*kick*f,z_eave+upturn*f))
+        # Use one corner displacement for both meeting faces, closing the hip seam.
+        ox = math.copysign(1.0,p[0]-cx) * max(0,1-min(p[0]-X0,X1-p[0])/max(upturn_len,0.001))**2
+        oy = math.copysign(1.0,p[1]-cy) * max(0,1-min(p[1]-Y0,Y1-p[1])/max(upturn_len,0.001))**2
+        return Vector((p[0]+ox*kick*f,p[1]+oy*kick*f,z_eave+upturn*f))
 
     if long_x:
         faces = [((X0, Y0), (X1, Y0), rb, ra, (0, -1)),
@@ -396,7 +401,8 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
             Ept = Vector((cxp, cyp, z_eave + upturn))
             if kick:
                 ox = 1 if cxp > cx else -1; oy = 1 if cyp > cy else -1
-                Ept.x += ox * kick * 0.7; Ept.y += oy * kick * 0.7
+                offset = kick if closed_corners else kick*0.7
+                Ept.x += ox*offset; Ept.y += oy*offset
             _hip_curve(g, ridge_mat, Ept, Vector((*r_end, zr)), ridge_w * 0.8, ridge_h * 0.8, concave * rise)
             if upturn > 0:
                 # small upswept tip (翘角) at each corner
@@ -405,7 +411,7 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
         if ridge_ends > 0 and math.dist(ra, rb) > 1e-3:
             for p, s in ((ra, -1), (rb, 1)):
                 d = Vector((rb[0] - ra[0], rb[1] - ra[1], 0)).normalized() * s
-                base = Vector((*p, zr + ridge_h))
+                base = Vector((*p, zr + (0.025 if closed_corners else ridge_h)))
                 tip = base + d * ridge_ends * 0.6 + Vector((0, 0, ridge_ends))
                 _ridge(g, ridge_mat, base - d * 0.6, tip, ridge_w * 0.9, ridge_h * 0.9)
     return dict(z_ridge=zr, rise=rise, ridge=(ra, rb), eave_rect=(X0, Y0, X1, Y1))

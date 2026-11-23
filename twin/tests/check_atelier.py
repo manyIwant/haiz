@@ -80,3 +80,36 @@ contact=min(wood.find_nearest(v.co)[3] for v in support.data.vertices if v.co.z>
 assert contact<0.08, f'low limb misses its support by {contact:.3f} m'
 assert bpy.data.objects['lanren.terminalia.leaves'].data.uv_layers
 print(f'Tall support to low branch mesh distance {contact:.4f} m; foliage and root bed decoded.')
+
+# Decode the teaching blocks in the shared frame and test interfaces after export.
+from mathutils.bvhtree import BVHTree
+spec=json.loads((ROOT/'data/buildings/yihao.json').read_text())
+for key in ('science','south_classrooms'):
+    assert bpy.data.objects.get(key)
+    name='mapped_roof' if key=='science' else 'mapped_plates'
+    roof=bpy.data.objects[key+'.'+name]
+    low,high=bounds(roof)
+    record='w1165596687@1' if key=='science' else 'w1165596688@1'
+    mapped=next(b['poly'] for b in json.loads((ROOT/'data/campus.json').read_text())['buildings'] if b['record']==record)
+    assert all(abs(actual-fn(p[axis] for p in mapped))<0.7
+               for fn,corner in ((min,low),(max,high)) for axis,actual in enumerate(corner[:2]))
+    print(key,'mapped XY bounds and roof verified',low,high)
+for suffix,cx in zip(('w','e'),spec['links']['x_centres']):
+    wing=bpy.data.objects['yihao.wing_'+suffix+'_rear']
+    surface=BVHTree.FromObject(wing,graph)
+    # Probe from the court into the wing. A hit at y=-10.6 would close off a bridge.
+    for z in (1.4,5.4,8.79,12.18,15.57):
+        hit=surface.ray_cast(Vector((cx,-12,z)),Vector((0,1,0)),5)
+        assert hit[0] is not None and hit[0].y>-8.3, (wing.name,z,hit)
+hall=bpy.data.objects['yihao.hall_finishes']
+assert hall['haiz_tag']=='photo-derived/estimated'
+for name in ('erhao.undercroft','erhao.courtyard_garden','science.shaded_landings',
+             'south_classrooms.gallery_edges','yanchi.water'):
+    assert bpy.data.objects[name].data.polygons
+print('Two bridge alignments checked on five levels each; court and southern teaching assets decoded.')
+# This slender return used to show the dark interior box of a perpendicular window.
+hit,point,normal,index,obj,_=bpy.context.scene.ray_cast(graph,Vector((-36.12,-129.23,5.80)),Vector((1,0,0)),distance=0.80)
+assert hit and obj.name=='south_classrooms.rooms', (point,obj)
+assert obj.data.materials[obj.data.polygons[index].material_index].name.startswith('atelier.south.terracotta')
+assert bpy.data.objects['south_classrooms.court_bridges']['haiz_tag']=='public-map/invented'
+print('Southern return is clear of protruding window backs; both open links are present.')
