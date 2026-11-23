@@ -13,17 +13,16 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const ASSETS = new URL('../../twin/assets/phase1/', import.meta.url);
-const DECODER = 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/gltf/';
-const LOADER = 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/loaders/DRACOLoader.js';
+const DECODER = new URL('../vendor/three/addons/libs/draco/', import.meta.url).href;
 const PARTS = Object.freeze({ yihao: 'yihao', beimen: 'gate' });
 let dracoLoader = null;
 const assets = new Map();
 
 async function load(part) {
   if (!assets.has(part)) assets.set(part, (async () => {
-    // Dynamic import is intentional: if the Draco CDN cannot load, the original
-    // V3 campus remains fully functional. The bundled GLBs require Draco.
-    const { DRACOLoader } = await import(LOADER);
+    // Load Draco locally so partial CDN failures cannot silently remove the
+    // Phase-2 models; other errors still fall back to V3. GLBs require Draco.
+    const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
     dracoLoader ??= new DRACOLoader().setDecoderPath(DECODER);
     const loader = new GLTFLoader().setDRACOLoader(dracoLoader);
     return (await loader.loadAsync(new URL(part + '.glb', ASSETS).href)).scene;
