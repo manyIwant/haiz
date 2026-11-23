@@ -1,0 +1,56 @@
+{
+  "baseline": "49ed015be7b155186aea06abdbb00e6d22965aaa",
+  "frame": "metres, twin (x,y,z) -> glTF (x,z,-y)",
+  "parts": {
+    "landmark": {
+      "file": "landmark.glb",
+      "objects": 4
+    },
+    "yihao": {
+      "file": "yihao.glb",
+      "objects": 321
+    },
+    "forecourt": {
+      "file": "forecourt.glb",
+      "objects": 16
+    },
+    "erhao": {
+      "file": "erhao.glb",
+      "objects": 297
+    },
+    "terminalia": {
+      "file": "terminalia.glb",
+      "objects": 8
+    },
+    "science": {
+      "file": "science.glb",
+      "objects": 524
+    },
+    "south_classrooms": {
+      "file": "south_classrooms.glb",
+      "objects": 532
+    },
+    "yanchi": {
+      "file": "yanchi.glb",
+      "objects": 42
+    },
+    "arts": {
+      "file": "arts.glb",
+      "objects": 670
+    }
+  },
+  "silhouette_overlap": [
+    {
+      "view": "jiaoxuelou-1600",
+      "iou": 0.886,
+      "model_px": 178622,
+      "traced_px": 190006
+    },
+    {
+      "view": "hero-2560",
+      "iou": 0.861,
+      "model_px": 8396,
+      "traced_px": 7641
+    }
+  ]
+}
