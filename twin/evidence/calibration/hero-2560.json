@@ -1,0 +1,307 @@
+{
+ "schema": "haiz-twin-calibration/1",
+ "image": "assets/images/web/hero-2560.jpg",
+ "image_size": [
+  2560,
+  1347
+ ],
+ "note": "Pixel positions read by hand on 2-3x zoomed crops of the repo image (no pixels of the photograph are stored here). World points are twin-frame coordinates of the corresponding model features at the time of measurement (model version in 'model'). Fit set: gate (near, ~14 m) plus Teaching Block 1 window heads (far, ~120 m), so that focal length and distance separate; the far fit points use the Teaching Block 1 bay width and storey heights, whose absolute scale comes from the Esri eave width.",
+ "camera_model": "pinhole, principal point column 1280 and row 1075 (horizon from the converging kerbs; the published image is keystone-corrected, i.e. a level camera with a shifted principal point); free: position (x, y, z), focal length, yaw, roll",
+ "model": "gate.json / site.json / yihao.json as committed with this file",
+ "points": [
+  {
+   "id": "gate_E_inner_base_outer",
+   "px": [
+    685,
+    1305
+   ],
+   "world": [
+    3.99,
+    106.66,
+    0.0
+   ],
+   "role": "fit",
+   "desc": "east inner pier, granite base, front-bottom corner on the side-bay side"
+  },
+  {
+   "id": "gate_E_inner_base_inner",
+   "px": [
+    930,
+    1300
+   ],
+   "world": [
+    2.31,
+    106.66,
+    0.0
+   ],
+   "role": "fit",
+   "desc": "east inner pier base, front-bottom corner on the central-opening side"
+  },
+  {
+   "id": "gate_W_inner_base_inner",
+   "px": [
+    1644,
+    1288
+   ],
+   "world": [
+    -2.31,
+    106.66,
+    0.0
+   ],
+   "role": "fit",
+   "desc": "west inner pier base, front-bottom corner on the central-opening side"
+  },
+  {
+   "id": "gate_W_inner_base_outer",
+   "px": [
+    1905,
+    1292
+   ],
+   "world": [
+    -3.99,
+    106.66,
+    0.0
+   ],
+   "role": "fit",
+   "desc": "west inner pier base, front-bottom corner on the side-bay side"
+  },
+  {
+   "id": "gate_E_opening_top",
+   "px": [
+    930,
+    660
+   ],
+   "world": [
+    2.37,
+    106.6,
+    4.33
+   ],
+   "role": "fit",
+   "desc": "top of the central opening at the east inner pier"
+  },
+  {
+   "id": "gate_W_opening_top",
+   "px": [
+    1630,
+    660
+   ],
+   "world": [
+    -2.37,
+    106.6,
+    4.33
+   ],
+   "role": "fit",
+   "desc": "top of the central opening at the west inner pier"
+  },
+  {
+   "id": "yihao_s5_axiswin_head_E",
+   "px": [
+    1187.5,
+    792.5
+   ],
+   "world": [
+    2.325,
+    -0.1,
+    18.05
+   ],
+   "role": "fit",
+   "desc": "storey-5 axis window, head, east jamb"
+  },
+  {
+   "id": "yihao_s5_axiswin_head_W",
+   "px": [
+    1267.5,
+    792.5
+   ],
+   "world": [
+    -2.325,
+    -0.1,
+    18.05
+   ],
+   "role": "fit",
+   "desc": "storey-5 axis window, head, west jamb"
+  },
+  {
+   "id": "yihao_s6_axiswin_head_E",
+   "px": [
+    1187.5,
+    735.0
+   ],
+   "world": [
+    2.325,
+    -0.1,
+    21.44
+   ],
+   "role": "fit",
+   "desc": "storey-6 axis window, head, east jamb"
+  },
+  {
+   "id": "yihao_s6_axiswin_head_W",
+   "px": [
+    1267.5,
+    735.0
+   ],
+   "world": [
+    -2.325,
+    -0.1,
+    21.44
+   ],
+   "role": "fit",
+   "desc": "storey-6 axis window, head, west jamb"
+  },
+  {
+   "id": "yihao_s5_westwin_head_W",
+   "px": [
+    1387.5,
+    792.5
+   ],
+   "world": [
+    -9.415,
+    -0.1,
+    18.05
+   ],
+   "role": "fit",
+   "desc": "storey-5 west-bay window, head, west jamb"
+  },
+  {
+   "id": "yihao_s3_westwin_head_E",
+   "px": [
+    1307.5,
+    909.0
+   ],
+   "world": [
+    -4.765,
+    -0.1,
+    11.27
+   ],
+   "role": "check",
+   "desc": "storey-3 west-bay window, head, east jamb"
+  },
+  {
+   "id": "yihao_s3_westwin_sill_W",
+   "px": [
+    1387.5,
+    940.0
+   ],
+   "world": [
+    -9.415,
+    -0.1,
+    9.34
+   ],
+   "role": "check",
+   "desc": "storey-3 west-bay window, sill, west jamb"
+  },
+  {
+   "id": "yihao_s4_westwin_head_E",
+   "px": [
+    1307.5,
+    850.0
+   ],
+   "world": [
+    -4.765,
+    -0.1,
+    14.66
+   ],
+   "role": "check",
+   "desc": "storey-4 west-bay window, head, east jamb"
+  },
+  {
+   "id": "yihao_porch_floor",
+   "px": [
+    1227.5,
+    1083
+   ],
+   "world": [
+    0.0,
+    6.7,
+    1.05
+   ],
+   "role": "check",
+   "desc": "Teaching Block 1 porch floor edge (top of the porch steps) on the axis"
+  },
+  {
+   "id": "plinth_bottom_E",
+   "px": [
+    1153.3,
+    1106
+   ],
+   "world": [
+    3.5,
+    31.6,
+    0.0
+   ],
+   "role": "check",
+   "desc": "rock plinth, north face, bottom east corner"
+  },
+  {
+   "id": "plinth_bottom_W",
+   "px": [
+    1326.7,
+    1106
+   ],
+   "world": [
+    -4.0,
+    31.6,
+    0.0
+   ],
+   "role": "check",
+   "desc": "rock plinth, north face, bottom west corner"
+  },
+  {
+   "id": "plinth_top_E",
+   "px": [
+    1153.3,
+    1090
+   ],
+   "world": [
+    3.5,
+    31.6,
+    0.75
+   ],
+   "role": "check",
+   "desc": "rock plinth, north face, top east corner"
+  },
+  {
+   "id": "plinth_top_W",
+   "px": [
+    1326.7,
+    1090
+   ],
+   "world": [
+    -4.0,
+    31.6,
+    0.75
+   ],
+   "role": "check",
+   "desc": "rock plinth, north face, top west corner"
+  },
+  {
+   "id": "rock_E_end",
+   "px": [
+    1159.3,
+    1060
+   ],
+   "world": [
+    3.3,
+    28.4,
+    1.6
+   ],
+   "role": "check",
+   "desc": "east end of the Taihu stone at mid height (vertical position of this feature is not identifiable; use du only)"
+  },
+  {
+   "id": "rock_W_tip",
+   "px": [
+    1322.7,
+    1047
+   ],
+   "world": [
+    -3.95,
+    28.6,
+    2.2
+   ],
+   "role": "check",
+   "desc": "west tip (raised head) of the Taihu stone (use du only)"
+  }
+ ]
+}

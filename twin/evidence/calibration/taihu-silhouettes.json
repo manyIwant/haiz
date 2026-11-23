@@ -1,0 +1,246 @@
+{
+ "schema": "haiz-twin-silhouettes/1",
+ "object": "Taihu stone on the forecourt plinth (site.json taihu)",
+ "notes": [
+  "Outlines of the stone traced by hand on 2x (jiaoxuelou-1600) and 4x (hero-2560) zooms of the repo photographs; pixel coordinates of the full images, no pixels stored.",
+  "The bottom of each outline follows the lawn on the plinth, which hides the foot of the stone.",
+  "Image left is east on both photographs (both look south)."
+ ],
+ "views": [
+  {
+   "id": "jiaoxuelou-1600",
+   "camera_report": "twin/evidence/calibration/jiaoxuelou-1600.report.json",
+   "kind": "lines",
+   "image_size": [1600, 1280],
+   "outline": [
+    [365, 866],
+    [360, 860],
+    [370, 840],
+    [390, 820],
+    [400, 790],
+    [410, 770],
+    [415, 767],
+    [390, 760],
+    [365, 755],
+    [355, 760],
+    [345, 765],
+    [325, 770],
+    [315, 772],
+    [295, 765],
+    [282, 745],
+    [275, 725],
+    [270, 715],
+    [260, 710],
+    [252, 700],
+    [255, 685],
+    [267, 670],
+    [270, 650],
+    [280, 635],
+    [295, 625],
+    [315, 615],
+    [340, 605],
+    [350, 597],
+    [370, 590],
+    [400, 589],
+    [430, 587],
+    [460, 580],
+    [480, 579],
+    [500, 582],
+    [510, 575],
+    [512, 560],
+    [520, 547],
+    [535, 541],
+    [555, 540],
+    [575, 547],
+    [590, 560],
+    [610, 559],
+    [625, 550],
+    [640, 544],
+    [660, 542],
+    [675, 547],
+    [690, 555],
+    [700, 570],
+    [720, 590],
+    [740, 607],
+    [760, 622],
+    [780, 635],
+    [800, 650],
+    [820, 654],
+    [835, 645],
+    [855, 642],
+    [875, 642],
+    [895, 645],
+    [915, 647],
+    [940, 640],
+    [960, 632],
+    [985, 625],
+    [1010, 620],
+    [1040, 619],
+    [1070, 617],
+    [1095, 617],
+    [1102, 622],
+    [1090, 632],
+    [1070, 645],
+    [1055, 654],
+    [1047, 665],
+    [1045, 680],
+    [1040, 695],
+    [1030, 710],
+    [1020, 717],
+    [1005, 725],
+    [990, 735],
+    [985, 745],
+    [995, 755],
+    [1007, 762],
+    [1005, 775],
+    [995, 790],
+    [985, 805],
+    [975, 820],
+    [965, 840],
+    [957, 855],
+    [955, 865],
+    [950, 872],
+    [800, 872],
+    [700, 872],
+    [600, 870],
+    [500, 868],
+    [400, 866]
+   ],
+   "openings": [
+    {
+     "outline": [
+      [385, 762],
+      [405, 760],
+      [408, 772],
+      [400, 782],
+      [388, 780]
+     ],
+     "basis": "building seen through the gap between the east head and its foot"
+    }
+   ],
+   "pockets": [
+    {
+     "px": [328, 672],
+     "r_px": 18,
+     "depth": 0.6,
+     "basis": "large dark hole in the east head"
+    },
+    {
+     "px": [464, 606],
+     "r_px": 12,
+     "depth": 0.45,
+     "basis": "pocket near the top of the east head"
+    },
+    {
+     "px": [461, 668],
+     "r_px": 9,
+     "depth": 0.4,
+     "basis": "pocket below it"
+    },
+    {
+     "px": [1001, 652],
+     "r_px": 13,
+     "depth": 0.5,
+     "basis": "dark hole in the west head"
+    },
+    {
+     "px": [903, 656],
+     "r_px": 9,
+     "depth": 0.4,
+     "basis": "pocket at the neck of the west head"
+    },
+    {
+     "px": [935, 707],
+     "r_px": 22,
+     "depth": 0.7,
+     "basis": "reddish cave under the west head"
+    },
+    {
+     "px": [948, 778],
+     "r_px": 7,
+     "depth": 0.3,
+     "basis": "small hole in the lower west block"
+    },
+    {
+     "px": [400, 742],
+     "r_px": 30,
+     "depth": 0.9,
+     "basis": "large dark cave under the east head"
+    },
+    {
+     "px": [530, 810],
+     "r_px": 18,
+     "depth": 0.8,
+     "basis": "dark gap between the lower blocks, middle"
+    },
+    {
+     "px": [755, 812],
+     "r_px": 26,
+     "depth": 0.9,
+     "basis": "dark cavity between the lower blocks, west of the middle"
+    },
+    {
+     "px": [830, 750],
+     "r_px": 16,
+     "depth": 0.7,
+     "basis": "crevice under the big grey slab"
+    },
+    {
+     "px": [575, 700],
+     "r_px": 14,
+     "depth": 0.7,
+     "basis": "dark cleft between the east head and the tall middle mass"
+    }
+   ]
+  },
+  {
+   "id": "hero-2560",
+   "camera_report": "twin/evidence/calibration/hero-2560.report.json",
+   "kind": "level",
+   "image_size": [2560, 1347],
+   "outline": [
+    [1182.5, 1087.5],
+    [1175, 1075],
+    [1167.5, 1065],
+    [1160, 1055],
+    [1158.75, 1046.25],
+    [1162.5, 1040],
+    [1167.5, 1035],
+    [1175, 1032.5],
+    [1185, 1030.75],
+    [1195, 1030.5],
+    [1205, 1028.75],
+    [1215, 1025.5],
+    [1225, 1023.75],
+    [1235, 1025.5],
+    [1245, 1025.5],
+    [1252.5, 1028.75],
+    [1257.5, 1035],
+    [1262.5, 1042.5],
+    [1272.5, 1043.75],
+    [1285, 1042.5],
+    [1295, 1040.5],
+    [1307.5, 1040],
+    [1320, 1041.25],
+    [1321.25, 1045],
+    [1315, 1048.75],
+    [1305, 1051.25],
+    [1302.5, 1060],
+    [1305, 1067.5],
+    [1302.5, 1073.75],
+    [1295, 1077.5],
+    [1290, 1082.5],
+    [1285, 1087.5]
+   ],
+   "openings": [],
+   "pockets": []
+  }
+ ],
+ "depth_prior": {
+  "y_centre": 28.6,
+  "half_depth_max": 1.5,
+  "half_depth_min": 0.35,
+  "inflate": 1.2,
+  "basis": "the photographs look south within 20 deg of each other, so they fix the stone's outline seen from the north but hardly its depth; the depth is an inflation of the outline (half depth 0.35 m + 1.2 x the distance from the outline, at most 1.5 m) about y 28.6, the middle of the plinth bed and of the stone's dark footprint on the Esri layer (about 3 m deep)"
+ }
+}

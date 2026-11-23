@@ -1,0 +1,103 @@
+{
+ "yihao": {
+  "faces": 87207,
+  "parts": 15,
+  "windows": 308,
+  "seconds": 0.7
+ },
+ "site": {
+  "faces": 236542,
+  "zones": 17,
+  "seconds": 26.8
+ },
+ "trees": {
+  "lanren": {
+   "branches": 3368,
+   "rosettes": 17720
+  },
+  "east_big": {
+   "branches": 800,
+   "rosettes": 3741
+  },
+  "east_lawn_small": {
+   "branches": 85,
+   "rosettes": 346
+  },
+  "west_big": {
+   "branches": 1897,
+   "rosettes": 8805
+  },
+  "west_far": {
+   "branches": 759,
+   "rosettes": 3571
+  },
+  "axis_e": {
+   "branches": 570,
+   "rosettes": 2659
+  },
+  "axis_w": {
+   "branches": 195,
+   "rosettes": 873
+  },
+  "palms": 18,
+  "faces": 770162,
+  "seconds": 34.3
+ },
+ "gate": {
+  "faces": 57722,
+  "seconds": 2.0
+ },
+ "campus": {
+  "faces": 290451,
+  "buildings": 175,
+  "seconds": 12.0
+ },
+ "sun": {
+  "azimuth": 284.83070546674674,
+  "elevation": 36.91245266156946,
+  "when": "2026-06-21T16:30",
+  "twin_dir": [
+   -0.4491,
+   0.6615,
+   0.6006
+  ]
+ },
+ "glb_split": {
+  "frame": "glTF +Y up; twin (x, y, z) -> glTF (x, z, -y); metres; z = 0 at the forecourt road",
+  "compression": "KHR_draco_mesh_compression (gltf-transform draco, edgebreaker, position 14 / normal 10 / texcoord 12 bits)",
+  "loader": "three.js GLTFLoader + DRACOLoader",
+  "parts": {
+   "yihao": {
+    "file": "yihao.glb",
+    "objects": 326,
+    "mb": 0.58,
+    "mb_uncompressed": 9.08
+   },
+   "site": {
+    "file": "site.glb",
+    "objects": 18,
+    "mb": 0.79,
+    "mb_uncompressed": 8.72
+   },
+   "trees": {
+    "file": "trees.glb",
+    "objects": 21,
+    "mb": 11.55,
+    "mb_uncompressed": 105.36
+   },
+   "gate": {
+    "file": "gate.glb",
+    "objects": 6,
+    "mb": 0.27,
+    "mb_uncompressed": 3.51
+   },
+   "campus": {
+    "file": "campus.glb",
+    "objects": 10,
+    "mb": 1.38,
+    "mb_uncompressed": 15.78
+   }
+  },
+  "seconds": 8.7
+ }
+}

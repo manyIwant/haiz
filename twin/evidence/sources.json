@@ -1,0 +1,384 @@
+{
+ "schema": "haiz-twin-sources/1",
+ "note": "Reference library of the Fucheng campus twin. Every source is tied to the twin data it informs; photographs stay where they already are in the repository and are cited by path and git blob id. Capture dates are unknown unless stated. Photo-derived numbers are estimates with the stated uncertainty, never survey data.",
+ "credibility_tags": {
+  "surveyed": "measured on site (none yet in phase 1)",
+  "public-map": "OpenStreetMap / Overture geometry",
+  "documented": "stated in a published text or inscription",
+  "photo-derived": "measured or read on a photograph (calibrated where noted)",
+  "estimated": "inferred from indirect evidence (risers, proportions, orthophoto reading)",
+  "invented": "artistic completion where no evidence exists"
+ },
+ "sources": [
+  {
+   "id": "hero-2560",
+   "kind": "photograph",
+   "path": "assets/images/web/hero-2560.jpg",
+   "git_blob": "c76cbacd65d2b02b8e025683093695c46d72e430",
+   "size_px": [
+    2560,
+    1347
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: confirmed by the North Gate paifang with the 海南中學 plaque and Teaching Block 1 (portal dated 1923) on the axis behind it",
+   "shows": "North Gate from the street, looking south along the main axis to Teaching Block 1; palm rows, Taihu stone on its plinth",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "camera calibration (twin/evidence/calibration/hero-2560.json): position, focal length, yaw, roll",
+    "North Gate: every height and width in twin/data/gate.json (gate plane 6.78 mm/px)",
+    "Teaching Block 1: storey pitch, window heads, porch floor (check points)",
+    "Taihu plinth width (corrected 9.6 -> 7.5 m) and rock length; axis road width (about 13 m kerb to kerb)"
+   ],
+   "calibration": "twin/evidence/calibration/hero-2560.report.json"
+  },
+  {
+   "id": "landscape_intro",
+   "kind": "photograph",
+   "path": "assets/images/campus/landscape_intro.jpg",
+   "git_blob": "f55e044e56523da4a6ff0e7e683a2b2311ae76fc",
+   "size_px": [
+    1600,
+    842
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: same gate as hero-2560",
+   "shows": "North Gate, slightly wider framing",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "bay rhythm, lions and boundary walls of the gate (qualitative check)"
+   ]
+  },
+  {
+   "id": "campus_fucheng_gate",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_fucheng_gate.jpg",
+   "git_blob": "10e50132bbc8ac949d711b30d289d77a67c1b864",
+   "size_px": [
+    493,
+    260
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: same gate (green glazed roofs, four lions, Teaching Block 1 through the central opening)",
+   "shows": "North Gate from the street (low resolution)",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "roof colour and lion placement (qualitative only; too small to measure)"
+   ]
+  },
+  {
+   "id": "aerial_campus",
+   "kind": "photograph",
+   "path": "assets/images/campus/aerial_campus.jpg",
+   "git_blob": "da710c0998897d865a31328843e4b17115aa02cd",
+   "size_px": [
+    800,
+    450
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: Teaching Block 1, forecourt and axis seen from the north",
+   "shows": "oblique aerial of the central campus (repo records it as from the school website)",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "Teaching Block 1: bay counts (6 per wing), storey counts, roof forms, tower tops, porch roofs",
+    "forecourt layout through a 4-point homography (edge compression about 25 %): lawns, plaza, side plazas, planting bed of the Terminalia",
+    "plaza paving pattern (diamond dots), Norfolk pine crown west of the plaza"
+   ]
+  },
+  {
+   "id": "campus_yihao",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_yihao.jpg",
+   "git_blob": "f07455fca1ed292b6fb42a2e92a24eb58e97eacf",
+   "size_px": [
+    460,
+    346
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Teaching Block 1 front",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "central block (3 bays), towers clad in granite to the 5th storey with an arched 6th-storey window, porch, plinth"
+   ]
+  },
+  {
+   "id": "jiaoxuelou-1600",
+   "kind": "photograph",
+   "path": "assets/images/web/jiaoxuelou-1600.jpg",
+   "git_blob": "fc0609244bfc9d1de6ef50c6de3849a6b1a880d7",
+   "size_px": [
+    1600,
+    1280
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou (same picture as assets/images/campus/scenery_11.jpg)",
+   "shows": "Teaching Block 1 portal from the forecourt",
+   "author": "区大伟 (signature seal on the picture)",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "portal (1923), stepped door frame, canopy on white columns, side porches, wing colonnade, window design",
+    "rock plinth with the inscription 虎踞龍盤捷報頻傳, red granite flights, Norfolk pine left of the plinth"
+   ]
+  },
+  {
+   "id": "scenery_13",
+   "kind": "photograph",
+   "path": "assets/images/campus/scenery_13.jpg",
+   "git_blob": "f155043226dca70d9fc65a6b6322c7aafba0f940",
+   "size_px": [
+    1120,
+    1400
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: east wing of Teaching Block 1",
+   "shows": "granite colonnade along the east wing under the Terminalia canopy",
+   "author": "区大伟 (signature seal on the picture)",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "two-storey granite colonnade, entablature, upper pilasters, hedge",
+    "side-plaza paving (dark field, staggered light squares)",
+    "Terminalia canopy overhanging the paving along the wing"
+   ]
+  },
+  {
+   "id": "lanshu-1600",
+   "kind": "photograph",
+   "path": "assets/images/web/lanshu-1600.jpg",
+   "git_blob": "fb9246f7de60715d3c092f301b906d0aaf613e62",
+   "size_px": [
+    1600,
+    1280
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: east side plaza in front of the east wing of Teaching Block 1",
+   "shows": "the centenary Terminalia (百年榄仁树): trunk, fork, the long low limb resting on a tall boulder, side-plaza steps",
+   "author": "区大伟 (signature seal on the picture)",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "trunk fork height (about 4 m), the main limb descending onto the boulder about 10 m from the trunk at 2.7-2.9 m and turning up (perspective estimate +/- 2 m)",
+    "boulders under the limb (no inscription visible: a different stone from the inscribed Taihu stone on the axis)"
+   ]
+  },
+  {
+   "id": "campus_taihushi",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_taihushi.jpg",
+   "git_blob": "3ef0f71fe1be002bf91857538b57504831c28e92",
+   "size_px": [
+    548,
+    352
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: rock on the axis plinth",
+   "shows": "the Taihu stone seen from the north",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "silhouette, holes and proportions of the procedural Taihu stone"
+   ],
+   "note": "docs/lanren-homepage-v4-20261104.md records this as a photograph taken by the project owner"
+  },
+  {
+   "id": "campus_yanchi",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_yanchi.jpg",
+   "git_blob": "66513e3fcd17e8a7c49eee57600b4029e332fd28",
+   "size_px": [
+    1400,
+    1120
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: 砚池 reflecting pool",
+   "shows": "rock edging, the upright stone inscribed 砚池 in red, coconut palms, corridor buildings around the pool",
+   "author": "区大伟 (signature on the picture)",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "pool edging, inscribed stone, palms (qualitative; positions in the pool are estimated)"
+   ]
+  },
+  {
+   "id": "wenhua_yanchi-800",
+   "kind": "photograph",
+   "path": "assets/images/web/wenhua_yanchi-800.jpg",
+   "git_blob": "908ccb9af1435999adb4d3dbb818dd45d0508343",
+   "size_px": [
+    800,
+    314
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: 砚池",
+   "shows": "rockery with a curved cascade from a raised round basin",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "rockery and cascade (form only; position invented)"
+   ]
+  },
+  {
+   "id": "campus_fengqitang",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_fengqitang.jpg",
+   "git_blob": "b534822a18e3cfa835b474b117ed3b38acb470a7",
+   "size_px": [
+    468,
+    304
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "single-storey hall with a green glazed hip roof, red columns and white walls, bronze statue in front",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "form of the two halls 凤栖堂 and 衍林堂 (generic single-storey green-roofed hall)"
+   ],
+   "note": "Identity to verify: the school history says a statue 「春风化雨」 stands in front of 衍林堂, so this picture may show 衍林堂 rather than 凤栖堂."
+  },
+  {
+   "id": "campus_yanlintang",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_yanlintang.jpg",
+   "git_blob": "4009626cb364ac7f8946d8c985fe0f6e0820dc18",
+   "size_px": [
+    1400,
+    1174
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "square open pavilion with a green glazed roof and red columns",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "not used for geometry (does not match the 412 m2 OSM footprint named 衍林堂)"
+   ],
+   "note": "Identity to verify against the OSM names."
+  },
+  {
+   "id": "campus_erhao",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_erhao.jpg",
+   "git_blob": "dfe80233819da1f59bdafec4e8c04d5d217572ed",
+   "size_px": [
+    1080,
+    599
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Teaching Block 2",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "storey count (5) of the massing"
+   ]
+  },
+  {
+   "id": "campus_kexue",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_kexue.jpg",
+   "git_blob": "b1555cec87b004a89ad41276cc50f930c2b24a5a",
+   "size_px": [
+    1080,
+    793
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Science Building",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "storey count (6) of the massing"
+   ]
+  },
+  {
+   "id": "campus_sanhao_sihao",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_sanhao_sihao.jpg",
+   "git_blob": "547ad3e9816295ccffe61e6eea61ee12ed1a20f6",
+   "size_px": [
+    1024,
+    768
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Teaching Blocks 3 and 4",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "storey count (6 or more) of the massing"
+   ]
+  },
+  {
+   "id": "esri-courtyard",
+   "kind": "orthophoto",
+   "path": "assets/cinematic/aligned/courtyard.jpg",
+   "git_blob": "af65493ab5e44ae79efa91dcceba80223407a21c",
+   "size_px": [
+    1024,
+    1024
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Esri World Imagery export over the campus, about 0.55 m/px, capture date unknown",
+   "author": "Esri World Imagery (imagery providers per Esri attribution)",
+   "capture_date": "unknown",
+   "rights": "Esri World Imagery terms of use; attribution required. Read in place through twin/tools/ortho.py; the warped research views are not committed.",
+   "used_for": [
+    "ground-level edges of lawns, plaza, steps and roads (read directly)",
+    "roof outlines of Teaching Block 1 after removing relief displacement of (+0.335, -0.53) m per metre of height",
+    "tree canopy extents (date differs from aerial_campus)"
+   ]
+  },
+  {
+   "id": "overture-2026-11-18",
+   "kind": "map data",
+   "path": "twin/data/campus.json",
+   "generator": "twin/tools/osm_campus.py",
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou: OSM land-use polygon named 海南中学高中部 (amenity=school)",
+   "shows": "building footprints (OSM and ODbL machine-traced footprints, doi:10.5281/zenodo.8174931), water (砚池), land use, school boundary",
+   "author": "OpenStreetMap contributors and the Overture Maps Foundation",
+   "capture_date": "Overture release 2026-11-18.0 (data edit dates vary)",
+   "rights": "ODbL 1.0: (c) OpenStreetMap contributors; attribution kept in campus.json",
+   "used_for": [
+    "school boundary, gate position on the axis (boundary vertex y 105.7)",
+    "footprints of every other campus building (massing only)",
+    "Teaching Block 1 footprint (way 1165596682) and its rear links (ways 1165596684 / 1165596685)",
+    "砚池 outline"
+   ]
+  },
+  {
+   "id": "hndaily-2023-10-30",
+   "kind": "text",
+   "url": "https://news.hndaily.cn/html/2023-10/30/content_58477_16668430.htm",
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "海南日报 2023-10-30 「一所中学的一个世纪 百年海中恰芳华」",
+   "author": "海南日报",
+   "capture_date": "2023-10-30",
+   "rights": "link only",
+   "used_for": [
+    "existence of the centenary Terminalia and the 1988 enlargement of the North Gate (documented facts, no dimensions)"
+   ]
+  }
+ ],
+ "not_used": [
+  {
+   "path": "assets/images/campus/campus_meilun_gate.jpg",
+   "git_blob": "d06049b60f4f96f497b436ab96899532eef4ec7a",
+   "reason": "Meilun campus gate (red roofs, different campus). Excluded: the twin is the Fucheng campus only."
+  },
+  {
+   "path": "assets/cinematic/gate_new_framed.jpg",
+   "reason": "framed cinematic still from earlier project work; not a primary source, not used"
+  },
+  {
+   "path": "assets/cinematic/gate_old_framed.jpg",
+   "reason": "framed cinematic still from earlier project work; not a primary source, not used"
+  },
+  {
+   "url": "https://www.360cities.net/zh/image/hkaxiong-hnzx-yc",
+   "reason": "砚池 panorama listed in memory-walk.html; not consulted in phase 1, candidate for the 砚池 pass"
+  }
+ ]
+}
