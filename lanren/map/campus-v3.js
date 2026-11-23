@@ -71,5 +71,16 @@ export async function loadCampusV3(geo, buildings) {
     }
   }
   if (entries.length !== buildings.length) throw new Error('Blender V3 campus is incomplete');
-  return { scene, entries, hulls, decks };
+  // The same upgrade path is used by chapter 04/05/06 and both 入画 worlds.
+  // Keep the V3 fallback and all its existing camera/collision/deck anchors.
+  const { upgradeCampusLandmarks } = await import('./twin-phase2.js');
+  const twin = await upgradeCampusLandmarks(entries);
+  if (twin.applied.length) {
+    for (const e of entries) {
+      if (!e.root.userData.haizTwinPart) continue;
+      e.top = new THREE.Box3().setFromObject(e.root).max.y - geo.frame.ground;
+    }
+  }
+  scene.userData.haizTwin = twin;
+  return { scene, entries, hulls, decks, twin };
 }
