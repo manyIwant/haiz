@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus overlay audit</title>
+<style>
+  :root { --bg: #f4f1ea; --ink: #1d1c1a; --muted: #6b665c; --line: #d8d2c4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161513; --ink: #ece7dc; --muted: #a39d90; --line: #38352f; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 4px 0; color: var(--muted); }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin: 12px 0; }
+  label { display: inline-flex; gap: 6px; align-items: center; }
+  .stage { position: relative; width: 100%; max-width: 1024px; aspect-ratio: 1; border: 1px solid var(--line); }
+  .stage img, .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .legend span { display: inline-block; width: 12px; height: 12px; margin-right: 4px; vertical-align: -1px; border: 2px solid; }
+  table { border-collapse: collapse; margin-top: 12px; font-variant-numeric: tabular-nums; }
+  td, th { border-bottom: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+</style>
+</head>
+<body>
+<main>
+  <h1>校园数据 × 公开影像叠加</h1>
+  <p>Serve the repository root (<code>python3 -m http.server 8000</code>) and open <code>/tools/campus-audit/overlay.html</code>. Footprints from <code>assets/walk/campus.json</code> are placed on the repository's Esri World Imagery tile with the least-squares similarity fit of <code>control-points.json</code>. Imagery: Esri, Maxar, Earthstar Geographics and the GIS user community; capture date unknown.</p>
+  <p id="summary"></p>
+  <div class="bar">
+    <label><input type="checkbox" id="roads" checked> 路网</label>
+    <label><input type="checkbox" id="trees"> 树点</label>
+    <label><input type="checkbox" id="labels" checked> 名称</label>
+    <label><input type="checkbox" id="claimed"> 声称的 41.4° / 比例 1.0</label>
+    <label>影像 <input type="range" id="fade" min="0" max="100" value="100"></label>
+    <span class="legend"><span style="border-color:#ffd400"></span>建筑 <span style="border-color:#ff8a00"></span>连廊/亭 <span style="border-color:#5cff7a"></span>园林 <span style="border-color:#3ad7ff"></span>运动场/水 <span style="border-color:#fff"></span>路网 <span style="border-color:#ff3b6b"></span>控制点残差</span>
+  </div>
+  <div class="stage"><img id="img" alt="Esri World Imagery of the campus area"><svg id="svg" viewBox="0 0 1024 1024"></svg></div>
+  <table id="res"></table>
+</main>
+<script type="module">
+import { rectToFootprint, corners, fitSimilarity } from './lib/geom.mjs';
+import { imagePixelToGround } from './lib/geo.mjs';
+
+const root = new URL('../../', import.meta.url);
+const j = (p) => fetch(new URL(p, root)).then((r) => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); });
+const [campus, man, cp] = await Promise.all([j('assets/walk/campus.json'), j('assets/cinematic/aligned/manifest.json'), j('tools/campus-audit/control-points.json')]);
+const layer = man.layers.find((l) => l.name === cp.layer);
+document.getElementById('img').src = new URL(layer.path, root).href;
+const tf = campus.meta.transform;
+const mpp = imagePixelToGround(0, 0, layer.bounds, layer.pixels).metresPerPixel;
+const toPx = ([e, n]) => [512 + e / mpp, 512 - n / mpp];
+const fpOf = (id) => { const b = campus.buildings.find((x) => x.id === id); return rectToFootprint(b.rect, tf, b.rot || 0); };
+const src = cp.points.map((p) => { const f = fpOf(p.id); return [f.cx, -f.cz]; });
+const dst = cp.points.map((p) => { const g = imagePixelToGround(p.u, p.v, layer.bounds, layer.pixels); return [g.e, g.n]; });
+const fit = fitSimilarity(src, dst);
+const claimedRot = 41.4 * Math.PI / 180;
+const claimed = (() => { // same translation as the fit, nominal rotation and scale: shows what the legacy claim alone would give
+  const c = Math.cos(claimedRot), s = Math.sin(claimedRot);
+  const mx = src.reduce((a, p) => a + p[0], 0) / src.length, my = src.reduce((a, p) => a + p[1], 0) / src.length;
+  const dx = dst.reduce((a, p) => a + p[0], 0) / dst.length, dy = dst.reduce((a, p) => a + p[1], 0) / dst.length;
+  return ([x, y]) => [c * (x - mx) - s * (y - my) + dx, s * (x - mx) + c * (y - my) + dy];
+})();
+document.getElementById('summary').textContent = `Fit from ${src.length} points: rotation ${(fit.rot * 180 / Math.PI).toFixed(1)}° anticlockwise from true north (legacy claim 41.4°), scale ${fit.scale.toFixed(3)}, RMS ${fit.rms.toFixed(1)} m. Image ${mpp.toFixed(2)} m/px.`;
+
+const colour = (b) => ({ gate: '#ff3b3b', corr: '#ff8a00', pavilion: '#ff8a00', garden: '#5cff7a', botanic: '#5cff7a', oldtree: '#5cff7a', rock: '#5cff7a', field: '#3ad7ff', pond: '#3ad7ff' })[b.form] || '#ffd400';
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('svg');
+function el(tag, attrs, parent = svg) { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent.appendChild(e); return e; }
+function draw() {
+  svg.replaceChildren();
+  const opt = (id) => document.getElementById(id).checked;
+  const T = opt('claimed') ? claimed : fit.apply;
+  const place = (x, z) => toPx(T([x, -z]));
+  const poly = (fp, stroke, w = 1.6, dash = '') => el('polygon', { points: corners(fp).map(([x, z]) => place(x, z).join(',')).join(' '), fill: 'none', stroke, 'stroke-width': w, 'stroke-dasharray': dash });
+  if (opt('roads')) for (const r of campus.roads) poly(rectToFootprint(r.rect, tf), '#ffffff', 1, '4 3');
+  for (const l of campus.lawns || []) { const fp = rectToFootprint(l.rect, tf); poly(fp, '#3ad7ff', 1.4, '6 3'); if (opt('labels')) { const [x, y] = place(fp.cx, fp.cz); el('text', { x, y, fill: '#bff3ff', 'font-size': 10, 'text-anchor': 'middle', stroke: '#000', 'stroke-width': 2.5, 'paint-order': 'stroke' }).textContent = l.id; } }
+  for (const b of campus.buildings) {
+    const fp = rectToFootprint(b.rect, tf, b.rot || 0);
+    poly(fp, colour(b));
+    if (opt('labels')) { const [x, y] = place(fp.cx, fp.cz); el('text', { x, y, fill: '#fff', 'font-size': 10, 'text-anchor': 'middle', stroke: '#000', 'stroke-width': 2.5, 'paint-order': 'stroke' }).textContent = b.id; }
+  }
+  if (opt('trees')) for (const t of campus.trees) { const x = (t.p[0] - tf.originPx[0]) * tf.scale, z = -(t.p[1] - tf.originPx[1]) * tf.scale; const [u, v] = place(x, z); el('circle', { cx: u, cy: v, r: 1.6, fill: '#9dff9d' }); }
+  cp.points.forEach((p, i) => {
+    const [u, v] = toPx(T(src[i]));
+    el('line', { x1: p.u, y1: p.v, x2: u, y2: v, stroke: '#ff3b6b', 'stroke-width': 2 });
+    el('circle', { cx: p.u, cy: p.v, r: p.sigma / mpp, fill: 'none', stroke: '#ff3b6b', 'stroke-width': 1, 'stroke-dasharray': '2 2' });
+    el('circle', { cx: p.u, cy: p.v, r: 3, fill: '#ff3b6b' });
+  });
+  const rows = cp.points.map((p, i) => { const q = T(src[i]); return [p.id, p.sigma, Math.hypot(q[0] - dst[i][0], q[1] - dst[i][1])]; });
+  document.getElementById('res').innerHTML = '<tr><th>Control point</th><th>σ (m)</th><th>Residual (m)</th></tr>' + rows.map(([id, s, r]) => `<tr><td>${id}</td><td>${s}</td><td>${r.toFixed(1)}</td></tr>`).join('');
+}
+for (const id of ['roads', 'trees', 'labels', 'claimed']) document.getElementById(id).addEventListener('change', draw);
+document.getElementById('fade').addEventListener('input', (e) => { document.getElementById('img').style.opacity = e.target.value / 100; });
+draw();
+window.__overlayReady = { rot: fit.rot * 180 / Math.PI, scale: fit.scale, rms: fit.rms };
+</script>
+</body>
+</html>
