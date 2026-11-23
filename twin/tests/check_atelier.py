@@ -113,3 +113,60 @@ assert hit and obj.name=='south_classrooms.rooms', (point,obj)
 assert obj.data.materials[obj.data.polygons[index].material_index].name.startswith('atelier.south.terracotta')
 assert bpy.data.objects['south_classrooms.court_bridges']['haiz_tag']=='public-map/invented'
 print('Southern return is clear of protruding window backs; both open links are present.')
+# Compare independently read roof corners with the decoded geometry in the photo crop.
+ref=json.loads((ROOT/'evidence/calibration/yihao_oblique_study.json').read_text())
+eye=Vector(ref['eye']);forward=Vector(ref['forward']);up=Vector(ref['up'])
+def oblique_pixel(xyz):
+    q=Vector(xyz)-eye
+    return Vector((ref['cx']+ref['focal_px']*q.dot(forward.cross(up))/q.dot(forward),
+                   ref['cy']-ref['focal_px']*q.dot(up)/q.dot(forward)))
+roof=bpy.data.objects['yihao.roof_central']
+verts=[roof.matrix_world@v.co for v in roof.data.vertices]
+for sample in ref['roof_check']['samples']:
+    target=Vector(sample['observed_px']);approx=Vector(sample['reference_vertex'])
+    actual=min(verts,key=lambda v:(v-approx).length_squared)
+    assert (actual-approx).length<0.025
+    before=(oblique_pixel(sample['previous_xyz'])-target).length
+    after=(oblique_pixel(actual)-target).length
+    assert after<10 and after<before
+    print('Oblique roof',sample['part'],round(before,2),'->',round(after,2),'px')
+arts=bpy.data.objects['arts']
+assert (arts.matrix_world.translation-Vector((25.6,-170.3,0.15))).length<0.02
+raw=(assets/'arts.glb').read_bytes()
+doc=json.loads(raw[20:20+struct.unpack_from('<I',raw,12)[0]])
+root=next(n for n in doc['nodes'] if n.get('name')=='arts')
+assert root['extras']['photoPlanting']['palms']==5
+assert root['extras']['photoPlanting']['shrubs']==48
+assert len(doc['images'])>=16
+# Reloaded roof geometry, including the inside return at every change of direction.
+trace=json.loads((ROOT/'evidence/calibration/arts_roofs.json').read_text())
+deps=bpy.context.evaluated_depsgraph_get()
+for spec in trace['wings']:
+    name='arts.building.roof_'+spec['id']
+    ob=bpy.data.objects[name]
+    assert len(ob.data.polygons)>500
+    for a,b in zip(spec['ridge_px'],spec['ridge_px'][1:]):
+        h=spec['eave']
+        x=((a[0]+b[0])/2-159)/4.536-.335*h
+        y=-150+(286-(a[1]+b[1])/2)/4.536+.53*h
+        hit,where,_,_,obj,_=bpy.context.scene.ray_cast(deps,Vector((x,y,30)),Vector((0,0,-1)))
+        assert hit and obj.name==name and abs(where.z-h-spec['rise'])<.22,(name,obj,where)
+    for material in ob.data.materials:
+        if material.name.startswith('arts.ceramic.'):
+            r,g,b,_=material.diffuse_color
+            assert r>4*g and g>b
+porch=trace['entrance']
+hit,where,_,_,obj,_=bpy.context.scene.ray_cast(deps,
+    Vector((porch['center_x'],porch['front_y']+6.45,22)),Vector((0,0,-1)))
+assert hit and obj.name=='arts.building.portico_tiles' and 7.8<where.z<9.8,(obj,where)
+
+pond=next(w for w in json.loads((ROOT/'data/campus.json').read_text())['water'] if w['name']=='砚池')
+boundary=[Vector(p) for p in pond['poly']]
+palms=[o for o in bpy.context.scene.objects if o.get('botanicalPalm')]
+assert len(palms)==5
+for palm in palms:
+    pt=palm.matrix_world.translation
+    crossings=sum((a.y>pt.y)!=(b.y>pt.y) and pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x
+                  for a,b in zip(boundary,boundary[1:]))
+    assert crossings%2==0,pt
+print('Arts Center: four red roof chains, portico, crest elevations and five dry-land palm roots verified.')

@@ -1,6 +1,6 @@
 # 府城前庭 · 太湖石、榄仁树与两栋教学楼
 
-基线为 PR #92 的 `49ed015`。这一版保留原点、标高、北门、道路和榄仁树骨架。八个可独立加载的部件位于 [assets/atelier](../assets/atelier)，可以分别导入 Blender 或 glTF 查看器，按原坐标组装。
+基线为 PR #92 的 `49ed015`。这一版保留原点、标高、北门、道路和榄仁树骨架。九个可独立加载的部件位于 [assets/atelier](../assets/atelier)，可以分别导入 Blender 或 glTF 查看器，按原坐标组装。
 
 ![第二阶段与此次雕刻的两组同机位渲染](../renders/atelier/comparison.jpg)
 
@@ -17,6 +17,8 @@
 | 前庭铺装和种植 | 继承原有广场标高、铺装分区、台阶跑向与绿篱位置。 | 在原有米制 UV 上生成花岗岩和路面材料。柱下绿篱有独立枝叶，台座草皮与根际植物有实际几何。铺装缝宽、石材颗粒和植物分布为推断。 |
 
 几何所用照片及 git blob 记录在[证据台账](../evidence/sources.json)。海南日报的百年校庆报道帮助核对榄仁树地标身份。建模中的尺度与深度仍取自仓库标定和地图。[海南日报《百年海中恰芳华》](https://news.hndaily.cn/h5/html5/2023-10/30/content_58477_16668430.htm)
+
+艺术中心的旧门廊、四组红瓦屋面和教学区的照片依据分别见[艺术中心与屋顶修订](TEACHING_COURTS.md#艺术中心与一号楼屋顶)及[教学区对照](TEACHING_COURTS.md)。
 
 ## 看模型与重建
 
@@ -42,7 +44,7 @@ python3 twin/tools/pack_forecourt.py twin/scratch/HAIZ-Forecourt.html
 
 - [石腹近看](../renders/atelier/limestone.jpg)、[台座反打](../renders/atelier/reverse.jpg)、[门廊檐下](../renders/atelier/portal_detail.jpg)、[东侧柱廊](../renders/atelier/colonnade.jpg)、[内院](../renders/atelier/quadrangle.jpg)用于检验进深、穿插和远近轮廓。
 - [树下标定机位](../renders/atelier/lanshu.jpg)、[枝杈近看](../renders/atelier/fork.jpg)、[树冠全景](../renders/atelier/crown.jpg)用于复核承托关系与冠层空隙。另有[太湖石侧光](../renders/atelier/stone_evening.jpg)和[树下侧光](../renders/atelier/tree_evening.jpg)。
-- 独立空场景复验了八个 GLB 的网格、内嵌贴图、对象标签、坐标转换和低枝与承托石的网格接触。在 Chromium 中实际操作了旋转、缩放、单看石体和各栋教学楼、机位切换和复位。修正了导出器将岩性颜色写入次要顶点色通道的问题，独立预览读取标准 `COLOR_0`。
+- 独立空场景复验了九个 GLB 的网格、内嵌贴图、对象标签、坐标转换和低枝与承托石的网格接触。在 Chromium 中实际操作了旋转、缩放、单看石体和各栋教学楼、机位切换和复位。修正了导出器将岩性颜色写入次要顶点色通道的问题，独立预览读取标准 `COLOR_0`。
 - 沿用第二阶段投影检查，太湖石在教学楼视角与北门视角的轮廓重合度为 **0.886 / 0.861**，原记录约 **0.93 / 0.86**。第一项下降值得保留在对照里。当前指标使用填实的外轮廓作参照，会同时受外缘变化和透光孔洞影响，无法单独判断洞穴是否更忠实。
 
 ## 续作定位

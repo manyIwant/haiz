@@ -308,9 +308,13 @@ def central(out: Out, detailed=False):
     facade(out, 'central_rear', (xa, y0), (xb, y0), 0.0, zt, ops)
     out.tags['central_rear'] = {'tag': 'invented', 'basis': SPEC['rear']['basis']}
     R = SPEC['roofs']['central']
-    g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.75), skip=('-z',))
-    arch.hip_roof(g, xa, y0, xb, y1, zt + 0.75, R['pitch'], overhang=R['overhang'], concave=R['concave'],
-                  upturn=R['upturn'], upturn_len=3.5, kick=0.25, ridge_mat=TRIM, ridge_ends=0.7, tiles=True, closed_corners=detailed)
+    if detailed:
+        detail.central_roof(out,xa,xb,y0,y1,zt)
+    else:
+        g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.75), skip=('-z',))
+        arch.hip_roof(g, xa, y0, xb, y1, zt + 0.75, R['pitch'], overhang=R['overhang'], concave=R['concave'],
+                      upturn=R['upturn'], upturn_len=3.5, kick=0.25, ridge_mat=TRIM, ridge_ends=0.7, tiles=True)
+
 
 
 def pavilion(out: Out, s: int, detailed=False):

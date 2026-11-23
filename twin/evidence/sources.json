@@ -331,7 +331,8 @@
    "used_for": [
     "ground-level edges of lawns, plaza, steps and roads (read directly)",
     "roof outlines of Teaching Block 1 after removing relief displacement of (+0.335, -0.53) m per metre of height",
-    "tree canopy extents (date differs from aerial_campus)"
+    "tree canopy extents (date differs from aerial_campus)",
+    "red eaves, ridge paths and lower grey roof areas of the arts centre; estimated heights used for relief correction"
    ]
   },
   {
@@ -398,6 +399,24 @@
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
     "Polished hall with cross beams, lights, framed artwork and a view of the planted court and colonnade beyond. Camera and hall assignment estimated."
+   ]
+  },
+  {
+   "id": "campus_yishu",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_yishu.jpg",
+   "git_blob": "507cea3ac54a4f2dc9c569e9849668f633cd9927",
+   "size_px": [
+    1080,
+    801
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Elevated view over the ink pond, entrance stairs and red hipped portico, white piers and flat intermediate roof, with taller red wings behind.",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "portico tile profile and ridge, roof palette, layered roof heights, pond and entry relationship"
    ]
   }
  ],

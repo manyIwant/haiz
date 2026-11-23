@@ -146,3 +146,28 @@ def enrich(out, model):
         frame_mat=FRAME,glass_mat='atelier.glass.sea',frame=0.045,mull=0.028)
     for h in (0.34*A['h'],0.63*A['h']):
         out.protos['w_arch'].box(FRAME,(0.04,0.098,h),(A['w']-0.04,0.146,h+0.034))
+
+
+def central_roof(out,xa,xb,y0,y1,zt):
+    from mathutils import Matrix
+    g=out.geo('roof_central','photo-derived/estimated',
+        'aerial_campus shows an east-west ridge about half the eave length. The aligned aerial layer suggests a 1.2 degree bearing against the site X axis. scenery_15 constrains the depth of the shadow frieze and the upright tips. Pitch, local yaw and hidden returns inferred.')
+    eave=zt+1.97
+    g.box(PLASTER,(xa,y0,zt),(xb,y1,eave-0.62))
+    g.box(SHADOW,(xa+0.07,y0+0.07,eave-0.62),(xb-0.07,y1-0.07,eave-0.23))
+    g.box(WHITE,(xa-0.12,y0-0.12,eave-0.27),(xb+0.12,y1+0.12,eave-0.07))
+    # Recess the bed of the eave and carry the projecting shelf on aligned corbels.
+    for i in range(9):
+        x=xa+1.05+i*(xb-xa-2.1)/8
+        for front in (True,False):
+            y=y1 if front else y0
+            local=kit.Geo()
+            corbel(local,0,eave-0.19,0.98)
+            turn=math.pi if front else 0
+            g.merge(local,Matrix.Translation((x,y,0))@Matrix.Rotation(turn,4,'Z'))
+    skin=kit.Geo()
+    arch.hip_roof(skin,xa,y0,xb,y1,eave,29.0,overhang=1.2,concave=0.148,
+                  upturn=0.35,kick=0.12,ridge_mat=WHITE,ridge_ends=0.43,ridge_h=0.16,
+                  hip_run=6.44,main_ridge_axis='x',fascia_h=0.38,closed_corners=True)
+    pivot=Vector((0,(y0+y1)/2,0))
+    g.merge(skin,Matrix.Translation(pivot)@Matrix.Rotation(math.radians(1.2),4,'Z')@Matrix.Translation(-pivot))

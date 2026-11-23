@@ -10,6 +10,7 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 import build
 
+requested=set(sys.argv[sys.argv.index('--')+1:]) if '--' in sys.argv else set()
 sc=bpy.context.scene
 for ob in list(sc.objects):
     if ob.type=='LIGHT' and ob.data.type=='SUN':
@@ -27,6 +28,8 @@ for name,eye,look,lens in [
     ('stone_evening',(-5.4,40.9,1.42),(-0.1,28.5,2.04),44),
     ('tree_evening',(50.6,25.7,1.53),(42.0,17.2,3.18),29),
 ]:
+    if requested and name not in requested:
+        continue
     sc.camera=build.add_camera(sc,name,eye,look,lens)
     sc.render.filepath=str(out/(name+'.jpg'))
     bpy.ops.render.render(write_still=True)
@@ -42,8 +45,11 @@ sun.angle=math.radians(1.0)
 sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value=0.21
 for name,eye,look,lens in [
     ('court_morning',(-8,-23,2.15),(-19.5,-42,6.15),27),
+    ('arts_morning',(40,-105,8.5),(20.8,-130,3.7),37),
     ('south_morning',(-59,-133,2.65),(-35,-143,5.7),27),
 ]:
+    if requested and name not in requested:
+        continue
     sc.camera=build.add_camera(sc,name,eye,look,lens)
     sc.render.filepath=str(out/(name+'.jpg'))
     bpy.ops.render.render(write_still=True)

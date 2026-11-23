@@ -21,6 +21,7 @@ from mathutils import Matrix, Vector
 import numpy as np
 import build
 import b_yihao
+import atelier_arts
 import atelier_south
 import atelier_science
 import atelier_yihao
@@ -36,6 +37,11 @@ P = build.SITE['taihu']
 OUT = TWIN/'assets/atelier'
 RENDERS = TWIN/'renders/atelier'
 VIEWS = {
+    'precinct_overview': ((-235,-207,145),(1,-105,4),32),
+    'arts_roof': ((-56,-82,82),(21,-157,4),35),
+    'arts_photo': ((1,-103.5,23),(29.5,-124,5.7),34),
+    'arts_entrance': ((9,-109,3.1),(20.8,-131,5.1),32),
+    'arts_court': ((49,-102,21),(20.8,-129,4),34),
     'south_court': ((-61,-132,3.05),(-36,-143,6.2),25),
     'teaching_group': ((-158,-155,103),(0,-88,7),34),
     'science_gallery': ((7,-60,3.4),(30,-85,10.2),26),
@@ -170,26 +176,47 @@ def school(coll):
             ob['haiz_basis'] += ' Sliding sashes, transoms, sill, track and interior folds interpreted from scenery_13 and campus_yihao; open states are illustrative.'
 
 
-def export(coll):
+def export(coll, filename=None):
     bpy.ops.object.select_all(action='DESELECT')
     for ob in coll.all_objects:
         ob.select_set(True)
-    bpy.ops.export_scene.gltf(filepath=str(OUT/(coll.name+'.glb')),use_selection=True,export_format='GLB',
+    bpy.ops.export_scene.gltf(filepath=str(OUT/(filename or (coll.name+'.glb'))),use_selection=True,export_format='GLB',
         export_extras=True,export_cameras=False,export_lights=False,export_gpu_instances=False,
         export_vertex_color='ACTIVE',export_yup=True,export_materials='EXPORT')
+
+
+def import_arts(sc):
+    # The self-contained native-scale conversion is authored by export_legacy_arts.cjs.
+    # Import it unchanged so the original embedded maps and planting meshes remain editable.
+    before=set(sc.objects)
+    bpy.ops.import_scene.gltf(filepath=str(TWIN/'source/arts_entrance.glb'))
+    coll=build.collection('arts_center')
+    for ob in set(sc.objects)-before:
+        move(ob,coll)
+    atelier_arts.build_roofs(coll)
+    return coll
 
 
 def camera_for(sc,key):
     existing=bpy.data.objects.get('cam.'+key)
     if existing is not None:
         return existing
+    if key=='yihao_oblique':
+        ref=json.loads((TWIN/'evidence/calibration/yihao_oblique_study.json').read_text())
+        eye=Vector(ref['eye']); d=Vector(ref['forward']); up=Vector(ref['up'])
+        ob=build.add_camera(sc,key,eye,eye+d,ref['focal_px']*36/ref['width'])
+        ob.rotation_euler=Matrix((d.cross(up),up,-d)).transposed().to_euler()
+        ob.data.sensor_fit='HORIZONTAL'
+        ob.data.shift_x=(ref['width']/2-ref['cx'])/ref['width']
+        ob.data.shift_y=(ref['cy']-ref['height']/2)/ref['width']
+        return ob
     if key in build.CALIBRATED:
         return build.calibrated_camera(sc,key,build.CALIBRATED[key])
     return build.add_camera(sc,key,*VIEWS[key])
 
 
 def save_master(sc,path):
-    for key in ('jiaoxuelou','lanshu',*VIEWS):
+    for key in ('jiaoxuelou','lanshu','yihao_oblique',*VIEWS):
         camera_for(sc,key)
     sc.camera=camera_for(sc,'jiaoxuelou')
     build.setup_render(sc,32,(1440,1152))
@@ -212,6 +239,8 @@ def render(sc, views, samples, width, output):
     for key in views:
         sc.camera = camera_for(sc,key)
         sc.render.resolution_y = round(width*(0.8 if key in ('jiaoxuelou','lanshu') else 0.64))
+        if key=='yihao_oblique':
+            sc.render.resolution_y=round(width*450/497)
         sc.render.filepath = str(output/(key+'.jpg'))
         bpy.ops.render.render(write_still=True)
 
@@ -297,13 +326,16 @@ def main(args):
         move(ob,pond)
     for ob in imported-keep:
         bpy.data.objects.remove(ob,do_unlink=True)
+    arts=import_arts(sc)
     if not args.draft:
+        export(arts,'arts.glb')
         for coll in (stone,yihao,site,erhao,terminalia,science,south,pond):
             export(coll)
         manifest = {'baseline':'49ed015be7b155186aea06abdbb00e6d22965aaa',
                     'frame':'metres, twin (x,y,z) -> glTF (x,z,-y)',
                     'parts':{c.name:{'file':c.name+'.glb','objects':len(c.all_objects)} for c in (stone,yihao,site,erhao,terminalia,science,south,pond)},
                     'silhouette_overlap':overlap}
+        manifest['parts']['arts']={'file':'arts.glb','objects':len(arts.all_objects)}
         (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     build.sun_and_sky(sc,args.when,strength=3.1)
     if args.blend:
@@ -316,7 +348,7 @@ if __name__=='__main__':
     parser.add_argument('--draft',action='store_true', help='Only render, leave checked-in GLBs alone')
     parser.add_argument('--cache',type=Path, help='Optional local NPZ of this sculpt; omit after changing relief data')
     parser.add_argument('--blend',type=Path)
-    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group'])
+    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group','yihao_oblique','arts_entrance','arts_court','arts_photo','arts_roof','precinct_overview'])
     parser.add_argument('--width',type=int,default=1440)
     parser.add_argument('--samples',type=int,default=32)
     parser.add_argument('--when',default='2026-06-21T16:30')
