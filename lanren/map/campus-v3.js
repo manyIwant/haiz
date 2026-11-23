@@ -82,5 +82,23 @@ export async function loadCampusV3(geo, buildings) {
     }
   }
   scene.userData.haizTwin = twin;
+  if (typeof window !== 'undefined') {
+    // Live inspection must distinguish a real Draco decode from the V3 fallback.
+    window.__haizTwinPhase2 = twin;
+    if (new URLSearchParams(location.search).get('twin') === 'debug') {
+      let status = document.getElementById('haiz-twin-status');
+      if (!status) {
+        status = document.createElement('output');
+        status.id = 'haiz-twin-status';
+        Object.assign(status.style, { position: 'fixed', right: '12px', bottom: '12px', zIndex: '999999',
+          background: 'rgba(15,26,24,.89)', color: '#fff', padding: '10px 12px', borderRadius: '6px',
+          font: '12px/1.5 monospace', pointerEvents: 'none' });
+        document.body.append(status);
+      }
+      status.textContent = twin.applied.length
+        ? 'Phase-2 GLB: ' + twin.applied.map(x => x.part).join(', ')
+        : 'Phase-2 GLB unavailable; using V3 (' + twin.skipped.join(', ') + ')';
+    }
+  }
   return { scene, entries, hulls, decks, twin };
 }
