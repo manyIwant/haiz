@@ -143,8 +143,8 @@ export const LIGHT = [
   // on the ground, turning back, the low sun now comes from over the walker's shoulder and lays the
   // whole tree in warm light against a cooling sky, while the campus steps back into the evening
   // haze (painters' aerial perspective: distance loses darks and saturation, never detail).
-  { sun: [268, 9], sunCol: [1.0, 0.74, 0.5], I: 4.7, zenith: [0.05, 0.12, 0.36], horizon: [0.9, 0.64, 0.46], glow: [1.4, 0.8, 0.42],
-    fog: [0.72, 0.58, 0.48], density: 0.0017, mist: 0.04, rays: 0.3, exposure: 0.97, warm: 0.7, cloud: 0.42, aperture: 0, focus: 0, sat: 1.1, contrast: 1.12 }
+  { sun: [268, 12], sunCol: [1.0, 0.76, 0.52], I: 4.8, zenith: [0.03, 0.12, 0.31], horizon: [0.92, 0.68, 0.44], glow: [1.4, 0.82, 0.42],
+    fog: [0.70, 0.60, 0.48], density: 0.0017, mist: 0.04, rays: 0.3, exposure: 0.97, warm: 0.7, cloud: 0.42, aperture: 0, focus: 0, sat: 1.1, contrast: 1.12 }
 ];
 
 // ---------------------------------------------------------------- interpolation

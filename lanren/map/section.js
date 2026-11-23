@@ -286,7 +286,7 @@ function groundMaterial(U, layerU) {
       uFeat: layerU.uFeat, uFeatN: layerU.uFeatN, uFeatSplit: layerU.uFeatSplit, uCanopy: layerU.uCanopy, uSheet: layerU.uSheet,
       uShadowDir: layerU.uShadowDir, uSelect: layerU.uSelect, uHover: layerU.uHover, uHoverFeat: layerU.uHoverFeat, uDim: layerU.uDim,
       uCanopyK: { value: 0 }, uBldShadowK: { value: 0 }, uContactK: { value: 1 }
-    });
+    }, AIR);
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vHW;')
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\n  vHW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -295,6 +295,7 @@ function groundMaterial(U, layerU) {
 ${NOISE}
 ${SHARED}
 ${CAMPUS_UNIFORMS}
+${airGLSL}
 uniform vec3 uPalR[${PAL_SIZE}];
 varying vec3 vHW;
 ${campusGLSL('uPalR')}
@@ -333,7 +334,7 @@ float hzSunK = 1.0;`)
 }`)
       .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
         .replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= hzSunK;'))
-      .replace('#include <opaque_fragment>', 'outgoingLight += uSweepCol * hzSeam(vHW);\n#include <opaque_fragment>');
+      .replace('#include <opaque_fragment>', 'outgoingLight = hzAir(outgoingLight, reflectedLight.indirectDiffuse, diffuseColor.rgb, vec3(0.0, 1.0, 0.0), vHW);\noutgoingLight += uSweepCol * hzSeam(vHW);\n#include <opaque_fragment>');
   };
   m.customProgramCacheKey = () => 'haiz-campus-ground';
   return m;

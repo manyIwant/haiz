@@ -203,7 +203,8 @@ body.home #experienceDock { display: none; }
   opacity: 0; transition: opacity .8s; pointer-events: none; font-size: 10px; }
 .js body.spatial[data-chapter="5"] .colophon { opacity: .9; pointer-events: auto; }
 /* 06: the index takes the foot of the frame on the left; provenance sits beside the navigator */
-@media (min-width: 761px) { .js body.spatial[data-chapter="5"] .colophon { left: auto; right: calc(var(--pad) + 150px); transform: none; width: min(340px, 26vw); text-align: right; opacity: .75; } }
+@media (max-width: 1180px) and (min-width: 761px) { .js body.spatial[data-chapter="5"] .colophon { display: none; } }
+@media (min-width: 1181px) { .js body.spatial[data-chapter="5"] .colophon { left: auto; right: calc(var(--pad) + 150px); transform: none; width: min(340px, 26vw); text-align: right; opacity: .75; } }
 .js body.spatial[data-chapter="5"] .growth { opacity: 0; }
 .growth { transition: opacity .8s; }
 .colophon p { margin: 0; line-height: 1.7; }
