@@ -32,6 +32,9 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
   // ---- desktop: scroll, orbit navigator, keyboard, catching a leaf, leaving and returning
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await ctx.newPage();
+  // Every action gets the suite's 90 s budget: on SwiftShader each input or fill waits on frames
+  // that take seconds, and Playwright's 30 s default was the most common way this suite timed out.
+  page.setDefaultTimeout(90000);
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await page.goto(base + '/index.html?quality=low&test=1');
@@ -129,7 +132,13 @@ const exe = process.env.CHROMIUM_PATH || (fs.existsSync('/opt/pw-browsers/chromi
       // 'commit' is the navigation this step is about; news.html's own load is covered by site tests.
       // This is a software-rendering budget, not a UX target: real exit timing needs a hardware GPU.
       page.waitForURL(/news\.html$/, { timeout: 300000, waitUntil: 'commit' }).then(() => mark('navigation to news.html committed')),
-      page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, timeout: 90000 }).then(() => mark('click returned')),
+      // The slab is pinned to a projected 3D anchor and the camera "breathes" (camera.js), so on a
+      // fast runner the link can move a fraction of a pixel every frame and never pass Playwright's
+      // "stable" check (CI re-run on 522e32b: 90 s waiting for stable). Click the visible link
+      // without that wait; the click handler, veil and navigation under test are unchanged.
+      page.waitForSelector('#p-leaves a[href="news.html"]', { state: 'visible', timeout: 90000 })
+        .then(() => page.click('#p-leaves a[href="news.html"]', { noWaitAfter: true, force: true, timeout: 90000 }))
+        .then(() => mark('click returned')),
     ]);
   } catch (e) {
     const diag = await page.evaluate(() => {
