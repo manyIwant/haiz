@@ -19,6 +19,7 @@ import { buildCampus, MATERIALS } from './campus3d.js';
 import { invert, hex } from './tone.js';
 import { MAP_GRADE, CAMPUS_UNIFORMS, campusGLSL, PAL_INDEX, PAL_SIZE } from './layer.js';
 import { GROUND_Y } from './geo.js';
+import { AIR, airGLSL } from './air.js';
 
 // ---------------------------------------------------------------- colour
 // the drawing, as it should look on screen (inverted through the film's grade like the plan)
@@ -245,14 +246,14 @@ function buildingDepth(U, NB) {
 function prepareV3Material(material, U, flag = null) {
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, U);
-    if (flag) shader.uniforms.uV3Flag = flag;
+    if (flag) { shader.uniforms.uV3Flag = flag; Object.assign(shader.uniforms, AIR); }
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vCampusWorld;')
       .replace('#include <project_vertex>', '#include <project_vertex>\nvCampusWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
 varying vec3 vCampusWorld;
-${flag ? NOISE + SHARED + 'uniform vec3 uInkWall, uInkTop, uInkSel; uniform float uDimB, uV3Flag;' : ''}`)
+${flag ? NOISE + SHARED + airGLSL + 'uniform vec3 uInkWall, uInkTop, uInkSel; uniform float uDimB, uV3Flag;' : ''}`)
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
 if (vCampusWorld.y < ${GROUND_Y.toFixed(3)} - 0.01) discard;`);
     if (!flag) return;
@@ -262,6 +263,7 @@ if (vCampusWorld.y < ${GROUND_Y.toFixed(3)} - 0.01) discard;`);
           'getDirectionalLightInfo( directionalLight, directLight ); directLight.color *= hzCampusShadow(vCampusWorld, vec3(0.0, 1.0, 0.0));'))
       .replace('#include <opaque_fragment>', `
 vec3 face = normalize(cross(dFdx(vCampusWorld), dFdy(vCampusWorld)));
+outgoingLight = hzAir(outgoingLight, reflectedLight.indirectDiffuse, diffuseColor.rgb, face, vCampusWorld);
 vec3 ink = mix(uInkWall * (0.78 + 0.15 * abs(face.x)), uInkTop, smoothstep(0.35, 0.8, abs(face.y)));
 if (uV3Flag > 1.5) ink = mix(ink, uInkSel, 0.45);
 else if (uV3Flag > 0.5) ink *= 1.035;

@@ -18,6 +18,9 @@ body.wd-touch .wd kbd { display: none; }
 .wd-go { padding: 8px 18px; border-radius: 999px; border: 0; background: #f3eee3; color: #172b24 !important; font: 600 13px/1.2 "Songti SC", "Noto Serif SC", serif !important; letter-spacing: .12em; min-height: 40px; }
 .wd-go i { font-style: normal; margin-left: 4px; }
 .wd-resume { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; min-height: 42px; }
+.wd-ruhua { font: 400 12.5px/1 "Songti SC", "Noto Serif SC", serif; letter-spacing: .12em; color: var(--text); text-decoration: none; padding: 9px 6px 9px 2px; border-bottom: 1px solid rgba(246, 241, 231, .35); opacity: .88; transition: opacity .3s, border-color .3s; white-space: nowrap; }
+.wd-ruhua:hover, .wd-ruhua:focus-visible { opacity: 1; border-color: rgba(246, 241, 231, .8); }
+.wd-ruhua i { font-style: normal; font-size: 11px; margin-left: 3px; }
 .wd-hold-dest { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); margin: 0; text-align: center; font-size: 12px; color: var(--text); text-shadow: 0 1px 6px rgba(0, 0, 0, .55); }
 .wd-hold-dest button { margin-left: 8px; background: none; border: 0; text-decoration: underline; color: inherit; padding: 0; }
 .wd-hold-h { position: absolute; left: 0; right: 0; top: calc(100% + 8px); margin: 0; text-align: center; font-size: 11px; color: var(--text); opacity: .78; text-shadow: 0 1px 6px rgba(0, 0, 0, .55); }
@@ -140,6 +143,9 @@ body.map-mode:not(.map-leaving) .cmap > .cmap-you.on { opacity: 1; visibility: v
   .wd-hold { bottom: auto; top: calc(var(--st) + 88px); flex-wrap: nowrap; padding: 5px 5px 5px 14px; }
   .wd-hold-t b { display: none; }
   .wd-hold-t span { white-space: nowrap; font-size: 13px; }
+  /* 入画 takes its own row under the step on, so the button keeps its shape */
+  .wd-hold:has(.wd-ruhua) { flex-wrap: wrap; border-radius: 22px; padding: 6px 6px 4px 14px; row-gap: 0; }
+  .wd-ruhua { flex-basis: 100%; text-align: center; border-bottom: 0; padding: 7px 0 5px; font-size: 12px; opacity: .8; }
   .wd-hold-h { top: calc(100% + 6px); }
   .wd-hold-dest { bottom: calc(100% + 6px); }
   body.wd-holding #p-whole .lede { visibility: hidden; }
