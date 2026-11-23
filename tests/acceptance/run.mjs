@@ -74,6 +74,7 @@ const SUITES = [
   { id: 'walk-runtime', tier: 'core', title: 'Campus walk runtime (headless, no GPU)', run: node('tests/walk/runtime.cjs'), timeout: 600 },
   { id: 'rings', tier: 'core', title: '年轮 archive, astronomy and codec', run: node('tests/rings.cjs') },
   { id: 'lanren', tier: 'core', title: 'Lanren tree home sources', run: node('tests/lanren.cjs') },
+  { id: 'twin-activation', tier: 'core', title: '06 free-roam route and shared twin landmark loader', run: nodeTest('tests/integration/twin-activation.test.mjs') },
   { id: 'home-mobile-units', tier: 'core', title: 'Home phone gesture intent and nearest stop', run: nodeTest('tests/home-mobile.test.cjs') },
   { id: 'roots', tier: 'core', title: 'Roots data', run: node('tests/roots.cjs') },
   { id: 'campus-map', tier: 'core', title: 'Campus map data', run: node('tests/campus-map.cjs') },
