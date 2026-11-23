@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-22T06:35:07.415Z",
+  "quality": "low",
+  "dpr": 3,
+  "reps": 9,
+  "a": "../haiz-base",
+  "b": ".",
+  "results": [
+    {
+      "chapter": 1,
+      "aMedianMs": 2258,
+      "bMedianMs": 2104,
+      "medianRatio": 0.933
+    },
+    {
+      "chapter": 2,
+      "aMedianMs": 2801,
+      "bMedianMs": 2814,
+      "medianRatio": 0.999
+    },
+    {
+      "chapter": 3,
+      "aMedianMs": 3289,
+      "bMedianMs": 3276,
+      "medianRatio": 0.99
+    },
+    {
+      "chapter": 4,
+      "aMedianMs": 3988,
+      "bMedianMs": 4032,
+      "medianRatio": 1.001
+    },
+    {
+      "chapter": 5,
+      "aMedianMs": 3987,
+      "bMedianMs": 3846,
+      "medianRatio": 0.979
+    },
+    {
+      "chapter": 6,
+      "aMedianMs": 4149,
+      "bMedianMs": 4111,
+      "medianRatio": 1.008
+    }
+  ]
+}

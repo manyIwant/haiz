@@ -29,6 +29,7 @@ export function pickTier() {
 }
 
 const SHADOW_HALF = 24;
+const ENV_BAKE_EVERY = 3;   // frames between image-based-light re-bakes while the sky moves
 const SHADOW_FAR = 120;
 
 // ------------------------------------------------------------------ atmosphere pass
@@ -158,15 +159,13 @@ void main(){
 }`
 };
 
-// vignette, grain and a gentle split-tone grade, after tone mapping
-const FinishShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarm: { value: 0.5 }, uVig: { value: 0.32 }, uSat: { value: 1.0 }, uContrast: { value: 1.0 } },
-  vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-  fragmentShader: /* glsl */`
-uniform sampler2D tDiffuse; uniform float uTime; uniform float uWarm; uniform float uVig; uniform float uSat; uniform float uContrast;
-varying vec2 vUv;
-void main(){
-  vec3 c = texture2D(tDiffuse, vUv).rgb;
+// vignette, grain and a gentle split-tone grade, after tone mapping.
+// It runs inside the output pass (tone mapping + sRGB, then this grade) so the
+// finished frame costs one full-screen pass instead of two: on a phone that is
+// one fewer half-float read and write of every pixel, with the same arithmetic.
+const FINISH_UNIFORMS = { uTime: { value: 0 }, uWarm: { value: 0.5 }, uVig: { value: 0.32 }, uSat: { value: 1.0 }, uContrast: { value: 1.0 } };
+const FINISH_PARS = /* glsl */`uniform float uTime; uniform float uWarm; uniform float uVig; uniform float uSat; uniform float uContrast;`;
+const FINISH_BODY = /* glsl */`
   float l = dot(c, vec3(0.299, 0.587, 0.114));
   c = mix(vec3(l), c, uSat);
   c = clamp((c - 0.5) * uContrast + 0.5, 0.0, 1.0);
@@ -177,10 +176,54 @@ void main(){
   vec2 q = vUv - 0.5;
   c *= 1.0 - uVig * smoothstep(0.25, 0.85, length(q * vec2(1.25, 1.0)));
   float n = fract(sin(dot(vUv * 1000.0 + uTime * 13.7, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
-  c += n * 0.022;
-  gl_FragColor = vec4(c, 1.0);
-}`
-};
+  c += n * 0.022;`;
+
+class FinishOutputPass extends OutputPass {
+  constructor() {
+    super();
+    Object.assign(this.uniforms, THREE.UniformsUtils.clone(FINISH_UNIFORMS));
+    const fs = this.material.fragmentShader.replace('varying vec2 vUv;', FINISH_PARS + '\nvarying vec2 vUv;');
+    const end = fs.lastIndexOf('}');
+    if (!fs.includes('sRGBTransferOETF') || !fs.includes('uContrast') || end < 0) throw new Error('three.js OutputShader changed: finish grade not installed');
+    // the grade runs on the tone-mapped, sRGB-encoded colour, exactly where the separate pass read it
+    this.material.fragmentShader = fs.slice(0, end) + '  {\n  vec3 c = gl_FragColor.rgb;' + FINISH_BODY + '\n  gl_FragColor = vec4(c, 1.0);\n  }\n}';
+    this.material.name = 'FinishOutputShader';
+  }
+}
+
+// three r170's PMREMGenerator.fromScene() allocates a new 768×1024 half-float
+// target on every call (no public option to pass one in; later releases add
+// `renderTarget`). The sky changes nearly every frame while the reader scrolls,
+// so the page used to allocate and free one per frame. This keeps one target
+// and bakes into it again, so the same texture stays bound as scene.environment.
+// It relies on a private method, so it is guarded: only on the three.js revision
+// it was verified with, only while the generator's own working size still matches
+// the kept target, and it lets go of a target someone disposed. Anything else
+// falls back to the stock per-bake allocation. bench/env-stability.cjs checks
+// the lifecycle (repeated bakes, resizes, stale-environment, texture count).
+const PMREM_REUSE_REVISION = '170';
+function reusePMREMTarget(pmrem) {
+  const stats = { active: false, allocations: 0, bakes: 0, reason: '' };
+  const allocate = pmrem._allocateTargets;
+  if (THREE.REVISION !== PMREM_REUSE_REVISION) { stats.reason = `three r${THREE.REVISION}: stock allocation`; return stats; }
+  if (typeof allocate !== 'function') { stats.reason = 'no _allocateTargets: stock allocation'; return stats; }
+  let kept = null;
+  const release = () => { kept = null; };
+  pmrem._allocateTargets = function () {
+    const out = allocate.call(this);   // sizes the generator's ping-pong target as a side effect
+    if (kept && kept.width === out.width && kept.height === out.height && kept.texture.mapping === out.texture.mapping) {
+      out.dispose();                   // never uploaded: frees nothing on the GPU, nothing allocated there
+      return kept;
+    }
+    if (kept) { kept.removeEventListener('dispose', release); kept.dispose(); }
+    kept = out;
+    kept.addEventListener('dispose', release);
+    stats.allocations++;
+    return kept;
+  };
+  stats.active = true;
+  return stats;
+}
 
 export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const tier = TIERS[tierName];
@@ -255,6 +298,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   envSky.frustumCulled = false;
   envScene.add(envSky);
   let envRT = null;
+  const envReuse = reusePMREMTarget(pmrem);
+  let lastBake = -Infinity, stageNo = 0;
 
   // ---------------------------------------------------------------- tree
   let bark = null;
@@ -374,8 +419,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   composer.addPass(focus);
   let bloom = null;
   if (tier.bloom) { bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.65, 0.92); composer.addPass(bloom); }
-  composer.addPass(new OutputPass());
-  const finish = new ShaderPass(FinishShader);
+  const finish = new FinishOutputPass();
   composer.addPass(finish);
 
   // ---------------------------------------------------------------- staging
@@ -410,16 +454,24 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     renderer.toneMappingExposure = s.exposure;
     focus.uniforms.uFocus.value = s.focus || 4;
     focus.uniforms.uAperture.value = s.aperture || 0;
+    // the shader passes the frame through untouched below this aperture: skip the full-screen copy
+    focus.enabled = focus.uniforms.uAperture.value >= 0.01;
     finish.uniforms.uWarm.value = s.warm;
     finish.uniforms.uSat.value = s.sat ?? 1;
     finish.uniforms.uContrast.value = s.contrast ?? 1;
     if (bloom) bloom.strength = 0.12 + 0.14 * s.rays;
     // image-based light follows the sky, re-baked when it changed enough
+    // (at most every third frame while it keeps changing: the ambient light trails by
+    // ≤ 0.1 s during a scroll, and the last change is always baked once it settles)
+    stageNo++;
     const key = [s.horizon.r, s.zenith.b, state.sunDir.x, state.sunDir.y].map((v) => v.toFixed(2)).join();
-    if (key !== state.envKey) {
+    if (key !== state.envKey && (stageNo - lastBake >= ENV_BAKE_EVERY || !envRT)) {
       state.envKey = key;
-      if (envRT) envRT.dispose();
-      envRT = pmrem.fromScene(envScene, 0, 1, 1000);
+      lastBake = stageNo;
+      const baked = pmrem.fromScene(envScene, 0, 1, 1000);
+      if (envRT && envRT !== baked) envRT.dispose();   // the stock path: a new target per bake
+      envRT = baked;
+      envReuse.bakes++;
       scene.environment = envRT.texture;
     }
   }
@@ -459,6 +511,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   return {
     renderer, scene, camera, sun, canopy, bark, island, water, grass, litter, meta, rosettes, stride,
-    heightAt, inIsland, setStage, resize, render, tier, composer
+    heightAt, inIsland, setStage, resize, render, tier, composer,
+    /** diagnostics for bench/: is the environment target reused, how often baked and allocated */
+    get envStats() { return { ...envReuse, target: envRT }; }
   };
 }
