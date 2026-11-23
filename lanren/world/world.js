@@ -103,12 +103,12 @@ export function attachWorld(ctx) {
   ui.className = 'wd';
   ui.innerHTML = `
     <div class="wd-hold" hidden>
-      <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，由你自己走' : '你已站在校园里。再向前一步，由你自己走'}</span></p>
-      <button type="button" class="wd-go" data-w="go">走进校园 <i aria-hidden="true">→</i></button>
-      <a class="wd-ruhua" href="ruhua-alive.html" title="入画：同一棵树，走进按海口此刻的天光画成的校园">或者，入画 <i aria-hidden="true">↗</i></a>
+      <p class="wd-hold-t"><b>06 · 回望</b><span>${coarse ? '再向前一步，走进画里' : '你已站在校园里。再向前一步，走进画里'}</span></p>
+      <a class="wd-ruhua" href="ruhua-alive.html" title="入画：同一棵树，走进按海口此刻的天光画成的校园">走进入画 <i aria-hidden="true">→</i></a>
+      <button type="button" class="wd-go" data-w="go">或者，就在这里走走</button>
       <button type="button" class="wd-resume" data-w="resume" hidden>回到上次站的地方</button>
       <p class="wd-hold-dest" hidden></p>
-      <p class="wd-hold-h">${coarse ? '再向上滑一次或点按钮 · 向下滑回到第五幕' : '再向下滚动一次 · ↓ / Enter · 或点按钮；向上滚动回到第五幕'}</p>
+      <p class="wd-hold-h">${coarse ? '点「走进入画」进入画中的校园 · 再向上滑一次就在这里走走 · 向下滑回到第五幕' : '点「走进入画」进入画中的校园 · 再向下滚动一次（↓ / Enter）就在这里走走 · 向上滚动回到第五幕'}</p>
     </div>
     <p class="wd-rotate-chip" hidden><i aria-hidden="true"></i><span>落地了。横过手机，接下来可以自己走（可选）</span></p>
     <div class="wd-rotate" role="dialog" aria-modal="true" aria-labelledby="wdRotT" hidden>
@@ -167,6 +167,10 @@ export function attachWorld(ctx) {
     </div>
     <p class="wd-live" role="status" aria-live="polite"></p>`;
   body.append(ui);
+  // 入画 picks up 06's leaving (assets/js/thread.js): a dark fade, and its home mark leads back to 06
+  ui.querySelector('.wd-ruhua')?.addEventListener('click', () => {
+    try { sessionStorage.setItem('haiz.thread', JSON.stringify({ i: 5, kind: 'pull', colour: '#0b1310', href: 'ruhua-alive.html', t: Date.now() })); } catch { /* storage blocked */ }
+  });
   const $ = (q) => ui.querySelector(q), $$ = (q) => [...ui.querySelectorAll(q)];
   const say = (t) => { $('.wd-live').textContent = t; };
   // 05's note: with the campus standing in 05 (composition b), the far view is the campus model, not the lagoon

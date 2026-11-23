@@ -80,7 +80,7 @@ export const CHAPTERS = [
     ui: { slab: 'index', anchor: [-2.2, 9.8, 1.2], exit: 'pull' },
     entries: [
       { href: 'windowsill/index.html', title: '课间窗台', en: 'Windowsill', note: '便签、专注、书信与本机留声', dark: true, primary: true },
-      { href: 'lab/', title: 'HAIZ 实验册', en: 'Lab Book · 34 Experiments', note: '一本可以动手的物理实验册', dark: true },
+      { href: 'lab/', title: 'HAIZ 实验册', en: 'Lab Book · 34 Experiments', note: '物理、化学、生物、数学等七科互动实验', dark: true },
       { href: 'physics-lab.html', title: '物理实验室', en: 'Physics lab', note: 'Every Joule 原版与自制练习', dark: true },
       { href: 'pocket/index.html', title: 'HAIZ Pocket', en: 'Pocket', note: '移动端应用，可安装的 PWA', dark: true },
       { href: 'login/index.html', title: '登录', en: 'Sign in', note: 'Pocket 账户 · 登录与注册', dark: true },
