@@ -1,0 +1,71 @@
+/* HAIZ · 入画 · 画境实验室 — the picture is the page; tools sit at its edges (shares 入画's palette). */
+:root {
+  --paper: #f4f1e8; --ink: #1f3a30; --leaf: #2f5444; --muted: #5a6a60;
+  --glass: rgba(250, 248, 240, 0.86); --shadow: 0 6px 24px rgba(20, 40, 60, 0.18); --ease: cubic-bezier(.22, 1, .36, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #6f8f88; color: var(--ink);
+  font: 14px/1.55 -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+#pl-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid #f2c96b; outline-offset: 2px; }
+
+#pl-loading { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; z-index: 9; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, #e9e3d4, #b9b29f 70%, #8d8a7a); transition: opacity .9s var(--ease); }
+.pl-load-t { margin: 0; font-size: 18px; letter-spacing: .32em; color: #3d4a40; }
+#pl-bar { width: min(240px, 60vw); height: 2px; background: rgba(40, 60, 50, .15); border-radius: 2px; overflow: hidden; }
+#pl-bar i { display: block; height: 100%; width: 100%; background: #3d5a4a; transform: scaleX(0); transform-origin: left; transition: transform .4s var(--ease); }
+#pl-status { margin: 0; font-size: 13px; color: #4a554c; min-height: 1.6em; }
+body[data-stage="ready"] #pl-loading { opacity: 0; }
+
+#pl-ui { position: fixed; inset: 0; pointer-events: none; z-index: 3; }
+#pl-ui > * { pointer-events: auto; }
+body[data-stage="loading"] #pl-ui { visibility: hidden; }
+body.pl-bare #pl-ui > :not(#pl-split) { opacity: 0; pointer-events: none; }
+
+.pl-top { position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); display: flex; gap: 12px; align-items: center; pointer-events: none; }
+.pl-mark { pointer-events: auto; font: 600 19px/1 "Sora", system-ui, sans-serif; color: var(--ink); text-decoration: none; background: var(--glass); padding: 8px 12px; border-radius: 999px; box-shadow: var(--shadow); }
+.pl-title { margin: 0; display: flex; flex-direction: column; color: #fff; text-shadow: 0 1px 8px rgba(10, 30, 40, .55); line-height: 1.3; }
+.pl-title b { font-size: 16px; letter-spacing: .04em; } .pl-title span { font-size: 12px; opacity: .9; }
+
+.pl-modes { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 2px; padding: 3px; background: var(--glass); border-radius: 999px; box-shadow: var(--shadow); }
+.pl-modes button, .pl-chips button { border: 0; cursor: pointer; background: transparent; color: var(--ink); padding: 6px 13px; border-radius: 999px; min-height: 32px; }
+.pl-modes button[aria-pressed="true"], .pl-chips button[aria-pressed="true"] { background: var(--leaf); color: #fff; }
+
+#pl-split { position: absolute; top: 0; bottom: 0; left: 50%; width: 44px; margin-left: -22px; cursor: ew-resize; touch-action: none; display: none; }
+body[data-mode="split"] #pl-split { display: block; }
+#pl-split i { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--glass); box-shadow: var(--shadow); }
+#pl-split i::before, #pl-split i::after { content: ""; position: absolute; top: 10px; border: 5px solid transparent; }
+#pl-split i::before { left: 2px; border-right-color: var(--ink); } #pl-split i::after { right: 2px; border-left-color: var(--ink); }
+.pl-tag { position: absolute; top: calc(50% + 24px); font-size: 12px; color: #fff; text-shadow: 0 1px 6px rgba(10, 30, 40, .7); white-space: nowrap; }
+.pl-tag-l { right: 30px; } .pl-tag-r { left: 30px; }
+
+.pl-side { position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); display: flex; flex-direction: column; align-items: flex-end; gap: 8px; max-height: calc(100% - 120px); }
+.pl-panel-btn { border: 0; cursor: pointer; background: var(--glass); color: var(--ink); padding: 7px 14px; border-radius: 999px; box-shadow: var(--shadow); min-height: 34px; }
+.pl-panel { width: min(280px, calc(100vw - 32px)); background: rgba(250, 248, 240, .94); border-radius: 16px; box-shadow: var(--shadow); padding: 10px 14px 14px; overflow-y: auto; }
+.pl-panel h3 { margin: 10px 0 4px; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .12em; }
+.pl-layer { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; cursor: pointer; }
+.pl-layer input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--leaf); flex: none; }
+.pl-layer span { display: flex; flex-direction: column; }
+.pl-layer b { font-weight: 600; font-size: 14px; } .pl-layer small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.pl-chips { display: flex; flex-wrap: wrap; gap: 2px; }
+.pl-panel .pl-chips button { background: #e6e2d6; margin: 0 2px 2px 0; }
+.pl-panel .pl-chips button[aria-pressed="true"] { background: var(--leaf); }
+.pl-presets { margin: 2px 0 4px; }
+.pl-honest { margin: 12px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.pl-foot { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(720px, calc(100vw - 32px)); pointer-events: none; }
+.pl-views { pointer-events: auto; background: var(--glass); padding: 3px; border-radius: 999px; box-shadow: var(--shadow); justify-content: center; }
+.pl-note { margin: 0; font-size: 12px; color: #fff; text-shadow: 0 1px 6px rgba(10, 30, 40, .75); text-align: center; }
+.pl-debug { position: absolute; left: 16px; bottom: 16px; margin: 0; font: 12px/1.4 ui-monospace, monospace; background: rgba(20, 30, 28, .7); color: #e8efe9; padding: 4px 8px; border-radius: 6px; }
+
+@media (max-width: 720px) {
+  .pl-title span { display: none; }
+  .pl-modes { top: auto; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px); }
+  .pl-side { top: calc(max(12px, env(safe-area-inset-top)) + 46px); }
+  .pl-panel { max-height: 52vh; }
+  .pl-note { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { #pl-loading, #pl-bar i { transition: none; } }

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3f5f52">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="HAIZ 入画 · 画境实验室：在绘画校园里对照试验材质、光、空间层次与画面处理（实验样板，非官方，建筑为近似模型）。">
+  <title>haiz.space — 入画 · 画境实验室</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="lanren/painted-lab/lab.css?v=1">
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/"
+  } }
+  </script>
+  <script type="module" src="lanren/painted-lab/main.js?v=1"></script>
+</head>
+<body data-stage="loading" data-mode="split">
+  <canvas id="pl-canvas" tabindex="0" aria-label="三维场景：绘画校园。拖动环顾，滚轮或双指缩放，右键或 Shift 拖动平移"></canvas>
+
+  <div id="pl-loading" aria-hidden="true">
+    <p class="pl-load-t">HAIZ · 画境实验室</p>
+    <div id="pl-bar"><i></i></div>
+    <p id="pl-status" role="status" aria-live="polite">准备…</p>
+  </div>
+
+  <div id="pl-ui">
+    <header class="pl-top">
+      <a class="pl-mark" href="index.html" aria-label="回到 HAIZ 首页">haiz</a>
+      <p class="pl-title"><b>入画 · 画境实验室</b><span>材质 · 光 · 空间 · 画面</span></p>
+    </header>
+
+    <div class="pl-modes" role="group" aria-label="画面">
+      <button type="button" data-mode="base" aria-pressed="false" title="V2 漫步的原样画面">原画</button>
+      <button type="button" data-mode="split" aria-pressed="true" title="左原画，右实验（C 切换）">对照</button>
+      <button type="button" data-mode="lab" aria-pressed="false" title="实验画面">实验</button>
+    </div>
+
+    <div id="pl-split" role="slider" tabindex="0" aria-label="对照分界：左为原画，右为实验" aria-valuemin="2" aria-valuemax="98" aria-valuenow="50">
+      <span class="pl-tag pl-tag-l">原画</span><i aria-hidden="true"></i><span class="pl-tag pl-tag-r">实验</span>
+    </div>
+
+    <aside class="pl-side">
+      <button type="button" class="pl-panel-btn" data-act="panel" aria-expanded="true" aria-controls="pl-panel">图层</button>
+      <section id="pl-panel" class="pl-panel" aria-label="实验图层">
+        <div class="pl-chips pl-presets" role="group" aria-label="画法">
+          <button type="button" data-preset="study" aria-pressed="true" title="可测量的实验层，构图层关闭">研究</button>
+          <button type="button" data-preset="painting" aria-pressed="false" title="全部层，加上焦点与留白，笔触更大">画意</button>
+        </div>
+        <div id="pl-layers"></div>
+        <h3>时间</h3>
+        <div class="pl-chips" role="group" aria-label="时间">
+          <button type="button" data-time="morning" aria-pressed="false">清晨</button>
+          <button type="button" data-time="noon" aria-pressed="false">正午</button>
+          <button type="button" data-time="golden" aria-pressed="false">傍晚</button>
+        </div>
+        <p class="pl-honest">实验样板。建筑来自项目的 Blender V3 近似模型，树木、花坛与天空为绘画式表达，不是测绘或实景。</p>
+      </section>
+    </aside>
+
+    <footer class="pl-foot">
+      <nav id="pl-views" class="pl-chips pl-views" aria-label="观察点"></nav>
+      <p id="pl-note" class="pl-note"></p>
+    </footer>
+    <p id="pl-debug" class="pl-debug" hidden></p>
+  </div>
+</body>
+</html>
