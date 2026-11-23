@@ -1,0 +1,312 @@
+{
+ "image": "assets/images/web/jiaoxuelou-1600.jpg",
+ "image_size": [
+  1600,
+  1280
+ ],
+ "camera_model": "pinhole with radial distortion k1; principal point fixed at the centre of the picture area; free position, yaw, pitch, roll, focal length, k1",
+ "camera": {
+  "x": -5.002336901466342,
+  "y": 41.67586895046077,
+  "z": 1.7817232519721882,
+  "f_px": 1522.8963993951863,
+  "k1": 0.0,
+  "yaw_deg": -74.51419896488294,
+  "pitch_deg": 4.100813714807947,
+  "roll_deg": 0.40097436237142003,
+  "principal_point": [
+   799.0,
+   653.5
+  ],
+  "basis": {
+   "right": [
+    -0.963806672988489,
+    -0.2665107349382257,
+    0.006980348526159671
+   ],
+   "up": [
+    -0.012348895767541303,
+    0.07078234526414234,
+    0.9974153419575168
+   ],
+   "forward": [
+    0.2663159812632022,
+    -0.9612293627233796,
+    0.07151160998203854
+   ]
+  },
+  "convention": "yaw = azimuth of the view direction from +x towards +y; pitch up positive; basis vectors in the twin frame"
+ },
+ "solution": {
+  "x": {
+   "value": -5.0023,
+   "sd": 0.0462
+  },
+  "y": {
+   "value": 41.6759,
+   "sd": 0.1496
+  },
+  "z": {
+   "value": 1.7817,
+   "sd": 0.0944
+  },
+  "yaw": {
+   "value": -74.5142,
+   "sd": 0.0962
+  },
+  "pitch": {
+   "value": 4.1008,
+   "sd": 0.3988
+  },
+  "roll": {
+   "value": 0.401,
+   "sd": 0.2518
+  },
+  "f": {
+   "value": 1522.8964,
+   "sd": 16.8453
+  },
+  "k1": {
+   "value": 0.0,
+   "sd": 0.0
+  },
+  "plinth_top": {
+   "value": 0.7829,
+   "sd": 0.0447
+  },
+  "portal_hw": {
+   "value": 4.7382,
+   "sd": 0.0366
+  }
+ },
+ "anchors": {},
+ "fit_rms_px": 1.5674999524919342,
+ "fit_max_px": 3.2919865074066452,
+ "n_residuals": 24,
+ "features": [
+  {
+   "id": "portal_E_outer",
+   "type": "vline",
+   "residual_px": [
+    -0.47,
+    -0.02,
+    0.43
+   ]
+  },
+  {
+   "id": "portal_W_inner",
+   "type": "vline",
+   "residual_px": [
+    -2.56,
+    -1.14,
+    0.27
+   ]
+  },
+  {
+   "id": "portal_W_outer",
+   "type": "vline",
+   "residual_px": [
+    -0.43,
+    1.43,
+    3.29
+   ]
+  },
+  {
+   "id": "tower_E_corner",
+   "type": "vline",
+   "residual_px": [
+    -1.62,
+    0.01,
+    1.63
+   ]
+  },
+  {
+   "id": "plinth_E_corner",
+   "type": "vline",
+   "residual_px": [
+    -2.14,
+    0.01,
+    2.17
+   ]
+  },
+  {
+   "id": "plinth_top_L",
+   "type": "xline",
+   "residual_px": [
+    -0.52
+   ]
+  },
+  {
+   "id": "plinth_top_M",
+   "type": "xline",
+   "residual_px": [
+    0.8
+   ]
+  },
+  {
+   "id": "plinth_top_R",
+   "type": "xline",
+   "residual_px": [
+    -0.14
+   ]
+  },
+  {
+   "id": "plinth_bot_L",
+   "type": "xline",
+   "residual_px": [
+    -1.73
+   ]
+  },
+  {
+   "id": "plinth_bot_R",
+   "type": "xline",
+   "residual_px": [
+    0.76
+   ]
+  },
+  {
+   "id": "portal_top",
+   "type": "xline",
+   "residual_px": [
+    0.34
+   ]
+  },
+  {
+   "id": "plinth_W_corner",
+   "type": "vline",
+   "residual_px": [
+    3.05,
+    0.02,
+    -3.01
+   ]
+  }
+ ],
+ "profile_f": [
+  {
+   "f_px": 1100,
+   "cost": 146.183,
+   "rms_px": 18.555,
+   "camera_xyz": [
+    -4.59,
+    38.18,
+    2.02
+   ],
+   "pitch_deg": 2.6
+  },
+  {
+   "f_px": 1300,
+   "cost": 77.183,
+   "rms_px": 9.689,
+   "camera_xyz": [
+    -4.77,
+    39.86,
+    1.95
+   ],
+   "pitch_deg": 3.33
+  },
+  {
+   "f_px": 1500,
+   "cost": 16.223,
+   "rms_px": 1.841,
+   "camera_xyz": [
+    -4.97,
+    41.48,
+    1.81
+   ],
+   "pitch_deg": 3.97
+  },
+  {
+   "f_px": 1700,
+   "cost": 56.168,
+   "rms_px": 7.227,
+   "camera_xyz": [
+    -5.19,
+    43.11,
+    1.61
+   ],
+   "pitch_deg": 4.67
+  },
+  {
+   "f_px": 1900,
+   "cost": 110.973,
+   "rms_px": 14.921,
+   "camera_xyz": [
+    -5.4,
+    44.7,
+    1.41
+   ],
+   "pitch_deg": 5.12
+  },
+  {
+   "f_px": 2200,
+   "cost": 190.883,
+   "rms_px": 25.577,
+   "camera_xyz": [
+    -5.73,
+    47.05,
+    1.07
+   ],
+   "pitch_deg": 5.7
+  }
+ ],
+ "alternatives": [
+  {
+   "left_out": [
+    "tower"
+   ],
+   "camera_xyz": [
+    -5.01,
+    41.77,
+    1.77
+   ],
+   "f_px": 1534.9,
+   "pitch_deg": 4.16,
+   "roll_deg": 0.46,
+   "rms_px": 1.581
+  },
+  {
+   "left_out": [
+    "portal_top"
+   ],
+   "camera_xyz": [
+    -4.99,
+    41.43,
+    2.22
+   ],
+   "f_px": 1503.0,
+   "pitch_deg": 1.66,
+   "roll_deg": -0.27,
+   "rms_px": 1.442
+  },
+  {
+   "left_out": [
+    "plinth_E_corner",
+    "plinth_W_corner"
+   ],
+   "camera_xyz": [
+    -4.53,
+    38.31,
+    1.09
+   ],
+   "f_px": 1417.9,
+   "pitch_deg": 5.84,
+   "roll_deg": 0.61,
+   "rms_px": 1.087
+  },
+  {
+   "left_out": [
+    "plinth_bot_L",
+    "plinth_bot_R"
+   ],
+   "camera_xyz": [
+    -4.99,
+    41.45,
+    3.33
+   ],
+   "f_px": 1504.2,
+   "pitch_deg": 1.82,
+   "roll_deg": -0.26,
+   "rms_px": 1.433
+  }
+ ]
+}

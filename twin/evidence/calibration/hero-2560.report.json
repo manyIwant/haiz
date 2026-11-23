@@ -1,0 +1,207 @@
+{
+ "image": "assets/images/web/hero-2560.jpg",
+ "camera": {
+  "x": 0.4391307985802926,
+  "y": 120.28647163703569,
+  "z": 1.500373876430654,
+  "f_px": 2055.484118574053,
+  "yaw_deg": 1.5675819375590812,
+  "roll_deg": -0.6789319443848929,
+  "principal_point": [
+   1280,
+   1075
+  ]
+ },
+ "fit_rms_px": 6.260087043399844,
+ "points": [
+  {
+   "id": "gate_E_inner_base_outer",
+   "role": "fit",
+   "du_px": 1.6,
+   "dv_px": 5.1,
+   "depth_m": 13.5,
+   "metres_per_px": 0.0066,
+   "depth_change_to_match_m": 0.3
+  },
+  {
+   "id": "gate_E_inner_base_inner",
+   "role": "fit",
+   "du_px": 13.0,
+   "dv_px": 6.3,
+   "depth_m": 13.6,
+   "metres_per_px": 0.0066,
+   "depth_change_to_match_m": 0.4
+  },
+  {
+   "id": "gate_W_inner_base_inner",
+   "role": "fit",
+   "du_px": -4.9,
+   "dv_px": 7.9,
+   "depth_m": 13.7,
+   "metres_per_px": 0.0067,
+   "depth_change_to_match_m": 0.5
+  },
+  {
+   "id": "gate_W_inner_base_outer",
+   "role": "fit",
+   "du_px": -15.9,
+   "dv_px": 0.2,
+   "depth_m": 13.7,
+   "metres_per_px": 0.0067,
+   "depth_change_to_match_m": 0.0
+  },
+  {
+   "id": "gate_E_opening_top",
+   "role": "fit",
+   "du_px": -2.6,
+   "dv_px": -7.6,
+   "depth_m": 13.6,
+   "metres_per_px": 0.0066,
+   "depth_change_to_match_m": 0.3
+  },
+  {
+   "id": "gate_W_opening_top",
+   "role": "fit",
+   "du_px": 8.6,
+   "dv_px": -12.0,
+   "depth_m": 13.8,
+   "metres_per_px": 0.0067,
+   "depth_change_to_match_m": 0.4
+  },
+  {
+   "id": "yihao_s5_axiswin_head_E",
+   "role": "fit",
+   "du_px": 0.7,
+   "dv_px": 0.8,
+   "depth_m": 120.3,
+   "metres_per_px": 0.0585,
+   "depth_change_to_match_m": -0.3
+  },
+  {
+   "id": "yihao_s5_axiswin_head_W",
+   "role": "fit",
+   "du_px": 0.1,
+   "dv_px": 0.1,
+   "depth_m": 120.4,
+   "metres_per_px": 0.0586,
+   "depth_change_to_match_m": -0.1
+  },
+  {
+   "id": "yihao_s6_axiswin_head_E",
+   "role": "fit",
+   "du_px": -0.0,
+   "dv_px": 0.3,
+   "depth_m": 120.3,
+   "metres_per_px": 0.0585,
+   "depth_change_to_match_m": -0.1
+  },
+  {
+   "id": "yihao_s6_axiswin_head_W",
+   "role": "fit",
+   "du_px": -0.6,
+   "dv_px": -0.2,
+   "depth_m": 120.4,
+   "metres_per_px": 0.0586,
+   "depth_change_to_match_m": 0.1
+  },
+  {
+   "id": "yihao_s5_westwin_head_W",
+   "role": "fit",
+   "du_px": 0.9,
+   "dv_px": -0.8,
+   "depth_m": 120.6,
+   "metres_per_px": 0.0587,
+   "depth_change_to_match_m": 0.4
+  },
+  {
+   "id": "yihao_s3_westwin_head_E",
+   "role": "check",
+   "du_px": 3.1,
+   "dv_px": -1.0,
+   "depth_m": 120.5,
+   "metres_per_px": 0.0586,
+   "depth_change_to_match_m": 0.8
+  },
+  {
+   "id": "yihao_s3_westwin_sill_W",
+   "role": "check",
+   "du_px": 2.7,
+   "dv_px": 0.1,
+   "depth_m": 120.6,
+   "metres_per_px": 0.0587,
+   "depth_change_to_match_m": -0.1
+  },
+  {
+   "id": "yihao_s4_westwin_head_E",
+   "role": "check",
+   "du_px": 2.4,
+   "dv_px": 0.1,
+   "depth_m": 120.5,
+   "metres_per_px": 0.0586,
+   "depth_change_to_match_m": -0.1
+  },
+  {
+   "id": "yihao_porch_floor",
+   "role": "check",
+   "du_px": 4.3,
+   "dv_px": 0.7,
+   "depth_m": 113.6,
+   "metres_per_px": 0.0552,
+   "depth_change_to_match_m": 10.3
+  },
+  {
+   "id": "plinth_bottom_E",
+   "role": "check",
+   "du_px": -0.2,
+   "dv_px": 5.3,
+   "depth_m": 88.6,
+   "metres_per_px": 0.0431,
+   "depth_change_to_match_m": 15.2
+  },
+  {
+   "id": "plinth_bottom_W",
+   "role": "check",
+   "du_px": 0.3,
+   "dv_px": 3.2,
+   "depth_m": 88.8,
+   "metres_per_px": 0.0432,
+   "depth_change_to_match_m": 9.1
+  },
+  {
+   "id": "plinth_top_E",
+   "role": "check",
+   "du_px": -0.4,
+   "dv_px": 3.9,
+   "depth_m": 88.6,
+   "metres_per_px": 0.0431,
+   "depth_change_to_match_m": 23.2
+  },
+  {
+   "id": "plinth_top_W",
+   "role": "check",
+   "du_px": 0.1,
+   "dv_px": 1.8,
+   "depth_m": 88.8,
+   "metres_per_px": 0.0432,
+   "depth_change_to_match_m": 10.8
+  },
+  {
+   "id": "rock_E_end",
+   "role": "check",
+   "du_px": 0.3,
+   "dv_px": 14.2,
+   "depth_m": 91.8,
+   "metres_per_px": 0.0446,
+   "depth_change_to_match_m": -86.8
+  },
+  {
+   "id": "rock_W_tip",
+   "role": "check",
+   "du_px": -0.8,
+   "dv_px": 11.8,
+   "depth_m": 91.8,
+   "metres_per_px": 0.0446,
+   "depth_change_to_match_m": -38.8
+  }
+ ]
+}

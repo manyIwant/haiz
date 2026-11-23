@@ -1,0 +1,516 @@
+{
+ "image": "assets/images/web/lanshu-1600.jpg",
+ "image_size": [
+  1600,
+  1280
+ ],
+ "camera_model": "pinhole with radial distortion k1; principal point fixed at the centre of the picture area; free position, yaw, pitch, roll, focal length, k1",
+ "camera": {
+  "x": 49.78318198702629,
+  "y": 22.748946433436185,
+  "z": 1.266699030654079,
+  "f_px": 1280.2608292804173,
+  "k1": -0.02415187733917126,
+  "yaw_deg": -137.22694782880296,
+  "pitch_deg": 10.424457562864783,
+  "roll_deg": -4.231594705297492,
+  "principal_point": [
+   796.0,
+   657.5
+  ],
+  "basis": {
+   "right": [
+    -0.6870452812829333,
+    0.7229815665425524,
+    -0.0725702136315717
+   ],
+   "up": [
+    0.08234683157665652,
+    0.17670413150408257,
+    0.9808132591062754
+   ],
+   "forward": [
+    -0.7219333631271939,
+    -0.6678871943293004,
+    0.1809389810261857
+   ]
+  },
+  "convention": "yaw = azimuth of the view direction from +x towards +y; pitch up positive; basis vectors in the twin frame"
+ },
+ "solution": {
+  "x": {
+   "value": 49.7832,
+   "sd": 2.4875
+  },
+  "y": {
+   "value": 22.7489,
+   "sd": 0.5083
+  },
+  "z": {
+   "value": 1.2667,
+   "sd": 0.144
+  },
+  "yaw": {
+   "value": -137.2269,
+   "sd": 3.0767
+  },
+  "pitch": {
+   "value": 10.4245,
+   "sd": 1.0195
+  },
+  "roll": {
+   "value": -4.2316,
+   "sd": 0.1667
+  },
+  "f": {
+   "value": 1280.2608,
+   "sd": 139.0841
+  },
+  "k1": {
+   "value": -0.0242,
+   "sd": 0.0872
+  },
+  "m": {
+   "value": 0.7976,
+   "sd": 0.0107
+  },
+  "w": {
+   "value": 3.2688,
+   "sd": 0.0353
+  },
+  "z_top": {
+   "value": 3.9072,
+   "sd": 0.1165
+  },
+  "z_tr": {
+   "value": 3.3297,
+   "sd": 0.0864
+  },
+  "tower_y": {
+   "value": 1.5474,
+   "sd": 0.1812
+  }
+ },
+ "anchors": {
+  "z_bot": {
+   "value": 1.85,
+   "basis": "ground-floor window sill 0.80 m above the building floor (z 1.05, estimated); the camera height and every height in the solution move with this value"
+  }
+ },
+ "fit_rms_px": 0.6992464272271666,
+ "fit_max_px": 2.2594758444019685,
+ "n_residuals": 62,
+ "features": [
+  {
+   "id": "winA_mullion_east",
+   "type": "vline",
+   "residual_px": [
+    0.23,
+    0.27
+   ]
+  },
+  {
+   "id": "winA_mullion_centre",
+   "type": "vline",
+   "residual_px": [
+    1.4,
+    1.48
+   ]
+  },
+  {
+   "id": "winA_mullion_west",
+   "type": "vline",
+   "residual_px": [
+    0.07,
+    0.18
+   ]
+  },
+  {
+   "id": "winB_mullion_east",
+   "type": "vline",
+   "residual_px": [
+    -0.75,
+    -0.89
+   ]
+  },
+  {
+   "id": "winB_mullion_centre",
+   "type": "vline",
+   "residual_px": [
+    0.29,
+    0.14
+   ]
+  },
+  {
+   "id": "winB_mullion_west",
+   "type": "vline",
+   "residual_px": [
+    -0.53,
+    -0.67
+   ]
+  },
+  {
+   "id": "winC_mullion_east",
+   "type": "vline",
+   "residual_px": [
+    -0.33,
+    -0.57
+   ]
+  },
+  {
+   "id": "winC_mullion_centre",
+   "type": "vline",
+   "residual_px": [
+    0.2,
+    0.08
+   ]
+  },
+  {
+   "id": "winC_mullion_west",
+   "type": "vline",
+   "residual_px": [
+    -0.29,
+    -0.51
+   ]
+  },
+  {
+   "id": "winD_frame_west",
+   "type": "vline",
+   "residual_px": [
+    -0.96,
+    -1.43
+   ]
+  },
+  {
+   "id": "winA_frame_west",
+   "type": "vline",
+   "residual_px": [
+    0.36,
+    0.52
+   ]
+  },
+  {
+   "id": "winB_frame_west",
+   "type": "vline",
+   "residual_px": [
+    -0.1,
+    0.39
+   ]
+  },
+  {
+   "id": "winC_frame_west",
+   "type": "vline",
+   "residual_px": [
+    0.48,
+    0.84
+   ]
+  },
+  {
+   "id": "tower_corner",
+   "type": "vline",
+   "residual_px": [
+    -0.78,
+    0.82
+   ]
+  },
+  {
+   "id": "winD_head",
+   "type": "xline",
+   "residual_px": [
+    -1.11
+   ]
+  },
+  {
+   "id": "winA_head",
+   "type": "xline",
+   "residual_px": [
+    0.13
+   ]
+  },
+  {
+   "id": "winB_head",
+   "type": "xline",
+   "residual_px": [
+    0.39
+   ]
+  },
+  {
+   "id": "winC_head",
+   "type": "xline",
+   "residual_px": [
+    0.34
+   ]
+  },
+  {
+   "id": "winD_sill",
+   "type": "xline",
+   "residual_px": [
+    2.26
+   ]
+  },
+  {
+   "id": "winA_sill",
+   "type": "xline",
+   "residual_px": [
+    -0.8
+   ]
+  },
+  {
+   "id": "winB_sill",
+   "type": "xline",
+   "residual_px": [
+    -0.11
+   ]
+  },
+  {
+   "id": "winC_sill",
+   "type": "xline",
+   "residual_px": [
+    -0.18
+   ]
+  },
+  {
+   "id": "winD_transom",
+   "type": "xline",
+   "residual_px": [
+    -0.47
+   ]
+  },
+  {
+   "id": "winA_transom",
+   "type": "xline",
+   "residual_px": [
+    0.1
+   ]
+  },
+  {
+   "id": "winB_transom",
+   "type": "xline",
+   "residual_px": [
+    0.29
+   ]
+  },
+  {
+   "id": "winC_transom",
+   "type": "xline",
+   "residual_px": [
+    0.14
+   ]
+  },
+  {
+   "id": "upper_vertical_1",
+   "type": "vdir",
+   "residual_px": [
+    -0.42,
+    0.42
+   ]
+  },
+  {
+   "id": "upper_vertical_2",
+   "type": "vdir",
+   "residual_px": [
+    -0.27,
+    0.27
+   ]
+  },
+  {
+   "id": "upper_vertical_3",
+   "type": "vdir",
+   "residual_px": [
+    0.06,
+    -0.06
+   ]
+  },
+  {
+   "id": "upper_vertical_4",
+   "type": "vdir",
+   "residual_px": [
+    0.28,
+    -0.28
+   ]
+  },
+  {
+   "id": "upper_vertical_5",
+   "type": "vdir",
+   "residual_px": [
+    0.41,
+    -0.41
+   ]
+  },
+  {
+   "id": "upper_vertical_6",
+   "type": "vdir",
+   "residual_px": [
+    0.34,
+    -0.34
+   ]
+  },
+  {
+   "id": "upper_horizontal_1",
+   "type": "xdir",
+   "residual_px": [
+    -0.46,
+    0.46
+   ]
+  },
+  {
+   "id": "upper_horizontal_2",
+   "type": "xdir",
+   "residual_px": [
+    -0.42,
+    0.42
+   ]
+  },
+  {
+   "id": "upper_horizontal_3",
+   "type": "xdir",
+   "residual_px": [
+    -0.42,
+    0.42
+   ]
+  },
+  {
+   "id": "upper_horizontal_4",
+   "type": "xdir",
+   "residual_px": [
+    -0.83,
+    0.83
+   ]
+  },
+  {
+   "id": "upper_horizontal_5",
+   "type": "xdir",
+   "residual_px": [
+    -1.7,
+    1.7
+   ]
+  }
+ ],
+ "profile_f": [
+  {
+   "f_px": 1050,
+   "cost": 11.653,
+   "rms_px": 0.796,
+   "camera_xyz": [
+    45.26,
+    22.76,
+    1.35
+   ],
+   "pitch_deg": 12.38
+  },
+  {
+   "f_px": 1150,
+   "cost": 10.507,
+   "rms_px": 0.725,
+   "camera_xyz": [
+    47.33,
+    22.84,
+    1.3
+   ],
+   "pitch_deg": 11.45
+  },
+  {
+   "f_px": 1250,
+   "cost": 10.151,
+   "rms_px": 0.701,
+   "camera_xyz": [
+    49.24,
+    22.78,
+    1.27
+   ],
+   "pitch_deg": 10.65
+  },
+  {
+   "f_px": 1350,
+   "cost": 10.201,
+   "rms_px": 0.7,
+   "camera_xyz": [
+    51.0,
+    22.64,
+    1.25
+   ],
+   "pitch_deg": 9.95
+  },
+  {
+   "f_px": 1450,
+   "cost": 10.451,
+   "rms_px": 0.708,
+   "camera_xyz": [
+    52.62,
+    22.42,
+    1.23
+   ],
+   "pitch_deg": 9.34
+  },
+  {
+   "f_px": 1600,
+   "cost": 10.976,
+   "rms_px": 0.728,
+   "camera_xyz": [
+    54.82,
+    21.99,
+    1.21
+   ],
+   "pitch_deg": 8.56
+  }
+ ],
+ "alternatives": [
+  {
+   "left_out": [
+    "tower"
+   ],
+   "camera_xyz": [
+    47.56,
+    23.04,
+    1.17
+   ],
+   "f_px": 1158.2,
+   "pitch_deg": 11.56,
+   "roll_deg": -4.23,
+   "rms_px": 0.673
+  },
+  {
+   "left_out": [
+    "upper"
+   ],
+   "camera_xyz": [
+    57.37,
+    21.28,
+    1.32
+   ],
+   "f_px": 1786.1,
+   "pitch_deg": 7.52,
+   "roll_deg": -4.07,
+   "rms_px": 0.548
+  },
+  {
+   "left_out": [
+    "transom"
+   ],
+   "camera_xyz": [
+    49.66,
+    22.78,
+    1.28
+   ],
+   "f_px": 1272.6,
+   "pitch_deg": 10.45,
+   "roll_deg": -4.25,
+   "rms_px": 0.705
+  },
+  {
+   "left_out": [
+    "tower",
+    "upper"
+   ],
+   "camera_xyz": [
+    59.0,
+    20.57,
+    1.39
+   ],
+   "f_px": 1939.5,
+   "pitch_deg": 6.87,
+   "roll_deg": -3.96,
+   "rms_px": 0.56
+  }
+ ]
+}

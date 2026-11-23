@@ -1,0 +1,28 @@
+{
+  "schema": "haiz-twin-yanchi/1",
+  "name": "砚池",
+  "tag": "public-map/estimated",
+  "basis": "outline: OSM reflecting pool 砚池 (about 500 m2, x 37..64, y -130..-108 in the twin frame); water level and basin depth estimated; photographs campus_yanchi.jpg and wenhua_yanchi-800.jpg show rock edging, a rockery with a curved cascade from a raised round basin, an upright stone inscribed 砚池 in red, coconut palms and surrounding corridor buildings",
+  "water_depth_below_ground": 0.45,
+  "edging_spacing": 1.15,
+  "rockery_tag": "photo-derived/invented",
+  "rockery_basis": "rockery and raised round cascade basin with a curved weir (wenhua_yanchi); their position in the pond and the stones are invented",
+  "rockery": [
+    {"xy": [38.6, -121.8], "size": [2.2, 1.6, 1.5], "seed": 501, "rot": 20},
+    {"xy": [40.2, -123.6], "size": [1.6, 1.3, 1.1], "seed": 502, "rot": -15},
+    {"xy": [38.4, -117.6], "size": [1.8, 1.4, 1.9], "seed": 503, "rot": 40, "lean": [0.15, 0.05]},
+    {"xy": [42.6, -122.4], "size": [1.2, 1.0, 0.8], "seed": 504, "rot": 70},
+    {"xy": [37.9, -114.0], "size": [1.4, 1.1, 1.0], "seed": 505, "rot": 5}
+  ],
+  "cascade": {"xy": [41.4, -119.6], "r": 1.9, "h": 0.4},
+  "stone": {"xy": [36.0, -112.2], "size": [1.5, 0.75, 2.6], "seed": 510, "rot_deg": 45, "text": "砚\n池",
+            "text_offset": [-0.3, 0.3, 1.65],
+            "tag": "photo-derived/estimated", "basis": "upright stone about 2.6 m high with the red vertical inscription 砚池 at the pond edge (campus_yanchi, wenhua_yanchi); position on the shore estimated"},
+  "palms": {
+    "tag": "photo-derived/invented",
+    "basis": "tall leaning coconut palms round the pond (campus_yanchi, wenhua_yanchi); number and positions invented",
+    "positions": [[35.6, -118.4, 12.0, 0.12, 0.03], [35.2, -124.5, 11.0, 0.10, -0.05], [38.2, -106.4, 13.0, 0.05, 0.10],
+                  [45.2, -106.6, 11.5, -0.05, 0.12], [56.0, -106.4, 12.5, 0.06, 0.10], [66.2, -112.5, 11.0, 0.12, 0.0],
+                  [66.0, -126.0, 12.0, 0.10, -0.05]]
+  }
+}

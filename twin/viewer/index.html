@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>府城校区孪生 · 模型检查</title>
+<style>
+  :root { --bg: #e9ece8; --panel: rgba(255,255,255,0.92); --ink: #1d2320; --muted: #5b655f; --line: #c9d0cb; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+  canvas { display: block; }
+  #panel { position: fixed; top: 12px; left: 12px; max-width: min(360px, calc(100vw - 48px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  #panel h1 { font-size: 15px; margin: 0 0 6px; }
+  #panel label { display: block; margin: 3px 0; }
+  #legend span { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  #legend div { font-size: 12px; color: var(--muted); }
+  #info { margin-top: 8px; font-size: 12px; color: var(--muted); white-space: pre-wrap; max-height: 30vh; overflow: auto; }
+  #status { font-size: 12px; color: var(--muted); }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="panel">
+  <h1>府城校区孪生 · 第二阶段模型</h1>
+  <div id="status">加载中…</div>
+  <div id="parts"></div>
+  <label><input type="checkbox" id="bytag"> 按可信度标签着色</label>
+  <div id="legend" hidden></div>
+  <div id="info">点击任一对象查看名称、标签和依据。</div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const BASE = new URLSearchParams(location.search).get('base') || '../assets/phase1/';
+const PARTS = ['yihao', 'site', 'trees', 'gate', 'campus'];
+// twin (x, y, z) -> glTF (x, z, -y)
+const tw = (x, y, z) => new THREE.Vector3(x, z, -y);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdfe6ea);
+scene.fog = new THREE.Fog(0xdfe6ea, 600, 2400);
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.3, 4000);
+camera.position.copy(tw(70, 120, 55));
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(tw(0, 20, 4));
+controls.update();
+
+scene.add(new THREE.HemisphereLight(0xeef3ff, 0x6b6550, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.copy(tw(-120, 160, 220));
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -160, right: 160, top: 160, bottom: -160, near: 10, far: 700 });
+scene.add(sun);
+
+const TAGS = [
+  ['surveyed', '#1b7f3b', '实测'], ['public-map', '#2f8fd8', '公开地图'], ['documented', '#7a4fc9', '文献/题刻'],
+  ['photo-derived', '#e0a100', '照片量取'], ['estimated', '#e07020', '估计'], ['invented', '#d23c3c', '艺术补全'],
+];
+const tagColor = (tag) => {
+  const first = (tag || 'invented').split('/')[0];
+  const t = TAGS.find(([k]) => k === first);
+  return new THREE.Color(t ? t[1] : '#999999');
+};
+document.getElementById('legend').innerHTML = TAGS.map(([k, c, zh]) => `<div><span style="background:${c}"></span>${zh}（${k}）</div>`).join('') +
+  '<div>多重标签按第一个着色，例如 photo-derived/estimated 记为照片量取。</div>';
+
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/gltf/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+const roots = {};
+const original = new Map();
+let loaded = 0;
+const status = document.getElementById('status');
+const partsDiv = document.getElementById('parts');
+
+function tagOf(o) {
+  for (let p = o; p; p = p.parent) if (p.userData && p.userData.haiz_tag) return p;
+  return null;
+}
+
+for (const part of PARTS) {
+  loader.load(BASE + part + '.glb', (g) => {
+    const root = g.scene;
+    root.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = o.receiveShadow = true;
+        original.set(o, o.material);
+        for (const m of [].concat(o.material)) {
+          for (const k of ['map', 'normalMap', 'roughnessMap']) if (m[k]) m[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
+        }
+      }
+    });
+    scene.add(root);
+    roots[part] = root;
+    const id = 'p_' + part;
+    partsDiv.insertAdjacentHTML('beforeend', `<label><input type="checkbox" id="${id}" checked> ${part}</label>`);
+    document.getElementById(id).onchange = (e) => { root.visible = e.target.checked; };
+    loaded++;
+    status.textContent = `已加载 ${loaded}/${PARTS.length} 个部件`;
+    if (loaded === PARTS.length) { status.textContent += '（完成）'; window.__twinReady = true; applyTagMode(); }
+  }, undefined, (err) => { status.textContent = `加载 ${part} 失败：${err.message || err}`; window.__twinError = String(err); });
+}
+
+const tagMats = new Map();
+function applyTagMode() {
+  const on = document.getElementById('bytag').checked;
+  document.getElementById('legend').hidden = !on;
+  for (const [mesh, mat] of original) {
+    if (!on) { mesh.material = mat; continue; }
+    const holder = tagOf(mesh);
+    const tag = holder ? holder.userData.haiz_tag : 'invented';
+    if (!tagMats.has(tag)) tagMats.set(tag, new THREE.MeshLambertMaterial({ color: tagColor(tag) }));
+    mesh.material = tagMats.get(tag);
+  }
+}
+document.getElementById('bytag').onchange = applyTagMode;
+if (new URLSearchParams(location.search).get('tags') === '1') document.getElementById('bytag').checked = true;
+
+const ray = new THREE.Raycaster();
+renderer.domElement.addEventListener('click', (e) => {
+  const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(p, camera);
+  const hit = ray.intersectObjects(scene.children, true).find((h) => h.object.visible);
+  const info = document.getElementById('info');
+  if (!hit) { info.textContent = '点击任一对象查看名称、标签和依据。'; return; }
+  const holder = tagOf(hit.object);
+  const pt = hit.point;
+  info.textContent = `${holder ? (holder.userData.name || holder.name) : hit.object.name}\n标签：${holder ? holder.userData.haiz_tag : '—'}\n依据：${holder ? (holder.userData.haiz_basis || '—') : '—'}\n位置（孪生坐标）：x ${pt.x.toFixed(1)}  y ${(-pt.z).toFixed(1)}  z ${pt.y.toFixed(2)}`;
+});
+
+const view = new URLSearchParams(location.search).get('view');
+if (view === 'gate') { camera.position.copy(tw(0.44, 120.3, 1.5)); controls.target.copy(tw(0.0, 0.0, 1.5)); camera.fov = 36; camera.updateProjectionMatrix(); controls.update(); }
+if (view === 'top') { camera.position.copy(tw(0, 0, 420)); controls.target.copy(tw(0, 1, 0)); controls.update(); }
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>

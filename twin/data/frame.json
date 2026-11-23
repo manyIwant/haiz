@@ -1,0 +1,17 @@
+{
+ "schema": "haiz-twin-frame/1",
+ "status": "provisional",
+ "origin": {
+  "wgs84": [
+   19.99847892,
+   110.34254843
+  ],
+  "what": "Main axis x front facade of Teaching Block 1 (portal centre), ground level",
+  "basis": "provisional: read from the Esri layer with relief displacement removed (k=0.53 m/m)"
+ },
+ "rotation": {
+  "theta_deg": 41.0,
+  "what": "campus north is turned this many degrees anticlockwise from true north (campus north bearing 319.0)",
+  "basis": "provisional"
+ }
+}
