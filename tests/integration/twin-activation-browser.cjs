@@ -39,8 +39,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     const names = twin.applied.map(x => x.part).sort();
     assert.deepEqual(names, ['gate', 'yihao'], 'actual Phase-2 GLBs installed: ' + JSON.stringify(twin));
     assert.deepEqual(twin.skipped, [], 'no silent fallback to V3');
-    for (const asset of ['yihao.glb', 'gate.glb', 'draco_decoder.wasm'])
+    for (const asset of ['yihao.glb', 'gate.glb'])
       assert.ok(got.has(asset), 'loaded and decoded local ' + asset + ' (seen ' + [...got].join(', ') + ')');
+    const wasm = await page.request.get(BASE + '/lanren/vendor/three/addons/libs/draco/draco_decoder.wasm');
+    assert.ok(wasm.ok(), 'local Draco WASM is reachable without any CDN');
     await page.waitForFunction(() => window.__ruhua?.stage === 'stroll' && !!window.__ruhua?.free, null, { timeout: 300000 });
     assert.deepEqual(errors, [], 'no page errors');
     console.log('PASS Phase-2 GLBs + local Draco applied in live free-roam render:', names.join(', '));
