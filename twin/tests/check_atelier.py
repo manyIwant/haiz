@@ -194,3 +194,39 @@ z=[v.co.z for v in water.data.vertices]
 assert max(z)-min(z)>.039 and len(z)>15000
 assert all(bpy.data.objects.get('yanchi.'+s) for s in ['fall_and_contact','shelf.00','garden_walk','coconut_bank','bank_foliage'])
 print('Pond replacement verified: real water relief, carved marker, four bank steps and %.2f m spill.'%(upper_z-lower_z))
+
+
+# Compare actual stroke hits to photographed positive and negative space.
+# Sampling includes the counters and small signature marks on all three panels.
+contours=json.loads((ROOT/'evidence/calibration/stone_lettering.json').read_text())['panels']
+camera=json.loads((ROOT/'evidence/calibration/jiaoxuelou-1600.report.json').read_text())['camera']
+eye=Vector((camera['x'],camera['y'],camera['z']))
+right,up,forward=[Vector(camera['basis'][k]) for k in ('right','up','forward')]
+cx,cy=camera['principal_point']
+plaque=bpy.data.objects['site.taihu.inscription']
+def contains(ring,u,v):
+    return sum((a[1]>v)!=(b[1]>v) and u<(b[0]-a[0])*(v-a[1])/(b[1]-a[1])+a[0]
+               for a,b in zip(ring,ring[1:]+ring[:1]))%2==1
+for key,rect,stride in [('taihu',(394,924,620,969),2),('donor',(969,982,1050,1005),1),('pond',(235,185,380,633),4)]:
+    shapes=[(min(p[0] for p in q[0]),max(p[0] for p in q[0]),min(p[1] for p in q[0]),max(p[1] for p in q[0]),q)
+            for q in contours[key]['outlines_px']]
+    union=matched=0
+    for v in range(rect[1],rect[3],stride):
+        for u in range(rect[0],rect[2],stride):
+            px=u+.31;py=v+.47
+            inside=any(contains(q[0],px,py) and not any(contains(h,px,py) for h in q[1:])
+                       for l,r,t,b,q in shapes if l<=px<=r and t<=py<=b)
+            if key=='pond':
+                x=(px-302)*.00875+.00023*(py-400);z=3.57-(py-188)*.00598
+                origin=Vector((x+.038*z+.035*math.sin(3.6*z+x),-1.5,z+.022*math.sin(5.5*x+.75*z)*min(z,1)))
+                ob=stele; direction=Vector((0,1,0));pigment='inscription.vermilion'
+            else:
+                ob=plaque;origin=eye
+                direction=forward+right*((px-cx)/camera['f_px'])+up*((cy-py)/camera['f_px'])
+                pigment='inscription.mineral'
+            hit,point,_,idx=ob.ray_cast(origin,direction.normalized())
+            painted=hit and ob.data.materials[ob.data.polygons[idx].material_index].name.startswith(pigment)
+            matched+=bool(inside and painted);union+=bool(inside or painted)
+    score=matched/union
+    print(key,'stroke-mask agreement on reloaded mesh:',round(score,3))
+    assert score>.89,(key,score)

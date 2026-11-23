@@ -5,7 +5,7 @@ from pathlib import Path
 import random
 import tempfile
 
-import bmesh
+import atelier_lettering
 import bpy
 import numpy as np
 from mathutils import Vector
@@ -240,27 +240,6 @@ def weathered_materials(original):
     return variants
 
 
-def flute_marker(mesh):
-    # Resample the existing carved solid before weathering so the letter bottoms,
-    # cheeks and stone face move as a unit. The original inset type remains editable.
-    bm=bmesh.new();bm.from_mesh(mesh)
-    bmesh.ops.triangulate(bm,faces=list(bm.faces))
-    for _ in range(5):
-        edges=[e for e in bm.edges if e.calc_length()>.195]
-        if not edges: break
-        bmesh.ops.subdivide_edges(bm,edges=edges,cuts=1,use_grid_fill=True)
-        bmesh.ops.triangulate(bm,faces=[f for f in bm.faces if len(f.verts)>3])
-    for v in bm.verts:
-        x,y,z=v.co
-        front=max(0,min(1,(-y+.15)/.38))
-        groove=math.exp(-((x+.68+.064*math.sin(1.8*z))/.11)**2)
-        shelf=math.exp(-((z-1.92+.12*x)/.095)**2)*max(0,min(1,x+.8))
-        v.co.y+=front*(.16*groove+.13*shelf+.083*math.sin(3.1*x+1.1*z)+.023*math.cos(7*x-3*z))
-        v.co.x+=.043*math.sin(z*3.6+x)+.038*z
-        v.co.z+=.027*math.sin(x*5.5+z*.75)*min(z,1)
-    bm.normal_update();bm.to_mesh(mesh);bm.free();mesh.update()
-
-
 def limestone(coll,rng):
     path=TWIN.parent/'assets/walk/models/campus-limestone.glb'
     prev=set(bpy.context.scene.objects)
@@ -269,15 +248,14 @@ def limestone(coll,rng):
     source={o.name:o for o in objects}
     stones=[source['Limestone_%d_high'%i].data for i in range(3)]
     mats=weathered_materials(stones[0].materials[0])
-    flute_marker(source['PondStele'].data)
     def place(name,mesh,xyz,scale,angles,basis,tone):
         ob=bpy.data.objects.new('yanchi.'+name,mesh);coll.objects.link(ob)
         ob.location=xyz;ob.scale=scale;ob.rotation_euler=angles
         ob.material_slots[0].link='OBJECT';ob.material_slots[0].material=mats[tone]
         ob['haiz_tag']='photo-derived/estimated';ob['haiz_basis']=basis
         return ob
-    place('inscribed_stone',source['PondStele'].data,(39.65,-126.85,.115),(.85,1.35,.80),
-          (.025,-.055,math.radians(65)),'Photo-informed original HAIZ carved stone with inset vermilion type. Location and calligraphy approximate.',3)
+    place('inscribed_stone',atelier_lettering.marker_mesh(mats[3]),(39.65,-126.85,.115),(.85,1.35,.80),
+          (.025,-.055,math.radians(65)),atelier_lettering.POND_BASIS,3)
     # The larger slabs form a battered stack along the back of the weir. Individual
     # strata overhang earlier ones, leaving shadow joints and pockets for understory.
     stacks=[(40.25,-124.65,3,1.07),(40.95,-123.45,4,1.16),(40.35,-122.12,5,1.16),

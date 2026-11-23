@@ -21,6 +21,7 @@ from mathutils import Matrix, Vector
 import numpy as np
 import build
 import b_yihao
+import atelier_lettering
 import atelier_pond
 import atelier_arts
 import atelier_south
@@ -38,6 +39,7 @@ P = build.SITE['taihu']
 OUT = TWIN/'assets/atelier'
 RENDERS = TWIN/'renders/atelier'
 VIEWS = {
+    'taihu_script': ((-.54,34.13,.87),(-.08,31.62,.43),41),
     'pond_bank': ((51.2,-130.8,1.77),(41.3,-122,1.10),29),
     'pond_stone': ((44.3,-131.2,1.65),(40.0,-125.65,1.55),33),
     'pond_falls': ((49.6,-124.2,1.38),(42,-120.2,.52),43),
@@ -125,7 +127,8 @@ def plinth(coll):
     g.box('ground.lawn',(x0+0.15,y0+0.15,top-0.11),(x1-0.15,y1-0.15,top-0.043))
     for key in ('panel','panel2'):
         a,b,z0,z1 = P[key]
-        g.box('atelier.coping',(a,y1,z0),(b,y1+0.023,z1))
+        g.box('atelier.coping',(a,y1,z0),(b,y1+0.023,z1),skip=('+y',))
+    atelier_lettering.plinth_panels(coll,P)
     ob = g.to_object('site.taihu.plinth',coll)
     tag(ob,'photo-derived/estimated',P['basis']+' Coping and joints interpreted from jiaoxuelou.')
     return ob
@@ -253,18 +256,13 @@ def render(sc, views, samples, width, output):
 def main(args):
     sc = build.reset_scene()
     OUT.mkdir(parents=True,exist_ok=True)
-    # Preserve the phase-two pavement triangulation, levels, stair runs and vector lettering.
+    # Preserve the phase-two pavement triangulation, levels, and stair runs.
     bpy.ops.import_scene.gltf(filepath=str(TWIN/'assets/phase1/site.glb'))
     stone = build.collection('landmark')
     site = build.collection('forecourt')
     for ob in list(sc.objects):
-        if ob.name in ('site.taihu.rock','site.taihu.plinth','site.forecourt.hedges'):
+        if ob.name in ('site.taihu.rock','site.taihu.plinth','site.taihu.inscription','site.forecourt.hedges'):
             bpy.data.objects.remove(ob,do_unlink=True)
-        elif ob.name=='site.taihu.inscription':
-            move(ob,stone)
-            # Shallow, mineral-coloured engraved lettering appearance; underlying outline retained.
-            for slot in ob.material_slots:
-                slot.material = kit.get_material('atelier.lettering',{'atelier.lettering':((0.64,0.60,0.51),0.75,0,{})})
         else:
             move(ob,site)
     overlap = fieldstone(stone,args.cache)
@@ -342,7 +340,7 @@ if __name__=='__main__':
     parser.add_argument('--draft',action='store_true', help='Only render, leave checked-in GLBs alone')
     parser.add_argument('--cache',type=Path, help='Optional local NPZ of this sculpt; omit after changing relief data')
     parser.add_argument('--blend',type=Path)
-    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group','yihao_oblique','arts_entrance','arts_court','arts_photo','arts_roof','precinct_overview','pond_bank','pond_falls','pond_stone','pond_overview'])
+    parser.add_argument('--views',nargs='*',default=['jiaoxuelou','piedmont','limestone','reverse','colonnade','portal_detail','quadrangle','avenue','lanshu','fork','crown','roofscape','upper_facade','west_end','south_wing','hall','science_gallery','court_arcade','teaching_court','south_court','teaching_group','yihao_oblique','arts_entrance','arts_court','arts_photo','arts_roof','precinct_overview','pond_bank','pond_falls','pond_stone','pond_overview','taihu_script'])
     parser.add_argument('--width',type=int,default=1440)
     parser.add_argument('--samples',type=int,default=32)
     parser.add_argument('--when',default='2026-06-21T16:30')
