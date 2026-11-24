@@ -9,3 +9,6 @@ Rebuild locally:
 python3 twin/tools/pack_runtime.py --gltfpack gltfpack
 python3 twin/tools/derive_rosettes.py
 ```
+
+## Homepage artistic exception
+The canonical six-act homepage retains the original V4 artistic tree, island, interactive foliage, and historical camera path, restored byte-for-byte from the pre-atelier integration. The detailed master remains available to 入画, 自由共游 and 画境实验室. Never automatically substitute the homepage hero tree when updating campus geometry.
