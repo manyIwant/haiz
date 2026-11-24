@@ -37,7 +37,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.waitForFunction(() => !!window.__haizTwinPhase2, null, { timeout: 300000 });
     const twin = await page.evaluate(() => window.__haizTwinPhase2);
     const names = twin.applied.map(x => x.part).sort();
-    assert.deepEqual(names, ['gate', 'yihao'], 'actual Phase-2 GLBs installed: ' + JSON.stringify(twin));
+    assert.deepEqual(names, ['arts','erhao','forecourt','gate','landmark','science','south_classrooms','yanchi','yihao'].sort(), 'actual atelier meshes installed: ' + JSON.stringify(twin));
+    const tree=await page.evaluate(()=>window.__haizAtelierTree);
+    assert.ok(tree?.rosettes>1000 && tree?.meshes>0, 'atelier animated tree loaded');
     assert.deepEqual(twin.skipped, [], 'no silent fallback to V3');
     for (const asset of ['yihao.glb', 'gate.glb'])
       assert.ok(got.has(asset), 'loaded and decoded local ' + asset + ' (seen ' + [...got].join(', ') + ')');
@@ -45,7 +47,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.ok(wasm.ok(), 'local Draco WASM is reachable without any CDN');
     await page.waitForFunction(() => window.__ruhua?.stage === 'stroll' && !!window.__ruhua?.free, null, { timeout: 300000 });
     assert.deepEqual(errors, [], 'no page errors');
-    console.log('PASS Phase-2 GLBs + local Draco applied in live free-roam render:', names.join(', '));
+    console.log('PASS atelier buildings and precinct + shared animated tree applied in live free-roam:', names.join(', '));
     console.log('PASS entering the free-roam stage and enabled createFree()');
     console.log('PASS all assets served locally, no browser exceptions');
   } finally {
