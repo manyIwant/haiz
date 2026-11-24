@@ -79,6 +79,8 @@ export async function createWorld({ campus, v4, tier, asset, say = () => {} }) {
     const raw = v3.scene.clone(true);                         // shares geometry, keeps the Blender materials
     const c = await createCampus(geo, model, v3);
     W.campus = c; W.campusV3 = raw;
+    const forecourt = v3.extra?.children.find(object => object.userData.haizAtelierPart === 'forecourt');
+    if (forecourt) ground.coverSurface(forecourt);
     if(c.twin.applied.some(x=>x.part==='yanchi'))water.traverse(o=>{if(o.userData.haizWaterId==='yanchi')o.visible=false;});
     W.hulls = c.hulls;
     W.rebuild();

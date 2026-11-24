@@ -289,6 +289,8 @@ export function createGround(geo, trees, size = 2048) {
 vec2 puv = (vWP.xz - uPaintO) / uPaintS;
 vec2 tuv = vec2(puv.x, 1.0 - puv.y);
 float inside = step(0.0, puv.x) * step(puv.x, 1.0) * step(0.0, puv.y) * step(puv.y, 1.0);
+// Installed campus terrain owns these pixels, including its coplanar undersides.
+if (inside > 0.5 && textureLod(uPaint, tuv, 0.0).a < 0.5) discard;
 vec3 paint = pow(texture2D(uPaint, tuv).rgb, vec3(2.2));
 float lawn = texture2D(uMask, tuv).r * inside;
 // beyond the campus: rough city ground in the haze
@@ -332,7 +334,46 @@ if (uWet > 0.001 || pud > 0.001) {
   const mesh = new THREE.Mesh(geom, mat);
   mesh.receiveShadow = true;
   mesh.name = 'ground';
-  return { mesh, paint: P, mask: M, paintTex: tex, maskTex: mtex };
+  function coverSurface(root) {
+    const path = new Path2D();
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    root.updateWorldMatrix(true, true);
+    root.traverse(object => {
+      if (!object.isMesh) return;
+      let terrain = false;
+      for (let node = object; node; node = node.parent) {
+        if (/site[._]?ground|site[._]?steps/i.test(node.name || '')) terrain = true;
+        if (node === root) break;
+      }
+      if (!terrain) return;
+      const { position } = object.geometry.attributes;
+      const index = object.geometry.index;
+      const count = index ? index.count : position.count;
+      for (let i = 0; i < count; i += 3) {
+        a.fromBufferAttribute(position, index ? index.getX(i) : i).applyMatrix4(object.matrixWorld);
+        b.fromBufferAttribute(position, index ? index.getX(i + 1) : i + 1).applyMatrix4(object.matrixWorld);
+        c.fromBufferAttribute(position, index ? index.getX(i + 2) : i + 2).applyMatrix4(object.matrixWorld);
+        const area = (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+        if (Math.abs(area) < 1e-8) continue;
+        // Give every projected triangle the same winding so top/bottom faces add.
+        path.moveTo(a.x, a.z);
+        path.lineTo(area > 0 ? b.x : c.x, area > 0 ? b.z : c.z);
+        path.lineTo(area > 0 ? c.x : b.x, area > 0 ? c.z : b.z);
+        path.closePath();
+      }
+    });
+    for (const [paint, mode] of [[P, 'destination-out'], [M, 'source-over']]) {
+      paint.g.save();
+      paint.g.setTransform(paint.k, 0, 0, paint.k, -paint.x0 * paint.k, -paint.z0 * paint.k);
+      paint.g.globalCompositeOperation = mode;
+      paint.g.filter = 'none';
+      paint.g.fillStyle = '#000';
+      paint.g.fill(path);
+      paint.g.restore();
+    }
+    tex.needsUpdate = mtex.needsUpdate = true;
+  }
+  return { mesh, paint: P, mask: M, paintTex: tex, maskTex: mtex, coverSurface };
 }
 
 /** ponds: deep teal that mirrors the sky at grazing angles, with sun glints and slow ripples */
