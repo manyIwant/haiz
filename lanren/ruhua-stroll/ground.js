@@ -336,13 +336,16 @@ if (uWet > 0.001 || pud > 0.001) {
   mesh.name = 'ground';
   function coverSurface(root) {
     const path = new Path2D();
+    const lawns = [];
     const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
     root.updateWorldMatrix(true, true);
     root.traverse(object => {
       if (!object.isMesh) return;
       let terrain = false;
+      let turf = false;
       for (let node = object; node; node = node.parent) {
         if (/site[._]?ground|site[._]?steps/i.test(node.name || '')) terrain = true;
+        if (/site[._]?ground.*lawns/i.test(node.name || '')) turf = true;
         if (node === root) break;
       }
       if (!terrain) return;
@@ -360,6 +363,11 @@ if (uWet > 0.001 || pud > 0.001) {
         path.lineTo(area > 0 ? b.x : c.x, area > 0 ? b.z : c.z);
         path.lineTo(area > 0 ? c.x : b.x, area > 0 ? c.z : b.z);
         path.closePath();
+        if (turf && area < 0) {
+          const lawn = new Path2D();
+          lawn.moveTo(a.x, a.z); lawn.lineTo(b.x, b.z); lawn.lineTo(c.x, c.z); lawn.closePath();
+          lawns.push({ path: lawn, height: (a.y + b.y + c.y) / 3 - geo.frame.ground });
+        }
       }
     });
     for (const [paint, mode] of [[P, 'destination-out'], [M, 'source-over']]) {
@@ -369,6 +377,19 @@ if (uWet > 0.001 || pud > 0.001) {
       paint.g.filter = 'none';
       paint.g.fillStyle = '#000';
       paint.g.fill(path);
+      paint.g.restore();
+    }
+    // The new turf supplies its own footprint and elevation. Keep paint RGB for
+    // the blades, with alpha below the floor shader's discard threshold.
+    for (const paint of [P, M]) {
+      paint.g.save();
+      paint.g.setTransform(paint.k, 0, 0, paint.k, -paint.x0 * paint.k, -paint.z0 * paint.k);
+      paint.g.filter = 'none';
+      for (const lawn of lawns) {
+        const height = Math.max(0, Math.min(255, Math.round(lawn.height / 4 * 255)));
+        paint.g.fillStyle = paint === P ? 'rgba(98,144,63,0.25)' : `rgb(255,150,${height})`;
+        paint.g.fill(lawn.path);
+      }
       paint.g.restore();
     }
     tex.needsUpdate = mtex.needsUpdate = true;

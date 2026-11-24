@@ -64,7 +64,7 @@ const LODS = [
 export function createGrass({ ground, maxTiles = 220 }) {
   const { paint, mask, paintTex, maskTex } = ground;
   // which 4 m world tiles have any lawn (so paving tiles are never drawn)
-  const md = mask.g.getImageData(0, 0, mask.c.width, mask.c.height).data;
+  let md;
   const mw = mask.c.width;
   const sample = (x, z) => {
     const u = (x - mask.x0) / mask.span, v = (z - mask.z0) / mask.span;
@@ -75,11 +75,16 @@ export function createGrass({ ground, maxTiles = 220 }) {
   const lawnTiles = new Set();
   const ix0 = Math.floor(mask.x0 / T), ix1 = Math.ceil((mask.x0 + mask.span) / T);
   const iz0 = Math.floor(mask.z0 / T), iz1 = Math.ceil((mask.z0 + mask.span) / T);
-  for (let i = ix0; i < ix1; i++) for (let j = iz0; j < iz1; j++) {
-    let m = 0;
-    for (let a = 0; a < 2 && m < 0.05; a++) for (let b = 0; b < 2; b++) m = Math.max(m, sample(i * T + (a + 0.5) * T / 2, j * T + (b + 0.5) * T / 2));
-    if (m > 0.04) lawnTiles.add(i * 100003 + j);
+  function refresh() {
+    md = mask.g.getImageData(0, 0, mask.c.width, mask.c.height).data;
+    lawnTiles.clear();
+    for (let i = ix0; i < ix1; i++) for (let j = iz0; j < iz1; j++) {
+      let m = 0;
+      for (let a = 0; a < 2 && m < 0.05; a++) for (let b = 0; b < 2; b++) m = Math.max(m, sample(i * T + (a + 0.5) * T / 2, j * T + (b + 0.5) * T / 2));
+      if (m > 0.04) lawnTiles.add(i * 100003 + j);
+    }
   }
+  refresh();
 
   const shared = {
     uPaint: { value: paintTex }, uMask: { value: maskTex },
@@ -137,7 +142,8 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   vec2 away = root - uPlayer.xz; float pd = length(away);
   lean += away / max(pd, 0.01) * (1.0 - smoothstep(0.12, 0.9, pd)) * 1.7;
   float bl = min(length(lean), 1.6);
-  vec3 p = vec3(root.x, uGroundY, root.y);
+  // Blue encodes the installed turf elevation over the base plane, in 4 metres.
+  vec3 p = vec3(root.x, uGroundY + mk.b * 4.0, root.y);
   float wdt = uW * (0.75 + 0.5 * aRnd.z) * (1.0 - pow(t, 1.4) * 0.88);
   p.xz += face * position.x * wdt * step(0.002, h);
   p.xz += lean * t * t * h * 0.62;
@@ -180,7 +186,7 @@ varying float vT; varying vec3 vGround; varying float vGust; varying float vFlow
   const frustum = new THREE.Frustum(), pm = new THREE.Matrix4(), box = new THREE.Box3(), v0 = new THREE.Vector3(), v1 = new THREE.Vector3();
   const stats = { tiles: [0, 0, 0], verts: 0 };
   return {
-    group, layers, stats, uniforms: shared,
+    group, layers, stats, uniforms: shared, refresh,
     update(camera, player, groundY) {
       shared.uPlayer.value.copy(player);
       shared.uEye.value.copy(camera.position);

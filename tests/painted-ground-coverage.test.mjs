@@ -27,6 +27,14 @@ test('installed terrain replaces old paint and grass only inside its transformed
   const surface = new THREE.Mesh(geometry);
   surface.name = 'site.ground.forecourt.road';
   root.add(surface);
+  const lawnGeometry = geometry.clone();
+  lawnGeometry.translate(0, 0.15, 0);
+  const lawn = new THREE.Mesh(lawnGeometry);
+  const lawnGroup = new THREE.Group();
+  lawnGroup.name = 'site.ground.forecourt.lawns';
+  lawnGroup.position.x = -10;
+  lawnGroup.add(lawn);
+  root.add(lawnGroup);
   const sample = (canvas, x, z) => {
     const pixelsPerMetre = canvas.width / ground.paint.span;
     const px = Math.floor((x - ground.paint.x0) * pixelsPerMetre);
@@ -39,4 +47,6 @@ test('installed terrain replaces old paint and grass only inside its transformed
   assert.equal(sample(ground.mask.c, 3, 0)[0], 0, 'old grass must not grow through the replacement');
   assert.deepEqual(sample(ground.paint.c, 8, -5), outside, 'triangle bounds must not erase the uncovered corner');
   assert.equal(sample(ground.paint.c, -5, 5)[3], 255, 'surrounding campus stays covered');
+  assert.equal(sample(ground.mask.c, 3, 10)[0], 255, 'the replacement lawn keeps its grass');
+  assert.equal(sample(ground.mask.c, 3, 10)[2], 10, 'grass roots follow the raised 15 cm lawn');
 });
