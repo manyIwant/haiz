@@ -26,3 +26,17 @@ test('one campus asset loader in map, living world and art lab; one animated tre
  assert.match(read('lanren/map/atelier.js'),/hideMasterLeaves/);
  assert.match(read('lanren/map/twin-phase2.js'),/forecourt','landmark','yanchi/);
 });
+
+// A network-bound atelier upgrade must never gate map navigation.
+test('map unfold and 3D deep links are independent of GLB loading',()=>{
+ const s=read('lanren/map/map.js');
+ const unfold=s.slice(s.indexOf('  function unfold('),s.indexOf('  function fold('));
+ assert.match(unfold,/section\.loadBlender\(\);/);
+ assert.doesNotMatch(unfold,/loadingBlender|waitingToUnfold|\.then\(/);
+ assert.match(unfold,/startTrans\(1, path/);
+ assert.doesNotMatch(s,/waitingFor3d/);
+ const section=read('lanren/map/section.js');
+ const install=section.slice(section.indexOf('  function installV3('),section.indexOf('  function updateBuildings('));
+ assert.match(install,/Array\.isArray\(object\.material\)/);
+ assert.ok(install.indexOf('v3 = loaded;')>install.indexOf('group.add(loaded.scene);'));
+});
