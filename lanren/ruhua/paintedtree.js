@@ -16,6 +16,8 @@ import { cel, celDepth } from '../ruhua-stroll/atmos.js';
 import { WIND_GLSL, UNIFORMS } from '../js/foliage.js';
 import { seasonAt } from '../js/season.js';
 import { v4Group } from './v4.js';
+import { cloneAtelier } from '../map/atelier.js';
+import { makeLook } from '../ruhua-stroll/campus.js';
 
 // V4's wind and touch code, renamed so it can live beside the walk's own uniforms (uTime, uWindDir)
 const W4 = WIND_GLSL.replace(/\buWindDir\b/g, 'uWindDirV4').replace(/\buWind\b/g, 'uWindV4').replace(/\buGust\b/g, 'uGustV4').replace(/\buTime\b/g, 'uTimeV4')
@@ -231,7 +233,7 @@ export function createPaintedTree(v4) {
   const islet = new THREE.Mesh(v4.island.geometry, isletMaterial(v4.meta));
   islet.castShadow = islet.receiveShadow = true;
   islet.name = 'painted-islet';
-  group.add(bark, crown, islet);
+  if(v4.atelier){const master=cloneAtelier(v4.atelier.root),mats=new Map();master.traverse(o=>{if(!o.isMesh)return;const list=[].concat(o.material);const next=list.map(m=>{if(!mats.has(m))mats.set(m,makeLook(m));return mats.get(m);});o.material=Array.isArray(o.material)?next:next[0];});group.add(master,crown);}else group.add(bark,crown,islet);
   return {
     group, bark, crown, islet,
     /** today's phenology on the painted crown (Haikou day of year) */

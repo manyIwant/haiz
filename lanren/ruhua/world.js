@@ -67,7 +67,7 @@ export async function createWorld({ campus, v4, tier, asset, say = () => {} }) {
   };
   W.rebuild = () => { W.colliders = buildColliders(W.hulls.length ? [] : model.buildings, { rects: [...W.hulls, ...rects], circles: [...circles, ...W.extraCircles] }, sheet); };
   // the islet is ground you can climb onto; beyond it, the campus (and its decks)
-  W.heightAt = (x, z) => Math.max(W.decksAt(x, z), Math.abs(x) < 9 && Math.abs(z) < 9 ? v4.isletAt(x, z) + 0.01 : -99);
+  W.heightAt = (x, z) => Math.max(W.decksAt(x, z), !v4.atelier && Math.abs(x) < 9 && Math.abs(z) < 9 ? v4.isletAt(x, z) + 0.01 : -99);
   // tree crowns for the shade test (and the cat and the butterflies)
   W.crowns = [...trees.filter((t) => t.kind !== 'shrub').map((t) => ({ x: t.x, z: t.z, y: geo.frame.ground + (t.kind === 'palm' ? 8.6 : t.kind === 'kapok' ? 9 : 5.3) * t.h, r: (t.kind === 'palm' ? 3.4 : t.kind === 'banyan' ? 5.6 : 3.4) * t.s, ry: (t.kind === 'palm' ? 1.0 : 2.4) * t.h })),
     { x: 0, z: 0, y: 8.6, r: 12, ry: 5.5 }];
@@ -79,6 +79,7 @@ export async function createWorld({ campus, v4, tier, asset, say = () => {} }) {
     const raw = v3.scene.clone(true);                         // shares geometry, keeps the Blender materials
     const c = await createCampus(geo, model, v3);
     W.campus = c; W.campusV3 = raw;
+    if(c.twin.applied.some(x=>x.part==='yanchi'))water.traverse(o=>{if(o.userData.haizWaterId==='yanchi')o.visible=false;});
     W.hulls = c.hulls;
     W.rebuild();
     W.decksAt = c.heightAt;

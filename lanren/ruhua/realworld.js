@@ -14,6 +14,7 @@ import { createCanopy, UNIFORMS } from '../js/foliage.js';
 import { celLike, U } from '../ruhua-stroll/atmos.js';
 import { sideOf } from './paintfield.js';
 import { v4Group, LIGHT6, sun6Dir } from './v4.js';
+import { cloneAtelier } from '../map/atelier.js';
 
 const c3 = (a, k = 1) => new THREE.Color(a[0] * k, a[1] * k, a[2] * k);
 
@@ -73,7 +74,7 @@ export function createRealWorld({ world, v4, tier, LAYER = 1 }) {
   islet.castShadow = islet.receiveShadow = true;
   const grass = createGrass(v4.heightV4, tier.isletGrass, (x, z) => v4.heightV4(x, z) > v4.water + 0.25 && v4.rockV4(x, z) < 0.35);
   sideOf(grass.material, 'real');
-  tree.add(bark, canopy.mesh, islet, grass);
+  if(v4.atelier){const master=cloneAtelier(v4.atelier.root),seen=new Set();master.traverse(o=>{if(!o.isMesh)return;for(const m of [].concat(o.material))if(!seen.has(m)){seen.add(m);sideOf(m,'real');}});tree.add(master,canopy.mesh);}else tree.add(bark,canopy.mesh,islet,grass);
   group.add(tree);
   UNIFORMS.uGrow.value = 1;
 

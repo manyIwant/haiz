@@ -348,6 +348,7 @@ export function createWater(geo) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(f.hw * 2, f.hd * 2), mat);
     m.rotation.x = -Math.PI / 2; m.rotation.z = f.rot;
     m.position.set(f.cx, geo.frame.ground - 0.12, f.cz);
+    m.userData.haizWaterId = f.id;
     group.add(m);
   }
   return group;
