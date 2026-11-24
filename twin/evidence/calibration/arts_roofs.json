@@ -1,0 +1,17 @@
+{
+  "source": "HAIZ aligned courtyard aerial and campus_yishu.jpg",
+  "confidence": "Roof traces are image-derived. Height, pitch, obscured wall openings, parapet and court levels are estimates. Metres in twin frame, not survey coordinates.",
+  "raster": {"crop_twin_x": [-35,82], "crop_twin_y": [-228,-87], "origin_at_pixel": [159,286], "origin_twin": [0,-150], "pixels_per_metre": 4.536, "estimated_lean_per_metre": [0.335,-0.53]},
+  "wings": [
+    {"id":"northwest","ridge_px":[[147,357],[147,231],[281,231],[281,363]],"half_span":2.82,"eave":10.35,"rise":1.46},
+    {"id":"rear_hall","ridge_px":[[139,388],[104,388],[104,480],[317,480],[317,364],[282,364]],"half_span":2.65,"eave":8.75,"rise":1.53},
+    {"id":"east_gallery","ridge_px":[[396,389],[396,249],[445,249],[445,395]],"half_span":2.52,"eave":9.65,"rise":1.41},
+    {"id":"southeast","ridge_px":[[341,412],[445,412],[445,481],[341,481]],"closed":true,"half_span":2.77,"eave":8.85,"rise":1.48}
+  ],
+  "lower_roofs": [
+    {"id":"west_hall","bounds_px":[158,244,268,356],"height":7.0},
+    {"id":"south_hall","bounds_px":[115,379,302,467],"height":6.35},
+    {"id":"east_hall","bounds_px":[354,427,432,467],"height":5.65}
+  ],
+  "entrance": {"center_x":29.4,"front_y":-127.9,"eave_z":7.65,"entry_roof_width":18.57,"entry_roof_depth":9.1,"crest_z":10.47}
+}

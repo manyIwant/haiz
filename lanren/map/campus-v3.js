@@ -74,10 +74,11 @@ export async function loadCampusV3(geo, buildings) {
   // The same upgrade path is used by chapter 04/05/06 and both 入画 worlds.
   // Keep the V3 fallback and all its existing camera/collision/deck anchors.
   const { upgradeCampusLandmarks } = await import('./twin-phase2.js');
-  const twin = await upgradeCampusLandmarks(entries);
+  const atlas = await upgradeCampusLandmarks(entries, geo, scene, hulls);
+  const twin = atlas.status;
   if (twin.applied.length) {
     for (const e of entries) {
-      if (!e.root.userData.haizTwinPart) continue;
+      if (!e.root.userData.haizTwinPart || e.root.userData.haizTwinSuppressed) continue;
       e.top = new THREE.Box3().setFromObject(e.root).max.y - geo.frame.ground;
     }
   }
@@ -85,6 +86,7 @@ export async function loadCampusV3(geo, buildings) {
   if (typeof window !== 'undefined') {
     // Live inspection must distinguish a real Draco decode from the V3 fallback.
     window.__haizTwinPhase2 = twin;
+    window.__haizAtelier = twin;
     if (new URLSearchParams(location.search).get('twin') === 'debug') {
       let status = document.getElementById('haiz-twin-status');
       if (!status) {
@@ -96,9 +98,9 @@ export async function loadCampusV3(geo, buildings) {
         document.body.append(status);
       }
       status.textContent = twin.applied.length
-        ? 'Phase-2 GLB: ' + twin.applied.map(x => x.part).join(', ')
+        ? 'Atelier GLB: ' + twin.applied.map(x => x.part).join(', ')
         : 'Phase-2 GLB unavailable; using V3 (' + twin.skipped.join(', ') + ')';
     }
   }
-  return { scene, entries, hulls, decks, twin };
+  return { scene, entries, hulls, decks, twin, extra: atlas.extra, terrainAt: atlas.terrainAt };
 }

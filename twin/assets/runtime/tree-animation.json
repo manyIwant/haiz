@@ -1,0 +1,11 @@
+{
+  "source": "atelier/terminalia.glb",
+  "stride": 16,
+  "count": 8877,
+  "source_trunk_xy": [
+    38.91,
+    17.67
+  ],
+  "frame": "homepage V4: calibrated tree origin, +90 degree campus rotation",
+  "source_ground": 0.72
+}

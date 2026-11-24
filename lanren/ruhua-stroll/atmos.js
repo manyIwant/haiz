@@ -188,7 +188,7 @@ const VERT_WORLD = /* glsl */`
  */
 export function cel(opts = {}) {
   const m = new THREE.MeshLambertMaterial({
-    color: opts.color ?? 0xffffff, map: opts.map || null, alphaTest: opts.alphaTest || 0,
+    color: opts.color ?? 0xffffff, map: opts.map || null, alphaTest: opts.alphaTest || 0, vertexColors: !!opts.vertexColors, opacity: opts.opacity ?? 1,
     side: opts.side ?? THREE.FrontSide, transparent: !!opts.transparent, alphaToCoverage: !!opts.alphaToCoverage,
   });
   m.name = opts.name || 'cel';

@@ -34,6 +34,7 @@ export async function loadV4(base, { mobile = false, onProgress = () => {} } = {
   const tex = (n, srgb) => tl.loadAsync(url(n)).then((t) => { if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return tick(t); });
   const gl = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const size = mobile ? 'lo' : 'web';
+  const atelierPromise=import('../map/atelier.js').then(m=>m.loadAtelierTree()).catch(()=>null);
   const [treeG, islandG, rosBuf, meta, atlas, leafN, barkColor, barkNormal] = await Promise.all([
     gl.loadAsync(url('tree.glb')).then(tick), gl.loadAsync(url('island.glb')).then(tick),
     fetch(url('rosettes.bin')).then((r) => { if (!r.ok) throw new Error('rosettes.bin'); return r.arrayBuffer(); }).then(tick),
@@ -41,6 +42,8 @@ export async function loadV4(base, { mobile = false, onProgress = () => {} } = {
     tex(`leaf-atlas-${size}.png`), tex(`leaf-normal-${size}.png`), tex('bark-color.jpg', true), tex('bark-normal.jpg'),
   ]);
   for (const t of [barkColor, barkNormal]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const atelier=await atelierPromise;
+  if(atelier){meta.anchors={...atelier.anchors};meta.atelierPath=atelier.path;}
   let bark = null, island = null;
   treeG.scene.traverse((o) => { if (o.isMesh) bark = o; });
   islandG.scene.traverse((o) => { if (o.isMesh) island = o; });
@@ -74,7 +77,7 @@ export async function loadV4(base, { mobile = false, onProgress = () => {} } = {
   /** the islet's surface under a walk-world point (the campus ground where there is no islet) */
   const isletAt = (x, z) => { const [a, b] = toV4(x, z); return hV4(a, b); };
   return {
-    meta, bark, island, rosettes: new Float32Array(rosBuf), stride: meta.rosetteStride, atlas, leafN, barkColor, barkNormal,
+    meta, bark, island, atelier, rosettes: atelier?.rosettes || new Float32Array(rosBuf), stride: meta.rosetteStride, atlas, leafN, barkColor, barkNormal,
     heightV4: hV4, rockV4, isletAt, water: WATER,
   };
 }

@@ -6,6 +6,8 @@
 
 阶段报告：[`docs/PHASE1.md`](docs/PHASE1.md)、[`docs/PHASE2.md`](docs/PHASE2.md)（按标定照片重画榄仁树、重塑太湖石）· 资料来源库：[`evidence/sources.json`](evidence/sources.json)
 
+前庭独立母版、五个新 GLB、离线预览和多机位对照见[前庭建模记录](docs/FORECOURT_ATELIER.md)。
+
 ## 目录
 
 | 路径 | 内容 |

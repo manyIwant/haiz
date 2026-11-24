@@ -14,6 +14,7 @@ from pathlib import Path
 from mathutils import Matrix, Vector
 from kit import Geo, seg_frame
 import arch
+import atelier_yihao as detail
 
 TWIN = Path(__file__).resolve().parents[1]
 SPEC = json.loads((TWIN / 'data/buildings/yihao.json').read_text())
@@ -107,7 +108,7 @@ def tag_of(key):
 
 
 # --------------------------------------------------------------------------------------
-def wing(out: Out, s: int):
+def wing(out: Out, s: int, detailed=False):
     """s = -1 west wing, +1 east wing: 6 bays, granite colonnade on storeys 1-2."""
     Wg = PARTS['wings']
     xa, xb = sorted((s * Wg['x'][0], s * Wg['x'][1]))
@@ -126,7 +127,7 @@ def wing(out: Out, s: int):
         for st in range(3, 7):
             zb = lvl(st) + WSILL
             ops.append((cx - WW / 2, cx + WW / 2, zb, zb + WH, 'w_up'))
-    M, _ = facade(out, part, (xb, y1), (xa, y1), lvl(3) + 0.1, zt, ops, surround=TRIM)
+    M, _ = facade(out, part, (xb, y1), (xa, y1), lvl(3) + 0.1, zt, ops, surround=TRIM, mat=detail.PLASTER if detailed else WALL)
 
     def front(g, L, M):
         ops2 = []
@@ -150,30 +151,36 @@ def wing(out: Out, s: int):
         arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_EAVE)
     local(out, part, (xb, y1), (xa, y1), front)
 
-    # rear (courtyard) facade: invented corridor elevation
-    ops = []
-    for b in range(n):
-        cx = (b + 0.5) * bay
-        for st in range(1, 7):
-            zb = lvl(st) + (0.9 if st > 1 else 1.0)
-            ops.append((cx - 1.2, cx + 1.2, zb, zb + 1.6, 'w_rear'))
-    facade(out, part + '_rear', (xa, y0), (xb, y0), 0.0, zt, ops)
-    out.tags[part + '_rear'] = {'tag': 'invented', 'basis': SPEC['rear']['basis']}
+    if detailed:
+        detail.courtyard_wing(out, part, xa, xb, y0, zt, SPEC['links'], lvl, facade)
+    else:
+        # rear (courtyard) facade: invented corridor elevation
+        ops = []
+        for b in range(n):
+            cx = (b + 0.5) * bay
+            for st in range(1, 7):
+                zb = lvl(st) + (0.9 if st > 1 else 1.0)
+                ops.append((cx - 1.2, cx + 1.2, zb, zb + 1.6, 'w_rear'))
+        facade(out, part + '_rear', (xa, y0), (xb, y0), 0.0, zt, ops)
+        out.tags[part + '_rear'] = {'tag': 'invented', 'basis': SPEC['rear']['basis']}
 
-    def rear_bands(g, L, M):
-        for st in range(2, 7):
-            arch.band(g, TRIM, 0, L, lvl(st) - 0.05, lvl(st) + 0.15, 0.08)
-        arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_EAVE)
-    local(out, part + '_rear', (xa, y0), (xb, y0), rear_bands)
+        def rear_bands(g, L, M):
+            for st in range(2, 7):
+                arch.band(g, TRIM, 0, L, lvl(st) - 0.05, lvl(st) + 0.15, 0.08)
+            arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_EAVE)
+        local(out, part + '_rear', (xa, y0), (xb, y0), rear_bands)
 
     g = out.geo(part)
     R = SPEC['roofs']['wing']
     g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.5), skip=('-z', '-x', '+x'))
+    if detailed:
+        detail.wing_roof(g, xa, xb, y0, y1, zt + 0.5, R)
+        return
     arch.hip_roof(g, xa, y0, xb, y1, zt + 0.5, R['pitch'], overhang=R['overhang'],
                   concave=R['concave'], upturn=R['upturn'], ridge_mat=TRIM, tiles=True)
 
 
-def tower(out: Out, s: int):
+def tower(out: Out, s: int, detailed=False):
     """Granite stair towers framing the central block."""
     T = PARTS['towers']
     xa, xb = sorted((s * T['x'][0], s * T['x'][1]))
@@ -195,7 +202,10 @@ def tower(out: Out, s: int):
         g.polyn(WALL, [(0, 0.0, zg), (0, 0.12, zg), (0, 0.12, ztop), (0, 0.0, ztop)], (-1, 0, 0))
         g.polyn(WALL, [(L, 0.0, zg), (L, 0.12, zg), (L, 0.12, ztop), (L, 0.0, ztop)], (1, 0, 0))
         arch.cornice(g, GRAN, -0.38, L + 0.38, zg, CORN)
-        arch.louvre_box(g, L * 0.14, L * 0.86, ztop - 2.3, ztop - 0.35, depth=0.25, y=0.12)
+        if detailed:
+            detail.crown_panel(g, L, ztop)
+        else:
+            arch.louvre_box(g, L * 0.14, L * 0.86, ztop - 2.3, ztop - 0.35, depth=0.25, y=0.12)
         arch.cornice(g, TRIM, -0.05, L + 0.05, ztop - 0.3, [(0.0, 0.0), (-0.06, 0.0), (-0.06, 0.08), (-0.16, 0.16), (-0.16, 0.30), (0.0, 0.30)])
     local(out, part, (xb, y1), (xa, y1), upper)
     out.window(part, 'w_arch', M @ Matrix.Translation((L / 2 - ARCH['w'] / 2, 0.12, a_sill)))
@@ -220,7 +230,7 @@ def tower(out: Out, s: int):
            [((rb - ra) / 2 - 0.6, (rb - ra) / 2 + 0.6, lvl(st) + 1.0, lvl(st) + 2.4, 'w_pav') for st in range(1, 8)])
 
 
-def central(out: Out):
+def central(out: Out, detailed=False):
     C = PARTS['central']
     xa, xb = C['x']
     fa, fb = C['front_visible_x']
@@ -241,20 +251,28 @@ def central(out: Out):
             else:
                 zb = lvl(st) + CW['sill']
                 ops.append((cx - hw, cx + hw, zb, zb + CW['h'], 'w_wide_bars' if st == 3 else 'w_wide'))
-    M, _ = facade(out, part, (fb, y1), (fa, y1), lvl(3), zt, ops, surround=TRIM)
+    M, _ = facade(out, part, (fb, y1), (fa, y1), lvl(3), zt, ops, surround=TRIM, mat=detail.PLASTER if detailed else WALL)
     hall_w = SPEC['porch']['through_hall']['x'][1]
 
     def deco(g, L, M):
         for x in (fb - bay / 2, fb + bay / 2):
             arch.pilaster(g, TRIM, x, 1.0, 0.18, lvl(3), zt - 0.05)
-        for st in range(4, 8):
-            arch.band(g, TRIM, 0, L, lvl(st) - 0.06, lvl(st) + 0.10, 0.06)
         arch.cornice(g, TRIM, 0, L, zt, arch.CORNICE_DEEP, returns=False)
-        k = 0
-        x = 0.45
-        while x < L - 0.3:
-            g.box(TRIM, (x - 0.12, -0.42, zt - 0.38), (x + 0.12, 0.0, zt + 0.02), skip=('+y',))
-            x += 1.2
+        if detailed:
+            # The wide sill band is confined to the uppermost windows in scenery_15.
+            for cx in centres:
+                sill = lvl(7) + CW['top_storey']['sill']
+                for z, height, projection in ((sill-0.44,0.36,0.12),(sill-0.08,0.08,0.17)):
+                    arch.band(g, TRIM, max(0,cx-hw-0.33), min(L,cx+hw+0.33), z, z+height, projection)
+            for j in range(7):
+                detail.corbel(g, L/2 + (j-3)*bay/2, zt-0.02)
+        else:
+            for st in range(4, 8):
+                arch.band(g, TRIM, 0, L, lvl(st) - 0.06, lvl(st) + 0.10, 0.06)
+            x = 0.45
+            while x < L - 0.3:
+                g.box(TRIM, (x - 0.12, -0.42, zt - 0.38), (x + 0.12, 0.0, zt + 0.02), skip=('+y',))
+                x += 1.2
         # storeys 1-2 behind the porch: granite skin, open through-hall in the middle
         hx0, hx1 = L / 2 - hall_w, L / 2 + hall_w
         ops2 = [(hx0, hx1, 0.0, 4.2, None)]
@@ -290,12 +308,16 @@ def central(out: Out):
     facade(out, 'central_rear', (xa, y0), (xb, y0), 0.0, zt, ops)
     out.tags['central_rear'] = {'tag': 'invented', 'basis': SPEC['rear']['basis']}
     R = SPEC['roofs']['central']
-    g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.75), skip=('-z',))
-    arch.hip_roof(g, xa, y0, xb, y1, zt + 0.75, R['pitch'], overhang=R['overhang'], concave=R['concave'],
-                  upturn=R['upturn'], upturn_len=3.5, kick=0.25, ridge_mat=TRIM, ridge_ends=0.7, tiles=True)
+    if detailed:
+        detail.central_roof(out,xa,xb,y0,y1,zt)
+    else:
+        g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.75), skip=('-z',))
+        arch.hip_roof(g, xa, y0, xb, y1, zt + 0.75, R['pitch'], overhang=R['overhang'], concave=R['concave'],
+                      upturn=R['upturn'], upturn_len=3.5, kick=0.25, ridge_mat=TRIM, ridge_ends=0.7, tiles=True)
 
 
-def pavilion(out: Out, s: int):
+
+def pavilion(out: Out, s: int, detailed=False):
     Pv = PARTS['pavilions']
     xa, xb = sorted((s * Pv['x'][0], s * Pv['x'][1]))
     y0, y1 = Pv['y']
@@ -312,7 +334,7 @@ def pavilion(out: Out, s: int):
                                                     (L / 2 - 0.8, L / 2 + 0.8, lvl(2) + 1.0, lvl(2) + 2.5, 'w_pav')]
         arch.wall_with_openings(g, GRAN, L, 0.0, zent, [o[:4] for o in ops2], t=0.3)
         for o in ops2:
-            out.window(part, o[4], M @ Matrix.Translation((o[0], 0, o[2])))
+            out.window(end if detailed and windows is not None else part, o[4], M @ Matrix.Translation((o[0], 0, o[2])))
         if corner_piers:
             for x in (0.0, L):
                 g.box(GRAN, (max(0, x - 0.6), -0.25, 0), (min(L, x + 0.6), 0, zent), skip=('+y', '-z'))
@@ -332,12 +354,15 @@ def pavilion(out: Out, s: int):
         cy = Dp * f
         for st in range(3, 8):
             ops.append((cy - 1.2, cy + 1.2, lvl(st) + 0.95, lvl(st) + 2.75, 'w_side'))
-    M2, _ = facade(out, part, p0, p1, lvl(3) + 0.1, zt, ops, surround=TRIM)
+    end = part + '_end' if detailed else part
+    if detailed:
+        out.geo(end, 'estimated', 'Outer return visible obliquely on aerial_campus. Three axes, sash subdivisions and floor levels on the end are inferred.')
+    M2, _ = facade(out, end, p0, p1, lvl(3) + 0.1, zt, ops, surround=TRIM, mat=detail.PLASTER if detailed else WALL)
     win2 = []
     for f in (0.2, 0.5, 0.8):
         cy = Dp * f
         win2 += [(cy - 1.2, cy + 1.2, 1.0, 3.0, 'w_side'), (cy - 1.2, cy + 1.2, lvl(2) + 0.9, lvl(2) + 2.7, 'w_side')]
-    local(out, part, p0, p1, lambda g, L, M: base_and_trim(g, L, M, windows=win2))
+    local(out, end, p0, p1, lambda g, L, M: base_and_trim(g, L, M, windows=win2))
     # rear
     ops = [(cx - 1.2, cx + 1.2, lvl(st) + 0.9, lvl(st) + 2.5, 'w_rear') for cx in (Wd * 0.3, Wd * 0.7) for st in range(1, 8)]
     facade(out, part + '_rear', (xa, y0), (xb, y0), 0.0, zt, ops)
@@ -361,7 +386,7 @@ def pavilion(out: Out, s: int):
     R = SPEC['roofs']['pavilion']
     g.box(WALL, (xa, y0, zt), (xb, y1, zt + 0.5), skip=('-z',))
     arch.hip_roof(g, xa, y0, xb, y1, zt + 0.5, R['pitch'], overhang=R['overhang'], concave=R['concave'],
-                  upturn=R['upturn'], upturn_len=3.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.5, tiles=True)
+                  upturn=R['upturn'], upturn_len=3.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.5, tiles=True, closed_corners=detailed)
 
 
 def _stepped_head(g, mat, x0, x1, z_top, y_front, depth=0.35, big=(0.6, 0.35), small=(0.3, 0.3)):
@@ -375,7 +400,7 @@ def _stepped_head(g, mat, x0, x1, z_top, y_front, depth=0.35, big=(0.6, 0.35), s
         g.box(mat, (bx0, y_front - depth, z_top - bh - sh), (bx1, y_front, z_top - bh), skip=('+z',))
 
 
-def porch(out: Out):
+def porch(out: Out, detailed=False):
     Pp = SPEC['porch']
     part = 'porch'
     g = out.geo(part, Pp['portal']['tag'], Pp['portal']['basis'])
@@ -409,8 +434,32 @@ def porch(out: Out):
     for (a0, a1) in (((xL, yF - 0.6), (xR, yF)), ((xL, yB), (xR, yB + 0.6)), ((xL, yB), (xL + 0.6, yF)), ((xR - 0.6, yB), (xR, yF))):
         g.box(TRIM, (a0[0], a0[1], zc - 0.65), (a1[0], a1[1], zc - 0.3))
     g.polyn(TRIM, [(xL, yB, zc - 0.3), (xR, yB, zc - 0.3), (xR, yF, zc - 0.3), (xL, yF, zc - 0.3)], (0, 0, -1))
-    arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang'], concave=0.08,
-                  upturn=0.45, upturn_len=2.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.35, tiles=True)
+    if detailed:
+        # The front photo shows a long red ridge above a pale shelf and layered fascia.
+        # The slope behind the crest and the underside profiles are inferred.
+        arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang']-0.16,
+                      concave=0.095, upturn=0.18, upturn_len=1.2, kick=0.04, ridge_mat=TRIM,
+                      hip_run=1.37, ridge_w=0.18, ridge_h=0.12, ridge_ends=0.15,
+                      fascia_h=0.16, tile_pitch=0.19, closed_corners=True)
+        # A continuous shelf returns around the sides. Its visible front corners rise gently.
+        over = C['overhang']
+        x0, x1, y0, y1 = ca-over, cb+over, cy0-over, cy1+over
+        path = []
+        for start,end in (((x0,y0),(x1,y0)),((x1,y0),(x1,y1)),
+                          ((x1,y1),(x0,y1)),((x0,y1),(x0,y0))):
+            length = math.dist(start,end)
+            for i in range(math.ceil(length/0.31)):
+                t = i/math.ceil(length/0.31)
+                rise = 0.16*max(0,1-min(t,1-t)*length/1.25)**2
+                path.append((start[0]+(end[0]-start[0])*t,start[1]+(end[1]-start[1])*t,zc+rise))
+        g.sweep(TRIM,[(-0.32,-0.11),(0.04,-0.11),(0.13,-0.14),(0.13,-0.22),
+                      (0.015,-0.25),(0.015,-0.32),(-0.10,-0.39),(-0.32,-0.39)],path,closed=True)
+        for x in (ca+1.18,cb-1.18):
+            g.box('frame.alu.grey',(x-0.22,fy-0.77,zc-0.68),(x+0.22,fy-0.49,zc-0.642))
+            g.box('trim.white',(x-0.19,fy-0.74,zc-0.69),(x+0.19,fy-0.52,zc-0.68))
+    else:
+        arch.hip_roof(g, ca, cy0, cb, cy1, zc, C['pitch'], overhang=C['overhang'], concave=0.08,
+                      upturn=0.45, upturn_len=2.0, kick=0.2, ridge_mat=TRIM, ridge_ends=0.35, tiles=True)
     # side porches: granite side portals with stepped heads, slabs, short white columns, shed roofs
     S = Pp['side']
     for side in (-1, 1):
@@ -446,7 +495,7 @@ def porch(out: Out):
                      mat='metal.steel.white', bars=0.0, post=0.7)
 
 
-def links(out: Out):
+def links(out: Out, storeys=6):
     """Covered links towards the next building (white flat roofs on the Esri layer)."""
     Lk = SPEC['links']
     part = 'links'
@@ -454,18 +503,18 @@ def links(out: Out):
     ya, yb = Lk['y']
     for xc in Lk['x_centres']:
         x0, x1 = xc - Lk['width'] / 2, xc + Lk['width'] / 2
-        for st in range(2, 8):
+        for st in range(2, storeys + 2):
             z = lvl(st)
             g.box(WALL, (x0, ya, z - 0.4), (x1, yb, z))
-            if st < 7:
+            if st <= storeys:
                 arch.railing(g, [(x0 + 0.1, ya, z), (x0 + 0.1, yb, z)], h=1.05, mat=TRIM, bars=0.0, posts=False)
                 arch.railing(g, [(x1 - 0.1, yb, z), (x1 - 0.1, ya, z)], h=1.05, mat=TRIM, bars=0.0, posts=False)
                 g.box(WALL, (x0, ya, z), (x0 + 0.2, yb, z + 1.05), skip=('-z',))
                 g.box(WALL, (x1 - 0.2, ya, z), (x1, yb, z + 1.05), skip=('-z',))
-        g.box('roof.flat.white', (x0 - 0.3, ya, lvl(7) - 0.4), (x1 + 0.3, yb, lvl(7) + 0.3))
+        g.box('roof.flat.white', (x0 - 0.3, ya, lvl(storeys + 1) - 0.4), (x1 + 0.3, yb, lvl(storeys + 1) + 0.3))
         for x in (x0 + 0.25, x1 - 0.25):
             for y in (ya + 0.3, (ya + yb) / 2):
-                arch.square_column(g, WALL, x, y, 0.45, 0.0, lvl(7) - 0.4)
+                arch.square_column(g, WALL, x, y, 0.45, 0.0, lvl(storeys + 1) - 0.4)
 
 
 def base_skirt(out: Out, depth=1.2):
@@ -494,15 +543,17 @@ def base_skirt(out: Out, depth=1.2):
         g.polyn(GRAN, [(a[0], a[1], -depth), (b[0], b[1], -depth), (b[0], b[1], 0.0), (a[0], a[1], 0.0)], (dy / L, -dx / L, 0.0))
 
 
-def build():
+def build(detailed_porch=False):
     out = Out()
+    if detailed_porch:
+        detail.register_materials()
     protos(out)
     base_skirt(out)
     for s in (-1, 1):
-        wing(out, s)
-        tower(out, s)
-        pavilion(out, s)
-    central(out)
-    porch(out)
-    links(out)
+        wing(out, s, detailed_porch)
+        tower(out, s, detailed_porch)
+        pavilion(out, s, detailed_porch)
+    central(out, detailed_porch)
+    porch(out, detailed_porch)
+    links(out, storeys=5 if detailed_porch else 6)
     return out

@@ -316,7 +316,7 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
              overhang: float = 0.8, mat='roof.tile.red', fascia_mat='trim.white', fascia_h=0.35,
              concave: float = 0.0, upturn: float = 0.0, upturn_len: float = 3.0, kick: float = 0.0,
              ridge_mat: str | None = 'trim.white', ridge_w=0.28, ridge_h=0.22, nseg=10, tiles=True,
-             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None):
+             tile_pitch=0.23, soffit_mat='trim.white', ridge_ends=0.0, thick=0.18, main_ridge_axis=None, hip_run=None, closed_corners=False):
     """Hip roof over the axis-aligned rectangle [x0,x1]x[y0,y1] (walls), with eave overhang.
 
     concave: 0 = straight slopes; >0 = traditional sag (surface lowered mid-slope by that
@@ -332,17 +332,23 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
     rise = half * math.tan(math.radians(pitch_deg))
     zr = z_eave + rise
     cx, cy = (X0 + X1) / 2, (Y0 + Y1) / 2
+    end_run = half if hip_run is None else hip_run
     if long_x:
-        ra = (X0 + half, cy); rb = (X1 - half, cy)
+        ra = (X0 + end_run, cy); rb = (X1 - end_run, cy)
     else:
-        ra = (cx, Y0 + half); rb = (cx, Y1 - half)
+        ra = (cx, Y0 + end_run); rb = (cx, Y1 - end_run)
     corners = [(X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)]
 
     def eave_pt(p, sa, sb, outward):
         dmin = min(sa, sb)
         f = max(0.0, 1.0 - dmin / upturn_len) if upturn_len > 0 else 0.0
         f = f * f
-        return Vector((p[0] + outward[0] * kick * f, p[1] + outward[1] * kick * f, z_eave + upturn * f))
+        if not closed_corners:
+            return Vector((p[0]+outward[0]*kick*f,p[1]+outward[1]*kick*f,z_eave+upturn*f))
+        # Use one corner displacement for both meeting faces, closing the hip seam.
+        ox = math.copysign(1.0,p[0]-cx) * max(0,1-min(p[0]-X0,X1-p[0])/max(upturn_len,0.001))**2
+        oy = math.copysign(1.0,p[1]-cy) * max(0,1-min(p[1]-Y0,Y1-p[1])/max(upturn_len,0.001))**2
+        return Vector((p[0]+ox*kick*f,p[1]+oy*kick*f,z_eave+upturn*f))
 
     if long_x:
         faces = [((X0, Y0), (X1, Y0), rb, ra, (0, -1)),
@@ -386,7 +392,10 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
             g.polyn(fascia_mat, [pz, qz, q, p], (nrm[0], nrm[1], 0.0))
             g.polyn(soffit_mat, [inset(p), inset(q), qz, pz], (0, 0, -1))
         if tiles and mat:
-            _tile_rows(g, rows, mat, tile_pitch)
+            if closed_corners:
+                _parallel_cover_tiles(g, rows, mat, tile_pitch)
+            else:
+                _tile_rows(g, rows, mat, tile_pitch)
     if ridge_mat:
         if math.dist(ra, rb) > 1e-3:
             _ridge(g, ridge_mat, Vector((*ra, zr)), Vector((*rb, zr)), ridge_w, ridge_h)
@@ -395,19 +404,66 @@ def hip_roof(g: Geo, x0: float, y0: float, x1: float, y1: float, z_eave: float, 
             Ept = Vector((cxp, cyp, z_eave + upturn))
             if kick:
                 ox = 1 if cxp > cx else -1; oy = 1 if cyp > cy else -1
-                Ept.x += ox * kick * 0.7; Ept.y += oy * kick * 0.7
+                offset = kick if closed_corners else kick*0.7
+                Ept.x += ox*offset; Ept.y += oy*offset
             _hip_curve(g, ridge_mat, Ept, Vector((*r_end, zr)), ridge_w * 0.8, ridge_h * 0.8, concave * rise)
             if upturn > 0:
                 # small upswept tip (翘角) at each corner
-                tip = Ept + Vector(((1 if cxp > cx else -1) * 0.35, (1 if cyp > cy else -1) * 0.35, upturn * 0.9 + 0.25))
+                reach = 0.11 if closed_corners else 0.35
+                lift = upturn*0.45+0.11 if closed_corners else upturn*0.9+0.25
+                tip = Ept + Vector((ox*reach if kick else math.copysign(reach,cxp-cx), oy*reach if kick else math.copysign(reach,cyp-cy), lift))
                 _ridge(g, ridge_mat, Ept, tip, ridge_w * 0.7, ridge_h * 0.7)
         if ridge_ends > 0 and math.dist(ra, rb) > 1e-3:
             for p, s in ((ra, -1), (rb, 1)):
                 d = Vector((rb[0] - ra[0], rb[1] - ra[1], 0)).normalized() * s
-                base = Vector((*p, zr + ridge_h))
+                base = Vector((*p, zr + (0.025 if closed_corners else ridge_h)))
                 tip = base + d * ridge_ends * 0.6 + Vector((0, 0, ridge_ends))
-                _ridge(g, ridge_mat, base - d * 0.6, tip, ridge_w * 0.9, ridge_h * 0.9)
+                if closed_corners:
+                    knee=base+d*0.07+Vector((0,0,ridge_ends*0.28))
+                    _ridge(g,ridge_mat,base-d*0.28,knee,ridge_w,ridge_h)
+                    _ridge(g,ridge_mat,knee,knee+d*0.055+Vector((0,0,ridge_ends*0.62)),ridge_w*0.70,ridge_h*0.70)
+                else:
+                    _ridge(g, ridge_mat, base - d * 0.6, tip, ridge_w * 0.9, ridge_h * 0.9)
     return dict(z_ridge=zr, rise=rise, ridge=(ra, rb), eave_rect=(X0, Y0, X1, Y1))
+
+
+def _parallel_cover_tiles(g,rows,mat,pitch):
+    """Keep tile courses perpendicular to their eave, terminating at the diagonal hip."""
+    e0,e1=rows[0][0],rows[0][-1]
+    axis=Vector((e1.x-e0.x,e1.y-e0.y,0)).normalized()
+    width=(e1-e0).dot(axis)
+    sections=len(rows[0])-1
+    for k in range(1,round(width/pitch)):
+        x=k*width/round(width/pitch)
+        strip=[]
+        old_edges=None
+        for row in rows:
+            left=(row[0]-e0).dot(axis)
+            right=(row[-1]-e0).dot(axis)
+            if x<left or x>right or right-left<0.001:
+                if old_edges and strip:
+                    side=0 if x<left else -1
+                    before=old_edges[side]
+                    after=row[side]
+                    span=(after-before).dot(axis)
+                    if abs(span)>1e-7:
+                        strip.append(before.lerp(after,max(0,min(1,(x-(before-e0).dot(axis))/span))))
+                break
+            u=(x-left)/(right-left)*sections
+            j=min(sections-1,int(u))
+            strip.append(row[j].lerp(row[j+1],u-j))
+            old_edges=row
+        if len(strip)<2: continue
+        prev=None
+        for j,p in enumerate(strip):
+            v=strip[min(j+1,len(strip)-1)]-strip[max(0,j-1)]
+            n=axis.cross(v).normalized()
+            if n.z<0: n.negate()
+            ring=[p+axis*(0.046*math.cos(t))+n*(0.039*math.sin(t)) for t in (0,math.pi/3,2*math.pi/3,math.pi)]
+            if prev is not None:
+                for i in range(3):
+                    g.polyn(mat,[prev[i],prev[i+1],ring[i+1],ring[i]],(prev[i]+prev[i+1])*0.5-strip[j-1])
+            prev=ring
 
 
 def _tile_rows(g: Geo, rows, mat, pitch):

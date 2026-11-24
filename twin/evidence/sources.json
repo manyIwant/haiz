@@ -122,7 +122,8 @@
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
     "portal (1923), stepped door frame, canopy on white columns, side porches, wing colonnade, window design",
-    "rock plinth with the inscription 虎踞龍盤捷報頻傳, red granite flights, Norfolk pine left of the plinth"
+    "rock plinth with the inscription 虎踞龍盤捷報頻傳, red granite flights, Norfolk pine left of the plinth",
+    "Light lettering, dedication marks and donor panel projected onto the Taihu plinth in the forecourt edition. Small signatures not transcribed."
    ]
   },
   {
@@ -198,7 +199,9 @@
    "capture_date": "unknown",
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
-    "pool edging, inscribed stone, palms (qualitative; positions in the pool are estimated)"
+    "pool edging, inscribed stone, palms (qualitative; positions in the pool are estimated)",
+    "Near-bank upright marker, striated shelves, broad-leaved understory and palm trunks. Interpreted with the corresponding Atlas crop; the crop is not an independent viewpoint.",
+    "Vermilion brush outlines, hairline, small vertical dedication and two visible seal marks on the pond stele. Inscribed depth and frontal deprojection estimated."
    ]
   },
   {
@@ -216,7 +219,8 @@
    "capture_date": "unknown",
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
-    "rockery and cascade (form only; position invented)"
+    "rockery and cascade (form only; position invented)",
+    "Crescent-shaped raised spillway terminates against the stacked rock bank. Two small planters on a low paved landing, steps and corridor context. Used for relative height and layout; camera unregistered."
    ]
   },
   {
@@ -272,7 +276,8 @@
    "capture_date": "unknown",
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
-    "storey count (5) of the massing"
+    "storey count (5) of the massing",
+    "Five-storey court-side facade, barred classroom lights, condensers and perpendicular open gallery."
    ]
   },
   {
@@ -290,7 +295,8 @@
    "capture_date": "unknown",
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
-    "storey count (6) of the massing"
+    "storey count (6) of the massing",
+    "Recessed wall and continuous gallery fascia, stacked screens, raised cap and light ground-floor awnings."
    ]
   },
   {
@@ -303,12 +309,13 @@
     768
    ],
    "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
-   "shows": "Teaching Blocks 3 and 4",
+   "shows": "Court catalogued under Teaching Blocks 3/4; a wall bears the name of the Science Activity Centre.",
    "author": "unknown",
    "capture_date": "unknown",
    "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
    "used_for": [
-    "storey count (6 or more) of the massing"
+    "storey count (6 or more) of the massing",
+    "Related court palette and open gallery details. Visible sign identifies a science activity centre. Individual classroom building numbers and location are unconfirmed."
    ]
   },
   {
@@ -328,7 +335,8 @@
    "used_for": [
     "ground-level edges of lawns, plaza, steps and roads (read directly)",
     "roof outlines of Teaching Block 1 after removing relief displacement of (+0.335, -0.53) m per metre of height",
-    "tree canopy extents (date differs from aerial_campus)"
+    "tree canopy extents (date differs from aerial_campus)",
+    "red eaves, ridge paths and lower grey roof areas of the arts centre; estimated heights used for relief correction"
    ]
   },
   {
@@ -359,6 +367,61 @@
    "rights": "link only",
    "used_for": [
     "existence of the centenary Terminalia and the 1988 enlargement of the North Gate (documented facts, no dimensions)"
+   ]
+  },
+  {
+   "id": "scenery_15",
+   "kind": "photograph",
+   "path": "assets/images/campus/scenery_15.jpg",
+   "git_blob": "3747a95414b893ade6674d4f4c9415e0491955ae",
+   "size_px": [
+    1400,
+    1120
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Oblique view of Block 1: upper window belts, tower tablet, corbels and side aspect of the porch.",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "Oblique view of Block 1: upper window belts, tower tablet, corbels and side aspect of the porch."
+   ]
+  },
+  {
+   "id": "scenery_17",
+   "kind": "photograph",
+   "path": "assets/images/campus/scenery_17.jpg",
+   "git_blob": "5a492bbd5a3026d8eb093477b601fbf38bec5365",
+   "size_px": [
+    1400,
+    1120
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Polished hall with cross beams, lights, framed artwork and a view of the planted court and colonnade beyond. Camera and hall assignment estimated.",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "Polished hall with cross beams, lights, framed artwork and a view of the planted court and colonnade beyond. Camera and hall assignment estimated."
+   ]
+  },
+  {
+   "id": "campus_yishu",
+   "kind": "photograph",
+   "path": "assets/images/campus/campus_yishu.jpg",
+   "git_blob": "507cea3ac54a4f2dc9c569e9849668f633cd9927",
+   "size_px": [
+    1080,
+    801
+   ],
+   "campus": "Fucheng campus (府城校区), Dalu Street, Qiongshan, Haikou",
+   "shows": "Elevated view over the ink pond, entrance stairs and red hipped portico, white piers and flat intermediate roof, with taller red wings behind.",
+   "author": "unknown",
+   "capture_date": "unknown",
+   "rights": "Third-party photograph already in this repository (added in 6bc909d). Author and redistribution licence not verified (see ARTWORK-LICENSING.md and docs/provenance/RIGHTS-REVIEW.md, item P2). twin/ only reads it in place for measurement; no pixels are copied, cropped or re-published under twin/.",
+   "used_for": [
+    "portico tile profile and ridge, roof palette, layered roof heights, pond and entry relationship",
+    "Relationship of entry steps to water, a short gap between stone shelf and portico, and visible raised weir. Cross-check for the pond model."
    ]
   }
  ],

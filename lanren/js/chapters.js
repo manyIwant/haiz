@@ -14,7 +14,7 @@ export const CHAPTERS = [
     id: 'tree', index: '01', label: '开场 · 初遇', en: ['A Tree', 'Connects Everything'], zh: '一棵树，连接所有可能',
     lede: '海南中学府城校区一号教学楼前，一棵百年榄仁树与太湖石「虎踞龙盘」相互呼应。这是它的数字化身：冬末，去年的红叶还挂在枝头。向下滚动，绕着它走，看它抽枝、发芽、展叶，也走进 HAIZ 的每一个角落。',
     specimen: ['Terminalia catappa L.', '大叶榄仁 · 使君子科', '海南中学府城校区 · 一号教学楼前'],
-    note: '树为依物种特征创作的概念模型；太湖石依校园实拍重建。都不是测绘',
+    note: '榄仁树和校园地标采用照片辅助重建的统一模型，动态枝叶为艺术派生。不是实地测绘',
     ui: { slab: 'none' },
     entries: []
   },
@@ -27,7 +27,7 @@ export const CHAPTERS = [
       { action: 'roots-climb', title: '沿树干向上', en: 'Climb the years', note: '继续滚动，或在右侧选一个年代', primary: true },
       { action: 'roots-read', title: '按年代阅读', en: 'Read by year', note: '不看镜头，逐条读史料、照片与出处' },
       { action: 'rings', title: '年轮', en: 'Rings', note: '三万个真实的日子：让树回到任何一天' },
-      { href: 'campus-3d.html?focus=lanshu', title: '第一人称校园', en: 'Walk the campus', note: '从树下出发：16 间可步入的想象教室', dark: true, group: '从树下出发' },
+      { href: 'ruhua-free.html?stage=stroll', title: '第一人称校园', en: 'Walk the campus', note: '从同一个榄仁树世界出发，进入自由共游', dark: true, group: '从树下出发' },
       { href: 'descent.html', title: '从星球到树荫', en: 'The descent', note: '一段保持地理焦点的下降镜头', dark: true },
       { href: 'director.html', title: '探索导演台', en: 'Director', note: '编排你自己的步行路线' }
     ]
@@ -61,7 +61,7 @@ export const CHAPTERS = [
   {
     id: 'days', index: '05', label: '透过树冠 · 远眺', en: ['Looking', 'Forward'], zh: '日子 · 创作',
     lede: '从叶丛里向外望，远处是水面与正在落下的光。那些正在发生、将要发生的事：校园杂志、社团提案、课间电台，和一间可以寄出课间的暗房。',
-    note: '远景为艺术表达，不是校园实景',
+    note: '校园几何来自照片辅助重建，光影和未核实部分为艺术表达',
     ui: { slab: 'right', anchor: [-460, 12, 170], exit: 'light' },
     entries: [
       { href: 'journal.html', title: '校园杂志', en: 'Journal', note: '影像、手记与校园正在发生的事', primary: true },

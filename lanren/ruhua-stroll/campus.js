@@ -98,7 +98,7 @@ const GLASS = /* glsl */`
 // light bounced up from sunlit paving and lawns warms the lower walls, most visibly in shade
 const BOUNCE = 'outCol += albedo * uGroundAmb * uSunColor * 0.22 * wallBounce * max(uSunDir.y, 0.2);\n';
 
-function makeLook(src) {
+export function makeLook(src) {
   const name = src.name || '';
   if (/glass/i.test(name)) return cel({ name: 'glass', key: 'glass-v2', fragment: { after: GLASS } });
   const look = LOOK[name] || { color: '#' + (src.color?.getHexString?.() || 'cccccc') };
@@ -112,7 +112,8 @@ function makeLook(src) {
     m.map.colorSpace = THREE.SRGBColorSpace;
     return m;
   }
-  return cel({ name: 'campus-' + name, key: 'campus-' + name, color: new THREE.Color(look.color || look.tint), defines, fragment: { albedo, after } });
+  // Keep the master's maps and vertex pigments, including both stone inscriptions.
+  return cel({ name: 'campus-' + name, key: 'campus-' + name, color: src.color?.clone() || new THREE.Color(look.color || look.tint), map: src.map || null, vertexColors: src.vertexColors, alphaTest: src.alphaTest, side: src.side, transparent: src.transparent, opacity: src.opacity, defines, soft: .14, fragment: { albedo, after } });
 }
 
 function meanOf(texture) {
@@ -136,7 +137,7 @@ export async function createCampus(geo, model = buildCampus(geo.campus, geo.fram
     if (!o.isMesh) return;
     const list = Array.isArray(o.material) ? o.material : [o.material];
     const next = list.map((m) => {
-      const key = (m.name || '') + (m.map ? ':' + m.map.uuid : '');
+      const key = m.uuid;
       if (!cache.has(key)) cache.set(key, makeLook(m));
       return cache.get(key);
     });
@@ -146,12 +147,12 @@ export async function createCampus(geo, model = buildCampus(geo.campus, geo.fram
   });
   const decks = v3.decks;
   const heightAt = (x, z) => {
-    let y = geo.frame.ground + 0.02;
+    let y = v3.terrainAt?.(x,z) ?? geo.frame.ground + 0.02;
     for (const deck of decks) {
       const dx = x - deck.cx, dz = z - deck.cz;
       if (Math.abs(dx * deck.c - dz * deck.s) <= deck.hw && Math.abs(dx * deck.s + dz * deck.c) <= deck.hd) y = Math.max(y, deck.y);
     }
     return y;
   };
-  return { scene: v3.scene, hulls: v3.hulls, decks, heightAt, buildings: model.buildings, tris: Math.round(tris), materials: cache.size };
+  return { scene: v3.scene, hulls: v3.hulls, decks, heightAt, twin: v3.twin, buildings: model.buildings, tris: Math.round(tris), materials: cache.size };
 }

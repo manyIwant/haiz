@@ -1,0 +1,52 @@
+{
+  "schema": "haiz-atelier-runtime/1",
+  "source": "atelier",
+  "parts": {
+    "yihao": {
+      "file": "yihao.glb",
+      "bytes": 1038688,
+      "source_sha256": "4489b02a27fe72748abb30776d77d1d12ada3525fa8cbca61007108f2bf27729"
+    },
+    "erhao": {
+      "file": "erhao.glb",
+      "bytes": 2017272,
+      "source_sha256": "6f682e296457c03adc2ebcf8ad664b0aa3428d4f1bf7d7c3b1ab3c591689ebdb"
+    },
+    "science": {
+      "file": "science.glb",
+      "bytes": 471092,
+      "source_sha256": "1475501133fba684fdbafe9070720bad1237441c805fc7fab47b03d5997ec502"
+    },
+    "south_classrooms": {
+      "file": "south_classrooms.glb",
+      "bytes": 1667820,
+      "source_sha256": "6529b61d0c6c7baed98eea50154ce0a75282e9f727e7b168189c7157e1b8cd75"
+    },
+    "arts": {
+      "file": "arts.glb",
+      "bytes": 3097248,
+      "source_sha256": "9b7cefaefc4d9d5c74c7ecfbe112d5d210ee1820b8b265f6549e931b4cac0543"
+    },
+    "forecourt": {
+      "file": "forecourt.glb",
+      "bytes": 3992132,
+      "source_sha256": "10619321deb1625b4bb3986c5903f843465e39598a9adfe070567b61f77de421"
+    },
+    "landmark": {
+      "file": "landmark.glb",
+      "bytes": 5627696,
+      "source_sha256": "b10eb2dab7d5f06fd2f5cc2ad19a07d925ef885ead5757d41f2cecd7f3cefb7a"
+    },
+    "terminalia": {
+      "file": "terminalia.glb",
+      "bytes": 10505772,
+      "source_sha256": "67be620c7a4fdf7adb62daf5e9f430e7f5c0ca588532f04729a3c5f60f5a5972"
+    },
+    "yanchi": {
+      "file": "yanchi.glb",
+      "bytes": 3279912,
+      "source_sha256": "5251bc0502e3bbabb3bb6434516c72425d40de2ec14c331f19f9c0c760dc2f56"
+    }
+  },
+  "texture_bytes": 64334705
+}

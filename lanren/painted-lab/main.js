@@ -22,6 +22,8 @@ import { pairMaterials, LABM } from './material.js';
 import { createLabPipeline } from './passes.js';
 import { VIEWS, resolveView } from './views.js';
 import { createOrbit } from './orbit.js';
+import { loadAtelierPart, placeAtelierPart, atelierEnabled } from '../map/atelier.js';
+import { makeLook } from '../ruhua-stroll/campus.js';
 
 const Q = new URLSearchParams(location.search);
 const ROOT = new URL('../', import.meta.url);
@@ -89,23 +91,28 @@ async function main() {
   const day = createDaylight(scene, { shadowSize: tier.shadow, shadowBox: 70 });
   day.set(MOODS[Q.get('time')] ? Q.get('time') : 'noon', true);
   const ground = createGround(geo, allTrees, tier.paint);
-  scene.add(ground.mesh, createWater(geo));
+  const water = createWater(geo);
+  scene.add(ground.mesh,water);
   const grass = createGrass({ ground });
   scene.add(grass.group);
   scene.add(createHorizon(geo));
   bar(0.15);
 
   say('载入树木…');
-  const flora = await createFlora(geo, { url: asset('assets/toon/flora.glb'), atlasUrl: asset('assets/stroll/leaf-atlas-v2.png') });
+  let masterTree=null;
+  if(atelierEnabled())try{masterTree=placeAtelierPart(await loadAtelierPart('terminalia'),geo.frame);const mats=new Map();masterTree.traverse(o=>{if(!o.isMesh)return;const list=[].concat(o.material),next=list.map(m=>{if(!mats.has(m))mats.set(m,makeLook(m));return mats.get(m);});o.material=Array.isArray(o.material)?next:next[0];});}catch(err){console.warn('Atelier tree fallback',err);}
+  const flora = await createFlora(geo, { url: asset('assets/toon/flora.glb'), atlasUrl: asset('assets/stroll/leaf-atlas-v2.png'), skipLanshu:!!masterTree, skipRock:!!masterTree });
+  if(masterTree)flora.group.add(masterTree);
   scene.add(flora.group);
   bar(0.3);
 
-  say('载入校园建筑（约 11 MB）…');
+  say('载入统一校园模型与材质…');
   let buildings = 'loading';
   try {
     const { createCampus } = await import('../ruhua-stroll/campus.js');
     const c = await createCampus(geo, model);
     scene.add(c.scene);
+    if(c.twin.applied.some(x=>x.part==='yanchi'))water.traverse(o=>{if(o.userData.haizWaterId==='yanchi')o.visible=false;});
     buildings = 'ready';
   } catch (e) {
     console.warn('campus buildings unavailable', e);

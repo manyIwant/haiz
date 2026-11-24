@@ -73,7 +73,7 @@ const root = path.resolve(__dirname, '..');
   const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.strictEqual(ch.CHAPTERS[1].id, 'roots');
   assert(home.includes('class="roots-static"') && NODES.every((n) => home.includes(n.title.replace(/「|」/g, (m) => m))), 'every station in the static reading list');
-  for (const href of ['campus-3d.html?focus=lanshu', 'descent.html', 'director.html']) assert(home.includes(`href="${href}"`), 'walk-out link kept: ' + href);
+  for (const href of ['ruhua-free.html?stage=stroll', 'descent.html', 'director.html']) assert(home.includes(`href="${href}"`), 'walk-out link kept: ' + href);
   out.push('index.html: 02 根脉 with a no-film reading list; walk-out links kept');
   console.log('roots:\n- ' + out.join('\n- '));
 })().catch((e) => { console.error(e); process.exit(1); });
