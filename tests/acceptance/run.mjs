@@ -74,6 +74,7 @@ const SUITES = [
   { id: 'walk-runtime', tier: 'core', title: 'Campus walk runtime (headless, no GPU)', run: node('tests/walk/runtime.cjs'), timeout: 600 },
   { id: 'rings', tier: 'core', title: '年轮 archive, astronomy and codec', run: node('tests/rings.cjs') },
   { id: 'lanren', tier: 'core', title: 'Lanren tree home sources', run: node('tests/lanren.cjs') },
+  { id: 'twin-activation', tier: 'core', title: '06 free-roam route and shared twin landmark loader', run: nodeTest('tests/integration/twin-activation.test.mjs') },
   { id: 'home-mobile-units', tier: 'core', title: 'Home phone gesture intent and nearest stop', run: nodeTest('tests/home-mobile.test.cjs') },
   { id: 'roots', tier: 'core', title: 'Roots data', run: node('tests/roots.cjs') },
   { id: 'campus-map', tier: 'core', title: 'Campus map data', run: node('tests/campus-map.cjs') },
@@ -92,6 +93,7 @@ const SUITES = [
   { id: 'mobile-compat-chromium', tier: 'browser', title: 'Every page on iPhone SE / iPhone 13 / Pixel 7 / iPad (Chromium emulation)', run: node('tests/mobile-compat-browser.cjs'), needs: ['chromium'], timeout: 1800 },
   { id: 'mobile-compat-webkit', tier: 'browser', title: 'Every page on iPhone SE / iPhone 13 / iPad (WebKit engine)', run: node('tests/mobile-compat-browser.cjs', ['--engine=webkit', '--devices=iPhone SE,iPhone 13,iPad Mini landscape']), needs: ['webkit'], timeout: 1800 },
   { id: 'rings-browser', tier: 'browser', title: '年轮 interaction, phone deep link and no-WebGL fallback', run: node('tests/rings-browser.cjs'), needs: ['chromium'], timeout: 900 },
+  { id: 'twin-browser', tier: 'browser', title: 'Actual Phase-2 GLB + local Draco decode in 入画自由共游', run: node('tests/integration/twin-activation-browser.cjs'), needs: ['chromium'], timeout: 650 },
 ];
 
 // Not covered by this runner at all — always listed in the report so nobody reads a green run as more than it is.
