@@ -51,7 +51,7 @@ export function attachWorld(ctx) {
     const p = dip.map((v, i) => v + (end[i] - v) * t);
     rc.set(new THREE.Vector3(p[0], p[1] + 2.5, p[2]), new THREE.Vector3(0, -1, 0));
     rc.far = 3.4;
-    const hit = world.bark ? rc.intersectObject(world.bark, false)[0] : null;
+    const hit = world.bark ? rc.intersectObject(world.bark, true)[0] : null;
     return [p[0], hit ? hit.point.y + 0.02 : p[1] + 0.24, p[2]];
   };
   const limb = { a: onBark(0.12), b: onBark(0.62) };

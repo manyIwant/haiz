@@ -263,6 +263,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   const gltf = new GLTFLoader();
   gltf.setMeshoptDecoder(MeshoptDecoder);
   const bin = (name) => fetch(new URL(name, base)).then((r) => { if (!r.ok) throw new Error(name); return r.arrayBuffer(); }).then(tick);
+  const atelierPromise=import('../map/atelier.js').then(m=>m.loadAtelierTree()).catch(()=>null);
   const [treeG, islandG, rosBuf, meta, atlas, leafN, barkColor, barkNormal] = await Promise.all([
     gltf.loadAsync(new URL('tree.glb', base).href).then(tick),
     gltf.loadAsync(new URL('island.glb', base).href).then(tick),
@@ -272,7 +273,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     tex('bark-color.jpg', true), tex('bark-normal.jpg', false)
   ]);
   for (const t of [barkColor, barkNormal]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const atelier = await atelierPromise;
   const WATER = meta.water;
+  if(atelier){meta.anchors={...atelier.anchors};meta.atelierPath=atelier.path;meta.counts={...meta.counts,rosettes:atelier.rosettes.length/16};}
 
   // ---------------------------------------------------------------- light
   const sky = createSky();
@@ -308,6 +311,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
   bark.customDepthMaterial = makeBarkMaterial({}, true);
   bark.castShadow = bark.receiveShadow = true;
   bark.frustumCulled = false;
+  if(atelier)bark=atelier.root;
   scene.add(bark);
 
   let island = null;
@@ -322,6 +326,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     const c = new THREE.Vector3(...pl.centre).addScaledVector(n, pl.size[1] / 2);
     inscr = { centre: c.toArray(), normal: n.toArray(), tangent: tg.toArray(), size: [1.7, 0.3] };
   }
+  if(atelier){const {islandWithoutOldInscription}=await import('../map/atelier.js');island.geometry=islandWithoutOldInscription(island.geometry);}
   island.material = makeIslandMaterial(inscr);
   island.castShadow = island.receiveShadow = true;
   scene.add(island);
@@ -360,7 +365,7 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
     return ix < 0 || iz < 0 || ix >= HF || iz >= HF ? 1 : rockF[iz * HF + ix];
   };
 
-  const rosettes = new Float32Array(rosBuf);
+  const rosettes = atelier?.rosettes || new Float32Array(rosBuf);
   const stride = meta.rosetteStride;
   const canopy = createCanopy(rosettes, stride, atlas, leafN, tier.density, tier.geo);
   scene.add(canopy.mesh);
@@ -375,9 +380,9 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
       if (spots.some((p) => Math.hypot(p[0] - x, p[2] - z) < 0.9)) continue;
       spots.push([x, heightAt(x, z) - 0.05, z, 0.3 + r() * 0.45]);
     }
-    if (spots.length) scene.add(createShrubs(spots, atlas, leafN));
+    if (!atelier && spots.length) scene.add(createShrubs(spots, atlas, leafN));
   }
-  scene.add(grass);
+  if(!atelier)scene.add(grass);
 
   const distance = createDistance(WATER);
   scene.add(distance);
@@ -511,7 +516,8 @@ export async function buildScene(canvas, tierName, onProgress = () => {}) {
 
   return {
     renderer, scene, camera, sun, canopy, bark, island, water, grass, litter, meta, rosettes, stride,
-    heightAt, inIsland, setStage, resize, render, tier, composer,
+    heightAt, inIsland, setStage, resize, render, tier, composer, atelierTree: atelier,
+    setAtelierGround(on){if(atelier)island.visible=!on;},
     /** diagnostics for bench/: is the environment target reused, how often baked and allocated */
     get envStats() { return { ...envReuse, target: envRT }; }
   };
