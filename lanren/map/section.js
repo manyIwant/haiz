@@ -618,29 +618,54 @@ export function createSection(world, geo, campus, layer) {
   prepareV3Material(v3DepthMat, U);
   let extraDepth = null;
   function installV3(loaded) {
-    v3 = loaded;
-    for (const e of v3.entries) {
+    // Stage all materials and shadow copies before making the upgrade live.
+    // A failed GLB/material must not leave a half-installed v3 that breaks tick().
+    const pendingDepth = new THREE.Group();
+    let pendingExtra = null;
+    for (const e of loaded.entries) {
       e.flag = { value: flags[e.building.index] };
       const materials = new Map();
       e.root.traverse(object => {
         if (!object.isMesh) return;
-        const original = object.material;
-        if (!materials.has(original)) {
-          const material = original.clone();
-          prepareV3Material(material, U, e.flag);
-          materials.set(original, material);
-        }
-        object.material = materials.get(original);
+        const convert = original => {
+          if (!original) return original;
+          if (!materials.has(original)) {
+            const material = original.clone();
+            prepareV3Material(material, U, e.flag);
+            materials.set(original, material);
+          }
+          return materials.get(original);
+        };
+        object.material = Array.isArray(object.material) ? object.material.map(convert) : convert(object.material);
       });
       e.base = e.root.position.y;
-      e.building.top = Math.max(e.building.top, e.top);
+      // Commit the updated height only when the entire install succeeds.
       // Same geometry in the existing cached campus shadow pass.
       e.depth = e.root.clone(true);
       e.depth.traverse(o => { if (o.isMesh) o.material = v3DepthMat; });
-      v3Depth.add(e.depth);
+      pendingDepth.add(e.depth);
     }
-    if(v3.extra){const flag={value:0},mats=new Map();v3.extra.traverse(o=>{if(!o.isMesh)return;const list=[].concat(o.material);const next=list.map(m=>{if(!mats.has(m)){const n=m.clone();prepareV3Material(n,U,flag);mats.set(m,n);}return mats.get(m);});o.material=Array.isArray(o.material)?next:next[0];});extraDepth=v3.extra.clone(true);extraDepth.traverse(o=>{if(o.isMesh)o.material=v3DepthMat;});v3Depth.add(extraDepth);v3.extra.visible=extraDepth.visible=false;}
-    group.add(v3.scene);
+    if (loaded.extra) {
+      const flag = {value:0}, mats = new Map();
+      loaded.extra.traverse(o => {
+        if (!o.isMesh) return;
+        const convert = m => {
+          if (!m) return m;
+          if (!mats.has(m)) { const n=m.clone(); prepareV3Material(n,U,flag); mats.set(m,n); }
+          return mats.get(m);
+        };
+        o.material = Array.isArray(o.material) ? o.material.map(convert) : convert(o.material);
+      });
+      pendingExtra = loaded.extra.clone(true);
+      pendingExtra.traverse(o => { if (o.isMesh) o.material=v3DepthMat; });
+      pendingDepth.add(pendingExtra);
+      loaded.extra.visible = pendingExtra.visible = false;
+    }
+    for (const e of loaded.entries) e.building.top = Math.max(e.building.top,e.top);
+    v3Depth.add(pendingDepth);
+    group.add(loaded.scene);
+    extraDepth = pendingExtra;
+    v3 = loaded;
     shadowKey = '';
     return true;
   }
