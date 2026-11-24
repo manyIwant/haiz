@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>HAIZ Campus Toybox · 六款原创角色艺术验收台</title>
+  <style>
+    :root { --bg: #EAE3D5; --panel: #F7F3EA; --border: rgba(68, 52, 36, 0.14); --text: #241F1B; --muted: #6B6156; --accent: #2F4A3C; --accent-fg: #F7F2E8; --chip: #E1D8C6; }
+    [data-studio-theme="obsidian"] { --bg: #101218; --panel: #191C24; --border: rgba(255, 255, 255, 0.10); --text: #F2EFE9; --muted: #A29F98; --accent: #D9644A; --accent-fg: #FFFBF6; --chip: #242834; }
+    [data-studio-theme="ocean"] { --bg: #DAE8F1; --panel: #F3F8FC; --border: rgba(20, 56, 82, 0.14); --text: #152B3D; --muted: #4E6C84; --accent: #1D445E; --accent-fg: #F4F9FC; --chip: #C9DFEC; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Inter", sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 16px 28px; }
+    .studio-wrap { width: 100%; max-width: 960px; display: grid; grid-template-columns: 1.25fr 0.95fr; gap: 18px; align-items: start; }
+    .header-bar { width: 100%; max-width: 960px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+    .title-group h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .title-group p { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    .pill-group { display: inline-flex; gap: 3px; padding: 3px; border-radius: 99px; background: var(--chip); }
+    .pill-btn { border: none; background: transparent; color: var(--muted); font-size: 11.5px; font-weight: 650; padding: 5px 11px; border-radius: 99px; cursor: pointer; }
+    .pill-btn.is-active { background: var(--panel); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+    .back-link { font-size: 12px; font-weight: 650; color: var(--text); text-decoration: none; padding: 7px 13px; border-radius: 99px; border: 1px solid var(--border); background: var(--panel); }
+    .viewport-card { position: relative; background: var(--panel); border: 1.5px solid var(--border); border-radius: 24px; overflow: hidden; aspect-ratio: 4 / 3.4; box-shadow: 0 22px 54px rgba(18, 15, 12, 0.12); }
+    #studioCanvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+    #studioCanvas:active { cursor: grabbing; }
+    .vp-hint { position: absolute; left: 14px; bottom: 12px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: rgba(24, 21, 18, 0.62); color: #F6F2E9; pointer-events: none; }
+    .info-card { background: var(--panel); border: 1.5px solid var(--border); border-radius: 24px; padding: 20px; box-shadow: 0 18px 44px rgba(18, 15, 12, 0.08); }
+    .char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+    .char-btn { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 13px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-family: inherit; font-size: 13px; font-weight: 650; cursor: pointer; text-align: left; }
+    .char-btn.is-active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35); }
+    .meta-title { font-size: 19px; font-weight: 700; margin: 0 0 4px; }
+    .meta-role { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 10px; }
+    .meta-story { font-size: 13px; line-height: 1.6; color: var(--text); opacity: 0.88; margin: 0 0 14px; }
+    .spec-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .spec-tag { font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 99px; background: var(--chip); color: var(--text); }
+    .anim-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+    .anim-btn { border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 10px; padding: 7px 4px; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+    .anim-btn.is-active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .export-btn { width: 100%; height: 42px; border: none; border-radius: 12px; background: var(--accent); color: var(--accent-fg); font-size: 13.5px; font-weight: 650; cursor: pointer; }
+    @media (max-width: 780px) { .studio-wrap { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-studio-theme="porcelain">
+  <header class="header-bar">
+    <div class="title-group">
+      <h1>HAIZ Campus Toybox · 角色艺术验收台</h1>
+      <p>独立复用角色资产：360° 旋转缩放、生命微动作播放、三主题布光与 glTF 2.0 (.glb) 导出</p>
+    </div>
+    <div class="toolbar">
+      <div class="pill-group">
+        <button type="button" class="pill-btn is-active" data-theme="porcelain">素瓷</button>
+        <button type="button" class="pill-btn" data-theme="obsidian">黑曜</button>
+        <button type="button" class="pill-btn" data-theme="ocean">南海</button>
+      </div>
+      <a class="back-link" href="./index.html">返回抓娃娃机</a>
+    </div>
+  </header>
+
+  <main class="studio-wrap">
+    <section class="viewport-card">
+      <canvas id="studioCanvas"></canvas>
+      <span class="vp-hint">拖拽旋转 360° · 滚轮缩放</span>
+    </section>
+
+    <aside class="info-card">
+      <div class="char-grid" id="charGrid"></div>
+      <h2 class="meta-title" id="metaName">榄仁小芽</h2>
+      <p class="meta-role" id="metaRole"></p>
+      <p class="meta-story" id="metaStory"></p>
+      <div class="spec-row" id="metaSpecs"></div>
+      <div class="anim-row" id="animRow">
+        <button type="button" class="anim-btn is-active" data-anim="idle">自然待机</button>
+        <button type="button" class="anim-btn" data-anim="grabbed">被抓起</button>
+        <button type="button" class="anim-btn" data-anim="bounce">软弹回弹</button>
+        <button type="button" class="anim-btn" data-anim="celebrate">欢迎庆祝</button>
+      </div>
+      <button type="button" class="export-btn" id="exportGlbBtn">导出标准 .GLB 三维模型</button>
+    </aside>
+  </main>
+
+  <script type="module">
+    import { CHARACTER_REGISTRY, CharacterStudioScene } from './src/index.js';
+
+    const params = new URLSearchParams(location.search);
+    const initialChar = params.get('char') || 'lanren-spirit';
+    const initialTheme = params.get('theme') || 'porcelain';
+    const preserveBuf = params.get('qa') === '1';
+
+    document.body.dataset.studioTheme = initialTheme;
+    const canvas = document.getElementById('studioCanvas');
+    const studio = new CharacterStudioScene(canvas, { characterId: initialChar, theme: initialTheme, autoRotate: !preserveBuf, preserveDrawingBuffer: preserveBuf });
+    studio.start();
+    window.__HAIZ_STUDIO__ = studio;
+
+    const charGrid = document.getElementById('charGrid');
+    const metaName = document.getElementById('metaName');
+    const metaRole = document.getElementById('metaRole');
+    const metaStory = document.getElementById('metaStory');
+    const metaSpecs = document.getElementById('metaSpecs');
+
+    function renderMeta(meta) {
+      metaName.textContent = `${meta.nameZh} · ${meta.nameEn}`;
+      metaRole.textContent = `${meta.roleZh} · 性格：${meta.personalityZh}`;
+      metaStory.textContent = meta.storyZh;
+      metaSpecs.innerHTML = `<span class="spec-tag">ID: ${meta.id}</span><span class="spec-tag">原点: 脚底中心 (0,0,0)</span><span class="spec-tag">朝向: +Y 上 / +Z 前</span><span class="spec-tag">标准高: ${meta.scaleSpec.height}m</span>`;
+    }
+
+    CHARACTER_REGISTRY.forEach((c) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'char-btn' + (c.id === initialChar ? ' is-active' : '');
+      btn.dataset.cid = c.id;
+      btn.innerHTML = `<span class="dot" style="background:${c.accentHex}"></span><span>${c.nameZh}</span>`;
+      btn.addEventListener('click', () => {
+        const meta = studio.setCharacter(c.id);
+        renderMeta(meta);
+        charGrid.querySelectorAll('.char-btn').forEach((b) => b.classList.toggle('is-active', b === btn));
+      });
+      charGrid.appendChild(btn);
+    });
+
+    renderMeta(studio.currentCharacter.meta);
+
+    document.querySelectorAll('[data-anim]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        studio.setAnimationMode(btn.dataset.anim);
+        document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('is-active', b === btn));
+      });
+    });
+
+    document.querySelectorAll('[data-theme]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.dataset.theme;
+        document.body.dataset.studioTheme = t;
+        studio.applyTheme(t);
+        document.querySelectorAll('[data-theme]').forEach((b) => b.classList.toggle('is-active', b === btn));
+      });
+    });
+
+    document.getElementById('exportGlbBtn').addEventListener('click', () => {
+      const glb = studio.exportCurrentGLB();
+      if (!glb) return;
+      const blob = new Blob([glb], { type: 'model/gltf-binary' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `haiz-toybox-${studio.currentCharacter.id}.glb`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    });
+
+    window.addEventListener('resize', () => studio.resize());
+  </script>
+</body>
+</html>

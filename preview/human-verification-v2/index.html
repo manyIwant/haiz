@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>HAIZ · Toybox V2 人类验证交互系统</title>
+  <style>
+    :root {
+      --bg: #EBE4D6;
+      --card: #F8F4EB;
+      --border: rgba(68, 52, 36, 0.14);
+      --text: #231E1A;
+      --muted: #6E6459;
+      --btn-bg: #2F4A3C;
+      --btn-text: #F7F2E8;
+      --pill-bg: #E0D7C5;
+    }
+    [data-host-theme="obsidian"] {
+      --bg: #0D0F14;
+      --card: #171A21;
+      --border: rgba(255, 255, 255, 0.10);
+      --text: #F2EFE9;
+      --muted: #9E9B95;
+      --btn-bg: #D9644A;
+      --btn-text: #FFFBF6;
+      --pill-bg: #222631;
+    }
+    [data-host-theme="ocean"] {
+      --bg: #DCE9F1;
+      --card: #F4F9FC;
+      --border: rgba(20, 56, 82, 0.14);
+      --text: #152B3D;
+      --muted: #4E6C84;
+      --btn-bg: #1D445E;
+      --btn-text: #F4F9FC;
+      --pill-bg: #CBE0EC;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Inter", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 14px;
+      transition: background 0.28s ease, color 0.28s ease;
+    }
+    .host-shell {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 26px 24px;
+      box-shadow: 0 22px 58px rgba(18, 15, 12, 0.10);
+    }
+    .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 8px; }
+    .brand { font-size: 12.5px; font-weight: 750; letter-spacing: 0.14em; }
+    .pills { display: inline-flex; gap: 3px; background: var(--pill-bg); padding: 3px; border-radius: 99px; }
+    .pill { border: none; background: transparent; color: var(--muted); font-size: 11px; font-weight: 650; padding: 5px 10px; border-radius: 99px; cursor: pointer; }
+    .pill.is-active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+    h1 { margin: 0 0 6px; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+    .desc { margin: 0 0 20px; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-primary, .btn-secondary { width: 100%; height: 46px; border-radius: 14px; font-size: 14px; font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: opacity 0.15s ease, transform 0.1s ease; }
+    .btn-primary { border: none; background: var(--btn-bg); color: var(--btn-text); }
+    .btn-secondary { border: 1px solid var(--border); background: transparent; color: var(--text); }
+    .btn-primary:hover, .btn-secondary:hover { opacity: 0.90; }
+    .btn-primary:active, .btn-secondary:active { transform: scale(0.985); }
+    .status-log { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--pill-bg); font-size: 12px; color: var(--muted); line-height: 1.55; word-break: break-all; }
+    .status-log strong { display: block; color: var(--text); margin-bottom: 2px; }
+  </style>
+</head>
+<body data-host-theme="porcelain">
+  <main class="host-shell">
+    <div class="top-row">
+      <span class="brand">HAIZ · TOYBOX V2</span>
+      <div class="pills" role="group" aria-label="主题切换">
+        <button type="button" class="pill is-active" data-theme="porcelain">奶油素瓷</button>
+        <button type="button" class="pill" data-theme="obsidian">黑曜黄铜</button>
+        <button type="button" class="pill" data-theme="ocean">南海松蓝</button>
+      </div>
+    </div>
+    <h1>微缩抓娃娃机真人验证</h1>
+    <p class="desc">零外部 CDN 依赖的本地化 WebGL2 绒毛渲染引擎。本页默认使用隔离的 <code>MockToyboxAdapter</code> 进行独立艺术验收。</p>
+    <div class="actions">
+      <button id="launchBtn" class="btn-primary" type="button">唤醒 HAIZ 抓娃娃机</button>
+      <a class="btn-secondary" href="./studio.html">打开六款角色艺术验收台</a>
+    </div>
+    <div id="statusLog" class="status-log">
+      <strong>等待验证</strong>
+      抓起指定玩偶并左移投放至奖品出口，看看谁会探出头来欢迎你。
+    </div>
+  </main>
+
+  <script type="module">
+    import { createHumanVerification, MockToyboxAdapter } from './src/index.js';
+
+    const params = new URLSearchParams(location.search);
+    const initialTheme = params.get('theme') || 'porcelain';
+    const forcedTarget = params.get('target') || null;
+    const preserveBuf = params.get('qa') === '1';
+
+    document.body.dataset.hostTheme = initialTheme;
+    document.querySelectorAll('[data-theme]').forEach((b) =>
+      b.classList.toggle('is-active', b.dataset.theme === initialTheme)
+    );
+
+    const adapter = new MockToyboxAdapter({ latencyMs: preserveBuf ? 40 : 420, forcedTargetId: forcedTarget });
+    const statusLog = document.getElementById('statusLog');
+    const launchBtn = document.getElementById('launchBtn');
+
+    const verification = createHumanVerification({
+      container: document.body,
+      theme: initialTheme,
+      challengeProvider: adapter,
+      preserveDrawingBuffer: preserveBuf,
+      onSuccess(result) {
+        statusLog.innerHTML = `<strong>验证通过 · ${result.message}</strong>Mock Token: <code>${result.verificationToken}</code>`;
+        launchBtn.textContent = '再玩一次';
+      },
+      onFailure(err) {
+        statusLog.innerHTML = `<strong>服务端未通过</strong>${err.message || err.code}`;
+      },
+      onCancel() {
+        statusLog.innerHTML = `<strong>已关闭验证</strong>可随时点击上方按钮重新唤醒抓娃娃机。`;
+      }
+    });
+
+    window.__HAIZ_V2__ = verification;
+    launchBtn.addEventListener('click', () => verification.open());
+    document.querySelectorAll('[data-theme]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.dataset.theme;
+        document.body.dataset.hostTheme = t;
+        document.querySelectorAll('[data-theme]').forEach((b) => b.classList.toggle('is-active', b === btn));
+        verification.setTheme(t);
+      });
+    });
+
+    setTimeout(() => verification.open(), preserveBuf ? 40 : 180);
+  </script>
+</body>
+</html>
