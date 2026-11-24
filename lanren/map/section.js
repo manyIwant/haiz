@@ -249,7 +249,7 @@ function prepareV3Material(material, U, flag = null) {
     if (flag) { shader.uniforms.uV3Flag = flag; Object.assign(shader.uniforms, AIR); }
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vCampusWorld;')
-      .replace('#include <project_vertex>', '#include <project_vertex>\nvCampusWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvec4 hzWorldPos = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\nhzWorldPos = instanceMatrix * hzWorldPos;\n#endif\nvCampusWorld = (modelMatrix * hzWorldPos).xyz;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
 varying vec3 vCampusWorld;
@@ -616,6 +616,7 @@ export function createSection(world, geo, campus, layer) {
   shadowScene.add(v3Depth);
   const v3DepthMat = new THREE.MeshDepthMaterial();
   prepareV3Material(v3DepthMat, U);
+  let extraDepth = null;
   function installV3(loaded) {
     v3 = loaded;
     for (const e of v3.entries) {
@@ -638,6 +639,7 @@ export function createSection(world, geo, campus, layer) {
       e.depth.traverse(o => { if (o.isMesh) o.material = v3DepthMat; });
       v3Depth.add(e.depth);
     }
+    if(v3.extra){const flag={value:0},mats=new Map();v3.extra.traverse(o=>{if(!o.isMesh)return;const list=[].concat(o.material);const next=list.map(m=>{if(!mats.has(m)){const n=m.clone();prepareV3Material(n,U,flag);mats.set(m,n);}return mats.get(m);});o.material=Array.isArray(o.material)?next:next[0];});extraDepth=v3.extra.clone(true);extraDepth.traverse(o=>{if(o.isMesh)o.material=v3DepthMat;});v3Depth.add(extraDepth);v3.extra.visible=extraDepth.visible=false;}
     group.add(v3.scene);
     shadowKey = '';
     return true;
@@ -650,7 +652,7 @@ export function createSection(world, geo, campus, layer) {
     }
     mesh.visible = depthMesh.visible = !!cutGroup;
     for (const { building: b, root, base, depth } of v3.entries) {
-      root.visible = depth.visible = b.group !== cutGroup && standing(b) > GROUND_Y + 0.01;
+      root.visible = depth.visible = !root.userData.haizTwinSuppressed && b.group !== cutGroup && !(root.userData.haizTwinAliases || []).includes(cutGroup) && standing(b) > GROUND_Y + 0.01;
       root.position.y = depth.position.y = base + lifts[b.index];
     }
   }
@@ -664,7 +666,7 @@ export function createSection(world, geo, campus, layer) {
     get blender() { return v3?.scene || null; },
     get walkHulls() { return v3?.hulls || null; },
     walkHeight(x, z) {
-      let y = GROUND_Y + 0.02;
+      let y = v3?.terrainAt?.(x,z) ?? GROUND_Y + 0.02;
       if (!v3) return y;
       for (const deck of v3.decks) {
         const dx = x - deck.cx, dz = z - deck.cz;
@@ -720,6 +722,9 @@ export function createSection(world, geo, campus, layer) {
       mesh.material = sweepR > 0.5 ? litMat : inkMat;
       updateBuildings();
       ground.visible = sweepR > 1;
+      if(v3?.extra)v3.extra.visible=sweepR>1;
+      if(extraDepth)extraDepth.visible=sweepR>1;
+      world.setAtelierGround?.(sweepR>1&&!!v3?.twin.applied.some(x=>x.part==='forecourt'));
       for (const t of trees) t.mesh.visible = sweepR > 1;
       U.uCSOn.value = Math.min(1, sweepR / 40);
       if (!group.visible || sweepR <= 1) return;

@@ -1,81 +1,44 @@
-// HAIZ · Phase-2 twin bridge for the existing six-act map and 入画 worlds.
-//
-// The legacy 3D world is centred on the six-act 榄仁树, while the twin exports
-// absolute metres from the 一号教学楼 portal. Reuse the twin as LOCAL geometry
-// of its existing V3 landmark root; the root continues to own visibility,
-// height cuts, camera relations, shading, collisions and the walking frame.
-// This avoids dropping a second, displaced campus on top of the first one.
-//
-// The primary tree and Taihu rock stay with V4 until their geometry can be
-// replaced together with the growth/wind, foliage, stone and film shaders.
-// Do not present this adapter as surveyed coordinates or a full campus swap.
+// Replace old campus meshes with a single rigidly registered atelier edition.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-const ASSETS = new URL('../../twin/assets/phase1/', import.meta.url);
-const DECODER = new URL('../vendor/three/addons/libs/draco/', import.meta.url).href;
-const PARTS = Object.freeze({ yihao: 'yihao', beimen: 'gate' });
-let dracoLoader = null;
-const assets = new Map();
-
-async function load(part) {
-  if (!assets.has(part)) assets.set(part, (async () => {
-    // Load Draco locally so partial CDN failures cannot silently remove the
-    // Phase-2 models; other errors still fall back to V3. GLBs require Draco.
-    const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
-    dracoLoader ??= new DRACOLoader().setDecoderPath(DECODER);
-    const loader = new GLTFLoader().setDRACOLoader(dracoLoader);
-    return (await loader.loadAsync(new URL(part + '.glb', ASSETS).href)).scene;
-  })());
-  let timer;
-  try {
-    return await Promise.race([
-      assets.get(part),
-      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Twin load deadline for ' + part)), 20000); })
-    ]);
-  } finally { clearTimeout(timer); }
+import { atelierEnabled,loadAtelierPart,placeAtelierPart,trimForecourt,terrainSampler } from './atelier.js';
+const BUILDINGS=[
+ {part:'yihao',id:'yihao'},{part:'erhao',id:'erhao',aliases:['corr_w12','corr_e12']},
+ {part:'science',id:'kexue'},{part:'south_classrooms',id:'sanhao',aliases:['sihao','corr_34']},
+ {part:'arts',id:'yishu'},{part:'gate',id:'beimen'}
+];
+const EXTRAS=['forecourt','landmark','yanchi'];
+function install(entry,model,frame,aliases){
+  const root=entry.root;root.updateWorldMatrix(true,false);
+  const placed=placeAtelierPart(model,frame),matrix=root.matrixWorld.clone().invert().multiply(placed.matrixWorld);
+  const box=new THREE.Box3().setFromObject(model);if(box.isEmpty())throw Error('Empty master');
+  placed.matrix.copy(matrix);placed.matrixAutoUpdate=false;
+  root.clear();root.add(placed);root.userData.haizTwinPart=model.userData.haizAtelierPart;root.userData.haizTwinAliases=aliases;
+  root.updateWorldMatrix(true,true);
+  return {part:model.userData.haizAtelierPart,source:model.userData.haizAtelierPart==='gate'?'phase2':'atelier'};
 }
-
-/** Replaces V3 geometry, never its positioned anchor, collider or state. */
-function replaceInside(root, source, part) {
-  const model = source.clone(true);
-  model.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(model);
-  if (box.isEmpty()) throw new Error('Twin ' + part + ' contains no geometry');
-  const centre = box.getCenter(new THREE.Vector3());
-  // The V3 root is already positioned and yawed by campus-v3.js. Match the
-  // twin landmark's *geometric centre* to that root and set its road datum at
-  // the same site ground. The old KML and photo-derived twin frames differ;
-  // a single world-space matrix cannot make all their anchors agree.
-  model.position.set(-centre.x, -box.min.y, -centre.z);
-  model.userData.haizTwinPart = part;
-  model.userData.haizTwinPlacement = 'fitted-to-existing-campus-root';
-  model.name = 'TWIN_PHASE2_' + part;
-  for (const child of [...root.children]) root.remove(child);
-  root.add(model);
-  root.userData.haizTwinPart = part;
-  return { part, originalCenter: [centre.x, centre.z], height: box.max.y - box.min.y };
-}
-
-/** Integrate only confirmed matching landmarks; partial and network-safe. */
-export async function upgradeCampusLandmarks(entries) {
-  if (new URLSearchParams(location.search).get('twin') === 'off') return { applied: [], skipped: ['disabled'] };
-  const wanted = entries.filter((e) => PARTS[e.building.id]);
-  const result = { applied: [], skipped: [] };
-  const loaded = await Promise.all(wanted.map(async (e) => {
-    const part = PARTS[e.building.id];
-    try {
-      const model = await load(part);
-      return { e, part, model };
-    } catch (err) {
-      console.warn('HAIZ: keeping V3 geometry for ' + part, err);
-      result.skipped.push(part);
-      return null;
-    }
-  }));
-  for (const p of loaded.filter(Boolean)) {
-    try { result.applied.push(replaceInside(p.e.root, p.model, p.part)); }
-    catch (err) { console.warn('HAIZ: twin geometry rejected, keeping V3', p.part, err); result.skipped.push(p.part); }
-  }
-  return result;
+export async function upgradeCampusLandmarks(entries,geo,scene,hulls){
+  const extra=new THREE.Group();extra.name='ATELIER_precinct';scene.add(extra);
+  const status={edition:'atelier',applied:[],skipped:[],suppressed:[]};
+  if(!atelierEnabled()){status.skipped.push('disabled');return {status,extra,terrainAt:()=>geo.frame.ground+.02};}
+  const byId=new Map(entries.map(e=>[e.building.id,e]));
+  const jobs=[...BUILDINGS.filter(b=>byId.has(b.id)),...EXTRAS.map(part=>({part}))];
+  const work=async job=>{
+    try{
+      const model=await loadAtelierPart(job.part);
+      if(job.id){
+        status.applied.push(install(byId.get(job.id),model,geo.frame,job.aliases||[]));
+        for(const id of job.aliases||[]){const e=byId.get(id);if(!e)continue;e.root.clear();e.root.userData.haizTwinSuppressed=true;e.root.visible=false;status.suppressed.push(id);}
+      }else{
+        if(job.part==='forecourt')trimForecourt(model);
+        const placed=placeAtelierPart(model,geo.frame);extra.add(placed);extra.updateMatrixWorld(true);
+        status.applied.push({part:job.part,source:'atelier'});
+        if(job.part==='landmark'){const box=new THREE.Box3().setFromObject(placed),p=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());hulls.push({id:'atelier-landmark',cx:p.x,cz:p.z,hw:s.x/2,hd:s.z/2,rot:0,tall:false});}
+      }
+    }catch(e){console.warn('HAIZ kept legacy where available',job.part,e);status.skipped.push(job.part);}
+  };
+  let next=0;const n=matchMedia('(pointer: coarse) and (max-width: 760px)').matches?2:3;
+  await Promise.all(Array.from({length:n},async()=>{while(next<jobs.length)await work(jobs[next++]);}));
+  status.applied.sort((a,b)=>a.part.localeCompare(b.part));status.skipped.sort();
+  const forecourt=extra.children.find(o=>o.userData.haizAtelierPart==='forecourt');
+  return {status,extra,terrainAt:forecourt?terrainSampler(forecourt,geo.frame.ground):()=>geo.frame.ground+.02};
 }
