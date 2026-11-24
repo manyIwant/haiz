@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>HAIZ · 人类验证交互系统</title>
+  <script src="./vendor/three.min.js"></script>
+  <style>
+    :root {
+      --page-bg: #F3F2EE;
+      --surface: #FFFFFF;
+      --border: rgba(20, 24, 31, 0.09);
+      --text: #1A1D23;
+      --muted: #676F7B;
+      --accent: #1A1D23;
+      --accent-text: #FFFFFF;
+      --badge-bg: #ECEBE6;
+    }
+    [data-host-theme="obsidian"] {
+      --page-bg: #0E1014;
+      --surface: #171A21;
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #F2F3F5;
+      --muted: #98A0AE;
+      --accent: #F2F3F5;
+      --accent-text: #111318;
+      --badge-bg: #232732;
+    }
+    [data-host-theme="ocean"] {
+      --page-bg: #E7F0F6;
+      --surface: #F8FBFD;
+      --border: rgba(19, 40, 59, 0.11);
+      --text: #13283B;
+      --muted: #526D85;
+      --accent: #1B4B72;
+      --accent-text: #FFFFFF;
+      --badge-bg: #DCE9F2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Inter", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      transition: background 0.28s ease, color 0.28s ease;
+    }
+    .host-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px;
+      box-shadow: 0 20px 56px rgba(15, 23, 36, 0.08);
+    }
+    .host-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .host-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+    .theme-pills {
+      display: inline-flex;
+      gap: 4px;
+      background: var(--badge-bg);
+      padding: 3px;
+      border-radius: 99px;
+    }
+    .theme-pill {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 99px;
+      cursor: pointer;
+    }
+    .theme-pill.is-active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 22px;
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field-input {
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--page-bg);
+      color: var(--text);
+      font-size: 14px;
+      padding: 0 14px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .primary-btn {
+      width: 100%;
+      height: 46px;
+      border: none;
+      border-radius: 13px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.12s ease;
+    }
+    .primary-btn:hover { opacity: 0.92; }
+    .primary-btn:active { transform: scale(0.985); }
+    .status-box {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--badge-bg);
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.55;
+      word-break: break-all;
+    }
+    .status-box strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body data-host-theme="porcelain">
+  <main class="host-card">
+    <div class="host-head">
+      <span class="host-logo">HAIZ · 校园通行</span>
+      <div class="theme-pills" role="group" aria-label="切换主题">
+        <button type="button" class="theme-pill is-active" data-theme-btn="porcelain">Porcelain</button>
+        <button type="button" class="theme-pill" data-theme-btn="obsidian">Obsidian</button>
+        <button type="button" class="theme-pill" data-theme-btn="ocean">Ocean</button>
+      </div>
+    </div>
+
+    <h1>海南中学 · 验证预览</h1>
+    <p class="sub">独立艺术验收演示，无需真实账号，不会登录。本演示使用 <code>MockChallengeAdapter</code> 模拟服务端签发凭证。</p>
+
+    <label class="field-label" for="haizAccount">校园邮箱或学号</label>
+    <input id="haizAccount" class="field-input" type="text" value="student@haiz.space" readonly autocomplete="off" />
+
+    <button id="openVerifyBtn" class="primary-btn" type="button">触发真人验证</button>
+
+    <div id="statusBox" class="status-box">
+      <strong>等待验证</strong>
+      点击上方按钮唤醒抓娃娃机验证组件，或切换上方三套 HAIZ 主题体验实时换肤。
+    </div>
+  </main>
+
+  <script type="module">
+    import { createHumanVerification, MockChallengeAdapter } from './src/index.js';
+
+    const adapter = new MockChallengeAdapter({ latencyMs: 520 });
+    const statusBox = document.getElementById('statusBox');
+    let currentTheme = 'porcelain';
+
+    const verification = createHumanVerification({
+      container: document.body,
+      theme: currentTheme,
+      challengeProvider: adapter,
+      onSuccess(result) {
+        statusBox.innerHTML = `<strong>演示通过 · ${result.message}</strong>Mock Token: <code>${result.verificationToken}</code>`;
+        setTimeout(() => verification.close(), 1100);
+      },
+      onFailure(err) {
+        statusBox.innerHTML = `<strong>验证未通过</strong>${err.message || err.code}`;
+      },
+      onCancel() {
+        statusBox.innerHTML = `<strong>已取消验证</strong>可随时再次点击按钮重新开启挑战。`;
+      }
+    });
+
+    document.getElementById('openVerifyBtn').addEventListener('click', () => {
+      verification.open();
+    });
+
+    document.querySelectorAll('[data-theme-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentTheme = btn.dataset.themeBtn;
+        document.body.dataset.hostTheme = currentTheme;
+        document.querySelectorAll('[data-theme-btn]').forEach((b) =>
+          b.classList.toggle('is-active', b === btn)
+        );
+        verification.setTheme(currentTheme);
+      });
+    });
+
+    // Auto-open on first load so reviewers immediately experience the claw machine
+    setTimeout(() => verification.open(), 220);
+  </script>
+</body>
+</html>

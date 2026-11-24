@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": "HAIZ Human Verification",
+  "plushies": [
+    {
+      "id": "sunshine-duck",
+      "nameZh": "椰阳小黄鸭",
+      "nameEn": "Sunshine Duck",
+      "series": "haiz-classic",
+      "materials": ["buttercup-velvet", "coral-satin-plastic", "woven-straw"],
+      "accentHex": "#F6C63B"
+    },
+    {
+      "id": "lanren-spirit",
+      "nameZh": "榄仁小芽",
+      "nameEn": "Lanren Leaf Spirit",
+      "series": "haiz-campus",
+      "materials": ["cream-velvet", "almond-leaf-fleece", "autumn-ochre-fleece", "acorn-satin"],
+      "accentHex": "#4E8F5B"
+    },
+    {
+      "id": "campus-cat",
+      "nameZh": "校园橘猫",
+      "nameEn": "Campus Ginger Cat",
+      "series": "haiz-campus",
+      "materials": ["ginger-velvet", "cream-velvet", "terracotta-fabric", "brushed-brass"],
+      "accentHex": "#E5974E"
+    },
+    {
+      "id": "schoolbag-bear",
+      "nameZh": "书包小棕熊",
+      "nameEn": "Schoolbag Bear",
+      "series": "haiz-campus",
+      "materials": ["cocoa-velvet", "sky-blue-corduroy", "ochre-satchel-fabric", "brushed-brass"],
+      "accentHex": "#9C6F52"
+    },
+    {
+      "id": "ocean-whale",
+      "nameZh": "潮汐小鲸",
+      "nameEn": "Tide Whale",
+      "series": "hainan-coast",
+      "materials": ["cerulean-velvet", "cream-corduroy", "pearlescent-droplet"],
+      "accentHex": "#639CC2"
+    },
+    {
+      "id": "hainan-fawn",
+      "nameZh": "坡鹿小团",
+      "nameEn": "Hainan Fawn",
+      "series": "hainan-nature",
+      "materials": ["cinnamon-velvet", "cream-dapple-fleece", "li-woven-corduroy-scarf"],
+      "accentHex": "#C58A60"
+    }
+  ]
+}
