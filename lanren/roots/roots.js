@@ -204,11 +204,6 @@ export function attach(ctx) {
   // ---------------------------------------------------------------- the nodes, found on the real bark
   const ray = new THREE.Raycaster();
   const nodes = NODES.map((n) => ({ ...n, at: { ...n.at } }));
-  if(world.meta.atelierPath?.length){
-    const path=world.meta.atelierPath.map(p=>new THREE.Vector3(...p));
-    const lengths=[0];for(let i=1;i<path.length;i++)lengths.push(lengths[i-1]+path[i].distanceTo(path[i-1]));
-    for(let i=0;i<nodes.length;i++){const at=nodes[i].at;if(!at.target)continue;const d=lengths.at(-1)*(.035+.91*i/Math.max(1,nodes.length-1));let j=1;while(j<lengths.length-1&&lengths[j]<d)j++;const target=path[j-1].clone().lerp(path[j],(d-lengths[j-1])/Math.max(.001,lengths[j]-lengths[j-1]));const offset=new THREE.Vector3(...at.eye).sub(new THREE.Vector3(...at.target));if(offset.length()<.9)offset.set(1.4,.5,1);offset.setLength(Math.max(1.3,Math.min(3.8,offset.length())));at.target=target.toArray();at.eye=target.clone().add(offset).toArray();if(at.look)at.look=target.clone().add(new THREE.Vector3(0,.18,0)).toArray();}
-  }
   const found = nodes.map((n) => {
     const at = n.at;
     // keep the eye above the island and the water
@@ -218,7 +213,7 @@ export function attach(ctx) {
     const o = new THREE.Vector3(...at.eye), t = new THREE.Vector3(...at.target);
     ray.set(o, t.clone().sub(o).normalize());
     ray.far = o.distanceTo(t) + 1.6;
-    const hit = ray.intersectObjects([world.bark, world.island].filter(Boolean), true)[0];
+    const hit = ray.intersectObjects([world.bark, world.island].filter(Boolean), false)[0];
     if (hit && hit.point.distanceTo(t) < 1.4) { at.target = hit.point.toArray(); return { point: hit.point.clone(), d: hit.distance }; }
     return { point: t, d: o.distanceTo(t), missed: true };
   });
@@ -240,7 +235,7 @@ export function attach(ctx) {
   };
   const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); blank.needsUpdate = true;
   U.uRPT0.value = U.uRPT1.value = blank;
-  if(world.bark.isMesh)patchReceiver(world.bark.material,U);else{const seen=new Set();world.bark.traverse(o=>{if(!o.isMesh)return;for(const m of [].concat(o.material)){if(!seen.has(m)){seen.add(m);patchReceiver(m,U);}}});}
+  patchReceiver(world.bark.material, U);
   patchReceiver(world.canopy?.mesh?.material, U, true);
   patchReceiver(world.island?.material, U);
   const film = new ShaderPass(FilmShader);

@@ -20,7 +20,9 @@ test('one campus asset loader in map, living world and art lab; one animated tre
  assert.match(read('lanren/map/section.js'),/loadCampusV3/);
  assert.match(read('lanren/ruhua/world.js'),/loadCampusV3/);
  assert.match(read('lanren/map/campus-v3.js'),/upgradeCampusLandmarks\(entries, geo, scene, hulls\)/);
- assert.match(read('lanren/js/scene.js'),/loadAtelierTree/);
+ assert.doesNotMatch(read('lanren/js/scene.js'),/loadAtelierTree|atelierPromise|atelierPath/);
+ assert.doesNotMatch(read('lanren/roots/roots.js'),/atelierPath/);
+ assert.match(read('lanren/js/scene.js'),/new Float32Array\(rosBuf\)/);
  assert.match(read('lanren/ruhua/v4.js'),/loadAtelierTree/);
  assert.match(read('lanren/painted-lab/main.js'),/loadAtelierPart\('terminalia'\)/);
  assert.match(read('lanren/map/atelier.js'),/hideMasterLeaves/);

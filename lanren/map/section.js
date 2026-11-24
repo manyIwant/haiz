@@ -749,7 +749,6 @@ export function createSection(world, geo, campus, layer) {
       ground.visible = sweepR > 1;
       if(v3?.extra)v3.extra.visible=sweepR>1;
       if(extraDepth)extraDepth.visible=sweepR>1;
-      world.setAtelierGround?.(sweepR>1&&!!v3?.twin.applied.some(x=>x.part==='forecourt'));
       for (const t of trees) t.mesh.visible = sweepR > 1;
       U.uCSOn.value = Math.min(1, sweepR / 40);
       if (!group.visible || sweepR <= 1) return;

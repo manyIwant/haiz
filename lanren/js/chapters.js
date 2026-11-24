@@ -14,7 +14,7 @@ export const CHAPTERS = [
     id: 'tree', index: '01', label: '开场 · 初遇', en: ['A Tree', 'Connects Everything'], zh: '一棵树，连接所有可能',
     lede: '海南中学府城校区一号教学楼前，一棵百年榄仁树与太湖石「虎踞龙盘」相互呼应。这是它的数字化身：冬末，去年的红叶还挂在枝头。向下滚动，绕着它走，看它抽枝、发芽、展叶，也走进 HAIZ 的每一个角落。',
     specimen: ['Terminalia catappa L.', '大叶榄仁 · 使君子科', '海南中学府城校区 · 一号教学楼前'],
-    note: '榄仁树和校园地标采用照片辅助重建的统一模型，动态枝叶为艺术派生。不是实地测绘',
+    note: '树为依物种特征创作的概念模型；太湖石依校园实拍重建。都不是测绘',
     ui: { slab: 'none' },
     entries: []
   },
