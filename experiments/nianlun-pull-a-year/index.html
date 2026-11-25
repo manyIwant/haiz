@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>抽出一年 · HAIZ 年轮</title>
+<meta name="description" content="按住一圈年轮把它拉出来：它像手卷一样滚开成那一年的 365 天；再把某一天拉开，就是那天府城校区上空的天。">
+<meta name="theme-color" content="#efe8da">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-level="disc">
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="wood" role="application" aria-label="年轮。方向键选一年，回车把它抽出来；抽出后方向键选一天，回车打开那一天，Esc 退回。"></canvas>
+
+<header id="title">
+  <h1>抽出一年</h1>
+  <p>HAIZ · 年轮　1923 — 今天</p>
+</header>
+<blockquote id="quote">树木是有记忆的，它的故事记录在年轮里。<cite>——《海南日报》2023 年 10 月 30 日</cite></blockquote>
+<p id="hint" aria-hidden="true"></p>
+
+<div id="hud" aria-hidden="true">
+  <p class="y"></p>
+  <p class="gz"></p>
+  <p class="facts"></p>
+  <ul class="events"></ul>
+</div>
+
+<div id="tag" aria-hidden="true"><p><span class="d"></span><span class="w"></span></p><p class="l"></p><p class="e"></p></div>
+
+<div id="slip" role="button" tabindex="0" aria-label="这一年的题签">
+  <p class="y"></p><p class="gz"></p><p class="count"></p>
+  <div class="more-wrap"><div><p class="facts"></p><div class="more"></div></div></div>
+</div>
+<div id="months" aria-hidden="true"></div>
+<p id="rhint" aria-hidden="true"></p>
+<div id="knots"></div>
+
+<section id="day" aria-label="这一天">
+  <button id="close" type="button" aria-label="收起这一天">收起</button>
+  <h2 class="date"></h2>
+  <p class="wd"></p>
+  <p class="desc"></p>
+  <p class="sun"></p>
+  <p class="badges"></p>
+  <p class="howto">左右拖动天空，看太阳走过这一天；在下面的带子上滑动，换一天。</p>
+  <div class="entries"></div>
+</section>
+<p id="clock" aria-hidden="true"></p>
+
+<button id="sound" type="button" aria-label="木头的声音"></button>
+<button id="corner" type="button" aria-label="把这一年放回年轮"><span>放回年轮</span></button>
+
+<details id="about">
+  <summary>这些从哪来</summary>
+  <div>
+    <p><b>天气</b>：ERA5 再分析（Copernicus / ECMWF，经 Open-Meteo，CC BY 4.0），校园所在约 25 km 网格的逐日值，1940 年起。不是校内观测，台风等极端值常被低估。</p>
+    <p><b>年轮</b>：一圈是一年，宽窄随当年雨量；沿着一圈从正上方顺时针是 1 月 1 日到 12 月 31 日。这是数据的画法，不是那棵树真实的年轮。1923—1939 年没有逐日数据，留白。</p>
+    <p><b>日月</b>：按日期与校园经纬度计算（与 HAIZ 年轮同一套公式）。天空颜色是美术表达。</p>
+    <p><b>结与题签</b>：带子上的结是有确切日期的校史与新闻，暗色的一段是只知道月份的事，只知道年份的写在题签上。全部摘自 HAIZ 第二幕「根脉」与新闻档案，各自标明史料等级与来源。</p>
+    <p>HAIZ 是学生创作的非官方数字校园，不代表海南中学。<a href="THIRD-PARTY.md" target="_blank" rel="noopener">第三方授权说明</a></p>
+  </div>
+</details>
+
+<p id="live" class="sr" aria-live="polite"></p>
+<p id="fallback">这个实验需要支持 WebGL 2 的浏览器。</p>
+<script type="module" src="app.js"></script>
+</body>
+</html>
