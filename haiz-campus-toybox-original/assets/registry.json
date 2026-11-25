@@ -1,0 +1,276 @@
+{
+  "spec": {
+    "registryVersion": "1.0.0",
+    "coordinateSystem": "right-handed Y-up, +Z front, origin at centre of resting base (y = 0)",
+    "units": "meters (1 unit = 1 m; tabletop plush scale ~0.14–0.18 m tall)",
+    "formats": [
+      "procedural-js",
+      "glb"
+    ]
+  },
+  "generatedAt": "2026-11-25T13:21:33.655Z",
+  "characters": [
+    {
+      "id": "lanren",
+      "qualifiedId": "haiz.toy.lanren",
+      "version": "1.0.0",
+      "name": "仁仁",
+      "enName": "Lanren",
+      "title": "榄仁树精灵 · HAIZ 吉祥物",
+      "motif": "校园榄仁树 (Terminalia catappa)",
+      "materialSummary": "压制羊毛毡 · 漆木枝干 · 手工锁边缝线 · 琉璃珠眼",
+      "modelPath": "assets/models/lanren.glb",
+      "meta": {
+        "id": "lanren",
+        "height": 0.178,
+        "footprint": 0.06,
+        "grabHeight": 0.112,
+        "eyeHeight": 0.075
+      },
+      "stats": {
+        "meshes": 34,
+        "vertices": 10785,
+        "triangles": 17896,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 1063392,
+      "sha256": "f0114a4531fef61f3b3772dca23a035e879faa7a763d70a42cf13c7c10dee706"
+    },
+    {
+      "id": "wuwu",
+      "qualifiedId": "haiz.toy.wuwu",
+      "version": "1.0.0",
+      "name": "午午",
+      "enName": "Wuwu",
+      "title": "午后暖阳抱枕精",
+      "motif": "海南下午三点的阳光",
+      "materialSummary": "短绒长毛绒 · 金盏花色毛毡光晕 · 编织草帽",
+      "modelPath": "assets/models/wuwu.glb",
+      "meta": {
+        "id": "wuwu",
+        "height": 0.155,
+        "footprint": 0.068,
+        "grabHeight": 0.105,
+        "eyeHeight": 0.068
+      },
+      "stats": {
+        "meshes": 31,
+        "vertices": 10349,
+        "triangles": 16650,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 1191920,
+      "sha256": "cacd649329ca1aacc1ea298d109cb006973a56f06ea8b251df463cf412ecdebf"
+    },
+    {
+      "id": "fantuan",
+      "qualifiedId": "haiz.toy.fantuan",
+      "version": "1.0.0",
+      "name": "饭团",
+      "enName": "Fantuan",
+      "title": "校猫三花小胖",
+      "motif": "校园常驻三花猫",
+      "materialSummary": "奶白/橘/炭黑拼色短绒 · 绯红毛毡项圈 · 磨砂黄铜铃铛",
+      "modelPath": "assets/models/fantuan.glb",
+      "meta": {
+        "id": "fantuan",
+        "height": 0.145,
+        "footprint": 0.068,
+        "grabHeight": 0.098,
+        "eyeHeight": 0.082
+      },
+      "stats": {
+        "meshes": 27,
+        "vertices": 7971,
+        "triangles": 13616,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 1035960,
+      "sha256": "5819490dc4717819fdef98265a8a0f546b2d635bc23681b463aa6721819c7bab"
+    },
+    {
+      "id": "zaozao",
+      "qualifiedId": "haiz.toy.zaozao",
+      "version": "1.0.0",
+      "name": "早早",
+      "enName": "Zaozao",
+      "title": "背大书包的早读小生",
+      "motif": "海中校园学生与帆布书包",
+      "materialSummary": "细织棉帆布制服与书包 · 黄铜圆框眼镜 · 漆木笔记本",
+      "modelPath": "assets/models/zaozao.glb",
+      "meta": {
+        "id": "zaozao",
+        "height": 0.168,
+        "footprint": 0.06,
+        "grabHeight": 0.118,
+        "eyeHeight": 0.11
+      },
+      "stats": {
+        "meshes": 32,
+        "vertices": 6909,
+        "triangles": 11216,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 776204,
+      "sha256": "87c9b2fe422f6f9c211c5b1332856c7dd10b3de2316a46e4345f1a43b934bba1"
+    },
+    {
+      "id": "chaochao",
+      "qualifiedId": "haiz.toy.chaochao",
+      "version": "1.0.0",
+      "name": "潮潮",
+      "enName": "Chaochao",
+      "title": "潮汐海玻璃水母",
+      "motif": "海南海洋、潮汐与海玻璃",
+      "materialSummary": "磨砂海玻璃树脂伞盖 · 柔绒触手裙摆 · 陶瓷小海螺",
+      "modelPath": "assets/models/chaochao.glb",
+      "meta": {
+        "id": "chaochao",
+        "height": 0.165,
+        "footprint": 0.06,
+        "grabHeight": 0.118,
+        "eyeHeight": 0.098
+      },
+      "stats": {
+        "meshes": 21,
+        "vertices": 7196,
+        "triangles": 12464,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 652892,
+      "sha256": "bb722d106e1a9ce5025e13c96fd7d8437f8429f8bb88ee7b245e0c9b9bdf2217"
+    },
+    {
+      "id": "changchang",
+      "qualifiedId": "haiz.toy.changchang",
+      "version": "1.0.0",
+      "name": "长长",
+      "enName": "Changchang",
+      "title": "海南长臂猿小玩偶",
+      "motif": "海南热带雨林旗舰物种 · 海南黑冠长臂猿",
+      "materialSummary": "深炭灰长毛绒 · 奶油毛毡面罩 · 手工珊瑚红扶桑花",
+      "modelPath": "assets/models/changchang.glb",
+      "meta": {
+        "id": "changchang",
+        "height": 0.168,
+        "footprint": 0.064,
+        "grabHeight": 0.118,
+        "eyeHeight": 0.116
+      },
+      "stats": {
+        "meshes": 33,
+        "vertices": 9484,
+        "triangles": 16000,
+        "clips": [
+          "idle",
+          "look",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate",
+          "signature"
+        ]
+      },
+      "fileSizeBytes": 1008968,
+      "sha256": "1d3e8313aad97d8d085a8a45f898f9179ac9fa1c7c2c65451560f69f2027945c"
+    }
+  ],
+  "textures": [
+    {
+      "name": "tex_felt_normal",
+      "path": "assets/textures/tex_felt_normal.png",
+      "width": 256,
+      "height": 256,
+      "fileSizeBytes": 178945
+    },
+    {
+      "name": "tex_plush_normal",
+      "path": "assets/textures/tex_plush_normal.png",
+      "width": 256,
+      "height": 256,
+      "fileSizeBytes": 172628
+    },
+    {
+      "name": "tex_woven_normal",
+      "path": "assets/textures/tex_woven_normal.png",
+      "width": 128,
+      "height": 128,
+      "fileSizeBytes": 51014
+    },
+    {
+      "name": "tex_terrazzo",
+      "path": "assets/textures/tex_terrazzo.png",
+      "width": 512,
+      "height": 512,
+      "fileSizeBytes": 183404
+    },
+    {
+      "name": "tex_stucco",
+      "path": "assets/textures/tex_stucco.png",
+      "width": 256,
+      "height": 256,
+      "fileSizeBytes": 130872
+    },
+    {
+      "name": "tex_wood",
+      "path": "assets/textures/tex_wood.png",
+      "width": 256,
+      "height": 256,
+      "fileSizeBytes": 61765
+    },
+    {
+      "name": "tex_leaf_wallpaper",
+      "path": "assets/textures/tex_leaf_wallpaper.png",
+      "width": 512,
+      "height": 512,
+      "fileSizeBytes": 403507
+    },
+    {
+      "name": "tex_contact_shadow",
+      "path": "assets/textures/tex_contact_shadow.png",
+      "width": 128,
+      "height": 128,
+      "fileSizeBytes": 26379
+    }
+  ]
+}
