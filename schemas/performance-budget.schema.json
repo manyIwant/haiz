@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haiz.space/schemas/performance-budget.schema.json",
+  "title": "HAIZ World Engine Executable Performance & Asset Budgets",
+  "type": "object",
+  "required": ["schema", "runtime", "assets"],
+  "properties": {
+    "schema": { "const": "haiz-performance-budget/1" },
+    "runtime": {
+      "type": "object",
+      "required": ["desktop", "mobile"],
+      "properties": {
+        "desktop": {
+          "type": "object",
+          "required": ["maxDrawCalls", "maxTriangles", "maxGeometries", "maxTextures"],
+          "properties": {
+            "maxDrawCalls": { "type": "integer", "maximum": 500 },
+            "maxTriangles": { "type": "integer", "maximum": 5000000 },
+            "maxGeometries": { "type": "integer", "maximum": 600 },
+            "maxTextures": { "type": "integer", "maximum": 180 }
+          }
+        },
+        "mobile": {
+          "type": "object",
+          "required": ["maxDrawCalls", "maxTriangles", "maxGeometries", "maxTextures"],
+          "properties": {
+            "maxDrawCalls": { "type": "integer", "maximum": 350 },
+            "maxTriangles": { "type": "integer", "maximum": 3200000 },
+            "maxGeometries": { "type": "integer", "maximum": 450 },
+            "maxTextures": { "type": "integer", "maximum": 140 }
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "required": ["characterMaxBytes", "mascotMaxBytes", "runtimeBuildingMaxBytes"],
+      "properties": {
+        "characterMaxBytes": { "type": "integer" },
+        "mascotMaxBytes": { "type": "integer" },
+        "runtimeBuildingMaxBytes": { "type": "integer" }
+      }
+    }
+  }
+}

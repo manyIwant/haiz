@@ -1,0 +1,78 @@
+{
+  "schema": "haiz-character-registry/1",
+  "note": "Unified registry bridging HAIZ living-campus 51-joint characters and Campus Toybox V2 mascot assets. Strictly fictional; zero real student biometrics or personal data.",
+  "characters": [
+    {
+      "id": "student-m",
+      "name": "海中高中男生（基础体）",
+      "category": "human-avatar",
+      "glb": "lanren/assets/life/student-m.glb",
+      "rigType": "makehuman-51",
+      "joints": 51,
+      "heightM": 1.71,
+      "license": "CC0 (MakeHuman hm08 base mesh) + HAIZ PolyForm-NC",
+      "fictionalOnly": true,
+      "privacyNote": "虚构校园人物，不对应任何真实学生"
+    },
+    {
+      "id": "student-f",
+      "name": "海中高中女生（林知夏等）",
+      "category": "npc",
+      "glb": "lanren/assets/life/student-f.glb",
+      "rigType": "makehuman-51",
+      "joints": 51,
+      "heightM": 1.60,
+      "license": "CC0 (MakeHuman hm08 base mesh) + HAIZ PolyForm-NC",
+      "fictionalOnly": true,
+      "privacyNote": "虚构校园人物，不对应任何真实学生"
+    },
+    {
+      "id": "teacher-f",
+      "name": "物理教师（符老师）",
+      "category": "npc",
+      "glb": "lanren/assets/life/teacher-f.glb",
+      "rigType": "makehuman-51",
+      "joints": 51,
+      "heightM": 1.61,
+      "license": "CC0 (MakeHuman hm08 base mesh) + HAIZ PolyForm-NC",
+      "fictionalOnly": true,
+      "privacyNote": "虚构校园教师，不对应任何真实教职工"
+    },
+    {
+      "id": "worker-m",
+      "name": "校园校工（吴伯）",
+      "category": "npc",
+      "glb": "lanren/assets/life/worker-m.glb",
+      "rigType": "makehuman-51",
+      "joints": 51,
+      "heightM": 1.66,
+      "license": "CC0 (MakeHuman hm08 base mesh) + HAIZ PolyForm-NC",
+      "fictionalOnly": true,
+      "privacyNote": "虚构校园职工"
+    },
+    {
+      "id": "lanren-spirit",
+      "name": "榄仁小芽（Toybox V2）",
+      "category": "mascot",
+      "glb": "preview/human-verification-v2/assets/models/lanren-spirit.glb",
+      "rigType": "static-mascot",
+      "joints": 0,
+      "heightM": 0.92,
+      "license": "HAIZ Original (pending formal artwork licensing audit)",
+      "fictionalOnly": true,
+      "privacyNote": "与真人验证次数/权限完全解耦，无付费抽奖"
+    },
+    {
+      "id": "campus-cat-mascot",
+      "name": "校园橘猫（Toybox V2）",
+      "category": "mascot",
+      "glb": "preview/human-verification-v2/assets/models/campus-cat.glb",
+      "rigType": "static-mascot",
+      "joints": 0,
+      "heightM": 0.88,
+      "license": "HAIZ Original (pending formal artwork licensing audit)",
+      "fictionalOnly": true,
+      "privacyNote": "与真人验证次数/权限完全解耦，无付费抽奖"
+    }
+  ]
+}

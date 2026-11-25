@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haiz.space/schemas/entity-interface.schema.json",
+  "title": "HAIZ World Engine Unified Entity & Multiplayer Packet Contract",
+  "type": "object",
+  "required": ["schema", "peerId", "assetId", "mode", "x", "y", "z", "yaw", "speed"],
+  "properties": {
+    "schema": { "const": "haiz-peer-packet/1" },
+    "peerId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "assetId": { "type": "string", "pattern": "^(char|toybox|vehicle|creature):[a-z0-9-]+$" },
+    "mode": { "enum": ["walk", "bike", "board", "broom"] },
+    "x": { "type": "number", "minimum": -1000, "maximum": 1000 },
+    "y": { "type": "number", "minimum": -20, "maximum": 120 },
+    "z": { "type": "number", "minimum": -1000, "maximum": 1000 },
+    "yaw": { "type": "number" },
+    "speed": { "type": "number", "minimum": 0, "maximum": 40 },
+    "roll": { "type": "number", "minimum": -1.6, "maximum": 1.6 },
+    "steer": { "type": "number", "minimum": -1.6, "maximum": 1.6 },
+    "crank": { "type": "number" },
+    "ts": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

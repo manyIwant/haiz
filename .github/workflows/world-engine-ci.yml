@@ -1,0 +1,60 @@
+name: HAIZ World Engine CI
+
+on:
+  pull_request:
+    paths:
+      - 'world-engine/**'
+      - 'world-engine.html'
+      - 'world-engine-lab.html'
+      - 'schemas/**'
+      - 'tools/world-engine/**'
+      - '.skills/haiz-world-engine/**'
+      - '.github/workflows/world-engine-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unified-architecture-gates:
+    name: Blocking Architecture, Contracts, Physics & GLB Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enforce spatial datum, duplicate rAF loop, dispose lifecycle, registry & syntax contracts
+        run: node tools/world-engine/validate-world.mjs
+      - name: Run headless Unified Architecture proof integration tests (8 invariants)
+        run: node --test tools/world-engine/test-unified-architecture.mjs
+      - name: Run Scientific Simulation Kernel conservation & accuracy tests (10 invariants)
+        run: node --test tools/world-engine/test-science-kernel.mjs
+      - name: Run binary GLB asset budget & duplicate SHA-256 audit
+        run: node tools/world-engine/validate-glb.mjs
+
+  browser-integration-and-visual:
+    name: Browser Unified Runtime, 6-Lens Parity & Mobile Budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: unified-architecture-gates
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright, Pillow & Chromium
+        run: |
+          pip install playwright pillow
+          playwright install chromium
+      - name: Run Desktop, Mobile, 6-Lens Horizontal Parity & Workbench acceptance suite
+        run: python3 tools/world-engine/test-world-browser.py
+      - name: Upload 6-lens comparison contact sheet, screenshots & JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-engine-acceptance-artifacts
+          path: |
+            docs/world-engine/screens/
+            docs/world-engine/browser-test-report.json
