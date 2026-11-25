@@ -1,0 +1,58 @@
+name: HAIZ World Engine CI
+
+on:
+  pull_request:
+    paths:
+      - 'world-engine/**'
+      - 'world-engine.html'
+      - 'world-engine-lab.html'
+      - 'schemas/**'
+      - 'tools/world-engine/**'
+      - '.skills/haiz-world-engine/**'
+      - '.github/workflows/world-engine-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts-and-physics:
+    name: World Contracts, GLB Budgets & Science Kernel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate World Engine spatial, registry, lens, and JS syntax contracts
+        run: node tools/world-engine/validate-world.mjs
+      - name: Run Scientific Simulation Kernel conservation & accuracy tests
+        run: node --test tools/world-engine/test-science-kernel.mjs
+      - name: Run GLB binary asset budget audit
+        run: node tools/world-engine/validate-glb.mjs
+
+  browser-acceptance:
+    name: Desktop & Mobile WebGL Acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: contracts-and-physics
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright & Chromium
+        run: |
+          pip install playwright
+          playwright install chromium
+      - name: Run World Engine Desktop, Mobile & Workbench acceptance suite
+        run: python3 tools/world-engine/test-world-browser.py
+      - name: Upload visual regression screenshots & report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-engine-acceptance-artifacts
+          path: |
+            docs/world-engine/screens/
+            docs/world-engine/browser-test-report.json

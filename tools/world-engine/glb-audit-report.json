@@ -1,0 +1,806 @@
+{
+  "schema": "haiz-glb-audit/1",
+  "generatedAt": "2026-11-25T12:33:01.808Z",
+  "budgets": {
+    "character": {
+      "maxBytes": 2500000,
+      "maxTris": 40000,
+      "label": "角色资产"
+    },
+    "mascot": {
+      "maxBytes": 500000,
+      "maxTris": 25000,
+      "label": "Toybox 玩偶"
+    },
+    "runtime": {
+      "maxBytes": 12000000,
+      "maxTris": 600000,
+      "label": "运行时建筑/景观"
+    },
+    "master": {
+      "maxBytes": 80000000,
+      "maxTris": 2500000,
+      "label": "离线母版 (非运行时)"
+    }
+  },
+  "summary": {
+    "totalFiles": 46,
+    "runtimeFiles": 37,
+    "totalBytes": 390045816,
+    "runtimeBytes": 124019276,
+    "passed": 42,
+    "warnings": 4,
+    "runtimeWarnings": 4
+  },
+  "files": [
+    {
+      "path": "twin/assets/atelier/terminalia.glb",
+      "kind": "master",
+      "bytes": 53871300,
+      "meshes": 8,
+      "primitives": 13,
+      "triangles": 1244154,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/yanchi.glb",
+      "kind": "master",
+      "bytes": 39710672,
+      "meshes": 17,
+      "primitives": 45,
+      "triangles": 314390,
+      "joints": 0,
+      "animations": 0,
+      "textures": 27,
+      "extensions": [
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/forecourt.glb",
+      "kind": "master",
+      "bytes": 33270952,
+      "meshes": 16,
+      "primitives": 32,
+      "triangles": 246843,
+      "joints": 0,
+      "animations": 0,
+      "textures": 12,
+      "extensions": [
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/landmark.glb",
+      "kind": "master",
+      "bytes": 31699256,
+      "meshes": 4,
+      "primitives": 11,
+      "triangles": 557719,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/arts.glb",
+      "kind": "master",
+      "bytes": 30561820,
+      "meshes": 383,
+      "primitives": 428,
+      "triangles": 269937,
+      "joints": 0,
+      "animations": 0,
+      "textures": 22,
+      "extensions": [
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "character-lab/hunyuan/source/20261121124835_b26256ec.glb",
+      "kind": "runtime",
+      "bytes": 27000692,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 1500000,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [
+        "bytes 25.75MB > 11.44MB (runtime)",
+        "triangles 1,500,000 > 600,000 (runtime)"
+      ],
+      "ok": false
+    },
+    {
+      "path": "twin/assets/atelier/south_classrooms.glb",
+      "kind": "master",
+      "bytes": 23634300,
+      "meshes": 8,
+      "primitives": 29,
+      "triangles": 162456,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/erhao.glb",
+      "kind": "master",
+      "bytes": 23480532,
+      "meshes": 12,
+      "primitives": 42,
+      "triangles": 123036,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/yihao.glb",
+      "kind": "master",
+      "bytes": 15955384,
+      "meshes": 46,
+      "primitives": 288,
+      "triangles": 83880,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/atelier/science.glb",
+      "kind": "master",
+      "bytes": 13842324,
+      "meshes": 9,
+      "primitives": 32,
+      "triangles": 42159,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/campus-v3/architecture.glb",
+      "kind": "runtime",
+      "bytes": 11713352,
+      "meshes": 136,
+      "primitives": 136,
+      "triangles": 645198,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform"
+      ],
+      "warnings": [
+        "triangles 645,198 > 600,000 (runtime)"
+      ],
+      "ok": false
+    },
+    {
+      "path": "twin/assets/phase1/trees.glb",
+      "kind": "runtime",
+      "bytes": 11550096,
+      "meshes": 21,
+      "primitives": 36,
+      "triangles": 1487557,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ],
+      "warnings": [
+        "triangles 1,487,557 > 600,000 (runtime)"
+      ],
+      "ok": false
+    },
+    {
+      "path": "twin/assets/runtime/terminalia.glb",
+      "kind": "runtime",
+      "bytes": 10505772,
+      "meshes": 8,
+      "primitives": 13,
+      "triangles": 1244154,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform"
+      ],
+      "warnings": [
+        "triangles 1,244,154 > 600,000 (runtime)"
+      ],
+      "ok": false
+    },
+    {
+      "path": "twin/source/arts_entrance.glb",
+      "kind": "runtime",
+      "bytes": 8195856,
+      "meshes": 371,
+      "primitives": 371,
+      "triangles": 51122,
+      "joints": 0,
+      "animations": 0,
+      "textures": 13,
+      "extensions": [
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "character-lab/hunyuan/models/student-near.glb",
+      "kind": "runtime",
+      "bytes": 6373476,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 63394,
+      "joints": 22,
+      "animations": 7,
+      "textures": 3,
+      "extensions": [
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "assets/walk/models/campus-limestone.glb",
+      "kind": "runtime",
+      "bytes": 5753376,
+      "meshes": 7,
+      "primitives": 8,
+      "triangles": 8070,
+      "joints": 0,
+      "animations": 0,
+      "textures": 3,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/landmark.glb",
+      "kind": "runtime",
+      "bytes": 5627696,
+      "meshes": 4,
+      "primitives": 11,
+      "triangles": 557714,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/tree.glb",
+      "kind": "runtime",
+      "bytes": 4365176,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 447382,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/forecourt.glb",
+      "kind": "runtime",
+      "bytes": 3992132,
+      "meshes": 16,
+      "primitives": 32,
+      "triangles": 246843,
+      "joints": 0,
+      "animations": 0,
+      "textures": 12,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "assets/walk/models/potted-plant.glb",
+      "kind": "runtime",
+      "bytes": 3874144,
+      "meshes": 2,
+      "primitives": 2,
+      "triangles": 14343,
+      "joints": 0,
+      "animations": 0,
+      "textures": 5,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/yanchi.glb",
+      "kind": "runtime",
+      "bytes": 3279912,
+      "meshes": 17,
+      "primitives": 45,
+      "triangles": 314377,
+      "joints": 0,
+      "animations": 0,
+      "textures": 19,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "KHR_materials_transmission",
+        "KHR_materials_ior"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/arts.glb",
+      "kind": "runtime",
+      "bytes": 3097248,
+      "meshes": 22,
+      "primitives": 39,
+      "triangles": 267253,
+      "joints": 0,
+      "animations": 0,
+      "textures": 19,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "EXT_mesh_gpu_instancing"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "character-lab/hunyuan/models/student-mid.glb",
+      "kind": "runtime",
+      "bytes": 2674264,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 22100,
+      "joints": 22,
+      "animations": 7,
+      "textures": 3,
+      "extensions": [
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/erhao.glb",
+      "kind": "runtime",
+      "bytes": 2017272,
+      "meshes": 17,
+      "primitives": 32,
+      "triangles": 123036,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "EXT_mesh_gpu_instancing"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/south_classrooms.glb",
+      "kind": "runtime",
+      "bytes": 1667820,
+      "meshes": 12,
+      "primitives": 25,
+      "triangles": 162456,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "EXT_mesh_gpu_instancing"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/phase1/campus.glb",
+      "kind": "runtime",
+      "bytes": 1379508,
+      "meshes": 10,
+      "primitives": 20,
+      "triangles": 342621,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/life/student-m.glb",
+      "kind": "character",
+      "bytes": 1105432,
+      "meshes": 6,
+      "primitives": 6,
+      "triangles": 31580,
+      "joints": 51,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "character-lab/hunyuan/models/student-far.glb",
+      "kind": "runtime",
+      "bytes": 1065600,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 7200,
+      "joints": 22,
+      "animations": 7,
+      "textures": 3,
+      "extensions": [
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/life/student-f.glb",
+      "kind": "character",
+      "bytes": 1059780,
+      "meshes": 4,
+      "primitives": 4,
+      "triangles": 30594,
+      "joints": 51,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/yihao.glb",
+      "kind": "runtime",
+      "bytes": 1038688,
+      "meshes": 127,
+      "primitives": 152,
+      "triangles": 82428,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "EXT_mesh_gpu_instancing"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/life/teacher-f.glb",
+      "kind": "character",
+      "bytes": 999064,
+      "meshes": 3,
+      "primitives": 3,
+      "triangles": 28732,
+      "joints": 51,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/life/worker-m.glb",
+      "kind": "character",
+      "bytes": 977568,
+      "meshes": 2,
+      "primitives": 2,
+      "triangles": 28184,
+      "joints": 51,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/phase1/site.glb",
+      "kind": "runtime",
+      "bytes": 792336,
+      "meshes": 18,
+      "primitives": 30,
+      "triangles": 257171,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/toon/flora.glb",
+      "kind": "runtime",
+      "bytes": 713996,
+      "meshes": 22,
+      "primitives": 22,
+      "triangles": 47246,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/phase1/yihao.glb",
+      "kind": "runtime",
+      "bytes": 580704,
+      "meshes": 27,
+      "primitives": 106,
+      "triangles": 133536,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "EXT_mesh_gpu_instancing",
+        "KHR_draco_mesh_compression",
+        "KHR_materials_specular"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/runtime/science.glb",
+      "kind": "runtime",
+      "bytes": 471092,
+      "meshes": 14,
+      "primitives": 27,
+      "triangles": 42159,
+      "joints": 0,
+      "animations": 0,
+      "textures": 9,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression",
+        "KHR_texture_transform",
+        "KHR_materials_transmission",
+        "KHR_materials_ior",
+        "EXT_mesh_gpu_instancing"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/island.glb",
+      "kind": "runtime",
+      "bytes": 337140,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 71460,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/ruhua/student.glb",
+      "kind": "character",
+      "bytes": 298284,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 8952,
+      "joints": 22,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "twin/assets/phase1/gate.glb",
+      "kind": "runtime",
+      "bytes": 270100,
+      "meshes": 6,
+      "primitives": 20,
+      "triangles": 79764,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression",
+        "KHR_materials_specular"
+      ],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/hainan-fawn.glb",
+      "kind": "mascot",
+      "bytes": 238856,
+      "meshes": 1,
+      "primitives": 23,
+      "triangles": 10908,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/schoolbag-bear.glb",
+      "kind": "mascot",
+      "bytes": 216652,
+      "meshes": 1,
+      "primitives": 23,
+      "triangles": 9788,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/campus-cat.glb",
+      "kind": "mascot",
+      "bytes": 203252,
+      "meshes": 1,
+      "primitives": 22,
+      "triangles": 9160,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/sunshine-duck.glb",
+      "kind": "mascot",
+      "bytes": 190784,
+      "meshes": 1,
+      "primitives": 17,
+      "triangles": 8720,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/lanren-spirit.glb",
+      "kind": "mascot",
+      "bytes": 186948,
+      "meshes": 1,
+      "primitives": 17,
+      "triangles": 8652,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "preview/human-verification-v2/assets/models/ocean-whale.glb",
+      "kind": "mascot",
+      "bytes": 159840,
+      "meshes": 1,
+      "primitives": 13,
+      "triangles": 7404,
+      "joints": 0,
+      "animations": 0,
+      "textures": 0,
+      "extensions": [],
+      "warnings": [],
+      "ok": true
+    },
+    {
+      "path": "lanren/assets/toon/student.glb",
+      "kind": "character",
+      "bytes": 45368,
+      "meshes": 1,
+      "primitives": 1,
+      "triangles": 3908,
+      "joints": 18,
+      "animations": 4,
+      "textures": 0,
+      "extensions": [
+        "KHR_mesh_quantization",
+        "EXT_meshopt_compression"
+      ],
+      "warnings": [],
+      "ok": true
+    }
+  ]
+}

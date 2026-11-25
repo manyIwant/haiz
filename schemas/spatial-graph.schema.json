@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haiz.space/schemas/spatial-graph.schema.json",
+  "title": "HAIZ World Engine Semantic Spatial Graph Contract",
+  "type": "object",
+  "required": ["schema", "datum", "nodes"],
+  "properties": {
+    "schema": { "const": "haiz-spatial-graph/1" },
+    "datum": {
+      "type": "object",
+      "required": ["wgs84", "campusNorthBearingDeg", "groundY", "provenance"],
+      "properties": {
+        "wgs84": {
+          "type": "object",
+          "required": ["lat", "lon"],
+          "properties": {
+            "lat": { "type": "number", "minimum": 19.9, "maximum": 20.1 },
+            "lon": { "type": "number", "minimum": 110.2, "maximum": 110.5 }
+          }
+        },
+        "campusNorthBearingDeg": { "type": "number", "minimum": 0, "maximum": 360 },
+        "groundY": { "type": "number" },
+        "provenance": { "type": "string", "minLength": 3 }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind", "evidence", "position", "radius", "purpose", "evidenceNote"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+          "name": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["building", "tree", "water", "landmark", "gate", "sports", "garden"] },
+          "evidence": { "enum": ["surveyed", "photo-derived", "public-map", "legacy-estimated", "creative-inference"] },
+          "position": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "radius": { "type": "number", "exclusiveMinimum": 0 },
+          "floors": { "type": "integer", "minimum": 0 },
+          "scienceStation": { "type": ["string", "null"] },
+          "purpose": { "type": "string", "minLength": 2 },
+          "evidenceNote": { "type": "string", "minLength": 6 }
+        }
+      }
+    }
+  }
+}

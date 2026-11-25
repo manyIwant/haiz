@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#2a4a3c">
+  <title>HAIZ World Engine — 艺术与工程验收台</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="world-engine/lab/lab.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    }
+  }
+  </script>
+  <script type="module" src="world-engine/lab/main.js"></script>
+</head>
+<body>
+  <header class="lab-top">
+    <div class="lab-brand">
+      <a href="world-engine.html">← 返回世界引擎</a>
+      <h1>HAIZ World Engine · 艺术与工程验收台</h1>
+    </div>
+    <div class="lab-top-meta">
+      <span id="lab-fps">-- fps</span>
+      <span id="lab-calls">-- calls</span>
+      <span id="lab-tris">-- tris</span>
+      <span id="lab-budget-pill" class="lab-pill">预算检测中</span>
+    </div>
+  </header>
+
+  <main class="lab-grid">
+    <section class="lab-stage-wrap">
+      <canvas id="lab-canvas" aria-label="三维验收视口"></canvas>
+      <div class="lab-stage-bar">
+        <div class="lab-seg" role="group" aria-label="画境快速切换" id="lab-lens-quick"></div>
+        <label class="lab-split-ctrl">
+          <span>A/B 分屏对比</span>
+          <input id="lab-split" type="range" min="-1" max="100" step="1" value="50">
+          <b id="lab-split-val">50%</b>
+        </label>
+      </div>
+      <div class="lab-stage-foot">
+        <span id="lab-gait-readout">步态滑步：0.00 cm/s · 髋高：-- m · 骨骼：51 关节</span>
+        <span id="lab-env-note">拖动旋转视角 · 滚轮缩放（开发机软件渲染帧率不代表真机 GPU）</span>
+      </div>
+    </section>
+
+    <aside class="lab-panel">
+      <nav class="lab-tabs" id="lab-tabs" role="tablist">
+        <button type="button" class="is-active" data-tab="art">画境与渲染</button>
+        <button type="button" data-tab="rig">角色与步态</button>
+        <button type="button" data-tab="spatial">空间与溯源</button>
+        <button type="button" data-tab="science">科学内核</button>
+        <button type="button" data-tab="perf">资产与性能</button>
+      </nav>
+
+      <div class="lab-tab-body" id="tab-art">
+        <h2>六画境着色与光照验证</h2>
+        <p class="lab-desc">同一三维几何、人物、草地与光照状态下的实时多画境对比。左侧为基准自然渲染，右侧为当前选中画境。</p>
+        <div class="lab-ctrl-group" id="lab-art-lenses"></div>
+        <label class="lab-slider">太阳时辰：<b id="lab-hour-val">16:15</b>
+          <input id="lab-hour" type="range" min="5.5" max="21.5" step="0.1" value="16.25">
+        </label>
+        <label class="lab-slider">厚涂 Kuwahara 强度：<b id="lab-paint-val">0.72</b>
+          <input id="lab-paint" type="range" min="0" max="1" step="0.02" value="0.72">
+        </label>
+        <label class="lab-slider">墨线轮廓强度：<b id="lab-ink-val">0.28</b>
+          <input id="lab-ink" type="range" min="0" max="1" step="0.02" value="0.28">
+        </label>
+        <label class="lab-slider">纸纹质感强度：<b id="lab-paper-val">0.42</b>
+          <input id="lab-paper" type="range" min="0" max="1" step="0.02" value="0.42">
+        </label>
+        <button type="button" class="lab-btn" id="lab-art-reset">恢复画境默认参数</button>
+      </div>
+
+      <div class="lab-tab-body" id="tab-rig" hidden>
+        <h2>51 骨骼人物与程序化步态验收</h2>
+        <p class="lab-desc">直接载入 HAIZ 真实 51 关节 MakeHuman CC0 衍生角色 GLB，运行 <code>three-procedural-locomotion</code> 实时测量支撑期滑步与重心高度。</p>
+        <div class="lab-row-label">角色资产</div>
+        <div class="lab-ctrl-group" id="lab-fig-btns">
+          <button type="button" class="lab-chip is-active" data-fig="student-m">男生 (student-m)</button>
+          <button type="button" class="lab-chip" data-fig="student-f">女生 (student-f)</button>
+          <button type="button" class="lab-chip" data-fig="teacher-f">教师 (teacher-f)</button>
+          <button type="button" class="lab-chip" data-fig="worker-m">校工 (worker-m)</button>
+        </div>
+        <div class="lab-row-label">运动状态</div>
+        <div class="lab-ctrl-group" id="lab-motion-btns">
+          <button type="button" class="lab-chip" data-motion="idle">站立 Idle</button>
+          <button type="button" class="lab-chip is-active" data-motion="walk">步行 1.5 m/s</button>
+          <button type="button" class="lab-chip" data-motion="turn">绕行转弯</button>
+          <button type="button" class="lab-chip" data-motion="run">奔跑 3.7 m/s</button>
+        </div>
+        <label class="lab-check">
+          <input id="lab-skel-toggle" type="checkbox"> 显示 51 关节骨骼叠加（SkeletonHelper）
+        </label>
+        <label class="lab-check">
+          <input id="lab-umb-toggle" type="checkbox"> 雨天撑伞姿态叠加（右手持伞 IK）
+        </label>
+        <div class="lab-metrics" id="lab-rig-metrics"></div>
+      </div>
+
+      <div class="lab-tab-body" id="tab-spatial" hidden>
+        <h2>空间基准与真实性溯源审计</h2>
+        <p class="lab-desc">诚实暴露历史数据集（<code>campus.json</code> / <code>sun.js</code>）与影像校准基准（<code>twin/data/*</code>）之间的差异，杜绝把艺术推测伪装成真实测绘。</p>
+        <div id="lab-discrepancies"></div>
+        <h3 class="lab-subhead">语义空间节点清单（12 个核心实体）</h3>
+        <div id="lab-nodes-list"></div>
+      </div>
+
+      <div class="lab-tab-body" id="tab-science" hidden>
+        <h2>科学模拟内核数值验收</h2>
+        <p class="lab-desc">实时在浏览器中对 RK4 非线性单摆、菲涅耳光学与海口微气候模型运行守恒性与精度断言。</p>
+        <button type="button" class="lab-btn lab-btn-primary" id="lab-run-sci">重新运行数值验收套件</button>
+        <div id="lab-sci-results"></div>
+      </div>
+
+      <div class="lab-tab-body" id="tab-perf" hidden>
+        <h2>实时渲染遥测与仓库 GLB 资产预算</h2>
+        <p class="lab-desc">统计当前视口的硬件无关绘制预算（Draw Calls / 三角形 / 几何体 / 纹理），并展示全仓 GLB 资产扫描结果。</p>
+        <div class="lab-metrics" id="lab-perf-metrics"></div>
+        <h3 class="lab-subhead">子系统 CPU 耗时分布</h3>
+        <div id="lab-subsystems"></div>
+        <h3 class="lab-subhead">GLB 资产预算审计（来自 validate-glb.mjs）</h3>
+        <div id="lab-glb-audit">正在读取资产审计报告…</div>
+      </div>
+    </aside>
+  </main>
+</body>
+</html>

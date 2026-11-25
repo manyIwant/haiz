@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#2a4a3c">
+  <meta name="description" content="HAIZ World Engine：海南中学府城校区统一数字世界引擎原型。统一空间坐标与语义图谱、海口实时与 86 年 ERA5 历史气象时钟、六种艺术画境、多模态漫游、校园生命与物理科学实验站。">
+  <title>HAIZ World Engine — 海南中学数字校园世界引擎</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="world-engine/world-engine.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    }
+  }
+  </script>
+  <script type="module" src="world-engine/main.js"></script>
+</head>
+<body>
+  <canvas id="we-canvas" aria-label="HAIZ World Engine 三维校园世界"></canvas>
+
+  <div id="we-loading" role="status" aria-live="polite">
+    <h1 class="we-load-mark">HAIZ · World Engine</h1>
+    <p class="we-load-sub">海南中学府城校区 · 统一数字校园世界</p>
+    <div class="we-load-track"><i id="we-load-bar"></i></div>
+    <p id="we-load-status">初始化世界内核…</p>
+  </div>
+
+  <div id="we-ui">
+    <!-- Top Bar: restrained Paper & Ink corners -->
+    <header class="we-topbar">
+      <div class="we-brand">
+        <a href="index.html">haiz</a>
+        <span>世界引擎</span>
+        <a class="we-brand-lab" href="world-engine-lab.html">工程验收台 →</a>
+      </div>
+      <div class="we-top-right">
+        <button type="button" class="we-pill" id="we-clock-btn" aria-expanded="false" aria-controls="we-clock-panel">
+          <span id="we-clock-label">海口 16:12 · 晴</span>
+        </button>
+        <button type="button" class="we-pill" id="we-map-btn" title="语义水彩地图（M）">地图</button>
+        <button type="button" class="we-pill" id="we-sci-btn" title="科学模拟实验站（E）">科学站</button>
+        <button type="button" class="we-pill" id="we-view-btn" title="切换第一/第三人称（V）">视角</button>
+        <button type="button" class="we-pill" id="fr-sound" aria-pressed="true"><span>声音</span></button>
+      </div>
+    </header>
+
+    <!-- One World, Six Ways of Seeing: Art Lens Switcher -->
+    <div class="we-lens-bar" aria-label="世界艺术画境">
+      <div id="we-lens-strip" role="group" aria-label="观看方式"></div>
+      <p id="we-lens-caption">水粉厚涂 · HAIZ · 水粉画境</p>
+    </div>
+
+    <!-- Unified World Clock & 86-Year ERA5 Climate Panel -->
+    <aside id="we-clock-panel" hidden aria-label="统一世界时钟与气象档案">
+      <div class="we-panel-head">
+        <h2>世界时钟与气象</h2>
+        <button type="button" class="we-close" id="we-clock-close" aria-label="关闭">×</button>
+      </div>
+      <div class="we-row">
+        <span class="we-section-title" style="margin:0">校园时辰（同步光照 · 人物 · 橘猫 · 光学站）</span>
+        <b id="we-hour-val" style="font-family:var(--mono)">16:12</b>
+      </div>
+      <input id="we-hour-slider" type="range" min="0" max="23.9" step="0.1" value="16.2" aria-label="校园时辰">
+      <div class="we-row" style="margin-top:8px">
+        <button type="button" class="we-chip" id="we-timelapse-btn" aria-pressed="false">昼夜流逝</button>
+        <span style="font-size:12px;color:var(--ink-muted)">北向基准 319.0°</span>
+      </div>
+
+      <p class="we-section-title">自由天气（统一影响光照、植被与地面水洼）</p>
+      <div id="we-wx-presets"></div>
+
+      <p class="we-section-title">年轮时间旅行（1940–2026 ERA5 真实逐日气象档案）</p>
+      <div id="we-era-list"></div>
+      <label style="display:block;margin-top:8px;font-size:12px;color:var(--ink-muted)">
+        任选历史日期（1940-01-01 至 2026-11-16）：
+        <input id="we-era-date" type="date" min="1940-01-01" max="2026-11-16" value="1985-11-18">
+      </label>
+      <p id="we-era-note"></p>
+    </aside>
+
+    <!-- Bottom-Left Semantic Place Witness -->
+    <div class="we-place-witness" aria-live="polite">
+      <span id="we-place-name">百年榄仁树</span>
+      <span id="we-place-evidence" class="we-badge we-badge-calibrated">影像校准</span>
+      <button type="button" class="we-mini-btn" id="we-place-story-btn">地点档案</button>
+      <button type="button" class="we-mini-btn we-mini-btn-accent" id="we-place-sci-btn">科学站 (E)</button>
+    </div>
+
+    <!-- Whisper Toast -->
+    <div id="we-whisper" hidden aria-live="polite"><b></b><span></span></div>
+
+    <!-- Locomotion Mode Bar (shared with lanren/free) -->
+    <nav id="fr-modes" aria-label="移动方式">
+      <button type="button" data-mode="walk" aria-pressed="true" title="步行（1）"><b>步</b><span>步行</span></button>
+      <button type="button" data-mode="bike" aria-pressed="false" title="单车（2）"><b>骑</b><span>单车</span></button>
+      <button type="button" data-mode="board" aria-pressed="false" title="滑板（3）"><b>滑</b><span>滑板</span></button>
+      <button type="button" data-mode="broom" aria-pressed="false" title="竹扫帚（4）"><b>飞</b><span>扫帚</span></button>
+    </nav>
+
+    <!-- Mobile Touch Stick & Vehicle Action Pad -->
+    <div id="rh-stick" hidden aria-hidden="true"><i></i></div>
+    <div id="fr-pad" data-mode="none" aria-hidden="true">
+      <button type="button" data-pad="bell" data-for="bike">铃</button>
+      <button type="button" data-pad="jump" data-for="board">跳</button>
+      <button type="button" data-pad="up" data-for="broom">升</button>
+      <button type="button" data-pad="down" data-for="broom">降</button>
+      <button type="button" data-pad="boost" data-for="bike board broom">疾</button>
+    </div>
+    <p id="fr-prompt" hidden></p>
+
+    <!-- Painted Compass & Readings (lanren/free/hud.js) -->
+    <section id="fr-hud" aria-label="罗盘与读数" style="opacity:0">
+      <canvas aria-label="罗盘"></canvas>
+      <div class="fr-read">
+        <p class="fr-speed"><b data-hud="speed">0</b><small data-hud="unit">km/h</small></p>
+        <p class="fr-line" data-hud="line"></p>
+        <p class="fr-place" data-hud="place"></p>
+        <p class="fr-dest" data-hud="dest"></p>
+      </div>
+      <div data-hud="alt" hidden><i></i><span>56</span><span>28</span><span>0</span></div>
+    </section>
+    <div id="fr-vista" hidden role="status" aria-live="polite">
+      <p><b></b><span></span></p>
+      <button type="button" data-vista="sketch">画下来 <kbd>F</kbd></button>
+    </div>
+    <section id="fr-book" hidden aria-label="速写本：海中八景">
+      <header><h2>海中八景 <small data-vista="count"></small></h2><button type="button" data-vista="close" aria-label="合上">合上</button></header>
+      <ol></ol>
+    </section>
+    <section id="fr-slip" hidden aria-label="去哪儿">
+      <header><h2>去哪儿</h2><button type="button" data-hud="close" aria-label="关闭">×</button></header>
+      <ul></ul>
+      <footer><button type="button" data-hud="clear">随便逛逛</button></footer>
+    </section>
+    <button type="button" id="fr-book-btn" hidden><span>速写本</span></button>
+    <img id="fr-fly" hidden alt="">
+  </div>
+
+  <!-- Semantic Watercolor Campus Map Modal -->
+  <div id="we-map-modal" class="we-modal" hidden role="dialog" aria-modal="true" aria-label="校园语义水彩地图">
+    <div class="we-modal-sheet">
+      <div class="we-panel-head">
+        <h2>海中语义地图 · 实测校准与空间叙事</h2>
+        <button type="button" class="we-close" data-map-close aria-label="关闭">×</button>
+      </div>
+      <div id="we-map-places"></div>
+      <div class="we-map-layout">
+        <canvas id="we-map-canvas" width="900" height="640"></canvas>
+        <div id="we-map-dossier"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-World Scientific Simulation Station Modal -->
+  <div id="we-science-modal" class="we-modal" hidden role="dialog" aria-modal="true" aria-label="校园科学模拟实验站">
+    <div class="we-modal-sheet">
+      <div class="we-panel-head">
+        <h2>HAIZ 科学模拟引擎 · 校园实景实验站</h2>
+        <button type="button" class="we-close" data-sci-close aria-label="关闭">×</button>
+      </div>
+      <div id="we-sci-tabs"></div>
+      <div id="we-sci-body"></div>
+      <div id="we-sci-meta" class="we-sci-meta"></div>
+    </div>
+  </div>
+</body>
+</html>

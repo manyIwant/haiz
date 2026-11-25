@@ -1,0 +1,310 @@
+{
+  "schema": "haiz-world-engine-browser-report/1",
+  "timestamp": "2026-11-25T12:25:05Z",
+  "environment": "Linux VM · Google Chrome Headless · ANGLE SwiftShader (software rendering; NOT real-device GPU FPS)",
+  "checks": [
+    {
+      "name": "Desktop World Engine boots cleanly",
+      "ok": true,
+      "detail": "wall=42.3s"
+    },
+    {
+      "name": "Desktop draw-call & triangle budgets",
+      "ok": true,
+      "detail": "calls=577, tris=3,318,996"
+    },
+    {
+      "name": "Art Lens switch to Ink & Wash (水墨写生)",
+      "ok": true,
+      "detail": "lens=inkwash"
+    },
+    {
+      "name": "ERA5 Historical Time Travel (1985-11-18) + Memory Lens",
+      "ok": true,
+      "detail": "era=1985-11-18"
+    },
+    {
+      "name": "Nocturne evening weather + wet ground sync",
+      "ok": true,
+      "detail": "nightFactor=1"
+    },
+    {
+      "name": "Semantic Watercolor Map opens with authority arbitration",
+      "ok": true,
+      "detail": "authority=map"
+    },
+    {
+      "name": "In-World Science Station opens (RK4 Pendulum)",
+      "ok": true,
+      "detail": "authority=lab"
+    },
+    {
+      "name": "Desktop zero uncaught page errors",
+      "ok": true,
+      "detail": "pageErrors=0, consoleErrors=0"
+    },
+    {
+      "name": "Mobile Portrait World Engine boots cleanly",
+      "ok": true,
+      "detail": "wall=20.5s"
+    },
+    {
+      "name": "Mobile Portrait zero horizontal overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile hardware-independent budgets",
+      "ok": true,
+      "detail": "calls=358, tris=1,948,722"
+    },
+    {
+      "name": "Mobile zero uncaught page errors",
+      "ok": true,
+      "detail": "pageErrors=0"
+    },
+    {
+      "name": "Workbench live browser Science Kernel 5/5 PASS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Workbench zero uncaught page errors",
+      "ok": true,
+      "detail": "pageErrors=0, slideCm=6.83"
+    }
+  ],
+  "telemetry": {
+    "desktop_gouache": {
+      "bootMs": 41833,
+      "tier": "medium",
+      "lens": "gouache",
+      "authority": "explore",
+      "world": {
+        "clockMs": 1795594361118,
+        "clockMode": "free",
+        "eraId": "free:clear",
+        "eraLabel": "海口此刻",
+        "haikouHour": 16.21,
+        "dayOfYear": 329,
+        "weatherId": "clear",
+        "weatherLabel": "晴",
+        "weatherOrigin": "climatology",
+        "temperatureC": 23.3,
+        "humidityPct": 72,
+        "windSpeedMs": 2.5,
+        "windDirDeg": 135,
+        "rainIntensity": 0,
+        "wetness": 0,
+        "puddle": 0,
+        "sunAltDeg": 21.2,
+        "sunAzDeg": 180,
+        "nightFactor": 0,
+        "phenology": {
+          "stage": "夏叶",
+          "redness": 0,
+          "flush": 0,
+          "foliage": 1
+        },
+        "activePlaceId": "lanshu",
+        "activePlaceName": "百年榄仁树",
+        "activeNpcCount": 0,
+        "butterflyCount": 0,
+        "catState": "rest"
+      },
+      "user": {
+        "locomotionMode": "walk",
+        "position": [
+          -16,
+          -0.68,
+          -20
+        ],
+        "agl": 0,
+        "speedMs": 0
+      },
+      "perf": {
+        "profile": "desktop",
+        "frames": 2,
+        "fps": 59.9,
+        "p50Ms": 16.7,
+        "p95Ms": 16.7,
+        "totalCpuMs": 26160.98,
+        "subsystems": {
+          "climate": 0.54,
+          "locomotion": 41.5,
+          "environment": 3.26,
+          "life_eco": 187.83,
+          "spatial_sci": 2.6,
+          "render": 25925.26
+        },
+        "render": {
+          "calls": 577,
+          "triangles": 3318996,
+          "geometries": 467,
+          "textures": 64,
+          "programs": 354
+        },
+        "budget": {
+          "maxDrawCalls": 720,
+          "maxTriangles": 5200000,
+          "maxGeometries": 650,
+          "maxTextures": 180,
+          "targetFrameMs": 16.7,
+          "maxSubsystemCpuMs": 8
+        },
+        "checks": {
+          "drawCallsOk": true,
+          "trianglesOk": true,
+          "geometriesOk": true,
+          "texturesOk": true,
+          "cpuOk": false
+        },
+        "allHardwareIndependentBudgetsOk": true
+      }
+    },
+    "mobile_gouache": {
+      "bootMs": 19993,
+      "tier": "low",
+      "lens": "gouache",
+      "authority": "explore",
+      "world": {
+        "clockMs": 1795594339100,
+        "clockMode": "free",
+        "eraId": "free:clear",
+        "eraLabel": "海口此刻",
+        "haikouHour": 16.21,
+        "dayOfYear": 329,
+        "weatherId": "clear",
+        "weatherLabel": "晴",
+        "weatherOrigin": "climatology",
+        "temperatureC": 23.2,
+        "humidityPct": 72,
+        "windSpeedMs": 2.5,
+        "windDirDeg": 135,
+        "rainIntensity": 0,
+        "wetness": 0,
+        "puddle": 0,
+        "sunAltDeg": 21.3,
+        "sunAzDeg": 180,
+        "nightFactor": 0,
+        "phenology": {
+          "stage": "夏叶",
+          "redness": 0,
+          "flush": 0,
+          "foliage": 1
+        },
+        "activePlaceId": "lanshu",
+        "activePlaceName": "百年榄仁树",
+        "activeNpcCount": 0,
+        "butterflyCount": 0,
+        "catState": "rest"
+      },
+      "user": {
+        "locomotionMode": "walk",
+        "position": [
+          -16,
+          -0.68,
+          -20
+        ],
+        "agl": 0,
+        "speedMs": 0
+      },
+      "perf": {
+        "profile": "mobile",
+        "frames": 2,
+        "fps": 59.9,
+        "p50Ms": 16.7,
+        "p95Ms": 16.7,
+        "totalCpuMs": 10690.88,
+        "subsystems": {
+          "climate": 0.62,
+          "locomotion": 18.58,
+          "environment": 1.04,
+          "life_eco": 96.56,
+          "spatial_sci": 0.33,
+          "render": 10573.74
+        },
+        "render": {
+          "calls": 358,
+          "triangles": 1948722,
+          "geometries": 362,
+          "textures": 41,
+          "programs": 305
+        },
+        "budget": {
+          "maxDrawCalls": 620,
+          "maxTriangles": 4200000,
+          "maxGeometries": 580,
+          "maxTextures": 160,
+          "targetFrameMs": 33.3,
+          "maxSubsystemCpuMs": 12
+        },
+        "checks": {
+          "drawCallsOk": true,
+          "trianglesOk": true,
+          "geometriesOk": true,
+          "texturesOk": true,
+          "cpuOk": false
+        },
+        "allHardwareIndependentBudgetsOk": true
+      }
+    },
+    "workbench": {
+      "lens": "gouache",
+      "motion": "walk",
+      "slideCm": 6.83,
+      "perf": {
+        "profile": "desktop",
+        "frames": 3,
+        "fps": 20,
+        "p50Ms": 50,
+        "p95Ms": 50,
+        "totalCpuMs": 1528.15,
+        "subsystems": {
+          "gait_sim": 0.88,
+          "render": 1527.27
+        },
+        "render": {
+          "calls": 47,
+          "triangles": 92314,
+          "geometries": 21,
+          "textures": 22,
+          "programs": 28
+        },
+        "budget": {
+          "maxDrawCalls": 720,
+          "maxTriangles": 5200000,
+          "maxGeometries": 650,
+          "maxTextures": 180,
+          "targetFrameMs": 16.7,
+          "maxSubsystemCpuMs": 8
+        },
+        "checks": {
+          "drawCallsOk": true,
+          "trianglesOk": true,
+          "geometriesOk": true,
+          "texturesOk": true,
+          "cpuOk": false
+        },
+        "allHardwareIndependentBudgetsOk": true
+      }
+    }
+  },
+  "screenshots": [
+    "docs/world-engine/screens/01-desktop-gouache.png",
+    "docs/world-engine/screens/02-desktop-inkwash.png",
+    "docs/world-engine/screens/03-desktop-memory-1985.png",
+    "docs/world-engine/screens/04-desktop-nocturne-rain.png",
+    "docs/world-engine/screens/05-desktop-semantic-map.png",
+    "docs/world-engine/screens/06-desktop-science-station.png",
+    "docs/world-engine/screens/07-desktop-optics-station.png",
+    "docs/world-engine/screens/08-mobile-gouache.png",
+    "docs/world-engine/screens/09-workbench-art-split.png",
+    "docs/world-engine/screens/10-workbench-rig-gait.png"
+  ],
+  "summary": {
+    "passed": 14,
+    "total": 14,
+    "allPassed": true
+  }
+}
