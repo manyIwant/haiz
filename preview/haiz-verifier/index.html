@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>HAIZ 验证器 · 预览</title>
+<link rel="stylesheet" href="./src/verifier.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../lanren/vendor/three/three.module.min.js",
+  "three/addons/": "../../lanren/vendor/three/addons/"
+} }
+</script>
+<style>
+  :root { color-scheme: light; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #f7f3eb; color: #292e2a; font: 15px/1.5 "Sora", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; display: grid; place-items: center; }
+  .app { position: relative; width: min(100vw, 420px); min-height: min(100dvh, 860px); background: #fbf9f4; overflow: hidden; display: flex; flex-direction: column; }
+  @media (min-width: 520px) { .app { border-radius: 28px; box-shadow: 0 30px 80px -40px rgba(23, 43, 36, .45), 0 0 0 1px #e6e1d6; } }
+  .bar { display: flex; align-items: center; justify-content: center; height: 52px; font-weight: 600; position: relative; border-bottom: 1px solid #ece7dc; }
+  .bar small { position: absolute; right: 16px; font-weight: 400; font-size: 11px; color: #9a5a22; background: #fbf1e4; border-radius: 999px; padding: 1px 8px; }
+  .form { padding: 28px 20px; display: grid; gap: 10px; }
+  .form h1 { margin: 0 0 6px; font: 600 26px/1.25 "Songti SC", "Noto Serif SC", serif; }
+  .form p { margin: 0 0 12px; color: #626e62; font-size: 14px; }
+  label { font-size: 13px; color: #626e62; }
+  input { height: 46px; padding: 0 14px; border: 1px solid #ddd7ca; border-radius: 12px; background: #fff; font: inherit; color: inherit; }
+  input:focus { outline: 2px solid #293f36; outline-offset: 1px; }
+  .primary { height: 48px; border: 0; border-radius: 999px; background: #293f36; color: #f7f3eb; font: 600 15px/1 inherit; cursor: pointer; margin-top: 6px; }
+  .primary:disabled { opacity: .5; cursor: default; }
+  .hint { font-size: 12px; color: #8a938a; }
+  .done { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 24px; }
+  .done .ok { width: 54px; height: 54px; border-radius: 50%; border: 2px solid #3f7a52; color: #3f7a52; display: grid; place-items: center; margin-bottom: 8px; }
+  .done .ok svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .done h2 { margin: 0; font: 600 22px/1.3 "Songti SC", "Noto Serif SC", serif; }
+  .done p { margin: 0; color: #626e62; font-size: 13px; }
+  .done code { font-size: 11px; color: #8a938a; word-break: break-all; }
+  .link { margin-top: 10px; border: 0; background: none; color: #293f36; text-decoration: underline; cursor: pointer; font: inherit; }
+  .app.is-done .form { display: none; }
+  .app.is-done .done { display: flex; }
+  .scrim { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(23, 43, 36, .38); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.is-open { opacity: 1; pointer-events: auto; }
+  .scrim .hv { transform: translateY(18px) scale(.98); transition: transform .25s cubic-bezier(.22, 1, .36, 1); }
+  .scrim.is-open .hv { transform: none; }
+  @media (prefers-reduced-motion: reduce) { .scrim, .scrim .hv { transition: none; } }
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <div class="bar">注册 HAIZ<small>预览</small></div>
+  <form class="form" id="form" novalidate>
+    <h1>欢迎来到海中</h1>
+    <p>输入邮箱后，先做一个小小的验证。</p>
+    <label for="email">电子邮箱</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com" value="student@example.com">
+    <span class="hint">这是一张演示页面，不会真的创建账号，也不会发送邮件。</span>
+    <button class="primary" type="submit">继续</button>
+  </form>
+  <section class="done" aria-live="polite">
+    <div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></div>
+    <h2>你已进入</h2>
+    <p id="who"></p>
+    <code id="token"></code>
+    <button class="link" id="again" type="button">重新开始</button>
+  </section>
+  <div class="scrim" id="scrim"></div>
+</main>
+
+<script type="module">
+  import { createHaizVerifier } from './src/verifier.js';
+  import { createAdapterFromConfig } from '../../haiz-campus-toybox-original/src/challenge/adapters/index.js';
+
+  // ?api=/api/toybox 时走真实服务端；默认是浏览器内的演示适配器（demo:true，不能授权真实登录）
+  const params = new URLSearchParams(location.search);
+  const api = params.get('api');
+  const adapter = createAdapterFromConfig(api ? { mode: 'http', baseUrl: api } : { mode: 'mock', latencyMs: 180 });
+
+  const app = document.getElementById('app');
+  const scrim = document.getElementById('scrim');
+  const form = document.getElementById('form');
+  let verifier = null;
+  let opener = null;
+
+  function closeSheet() {
+    scrim.classList.remove('is-open');
+    const v = verifier;
+    verifier = null;
+    scrim._verifier = null;
+    setTimeout(() => v?.destroy(), 260);
+    opener?.focus();
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (verifier) return;
+    opener = form.querySelector('.primary');
+    verifier = createHaizVerifier({
+      container: scrim,
+      adapter,
+      onClose: closeSheet,
+      async onVerified({ passToken, demo }) {
+        // 真实接入时：把 passToken 连同表单一起交给登录/注册接口，由服务端一次性核销。
+        let note = '';
+        if (adapter.consumeDemoPassToken) {
+          const r = await adapter.consumeDemoPassToken(passToken);
+          note = r.ok ? '（演示核销通过）' : `（演示核销失败：${r.reason}）`;
+        }
+        document.getElementById('who').textContent = `账号：${document.getElementById('email').value || '未填写'} ${note}`;
+        document.getElementById('token').textContent = demo ? '演示凭证，不能用于真实登录' : '';
+        closeSheet();
+        app.classList.add('is-done');
+      },
+    });
+    scrim._verifier = verifier;
+    requestAnimationFrame(() => scrim.classList.add('is-open'));
+  });
+  scrim.addEventListener('click', (e) => { if (e.target === scrim) closeSheet(); });
+  document.getElementById('again').addEventListener('click', () => app.classList.remove('is-done'));
+</script>
+</body>
+</html>
