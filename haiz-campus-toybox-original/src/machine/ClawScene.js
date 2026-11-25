@@ -22,7 +22,9 @@ export class ClawScene {
     this.reducedMotion = !!opts.reducedMotion;
     this.onDropComplete = opts.onDropComplete || (async () => ({ status: 'wrong' }));
     this.onStateChange = opts.onStateChange || (() => {});
+    this.onFirstAction = opts.onFirstAction || (() => {});
     this.audio = new ToyboxAudio();
+    this.showcaseToy = null;
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -152,6 +154,7 @@ export class ClawScene {
       const dy = e.clientY - downY;
       if (Math.hypot(dx, dy) > 8) {
         moved = true;
+        this.onFirstAction();
         this.glideTarget = null;
         this.inputVec.x = Math.max(-1, Math.min(1, dx / 44));
         this.inputVec.z = Math.max(-1, Math.min(1, dy / 44));
@@ -173,12 +176,14 @@ export class ClawScene {
         // Check if user tapped the physical grab button
         const btnHits = this._raycaster.intersectObject(this.cabinet.grabBtn, true);
         if (btnHits.length > 0) {
+          this.onFirstAction();
           this.triggerGrab();
           return;
         }
         const hitPt = new THREE.Vector3();
         if (this._raycaster.ray.intersectPlane(this._floorPlane, hitPt)) {
           if (Math.abs(hitPt.x) <= PLAYFIELD.halfX && Math.abs(hitPt.z) <= PLAYFIELD.halfZ) {
+            this.onFirstAction();
             this.glideTarget = {
               x: Math.max(-X_LIMIT, Math.min(X_LIMIT, hitPt.x)),
               z: Math.max(-Z_LIMIT, Math.min(Z_LIMIT, hitPt.z)),
@@ -200,19 +205,19 @@ export class ClawScene {
     this.renderer.setSize(w, h, false);
     const aspect = w / h;
     this.camera.aspect = aspect;
-    // Frame the full Qilou cabinet cleanly on desktop, portrait mobile, and landscape mobile
+    // Frame the full Qilou cabinet (including the roof 3D showcase vitrine & bottom prize window)
     if (aspect < 0.78) {
       this.camera.fov = 38;
-      this._baseCamPos = new THREE.Vector3(0, 0.44, 2.25 / Math.max(0.56, aspect * 1.15));
-      this.camTarget.set(0, 0.21, 0.02);
+      this._baseCamPos = new THREE.Vector3(0, 0.56, 2.48 / Math.max(0.62, aspect * 1.15));
+      this.camTarget.set(0, 0.30, 0.02);
     } else if (aspect < 1.1) {
-      this.camera.fov = 35;
-      this._baseCamPos = new THREE.Vector3(0, 0.42, 2.18);
-      this.camTarget.set(0, 0.21, 0.02);
+      this.camera.fov = 36;
+      this._baseCamPos = new THREE.Vector3(0, 0.56, 2.48);
+      this.camTarget.set(0, 0.31, 0.02);
     } else {
-      this.camera.fov = 33;
-      this._baseCamPos = new THREE.Vector3(0, 0.44, 2.08);
-      this.camTarget.set(0, 0.22, 0.02);
+      this.camera.fov = 34;
+      this._baseCamPos = new THREE.Vector3(0, 0.58, 2.38);
+      this.camTarget.set(0, 0.31, 0.02);
     }
     this.camera.updateProjectionMatrix();
   }
@@ -222,8 +227,15 @@ export class ClawScene {
     this._clearToys();
     this.targetId = challenge.target;
     const entry = TOY_BY_ID[challenge.target];
-    this.cabinet.setMarquee(entry, `找到「${entry.name}」并抓取入校`);
+    this.cabinet.setMarquee(entry, '请抓住这位伙伴 →', '← 橱窗里的伙伴');
     this.cabinet.setAttempts(challenge.attemptsLeft ?? challenge.maxAttempts ?? 5);
+
+    // Mount live 3D target model inside the illuminated Qilou roof showcase vitrine
+    this.showcaseToy = createToy(challenge.target, { reducedMotion: this.reducedMotion, seed: 999 });
+    this.showcaseToy.root.scale.setScalar(1.06);
+    this.showcaseToy.root.position.set(0, 0, 0);
+    this.cabinet.targetTurntable.rotation.y = 0.25;
+    this.cabinet.targetTurntable.add(this.showcaseToy.root);
 
     const shadowTex = contactShadow();
     for (const item of challenge.layout) {
@@ -265,6 +277,11 @@ export class ClawScene {
   }
 
   _clearToys() {
+    if (this.showcaseToy) {
+      this.cabinet.targetTurntable.remove(this.showcaseToy.root);
+      this.showcaseToy.dispose();
+      this.showcaseToy = null;
+    }
     for (const item of this.toys) {
       this.scene.remove(item.toy.root);
       this.scene.remove(item.shadow);
@@ -289,6 +306,7 @@ export class ClawScene {
 
   setReducedMotion(rm) {
     this.reducedMotion = !!rm;
+    if (this.showcaseToy) this.showcaseToy.behavior.reducedMotion = this.reducedMotion;
     for (const item of this.toys) item.toy.behavior.reducedMotion = this.reducedMotion;
   }
 
@@ -528,7 +546,8 @@ export class ClawScene {
         picked.toy.behavior.holdCelebrate = true;
         picked.toy.behavior.play('celebrate');
         const entry = TOY_BY_ID[picked.id];
-        this.cabinet.setMarquee(entry, `欢迎来到海南中学 · ${entry.name}来接你啦`);
+        this.cabinet.setMarquee(entry, '欢迎来到海南中学', '← 今日迎新伙伴');
+        if (this.showcaseToy) this.showcaseToy.behavior.play('celebrate');
         // All remaining toys inside the cabinet cheer too!
         for (const other of this.toys) {
           if (other !== picked) {
@@ -565,6 +584,13 @@ export class ClawScene {
   }
 
   _updateToys(dt) {
+    // Slowly rotate the live 3D target character inside the Qilou roof showcase vitrine
+    if (this.showcaseToy) {
+      const spinSpeed = this.reducedMotion ? 0.14 : 0.55;
+      this.cabinet.targetTurntable.rotation.y += spinSpeed * dt;
+      this.showcaseToy.behavior.update(dt);
+    }
+
     const clawWorld = new THREE.Vector3(this.clawX, PLAYFIELD.ceilingY - 0.028 - this.clawDrop - 0.06, this.clawZ);
     const localLook = new THREE.Vector3();
     for (const item of this.toys) {

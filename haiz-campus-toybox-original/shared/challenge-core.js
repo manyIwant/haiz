@@ -72,6 +72,8 @@ export function generateLayout({ rand = secureRandom, maxRestarts = 1000, maxTri
         const z = round(-b + 2 * b * rand());
         if (isInChute(x, z)) continue;
         if (pts.some((p) => Math.hypot(p.x - x, p.z - z) < LAYOUT.minDistance)) continue;
+        // Prevent severe front-to-back occlusion from the player's front camera
+        if (pts.some((p) => Math.abs(p.x - x) < 0.22)) continue;
         pts.push({ x, z });
         placed = true;
       }

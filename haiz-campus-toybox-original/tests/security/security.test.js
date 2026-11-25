@@ -21,11 +21,16 @@ describe('HAIZ Campus Toybox — Security Layer', () => {
     }
   });
 
-  it('generates valid layouts over 500 random samples (chute exclusion, min distance, all 6 characters)', () => {
+  it('generates valid, non-occluded layouts over 500 random samples (chute exclusion, min distance, X separation, all 6 characters)', () => {
     for (let i = 0; i < 500; i++) {
       const layout = generateLayout();
       expect(layout).toHaveLength(CHARACTER_IDS.length);
       expect(validateLayout(layout).ok).toBe(true);
+      for (let a = 0; a < layout.length; a++) {
+        for (let b = a + 1; b < layout.length; b++) {
+          expect(Math.abs(layout[a].x - layout[b].x)).toBeGreaterThanOrEqual(0.219);
+        }
+      }
     }
   });
 

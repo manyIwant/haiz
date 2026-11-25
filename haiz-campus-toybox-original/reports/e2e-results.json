@@ -1,9 +1,18 @@
 {
-  "timestamp": "2026-11-25T13:16:38.584Z",
+  "timestamp": "2026-11-25T15:05:50.895Z",
   "checks": [
     {
-      "name": "desktop_machine_load",
-      "ok": true
+      "name": "first_time_stranger_visual_target_and_onboarding",
+      "ok": true,
+      "details": {
+        "guideVisible": true,
+        "primaryStatus": "请抓住这位伙伴",
+        "showcaseMatchesTarget": true,
+        "rotBefore": 0.7725549999999993,
+        "minXGap": 0.223,
+        "rotating": true,
+        "guideDismissed": true
+      }
     },
     {
       "name": "real_grab_and_welcome_story",
@@ -21,26 +30,16 @@
     {
       "name": "mobile_landscape_layout",
       "ok": true
-    },
-    {
-      "name": "gallery_all_6_and_envs",
-      "ok": true
     }
   ],
   "screenshots": [
+    "01-machine-desktop-onboarding.png",
     "01-machine-desktop.png",
     "04-machine-welcome-success.png",
     "05-accessible-mode.png",
+    "02-machine-mobile-portrait-onboarding.png",
     "02-machine-mobile-portrait.png",
-    "03-machine-mobile-landscape.png",
-    "06-gallery-lanren.png",
-    "07-gallery-wuwu.png",
-    "08-gallery-fantuan.png",
-    "09-gallery-zaozao.png",
-    "10-gallery-chaochao.png",
-    "11-gallery-changchang.png",
-    "12-gallery-silhouette.png",
-    "13-gallery-lantern.png"
+    "03-machine-mobile-landscape.png"
   ],
   "errors": []
 }

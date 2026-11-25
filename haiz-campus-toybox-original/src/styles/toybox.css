@@ -33,7 +33,9 @@ html, body {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 100dvh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
   position: relative;
 }
 
@@ -42,10 +44,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 18px;
+  gap: 10px;
+  padding: 8px 16px;
+  max-width: 100%;
+  overflow: hidden;
   border-bottom: 1px solid var(--border);
-  background: rgba(251, 246, 235, 0.78);
+  background: rgba(251, 246, 235, 0.84);
   backdrop-filter: blur(8px);
   z-index: 10;
 }
@@ -53,18 +57,20 @@ html, body {
 .tbx-brand {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .tbx-brand h1 {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 1.08rem;
+  font-size: 1.04rem;
   font-weight: 700;
   color: var(--qilou-green);
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .tbx-brand span {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: var(--ink-soft);
   letter-spacing: 0.08em;
 }
@@ -72,19 +78,23 @@ html, body {
 .tbx-tools {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.tbx-tools::-webkit-scrollbar { display: none; }
 
 .tbx-badge-demo {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border: 1px solid rgba(196, 83, 58, 0.45);
   background: rgba(196, 83, 58, 0.1);
   color: var(--terracotta-dark);
   border-radius: 4px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .tbx-btn-ghost {
@@ -92,12 +102,13 @@ html, body {
   border: 1px solid var(--border);
   background: var(--cream);
   color: var(--qilou-green);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 6px 11px;
+  padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
 }
 .tbx-btn-ghost:hover, .tbx-btn-ghost:focus-visible {
@@ -123,45 +134,59 @@ html, body {
   height: 100%;
 }
 
-/* Subtle floating target cue (top-left corner, never blocks the Qilou pediment marquee) */
-.tbx-target-strip {
+/* ── Concise, Skippable First-Time Onboarding Card (anchored to side, never blocks vitrine or toys) */
+.tbx-guide {
   position: absolute;
-  top: 12px;
+  top: 14px;
   left: 16px;
+  width: min(272px, calc(100vw - 32px));
+  background: rgba(251, 246, 235, 0.95);
+  border: 1.5px solid var(--brass);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 24px rgba(42, 28, 16, 0.12);
+  z-index: 11;
+  animation: tbx-slide-up 0.2s ease-out forwards;
+}
+.tbx-guide-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 6px 12px;
-  background: rgba(251, 246, 235, 0.9);
-  border: 1px solid rgba(184, 141, 68, 0.45);
-  border-radius: 6px;
-  box-shadow: 0 4px 14px rgba(42, 28, 16, 0.08);
-  font-size: 0.82rem;
-  z-index: 6;
-  max-width: min(320px, calc(100vw - 32px));
+  margin-bottom: 6px;
 }
-.tbx-target-hint { display: none; }
-.tbx-target-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.tbx-target-name {
+.tbx-guide-head strong {
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-size: 0.9rem;
   color: var(--qilou-green);
 }
-.tbx-target-hint {
+.tbx-guide-skip {
+  appearance: none;
+  border: none;
+  background: transparent;
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  text-decoration: underline;
 }
+.tbx-guide-skip:hover { color: var(--terracotta); }
+.tbx-guide ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.tbx-guide li { margin-bottom: 3px; }
+.tbx-guide li b { color: var(--ink); }
 
-/* ── Welcome Story Plaque (bottom-right / bottom-center on mobile) */
+/* ── Welcome Story Plaque */
 .tbx-welcome {
   position: absolute;
-  bottom: 18px;
-  right: 22px;
+  bottom: 16px;
+  right: 20px;
   width: min(350px, calc(100vw - 28px));
   background: var(--cream);
   border: 2px solid var(--brass);
@@ -172,7 +197,7 @@ html, body {
   animation: tbx-slide-up 0.18s ease-out forwards;
 }
 @keyframes tbx-slide-up {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .tbx-welcome-kicker {
@@ -218,34 +243,71 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 10px 18px;
+  padding: 8px 18px;
   border-top: 1px solid var(--border);
-  background: rgba(246, 237, 220, 0.92);
+  background: rgba(246, 237, 220, 0.94);
   z-index: 10;
 }
-.tbx-status {
-  font-size: 0.84rem;
-  color: var(--ink);
+
+.tbx-status-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 }
+
+/* 3-Step Visual Progress Rhythm */
+.tbx-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tbx-step {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(45, 78, 71, 0.06);
+  transition: background 0.2s, color 0.2s;
+}
+.tbx-step[data-active="true"] {
+  background: var(--qilou-green);
+  color: var(--cream);
+}
+.tbx-step[data-done="true"] {
+  color: var(--qilou-green);
+  border-color: rgba(45, 78, 71, 0.28);
+  background: rgba(45, 78, 71, 0.1);
+}
+
+.tbx-status {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+}
 .tbx-status small {
   display: block;
+  font-weight: 400;
   font-size: 0.74rem;
   color: var(--ink-soft);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .tbx-controls {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
 }
 
 .tbx-dpad {
   display: grid;
   grid-template-columns: repeat(3, 36px);
-  grid-template-rows: repeat(2, 32px);
+  grid-template-rows: repeat(2, 30px);
   gap: 4px;
 }
 .tbx-dir {
@@ -274,7 +336,7 @@ html, body {
   font-family: var(--font-serif);
   font-size: 0.96rem;
   font-weight: 700;
-  padding: 12px 22px;
+  padding: 11px 22px;
   border-radius: 999px;
   cursor: pointer;
   letter-spacing: 0.08em;
@@ -298,7 +360,7 @@ html, body {
   background: rgba(243, 234, 216, 0.97);
   z-index: 15;
   overflow-y: auto;
-  padding: 22px 18px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -345,23 +407,36 @@ html, body {
   display: block;
 }
 
-.tbx-antibot-slot {
-  min-height: 0;
-}
-
+.tbx-antibot-slot { min-height: 0; }
 .hidden { display: none !important; }
 
-/* ── Responsive Mobile Portrait & Landscape */
+/* ── Responsive Mobile Portrait (zero cabinet occlusion, single-row header) */
 @media (max-width: 680px) {
-  .tbx-header { padding: 8px 12px; }
+  .tbx-header { padding: 6px 10px; gap: 6px; }
+  .tbx-brand h1 { font-size: 0.92rem; }
   .tbx-brand span { display: none; }
-  .tbx-target-hint { display: none; }
-  .tbx-console { flex-direction: column; gap: 8px; padding: 8px 12px 12px; }
-  .tbx-status { text-align: center; }
-  .tbx-welcome { right: 14px; left: 14px; width: auto; bottom: 12px; }
+  .tbx-badge-demo { font-size: 0.64rem; padding: 2px 6px; }
+  .tbx-btn-ghost { font-size: 0.7rem; padding: 4px 7px; }
+  .tbx-guide {
+    top: auto;
+    bottom: 8px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 9px 12px;
+  }
+  .tbx-guide ol { font-size: 0.74rem; }
+  .tbx-console { flex-direction: column; gap: 6px; padding: 7px 12px 10px; }
+  .tbx-status-col { align-items: center; text-align: center; }
+  .tbx-welcome { right: 12px; left: 12px; width: auto; bottom: 10px; }
 }
+
+/* ── Responsive Mobile Landscape */
 @media (max-height: 500px) and (orientation: landscape) {
-  .tbx-header { padding: 5px 12px; }
-  .tbx-console { padding: 6px 12px; flex-direction: row; }
-  .tbx-target-strip { top: 6px; padding: 4px 10px; font-size: 0.78rem; }
+  .tbx-header { padding: 4px 12px; }
+  .tbx-console { padding: 5px 12px; flex-direction: row; }
+  .tbx-steps { display: none; }
+  .tbx-guide { top: 8px; left: 10px; width: 230px; padding: 8px 10px; }
+  .tbx-dpad { grid-template-columns: repeat(3, 30px); grid-template-rows: repeat(2, 24px); }
+  .tbx-grab-btn { padding: 8px 16px; font-size: 0.85rem; }
 }

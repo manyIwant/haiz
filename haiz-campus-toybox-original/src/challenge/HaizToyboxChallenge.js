@@ -1,10 +1,13 @@
 // HAIZ Campus Toybox — Mountable Verification Challenge Component.
-// Orchestrates the 3D Qilou claw machine, accessible alternative flow, ChallengeAdapter,
-// AntiBotProvider, AbortController lifecycle isolation, and final handoff to the login host.
+// Orchestrates the 3D Qilou claw machine (with integrated rotating 3D Target Showcase Vitrine),
+// skippable first-time onboarding, 3-step progress rhythm, accessible alternative flow,
+// ChallengeAdapter, AntiBotProvider, AbortController lifecycle isolation, and login handoff.
 import { ClawScene } from '../machine/ClawScene.js';
 import { TOY_BY_ID } from '../toys/registry.js';
 import { createAntiBotProvider } from './adapters/index.js';
 import { ATTEMPT_STATUS } from '../../shared/protocol.js';
+
+const ONBOARD_KEY = 'haiz_toybox_onboarded_v1';
 
 export class HaizToyboxChallenge {
   /**
@@ -28,15 +31,41 @@ export class HaizToyboxChallenge {
     this._gen = 0;
     this._ac = null;
     this._keys = new Set();
+    this._guideVisible = !this._isOnboarded();
 
     this._renderDOM();
     this.scene = new ClawScene(this.els.canvasHost, {
       reducedMotion: this.reducedMotion,
       onDropComplete: (pick) => this._handleSubmit(pick),
       onStateChange: (state, info) => this._onSceneState(state, info),
+      onFirstAction: () => this.dismissGuide(),
     });
     this._bindControls();
     this.startChallenge('game');
+  }
+
+  _isOnboarded() {
+    try { return window.localStorage?.getItem(ONBOARD_KEY) === '1'; } catch { return false; }
+  }
+
+  dismissGuide() {
+    if (!this._guideVisible) return;
+    this._guideVisible = false;
+    this.els.guide?.classList.add('hidden');
+    try { window.localStorage?.setItem(ONBOARD_KEY, '1'); } catch {}
+  }
+
+  showGuide() {
+    this._guideVisible = true;
+    this.els.guide?.classList.remove('hidden');
+  }
+
+  _setStep(stepNum) {
+    this.els.steps.forEach((el, idx) => {
+      const n = idx + 1;
+      el.dataset.active = String(n === stepNum);
+      el.dataset.done = String(n < stepNum);
+    });
   }
 
   _renderDOM() {
@@ -48,22 +77,28 @@ export class HaizToyboxChallenge {
             <span>CAMPUS TOYBOX</span>
           </div>
           <div class="tbx-tools">
-            <span class="tbx-badge-demo hidden" data-role="demo-badge">DEMO 演示模式 · 非正式授权</span>
-            <a class="tbx-btn-ghost" href="${this.galleryUrl}" data-role="gallery-link">角色艺术验收馆</a>
-            <button type="button" class="tbx-btn-ghost" data-role="btn-a11y" aria-pressed="false">无障碍模式</button>
-            <button type="button" class="tbx-btn-ghost" data-role="btn-rm" aria-pressed="${this.reducedMotion}">减弱动效</button>
-            <button type="button" class="tbx-btn-ghost" data-role="btn-mute" aria-pressed="false">音效: 开</button>
+            <span class="tbx-badge-demo hidden" data-role="demo-badge">DEMO 演示</span>
+            <button type="button" class="tbx-btn-ghost" data-role="btn-guide" title="查看操作引导">玩法</button>
+            <a class="tbx-btn-ghost" href="${this.galleryUrl}" data-role="gallery-link">角色馆</a>
+            <button type="button" class="tbx-btn-ghost" data-role="btn-a11y" aria-pressed="false">无障碍</button>
+            <button type="button" class="tbx-btn-ghost" data-role="btn-rm" aria-pressed="${this.reducedMotion}">静效</button>
+            <button type="button" class="tbx-btn-ghost" data-role="btn-mute" aria-pressed="false">音效</button>
           </div>
         </header>
 
         <main class="tbx-stage-wrap">
-          <div class="tbx-canvas-host" data-role="canvas-host" aria-label="海南中学微缩抓娃娃机三维画布"></div>
+          <div class="tbx-canvas-host" data-role="canvas-host" aria-label="海南中学微缩抓娃娃机三维画布，顶部骑楼橱窗内旋转展示本次需要抓取的目标伙伴"></div>
 
-          <div class="tbx-target-strip" data-role="target-strip" aria-live="polite">
-            <span class="tbx-target-dot" data-role="target-dot"></span>
-            <span>寻找伙伴：<strong class="tbx-target-name" data-role="target-name">加载中…</strong></span>
-            <span class="tbx-target-hint" data-role="target-hint"></span>
-          </div>
+          <aside class="tbx-guide ${this._guideVisible ? '' : 'hidden'}" data-role="guide" aria-label="首次操作引导">
+            <div class="tbx-guide-head">
+              <strong>怎么玩？两步就好</strong>
+              <button type="button" class="tbx-guide-skip" data-role="btn-skip-guide">跳过引导</button>
+            </div>
+            <ol>
+              <li><b>看顶部橱窗</b>：记住旋转展示的那位伙伴</li>
+              <li><b>对准并抓取</b>：点击/拖动机箱内同一位伙伴（或用方向键），按下「抓取」</li>
+            </ol>
+          </aside>
 
           <section class="tbx-welcome hidden" data-role="welcome" aria-live="polite">
             <div class="tbx-welcome-kicker">HAIZ · CAMPUS WELCOME</div>
@@ -88,9 +123,16 @@ export class HaizToyboxChallenge {
         </main>
 
         <footer class="tbx-console">
-          <div class="tbx-status" data-role="status" role="status" aria-live="polite">
-            正在唤醒校园玩偶屋…
-            <small data-role="status-sub">点击/拖动画面或使用方向键移动机械爪，按空格键抓取</small>
+          <div class="tbx-status-col">
+            <div class="tbx-steps" aria-label="验证步骤">
+              <span class="tbx-step" data-step="1" data-active="true">① 移动对准</span>
+              <span class="tbx-step" data-step="2">② 按下抓取</span>
+              <span class="tbx-step" data-step="3">③ 迎接伙伴</span>
+            </div>
+            <div class="tbx-status" data-role="status" role="status" aria-live="polite">
+              正在唤醒校园玩偶屋…
+              <small data-role="status-sub">请抓住顶部橱窗里的这位伙伴</small>
+            </div>
           </div>
           <div class="tbx-antibot-slot" data-role="antibot-slot"></div>
           <div class="tbx-controls" data-role="controls">
@@ -110,13 +152,13 @@ export class HaizToyboxChallenge {
     const q = (r) => this.mountEl.querySelector(`[data-role="${r}"]`);
     this.els = {
       demoBadge: q('demo-badge'),
+      btnGuide: q('btn-guide'),
+      btnSkipGuide: q('btn-skip-guide'),
+      guide: q('guide'),
       btnA11y: q('btn-a11y'),
       btnRm: q('btn-rm'),
       btnMute: q('btn-mute'),
       canvasHost: q('canvas-host'),
-      targetDot: q('target-dot'),
-      targetName: q('target-name'),
-      targetHint: q('target-hint'),
       welcome: q('welcome'),
       welcomeTitle: q('welcome-title'),
       welcomeBody: q('welcome-body'),
@@ -127,6 +169,7 @@ export class HaizToyboxChallenge {
       a11yGrid: q('a11y-grid'),
       status: q('status'),
       statusSub: q('status-sub'),
+      steps: Array.from(this.mountEl.querySelectorAll('.tbx-step')),
       antibotSlot: q('antibot-slot'),
       controls: q('controls'),
       btnGrab: q('btn-grab'),
@@ -135,16 +178,23 @@ export class HaizToyboxChallenge {
   }
 
   _bindControls() {
-    // Grab & Refresh
-    this.els.btnGrab.addEventListener('click', () => this.scene.triggerGrab());
+    this.els.btnGrab.addEventListener('click', () => {
+      this.dismissGuide();
+      this.scene.triggerGrab();
+    });
     this.els.btnRefresh.addEventListener('click', () => this.startChallenge(this.mode));
     this.els.btnReplay.addEventListener('click', () => this.startChallenge(this.mode));
     this.els.btnContinue.addEventListener('click', () => {
       if (this._passedPayload) this.onVerified(this._passedPayload);
     });
+    this.els.btnSkipGuide.addEventListener('click', () => this.dismissGuide());
+    this.els.btnGuide.addEventListener('click', () => {
+      if (this._guideVisible) this.dismissGuide();
+      else this.showGuide();
+    });
 
-    // Toggles
     this.els.btnA11y.addEventListener('click', () => {
+      this.dismissGuide();
       const next = this.mode === 'game' ? 'accessible' : 'game';
       this.startChallenge(next);
     });
@@ -156,15 +206,14 @@ export class HaizToyboxChallenge {
     this.els.btnMute.addEventListener('click', () => {
       this.muted = !this.muted;
       this.els.btnMute.setAttribute('aria-pressed', String(this.muted));
-      this.els.btnMute.textContent = this.muted ? '音效: 关' : '音效: 开';
+      this.els.btnMute.textContent = this.muted ? '静音' : '音效';
       this.scene.audio.setMuted(this.muted);
     });
 
-    // Virtual D-pad pointer hold
     const dirMap = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
     this.mountEl.querySelectorAll('.tbx-dir').forEach((btn) => {
       const [dx, dz] = dirMap[btn.dataset.dir];
-      const start = (e) => { e.preventDefault(); this.scene.setInput(dx, dz); };
+      const start = (e) => { e.preventDefault(); this.dismissGuide(); this.scene.setInput(dx, dz); };
       const stop = () => this.scene.setInput(0, 0);
       btn.addEventListener('pointerdown', start);
       btn.addEventListener('pointerup', stop);
@@ -172,18 +221,28 @@ export class HaizToyboxChallenge {
       btn.addEventListener('pointercancel', stop);
     });
 
-    // Keyboard controls
     this._onKeyDown = (e) => {
       if (this.mode !== 'game') return;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(e.key)) {
         if (document.activeElement?.tagName !== 'BUTTON') e.preventDefault();
       }
-      if (e.key === ' ' || e.key === 'Enter') {
-        if (this.scene.state === 'aiming') this.scene.triggerGrab();
+      if (e.key === 'Escape' && this._guideVisible) {
+        this.dismissGuide();
         return;
       }
-      this._keys.add(e.key.toLowerCase());
-      this._syncKeys();
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (this.scene.state === 'aiming') {
+          this.dismissGuide();
+          this.scene.triggerGrab();
+        }
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'w', 'a', 's', 'd'].includes(k)) {
+        this.dismissGuide();
+        this._keys.add(k);
+        this._syncKeys();
+      }
     };
     this._onKeyUp = (e) => {
       this._keys.delete(e.key.toLowerCase());
@@ -208,7 +267,6 @@ export class HaizToyboxChallenge {
   }
 
   async startChallenge(mode = 'game') {
-    // Cancel previous in-flight challenge cleanly
     this._gen += 1;
     const gen = this._gen;
     if (this._ac) this._ac.abort();
@@ -226,6 +284,7 @@ export class HaizToyboxChallenge {
     this.els.btnA11y.setAttribute('aria-pressed', String(mode === 'accessible'));
     this.els.a11yPanel.classList.toggle('hidden', mode !== 'accessible');
     this.els.controls.classList.toggle('hidden', mode === 'accessible');
+    this._setStep(1);
 
     this._setStatus('正在向校园驿站申请本轮挑战…', '每次挑战随机生成玩偶位置与一次性凭证');
 
@@ -236,7 +295,6 @@ export class HaizToyboxChallenge {
       this.challengeStartedAt = performance.now();
       this.els.demoBadge.classList.toggle('hidden', !ch.demo);
 
-      // Prepare independent anti-bot provider
       this.antiBot = createAntiBotProvider(ch.antiBot?.provider);
       await this.antiBot.prepare({
         container: this.els.antibotSlot,
@@ -248,16 +306,12 @@ export class HaizToyboxChallenge {
       if (gen !== this._gen) return;
 
       const entry = TOY_BY_ID[ch.target];
-      this.els.targetDot.style.background = entry.badgeColor;
-      this.els.targetName.textContent = `${entry.name}（${entry.title}）`;
-      this.els.targetHint.textContent = entry.accessibleHint;
-
       if (mode === 'accessible') {
         this._renderAccessible(ch, entry);
-        this._setStatus(`请选择今日迎新伙伴「${entry.name}」`, `剩余尝试次数：${ch.attemptsLeft}`);
+        this._setStatus('请选出这位伙伴', `外观特征：${entry.accessibleHint}（${entry.name}）`);
       } else {
         this.scene.loadChallenge(ch);
-        this._setStatus(`请抓住「${entry.name}」放入左下角奖品口`, '点击或拖动画面对准玩偶，再按下「抓取」');
+        this._setStatus('请抓住这位伙伴', `顶部橱窗旋转展示中 · ${entry.name}（${entry.title}）`);
       }
     } catch (err) {
       if (err?.name === 'AbortError' || gen !== this._gen) return;
@@ -267,14 +321,14 @@ export class HaizToyboxChallenge {
   }
 
   _renderAccessible(ch, targetEntry) {
-    this.els.a11yPrompt.textContent = `请从下方 6 位校园伙伴中找出「${targetEntry.name}（${targetEntry.enName}）」——特征：${targetEntry.accessibleHint}。`;
+    this.els.a11yPrompt.textContent = `请选出这位伙伴——外观特征：${targetEntry.accessibleHint}（${targetEntry.name} · ${targetEntry.title}）。`;
     this.els.a11yGrid.innerHTML = '';
     for (const item of ch.layout) {
       const e = TOY_BY_ID[item.characterId];
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'tbx-a11y-card';
-      btn.innerHTML = `<strong>${e.name} · ${e.enName}</strong><span>${e.accessibleHint}</span>`;
+      btn.innerHTML = `<strong>${e.accessibleHint}</strong><span>${e.name} · ${e.title}</span>`;
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         const res = await this._handleSubmit({ slot: item.slot, characterId: item.characterId });
@@ -316,9 +370,8 @@ export class HaizToyboxChallenge {
         return res;
       }
       if (res.status === ATTEMPT_STATUS.WRONG) {
-        const pickedName = TOY_BY_ID[pick.characterId]?.name || '小玩偶';
-        const targetName = TOY_BY_ID[this.challenge.target]?.name;
-        this._setStatus(`抓到的是「${pickedName}」，它害羞地回去了！再找找「${targetName}」吧`, `剩余尝试次数：${res.attemptsLeft}`);
+        const target = TOY_BY_ID[this.challenge.target];
+        this._setStatus('这位伙伴害羞地回去了，请再对照顶部橱窗抓一次！', `目标：${target.name} · 剩余尝试次数：${res.attemptsLeft}`);
       } else if (res.status === ATTEMPT_STATUS.EXPIRED || res.status === ATTEMPT_STATUS.EXHAUSTED) {
         this._setStatus(res.status === ATTEMPT_STATUS.EXPIRED ? '本轮挑战已过期，请刷新新的一局' : '本轮尝试次数已用完，请换一局再试', '');
         this.els.btnRefresh.classList.remove('hidden');
@@ -341,16 +394,22 @@ export class HaizToyboxChallenge {
 
   _onSceneState(state, info) {
     this.els.btnGrab.disabled = state !== 'aiming';
-    if (state === 'aiming' && info?.emptyGrab) {
-      this._setStatus('差一点点就碰到啦！再挪一挪光圈对准玩偶吧', '未抓到玩偶不会扣除尝试次数');
-    }
-    if (state === 'welcome' && info?.result) {
+    if (state === 'aiming') {
+      this._setStep(1);
+      if (info?.emptyGrab) {
+        this._setStatus('差一点点就碰到啦！再挪一挪光圈对准这位伙伴吧', '未抓到玩偶不会扣除尝试次数');
+      }
+    } else if (['dropping', 'grabbing', 'lifting', 'carrying', 'releasing', 'verifying'].includes(state)) {
+      this._setStep(2);
+    } else if (state === 'welcome' && info?.result) {
+      this._setStep(3);
       this._showWelcome(info.result, info.character);
     }
   }
 
   _showWelcome(result, entry) {
-    this._setStatus(`${entry.name}已经从奖品口探出头来迎接你啦！`, result.demo ? '演示凭证已签发（仅作展示，不可用于生产登录）' : '一次性服务端凭证已签发');
+    this.dismissGuide();
+    this._setStatus(`欢迎入校！${entry.name}从奖品口探出头来迎接你啦`, result.demo ? '演示凭证已签发（仅作展示，不可用于生产登录）' : '一次性服务端凭证已签发');
     this.els.welcomeTitle.textContent = `${entry.name}来接你入校啦`;
     this.els.welcomeBody.textContent = `「${entry.story}」`;
     this.els.welcome.classList.remove('hidden');
