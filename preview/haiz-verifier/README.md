@@ -1,54 +1,45 @@
-# HAIZ 验证器（抓娃娃机版 · 预览）
+# HAIZ 动物验证码（抓娃娃机版 · 预览）
 
-照着参考视频的交互节奏做的一个人类验证弹窗：一张简洁的卡片，里面是一台正面视角的小玩偶柜。
+继承 PR #113 的极简卡片设计、正面玩偶柜构图、三步交互与服务端安全验证架构，将原有的 6 位校园角色替换为 6 款高辨识度 3D 毛绒动物玩偶：
 
-1. **移动**：拖动左边的摇杆（或直接在玩偶柜里左右拖、或按 ← →）把爪子移到目标玩偶上方。
-2. **抓住**：按右边的「抓」，爪子放下、合拢、提起。
-3. **投放**：把玩偶移到左下角的投放口，按「放」。投放口亮绿时可以松爪。
+| 动物 | 提示样式 | 模型文件 | 体积 | 动画片段 |
+| --- | --- | --- | --- | --- |
+| 黄鸭子 🐤 | `黄鸭子 🐤`（暖金黄） | `assets/models/duck.glb` | ~233 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
+| 黑白熊猫 🐼 | `黑白熊猫 🐼`（墨黑） | `assets/models/panda.glb` | ~251 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
+| 橙色狐狸 🦊 | `橙色狐狸 🦊`（狐狸橙） | `assets/models/fox.glb` | ~271 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
+| 绿色青蛙 🐸 | `绿色青蛙 🐸`（草叶绿） | `assets/models/frog.glb` | ~220 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
+| 粉色小猪 🐷 | `粉色小猪 🐷`（草莓粉） | `assets/models/pig.glb` | ~268 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
+| 浅蓝色大象 🐘 | `浅蓝色大象 🐘`（晴空蓝） | `assets/models/elephant.glb` | ~270 KB | `idle` / `touch` / `lifted` / `land` / `celebrate` |
 
-松爪之后才把选择交给验证服务判定。通过后卡片变成「已验证」，再回到页面显示「你已进入」。
+6 款动物 GLB 合计约 **1.48 MB**（较原 5.7 MB 缩小约 **74%**），并在前端内置二进制缓存，换局与重试免重复网络加载。原有 6 位 HAIZ 校园角色资产完整保留在 `haiz-campus-toybox-original/` 中。
 
-![流程截图](./screenshots/flow.jpg)
+![六款动物玩偶多角度展示](./screenshots/animals-showcase.jpg)
 
-在线预览：`/preview/haiz-verifier/`（GitHub Pages 根目录下）。
+![完整验证流程](./screenshots/flow.jpg)
 
-## 用了什么
+## 交互流程
 
-- **玩偶**：`haiz-campus-toybox-original/assets/models/` 里 6 位 HAIZ 原创角色的 GLB（仁仁、午午、饭团、早早、潮潮、长长），包括它们自带的待机、被抓起、落地、欢呼动画。没有使用参考视频里的任何素材。
-- **验证协议**：直接复用 `haiz-campus-toybox-original/shared/` 的 `ChallengeService` 和 `src/challenge/adapters/`（Mock / Http / Turnstile）。接口见 `haiz-campus-toybox-original/shared/CONTRACT.md`。
-- **Three.js r170**：复用 `lanren/vendor/three/`，不走 CDN，无需构建。
+1. **移动**：拖动左下角摇杆、直接在玩偶柜画面左右拖动/轻点，或使用键盘 `←` `→` / `A` `D`，将爪子移到任务指定的动物上方（如「用爪子抓起那只 **黄鸭子** 🐤」）。
+2. **抓住**：按右下角红色「抓」（或空格/回车），三爪放下、平滑合拢抱起动物并升起。
+3. **投放**：将动物移到左下角投放口上方（投放口亮绿且提示「可以投放」），按「放」松爪落入。
 
-## 安全边界
+松爪后将选择交给验证服务判定：抓错会提示对应动物与剩余次数（如「那是粉色小猪 🐷，还可以试 4 次」）并回位；抓对后卡片变为「已验证」，再回到页面显示「你已进入」。
 
-- 前端只负责交互。抓到哪只、什么时候提交，最后都要由服务端 `submitAttempt` 判定，通过后拿到一次性 `passToken`，登录/注册接口再在服务端核销。
-- 默认使用浏览器内的 `MockAdapter`，挑战和凭证都带 `demo: true`，页面上有「演示模式 · 不能用于真实登录」提示，服务端会拒绝演示凭证。
-- 接真实服务端：`/preview/haiz-verifier/?api=/api/toybox`（需要部署 `haiz-campus-toybox-original/server/` 或等价实现）。
+## 安全边界与无障碍
 
-## 无障碍
+- **前端不决定是否通过**：完整保留 `haiz-campus-toybox-original/shared/` 的 `ChallengeService` 与 `src/challenge/adapters/`（Mock / Http / Turnstile）。协议层保持稳定 `characterId` 与 `slot` 校验，动物映射仅作用于展示层，因此可直接对接现有参考服务端（`?api=/api/toybox`）。
+- **演示隔离**：默认使用浏览器内 `MockAdapter`（`demo: true`），页面显著标注「演示模式 · 不能用于真实登录」，生产服务端会直接拒绝演示凭证。
+- **无障碍替代**：点击「看不清或不方便操作？换一种方式」进入 2×3 动物名单模式（带 Emoji 与对应色文字），走同一套服务端校验；WebGL 不可用时自动降级为名单模式；完整支持键盘、`prefers-reduced-motion` 与后台暂停渲染。
 
-- 「看不清或不方便操作？换一种方式」切换到名单模式：直接点目标玩偶的名字，走同一套服务端校验。
-- WebGL 不可用时自动进入名单模式。
-- 支持键盘（← → 移动，空格/回车按按钮，Esc 关闭）、`prefers-reduced-motion`、页面隐藏时暂停渲染，`destroy()` 释放 WebGL 资源。
+## 源码、模型重导与本地验收
 
-## 接入现有登录（还没做）
-
-这次没有改动 `login/`。要接入时：
-
-```js
-import { createHaizVerifier } from '/preview/haiz-verifier/src/verifier.js';
-import { createAdapterFromConfig } from '/haiz-campus-toybox-original/src/challenge/adapters/index.js';
-
-const v = createHaizVerifier({
-  container: sheetElement,
-  adapter: createAdapterFromConfig({ mode: 'http', baseUrl: '/api/toybox' }),
-  onVerified: ({ passToken }) => submitLogin({ ...form, passToken }), // 服务端一次性核销
-  onClose: () => v.destroy(),
-});
-```
-
-页面需要声明 import map（`three` → `lanren/vendor/three/three.module.min.js`，`three/addons/` → `lanren/vendor/three/addons/`），并引入 `src/verifier.css`（样式全部限定在 `.hv` 内）。
-
-## 已知限制
-
-- 6 个 GLB 一共约 5.7 MB，首次打开在慢网下需要几秒，期间显示「正在摆放玩偶…」。正式接入前建议压缩模型。
-- 爪子「对准」的判定很宽松（以玩偶中心为准），没有物理模拟，不会出现抓到一半滑落。
+- 动物建模与动画源码：`src/animals/`（`builders.js`、`plush-kit.js`、`glb-exporter.js`、`catalog.js`）
+- 重新导出 6 个 GLB 与检视拼图：
+  ```bash
+  python3 preview/haiz-verifier/scripts/export-animals.py
+  ```
+- 运行全 6 款动物抓取/投放 + 360×740 移动端 + 无障碍端到端测试：
+  ```bash
+  python3 preview/haiz-verifier/scripts/verify-e2e.py
+  ```
+- 授权与素材来源说明：见 [`LICENSES.md`](./LICENSES.md)。

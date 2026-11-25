@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>HAIZ Animal Plush GLB Exporter</title>
+<script type="importmap">
+{ "imports": {
+  "three": "../../../lanren/vendor/three/three.module.min.js",
+  "three/addons/": "../../../lanren/vendor/three/addons/"
+} }
+</script>
+<style>
+  html, body { margin: 0; background: #f6f3ec; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1440" height="960"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { ANIMALS } from '../src/animals/catalog.js';
+import { BUILDERS } from '../src/animals/builders.js';
+import { exportToGLB } from '../src/animals/glb-exporter.js';
+
+function toBase64(u8) {
+  let bin = '';
+  for (let i = 0; i < u8.length; i += 0x8000) {
+    bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+
+window.__exportAllAnimals = async function () {
+  const results = [];
+  for (const animal of ANIMALS) {
+    const { root, clips } = BUILDERS[animal.id]();
+    root.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(root);
+    const size = box.getSize(new THREE.Vector3());
+    // 确保每个动物模型底部贴合 y=0
+    if (Math.abs(box.min.y) > 1e-5) {
+      root.position.y -= box.min.y;
+      root.updateMatrixWorld(true);
+    }
+
+    let meshes = 0, vertices = 0, triangles = 0;
+    root.traverse((o) => {
+      if (o.isMesh && o.geometry) {
+        meshes++;
+        vertices += o.geometry.attributes.position.count;
+        triangles += o.geometry.index
+          ? o.geometry.index.count / 3
+          : o.geometry.attributes.position.count / 3;
+      }
+    });
+
+    const glb = exportToGLB(root, clips);
+    results.push({
+      id: animal.id,
+      protocolId: animal.protocolId,
+      name: animal.name,
+      emoji: animal.emoji,
+      modelFile: animal.modelFile,
+      size: { x: +size.x.toFixed(4), y: +size.y.toFixed(4), z: +size.z.toFixed(4) },
+      stats: { meshes, vertices, triangles: Math.round(triangles), clips: clips.map((c) => c.name), byteLength: glb.byteLength },
+      glbBase64: toBase64(glb),
+    });
+  }
+  return results;
+};
+
+// 从已导出的 .glb 通过 GLTFLoader 重新加载，渲染 6 动物 × 2 视角（正面 + 3/4 侧面）检视图
+window.__renderShowcase = async function (basePath = '../assets/models/') {
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(1440, 960, false);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setScissorTest(true);
+
+  const loader = new GLTFLoader();
+  const cols = 3;
+  const rows = 2;
+  const cellW = 1440 / cols;
+  const cellH = 960 / rows;
+
+  for (let i = 0; i < ANIMALS.length; i++) {
+    const animal = ANIMALS[i];
+    const g = await loader.loadAsync(`${basePath}${animal.modelFile}?v=${Date.now()}`);
+    const model = g.scene;
+    model.traverse((o) => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    });
+    const box = new THREE.Box3().setFromObject(model);
+    const sz = box.getSize(new THREE.Vector3());
+    const s = 1.0 / Math.max(sz.y, 1e-4);
+    model.scale.setScalar(s);
+    model.position.y = -box.min.y * s;
+
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const baseX = col * cellW;
+    const baseY = (rows - 1 - row) * cellH;
+
+    // 同一格左半边正面，右半边 3/4 角度
+    const views = [
+      { vx: baseX, vw: cellW / 2, yaw: 0.06 },
+      { vx: baseX + cellW / 2, vw: cellW / 2, yaw: -0.62 },
+    ];
+
+    for (const v of views) {
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf6f3ec);
+      scene.add(new THREE.HemisphereLight(0xfffaf2, 0xd8d1c2, 1.55));
+      const sun = new THREE.DirectionalLight(0xfff4e2, 2.05);
+      sun.position.set(2.0, 4.5, 3.8);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(512, 512);
+      Object.assign(sun.shadow.camera, { left: -1.5, right: 1.5, top: 1.5, bottom: -0.5, near: 0.5, far: 12 });
+      scene.add(sun);
+      const fill = new THREE.DirectionalLight(0xe5f0ea, 0.65);
+      fill.position.set(-2.6, 2.0, 2.6);
+      scene.add(fill);
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.ShadowMaterial({ opacity: 0.16 }));
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const clone = model.clone(true);
+      clone.rotation.y = v.yaw;
+      scene.add(clone);
+
+      const cam = new THREE.PerspectiveCamera(28, v.vw / cellH, 0.1, 20);
+      cam.position.set(0, 0.72, 3.15);
+      cam.lookAt(0, 0.48, 0);
+
+      renderer.setViewport(v.vx, baseY, v.vw, cellH);
+      renderer.setScissor(v.vx, baseY, v.vw, cellH);
+      renderer.render(scene, cam);
+    }
+  }
+  return canvas.toDataURL('image/jpeg', 0.92);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "animals": [
+    {
+      "id": "duck",
+      "protocolId": "wuwu",
+      "name": "黄鸭子",
+      "emoji": "🐤",
+      "modelFile": "duck.glb",
+      "size": {
+        "x": 0.1275,
+        "y": 0.1543,
+        "z": 0.141
+      },
+      "stats": {
+        "meshes": 19,
+        "vertices": 3971,
+        "triangles": 6376,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 238280
+      },
+      "sha256": "2f9cd45f1edceb694459e05a4c86e1f664c0d240d313be6efde56c226efaea57"
+    },
+    {
+      "id": "panda",
+      "protocolId": "changchang",
+      "name": "黑白熊猫",
+      "emoji": "🐼",
+      "modelFile": "panda.glb",
+      "size": {
+        "x": 0.1359,
+        "y": 0.1497,
+        "z": 0.1097
+      },
+      "stats": {
+        "meshes": 23,
+        "vertices": 4308,
+        "triangles": 6832,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 257296
+      },
+      "sha256": "dd557c11ff6a916f064d6c153ce61552263e19d4ffd004082af1e691e81e490b"
+    },
+    {
+      "id": "fox",
+      "protocolId": "fantuan",
+      "name": "橙色狐狸",
+      "emoji": "🦊",
+      "modelFile": "fox.glb",
+      "size": {
+        "x": 0.1468,
+        "y": 0.1625,
+        "z": 0.1387
+      },
+      "stats": {
+        "meshes": 21,
+        "vertices": 4173,
+        "triangles": 6734,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 277264
+      },
+      "sha256": "b02b514b6259873e782940ea430481da3d7f8d4a40aef6f60890da1286f40d36"
+    },
+    {
+      "id": "frog",
+      "protocolId": "lanren",
+      "name": "绿色青蛙",
+      "emoji": "🐸",
+      "modelFile": "frog.glb",
+      "size": {
+        "x": 0.1307,
+        "y": 0.1292,
+        "z": 0.0945
+      },
+      "stats": {
+        "meshes": 21,
+        "vertices": 3664,
+        "triangles": 5780,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 225400
+      },
+      "sha256": "db75d508ccfb6c386065c977ba72669b4bff37f47db38fdbdd3404dd50da22b4"
+    },
+    {
+      "id": "pig",
+      "protocolId": "zaozao",
+      "name": "粉色小猪",
+      "emoji": "🐷",
+      "modelFile": "pig.glb",
+      "size": {
+        "x": 0.1366,
+        "y": 0.1625,
+        "z": 0.1261
+      },
+      "stats": {
+        "meshes": 27,
+        "vertices": 4610,
+        "triangles": 7252,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 274864
+      },
+      "sha256": "5e945db3c1e106d3f41ea059fb2641a1082d14423617fab430899407c5915f6c"
+    },
+    {
+      "id": "elephant",
+      "protocolId": "chaochao",
+      "name": "浅蓝色大象",
+      "emoji": "🐘",
+      "modelFile": "elephant.glb",
+      "size": {
+        "x": 0.1519,
+        "y": 0.139,
+        "z": 0.1653
+      },
+      "stats": {
+        "meshes": 28,
+        "vertices": 4595,
+        "triangles": 7250,
+        "clips": [
+          "idle",
+          "touch",
+          "lifted",
+          "land",
+          "celebrate"
+        ],
+        "byteLength": 276212
+      },
+      "sha256": "0625dac8c29d5ca02efbc6125eeccf49b8581196e0abaf035b3f14d2d3849b1e"
+    }
+  ],
+  "totalBytes": 1549316
+}

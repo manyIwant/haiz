@@ -1,17 +1,8 @@
-// HAIZ 验证器 · 界面与流程
-// 三步：① 移动 ② 抓住 ③ 投放 → 服务端判定 → 已验证。
-// 前端只负责交互；是否通过只由 adapter（生产环境 = 可信服务端）决定。
-import { CHARACTER_NAMES } from '../../../haiz-campus-toybox-original/shared/character-ids.js';
+// HAIZ 动物验证码 · 界面与流程
+// 继承 PR #113 的三步流程：① 移动 ② 抓住 ③ 投放 → 服务端判定 → 已验证。
+// 前端只负责交互；是否通过始终由 adapter（生产环境 = 可信服务端 + 反机器人校验）决定。
 import { createAntiBotProvider } from '../../../haiz-campus-toybox-original/src/challenge/adapters/index.js';
-
-const ACCENT = {
-  lanren: '#7fae6a',
-  wuwu: '#e2a03a',
-  fantuan: '#c8723d',
-  zaozao: '#2f5d6b',
-  chaochao: '#4fa3a5',
-  changchang: '#4a4750',
-};
+import { resolveAnimal } from './animals/catalog.js';
 
 const STEPS = ['移动', '抓住', '投放'];
 
@@ -109,11 +100,12 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     ui.go.disabled = !enabled;
   }
 
-  function targetLabel(id) {
-    return `<span class="hv-chip" style="--c:${ACCENT[id] || '#888'}"></span><strong>${CHARACTER_NAMES[id] || id}</strong>`;
+  function targetLabel(characterId) {
+    const a = resolveAnimal(characterId);
+    return `<strong class="hv-target" style="--tc:${a.textColor}">${a.name}</strong><span class="hv-emoji" aria-hidden="true">${a.emoji}</span>`;
   }
 
-  // ---------- 控制：摇杆 / 键盘 / 直接拖动画面 ----------
+  // ---------- 控制：摇杆 / 键盘 / 直接拖动或轻点画面 ----------
   const canMove = () => state === 'move' || state === 'hold';
 
   let stickPointer = null;
@@ -188,18 +180,25 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     }
   }
 
-  function tick() {
+  let lastTick = 0;
+  function tick(now = performance.now()) {
     raf = requestAnimationFrame(tick);
+    const dt = lastTick ? Math.min(0.1, Math.max(0.004, (now - lastTick) / 1000)) : 1 / 60;
+    lastTick = now;
     if (!scene || !canMove()) return;
     const v = stickV || keyV;
     if (v) {
-      scene.setClawX(scene.clawX + v * 0.032);
+      scene.setClawX(scene.clawX + v * 2.15 * dt);
       dragTarget = null;
       noteMove();
     } else if (dragTarget != null) {
       const d = dragTarget - scene.clawX;
-      scene.setClawX(scene.clawX + d * 0.22);
-      if (Math.abs(d) < 0.003) dragTarget = null;
+      const alpha = 1 - Math.exp(-14 * dt);
+      scene.setClawX(scene.clawX + d * alpha);
+      if (Math.abs(d) < 0.004) {
+        scene.setClawX(dragTarget);
+        dragTarget = null;
+      }
     }
     ui.knob.style.transform = `translate(calc(-50% + ${v * 10}px), -50%) rotate(${v * 18}deg)`;
     ui.stick.setAttribute('aria-valuenow', String(Math.round(v * 100) / 100));
@@ -218,6 +217,7 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     state = 'loading';
     held = null;
     moved = false;
+    dragTarget = null;
     setStep(0);
     setGo('抓', false);
     pill('正在准备…');
@@ -227,7 +227,12 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
         challenge = await adapter.createChallenge({ mode: 'game', signal: ac.signal });
         antiBot?.destroy?.();
         antiBot = createAntiBotProvider(challenge.antiBot?.provider);
-        await antiBot.prepare({ container: root, siteKey: challenge.antiBot?.siteKey, action: challenge.antiBot?.action, cData: challenge.antiBot?.cData });
+        await antiBot.prepare({
+          container: root,
+          siteKey: challenge.antiBot?.siteKey,
+          action: challenge.antiBot?.action,
+          cData: challenge.antiBot?.cData,
+        });
         ui.demo.hidden = !challenge.demo;
         ui.loading.hidden = false;
         await scene.loadLayout(challenge.layout);
@@ -242,7 +247,7 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     } catch (err) {
       if (err?.name === 'AbortError') return;
       console.error('[haiz-verifier]', err);
-      fail('暂时连不上验证服务，请稍后再试', true);
+      fail('暂时连不上验证服务，请稍后再试');
     }
   }
 
@@ -296,13 +301,12 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     if (res.status === 'passed') return verified(res);
 
     if (res.status === 'invalid' && res.attemptsLeft > 0 && mode === 'accessible') {
-      // 服务端的粗略时间检查：点得太快。名单模式里直接再点一次即可。
       state = 'accessible';
       pill('慢一点，再点一次', 'warn', ICON.list);
       return;
     }
     if (res.status === 'wrong' && res.attemptsLeft > 0) {
-      const name = CHARACTER_NAMES[toy.characterId] || '它';
+      const animal = resolveAnimal(toy.characterId);
       if (mode === 'game') {
         await scene.returnToy(scene.toys.find((t) => t.slot === toy.slot));
         await scene.home();
@@ -312,7 +316,7 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
       state = mode === 'game' ? 'move' : 'accessible';
       setStep(0);
       setGo('抓', false);
-      pill(`那是${name}，还可以试 ${res.attemptsLeft} 次`, 'warn', ICON.arrows);
+      pill(`那是${animal.name} ${animal.emoji}，还可以试 ${res.attemptsLeft} 次`, 'warn', ICON.arrows);
       return;
     }
     const msg = {
@@ -354,7 +358,7 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     };
   }
 
-  // ---------- 无障碍替代：直接从名单里选 ----------
+  // ---------- 无障碍替代：直接从动物名单里选 ----------
   async function enterAccessible(fresh = false) {
     state = 'loading';
     root.classList.add('is-accessible');
@@ -364,21 +368,34 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
         challenge = await adapter.createChallenge({ mode: 'accessible', signal: ac.signal });
         antiBot?.destroy?.();
         antiBot = createAntiBotProvider(challenge.antiBot?.provider);
-        await antiBot.prepare({ container: root, siteKey: challenge.antiBot?.siteKey, action: challenge.antiBot?.action, cData: challenge.antiBot?.cData });
+        await antiBot.prepare({
+          container: root,
+          siteKey: challenge.antiBot?.siteKey,
+          action: challenge.antiBot?.action,
+          cData: challenge.antiBot?.cData,
+        });
         ui.demo.hidden = !challenge.demo;
         startedAt = performance.now();
       }
     } catch (err) {
-      if (err?.name !== 'AbortError') fail('暂时连不上验证服务，请稍后再试');
+      if (err?.name === 'AbortError') return;
+      fail('暂时连不上验证服务，请稍后再试');
       return;
     }
     state = 'accessible';
     ui.sub.innerHTML = `在下面选出 ${targetLabel(challenge.target)}`;
     ui.list.innerHTML = '';
     for (const item of [...challenge.layout].sort((a, b) => a.slot - b.slot)) {
+      const a = resolveAnimal(item.characterId);
       const li = el('li');
-      const b = el('button', 'hv-list-btn', `<span class="hv-chip" style="--c:${ACCENT[item.characterId]}"></span>${CHARACTER_NAMES[item.characterId]}`);
+      const b = el(
+        'button',
+        'hv-list-btn',
+        `<span class="hv-list-emoji" aria-hidden="true">${a.emoji}</span><span class="hv-list-name" style="color:${a.textColor}">${a.name}</span>`
+      );
       b.type = 'button';
+      b.dataset.characterId = item.characterId;
+      b.dataset.animalId = a.id;
       b.addEventListener('click', () => {
         if (state !== 'accessible') return;
         state = 'submitting';
@@ -390,7 +407,7 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
     }
     ui.list.hidden = false;
     ui.loading.hidden = true;
-    pill('点一下名字即可', '', ICON.list);
+    pill('点一下对应动物即可', '', ICON.list);
     setGo('抓', false);
     ui.alt.querySelector('span').textContent = '回到抓娃娃';
     ui.list.querySelector('button')?.focus();
@@ -432,6 +449,8 @@ export function createHaizVerifier({ container, adapter, onVerified, onClose }) 
 
   return {
     element: root,
+    getScene: () => scene,
+    getChallenge: () => challenge,
     destroy() {
       destroyed = true;
       ac.abort();

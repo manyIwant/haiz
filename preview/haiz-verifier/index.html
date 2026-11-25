@@ -85,6 +85,7 @@
     scrim.classList.remove('is-open');
     const v = verifier;
     verifier = null;
+    scrim._verifier = null;
     setTimeout(() => v?.destroy(), 260);
     opener?.focus();
   }
@@ -110,6 +111,7 @@
         app.classList.add('is-done');
       },
     });
+    scrim._verifier = verifier;
     requestAnimationFrame(() => scrim.classList.add('is-open'));
   });
   scrim.addEventListener('click', (e) => { if (e.target === scrim) closeSheet(); });
