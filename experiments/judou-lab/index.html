@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JUDOU / 句读 · 可改写的教科书</title>
+  <meta name="description" content="中文原生交互设计实验 001：可改写的教科书。文字不再只是描述现象，文字本身就是控制现象的界面。">
+  <link rel="stylesheet" href="css/judou.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-clause">
+        <button type="button" class="brand-mark" id="brand-home" title="返回卷首目录">JUDOU · 句读 001</button>
+        <div id="brand-clause" style="display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:0.25em"></div>
+      </div>
+      <div class="topbar-tools">
+        <button type="button" class="tool-btn hide-mobile" id="btn-undo" title="撤销上一步 (Ctrl+Z)" disabled>撤销</button>
+        <button type="button" class="tool-btn hide-mobile" id="btn-redo" title="重做 (Ctrl+Y)" disabled>重做</button>
+        <button type="button" class="tool-btn hide-mobile" id="btn-reset" title="恢复本章初始参数" disabled>重置</button>
+        <button type="button" class="tool-btn" id="btn-guide">指南</button>
+        <button type="button" class="tool-btn" id="btn-font" title="切换字号">字号</button>
+        <button type="button" class="tool-btn" id="btn-theme" title="切换日/夜阅读模式">夜读</button>
+      </div>
+    </div>
+    <div class="guide-strip" id="guide-strip" hidden>
+      <div class="guide-inner">
+        <span class="guide-item"><span class="jw jw-choice" tabindex="-1">实心着重号</span> 点按或在上方按 ↑↓ 换词</span>
+        <span class="guide-item"><span class="jw jw-num" tabindex="-1">3.14</span> 左右拖动或点击精确调节</span>
+        <span class="guide-item"><span class="jw jw-syntax" tabindex="-1">⌜句构⌟</span> 切换语法结构与公式形态</span>
+        <span class="guide-item"><span class="jw-dep" style="border-bottom:1.5px solid var(--indigo)">因果溯源</span> 悬停或聚焦点亮上游前提</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace" id="workspace">
+    <main class="main-col" id="main-col" tabindex="-1"></main>
+    <aside class="margin-col" id="margin-col" aria-label="模型边界与探索手记"></aside>
+  </div>
+
+  <nav class="mobile-dock" aria-label="移动端快捷操作">
+    <button type="button" class="tool-btn" id="mob-undo" disabled>撤销</button>
+    <button type="button" class="tool-btn" id="mob-snap">记下此刻</button>
+    <button type="button" class="tool-btn" id="mob-next">下一章 →</button>
+  </nav>
+
+  <!-- 聚合选择浮层 -->
+  <div id="para-veil"></div>
+  <ul id="para-pop" role="listbox" aria-label="可替换为"></ul>
+
+  <!-- 数值精确调节浮层 -->
+  <div id="num-pop" role="dialog" aria-label="调节数值">
+    <button type="button" id="num-pop-dec" aria-label="减小">−</button>
+    <input type="number" id="num-pop-input" aria-label="输入数值">
+    <span id="num-pop-unit" style="color:var(--ink-3)"></span>
+    <button type="button" id="num-pop-inc" aria-label="增大">+</button>
+  </div>
+
+  <div class="sr-only" id="sr-live" aria-live="polite"></div>
+
+  <script src="js/judou-core.js"></script>
+  <script src="js/ch-pendulum.js"></script>
+  <script src="js/ch-quadratic.js"></script>
+  <script src="js/ch-daynight.js"></script>
+  <script src="js/ch-logic.js"></script>
+  <script src="js/workbench.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
