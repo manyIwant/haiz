@@ -1,0 +1,58 @@
+{
+  "desktop": {
+    "ring_metrics": {
+      "w2026_px": 34.71,
+      "w2025_px": 22.89,
+      "w2023_px": 8.66,
+      "w1950_px": 2.4,
+      "ratio_2026_to_1950": 14.47
+    },
+    "hover_2026_picked": "2026",
+    "after_elastic_pull": {
+      "level": "ribbon",
+      "phase": "fly",
+      "y": 2026
+    },
+    "conflict_detected": {
+      "visible": true,
+      "text": "⚠ 发现冲突（1）：11-26 科创社 · 机器人舵机调试（与物理阶段考冲突！） × 物理电磁感应阶段限时测验 重叠 60 分钟"
+    },
+    "cross_layer_drag_homework_to_free_slot": true,
+    "conflict_resolved": true,
+    "mistake_to_137_reviews": {
+      "before": 8,
+      "after": 11,
+      "added": 3
+    },
+    "csv_score_import_count": 6,
+    "absence_catchup_added": 4,
+    "reload_persistence": {
+      "hasCustomTask": true,
+      "hw1Linked": true,
+      "quizScores": 6,
+      "mistakeReviewCount": 3,
+      "casVersion": 8
+    },
+    "reversible_return": true
+  },
+  "mobile": {
+    "ring_metrics": {
+      "w2026_px": 17.96,
+      "w2023_px": 4.48,
+      "w1950_px": 1.24,
+      "overflowX": false
+    },
+    "touch_precision_bar": {
+      "visible": true,
+      "initial": "1988",
+      "after_plus_1": "1989"
+    },
+    "ribbon_overflowX": false,
+    "day_overflowX": false
+  },
+  "narrow360": {
+    "disc_overflowX": false,
+    "ribbon_overflowX": false
+  },
+  "errors": []
+}
