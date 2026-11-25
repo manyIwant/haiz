@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<title>折 · HAIZ 设计实验室</title>
+<meta name="description" content="方案二「折」：界面是一张纸，信息藏在折里。展开就是进入，折起就是收好；打开时立起，合上前先躺平。">
+<style>
+/* ───────────────────────── 折 · Tokens ─────────────────────────
+   一张卡纸有两面：正面浅，背面深。折痕是唯一的边界。 */
+:root{
+  --face:#e7e3da; --back:#cfc9bc; --deep:#b9b2a3; --ink:#1b1f22; --ink2:#4e5257; --ink3:#7f8186;
+  --blue:#2443b8; --blue-soft:#2443b81f; --warn:#b8402a;
+  --sans:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  --fs:1;
+  --t:280ms; --t-fast:150ms; --ease:cubic-bezier(.3,.7,.1,1);
+  --crease-l:linear-gradient(90deg,#0000 0,#fff6 1px,#0000 2px), linear-gradient(90deg,#0002,#0000 14%);
+  --desk:#2b2c2a;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{ --face:#2d2f2c; --back:#22241f; --deep:#1a1b18; --ink:#ecebe5; --ink2:#c0beb6; --ink3:#8d8b84; --blue:#8aa2ff; --blue-soft:#8aa2ff26; --desk:#0e0f0e; color-scheme:dark }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --face:#2d2f2c; --back:#22241f; --deep:#1a1b18; --ink:#ecebe5; --ink2:#c0beb6; --ink3:#8d8b84; --blue:#8aa2ff; --blue-soft:#8aa2ff26; --desk:#0e0f0e; color-scheme:dark } }
+:root[data-motion="reduce"]{ --t:0ms; --t-fast:0ms }
+@media (prefers-reduced-motion: reduce){ :root:not([data-motion="normal"]){ --t:0ms; --t-fast:0ms } }
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:calc(16px*var(--fs));line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ───────── 纸：一张横向展开的经折装（桌面） ───────── */
+.desk{position:fixed;inset:0;display:flex;align-items:stretch;padding:28px 0 28px 28px}
+.sheet{position:relative;flex:0 1 auto;max-width:calc(100% - 52px);display:flex;align-items:stretch;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;perspective:1800px;scroll-snap-type:x proximity;padding-right:8px}
+.sheet::-webkit-scrollbar{height:6px}.sheet::-webkit-scrollbar-thumb{background:#fff3}
+
+/* 折页 · 每一页是纸的一折 */
+.pn{position:relative;flex:0 0 auto;width:var(--w,380px);display:flex;transition:width var(--t) var(--ease);scroll-snap-align:start;transform-style:preserve-3d}
+.pn > .body{position:relative;flex:1;min-width:0;background:var(--face);overflow:hidden auto;scrollbar-width:none;padding:28px 28px 40px;transform-origin:left center;transition:transform var(--t) var(--ease),filter var(--t) var(--ease);backface-visibility:hidden}
+.pn > .body::-webkit-scrollbar{display:none}
+/* 山折与谷折：相邻的两页受光不同 */
+.pn:nth-child(odd) > .body{background-image:linear-gradient(90deg,#0000 70%,#00000010)}
+.pn:nth-child(even) > .body{background-image:linear-gradient(90deg,#ffffff1a,#0000 30%)}
+.pn + .pn > .body{box-shadow:inset 1px 0 0 #00000014, inset 2px 0 0 #ffffff40}
+/* 折痕条：折起来时只剩它 */
+.pn > .spine{display:none;width:44px;background:var(--back);cursor:pointer;border:0;padding:16px 0;writing-mode:vertical-rl;font-size:14px;letter-spacing:.3em;color:var(--ink2);text-align:start;box-shadow:inset -1px 0 0 #0002, inset 1px 0 0 #fff3}
+.pn > .spine:hover{background:var(--deep);color:var(--ink)}
+.pn.folded{width:44px}
+.pn.folded > .spine{display:block}
+.pn.folded > .body{display:none}
+.pn.folding > .body{transform:rotateY(-80deg);filter:brightness(.7)}
+.pn-h{display:flex;align-items:baseline;gap:10px;margin:0 0 18px}
+.pn-h h2{font-size:calc(13px*var(--fs));letter-spacing:.24em;font-weight:600;margin:0;color:var(--ink2)}
+.pn-h .fold-btn{margin-left:auto;background:none;border:0;padding:2px 4px;cursor:pointer;color:var(--ink3);font-size:12px}
+.pn-h .fold-btn:hover{color:var(--blue)}
+.big{font-size:calc(34px*var(--fs));line-height:1.25;font-weight:600;letter-spacing:.01em;margin:.1em 0 .4em}
+.mid{font-size:calc(21px*var(--fs));line-height:1.45;font-weight:500;margin:.2em 0 .5em}
+.p{font-size:calc(15.5px*var(--fs));line-height:1.75;color:var(--ink);margin:.4em 0 .8em}
+.note{font-size:calc(12.5px*var(--fs));color:var(--ink3);line-height:1.6;margin:.6em 0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ex{display:inline-block;font-size:11px;letter-spacing:.12em;color:var(--blue);border:1px solid currentColor;padding:0 .4em;line-height:1.5;vertical-align:.15em;margin-left:.4em}
+.crease{height:0;border:0;margin:20px -28px;border-top:1px solid #00000018;border-bottom:1px solid #ffffff55}
+
+/* ───────── 书口索引（导航）：剪在纸边上的台阶 ───────── */
+.edge{flex:0 0 52px;display:flex;flex-direction:column;gap:2px;padding-top:24px}
+.tab{position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:72px;margin-left:0;background:var(--back);border:0;cursor:pointer;writing-mode:vertical-rl;letter-spacing:.35em;font-size:14px;color:var(--ink2);transition:transform var(--t-fast) var(--ease),background var(--t-fast);clip-path:polygon(0 0,100% 6px,100% calc(100% - 6px),0 100%);text-decoration:none}
+.tab:hover{transform:translateX(3px);color:var(--ink)}
+.tab[aria-current="page"]{background:var(--face);color:var(--ink);transform:translateX(-4px);width:52px;font-weight:600;box-shadow:inset 3px 0 0 var(--blue)}
+.tab .cnt{position:absolute;bottom:6px;writing-mode:horizontal-tb;font-size:10px;letter-spacing:0;color:var(--blue);font-family:var(--mono)}
+
+/* ───────── 组件 ───────── */
+/* 折条（列表项）：完成 = 折起来 */
+.strip{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px 0 12px 0;border-top:1px solid #0000001a;box-shadow:inset 0 1px 0 #fff5;transform-origin:top center;transition:transform var(--t) var(--ease),opacity var(--t) var(--ease),max-height var(--t) var(--ease),padding var(--t) var(--ease);max-height:200px}
+.strip.gone{transform:rotateX(-90deg);opacity:0;max-height:0;padding:0}
+.strip .t{flex:1;min-width:0}
+.strip .t b{font-weight:500;display:block}
+.strip .t small{color:var(--ink3);font-size:12.5px}
+.strip .t small.late{color:var(--warn)}
+/* 折角钮：右上角折过来就是“完成” */
+.corner{flex:0 0 30px;height:30px;border:0;background:var(--back);cursor:pointer;position:relative;clip-path:polygon(0 0,100% 0,100% 100%,0 100%);transition:clip-path var(--t-fast) var(--ease),background var(--t-fast)}
+.corner::after{content:"";position:absolute;right:0;top:0;width:12px;height:12px;background:linear-gradient(225deg,var(--face) 50%,var(--deep) 50%)}
+.corner:hover{background:var(--deep)}
+.corner:hover::after{width:16px;height:16px}
+.corner[aria-pressed="true"]{background:var(--blue)}
+.corner[aria-pressed="true"]::after{width:30px;height:30px;background:linear-gradient(225deg,var(--face) 50%,#1b2f8a 50%)}
+.stack{display:block;width:100%;margin-top:12px;background:none;border:0;padding:6px 0 0;cursor:pointer;text-align:left;color:var(--ink3);font-size:12.5px}
+.stack .leaves{display:block;height:calc(var(--n,1)*3px + 2px);background:repeating-linear-gradient(180deg,var(--back) 0 2px,var(--deep) 2px 3px);margin-bottom:6px}
+
+/* 翻牌（开关）：翻过来就是纸的另一面 */
+.flip{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer;user-select:none}
+.flip .card{position:relative;flex:0 0 56px;height:30px;perspective:300px;border:0;padding:0;background:none;cursor:pointer}
+.flip .card i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;letter-spacing:.2em;backface-visibility:hidden;transition:transform var(--t) var(--ease)}
+.flip .card .f{background:var(--back);color:var(--ink2);box-shadow:inset 0 0 0 1px #0001}
+.flip .card .b{background:var(--blue);color:#fff;transform:rotateY(180deg)}
+.flip .card[aria-checked="true"] .f{transform:rotateY(-180deg)}
+.flip .card[aria-checked="true"] .b{transform:rotateY(0)}
+.flip .lab{flex:1}
+.flip .lab small{display:block;color:var(--ink3);font-size:12.5px}
+
+/* 折扇（选项）：选中的一折摊平，其余斜着退后 */
+.fan{display:flex;perspective:600px;margin:8px 0 14px;height:44px}
+.fan button{flex:1 1 0;min-width:0;border:0;background:var(--back);cursor:pointer;font-size:13.5px;color:var(--ink2);transition:transform var(--t) var(--ease),flex var(--t) var(--ease),background var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.fan button:nth-child(odd){transform-origin:right center;transform:rotateY(38deg)}
+.fan button:nth-child(even){transform-origin:left center;transform:rotateY(-38deg);background:var(--deep)}
+.fan button[aria-checked="true"]{transform:none;flex:2.2 1 0;background:var(--face);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px #0002, inset 0 -3px 0 var(--blue)}
+.fan-l{font-size:13px;color:var(--ink2);margin-top:10px}
+
+/* 拉条（滑块）：从缝里抽出一条刻度纸 */
+.pull{position:relative;height:56px;margin:6px 0 14px}
+.pull .slot{position:absolute;left:0;top:14px;width:10px;height:28px;background:var(--ink);border-radius:1px}
+.pull .tape{position:absolute;left:6px;top:18px;height:20px;width:calc(var(--p)*(100% - 60px) + 40px);background:repeating-linear-gradient(90deg,var(--ink3) 0 1px,#0000 1px 10px) bottom/100% 6px no-repeat,var(--face);box-shadow:0 1px 0 #0002,0 0 0 1px #0001;transition:width var(--t-fast) var(--ease)}
+.pull .grip{position:absolute;right:-1px;top:-6px;bottom:-6px;width:38px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12.5px;clip-path:polygon(0 0,100% 4px,100% calc(100% - 4px),0 100%)}
+.pull input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:ew-resize}
+.pull-l{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2)}
+.pull-l b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+
+/* 字段：写在纸上的一行 */
+.field{display:block;margin:14px 0 6px;position:relative}
+.field span{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--ink2);margin-bottom:4px}
+.field input{width:100%;border:0;border-bottom:1.5px solid var(--ink);background:transparent;padding:8px 2px;font-size:calc(19px*var(--fs));outline:0;border-radius:0}
+.field input:focus{border-bottom-color:var(--blue);background:var(--blue-soft)}
+.field .crumple{position:absolute;inset:-6px -10px;pointer-events:none;opacity:0;transition:opacity var(--t)}
+.field.err .crumple{opacity:1;background:linear-gradient(160deg,#0000 47%,#0000002a 49%,#ffffff70 50%,#0000 52%)}
+.field .msg{display:block;font-size:13px;color:var(--warn);min-height:1.2em;margin-top:4px}
+.field .peek{position:absolute;right:0;bottom:30px;width:60px;height:34px;border:0;background:var(--back);cursor:pointer;font-size:12px;color:var(--ink2);transform-origin:top center;transition:transform var(--t-fast) var(--ease)}
+.field .peek[aria-pressed="true"]{transform:rotateX(65deg);background:var(--deep)}
+
+/* 折舌（主要操作）：从纸边伸出来的一条，按下去纸就折上 */
+.tongue{display:inline-flex;align-items:center;gap:10px;margin-top:20px;border:0;background:var(--ink);color:var(--face);padding:13px 22px 13px 18px;font-size:calc(16px*var(--fs));letter-spacing:.2em;cursor:pointer;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%);transition:transform var(--t-fast) var(--ease),background var(--t-fast)}
+.tongue:hover{transform:translateX(4px)}
+.tongue:active{transform:translateX(8px) scaleX(.97)}
+.tongue[disabled]{background:var(--deep);color:var(--ink3);cursor:not-allowed;transform:none}
+.tongue.light{background:var(--back);color:var(--ink)}
+.linkline{background:none;border:0;padding:0;cursor:pointer;color:var(--ink);border-bottom:1px solid var(--ink3);font-size:inherit}
+.linkline:hover{color:var(--blue);border-color:var(--blue)}
+
+/* 撕线（危险操作）：沿着齿孔拖过去才撕得下 */
+.perf{position:relative;display:flex;align-items:center;gap:12px;padding:12px 10px 12px 0;transition:transform 520ms cubic-bezier(.5,0,.8,.4),opacity 520ms}
+.perf .who{flex:1}
+.perf .who small{display:block;color:var(--ink3);font-size:12.5px}
+.perf .line{position:relative;flex:0 0 120px;height:34px;border-left:2px dashed var(--ink3);background:var(--back);touch-action:none;cursor:grab;overflow:hidden}
+.perf .line::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--tear,0)*100%);background:repeating-linear-gradient(90deg,var(--warn) 0 4px,#0000 4px 7px);opacity:.6}
+.perf .line span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink2);pointer-events:none}
+.perf.torn{transform:translate(30px,60px) rotate(8deg);opacity:0}
+.perf .line:focus-visible{outline:2px solid var(--warn)}
+
+/* 立起来的东西：纸雕 */
+.pop-stage{perspective:1100px;margin:6px -8px 8px}
+.plane{position:relative;transform-style:preserve-3d;transform-origin:50% 60%;transition:transform 600ms var(--ease)}
+.bld{position:absolute;transform-style:preserve-3d;cursor:pointer}
+.bld i{position:absolute;display:block;background:var(--face);box-shadow:inset 0 0 0 1px #0003;transform-origin:0 0;transition:transform 520ms var(--ease)}
+.bld i.top{inset:0;background:var(--face);transform:translateZ(var(--hh))}
+.bld i.s{left:0;right:0;bottom:0;height:var(--h);transform-origin:bottom;transform:rotateX(-90deg) scaleY(var(--rise));background:var(--back)}
+.bld i.n{left:0;right:0;top:0;height:var(--h);transform-origin:top;transform:rotateX(90deg) scaleY(var(--rise));background:var(--deep)}
+.bld i.e{top:0;bottom:0;right:0;width:var(--h);transform-origin:right;transform:rotateY(90deg) scaleX(var(--rise));background:var(--deep)}
+.bld i.w{top:0;bottom:0;left:0;width:var(--h);transform-origin:left;transform:rotateY(-90deg) scaleX(var(--rise));background:var(--back)}
+.bld:hover i.top{background:#fff}
+.bld.sel i{background:var(--blue)!important;box-shadow:inset 0 0 0 1px #0004}
+.bld.sel i.top{background:#3d5bd0!important}
+.road{position:absolute;background:#0000000f}
+.green{position:absolute;border:1px dashed #0000002a}
+.plane .lbl{position:absolute;font-size:11px;color:var(--ink);transform:translateZ(60px) rotateX(-55deg);transform-origin:bottom center;white-space:nowrap;pointer-events:none;background:var(--face);padding:0 4px;box-shadow:0 0 0 1px #0002}
+
+/* 单摆：从书页上立起来的纸雕 */
+.page3d{position:relative;height:260px;transform-style:preserve-3d;transform:rotateX(52deg);transform-origin:50% 100%;background:repeating-linear-gradient(0deg,#0000 0 23px,#00000010 23px 24px),var(--face);box-shadow:0 0 0 1px #0002;margin:20px 10px 40px}
+.standup{position:absolute;left:10%;right:10%;bottom:40%;height:220px;transform-origin:bottom center;transform:rotateX(calc(-90deg * var(--up,1)));transition:transform 600ms var(--ease);transform-style:preserve-3d}
+.standup svg{width:100%;height:100%;overflow:visible}
+.standup line,.standup path{stroke:var(--ink);fill:none;stroke-width:1.4}
+
+/* 专注：一张自己慢慢对折的纸 */
+.fsheet{position:relative;width:180px;height:180px;margin:10px auto 14px;perspective:600px}
+.fsheet .part{position:absolute;background:var(--face);box-shadow:0 0 0 1px #0002, 0 8px 20px -10px #0006;transition:all 700ms var(--ease);display:flex;align-items:center;justify-content:center}
+.fsheet .left{font-family:var(--mono);font-size:22px}
+
+/* 收件袋 */
+.pocket{position:relative;margin:14px 0 8px;padding-top:18px}
+.pocket .mouth{position:relative;z-index:2;height:64px;background:var(--back);box-shadow:inset 0 2px 0 #0002;display:flex;align-items:flex-end;padding:0 0 8px 12px;font-size:12.5px;color:var(--ink2)}
+.slip{position:relative;z-index:1;margin:0 8px -40px;background:#f5f2ea;padding:10px 12px 46px;box-shadow:0 0 0 1px #0002;cursor:pointer;transition:transform var(--t) var(--ease),margin var(--t) var(--ease);font-size:14px}
+:root[data-theme="dark"] .slip{background:#3a3c38}
+.slip:hover{transform:translateY(-6px)}
+.slip.out{margin:0 0 14px;padding-bottom:12px;transform:none;z-index:3;cursor:default}
+.slip .acts{display:none;gap:8px;margin-top:10px;flex-wrap:wrap}
+.slip.out .acts{display:flex}
+
+/* 课：过去折得很薄，此刻完全展开，将来半开 */
+.cls{position:relative;overflow:hidden;border-top:1px solid #0000001a;transition:max-height var(--t) var(--ease),background var(--t);cursor:pointer;display:flex;gap:12px;align-items:baseline;padding:0 8px}
+.cls.past{max-height:22px;font-size:12px;color:var(--ink3);background:var(--back)}
+.cls.future{max-height:44px;padding-top:9px}
+.cls.now{max-height:200px;padding:14px 8px;background:var(--face);box-shadow:inset 3px 0 0 var(--blue)}
+.cls.now .nm{font-size:26px;font-weight:600}
+.cls .tm{font-family:var(--mono);font-size:12.5px;color:var(--ink3);flex:0 0 auto}
+.cls .nm{flex:1}
+.cls .rm{display:none;font-size:13px;color:var(--ink2)}
+.cls.now .rm,.cls.open .rm{display:block}
+.cls.open{max-height:120px;padding:10px 8px}
+
+.img{display:block;width:100%;height:auto;margin:6px 0 10px;filter:saturate(.9)}
+.act-fan{display:flex;flex-direction:column;margin-top:8px}
+.act{color:inherit;text-decoration:none;display:flex;align-items:baseline;gap:12px;border:0;background:none;text-align:left;padding:10px 0;border-top:1px solid #0000001a;cursor:pointer;transition:padding var(--t) var(--ease)}
+.act:hover{padding-left:8px}
+.act .n{font-family:var(--mono);font-size:12px;color:var(--ink3);flex:0 0 22px}
+.act .d{display:block;font-size:13px;color:var(--ink3)}
+.search input{width:100%;border:0;border-bottom:1.5px solid var(--ink);background:transparent;font-size:20px;padding:6px 2px;outline:0}
+.hits{margin-top:8px}
+.hits button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid #0000001a;padding:9px 0;cursor:pointer}
+.hits button small{color:var(--ink3);margin-left:8px}
+table.t{border-collapse:collapse;width:100%;font-size:13px;font-family:var(--mono)}
+table.t th{text-align:left;font-weight:500;color:var(--ink3);border-bottom:1px solid var(--ink);padding:4px 6px 4px 0}
+table.t td{border-bottom:1px solid #0000001a;padding:5px 6px 5px 0}
+.toast{visibility:hidden;position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(120%);background:var(--ink);color:var(--face);padding:10px 16px;font-size:14px;transition:transform var(--t) var(--ease);z-index:90;max-width:90vw}
+.toast.on{visibility:visible;transform:translateX(-50%) translateY(0)}
+.lab-tag{position:fixed;top:6px;left:28px;z-index:30;font-size:11.5px;color:#fff8;text-decoration:none}
+.lab-tag:hover{color:#fff}
+
+/* ───────── 手机：纸竖着折；书口索引移到拇指边 ───────── */
+@media (max-width: 760px){
+  body{overflow:auto}
+  .desk{position:static;display:block;padding:0}
+  .sheet{display:block;overflow:visible;perspective:1200px;padding:0 0 calc(76px + env(safe-area-inset-bottom))}
+  .pn{width:auto!important;display:block}
+  .pn > .body{padding:22px 16px 26px;overflow:visible;transform-origin:top center}
+  .pn + .pn > .body{box-shadow:inset 0 1px 0 #00000018, inset 0 2px 0 #ffffff50}
+  .pn:nth-child(odd) > .body{background-image:linear-gradient(180deg,#0000 70%,#0000000c)}
+  .pn:nth-child(even) > .body{background-image:linear-gradient(180deg,#ffffff1a,#0000 30%)}
+  .pn > .spine{writing-mode:horizontal-tb;width:100%;height:46px;padding:0 16px;text-align:left;letter-spacing:.2em}
+  .pn.folded{width:auto}
+  .pn.folding > .body{transform:rotateX(80deg)}
+  .edge{position:fixed;left:0;right:0;bottom:0;z-index:40;flex-direction:row;gap:2px;padding:0 6px env(safe-area-inset-bottom);background:var(--desk);height:calc(64px + env(safe-area-inset-bottom));align-items:flex-start}
+  .tab{writing-mode:horizontal-tb;width:auto;flex:1;height:56px;letter-spacing:.15em;clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 100%,0 100%);font-size:14px}
+  .tab:hover{transform:none}
+  .tab[aria-current="page"]{width:auto;transform:translateY(-6px);height:62px;box-shadow:inset 0 3px 0 var(--blue)}
+  .tab .cnt{bottom:auto;top:4px;right:6px}
+  .big{font-size:calc(28px*var(--fs))}
+  .fan button:nth-child(odd){transform:rotateY(24deg)}
+  .fan button:nth-child(even){transform:rotateY(-24deg)}
+  .fan button[aria-checked="true"]{transform:none}
+  .sheet{max-width:none}
+  .lab-tag{position:static;display:block;padding:6px 16px;background:var(--desk)}
+  .page3d{height:200px}
+  .standup{height:170px}
+  .pn-h .fold-btn{padding:8px}
+}
+</style>
+</head>
+<body>
+<a class="lab-tag" href="../index.html" data-lab>设计实验室 · 方案二「折」</a>
+<div class="desk">
+  <main class="sheet" id="sheet" aria-live="off"></main>
+  <nav class="edge" id="edge" aria-label="书口索引"></nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="../shared/data.js"></script>
+<script src="../shared/campus.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   折 · 规则
+   1. 界面是一张纸。层级 = 折的深浅；进入 = 展开；收好 = 折起。没有弹窗，也不换页。
+   2. 折痕是唯一的边界。不用卡片、阴影框、圆角容器分隔内容。
+   3. 动作就是形变：完成一件事 = 把它折起来；开关 = 翻到纸的背面；选择 = 摊平一折；
+      危险操作 = 沿齿孔撕下（必须拖过去，或用键盘连按两次）。
+   4. 打开时立起，合上前先躺平（继承 HAIZ 实验册）：纸雕只在纸摊开时站起来。
+   5. 桌面横着折（经折装），手机竖着折；书口索引永远在纸边——手机上就在拇指边。
+   ════════════════════════════════════════════════════════════════ */
+const D = window.HAIZ_SAMPLE, C = window.HAIZ_CAMPUS, R = HZ.root;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem('hz-zhe-' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('hz-zhe-' + k, JSON.stringify(v)); } catch {} } };
+const mobile = () => innerWidth <= 760;
+
+const S = {
+  view: 'home',
+  folded: store.get('folded', {}),
+  tasks: store.get('tasks', D.TASKS.map((t) => ({ ...t }))),
+  inbox: D.INBOX.map((x) => ({ ...x })), slipOut: null,
+  showDone: false, openCls: null,
+  focus: { min: 25, running: false, end: 0, subj: '数学' },
+  pref: store.get('pref', { motion: 0, size: 0, theme: 0, sync: false, leaf: false, intake: false }),
+  authed: store.get('authed', false),
+  login: { mode: 0, err: {} },
+  map: { sel: 'library', rise: 0.55, time: 0 },
+  lab: { L: 1.0, deg: 4, n: 30, rows: [], up: 1 },
+  devices: D.ACCOUNT.devices.map((d) => ({ ...d })),
+  q: '',
+};
+const TABS = [
+  { id: 'home', label: '树' }, { id: 'login', label: '入口' }, { id: 'pocket', label: '口袋' },
+  { id: 'map', label: '校园' }, { id: 'read', label: '实验册' }, { id: 'settings', label: '我' },
+];
+
+/* ── 折页工具 ── */
+function pn(id, title, body, w = 380) {
+  const f = !!S.folded[S.view + ':' + id];
+  return `<section class="pn ${f ? 'folded' : ''}" data-pn="${id}" style="--w:${w}px" aria-label="${esc(title)}">
+    <button class="spine" data-unfold="${id}" aria-expanded="false" aria-label="展开：${esc(title)}">${esc(title)}</button>
+    <div class="body"><div class="pn-h"><h2>${esc(title)}</h2><button class="fold-btn" data-fold="${id}" aria-expanded="true" aria-label="折起：${esc(title)}">折起 ⟵</button></div>${body}</div>
+  </section>`;
+}
+const ex = '<span class="ex">示例</span>';
+const flip = (id, on, label, sub = '') => `<div class="flip"><button class="card" role="switch" aria-checked="${on}" data-flip="${id}" aria-label="${esc(label)}"><i class="f">关</i><i class="b">开</i></button><span class="lab">${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span></div>`;
+const fan = (id, opts, cur, label) => `<div class="fan-l" id="fl-${id}">${esc(label)}</div><div class="fan" role="radiogroup" aria-labelledby="fl-${id}">${opts.map((o, i) => `<button role="radio" aria-checked="${i === cur}" data-fan="${id}" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
+const pull = (id, v, min, max, step, label, fmt = (x) => x) => `<div class="pull-l"><span>${esc(label)}</span><b id="pv-${id}">${fmt(v)}</b></div><div class="pull" style="--p:${(v - min) / (max - min)}"><span class="slot"></span><span class="tape"><span class="grip" id="pg-${id}">${fmt(v)}</span></span><input type="range" min="${min}" max="${max}" step="${step}" value="${v}" data-pull="${id}" aria-label="${esc(label)}"></div>`;
+
+/* ════════════════════ A · 首页（树） ════════════════════ */
+const ACTS = [
+  ['初遇', '冬末的榄仁树，逐叶生长。'], ['根脉', '沿树干向上，走过有出处的校史。'], ['青春 · 生长', '作品是树冠里的一片新叶。'],
+  ['场域', '水面显出总平面，校园从轮廓里升起。'], ['远方', '从树冠望出去，相机成为一个人。'], ['回望', '落地，回头，再看一次这棵树。'],
+];
+function vHome() {
+  const todo = S.tasks.filter((t) => !t.done);
+  const m = HZ.minuteNow(); const nxt = D.COURSES.filter((c) => c.day === HZ.today() && c.end > m).sort((a, b) => a.start - b.start)[0];
+  const hits = searchHits(S.q);
+  return [
+    pn('cover', 'HAIZ', `<p class="big">一棵树，<br>折进一座校园。</p>
+      <img class="img" src="${R}docs/lanren/rings/sunset-20191120.jpg" alt="HAIZ 的数字榄仁树，日落在树后" loading="lazy">
+      <p class="p">海南中学府城校区一号教学楼前的百年榄仁树，是这座数字校园的原点。学生独立建设，非官方。</p>
+      <p class="note">往右（手机上往下）是纸的其余几折；纸边的索引能直接翻到任何一折。</p>`, 420),
+    pn('acts', '六幕', `<div class="act-fan">${ACTS.map((a, i) => `<a class="act" href="${R}index.html${i ? '#' + ['', 'roots', 'leaves', 'map', 'far', 'back'][i] : ''}"><span class="n">0${i + 1}</span><span><b>${a[0]}</b><span class="d">${a[1]}</span></span></a>`).join('')}</div>
+      <p class="note">六幕共享同一棵树与同一台摄影机；点击进入现有的六幕首页。</p>`, 340),
+    pn('today', '今天', `${nxt ? `<p class="note">下一节</p><p class="big" style="margin-top:0">${nxt.name}</p><p class="num">${HZ.mm(nxt.start)} · ${nxt.room}</p>` : '<p class="mid">今天的课上完了</p>'}
+      <hr class="crease"><p class="mid">${todo.length} 件事没做 ${ex}</p>${todo.slice(0, 3).map((t) => `<div class="strip"><span class="t"><b>${esc(t.title)}</b><small>${esc(t.subject)} · ${HZ.dueText(t.due)}</small></span></div>`).join('')}
+      <button class="tongue light" data-go="pocket">打开口袋</button>`, 340),
+    pn('works', '作品与工具', D.WORKS.map((x) => `<a class="act" href="${R + x.href}"><span class="n">${x.verb}</span><span><b>${esc(x.name)}</b><span class="d">${esc(x.line)}</span></span></a>`).join(''), 360),
+    pn('find', '找', `<label class="search"><span class="sr">搜索</span><input id="q" placeholder="地点、功能、年份……" value="${esc(S.q)}" autocomplete="off"></label>
+      <div class="hits" id="hits">${hits}</div>`, 340),
+  ].join('');
+}
+function searchHits(q) {
+  const I = [];
+  D.WORKS.forEach((x) => I.push({ t: x.name, s: x.verb, href: R + x.href }));
+  TABS.forEach((t) => I.push({ t: ({ home: '首页', login: '登录 / 注册', pocket: 'Pocket · 课表任务', map: '校园地图', read: '实验册 · 单摆', settings: '设置与个人空间' })[t.id], s: '这张纸的一折', go: t.id }));
+  C.b.filter((b) => b.k !== 'corr').forEach((b) => I.push({ t: b.n, s: '地点', go: 'map', sel: b.id }));
+  D.HISTORY.forEach((h) => I.push({ t: h.label + ' ' + h.title, s: '根脉', href: R + 'index.html#roots/' + h.id }));
+  const hit = q ? I.filter((x) => (x.t + x.s).includes(q)) : I.slice(0, 7);
+  return hit.slice(0, 10).map((x) => x.href ? `<button data-href="${x.href}">${esc(x.t)}<small>${esc(x.s)}</small></button>` : `<button data-go="${x.go}" ${x.sel ? `data-sel="${x.sel}"` : ''}>${esc(x.t)}<small>${esc(x.s)}</small></button>`).join('') || '<p class="note">没有找到。</p>';
+}
+
+/* ════════════════════ B · 入口：登录与注册 ════════════════════ */
+function vLogin() {
+  if (S.authed) return pn('in', '已经进来了', `<p class="big">欢迎回来，<br>${esc(D.ACCOUNT.name)}${ex}</p><p class="p">登录凭条折好放进了纸边的「我」里。</p><button class="tongue" data-go="settings">去个人空间</button> <button class="tongue light" data-logout>退出登录</button><p class="note">演示：只是本机的一个标记，没有连接服务器。</p>`, 420);
+  const L = S.login, E = L.err;
+  const reg = L.mode === 1;
+  return [
+    pn('slip', reg ? '注册' : '登录', `
+      ${fan('mode', ['登录', '注册'], L.mode, '我要')}
+      <form id="loginForm" novalidate>
+        ${reg ? `<label class="field ${E.nick ? 'err' : ''}"><span>昵称</span><input name="nick" autocomplete="nickname"><i class="crumple"></i><em class="msg">${E.nick || ''}</em></label>` : ''}
+        <label class="field ${E.user ? 'err' : ''}"><span>账号</span><input name="user" autocomplete="username" autocapitalize="off" spellcheck="false" ${E.user ? 'aria-invalid="true"' : ''} aria-describedby="m-user"><i class="crumple"></i><em class="msg" id="m-user">${E.user || ''}</em></label>
+        <label class="field ${E.pass ? 'err' : ''}"><span>口令</span><input name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" ${E.pass ? 'aria-invalid="true"' : ''} aria-describedby="m-pass"><button type="button" class="peek" data-peek aria-pressed="false" aria-label="显示口令">掀开看</button><i class="crumple"></i><em class="msg" id="m-pass">${E.pass || ''}</em></label>
+        ${reg ? `<label class="field ${E.pass2 ? 'err' : ''}"><span>再写一遍口令</span><input name="pass2" type="password" autocomplete="new-password"><i class="crumple"></i><em class="msg">${E.pass2 || ''}</em></label>` : ''}
+        ${flip('keep', !!L.keep, '记住这台设备 8 小时', '公用电脑上请不要打开')}
+        <button class="tongue" type="submit">${reg ? '注册' : '登录'}　⟶</button>
+        <em class="msg" style="display:block;color:var(--warn);margin-top:10px" role="alert">${E.form || ''}</em>
+      </form>`, 420),
+    pn('why', '为什么这样', `<p class="p">按下「${reg ? '注册' : '登录'}」时，这张凭条会沿着折舌折起来送出去。出了错，它会摊开回来——<b>出错的那一行留下一道折痕</b>，改好之后折痕才会平。</p><p class="p">「掀开看」是盖在口令上的一小片纸：按一下掀开，再按一下盖回。</p><p class="note">演示账号 sample_01 / haiz2026。不会发送任何数据。</p>`, 320),
+  ].join('');
+}
+
+/* ════════════════════ C · 口袋（Pocket） ════════════════════ */
+function vPocket() {
+  const m = HZ.minuteNow(), day = HZ.today();
+  const list = D.COURSES.filter((c) => c.day === day).sort((a, b) => a.start - b.start);
+  const cls = list.map((c) => {
+    const st = c.end <= m ? 'past' : c.start <= m ? 'now' : 'future';
+    const isNow = st === 'now' || (st === 'future' && !list.some((x) => x.start <= m && x.end > m) && list.find((x) => x.start > m) === c);
+    return `<div class="cls ${isNow ? 'now' : st} ${S.openCls === c.id ? 'open' : ''}" data-cls="${c.id}" tabindex="0" role="button" aria-expanded="${isNow || S.openCls === c.id}"><span class="tm">${HZ.mm(c.start)}</span><span class="nm">${c.name}<span class="rm">${HZ.mm(c.start)}–${HZ.mm(c.end)} · ${c.room}</span></span></div>`;
+  }).join('');
+  const todo = S.tasks.filter((t) => !t.done).sort((a, b) => new Date(a.due) - new Date(b.due));
+  const done = S.tasks.filter((t) => t.done);
+  const strip = (t) => `<div class="strip" data-task="${t.id}"><button class="corner" data-done="${t.id}" aria-pressed="${t.done}" aria-label="${t.done ? '恢复' : '完成'}：${esc(t.title)}"></button><span class="t"><b>${esc(t.title)}</b><small class="${!t.done && new Date(t.due) < new Date() ? 'late' : ''}">${esc(t.subject)} · ${HZ.dueText(t.due)}${t.example ? ' · 示例' : ''}${t.source ? ' · 来自 ' + esc(t.source) : ''}</small></span></div>`;
+  const F = S.focus;
+  return [
+    pn('day', '周' + HZ.wd(day) + ' 的课', `<p class="note">过去的课折得很薄，此刻的课完全展开，后面的课半开。点任何一条都能摊开看。${ex}</p>${cls}`, 330),
+    pn('tasks', '要做的事', `
+      <form id="addForm" style="display:flex;gap:8px;align-items:flex-end;margin-bottom:6px"><label class="field" style="flex:1;margin:0"><span>记一件事</span><input name="t" placeholder="例如：周五交英语作文" autocomplete="off"></label><button class="tongue" style="margin:0;padding:10px 16px 10px 12px" aria-label="记下">记</button></form>
+      ${todo.map(strip).join('') || '<p class="note">都做完了。</p>'}
+      ${done.length ? `<button class="stack" data-stack style="--n:${done.length}" aria-expanded="${S.showDone}"><span class="leaves"></span>已折起 ${done.length} 件 · ${S.showDone ? '收回' : '摊开看看'}</button>${S.showDone ? done.map(strip).join('') : ''}` : ''}
+      <p class="note">完成 = 折起右上角。折起来的事叠在下面，随时可以摊开。</p>`, 380),
+    pn('inbox', '收件', `<p class="note">从通知里收到的候选，像纸条一样插在袋子里。抽出来看，确认后才变成任务。</p>
+      <div class="pocket">${S.inbox.map((it) => `<div class="slip ${S.slipOut === it.id ? 'out' : ''}" data-slip="${it.id}" tabindex="0" role="button" aria-expanded="${S.slipOut === it.id}"><b>${esc(it.guess.title)}</b><div style="font-size:13px;color:var(--ink2);margin-top:4px">${esc(it.text)}</div><div style="font-size:12px;color:var(--ink3);margin-top:4px">${esc(it.from)} · 猜测截止 ${HZ.dueText(it.guess.due)}</div><div class="acts"><button class="tongue" style="margin:0;padding:8px 16px 8px 12px;font-size:14px" data-accept="${it.id}">收下</button><button class="tongue light" style="margin:0;padding:8px 16px 8px 12px;font-size:14px" data-reject="${it.id}">塞回去不要</button></div></div>`).join('')}
+      <div class="mouth">${S.inbox.length ? S.inbox.length + ' 张待核' : '袋子空了'}</div></div>`, 330),
+    pn('focus', '专注', `${F.running ? '' : pull('fmin', F.min, 5, 90, 5, '专注多久（分钟）')}
+      <div class="fsheet" id="fsheet" aria-hidden="true"></div>
+      <p class="mid" style="text-align:center" id="fleft">${F.running ? '' : F.min + ' 分钟'}</p>
+      ${F.running ? '<button class="tongue light" data-fstop>摊开，停下</button>' : '<button class="tongue" data-fstart>开始 · 让纸自己折</button>'}
+      <p class="note">纸会随时间对折四次：折到最小，就结束了。今天已专注 ${D.FOCUS.filter((l) => new Date(l.at).toDateString() === new Date().toDateString()).reduce((a, l) => a + l.min, 0)} 分钟（示例）。</p>`, 300),
+  ].join('');
+}
+function drawFocusSheet() {
+  const el = $('#fsheet'); if (!el) return;
+  const F = S.focus;
+  const p = F.running ? Math.min(1, 1 - (F.end - Date.now()) / (F.min * 60000)) : 0;
+  const k = Math.min(4, Math.floor(p * 4 + 1e-6)); // 已对折次数
+  const W = 180 / Math.pow(2, Math.ceil(k / 2)), H = 180 / Math.pow(2, Math.floor(k / 2));
+  const s = Math.max(0, Math.round((F.end - Date.now()) / 1000));
+  el.innerHTML = `<div class="part" style="left:${(180 - W) / 2}px;top:${(180 - H) / 2}px;width:${W}px;height:${H}px;background-image:${k ? 'repeating-linear-gradient(90deg,#0000 0 ' + (W - 1) + 'px,#0002 ' + (W - 1) + 'px ' + W + 'px)' : 'none'}"><span class="left">${F.running ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : ''}</span></div>`;
+  const fl = $('#fleft'); if (fl && F.running) fl.textContent = ['刚开始', '对折了一次', '折成四分之一', '折成八分之一', '最后一折'][k];
+}
+let fTimer = 0;
+
+/* ════════════════════ D · 校园 ════════════════════ */
+const PLACES = ['lanshu', 'beimen', 'nanmen', 'yihao', 'erhao', 'sanhao', 'sihao', 'keji', 'kexue', 'library', 'yanchi', 'hujulongpan', 'fengqitang', 'yanlintang', 'yishu', 'yundong', 'canteen1', 'canteen3', 'zhiwuyuan', 'xiaoyouhui', 'dorm_f', 'dorm_m'];
+const B = Object.fromEntries(C.b.map((b) => [b.id, b]));
+function vMap() {
+  const M = S.map, b = B[M.sel];
+  return [
+    pn('plan', '校园 · 纸雕', `${pull('rise', Math.round(M.rise * 100), 0, 100, 1, '把校园从纸上立起来', (v) => v + '%')}
+      <div class="pop-stage" id="popStage"></div>
+      <p class="note">0% 是平面图，100% 是立起来的整座校园——同一张纸、同一套坐标。点一栋楼选中它。平面来自项目既有近似数据，方向与精度未独立复核。</p>`, 560),
+    pn('place', b.n, `${b.img ? `<img class="img" src="${R + b.img}" alt="${esc(b.n)}" loading="lazy">` : ''}<p class="big" style="font-size:26px">${esc(b.n)}</p><p class="p">${esc(b.d || b.c)}</p>
+      <p class="note">${b.f ? b.f + ' 层 · ' : ''}${esc(b.c)}${b.img ? ' · 图片来源：海南中学官网，经 HAIZ 既有页面使用' : ''}</p>
+      <hr class="crease">${fan('time', ['此刻', '清晨', '正午', '傍晚', '夜里'], M.time, '校园停在')}
+      <a class="tongue" href="${R}campus-3d.html" style="text-decoration:none">走进第一人称校园</a> <a class="tongue light" href="${R}index.html#map" style="text-decoration:none">去六幕第四幕</a>`, 360),
+  ].join('');
+}
+function buildPlan() {
+  const st = $('#popStage'); if (!st) return;
+  const bs = C.b.filter((b) => b.k !== 'corr' || true);
+  const core = C.b.filter((b) => b.k !== 'corr');
+  const xs = core.flatMap((b) => [b.r[0], b.r[2]]), ys = core.flatMap((b) => [b.r[1], b.r[3]]);
+  const x0 = Math.min(...xs) - 30, x1 = Math.max(...xs) + 30, y0 = Math.min(...ys) - 30, y1 = Math.max(...ys) + 30;
+  const Wd = st.clientWidth || 500; const k = Wd / (x1 - x0); const Hd = (y1 - y0) * k;
+  const X = (x) => (x - x0) * k, Y = (y) => (y1 - y) * k; // 北在上
+  const rise = S.map.rise;
+  const tint = ['', 'sepia(.25)', '', 'sepia(.5) saturate(1.4)', 'brightness(.55) hue-rotate(190deg)'][S.map.time];
+  let h = `<div class="plane" id="plane" style="width:${Wd}px;height:${Hd}px;transform:rotateX(${rise * 52}deg) rotateZ(${rise * -18}deg) scale(${1 - rise * 0.12});filter:${tint}">`;
+  C.roads.forEach((r) => { if (r[2] < x0 || r[0] > x1) return; h += `<i class="road" style="left:${X(Math.max(r[0], x0))}px;top:${Y(Math.min(r[3], y1))}px;width:${(Math.min(r[2], x1) - Math.max(r[0], x0)) * k}px;height:${(Math.min(r[3], y1) - Math.max(r[1], y0)) * k}px"></i>`; });
+  C.green.forEach((g) => { const r = g.r; h += `<i class="green" style="left:${X(r[0])}px;top:${Y(r[3])}px;width:${(r[2] - r[0]) * k}px;height:${(r[3] - r[1]) * k}px"></i>`; });
+  bs.forEach((b) => {
+    const r = b.r; const hgt = Math.max(3, (b.f ? b.f * 3.8 : ({ oldtree: 14, field: 0.5, pond: 0.3, gate: 6, rock: 3, garden: 1, pavilion: 5, botanic: 1, corr: 6 })[b.k] || 8) / 0.167 * k);
+    h += `<div class="bld ${b.id === S.map.sel ? 'sel' : ''}" data-b="${b.id}" style="left:${X(r[0])}px;top:${Y(r[3])}px;width:${(r[2] - r[0]) * k}px;height:${(r[3] - r[1]) * k}px;--h:${hgt}px;--hh:${hgt * rise}px;--rise:${rise}" title="${esc(b.n)}" ${PLACES.includes(b.id) ? 'tabindex="0" role="button" aria-label="' + esc(b.n) + '"' : ''}><i class="s"></i><i class="n"></i><i class="e"></i><i class="w"></i><i class="top"></i></div>`;
+  });
+  const s = B[S.map.sel]; h += `<span class="lbl" style="left:${X(s.r[0])}px;top:${Y(s.r[3]) - 20}px;transform:translateZ(${60 * rise + 4}px) rotateX(${-rise * 52}deg)">${esc(s.n)}</span>`;
+  h += '</div>';
+  st.style.height = Hd * (1 - rise * 0.35) + 'px';
+  st.innerHTML = h;
+}
+function updateRise() {
+  const p = $('#plane'); if (!p) return buildPlan();
+  const rise = S.map.rise;
+  p.style.transform = `rotateX(${rise * 52}deg) rotateZ(${rise * -18}deg) scale(${1 - rise * 0.12})`;
+  p.querySelectorAll('.bld').forEach((el) => { el.style.setProperty('--rise', rise); el.style.setProperty('--hh', parseFloat(el.style.getPropertyValue('--h')) * rise + 'px'); });
+  const l = p.querySelector('.lbl'); if (l) l.style.transform = `translateZ(${60 * rise + 4}px) rotateX(${-rise * 52}deg)`;
+  $('#popStage').style.height = parseFloat(p.style.height) * (1 - rise * 0.35) + 'px';
+}
+
+/* ════════════════════ E · 实验册 ════════════════════ */
+const G = 9.787;
+function vRead() {
+  const Lb = S.lab, T = D.LAB;
+  const T0 = 2 * Math.PI * Math.sqrt(Lb.L / G) * (1 + (Lb.deg * Math.PI / 180) ** 2 / 16);
+  return [
+    pn('text', '左页 · 步骤', `<p class="note">${esc(T.subject)}</p><p class="big" style="font-size:28px">${esc(T.title)}</p>${T.steps.map((s, i) => `<p class="p"><span class="num" style="color:var(--ink3)">${i + 1}</span>　${esc(s)}</p>`).join('')}<hr class="crease"><p class="note">${esc(T.principle)}</p><p class="note">出处：${T.sources.map(esc).join('；')}</p>`, 420),
+    pn('rig', '右页 · 装置', `<div class="page3d" aria-hidden="true"><div class="standup" id="standup" style="--up:${Lb.up}"><svg viewBox="-100 -10 200 220"><line x1="-70" y1="0" x2="70" y2="0"/><line x1="-60" y1="0" x2="-60" y2="210"/><g id="arm"><line x1="0" y1="0" x2="0" y2="${40 + Lb.L * 110}"/><circle cx="0" cy="${40 + Lb.L * 110}" r="7" fill="currentColor"/></g></svg></div></div>
+      ${pull('L', Lb.L, 0.3, 1.5, 0.05, '摆长 L（米）', (v) => (+v).toFixed(2))}
+      ${pull('deg', Lb.deg, 2, 30, 1, '放开角度（°）', (v) => v + '°')}
+      ${pull('n', Lb.n, 10, 60, 5, '全振动次数 n')}
+      <p class="mid num" id="labOut"></p>
+      <button class="tongue" data-rec>记下这一组</button> <button class="tongue light" data-lay>${Lb.up ? '让装置躺回纸上' : '让装置立起来'}</button>`, 420),
+    pn('rows', '记录', `${Lb.rows.length ? `<table class="t"><thead><tr><th>L</th><th>θ</th><th>n</th><th>t</th><th>g</th></tr></thead><tbody>${Lb.rows.map((r) => `<tr><td>${r.L.toFixed(2)}</td><td>${r.deg}°</td><td>${r.n}</td><td>${r.t.toFixed(1)}</td><td>${r.g.toFixed(2)}</td></tr>`).join('')}</tbody></table><p class="p">平均 <b class="num">${(Lb.rows.reduce((a, r) => a + r.g, 0) / Lb.rows.length).toFixed(3)}</b>，海口参考约 ${G}（按纬度估算）。</p>` : '<p class="note">还没有记录。右页调好装置后点「记下这一组」，这一折就会写上一行。</p>'}
+      <a class="tongue light" href="${R}lab/" style="text-decoration:none">在实验册里翻开</a>`, 300),
+  ].join('');
+}
+function labOut() {
+  const Lb = S.lab, th = Lb.deg * Math.PI / 180;
+  const T0 = 2 * Math.PI * Math.sqrt(Lb.L / G) * (1 + th * th / 16);
+  if (Lb.t == null) Lb.t = Lb.n * T0 + (Math.random() - 0.5) * 0.3;
+  const Tp = Lb.t / Lb.n, g = 4 * Math.PI ** 2 * Lb.L / Tp ** 2;
+  const o = $('#labOut'); if (o) o.innerHTML = `t = ${Lb.t.toFixed(1)} s（模拟秒表）<br>T = ${Tp.toFixed(3)} s　g ≈ ${g.toFixed(2)}${Lb.deg > 5 ? '<br><small style="color:var(--warn);font-size:13px">角度超过 5°：小角度近似失效，g 会偏小</small>' : ''}`;
+  return { Tp, g };
+}
+let armRAF = 0;
+function swing() {
+  cancelAnimationFrame(armRAF); const arm = $('#arm'); if (!arm || HZ.reduced()) return;
+  const t0 = performance.now();
+  const f = (t) => { if (!arm.isConnected) return; const T0 = 2 * Math.PI * Math.sqrt(S.lab.L / G); arm.setAttribute('transform', `rotate(${S.lab.up ? S.lab.deg * Math.cos(2 * Math.PI * (t - t0) / 1000 / T0) : 0})`); armRAF = requestAnimationFrame(f); };
+  armRAF = requestAnimationFrame(f);
+}
+
+/* ════════════════════ F · 我（设置与个人空间） ════════════════════ */
+function vSettings() {
+  const P = S.pref, A = D.ACCOUNT;
+  return [
+    pn('me', '我', S.authed ? `<p class="big" style="font-size:28px">${esc(A.name)}${ex}</p><p class="num">${A.handle} · ${A.joined} 加入</p><p class="p">树上有 ${A.leaves} 片我的叶子。</p><button class="tongue light" data-logout>退出登录</button>` : `<p class="mid">还没有登录</p><p class="p">下面的偏好照样能用，只存在这台设备上。</p><button class="tongue" data-go="login">去登录</button>`, 320),
+    pn('look', '看起来', `${fan('motion', ['照常', '减少', '跟随系统'], P.motion, '动画')}${fan('size', ['标准', '大', '特大'], P.size, '字号')}${fan('theme', ['跟随系统', '白天', '夜里'], P.theme, '颜色')}<p class="note">改了立刻生效。选中的一折会摊平，其余斜着退后。</p>`, 360),
+    pn('priv', '我的东西放在哪', `${flip('sync', P.sync, '课表和任务同步到账号', P.sync && S.syncErr ? '同步没有成功：这个实验室不连网（演示错误）' : '关着时只存在这台设备上')}
+      ${S.syncErr ? '<div class="field err" style="margin:0 0 8px"><i class="crumple"></i><em class="msg">同步失败留下了一道折痕。可以「再试一次」，或者把开关翻回去。</em></div><button class="tongue light" data-retry style="margin-top:0">再试一次</button>' : ''}
+      ${flip('leaf', P.leaf, '作品审核通过后公开', '没有审核通过的作品不会出现在树上')}
+      ${flip('intake', P.intake, '读取「示例班级群」的通知', '只在本机过滤，确认后才变成任务')}`, 360),
+    pn('dev', '登录过的设备', `${S.devices.map((d) => d.current ? `<div class="perf"><span class="who"><b>${esc(d.name)}</b><small>现在 · 就是你手上这台</small></span></div>` : `<div class="perf" data-perf="${d.id}"><span class="who"><b>${esc(d.name)}</b><small>最后一次 ${esc(d.last)}</small></span><span class="line" tabindex="0" role="button" aria-label="让「${esc(d.name)}」退出：向右拖过齿孔，或按两次 Enter" data-tear="${d.id}"><span>→ 撕下，让它退出</span></span></div>`).join('')}
+      <p class="note">撕下需要沿齿孔拖过去（或在键盘上连按两次 Enter）——不会误触。</p>
+      <hr class="crease"><div class="perf" data-perf="wipe"><span class="who"><b>清除这台设备上的实验室数据</b><small>任务和偏好回到示例的初始状态</small></span><span class="line" tabindex="0" role="button" aria-label="清除数据：向右拖过齿孔，或按两次 Enter" data-tear="wipe"><span>→ 撕下</span></span></div>`, 380),
+  ].join('');
+}
+function applyPref() {
+  const P = S.pref, r = document.documentElement;
+  if (P.motion === 1) r.dataset.motion = 'reduce'; else if (P.motion === 0) r.dataset.motion = 'normal'; else delete r.dataset.motion;
+  r.style.setProperty('--fs', [1, 1.12, 1.25][P.size]);
+  if (P.theme === 0) delete r.dataset.theme; else r.dataset.theme = P.theme === 1 ? 'light' : 'dark';
+}
+
+/* ════════════════════ 渲染与转场 ════════════════════ */
+const VIEWS = { home: vHome, login: vLogin, pocket: vPocket, map: vMap, read: vRead, settings: vSettings };
+function renderEdge() {
+  const late = S.tasks.filter((t) => !t.done).length;
+  $('#edge').innerHTML = TABS.map((t) => `<a class="tab" href="#${t.id}" data-tab="${t.id}" ${t.id === S.view ? 'aria-current="page"' : ''}>${t.label}${t.id === 'pocket' && late ? `<span class="cnt">${late}</span>` : ''}${t.id === 'settings' && S.authed ? '<span class="cnt">●</span>' : ''}</a>`).join('');
+}
+function render() {
+  const sc = $('#sheet').scrollLeft;
+  $('#sheet').innerHTML = VIEWS[S.view]();
+  $('#sheet').scrollLeft = sc;
+  renderEdge(); after();
+}
+function after() {
+  if (S.view === 'map') buildPlan();
+  if (S.view === 'read') { labOut(); swing(); }
+  if (S.view === 'pocket') drawFocusSheet();
+}
+let navBusy = 0;
+async function go(v) {
+  if (!VIEWS[v]) v = 'home';
+  if (v === S.view) return;
+  const old = [...document.querySelectorAll('.pn')];
+  const quick = HZ.reduced();
+  if (!quick) {
+    // 旧纸：从右往左依次折起（手机上从下往上）
+    old.reverse().forEach((el, i) => el.animate([{ transform: 'none', opacity: 1 }, { transform: mobile() ? 'rotateX(70deg)' : 'rotateY(-75deg)', opacity: 0 }], { duration: 180, delay: i * 40, easing: 'cubic-bezier(.5,0,.8,.5)', fill: 'forwards' }));
+    await new Promise((r) => setTimeout(r, 180 + old.length * 40));
+  }
+  S.view = v;
+  if (location.hash.slice(1) !== v) history.pushState(null, '', '#' + v);
+  $('#sheet').scrollLeft = 0; window.scrollTo(0, 0);
+  render();
+  if (!quick) document.querySelectorAll('.pn').forEach((el, i) => el.animate([{ transform: mobile() ? 'rotateX(-70deg)' : 'rotateY(75deg)', opacity: 0, transformOrigin: mobile() ? 'top' : 'left' }, { transform: 'none', opacity: 1, transformOrigin: mobile() ? 'top' : 'left' }], { duration: 300, delay: i * 55, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' }));
+}
+addEventListener('popstate', () => { const v = location.hash.slice(1) || 'home'; if (v !== S.view) go(v); });
+
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+function setFold(id, f) {
+  const key = S.view + ':' + id; const el = document.querySelector(`[data-pn="${id}"]`);
+  if (f) S.folded[key] = 1; else delete S.folded[key];
+  store.set('folded', S.folded);
+  if (!el) return;
+  if (f && !HZ.reduced()) { el.classList.add('folding'); setTimeout(() => { el.classList.remove('folding'); el.classList.add('folded'); }, 260); }
+  else { el.classList.toggle('folded', f); if (!f && !HZ.reduced()) el.querySelector('.body').animate([{ transform: mobile() ? 'rotateX(80deg)' : 'rotateY(-80deg)', filter: 'brightness(.7)' }, { transform: 'none', filter: 'none' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' }); el.querySelector('.fold-btn')?.focus(); }
+  if (S.view === 'map' && !f) setTimeout(buildPlan, 10);
+}
+
+/* ════════════════════ 事件 ════════════════════ */
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const tab = t.closest('[data-tab]'); if (tab) { e.preventDefault(); go(tab.dataset.tab); return; }
+  const g = t.closest('[data-go]'); if (g) { if (g.dataset.sel) S.map.sel = g.dataset.sel; go(g.dataset.go); return; }
+  const hr = t.closest('[data-href]'); if (hr) { location.href = hr.dataset.href; return; }
+  const fo = t.closest('[data-fold]'); if (fo) return setFold(fo.dataset.fold, true);
+  const un = t.closest('[data-unfold]'); if (un) return setFold(un.dataset.unfold, false);
+  const fl = t.closest('[data-flip]'); if (fl) {
+    const id = fl.dataset.flip; const on = fl.getAttribute('aria-checked') !== 'true';
+    fl.setAttribute('aria-checked', on);
+    if (id === 'keep') S.login.keep = on;
+    else { S.pref[id] = on; store.set('pref', S.pref); if (id === 'sync') { S.syncErr = on; setTimeout(render, 320); } }
+    toast((fl.getAttribute('aria-label')) + '：' + (on ? '开' : '关')); return;
+  }
+  const fa = t.closest('[data-fan]'); if (fa) {
+    const id = fa.dataset.fan, i = +fa.dataset.i;
+    fa.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b === fa));
+    if (id === 'mode') { S.login.mode = i; S.login.err = {}; setTimeout(render, 200); }
+    else if (id === 'time') { S.map.time = i; buildPlan(); }
+    else { S.pref[id] = i; store.set('pref', S.pref); applyPref(); }
+    return;
+  }
+  const pk = t.closest('[data-peek]'); if (pk) { const on = pk.getAttribute('aria-pressed') !== 'true'; pk.setAttribute('aria-pressed', on); pk.textContent = on ? '盖回去' : '掀开看'; pk.setAttribute('aria-label', on ? '隐藏口令' : '显示口令'); pk.parentElement.querySelector('input').type = on ? 'text' : 'password'; return; }
+  const dn = t.closest('[data-done]'); if (dn) {
+    const task = S.tasks.find((x) => x.id === dn.dataset.done); const strip = dn.closest('.strip');
+    dn.setAttribute('aria-pressed', !task.done);
+    strip.classList.add('gone');
+    setTimeout(() => { task.done = !task.done; store.set('tasks', S.tasks); render(); toast(task.done ? '折起来了：' + task.title : '摊回来了：' + task.title); }, HZ.reduced() ? 0 : 300);
+    return;
+  }
+  if (t.closest('[data-stack]')) { S.showDone = !S.showDone; render(); return; }
+  const cl = t.closest('[data-cls]'); if (cl) { S.openCls = S.openCls === cl.dataset.cls ? null : cl.dataset.cls; render(); return; }
+  const ac = t.closest('[data-accept]'); if (ac) { const it = S.inbox.find((x) => x.id === ac.dataset.accept); S.tasks.push({ id: 'n' + Date.now(), title: it.guess.title, subject: it.guess.subject, due: it.guess.due, done: false, example: true, source: it.from }); store.set('tasks', S.tasks); S.inbox = S.inbox.filter((x) => x !== it); S.slipOut = null; render(); toast('收下了，已经变成一件要做的事'); return; }
+  const rj = t.closest('[data-reject]'); if (rj) { S.inbox = S.inbox.filter((x) => x.id !== rj.dataset.reject); S.slipOut = null; render(); toast('塞回去了'); return; }
+  const sl = t.closest('[data-slip]'); if (sl && !sl.classList.contains('out')) { S.slipOut = sl.dataset.slip; render(); return; }
+  if (t.closest('[data-fstart]')) { const F = S.focus; F.running = true; F.end = Date.now() + F.min * 60000; clearInterval(fTimer); fTimer = setInterval(() => { drawFocusSheet(); if (Date.now() >= F.end) { F.running = false; clearInterval(fTimer); render(); toast('专注结束'); } }, 1000); render(); return; }
+  if (t.closest('[data-fstop]')) { S.focus.running = false; clearInterval(fTimer); render(); toast('停下了'); return; }
+  const bd = t.closest('.bld'); if (bd && PLACES.includes(bd.dataset.b)) { S.map.sel = bd.dataset.b; render(); return; }
+  if (t.closest('[data-rec]')) { const o = labOut(); S.lab.rows.push({ L: S.lab.L, deg: S.lab.deg, n: S.lab.n, t: S.lab.t, g: o.g }); S.lab.t = null; render(); toast('记下了，写在「记录」那一折'); return; }
+  if (t.closest('[data-lay]')) { S.lab.up = S.lab.up ? 0 : 1; const su = $('#standup'); su && su.style.setProperty('--up', S.lab.up); t.closest('[data-lay]').textContent = S.lab.up ? '让装置躺回纸上' : '让装置立起来'; return; }
+  if (t.closest('[data-logout]')) { S.authed = false; store.set('authed', false); render(); toast('已退出'); return; }
+  if (t.closest('[data-retry]')) { toast('还是没有成功（演示：不连网）'); return; }
+});
+document.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if ((e.key === 'Enter' || e.key === ' ') && (t.matches('[data-cls],[data-slip],.bld'))) { e.preventDefault(); t.click(); }
+  if (e.key === 'Enter' && t.matches('[data-tear]')) { e.preventDefault(); if (t.dataset.armed) tear(t.dataset.tear); else { t.dataset.armed = 1; t.querySelector('span').textContent = '再按一次 Enter 撕下'; t.style.setProperty('--tear', .5); t.closest('.perf').style.setProperty('--tear', .5); setTimeout(() => { delete t.dataset.armed; }, 3000); } }
+  if (!t.matches('input') && /^[1-6]$/.test(e.key) && !e.metaKey && !e.ctrlKey) go(TABS[+e.key - 1].id);
+});
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'q') { S.q = t.value.trim(); $('#hits').innerHTML = searchHits(S.q); return; }
+  const id = t.dataset.pull; if (!id) return;
+  const v = +t.value; const pull = t.closest('.pull'); const min = +t.min, max = +t.max; pull.style.setProperty('--p', (v - min) / (max - min));
+  const fmt = { rise: (x) => x + '%', L: (x) => x.toFixed(2), deg: (x) => x + '°' }[id] || ((x) => x);
+  $('#pv-' + id).textContent = fmt(v); $('#pg-' + id).textContent = fmt(v);
+  if (id === 'rise') { S.map.rise = v / 100; updateRise(); }
+  if (id === 'fmin') { S.focus.min = v; $('#fleft').textContent = v + ' 分钟'; }
+  if (id === 'L' || id === 'deg' || id === 'n') { S.lab[id] = v; S.lab.t = null; labOut(); if (id === 'L') { const arm = $('#arm'); if (arm) { const y = 40 + v * 110; arm.querySelector('line').setAttribute('y2', y); arm.querySelector('circle').setAttribute('cy', y); } } }
+});
+document.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.id === 'addForm') { const v = f.t.value.trim(); if (!v) { f.t.focus(); return; } const due = new Date(); due.setDate(due.getDate() + (/(明天)/.test(v) ? 1 : /周五|星期五/.test(v) ? ((5 - due.getDay() + 7) % 7 || 7) : 0)); due.setHours(21, 0, 0, 0); S.tasks.push({ id: 'n' + Date.now(), title: v, subject: '其他', due: due.toISOString(), done: false, example: false, source: '' }); store.set('tasks', S.tasks); render(); $('#addForm input').focus(); toast('记下了'); return; }
+  if (f.id === 'loginForm') {
+    const L = S.login, E = {}; const reg = L.mode === 1;
+    const user = f.user.value.trim(), pass = f.pass.value;
+    if (reg && !f.nick.value.trim()) E.nick = '写一个昵称，它会出现在公开作品上';
+    if (!/^[A-Za-z0-9_]{4,20}$/.test(user)) E.user = user ? '4–20 位字母、数字或下划线' : '还没写账号';
+    if (pass.length < 8) E.pass = pass ? '至少 8 位，还差 ' + (8 - pass.length) + ' 位' : '还没写口令';
+    if (reg && f.pass2.value !== pass) E.pass2 = '两次不一样';
+    const slip = f.closest('.body');
+    const fold = () => slip.animate([{ transform: 'none' }, { transform: mobile() ? 'rotateX(-35deg)' : 'rotateY(-30deg)', filter: 'brightness(.85)' }, { transform: 'none' }], { duration: HZ.reduced() ? 0 : 520, easing: 'cubic-bezier(.4,0,.2,1)' });
+    if (!Object.keys(E).length) {
+      if (!reg && user === 'sample_01' && pass === 'haiz2026') {
+        const a = slip.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(.2) translateX(120%)', opacity: 0 }], { duration: HZ.reduced() ? 0 : 520, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' });
+        a.onfinish = () => { S.authed = true; store.set('authed', true); L.err = {}; render(); toast('登录凭条已经折好，放进了「我」'); };
+        return;
+      }
+      E.form = reg ? '演示环境不创建真实账号。' : '账号或口令不对。';
+    }
+    fold(); L.err = E; const keep = { user: f.user.value, nick: f.nick?.value };
+    setTimeout(() => { render(); const nf = $('#loginForm'); if (nf) { nf.user.value = keep.user; if (nf.nick) nf.nick.value = keep.nick || ''; (nf.querySelector('[aria-invalid="true"]') || nf.pass).focus(); } }, HZ.reduced() ? 0 : 300);
+  }
+});
+document.addEventListener('input', (e) => {
+  // 改好了，折痕才平
+  const fd = e.target.closest('.field.err'); if (fd && e.target.form?.id === 'loginForm') { fd.classList.remove('err'); const m = fd.querySelector('.msg'); if (m) m.textContent = ''; e.target.removeAttribute('aria-invalid'); }
+});
+// 撕线：沿齿孔拖
+let tearing = null;
+document.addEventListener('pointerdown', (e) => { const l = e.target.closest('[data-tear]'); if (!l) return; tearing = { l, x0: e.clientX, w: l.getBoundingClientRect().width }; l.setPointerCapture(e.pointerId); });
+document.addEventListener('pointermove', (e) => { if (!tearing) return; const p = Math.max(0, Math.min(1, (e.clientX - tearing.x0) / tearing.w)); tearing.l.style.setProperty('--tear', p); tearing.p = p; });
+document.addEventListener('pointerup', () => { if (!tearing) return; const { l, p } = tearing; tearing = null; if (p > 0.85) tear(l.dataset.tear); else l.style.setProperty('--tear', 0); });
+function tear(id) {
+  const el = document.querySelector(`[data-perf="${id}"]`); if (!el) return;
+  el.classList.add('torn');
+  setTimeout(() => {
+    if (id === 'wipe') { try { Object.keys(localStorage).filter((k) => k.startsWith('hz-zhe-')).forEach((k) => localStorage.removeItem(k)); } catch {} S.tasks = D.TASKS.map((t) => ({ ...t })); S.pref = { motion: 0, size: 0, theme: 0, sync: false, leaf: false, intake: false }; S.folded = {}; applyPref(); toast('已清除'); }
+    else { const d = S.devices.find((x) => x.id === id); S.devices = S.devices.filter((x) => x.id !== id); toast('「' + (d ? d.name : '') + '」已退出'); }
+    render();
+  }, HZ.reduced() ? 0 : 520);
+}
+// 在折痕条上竖拖/横拖也能展开（加速手势；点击永远可用）
+addEventListener('resize', () => { if (S.view === 'map') buildPlan(); });
+
+applyPref();
+S.view = VIEWS[location.hash.slice(1)] ? location.hash.slice(1) : 'home';
+render();
+if (new URLSearchParams(location.search).has('embed')) document.querySelector('[data-lab]').style.display = 'none';
+</script>
+</body>
+</html>
