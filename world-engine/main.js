@@ -31,9 +31,8 @@ import { createWake } from '../lanren/free/wake.js';
 import { createWheelPath } from '../lanren/free/wheelpath.js';
 import { pairMaterials } from '../lanren/painted-lab/material.js';
 
-import { createEventBus } from './core/bus.js';
-import { createWorldState } from './core/state.js';
-import { createPerfMonitor } from './core/perf.js';
+import { createWorldRuntime } from './core/runtime.js';
+import { serializePeerPacket } from './core/entities.js';
 import { createSpatialGraph } from './spatial/graph.js';
 import { createWorldClock, ERA_BOOKMARKS, WEATHER_PRESETS } from './climate/clock.js';
 import { ART_LENSES, getLens } from './art/lenses.js';
@@ -82,9 +81,9 @@ function showWhisper(who, text) {
 
 async function boot() {
   const tBoot = performance.now();
-  const bus = createEventBus();
-  const store = createWorldState({ bus });
-  const perf = createPerfMonitor({ mobile: coarse });
+  const runtime = createWorldRuntime({ mobile: coarse });
+  const { bus, store, perf, assets, entities } = runtime;
+  const releaseLoop = runtime.claimRenderLoop('world-engine-main');
 
   const canvas = $('#we-canvas');
   const renderer = new THREE.WebGLRenderer({
@@ -496,15 +495,10 @@ async function boot() {
     });
   }
 
-  function selectLens(lensId) {
+  function selectLens(lensId, { animate = true } = {}) {
     const lens = getLens(lensId);
     store.setLens(lens.id);
-    pipeline.setLens(lens.id, { animate: true, origin: [0.5, 0.48] });
-    // If user switches to Nocturne during bright daytime, gently shift to evening study light
-    if (lens.id === 'nocturne' && lastClimate.clk.hours >= 7 && lastClimate.clk.hours < 18.5) {
-      worldClock.setHour(20.2);
-      syncWorldClockUi();
-    }
+    pipeline.setLens(lens.id, { animate, origin: [0.5, 0.48] });
     document.querySelectorAll('.we-lens-btn').forEach((el) => {
       el.classList.toggle('is-active', el.dataset.lens === lens.id);
     });
@@ -749,12 +743,16 @@ async function boot() {
   });
   let shadowFrameIdx = 0;
   let lastShadowX = 1e9, lastShadowZ = 1e9, lastSunAlt = -999;
-  const shadowCullDist = coarse ? 58 : 74;
-  function updateShadowBudget(fx, fz, sunAlt) {
+  const shadowCullDist = coarse ? 42 : 54;
+  function updateShadowBudget(fx, fz, sunAlt, { skipShadowUpdate = false } = {}) {
+    if (skipShadowUpdate) {
+      renderer.shadowMap.needsUpdate = false;
+      return;
+    }
     shadowFrameIdx++;
     const moved = Math.hypot(fx - lastShadowX, fz - lastShadowZ) > 0.8;
     const sunChanged = Math.abs(sunAlt - lastSunAlt) > 0.35;
-    const cadence = coarse ? 4 : 3;
+    const cadence = coarse ? 6 : 4;
     if (shadowFrameIdx === 1 || moved || sunChanged || shadowFrameIdx % cadence === 0) {
       for (const c of shadowCasters) {
         if (c.dynamic) { c.mesh.castShadow = true; continue; }
@@ -769,10 +767,10 @@ async function boot() {
     }
   }
 
-  function renderFrame(dtMs = 16.7) {
+  function renderFrame(dtMs = 16.7, opts = {}) {
     renderer.info.reset();
     const end = perf.beginSubsystem('render');
-    updateShadowBudget(focusPos.x, focusPos.z, lastClimate.sun.alt);
+    updateShadowBudget(focusPos.x, focusPos.z, lastClimate.sun.alt, opts);
     wake.render();
     pipeline.render(scene, camera);
     free.afterRender(canvas);
@@ -810,38 +808,113 @@ async function boot() {
     if (mapDrawer.isOpen) mapDrawer.render();
   });
 
-  const threeClock = new THREE.Clock();
-  function loop() {
-    const rawSec = threeClock.getDelta();
-    if (!paused) {
-      const dt = Math.min(rawSec, 1 / 20);
-      step(dt);
-      mapFrameSkip = mapDrawer.isOpen ? mapFrameSkip + 1 : 0;
-      if (!mapDrawer.isOpen || mapFrameSkip % 4 === 1) {
-        renderFrame();
+  // Register live entities into the unified EntityManager (proves shared spatial & multiplayer interfaces)
+  entities.register({
+    id: 'player:local',
+    kind: 'avatar',
+    assetId: 'char:student-m',
+    transform: { x: SPAWN.x, y: heightAt(SPAWN.x, SPAWN.z), z: SPAWN.z, yaw: SPAWN.yaw },
+    snapshot: () => {
+      const p = free.position;
+      return {
+        id: 'player:local',
+        assetId: 'char:student-m',
+        mode: free.mode,
+        transform: { x: p.x, y: p.y, z: p.z, yaw: free.ride.riding ? free.ride.state.yaw : player.state.yaw },
+        speed: free.speed,
+        roll: free.ride.state.roll || 0,
+        steer: free.ride.state.steer || 0,
+        crank: free.ride.state.crank || 0,
+      };
+    },
+  });
+  entities.register({
+    id: 'creature:campus-cat',
+    kind: 'creature',
+    assetId: 'creature:campus-cat',
+    transform: { x: cat.root.position.x, y: cat.root.position.y, z: cat.root.position.z, yaw: cat.root.rotation.y },
+    update: () => {
+      const ent = entities.get('creature:campus-cat');
+      if (ent) {
+        ent.transform.x = cat.root.position.x;
+        ent.transform.y = cat.root.position.y;
+        ent.transform.z = cat.root.position.z;
+        ent.transform.yaw = cat.root.rotation.y;
       }
-      if (mapDrawer.isOpen && mapFrameSkip % 6 === 1) {
-        mapDrawer.render();
-      }
-      perf.recordFrame(rawSec * 1000, renderer);
-    }
-    requestAnimationFrame(loop);
+    },
+  });
+  for (const agent of life.agents) {
+    const s0 = agent.live || agent.state || { x: 0, z: 0 };
+    entities.register({
+      id: `npc:${agent.id}`,
+      kind: 'npc',
+      assetId: agent.id === 'fu' ? 'char:teacher-f' : agent.id === 'wu' ? 'char:worker-m' : agent.id === 'lin' ? 'char:student-f' : 'char:student-m',
+      transform: { x: s0.x ?? 0, y: world.geo.frame.ground, z: s0.z ?? 0, yaw: 0 },
+      update: () => {
+        const s = agent.live || agent.state;
+        const ent = entities.get(`npc:${agent.id}`);
+        if (s && ent && Number.isFinite(s.x) && Number.isFinite(s.z)) {
+          ent.transform.x = s.x;
+          ent.transform.z = s.z;
+        }
+      },
+    });
   }
-  requestAnimationFrame(loop);
+
+  let rafId = 0;
+  let disposed = false;
+  const threeClock = new THREE.Clock();
+  function scheduleLoop() {
+    if (!disposed && !paused && !rafId) {
+      rafId = requestAnimationFrame(loop);
+    }
+  }
+  function loop() {
+    rafId = 0;
+    if (disposed || paused) return;
+    const rawSec = threeClock.getDelta();
+    const dt = Math.min(rawSec, 1 / 20);
+    step(dt);
+    mapFrameSkip = mapDrawer.isOpen ? mapFrameSkip + 1 : 0;
+    if (!mapDrawer.isOpen || mapFrameSkip % 4 === 1) {
+      renderFrame(rawSec * 1000);
+    }
+    if (mapDrawer.isOpen && mapFrameSkip % 6 === 1) {
+      mapDrawer.render();
+    }
+    scheduleLoop();
+  }
+  scheduleLoop();
+
+  function disposeEngine() {
+    if (disposed) return;
+    disposed = true;
+    if (rafId) cancelAnimationFrame(rafId);
+    releaseLoop();
+    pipeline.dispose();
+    runtime.dispose();
+    renderer.dispose();
+  }
+  addEventListener('pagehide', disposeEngine);
 
   // Clean public debug & acceptance API (used by automated Playwright tests & Workbench)
   window.__haizWorldEngine = {
-    version: '1.0.0',
+    version: '1.1.0',
     bootMs,
     tier: tierName,
+    sceneUuid: scene.uuid,
+    runtime,
     bus,
     store,
     perf,
+    assets,
+    entities,
     graph,
     worldClock,
     pipeline,
     world,
     player,
+    student,
     free,
     life,
     people,
@@ -853,24 +926,43 @@ async function boot() {
     openMap,
     openScience,
     teleportTo: (id) => teleportTo(graph.get(id)),
+    placeAvatar(x, z, yaw = 0.5) {
+      const y = heightAt(x, z);
+      player.state.pos.set(x, y, z);
+      player.state.yaw = yaw;
+      student.place?.(x, z, yaw);
+      if (student.group) student.group.visible = true;
+    },
+    peerPacket: () => serializePeerPacket(entities.get('player:local')),
+    dispose: disposeEngine,
     look(eye, at, fov = 44) {
       cameraOverride = eye ? { eye, at, fov } : null;
     },
     still(seconds = 0.5, fps = 30) {
       paused = true;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       const n = Math.max(1, Math.round(seconds * fps));
       for (let i = 0; i < n; i++) step(1 / fps);
-      renderFrame();
+      renderFrame(1000 / fps);
       if (mapDrawer.isOpen) mapDrawer.render();
+    },
+    renderOnly() {
+      paused = true;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      renderFrame(16.7, { skipShadowUpdate: true });
     },
     resume() {
       paused = false;
       threeClock.getDelta();
+      scheduleLoop();
     },
     telemetry() {
       return {
         bootMs,
         tier: tierName,
+        sceneUuid: scene.uuid,
+        loopOwner: runtime.loopOwner,
+        entityCount: entities.count,
         lens: store.state.user.lens,
         authority: store.state.authority,
         world: store.state.world,
@@ -880,6 +972,7 @@ async function boot() {
           agl: store.state.user.agl,
           speedMs: store.state.user.speedMs,
         },
+        cat: cat.describe?.() || null,
         perf: perf.snapshot(),
       };
     },

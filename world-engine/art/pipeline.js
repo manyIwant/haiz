@@ -592,6 +592,14 @@ export function createWorldPipeline(renderer, { tier = 'high', reduceMotion = fa
     run(M.finish, null);
   }
 
+  function dispose() {
+    for (const rt of [hdr, ao, base, ten, paint, prev]) rt.dispose();
+    depth.dispose();
+    bloom.dispose?.();
+    quad.dispose?.();
+    for (const mat of Object.values(M)) mat.dispose();
+  }
+
   applyLensUniforms(activeLens);
 
   return {
@@ -601,6 +609,7 @@ export function createWorldPipeline(renderer, { tier = 'high', reduceMotion = fa
     setOverrides,
     tick,
     render,
+    dispose,
     get lens() { return activeLens; },
     get tier() { return tier; },
     get size() { return size.clone(); },

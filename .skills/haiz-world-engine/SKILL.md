@@ -1,50 +1,42 @@
 ---
 name: haiz-world-engine
-description: Engineering constraints, spatial truth, art discipline, and executable verification commands for multi-AI development of HAIZ World Engine.
+description: Blocking engineering constraints, unified runtime invariants, spatial datum truth, art discipline, and executable verification commands for multi-AI development of HAIZ World Engine.
 ---
 
-# HAIZ World Engine · 协作工程规范 Skill
+# HAIZ World Engine · 多 AI 协作强制工程规范 Skill
 
-本 Skill 用于让不同的 AI 模型与人类开发者在同一套**可执行的工程约束**下协同建设 HAIZ（海南中学府城校区数字校园世界引擎），防止重复造轮子、坐标系分叉、画风失真或破坏既有功能。
+本 Skill 为不同 AI 模型与人类开发者提供**可由 CI 强制拦截**的统一世界工程约束，杜绝拼接式分叉、坐标系错乱、重复渲染循环、资源泄漏、画风退化或破坏既有生产系统。
 
-## 1. 不可违背的红线（Hard Invariants）
+## 1. CI 强制拒绝的红线（Executable Blocking Rules）
 
-1. **分支与安全边界**：严禁直接覆盖 `main` 分支；严禁修改线上 Supabase / 生产数据库；严禁暴露密钥或弱化 RLS/CSP 安全策略；严禁在无授权情况下采集或公开真实学生个人信息与位置轨迹。
-2. **保护既有成果**：不要推翻或删除 `lanren/` 六幕榄仁树、入画（`ruhua*.html`）、校园活着（`lanren/life/`）、自由共游（`lanren/free/`）、`twin/` 摄影校准建筑与 `lab/` 实验册。新系统应挂载在 `world-engine/` 内核上，而非复制 `main.js`。
-3. **真实测绘与艺术推演严格区分**：所有新增空间实体必须写入 `world-engine/spatial/graph.js` 并携带有效证据等级（`surveyed | photo-derived | public-map | legacy-estimated | creative-inference`），符合 `schemas/spatial-graph.schema.json`。
-4. **统一世界基准**：
-   - 经纬度基准统一采用 `twin/data/frame.json` 的 WGS84（`19.99847892°N, 110.34254843°E`），校园北向为 `319.0°`（不再引入新的北向常量）。
-   - 所有地面/空中交互必须使用 `world-engine/spatial/coord.js` 的 `separation3D()` 检查垂直离地高度，防止高空飞行惊扰地面生态或 NPC。
-5. **纸与墨视觉纪律**：
-   - UI 采用暖白纸色 `#f4f1e8`、深绿墨色 `#1f3a30`、红叶 `#a8482c`、新叶铜 `#8f6a1f`、结构深绿 `#2a4a3c`；夜色 `#0f1714` 仅用于沉浸空间。
-   - **禁止**黑底荧光科技风、廉价玻璃拟态堆砌、无意义装饰粒子雨与无信息英文标语；中文正文与按钮字号不小于 13 px。
-6. **科学模型诚实声明**：所有新增科学实验必须接入 `world-engine/science/kernel.js` 的数值求解与误差传播，并在 `MODEL_META` 中明示方程、适用范围、简化条件与精度；不得用纯动画冒充物理精确性。
-7. **性能与真机诚实原则**：任何软件渲染（SwiftShader）毫秒数都不等于真机 GPU 帧率；提交前必须通过硬件无关绘制预算（Draw Calls / Triangles / Textures / GLB 体积）。
+1. **禁止坐标系与北向分裂**：除 `world-engine/spatial/coord.js` 显式文档记录外，任何 `world-engine/` 代码不得硬编码旧北向（`337°`、`321.6°`）或火星坐标（`19.996067, 110.347227`）。由 `validate-world.mjs` 静态扫描拦截。
+2. **禁止子系统私建渲染循环**：`world-engine/` 内所有非入口子系统禁止调用 `requestAnimationFrame`；入口宿主必须通过 `runtime.claimRenderLoop(name)` 申请唯一主循环所有权。由 `validate-world.mjs` 静态门禁 + `runtime.js` 运行时断言双重拦截。
+3. **禁止非法状态变更**：所有权限切换、画境切换与角色坐标更新必须经 `store.setAuthority()` / `store.setLens()` / `store.setUserPose()` 校验（拦截非法画境、非法权限、`NaN` 或越界坐标）。切换画境严禁隐式篡改世界时钟、天气、场景实例或角色位置。
+4. **必须具备确定性生命周期释放**：核心运行时、渲染管线、资产缓存与实体管理器必须实现 `dispose()`，防止 GPU RenderTarget、几何体、纹理与事件监听泄漏。由 `validate-world.mjs` 与 `test-unified-architecture.mjs` 校验。
+5. **统一资产注册与去重**：所有角色、Campus Toybox V2 玩偶、载具与生物必须通过 `world-engine/core/assets.js`（`ASSET_CATALOG` + `createAssetRegistry`）与 `world-engine/core/entities.js` 接入，禁止重复加载或私自拷贝 GLB（`validate-glb.mjs` 检测二进制 SHA-256 重复与体积/三角面预算）。
+6. **真机与实测诚实边界**：严禁把艺术推测伪装成真实测绘（空间节点必须标注证据等级）；严禁把 SwiftShader 软件渲染帧时宣称为真机 GPU 帧率；严禁直接修改生产数据库或 `main` 分支。
+7. **纸与墨视觉与移动端底线**：UI 恪守 `#f4f1e8 / #1f3a30 / #a8482c / #8f6a1f` 纸墨体系；禁止黑底荧光科技风；手机竖屏 `390×844` 零横向溢出且通过移动端绘制预算。
 
-## 2. 必须执行的验证命令（Executable Gates）
-
-每次改动 `world-engine/`、资产、数据或着色器后，必须执行并全部通过：
+## 2. 必须全部通过的可执行门禁命令
 
 ```bash
-# 1. 空间契约、角色注册表、六画境契约与全量 JS 语法检查
+# 1. 静态架构红线 + 契约 + 资产目录 + 全量 JS 语法检查（13 项）
 node tools/world-engine/validate-world.mjs
 
-# 2. 科学模拟内核物理守恒性与数值精度单元测试
+# 2. 无页面依赖的统一架构集成证明测试（8 项核心不变量）
+node --test tools/world-engine/test-unified-architecture.mjs
+
+# 3. 科学模拟内核物理守恒与数值精度测试（10 项）
 node --test tools/world-engine/test-science-kernel.mjs
 
-# 3. 二进制 GLB 资产解析与预算扫描
+# 4. 二进制 GLB 资产体积、面数与 SHA-256 重复扫描
 node tools/world-engine/validate-glb.mjs --write
 
-# 4. 真实浏览器（桌面 1440×900 + 手机 390×844 + 工程验收台）回归与截图
+# 5. 浏览器全链路集成测试 + 六画境同机位横向对照 + 移动端验收
 python3 tools/world-engine/test-world-browser.py
 ```
 
-## 3. 新增子系统的标准接入模板
+## 3. 新实体与未来功能扩展标准接口
 
-不要新建独立的 `*.html` 拷贝整套 Three.js 循环。请按如下模式接入 `world-engine/`：
-
-1. 在 `world-engine/<domain>/` 编写纯 ES 模块，通过 `bus`（`world-engine/core/bus.js`）订阅事件（`clock:tick`、`weather:change`、`lens:change`、`place:enter`、`authority:change`）。
-2. 状态划分：共享世界状态写入 `store.state.world`，个人私有记录写入 `store.state.user`（遵循 `exportUserContract()`）。
-3. 若引入 UI 面板或交互模态，通过 `store.setAuthority('<mode>')` 接管输入与相机，关闭时归还 `'explore'`。
-4. 在 `world-engine/main.js` 中用 `perf.beginSubsystem('<name>')` 包裹 `update(dt)`，以便在 `world-engine-lab.html` 验收台实时监控 CPU 开销。
-5. 若新增 3D 资产，登记到 `world-engine/data/character-registry.json` 或 `schemas/` 对应契约，并执行 `validate-glb.mjs` 验证预算。
+- **Campus Toybox 原创角色 / 校园生物 / 载具**：在 `world-engine/core/assets.js` 的 `ASSET_CATALOG` 登记稳定 ID（如 `toybox:lanren-spirit`），通过 `runtime.entities.register({ id, kind, assetId, transform, update, snapshot, applySnapshot, dispose })` 接入统一空间与 3D 高度隔离查询。
+- **未来多人共游**：严格采用可选授权（opt-in），仅交换 `world-engine/core/entities.js` 定义的 `serializePeerPacket()`（符合 `schemas/entity-interface.schema.json`），不传输真实学生隐私或后台行动轨迹。

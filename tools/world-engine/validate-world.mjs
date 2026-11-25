@@ -1,11 +1,15 @@
 #!/usr/bin/env node
-// HAIZ World Engine — Executable Contract & Architecture Integrity Validator
+// HAIZ World Engine — Hardened Blocking Architecture & Contract Validator
 //
-// Validates:
+// Enforces executable rules that block future AI/human PRs from breaking unified world invariants:
 //   1. Spatial Datum & Semantic Graph contracts (evidence provenance, unique IDs, WGS84 bounds)
-//   2. Unified Character Registry contract (every referenced GLB exists on disk, fictionalOnly=true)
-//   3. Six Art Lenses contract (all required shader uniforms & parameters present and finite)
-//   4. JavaScript ES module syntax across all files in world-engine/
+//   2. Forbidden legacy coordinate/bearing leakage check (blocks 337°, 321.6°, GCJ-02 outside coord.js)
+//   3. Duplicate render-loop static guard (only entry hosts may call requestAnimationFrame, max 1 loop)
+//   4. Lifecycle dispose() contract check across core runtime, pipeline, assets, and entities
+//   5. Unified Character Registry & Toybox V2 Asset Catalog integrity (all GLBs exist on disk)
+//   6. Six Art Lenses shader/post contract completeness
+//   7. Performance budget & JSON Schema validity (including entity-interface.schema.json)
+//   8. Full ES module syntax verification across world-engine/ and tools/world-engine/
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +20,7 @@ import { CANONICAL_DATUM, EVIDENCE_LEVELS, runtimeToTwin, twinToRuntime, runtime
 import { SEMANTIC_PLACES, createSpatialGraph } from '../../world-engine/spatial/graph.js';
 import { ART_LENSES, getLens } from '../../world-engine/art/lenses.js';
 import { BUDGETS } from '../../world-engine/core/perf.js';
+import { ASSET_CATALOG } from '../../world-engine/core/assets.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 let passed = 0;
@@ -31,7 +36,16 @@ function check(name, fn) {
   }
 }
 
-console.log('HAIZ World Engine — Contract & Architecture Validator');
+function collectJsFiles(dir, out = []) {
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, ent.name);
+    if (ent.isDirectory()) collectJsFiles(full, out);
+    else if (ent.name.endsWith('.js') || ent.name.endsWith('.mjs')) out.push(full);
+  }
+  return out;
+}
+
+console.log('HAIZ World Engine — Blocking Contract & Architecture Validator');
 
 check('Canonical WGS84 datum within Hainan Middle School Fucheng campus bounds', () => {
   assert.ok(CANONICAL_DATUM.wgs84.lat > 19.99 && CANONICAL_DATUM.wgs84.lat < 20.01);
@@ -52,6 +66,59 @@ check('WGS84 projection maps Teaching Block 1 portal near canonical origin', () 
   const geo = runtimeToWgs84(ox, oz);
   assert.ok(Math.abs(geo.lat - CANONICAL_DATUM.wgs84.lat) < 1e-6);
   assert.ok(Math.abs(geo.lon - CANONICAL_DATUM.wgs84.lon) < 1e-6);
+});
+
+check('No legacy conflicting north bearings (337 / 321.6) or GCJ-02 coords leak outside coord.js', () => {
+  const files = collectJsFiles(path.join(ROOT, 'world-engine'));
+  const forbidden = [
+    { re: /\b19\.996067\b/, label: 'GCJ-02 lat 19.996067' },
+    { re: /\b110\.347227\b/, label: 'GCJ-02 lon 110.347227' },
+    { re: /campusNorthBearing\s*[:=]\s*337/, label: 'legacy bearing 337' },
+    { re: /CAMPUS_NORTH\s*=\s*321\.6/, label: 'legacy bearing 321.6' },
+  ];
+  for (const f of files) {
+    const rel = path.relative(ROOT, f).replaceAll('\\', '/');
+    if (rel === 'world-engine/spatial/coord.js') continue;
+    const src = fs.readFileSync(f, 'utf8');
+    for (const rule of forbidden) {
+      assert.ok(!rule.re.test(src), `Forbidden ${rule.label} found in ${rel}`);
+    }
+  }
+});
+
+check('Duplicate render-loop guard: subsystems have 0 rAF loops; entry hosts own at most 1 loop', () => {
+  const files = collectJsFiles(path.join(ROOT, 'world-engine'));
+  const allowedHosts = new Set([
+    'world-engine/main.js',
+    'world-engine/lab/main.js',
+    'world-engine/ui/map-drawer.js', // single one-shot layout rAF inside open()
+  ]);
+  for (const f of files) {
+    const rel = path.relative(ROOT, f).replaceAll('\\', '/');
+    const src = fs.readFileSync(f, 'utf8');
+    const rafMatches = src.match(/\brequestAnimationFrame\s*\(/g) || [];
+    if (!allowedHosts.has(rel)) {
+      assert.equal(rafMatches.length, 0, `Forbidden requestAnimationFrame in subsystem ${rel}`);
+    } else if (rel === 'world-engine/ui/map-drawer.js') {
+      assert.ok(rafMatches.length <= 1, `Unexpected loop in ${rel}`);
+    } else {
+      // Entry hosts: 1 loop recursion + 1 start (plus optional 1 one-shot toast class toggle)
+      assert.ok(rafMatches.length <= 3, `Too many requestAnimationFrame calls (${rafMatches.length}) in ${rel}`);
+    }
+  }
+});
+
+check('Lifecycle dispose() contract exists across runtime, pipeline, assets, and entities', () => {
+  for (const rel of [
+    'world-engine/core/runtime.js',
+    'world-engine/core/assets.js',
+    'world-engine/core/entities.js',
+    'world-engine/art/pipeline.js',
+    'world-engine/main.js',
+  ]) {
+    const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    assert.ok(/\bdispose\w*\s*\(/.test(src), `Missing dispose lifecycle handler in ${rel}`);
+  }
 });
 
 check('3D separation cleanly distinguishes high-altitude flight from ground proximity', () => {
@@ -76,14 +143,21 @@ check('Semantic Spatial Graph nodes have unique IDs, valid evidence provenance, 
   assert.ok(getSpatialDiscrepancyReport().length >= 4);
 });
 
-check('Unified Character Registry conforms to schema and all GLB assets exist on disk', () => {
+check('Unified Character Registry & Toybox Asset Catalog GLB files all exist on disk', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'world-engine/data/character-registry.json'), 'utf8'));
   assert.equal(reg.schema, 'haiz-character-registry/1');
   assert.ok(reg.characters.length >= 6);
   for (const ch of reg.characters) {
     assert.equal(ch.fictionalOnly, true, `${ch.id} must be marked fictionalOnly=true`);
-    const abs = path.join(ROOT, ch.glb);
-    assert.ok(fs.existsSync(abs), `Missing character GLB: ${ch.glb}`);
+    assert.ok(fs.existsSync(path.join(ROOT, ch.glb)), `Missing character GLB: ${ch.glb}`);
+  }
+  for (const [id, meta] of Object.entries(ASSET_CATALOG)) {
+    if (meta.path.endsWith('.glb')) {
+      const abs = path.join(ROOT, meta.path);
+      assert.ok(fs.existsSync(abs), `Missing catalog GLB for ${id}: ${meta.path}`);
+      const size = fs.statSync(abs).size;
+      assert.ok(size <= meta.maxBytes, `Asset ${id} exceeds catalog budget (${size} > ${meta.maxBytes})`);
+    }
   }
 });
 
@@ -103,28 +177,22 @@ check('Performance budgets define stricter mobile than desktop limits', () => {
   assert.ok(BUDGETS.mobile.maxTriangles < BUDGETS.desktop.maxTriangles);
 });
 
-check('JSON Schemas parse cleanly', () => {
-  for (const f of ['spatial-graph.schema.json', 'character-registry.schema.json', 'performance-budget.schema.json']) {
+check('All JSON Schemas parse cleanly', () => {
+  for (const f of ['spatial-graph.schema.json', 'character-registry.schema.json', 'performance-budget.schema.json', 'entity-interface.schema.json']) {
     const obj = JSON.parse(fs.readFileSync(path.join(ROOT, 'schemas', f), 'utf8'));
     assert.ok(obj.$schema && obj.title);
   }
 });
 
-check('All world-engine JS modules pass node --check syntax validation', () => {
-  const jsFiles = [];
-  function walk(d) {
-    for (const ent of fs.readdirSync(d, { withFileTypes: true })) {
-      const full = path.join(d, ent.name);
-      if (ent.isDirectory()) walk(full);
-      else if (ent.name.endsWith('.js') || ent.name.endsWith('.mjs')) jsFiles.push(full);
-    }
-  }
-  walk(path.join(ROOT, 'world-engine'));
-  walk(path.join(ROOT, 'tools/world-engine'));
+check('All world-engine & validator JS modules pass node --check syntax validation', () => {
+  const jsFiles = [
+    ...collectJsFiles(path.join(ROOT, 'world-engine')),
+    ...collectJsFiles(path.join(ROOT, 'tools/world-engine')),
+  ];
   for (const f of jsFiles) {
     execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' });
   }
-  assert.ok(jsFiles.length >= 12);
+  assert.ok(jsFiles.length >= 16);
 });
 
 console.log(`\nValidation complete: ${passed} checks passed.`);

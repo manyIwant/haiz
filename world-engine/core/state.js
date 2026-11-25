@@ -5,6 +5,7 @@
 //   3. `authority` — explicit input & camera ownership arbiter (`explore | map | lab | story | inspect`)
 
 export const AUTHORITIES = Object.freeze(['explore', 'map', 'lab', 'story', 'inspect']);
+export const VALID_LENSES = Object.freeze(['gouache', 'inkwash', 'realist', 'memory', 'nocturne', 'dream']);
 
 const STORAGE_KEY = 'haiz.world-engine.user.v1';
 
@@ -57,13 +58,13 @@ export function createWorldState({ bus, storage = globalThis.localStorage } = {}
       catState: 'rest',
     },
     user: {
-      lens: saved?.lens || 'gouache',
+      lens: VALID_LENSES.includes(saved?.lens) ? saved.lens : 'gouache',
       cameraMode: 'third',        // 'third' | 'first'
       locomotionMode: 'walk',     // 'walk' | 'bike' | 'board' | 'broom'
-      position: [0, -0.85, 14],
+      position: [-16, -0.85, -20],
       agl: 0,
       speedMs: 0,
-      headingRad: 0,
+      headingRad: 0.52,
       visitedPlaces: Array.isArray(saved?.visitedPlaces) ? saved.visitedPlaces : ['lanshu'],
       fieldNotes: Array.isArray(saved?.fieldNotes) ? saved.fieldNotes : [],
       scienceTrials: Array.isArray(saved?.scienceTrials) ? saved.scienceTrials : [],
@@ -97,11 +98,28 @@ export function createWorldState({ bus, storage = globalThis.localStorage } = {}
   }
 
   function setLens(lensId, meta = {}) {
+    if (!VALID_LENSES.includes(lensId)) {
+      throw new Error(`Invalid art lens "${lensId}"`);
+    }
     const prev = state.user.lens;
     if (prev === lensId && !meta.force) return;
     state.user.lens = lensId;
     persistUser();
     bus?.emit('lens:change', { prev, next: lensId, ...meta });
+  }
+
+  function setUserPose({ x, y, z, agl = 0, speedMs = 0, headingRad = 0, locomotionMode = state.user.locomotionMode }) {
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z) || !Number.isFinite(agl) || !Number.isFinite(speedMs)) {
+      throw new Error(`Illegal non-finite user pose: (${x}, ${y}, ${z})`);
+    }
+    if (Math.abs(x) > 1000 || Math.abs(z) > 1000 || y < -30 || y > 150) {
+      throw new Error(`User pose out of campus bounds: (${x}, ${y}, ${z})`);
+    }
+    state.user.position = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)];
+    state.user.agl = +agl.toFixed(2);
+    state.user.speedMs = +speedMs.toFixed(2);
+    state.user.headingRad = +headingRad.toFixed(4);
+    state.user.locomotionMode = locomotionMode;
   }
 
   function markPlaceVisited(placeId, placeName) {
@@ -165,6 +183,7 @@ export function createWorldState({ bus, storage = globalThis.localStorage } = {}
     state,
     setAuthority,
     setLens,
+    setUserPose,
     markPlaceVisited,
     addFieldNote,
     recordScienceTrial,

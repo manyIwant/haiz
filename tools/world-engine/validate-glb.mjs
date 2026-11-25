@@ -12,6 +12,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const WRITE = process.argv.includes('--write');
@@ -43,19 +44,20 @@ function walkGlb(dir, out = []) {
 
 function inspectGlb(filePath) {
   const buf = fs.readFileSync(filePath);
+  const sha256 = crypto.createHash('sha256').update(buf).digest('hex').slice(0, 16);
   const rel = path.relative(ROOT, filePath).replaceAll('\\', '/');
   if (buf.length < 20) {
-    return { path: rel, bytes: buf.length, ok: false, errors: ['File too small to be valid GLB'] };
+    return { path: rel, bytes: buf.length, sha256, ok: false, errors: ['File too small to be valid GLB'] };
   }
   const magic = buf.readUInt32LE(0);
   const version = buf.readUInt32LE(4);
   if (magic !== 0x46546c67 || version !== 2) {
-    return { path: rel, bytes: buf.length, ok: false, errors: [`Invalid GLB header (magic=0x${magic.toString(16)}, version=${version})`] };
+    return { path: rel, bytes: buf.length, sha256, ok: false, errors: [`Invalid GLB header (magic=0x${magic.toString(16)}, version=${version})`] };
   }
   const chunkLen = buf.readUInt32LE(12);
   const chunkType = buf.readUInt32LE(16);
   if (chunkType !== 0x4e4f534a) {
-    return { path: rel, bytes: buf.length, ok: false, errors: ['First chunk is not JSON'] };
+    return { path: rel, bytes: buf.length, sha256, ok: false, errors: ['First chunk is not JSON'] };
   }
   const gltf = JSON.parse(buf.subarray(20, 20 + chunkLen).toString('utf8'));
   const accessors = gltf.accessors || [];
@@ -65,7 +67,7 @@ function inspectGlb(filePath) {
   for (const m of meshes) {
     for (const p of m.primitives || []) {
       primitives++;
-      const mode = p.mode ?? 4; // 4 = TRIANGLES
+      const mode = p.mode ?? 4;
       if (mode === 4) {
         if (p.indices !== undefined && accessors[p.indices]) {
           triangles += Math.floor(accessors[p.indices].count / 3);
@@ -93,6 +95,7 @@ function inspectGlb(filePath) {
     path: rel,
     kind,
     bytes: buf.length,
+    sha256,
     meshes: meshes.length,
     primitives,
     triangles,
@@ -107,6 +110,13 @@ function inspectGlb(filePath) {
 
 const files = walkGlb(ROOT).sort();
 const results = files.map(inspectGlb);
+const byHash = new Map();
+for (const r of results) {
+  const arr = byHash.get(r.sha256) || [];
+  arr.push(r.path);
+  byHash.set(r.sha256, arr);
+}
+const duplicates = [...byHash.entries()].filter(([, list]) => list.length > 1).map(([sha256, paths]) => ({ sha256, paths }));
 const runtimeResults = results.filter((r) => r.kind !== 'master');
 const totalBytes = results.reduce((s, r) => s + r.bytes, 0);
 const runtimeBytes = runtimeResults.reduce((s, r) => s + r.bytes, 0);
@@ -126,12 +136,17 @@ const report = {
     passed,
     warnings,
     runtimeWarnings,
+    duplicateGroups: duplicates.length,
   },
+  duplicates,
   files: results.sort((a, b) => b.bytes - a.bytes),
 };
 
 console.log(`HAIZ GLB Asset Audit: ${results.length} files (${(totalBytes / 1048576).toFixed(1)} MB total; ${(runtimeBytes / 1048576).toFixed(1)} MB runtime)`);
-console.log(`  Passed: ${passed} | Warnings: ${warnings} (runtime warnings: ${runtimeWarnings})`);
+console.log(`  Passed: ${passed} | Warnings: ${warnings} (runtime warnings: ${runtimeWarnings}) | Duplicate binary groups: ${duplicates.length}`);
+for (const d of duplicates) {
+  console.log(`  [DUP] sha256=${d.sha256}: ${d.paths.join(' == ')}`);
+}
 for (const r of results.filter((x) => !x.ok)) {
   console.log(`  [WARN] ${r.path}: ${r.warnings.join('; ')}`);
 }
@@ -142,6 +157,6 @@ if (WRITE) {
   console.log(`Wrote ${path.relative(ROOT, outPath)}`);
 }
 
-if (STRICT && runtimeWarnings > 0) {
+if (STRICT && (runtimeWarnings > 0 || duplicates.length > 0)) {
   process.exit(1);
 }

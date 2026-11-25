@@ -1,22 +1,47 @@
 {
-  "schema": "haiz-world-engine-browser-report/1",
-  "timestamp": "2026-11-25T12:25:05Z",
+  "schema": "haiz-world-engine-browser-report/2",
+  "timestamp": "2026-11-25T13:33:24Z",
   "environment": "Linux VM · Google Chrome Headless · ANGLE SwiftShader (software rendering; NOT real-device GPU FPS)",
   "checks": [
     {
       "name": "Desktop World Engine boots cleanly",
       "ok": true,
-      "detail": "wall=42.3s"
+      "detail": "wall=43.3s"
+    },
+    {
+      "name": "Single render loop authority (no duplicate rAF loops)",
+      "ok": true,
+      "detail": "loopOwner=world-engine-main"
+    },
+    {
+      "name": "Unified EntityManager tracks live avatar + cat + 5 NPCs",
+      "ok": true,
+      "detail": "entityCount=7"
+    },
+    {
+      "name": "Opt-in multiplayer PeerStatePacket serializes cleanly",
+      "ok": true,
+      "detail": "schema=haiz-peer-packet/1, xyz=[-14.2, -0.68, -16.8]"
     },
     {
       "name": "Desktop draw-call & triangle budgets",
       "ok": true,
-      "detail": "calls=577, tris=3,318,996"
+      "detail": "calls=569, tris=3,302,702"
     },
     {
-      "name": "Art Lens switch to Ink & Wash (水墨写生)",
+      "name": "All 6 Art Lenses share the exact same live THREE.Scene UUID",
       "ok": true,
-      "detail": "lens=inkwash"
+      "detail": "uuid=fb6c4f22-910e-4cfb-8af5-705796f25cc5"
+    },
+    {
+      "name": "Switching across all 6 Art Lenses preserves exact avatar position, clock & weather",
+      "ok": true,
+      "detail": "pos=[-14.2, -0.68, -16.8], weather=晴"
+    },
+    {
+      "name": "Zero GPU geometry leak or scene rebuild across all 6 lens switches",
+      "ok": true,
+      "detail": "geometries=[467] across all 6 passes"
     },
     {
       "name": "ERA5 Historical Time Travel (1985-11-18) + Memory Lens",
@@ -39,6 +64,11 @@
       "detail": "authority=lab"
     },
     {
+      "name": "Unified World Clock causally drives Yanchi Fresnel Optics (Noon -> Dusk)",
+      "ok": true,
+      "detail": "sunAlt 49.3°->5.2°, θi 40.7°->84.8°"
+    },
+    {
       "name": "Desktop zero uncaught page errors",
       "ok": true,
       "detail": "pageErrors=0, consoleErrors=0"
@@ -46,7 +76,7 @@
     {
       "name": "Mobile Portrait World Engine boots cleanly",
       "ok": true,
-      "detail": "wall=20.5s"
+      "detail": "wall=31.1s"
     },
     {
       "name": "Mobile Portrait zero horizontal overflow",
@@ -54,9 +84,14 @@
       "detail": ""
     },
     {
+      "name": "Mobile UI interactive font size readable (>= 11px)",
+      "ok": true,
+      "detail": "minFont=12.0px"
+    },
+    {
       "name": "Mobile hardware-independent budgets",
       "ok": true,
-      "detail": "calls=358, tris=1,948,722"
+      "detail": "calls=366, tris=2,230,827"
     },
     {
       "name": "Mobile zero uncaught page errors",
@@ -74,110 +109,151 @@
       "detail": "pageErrors=0, slideCm=6.83"
     }
   ],
+  "unifiedArchitecture": {
+    "sixLensInvariance": {
+      "baselineSceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+      "baselinePosition": [
+        -14.2,
+        -0.68,
+        -16.8
+      ],
+      "baselineClockMs": 1795594320043,
+      "geometryCountsObserved": [
+        467
+      ],
+      "allSameScene": true,
+      "allSamePosition": true,
+      "allSameClock": true,
+      "allSameWeather": true,
+      "allSameGeometries": true,
+      "matrix": [
+        {
+          "lens": "gouache",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 569,
+          "triangles": 3302702,
+          "screenshot": "docs/world-engine/screens/lens-01-gouache.png"
+        },
+        {
+          "lens": "inkwash",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 569,
+          "triangles": 3302702,
+          "screenshot": "docs/world-engine/screens/lens-02-inkwash.png"
+        },
+        {
+          "lens": "realist",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 567,
+          "triangles": 3302700,
+          "screenshot": "docs/world-engine/screens/lens-03-realist.png"
+        },
+        {
+          "lens": "memory",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 569,
+          "triangles": 3302702,
+          "screenshot": "docs/world-engine/screens/lens-04-memory.png"
+        },
+        {
+          "lens": "nocturne",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 569,
+          "triangles": 3302702,
+          "screenshot": "docs/world-engine/screens/lens-05-nocturne.png"
+        },
+        {
+          "lens": "dream",
+          "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+          "position": [
+            -14.2,
+            -0.68,
+            -16.8
+          ],
+          "clockMs": 1795594320043,
+          "weatherLabel": "晴",
+          "geometries": 467,
+          "calls": 569,
+          "triangles": 3302702,
+          "screenshot": "docs/world-engine/screens/lens-06-dream.png"
+        }
+      ]
+    },
+    "clockToScienceCoupling": {
+      "noon": {
+        "sunAlt": 49.3,
+        "angText": "40.7°",
+        "readout": "\n          折射角 θₜ：29.27°\n          自然光反射率 R：2.48%\n          透射率 T：97.52%\n          Rₛ / Rₚ：4.4% / 0.5%\n          布儒斯特角 θ_B：53.11°\n        "
+      },
+      "dusk": {
+        "sunAlt": 5.2,
+        "angText": "84.8°",
+        "readout": "\n          折射角 θₜ：48.36°\n          自然光反射率 R：56.98%\n          透射率 T：43.02%\n          Rₛ / Rₚ：66.2% / 47.8%\n          布儒斯特角 θ_B：53.11°\n        "
+      },
+      "incidentAngleNoonDeg": 40.7,
+      "incidentAngleDuskDeg": 84.8
+    }
+  },
   "telemetry": {
     "desktop_gouache": {
-      "bootMs": 41833,
+      "bootMs": 42817,
       "tier": "medium",
+      "sceneUuid": "fb6c4f22-910e-4cfb-8af5-705796f25cc5",
+      "loopOwner": "world-engine-main",
+      "entityCount": 7,
       "lens": "gouache",
       "authority": "explore",
       "world": {
-        "clockMs": 1795594361118,
+        "clockMs": 1795594320043,
         "clockMode": "free",
         "eraId": "free:clear",
         "eraLabel": "海口此刻",
-        "haikouHour": 16.21,
+        "haikouHour": 16.2,
         "dayOfYear": 329,
         "weatherId": "clear",
         "weatherLabel": "晴",
         "weatherOrigin": "climatology",
-        "temperatureC": 23.3,
-        "humidityPct": 72,
-        "windSpeedMs": 2.5,
-        "windDirDeg": 135,
-        "rainIntensity": 0,
-        "wetness": 0,
-        "puddle": 0,
-        "sunAltDeg": 21.2,
-        "sunAzDeg": 180,
-        "nightFactor": 0,
-        "phenology": {
-          "stage": "夏叶",
-          "redness": 0,
-          "flush": 0,
-          "foliage": 1
-        },
-        "activePlaceId": "lanshu",
-        "activePlaceName": "百年榄仁树",
-        "activeNpcCount": 0,
-        "butterflyCount": 0,
-        "catState": "rest"
-      },
-      "user": {
-        "locomotionMode": "walk",
-        "position": [
-          -16,
-          -0.68,
-          -20
-        ],
-        "agl": 0,
-        "speedMs": 0
-      },
-      "perf": {
-        "profile": "desktop",
-        "frames": 2,
-        "fps": 59.9,
-        "p50Ms": 16.7,
-        "p95Ms": 16.7,
-        "totalCpuMs": 26160.98,
-        "subsystems": {
-          "climate": 0.54,
-          "locomotion": 41.5,
-          "environment": 3.26,
-          "life_eco": 187.83,
-          "spatial_sci": 2.6,
-          "render": 25925.26
-        },
-        "render": {
-          "calls": 577,
-          "triangles": 3318996,
-          "geometries": 467,
-          "textures": 64,
-          "programs": 354
-        },
-        "budget": {
-          "maxDrawCalls": 720,
-          "maxTriangles": 5200000,
-          "maxGeometries": 650,
-          "maxTextures": 180,
-          "targetFrameMs": 16.7,
-          "maxSubsystemCpuMs": 8
-        },
-        "checks": {
-          "drawCallsOk": true,
-          "trianglesOk": true,
-          "geometriesOk": true,
-          "texturesOk": true,
-          "cpuOk": false
-        },
-        "allHardwareIndependentBudgetsOk": true
-      }
-    },
-    "mobile_gouache": {
-      "bootMs": 19993,
-      "tier": "low",
-      "lens": "gouache",
-      "authority": "explore",
-      "world": {
-        "clockMs": 1795594339100,
-        "clockMode": "free",
-        "eraId": "free:clear",
-        "eraLabel": "海口此刻",
-        "haikouHour": 16.21,
-        "dayOfYear": 329,
-        "weatherId": "clear",
-        "weatherLabel": "晴",
-        "weatherOrigin": "climatology",
-        "temperatureC": 23.2,
+        "temperatureC": 22.5,
         "humidityPct": 72,
         "windSpeedMs": 2.5,
         "windDirDeg": 135,
@@ -202,32 +278,144 @@
       "user": {
         "locomotionMode": "walk",
         "position": [
-          -16,
+          -14.2,
           -0.68,
-          -20
+          -16.8
         ],
         "agl": 0,
         "speedMs": 0
       },
+      "cat": {
+        "act": "patrol",
+        "pose": "stretch",
+        "mode": "walk",
+        "at": [
+          127,
+          57
+        ],
+        "spot": "edge",
+        "trust": 0
+      },
       "perf": {
-        "profile": "mobile",
-        "frames": 2,
+        "profile": "desktop",
+        "frames": 3,
         "fps": 59.9,
         "p50Ms": 16.7,
-        "p95Ms": 16.7,
-        "totalCpuMs": 10690.88,
+        "p95Ms": 100,
+        "totalCpuMs": 23776.07,
         "subsystems": {
-          "climate": 0.62,
-          "locomotion": 18.58,
-          "environment": 1.04,
-          "life_eco": 96.56,
-          "spatial_sci": 0.33,
-          "render": 10573.74
+          "climate": 0.85,
+          "locomotion": 59.35,
+          "environment": 9.53,
+          "life_eco": 218.4,
+          "spatial_sci": 0.53,
+          "render": 23487.41
         },
         "render": {
-          "calls": 358,
-          "triangles": 1948722,
-          "geometries": 362,
+          "calls": 569,
+          "triangles": 3302702,
+          "geometries": 467,
+          "textures": 66,
+          "programs": 354
+        },
+        "budget": {
+          "maxDrawCalls": 720,
+          "maxTriangles": 5200000,
+          "maxGeometries": 650,
+          "maxTextures": 180,
+          "targetFrameMs": 16.7,
+          "maxSubsystemCpuMs": 8
+        },
+        "checks": {
+          "drawCallsOk": true,
+          "trianglesOk": true,
+          "geometriesOk": true,
+          "texturesOk": true,
+          "cpuOk": false
+        },
+        "allHardwareIndependentBudgetsOk": true
+      }
+    },
+    "mobile_gouache": {
+      "bootMs": 30609,
+      "tier": "low",
+      "sceneUuid": "a9bf7350-7f91-4b10-909e-f22a74eaf85a",
+      "loopOwner": "world-engine-main",
+      "entityCount": 7,
+      "lens": "gouache",
+      "authority": "explore",
+      "world": {
+        "clockMs": 1795594320053,
+        "clockMode": "free",
+        "eraId": "free:clear",
+        "eraLabel": "海口此刻",
+        "haikouHour": 16.2,
+        "dayOfYear": 329,
+        "weatherId": "clear",
+        "weatherLabel": "晴",
+        "weatherOrigin": "climatology",
+        "temperatureC": 22.4,
+        "humidityPct": 72,
+        "windSpeedMs": 2.5,
+        "windDirDeg": 135,
+        "rainIntensity": 0,
+        "wetness": 0,
+        "puddle": 0,
+        "sunAltDeg": 21.3,
+        "sunAzDeg": 180,
+        "nightFactor": 0,
+        "phenology": {
+          "stage": "夏叶",
+          "redness": 0,
+          "flush": 0,
+          "foliage": 1
+        },
+        "activePlaceId": "lanshu",
+        "activePlaceName": "百年榄仁树",
+        "activeNpcCount": 0,
+        "butterflyCount": 0,
+        "catState": "rest"
+      },
+      "user": {
+        "locomotionMode": "walk",
+        "position": [
+          -14.2,
+          -0.68,
+          -16.8
+        ],
+        "agl": 0,
+        "speedMs": 0
+      },
+      "cat": {
+        "act": "patrol",
+        "pose": "stretch",
+        "mode": "walk",
+        "at": [
+          127,
+          57
+        ],
+        "spot": "edge",
+        "trust": 0
+      },
+      "perf": {
+        "profile": "mobile",
+        "frames": 3,
+        "fps": 59.9,
+        "p50Ms": 16.7,
+        "p95Ms": 100,
+        "totalCpuMs": 16850.35,
+        "subsystems": {
+          "climate": 0.62,
+          "locomotion": 69.14,
+          "environment": 1.25,
+          "life_eco": 231.46,
+          "spatial_sci": 0.43,
+          "render": 16547.44
+        },
+        "render": {
+          "calls": 366,
+          "triangles": 2230827,
+          "geometries": 341,
           "textures": 41,
           "programs": 305
         },
@@ -259,10 +447,10 @@
         "fps": 20,
         "p50Ms": 50,
         "p95Ms": 50,
-        "totalCpuMs": 1528.15,
+        "totalCpuMs": 1635.82,
         "subsystems": {
-          "gait_sim": 0.88,
-          "render": 1527.27
+          "gait_sim": 0.91,
+          "render": 1634.92
         },
         "render": {
           "calls": 47,
@@ -291,8 +479,13 @@
     }
   },
   "screenshots": [
-    "docs/world-engine/screens/01-desktop-gouache.png",
-    "docs/world-engine/screens/02-desktop-inkwash.png",
+    "docs/world-engine/screens/lens-01-gouache.png",
+    "docs/world-engine/screens/lens-02-inkwash.png",
+    "docs/world-engine/screens/lens-03-realist.png",
+    "docs/world-engine/screens/lens-04-memory.png",
+    "docs/world-engine/screens/lens-05-nocturne.png",
+    "docs/world-engine/screens/lens-06-dream.png",
+    "docs/world-engine/screens/six-lenses-contact-sheet.png",
     "docs/world-engine/screens/03-desktop-memory-1985.png",
     "docs/world-engine/screens/04-desktop-nocturne-rain.png",
     "docs/world-engine/screens/05-desktop-semantic-map.png",
@@ -303,8 +496,8 @@
     "docs/world-engine/screens/10-workbench-rig-gait.png"
   ],
   "summary": {
-    "passed": 14,
-    "total": 14,
+    "passed": 21,
+    "total": 21,
     "allPassed": true
   }
 }

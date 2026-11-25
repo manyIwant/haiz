@@ -16,8 +16,8 @@ permissions:
   contents: read
 
 jobs:
-  contracts-and-physics:
-    name: World Contracts, GLB Budgets & Science Kernel
+  unified-architecture-gates:
+    name: Blocking Architecture, Contracts, Physics & GLB Gates
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,30 +25,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate World Engine spatial, registry, lens, and JS syntax contracts
+      - name: Enforce spatial datum, duplicate rAF loop, dispose lifecycle, registry & syntax contracts
         run: node tools/world-engine/validate-world.mjs
-      - name: Run Scientific Simulation Kernel conservation & accuracy tests
+      - name: Run headless Unified Architecture proof integration tests (8 invariants)
+        run: node --test tools/world-engine/test-unified-architecture.mjs
+      - name: Run Scientific Simulation Kernel conservation & accuracy tests (10 invariants)
         run: node --test tools/world-engine/test-science-kernel.mjs
-      - name: Run GLB binary asset budget audit
+      - name: Run binary GLB asset budget & duplicate SHA-256 audit
         run: node tools/world-engine/validate-glb.mjs
 
-  browser-acceptance:
-    name: Desktop & Mobile WebGL Acceptance
+  browser-integration-and-visual:
+    name: Browser Unified Runtime, 6-Lens Parity & Mobile Budgets
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: contracts-and-physics
+    timeout-minutes: 25
+    needs: unified-architecture-gates
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install Playwright & Chromium
+      - name: Install Playwright, Pillow & Chromium
         run: |
-          pip install playwright
+          pip install playwright pillow
           playwright install chromium
-      - name: Run World Engine Desktop, Mobile & Workbench acceptance suite
+      - name: Run Desktop, Mobile, 6-Lens Horizontal Parity & Workbench acceptance suite
         run: python3 tools/world-engine/test-world-browser.py
-      - name: Upload visual regression screenshots & report
+      - name: Upload 6-lens comparison contact sheet, screenshots & JSON report
         if: always()
         uses: actions/upload-artifact@v4
         with:
