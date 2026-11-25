@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>年轮 004 · 活木时光 · HAIZ</title>
+<meta name="description" content="以木质年轮与时间带为载体，融汇府城校区天候校史、课表作息、作业待办、个人日程、考试学情与成长记录的学生时间交互系统。">
+<meta name="theme-color" content="#efe8da">
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-level="disc">
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="wood" role="application" aria-label="活木年轮。方向键选年，回车抽出；抽出后可缩放学期月周、叠合多层时间带、拖拽作业入日程，Esc 退回。"></canvas>
+<canvas id="layers" aria-hidden="true"></canvas>
+
+<!-- ================================================================== TRUNK -->
+<header id="title">
+  <h1>年轮 004</h1>
+  <p>HAIZ · 活木时光　1923 — 今天</p>
+</header>
+
+<div id="top-tools">
+  <button id="scale-toggle" type="button" title="切换年轮疏密：今岁舒展 / 百年均分">疏密 · 今岁舒展</button>
+  <button id="data-btn" type="button" title="数据、隐私与演示模式">数据 · 隐私</button>
+  <button id="sound" type="button" aria-label="木头的声音"></button>
+</div>
+
+<blockquote id="quote">树木是有记忆的，它的故事记录在年轮里。<cite>——《海南日报》2023 年 10 月 30 日</cite></blockquote>
+<p id="hint" aria-hidden="true"></p>
+
+<!-- Quick paths beneath the trunk for high-frequency daily access -->
+<nav id="quick-paths" aria-label="快捷进入">
+  <button type="button" data-quick="today" id="q-today">今日 · 11月25日</button>
+  <i aria-hidden="true">·</i>
+  <button type="button" data-quick="week" id="q-week">本周课表与待办</button>
+  <i aria-hidden="true">·</i>
+  <button type="button" data-quick="term" id="q-term">本学期</button>
+  <i aria-hidden="true">·</i>
+  <button type="button" data-quick="year2026" id="q-2026">2026 抽出</button>
+  <i aria-hidden="true">·</i>
+  <button type="button" data-quick="year2023" id="q-2023">2023 百年</button>
+</nav>
+
+<!-- Mobile precision scrub lock bar (prevents thumb occlusion & makes every ring accurately selectable) -->
+<div id="touch-bar" hidden aria-live="polite">
+  <div class="tb-info">
+    <strong class="tb-y">2026</strong>
+    <span class="tb-sub">今岁形成层</span>
+  </div>
+  <div class="tb-actions">
+    <button type="button" id="tb-prev" aria-label="前一年">−1年</button>
+    <button type="button" id="tb-next" aria-label="后一年">+1年</button>
+    <button type="button" id="tb-pull" class="tb-primary">抽出此年</button>
+  </div>
+</div>
+
+<div id="hud" aria-hidden="true">
+  <p class="y"></p>
+  <p class="gz"></p>
+  <p class="facts"></p>
+  <p class="student-facts"></p>
+  <ul class="events"></ul>
+</div>
+
+<!-- ================================================================== RIBBON WORKSPACE -->
+<nav id="ribbon-bar" aria-label="时间尺度与叠层">
+  <div class="rb-row rb-scales">
+    <span class="rb-k">尺度</span>
+    <button type="button" data-scale="year">全年</button>
+    <button type="button" data-scale="term">本学期</button>
+    <button type="button" data-scale="month">本月</button>
+    <button type="button" data-scale="week">本周</button>
+    <button type="button" id="rb-today-btn" class="rb-ink">今日</button>
+    <span class="rb-pan">
+      <button type="button" id="rb-pan-prev" aria-label="向前平移">‹</button>
+      <span id="rb-win-label">全年</span>
+      <button type="button" id="rb-pan-next" aria-label="向后平移">›</button>
+    </span>
+  </div>
+  <div class="rb-row rb-layers">
+    <span class="rb-k">叠层</span>
+    <button type="button" data-layer="schedule" class="swatch sw-schedule"><i>竹</i>课表</button>
+    <button type="button" data-layer="homework" class="swatch sw-homework"><i>纸</i>作业</button>
+    <button type="button" data-layer="personal" class="swatch sw-personal"><i>靛</i>日程</button>
+    <button type="button" data-layer="exam" class="swatch sw-exam"><i>朱</i>考试</button>
+    <button type="button" data-layer="campus" class="swatch sw-campus"><i>叶</i>成长</button>
+    <select id="rb-subject-filter" aria-label="按学科筛选">
+      <option value="">全科</option>
+      <option value="语文">语文</option>
+      <option value="数学">数学</option>
+      <option value="英语">英语</option>
+      <option value="物理">物理</option>
+      <option value="化学">化学</option>
+      <option value="生物">生物</option>
+    </select>
+    <button type="button" id="rb-absence-btn" title="在时间带上圈选一段缺席日期，自动汇总错过的课程、作业与通知">圈选缺席</button>
+    <button type="button" id="rb-add-btn" class="rb-primary">+ 记一笔</button>
+  </div>
+  <div id="rb-conflict-banner" hidden>
+    <span class="cf-text"></span>
+    <button type="button" id="rb-conflict-fix">一键顺延至空闲时段</button>
+  </div>
+</nav>
+
+<div id="tag" aria-hidden="true">
+  <p><span class="d"></span><span class="w"></span></p>
+  <p class="l"></p>
+  <p class="s"></p>
+  <p class="e"></p>
+</div>
+
+<div id="slip" role="button" tabindex="0" aria-label="这一年的题签">
+  <p class="y"></p><p class="gz"></p><p class="count"></p>
+  <div class="more-wrap"><div><p class="facts"></p><div class="more"></div></div></div>
+</div>
+<div id="months" aria-hidden="true"></div>
+<p id="rhint" aria-hidden="true"></p>
+<div id="knots"></div>
+
+<!-- Inline tactile popover beside a clicked item on any peeled ribbon -->
+<div id="item-pop" hidden role="dialog" aria-label="条目操作"></div>
+
+<!-- ================================================================== DAY SKY & HOURS -->
+<section id="day" aria-label="这一天">
+  <div class="day-head">
+    <h2 class="date"></h2>
+    <p class="wd"></p>
+  </div>
+  <p class="desc"></p>
+  <p class="sun"></p>
+  <p class="badges"></p>
+  <div class="day-tabs" role="tablist">
+    <button type="button" role="tab" data-dtab="overview" aria-selected="true">今日纵览</button>
+    <button type="button" role="tab" data-dtab="schedule">课表作息</button>
+    <button type="button" role="tab" data-dtab="tasks">作业与日程</button>
+    <button type="button" role="tab" data-dtab="exams">考试与成长</button>
+  </div>
+  <div id="day-body"></div>
+  <p class="howto"></p>
+</section>
+
+<div id="day-controls">
+  <button id="horizon-toggle" type="button" title="切换地平线时间带：时辰作息 / 全年木带">地平线 · 时辰作息</button>
+  <button id="day-add-btn" type="button">+ 新增</button>
+  <button id="close" type="button" aria-label="收起这一天">收起</button>
+</div>
+<p id="clock" aria-hidden="true"></p>
+
+<!-- ================================================================== EXTRACTED EXAM SCROLL -->
+<aside id="exam-scroll" hidden role="dialog" aria-label="考试学情与错题卷轴">
+  <div class="scroll-sheet">
+    <header class="scroll-head">
+      <div>
+        <span class="seal-pill">朱印学情卷 · 仅本人可见</span>
+        <h2 id="ex-title"></h2>
+        <p id="ex-meta"></p>
+      </div>
+      <div class="scroll-head-actions">
+        <select id="ex-compare-select" aria-label="与历次考试对比"></select>
+        <button type="button" id="ex-edit-btn">编辑考试</button>
+        <button type="button" id="ex-import-btn">导入成绩</button>
+        <button type="button" id="ex-close-btn" class="ink-btn">卷回考试带</button>
+      </div>
+    </header>
+    <div id="ex-body"></div>
+  </div>
+</aside>
+
+<!-- ================================================================== ABSENCE DIGEST SCROLL -->
+<aside id="absence-scroll" hidden role="dialog" aria-label="缺席区间汇总">
+  <div class="scroll-sheet scroll-sheet-narrow">
+    <header class="scroll-head">
+      <div>
+        <span class="seal-pill">缺席补课单</span>
+        <h2 id="ab-title">缺席区间汇总</h2>
+        <p id="ab-meta"></p>
+      </div>
+      <div class="scroll-head-actions">
+        <button type="button" id="ab-close-btn" class="ink-btn">收起</button>
+      </div>
+    </header>
+    <div id="ab-body"></div>
+  </div>
+</aside>
+
+<!-- ================================================================== EDITOR & PRIVACY MODALS -->
+<aside id="editor-modal" hidden role="dialog" aria-label="编辑记录">
+  <div class="modal-paper">
+    <header class="modal-head">
+      <h2 id="ed-title">新增记录</h2>
+      <button type="button" id="ed-close" class="ink-btn">关闭</button>
+    </header>
+    <div id="ed-body"></div>
+  </div>
+</aside>
+
+<aside id="privacy-modal" hidden role="dialog" aria-label="数据、隐私与 HAIZ 架构">
+  <div class="modal-paper modal-wide">
+    <header class="modal-head">
+      <h2>数据、隐私与 HAIZ 生态对接</h2>
+      <button type="button" id="pr-close" class="ink-btn">关闭</button>
+    </header>
+    <div id="pr-body"></div>
+  </div>
+</aside>
+
+<button id="corner" type="button" aria-label="把这一年放回年轮"><span>放回年轮</span></button>
+
+<details id="about">
+  <summary>这些从哪来</summary>
+  <div>
+    <p><b>天气与校史</b>：ERA5 再分析（1940–2026-11-16，CC BY 4.0）与 HAIZ 第二幕「根脉」14 条史料及 6 条公开新闻；非校内实测。</p>
+    <p><b>作息与校园锚点</b>：夏季作息基准源自 HAIZ <code>data/news.json (n10)</code> 海南中学 2026-04-07 实录；教学楼 ID 对齐 <code>data/buildings.json</code>，实验关联对齐 <code>lab/js/catalog.js</code>。</p>
+    <p><b>演示数据与隐私</b>：标有「演示」的课表、作业、日程与成绩仅供体验，可随时清空或录入自己的真实记录。所有成绩、错题、私人日程与成长记录均默认<strong>仅本人可见</strong>，仅存本机浏览器，绝不请求智学网账号密码或未经授权的外部接口。</p>
+    <p>HAIZ 非官方学生数字校园实验 · <a href="THIRD-PARTY.md" target="_blank" rel="noopener">第三方授权说明</a></p>
+  </div>
+</details>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<p id="live" class="sr" aria-live="polite"></p>
+<p id="fallback">这个实验需要支持 WebGL 2 的浏览器。</p>
+<script type="module" src="app.js"></script>
+</body>
+</html>
