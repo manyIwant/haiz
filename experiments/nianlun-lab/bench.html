@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIANLUN · 组件与几何验收台</title>
+  <link rel="stylesheet" href="./css/nianlun.css" />
+  <style>
+    body { overflow-y: auto; }
+    .bench-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+    .bench-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--dim);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+    .bench-head h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 24px;
+    }
+    .bench-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    @media (max-width: 760px) {
+      .bench-grid { grid-template-columns: 1fr; }
+    }
+    .bench-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--dim);
+      padding: 18px;
+    }
+    .bench-card h2 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .bench-card p.desc {
+      margin: 0 0 14px;
+      font-size: 12.5px;
+      color: var(--text2);
+    }
+    .bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .bench-table th, .bench-table td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--faint);
+    }
+    .bench-table th { color: var(--text3); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="bench-wrap">
+    <header class="bench-head">
+      <div>
+        <h1>NIANLUN · 组件与几何验收台</h1>
+        <div class="deck-meta">独立验证极坐标核心组件、连续尺度几何布局与天文星历计算</div>
+      </div>
+      <div class="top-actions">
+        <button type="button" id="bench-theme" class="pill-btn">切换纸面/暗室</button>
+        <a href="./index.html" class="pill-btn active">← 返回时间仪</a>
+      </div>
+    </header>
+
+    <div class="bench-grid">
+      <!-- 1. Continuous Scale Layout -->
+      <section class="bench-card">
+        <h2>01 · 连续尺度径向分布 (Scale Lens)</h2>
+        <p class="desc">拖动滑块 σ ∈ [0, 5]，验证六层时间尺度在径向缩放时无重叠、有连续父子关系。</p>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <label for="bench-sigma" class="mono">σ = <span id="bench-sigma-val">1.00</span></label>
+          <input id="bench-sigma" type="range" min="0" max="5" step="0.05" value="1" style="flex:1;accent-color:var(--now);" />
+        </div>
+        <svg id="bench-layout-svg" viewBox="-140 -140 280 280" style="width:100%;max-width:240px;display:block;margin:0 auto 10px;"></svg>
+        <table class="bench-table" id="bench-layout-table"></table>
+      </section>
+
+      <!-- 2. Polar Arc Time-Range Selector -->
+      <section class="bench-card">
+        <h2>02 · 极坐标弧段区间选择器</h2>
+        <p class="desc">替代传统起止时间输入框。拖动起止手柄或使用微调按钮，橙色虚弧为已有日程冲突参考。</p>
+        <div id="bench-range-mount"></div>
+        <div id="bench-range-readout" class="mono" style="margin-top:10px;font-size:12.5px;color:var(--now);text-align:center;"></div>
+      </section>
+
+      <!-- 3. Hold-to-Confirm Polar Ring -->
+      <section class="bench-card">
+        <h2>03 · 画满一圈确认 (Hold-to-Confirm)</h2>
+        <p class="desc">用于删除或重置等不可逆操作。支持鼠标长按、触摸长按或聚焦后按住空格键，中途松开立即归零。</p>
+        <div style="display:flex;align-items:center;gap:14px;margin:18px 0;">
+          <button type="button" class="hold-btn" id="bench-hold-btn">
+            <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" class="hold-bg"></circle><circle cx="13" cy="13" r="11" class="hold-fg"></circle></svg>
+            <span>按住画满一圈触发</span>
+          </button>
+          <span class="mono" id="bench-hold-count">已确认 0 次</span>
+        </div>
+      </section>
+
+      <!-- 4. Astronomical & Calendar Calibration -->
+      <section class="bench-card">
+        <h2>04 · 天文星历与真实历法校验</h2>
+        <p class="desc">验证闰年、不同纬度昼长与月相历史校验点，所有数值均由 <code>astro.js</code> 实时计算。</p>
+        <table class="bench-table" id="bench-astro-table"></table>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { computeScaleLayout, polarToXY } from './js/polar.js';
+    import { createArcRangeSelector, bindHoldRing } from './js/components.js';
+    import {
+      OBSERVERS,
+      makeUtcFromObserverLocal,
+      getSunTimesAndPosition,
+      getLunarPhase,
+      formatMinutesAsHm,
+      daysInMonth,
+    } from './js/astro.js';
+
+    const themeBtn = document.getElementById('bench-theme');
+    document.documentElement.dataset.theme = localStorage.getItem('nianlun-theme') || 'dark';
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'paper' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('nianlun-theme', next);
+    });
+
+    // 1. Scale Layout
+    const sigmaInput = document.getElementById('bench-sigma');
+    const sigmaVal = document.getElementById('bench-sigma-val');
+    const layoutSvg = document.getElementById('bench-layout-svg');
+    const layoutTable = document.getElementById('bench-layout-table');
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function renderLayoutBench(sigma) {
+      sigmaVal.textContent = sigma.toFixed(2);
+      const layout = computeScaleLayout(sigma);
+      layoutSvg.innerHTML = '';
+      let rows = '<tr><th>尺度</th><th>角色</th><th>内径–外径</th><th>透明度</th></tr>';
+      for (const r of layout) {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', '0');
+        c.setAttribute('cy', '0');
+        c.setAttribute('r', (r.rMid * 0.3).toFixed(1));
+        c.setAttribute('fill', 'none');
+        c.setAttribute('stroke', r.role === 'focus' ? 'var(--now)' : 'var(--line)');
+        c.setAttribute('stroke-width', ((r.rOuter - r.rInner) * 0.28).toFixed(1));
+        c.setAttribute('stroke-opacity', (r.opacity * (r.role === 'focus' ? 0.55 : 0.2)).toFixed(2));
+        layoutSvg.appendChild(c);
+
+        rows += `<tr><td>${r.label}</td><td class="mono">${r.role}</td><td class="mono">${Math.round(r.rInner)}–${Math.round(r.rOuter)}</td><td class="mono">${r.opacity.toFixed(2)}</td></tr>`;
+      }
+      layoutTable.innerHTML = rows;
+    }
+    sigmaInput.addEventListener('input', (e) => renderLayoutBench(Number(e.target.value)));
+    renderLayoutBench(1);
+
+    // 2. Arc Range Selector
+    const readout = document.getElementById('bench-range-readout');
+    createArcRangeSelector(document.getElementById('bench-range-mount'), {
+      startMin: 9 * 60 + 30,
+      endMin: 11 * 60 + 45,
+      existingEvents: [
+        { startMin: 7 * 60, endMin: 8 * 60 + 30 },
+        { startMin: 14 * 60, endMin: 16 * 60 },
+      ],
+      onChange: ({ startMin, endMin }) => {
+        readout.textContent = `选定区间: ${formatMinutesAsHm(startMin)} → ${formatMinutesAsHm(endMin)}`;
+      },
+    });
+    readout.textContent = '选定区间: 09:30 → 11:45';
+
+    // 3. Hold Ring
+    let holdCount = 0;
+    const holdCountEl = document.getElementById('bench-hold-count');
+    bindHoldRing(document.getElementById('bench-hold-btn'), {
+      durationMs: 750,
+      onConfirm: () => {
+        holdCount++;
+        holdCountEl.textContent = `已确认 ${holdCount} 次`;
+      },
+    });
+
+    // 4. Astro Table
+    const astroTable = document.getElementById('bench-astro-table');
+    const nov25 = makeUtcFromObserverLocal(2026, 11, 25, 12, 0, 0, 8);
+    const haikouSun = getSunTimesAndPosition(nov25, 20.044, 110.199, 8);
+    const reykSun = getSunTimesAndPosition(makeUtcFromObserverLocal(2026, 12, 21, 12, 0, 0, 0), 64.147, -21.943, 0);
+    const fullMoon = getLunarPhase(Date.UTC(2000, 0, 21, 4, 40, 0));
+    const newMoon = getLunarPhase(Date.UTC(2024, 3, 8, 18, 20, 0));
+
+    astroTable.innerHTML = `
+      <tr><th>校验项</th><th>计算结果</th></tr>
+      <tr><td>2024 / 2026 年 2 月天数</td><td class="mono">${daysInMonth(2024, 2)} 天 / ${daysInMonth(2026, 2)} 天</td></tr>
+      <tr><td>海口 2026-11-25 日出/日落</td><td class="mono">${formatMinutesAsHm(haikouSun.sunriseMin)} / ${formatMinutesAsHm(haikouSun.sunsetMin)}</td></tr>
+      <tr><td>雷克雅未克 冬至日出/日落</td><td class="mono">${formatMinutesAsHm(reykSun.sunriseMin)} / ${formatMinutesAsHm(reykSun.sunsetMin)} (昼长 ${Math.round(reykSun.dayLengthMin)}m)</td></tr>
+      <tr><td>2000-01-21 月全食校验</td><td class="mono">${fullMoon.name} (${(fullMoon.illumination * 100).toFixed(1)}%)</td></tr>
+      <tr><td>2024-04-08 日全食校验</td><td class="mono">${newMoon.name} (${(newMoon.illumination * 100).toFixed(1)}%)</td></tr>
+    `;
+  </script>
+</body>
+</html>

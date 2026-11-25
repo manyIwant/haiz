@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIANLUN · Chronoscope / 时间仪 — 极坐标界面设计实验 001</title>
+  <meta name="description" content="NIANLUN 年轮极坐标界面设计实验 001：将时分、昼夜、周律、月相、年轮与纪元统一于连续极坐标尺度中的数字时间仪。" />
+  <link rel="stylesheet" href="./css/nianlun.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <section class="stage" aria-label="极坐标时间仪主画布">
+      <header class="topbar">
+        <div class="brand">
+          <h1>NIANLUN · Chronoscope</h1>
+          <span class="sub">极坐标时间仪 001</span>
+        </div>
+        <div class="top-actions">
+          <select id="observer-select" class="pill-select" aria-label="选择观测城市与纬度"></select>
+          <button type="button" id="btn-compare" class="pill-btn">双准线对比</button>
+          <button type="button" id="btn-theme" class="pill-btn">纸面</button>
+          <button type="button" id="btn-hand" class="pill-btn" title="切换手机端拇指象限左右手">右手象限</button>
+          <a href="./bench.html" class="pill-btn">几何验收台</a>
+        </div>
+      </header>
+
+      <div class="dial-container" id="dial-container">
+        <svg id="chronoscope-svg" viewBox="-460 -460 920 920" role="application" aria-roledescription="多尺度极坐标时间仪" aria-label="拖动旋转时间，上下键或滑块连续缩放时间尺度"></svg>
+      </div>
+
+      <div class="scale-bar">
+        <div class="scale-lens" id="scale-lens" role="group" aria-label="连续时间尺度透镜">
+          <div id="scale-stops" style="display:flex;gap:2px;flex-wrap:wrap;">
+            <button type="button" class="scale-stop" data-scale="0">时分</button>
+            <button type="button" class="scale-stop active" data-scale="1">昼夜</button>
+            <button type="button" class="scale-stop" data-scale="2">周律</button>
+            <button type="button" class="scale-stop" data-scale="3">月相</button>
+            <button type="button" class="scale-stop" data-scale="4">年轮</button>
+            <button type="button" class="scale-stop" data-scale="5">纪元</button>
+          </div>
+          <input type="range" id="scale-slider" class="scale-slider" min="0" max="5" step="0.02" value="1" aria-label="连续缩放时间尺度" />
+        </div>
+
+        <div class="nav-trail">
+          <button type="button" id="btn-back" class="pill-btn" title="回到上一次探索状态 (B)">← 上一步</button>
+          <button type="button" id="btn-now" class="pill-btn active" title="回到此刻 (N)">回到此刻</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="deck" id="deck" aria-live="polite"></aside>
+  </div>
+
+  <button type="button" class="mobile-quad-toggle" id="mobile-quad-toggle">收起时间仪</button>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
