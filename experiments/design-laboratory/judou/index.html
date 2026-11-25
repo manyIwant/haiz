@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<title>句读 · HAIZ 设计实验室</title>
+<meta name="description" content="方案一「句读」：界面是一句可以改写的话。横着读是句子，竖着换是选择。">
+<link rel="stylesheet" href="../shared/fonts.css">
+<style>
+/* ───────────────────────── 句读 · Tokens ─────────────────────────
+   只有三样东西：纸、墨、朱。层级靠字号与位置，不靠容器。 */
+:root{
+  --paper:#ffffff; --ink:#151515; --ink2:#55524c; --ink3:#8d8980; --rule:#e6e2da;
+  --zhu:#c8371d; --zhu-soft:#c8371d22; --hl:#fff3c4;
+  --serif:"HZ Serif","Noto Serif CJK SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+  --fs:1; /* 用户字号（设置里改） */
+  --jing:calc(clamp(24px, 2.35vw + 8px, 42px) * var(--fs));   /* 经：主句 */
+  --body:calc(clamp(17px, .35vw + 15px, 20px) * var(--fs));   /* 疏：正文 */
+  --t-fast:140ms; --t-mid:260ms; --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{ --paper:#111110; --ink:#ecebe6; --ink2:#b5b1a8; --ink3:#7d796f; --rule:#2b2a27; --zhu:#ff6a4a; --zhu-soft:#ff6a4a26; --hl:#3a3313; color-scheme:dark }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --paper:#111110; --ink:#ecebe6; --ink2:#b5b1a8; --ink3:#7d796f; --rule:#2b2a27; --zhu:#ff6a4a; --zhu-soft:#ff6a4a26; --hl:#3a3313; color-scheme:dark } }
+:root[data-motion="reduce"]{ --t-fast:0ms; --t-mid:0ms }
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:var(--serif);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh;min-height:100dvh}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ───────── 版面：桌面是一页书；主句在上，疏在下 ───────── */
+.page{max-width:1180px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(16px,5vw,72px) 140px;display:grid;grid-template-columns:minmax(0,1fr) 15em;gap:0 clamp(24px,4vw,64px)}
+.margin{grid-column:2;grid-row:1 / span 3;font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--ink3);padding-top:.6em}
+.margin p{margin:0 0 1.2em}
+.margin b{color:var(--ink2);font-weight:600}
+.main-clause{grid-column:1;font-size:var(--jing);line-height:1.6;letter-spacing:.02em;margin:0 0 .3em}
+.written{grid-column:1;font-size:15px;line-height:1.8;color:var(--ink3);min-height:1.8em;margin-bottom:.4em}
+.written button{background:none;border:0;padding:0;cursor:pointer;color:inherit;text-decoration:none}
+.written button:hover{color:var(--ink)}
+.view{grid-column:1}
+.view .jing{font-size:var(--jing);line-height:1.62;letter-spacing:.02em;margin:.55em 0 0;max-width:22em}
+.view .jing.s{font-size:calc(var(--jing)*.72)}
+.shu{font-size:var(--body);line-height:1.85;color:var(--ink);margin:.7em 0 .4em;padding-left:1.1em;border-left:1px solid var(--zhu);max-width:36em}
+.shu p{margin:.2em 0 .7em}
+.shu .note{font-family:var(--sans);font-size:13px;color:var(--ink3);line-height:1.6}
+.shu figure{margin:.4em 0 .8em}
+.shu img{display:block;max-width:100%;height:auto;max-height:340px;object-fit:cover}
+.shu figcaption{font-family:var(--sans);font-size:12.5px;color:var(--ink3);margin-top:.35em}
+.ex{font-family:var(--sans);font-size:.42em;letter-spacing:.08em;color:var(--zhu);border:1px solid currentColor;padding:.05em .35em;vertical-align:.55em;margin:0 .3em;white-space:nowrap}
+
+/* ───────── 词钮：带着重号的词，可以换 ───────── */
+.w{display:inline;background:none;border:0;padding:0 .02em;margin:0;cursor:pointer;
+   text-emphasis:filled dot var(--zhu);-webkit-text-emphasis:filled dot var(--zhu);
+   text-emphasis-position:under right;-webkit-text-emphasis-position:under;
+   border-radius:2px;transition:background var(--t-fast) var(--ease);position:relative;line-height:inherit;white-space:nowrap}
+.w:hover{background:var(--zhu-soft)}
+.w:focus-visible{outline:2px solid var(--zhu);outline-offset:3px}
+.w[aria-expanded="true"]{color:var(--zhu)}
+.w .v{display:inline-block}
+.w.num{font-variant-numeric:tabular-nums;cursor:ns-resize;touch-action:none}
+.w.act{color:var(--zhu);text-emphasis:none;-webkit-text-emphasis:none;border-bottom:1px solid currentColor}
+.w.done{text-decoration:line-through;text-decoration-color:var(--zhu);text-decoration-thickness:1px;color:var(--ink3)}
+.w.now{background:var(--hl)}
+/* 链接也是词：去别处的词用空心着重号 */
+.w.srch{text-emphasis:none;-webkit-text-emphasis:none;border-bottom:1.5px solid var(--ink)}
+.w.go{text-emphasis:open circle var(--zhu);-webkit-text-emphasis:open circle var(--zhu)}
+
+/* ───────── 补白：要你写的地方 ───────── */
+.blank{display:inline-block;position:relative;vertical-align:baseline;margin:0 .12em}
+.blank input{border:0;border-bottom:1.5px solid var(--ink);background:transparent;outline:0;padding:0 .1em;width:auto;min-width:3.5em;max-width:12em;font-size:1em;line-height:1.25;border-radius:0}
+.blank input::placeholder{color:var(--ink3);opacity:1}
+.blank input:focus{border-bottom-color:var(--zhu);background:var(--zhu-soft)}
+.blank input[aria-invalid="true"]{border-bottom-color:var(--zhu);border-bottom-style:dashed}
+
+/* ───────── 句读：标点就是状态与提交 ───────── */
+.stop{background:none;border:0;padding:0 .08em;margin:0;cursor:pointer;font-size:1em;line-height:1;color:var(--ink);position:relative;font-family:var(--serif)}
+.stop[data-s="ok"]{color:var(--zhu)}
+.stop[data-s="ok"]::after{content:"";position:absolute;inset:-.35em -.3em;border-radius:50%;border:1px solid var(--zhu);opacity:.0;transform:scale(.6);transition:all var(--t-mid) var(--ease)}
+.stop[data-s="ok"]:hover::after,.stop[data-s="ok"]:focus-visible::after{opacity:1;transform:scale(1)}
+.stop[data-s="err"]{color:var(--zhu)}
+.stop[data-s="wait"]{color:var(--ink3);cursor:help}
+.stop[data-s="busy"] .dots{display:inline-block;animation:breathe 1.1s infinite}
+.stop:focus-visible{outline:none}
+.stop:focus-visible{text-shadow:0 0 0 var(--zhu)}
+@keyframes breathe{50%{opacity:.25}}
+.hint-stop{font-family:var(--sans);font-size:12px;color:var(--ink3);margin-left:.4em;vertical-align:.6em;white-space:nowrap}
+
+/* ───────── 夹注：双行小字，嵌在句中 ───────── */
+.jz{display:inline-flex;flex-direction:column;vertical-align:middle;font-size:max(11px,.36em);line-height:1.3;margin:0 .35em;color:var(--ink2);font-family:var(--serif);letter-spacing:.04em;max-width:22em;text-align:left}
+.jz.zhu{color:var(--zhu)}
+.nb{white-space:nowrap}
+.jz span{white-space:nowrap}
+.jz.wrap span{white-space:normal}
+
+/* ───────── 聚合栏：竖着展开的选择 ───────── */
+#para{position:fixed;z-index:50;display:none;flex-direction:column;background:var(--paper);box-shadow:0 0 0 1px var(--rule),0 18px 50px -20px #0004;padding:.15em .25em;margin:0;list-style:none;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;max-height:72vh;transform-origin:left center}
+#para.on{display:flex;animation:paraIn var(--t-mid) var(--ease)}
+@keyframes paraIn{from{clip-path:inset(45% 0 45% 0)}to{clip-path:inset(0 0 0 0)}}
+#para li{padding:.08em .35em;cursor:pointer;white-space:nowrap;color:var(--ink3);border-radius:2px;line-height:1.5;position:relative}
+#para li[aria-selected="true"]{color:var(--ink);background:var(--zhu-soft)}
+#para li.cur{color:var(--zhu)}
+#para li.cur::before{content:"";position:absolute;left:-.12em;top:.35em;bottom:.35em;width:2px;background:var(--zhu)}
+#para li small{font-family:var(--sans);font-size:.38em;color:var(--ink3);margin-left:.6em;letter-spacing:.04em;vertical-align:.4em}
+#para li[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+#veil{position:fixed;inset:0;z-index:49;display:none}
+#veil.on{display:block}
+
+/* ───────── 旁白：同时在进行的事 ───────── */
+.aside{position:fixed;left:0;right:0;bottom:0;z-index:20;font-family:var(--sans);font-size:13px;color:var(--ink2);background:linear-gradient(transparent,var(--paper) 40%);padding:28px clamp(16px,5vw,72px) max(14px,env(safe-area-inset-bottom));pointer-events:none}
+.aside .in{max-width:1180px;margin:0 auto;pointer-events:auto}
+.aside button{background:none;border:0;padding:0;cursor:pointer;color:inherit;border-bottom:1px dotted var(--ink3)}
+.aside .sep{margin:0 .5em;color:var(--ink3)}
+.lab-tag{position:fixed;top:12px;right:14px;z-index:30;font-family:var(--sans);font-size:12px;color:var(--ink3);text-decoration:none}
+.lab-tag:hover{color:var(--zhu)}
+
+/* 表：疏里的表格，像书里的表 */
+table.t{border-collapse:collapse;font-size:.88em;font-variant-numeric:tabular-nums;margin:.3em 0 .8em;width:100%;max-width:34em}
+table.t th{font-family:var(--sans);font-weight:500;font-size:.78em;color:var(--ink3);text-align:left;border-bottom:1px solid var(--ink);padding:.2em .6em .2em 0}
+table.t td{border-bottom:1px solid var(--rule);padding:.25em .6em .25em 0}
+table.t tr.cur td{color:var(--zhu)}
+
+/* 地图 */
+.plan{width:100%;max-width:640px;height:auto;display:block;touch-action:manipulation}
+.plan .rd{fill:var(--rule)}
+.plan .gr{fill:none;stroke:var(--ink3);stroke-width:1;stroke-dasharray:2 3;opacity:.6}
+.plan .bd{fill:var(--paper);stroke:var(--ink);stroke-width:1.2;cursor:pointer;transition:fill var(--t-fast)}
+.plan .bd:hover{fill:var(--zhu-soft)}
+.plan .bd.from{fill:var(--ink)}
+.plan .bd.to{fill:var(--zhu);stroke:var(--zhu)}
+.plan .route{fill:none;stroke:var(--zhu);stroke-width:3;stroke-dasharray:8 6;stroke-linecap:round}
+.plan text{font-family:var(--sans);font-size:30px;fill:var(--ink2);pointer-events:none}
+.plan .lbl-to{fill:var(--zhu);font-weight:600}
+
+/* 单摆 */
+.pend{float:right;width:min(42%,220px);margin:0 0 .5em 1em}
+.pend line{stroke:var(--ink);stroke-width:1.2}
+.pend circle.bob{fill:var(--ink)}
+.pend .arc{fill:none;stroke:var(--zhu);stroke-dasharray:3 4}
+.progress-marks{font-size:20px;letter-spacing:.18em;color:var(--rule)}
+.progress-marks i{font-style:normal}
+.progress-marks i.r{color:var(--zhu)}
+
+.flash{animation:flash 900ms var(--ease)}
+@keyframes flash{0%{background:var(--hl)}100%{background:transparent}}
+
+/* ───────── 手机：主句沉到拇指边，疏在上方 ───────── */
+@media (max-width: 720px){
+  .page{display:block;padding:20px 16px 0}
+  .margin{display:none}
+  .written{display:none}
+  .view .jing{max-width:none}
+  .main-clause{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--paper);margin:0;padding:10px 16px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--rule);font-size:calc(22px*var(--fs));line-height:1.5}
+  .aside{bottom:calc(58px + env(safe-area-inset-bottom));background:none;padding:6px 16px;font-size:12px}
+  .aside .in{background:var(--paper)}
+  .view{padding-bottom:150px}
+  .shu{padding-left:.8em}
+  .pend{width:40%}
+  #para li{line-height:1.9}
+  .jz{font-size:max(12px,.42em)}
+}
+@media (prefers-reduced-motion: reduce){ :root:not([data-motion="normal"]){--t-fast:0ms;--t-mid:0ms} }
+</style>
+</head>
+<body>
+<a class="lab-tag" href="../index.html" data-lab>设计实验室 · 方案一「句读」</a>
+<div class="page">
+  <div class="written" id="written" aria-label="已经写下的句子"></div>
+  <h1 class="main-clause" id="main"></h1>
+  <aside class="margin" id="margin"></aside>
+  <main class="view" id="view" tabindex="-1"></main>
+</div>
+<div class="aside" id="aside" aria-live="polite"><div class="in" id="asideIn"></div></div>
+<div id="veil"></div>
+<ul id="para" role="listbox" aria-label="可以换成"></ul>
+<div class="sr" id="live" aria-live="assertive"></div>
+
+<script src="../shared/data.js"></script>
+<script src="../shared/campus.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   句读 · 引擎
+   规则只有四条：
+   1. 横着读是句子（组合），竖着换是选择（聚合）。
+   2. 带实心着重号的词可以换；空心圈的词带你去别处；下划线是要你写的空。
+   3. 句末的标点就是状态：？还缺东西 · 。可以落定（按下它）· ！出了问题 · …… 正在进行。
+   4. 内容不装进卡片：短的注成句中的双行夹注，长的写成句下的「疏」。
+   ════════════════════════════════════════════════════════════════ */
+const D = window.HAIZ_SAMPLE, C = window.HAIZ_CAMPUS, R = HZ.root;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('hz-judou-' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('hz-judou-' + k, JSON.stringify(v)); } catch {} },
+};
+
+/* ── 全局状态（演示状态，只存本机）── */
+const S = {
+  view: 'home',
+  written: [],
+  pref: store.get('pref', { motion: 0, size: 0, theme: 0, sync: 0, leaf: 0, intake: 0 }),
+  tasks: store.get('tasks', D.TASKS.map((t) => ({ ...t }))),
+  inbox: D.INBOX.map((i) => ({ ...i })),
+  focus: { min: 25, subj: 0, running: false, end: 0, paused: 0 },
+  focusLog: D.FOCUS.slice(),
+  day: HZ.today(),
+  week: false,
+  login: { mode: 0, user: '', pass: '', pass2: '', nick: '', show: false, keep: 0, state: 'idle', err: '', agree: false },
+  authed: store.get('authed', false),
+  home: { verb: 0, obj: 0 },
+  map: { from: 'lanshu', to: 'library', how: 0, time: 0 },
+  lab: { L: 1.0, n: 30, deg: 4, t: null, rows: [], jitter: 0.12 },
+  devices: D.ACCOUNT.devices.map((d) => ({ ...d })),
+  confirm: null,
+  syncErr: false,
+};
+
+/* ── 词的定义：每个视图渲染时登记 ── */
+let DEFS = {};
+function def(id, d) { DEFS[id] = d; return id; }
+function w(id, extraCls = '') {
+  const d = DEFS[id];
+  const label = d.num ? d.fmt(d.get()) : (d.label ? d.label() : d.opts[d.get()]);
+  const cls = ['w', d.num ? 'num' : '', d.go ? 'go' : '', extraCls].join(' ');
+  const aria = d.go ? `aria-label="${esc(label)}（打开）"` : `aria-haspopup="listbox" aria-expanded="false" aria-label="${esc((d.name || '') + '：' + label + '，可以换')}"`;
+  return `<button class="${cls}" data-w="${id}" data-k="w-${id}" ${aria}><span class="v">${esc(label)}</span></button>`;
+}
+/* 夹注：把一段话平均拆成两行 */
+function jz(text, tone = '') {
+  const t = String(text); const h = Math.ceil(t.length / 2);
+  return `<span class="jz ${tone}" role="note"><span>${esc(t.slice(0, h))}</span><span>${esc(t.slice(h))}</span></span>`;
+}
+/* 补白 */
+function blank(id, ph, attrs = '') {
+  return `<span class="blank"><input data-k="in-${id}" data-in="${id}" placeholder="${esc(ph)}" aria-label="${esc(ph)}" size="${Math.max(4, ph.length + 1)}" ${attrs}></span>`;
+}
+/* 句读 */
+function stop(id, s, label) {
+  const g = { ok: '。', wait: '？', err: '！', busy: '<span class="dots">……</span>' }[s];
+  const al = { ok: label || '落定（提交）', wait: '还缺东西', err: '出了问题', busy: '正在进行' }[s];
+  return `<button class="stop" data-stop="${id}" data-s="${s}" data-k="stop-${id}" aria-label="${al}" ${s === 'busy' ? 'aria-busy="true"' : ''}>${g}</button>`;
+}
+const ex = '<span class="ex">示例</span>';
+
+/* ════════════════════ 主句：我想……（导航即谓语） ════════════════════ */
+const VIEWS = [
+  { id: 'home', phrase: '看看 HAIZ' },
+  { id: 'login', phrase: '登录' },
+  { id: 'pocket', phrase: '安排今天' },
+  { id: 'map', phrase: '在校园里走走' },
+  { id: 'read', phrase: '读一页实验册' },
+  { id: 'settings', phrase: '调整设置' },
+];
+function mainClause() {
+  def('nav', {
+    name: '我想', opts: VIEWS.map((v) => v.phrase),
+    get: () => VIEWS.findIndex((v) => v.id === S.view),
+    set: (i) => go(VIEWS[i].id),
+    extra: true,
+  });
+  def('search', { name: '找', label: () => '我想', opts: [], get: () => 0, set: () => {}, search: true });
+  return `<button class="w srch" data-w="search" data-k="w-search" aria-label="搜索：输入你想做的事" title="搜索（/）">我想</button> ${w('nav')}。`;
+}
+
+/* ════════════════════ A · 首页 ════════════════════ */
+const VERBS = [...new Set(D.WORKS.map((x) => x.verb))];
+function vHome() {
+  const now = new Date();
+  const objs = D.WORKS.filter((x) => x.verb === VERBS[S.home.verb]);
+  if (S.home.obj >= objs.length) S.home.obj = 0;
+  const work = objs[S.home.obj];
+  def('verb', { name: '动词', opts: VERBS, get: () => S.home.verb, set: (i) => { S.home.verb = i; S.home.obj = 0; } });
+  def('obj', { name: '去处', opts: objs.map((x) => x.name), get: () => S.home.obj, set: (i) => { S.home.obj = i; } });
+  def('allobj', { name: '所有去处', opts: D.WORKS.map((x) => x.verb + ' ' + x.name), get: () => D.WORKS.indexOf(work), set: (i) => { const x = D.WORKS[i]; S.home.verb = VERBS.indexOf(x.verb); S.home.obj = D.WORKS.filter((y) => y.verb === x.verb).indexOf(x); } });
+  const todo = S.tasks.filter((t) => !t.done);
+  const next = nextCourse();
+  def('toPocket', { go: true, label: () => todo.length + ' 件事', set: () => go('pocket') });
+  def('toNext', { go: true, label: () => next ? next.name : '没有课', set: () => go('pocket') });
+  def('toMap', { go: true, label: () => '百年榄仁树', set: () => go('map') });
+  return `
+  <p class="jing">今天是 ${now.getMonth() + 1} 月 ${now.getDate()} 日，星期${HZ.wd(now.getDay())}，海口${D.WEATHER.label}${jz('示例天气，不是实时数据')}。</p>
+  <p class="jing">这里是一所中学的数字校园${jz('海南中学府城校区 · 学生建设的非官方项目')}，从一棵 ${w('toMap')} 开始。</p>
+  <p class="jing" id="homeQ">我想 ${w('verb')} ${w('obj')}${stop('openWork', 'ok', '打开 ' + work.name)}</p>
+  <div class="shu" data-k="shu-work">
+    <p><b>${esc(work.name)}</b>　${esc(work.line)}</p>
+    ${work.img ? `<figure><img src="${R + work.img}" alt="${esc(work.name)} 的画面" loading="lazy"><figcaption>HAIZ 已有作品的开发截图（软件渲染），不是实机录屏。</figcaption></figure>` : ''}
+    <p class="note">按句末的「。」就去这里。换动词，能去的地方跟着变；也可以 ${w('allobj')} 直接挑。</p>
+  </div>
+  <p class="jing s">或者，今天还有 ${w('toPocket')} 等着我；下一节是 ${w('toNext')}${next ? jz(HZ.mm(next.start) + ' · ' + next.room) : ''}。</p>`;
+}
+function nextCourse() {
+  const m = HZ.minuteNow();
+  return D.COURSES.filter((c) => c.day === S.day).sort((a, b) => a.start - b.start).find((c) => c.end > m) || null;
+}
+
+/* ════════════════════ B · 登录与注册 ════════════════════ */
+const DEMO_USER = 'sample_01', DEMO_PASS = 'haiz2026';
+function vLogin() {
+  const L = S.login;
+  if (S.authed) {
+    def('logout', { go: true, label: () => '退出登录', set: () => { S.authed = false; store.set('authed', false); L.state = 'idle'; L.pass = ''; } });
+    def('toSettings', { go: true, label: () => '个人空间', set: () => go('settings') });
+    return `<p class="jing">欢迎回来，${esc(D.ACCOUNT.name)}${ex}。</p>
+    <p class="jing s">你可以去 ${w('toSettings')}，或者 ${w('logout')}。</p>
+    <div class="shu"><p class="note">演示：登录状态只是这台浏览器里的一个标记，没有连接任何服务器。</p></div>`;
+  }
+  def('mode', { name: '要做的事', opts: ['登录', '注册', '找回口令'], get: () => L.mode, set: (i) => { L.mode = i; L.state = 'idle'; L.err = ''; } });
+  def('show', { name: '口令', opts: ['显示', '隐藏'], get: () => (L.show ? 1 : 0), set: (i) => { L.show = i === 1; } , toggle: true});
+  def('keep', { name: '记住', opts: ['记住这台设备 8 小时', '不记住'], get: () => L.keep, set: (i) => { L.keep = i; }, toggle: true });
+  const userOk = /^[A-Za-z0-9_]{4,20}$/.test(L.user);
+  const passOk = L.pass.length >= 8;
+  let s = 'wait', g = '';
+  if (L.state === 'busy') s = 'busy';
+  else if (L.state === 'err') { s = 'err'; }
+  else if (L.mode === 0 && userOk && passOk) s = 'ok';
+  else if (L.mode === 1 && userOk && passOk && L.pass === L.pass2 && L.nick.trim() && L.agree) s = 'ok';
+  else if (L.mode === 2 && userOk) s = 'ok';
+  const userHint = L.user && !userOk ? jz('4–20 位字母、数字或下划线', 'zhu') : '';
+  const passHint = L.pass && !passOk ? jz('至少 8 位，还差 ' + (8 - L.pass.length) + ' 位', 'zhu') : '';
+  const caps = L.caps ? jz('大写锁定开着', 'zhu') : '';
+  const pw = (id, ph) => blank(id, ph, `type="${L.show ? 'text' : 'password'}" autocomplete="${id === 'pass' && L.mode === 0 ? 'current-password' : 'new-password'}" ${(id === 'pass' && L.pass && !passOk) ? 'aria-invalid="true"' : ''}`);
+  let body;
+  if (L.mode === 0) {
+    body = `<p class="jing">我是 ${blank('user', '账号', `autocomplete="username" autocapitalize="off" spellcheck="false" ${L.user && !userOk ? 'aria-invalid="true"' : ''}`)}${userHint}，口令是 ${pw('pass', '口令')}${passHint}${caps}（${w('show')}），${w('keep')}${stop('login', s, '登录')}${L.state === 'err' ? jz(L.err, 'zhu') : ''}</p>`;
+  } else if (L.mode === 1) {
+    def('agree', { name: '已读说明', opts: ['还没读', '读过了'], get: () => (L.agree ? 1 : 0), set: (i) => { L.agree = i === 1; }, toggle: true });
+    const strength = L.pass ? (L.pass.length >= 12 && /\d/.test(L.pass) && /[A-Za-z]/.test(L.pass) ? '强' : L.pass.length >= 8 ? '中' : '弱') : '';
+    body = `<p class="jing">我叫 ${blank('nick', '昵称', 'autocomplete="nickname"')}，账号用 ${blank('user', '字母或数字', 'autocomplete="username" autocapitalize="off" spellcheck="false"')}${userHint}，</p>
+    <p class="jing">口令定为 ${pw('pass', '至少 8 位')}${strength ? jz('强度：' + strength, strength === '弱' ? 'zhu' : '') : ''}，再写一遍 ${pw('pass2', '同上')}${L.pass2 && L.pass2 !== L.pass ? jz('两次不一样', 'zhu') : ''}（${w('show')}）。</p>
+    <p class="jing">使用说明我 ${w('agree')}${jz('昵称会显示在公开作品上；账号只用于登录')}${stop('login', s, '注册')}</p>`;
+  } else {
+    body = `<p class="jing">我的账号是 ${blank('user', '账号', 'autocomplete="username" autocapitalize="off"')}${userHint}，请让管理员帮我重设口令${stop('login', s, '提交找回请求')}</p>
+    <div class="shu"><p class="note">HAIZ 账号没有绑定邮箱或手机号，找回口令需要管理员核实（现有后端的 recover 流程）。这里只是演示句子的样子。</p></div>`;
+  }
+  return `<p class="jing">我想 ${w('mode')}。</p>${body}
+  <div class="shu" data-k="shu-login"><p class="note">演示账号：${DEMO_USER} / ${DEMO_PASS}。这个实验室不会把你输入的任何内容发送到网络。句末是「？」时说明还缺东西，点它会带你去缺的地方；变成红色的「。」就可以按下。</p></div>`;
+}
+
+/* ════════════════════ C · Pocket ════════════════════ */
+const SUBJ = ['数学', '语文', '英语', '物理', '化学', '生物', '历史', '地理', '其他'];
+function vPocket() {
+  const m = HZ.minuteNow();
+  const day = D.COURSES.filter((c) => c.day === S.day).sort((a, b) => a.start - b.start);
+  const isToday = S.day === HZ.today();
+  const cur = isToday ? day.find((c) => c.start <= m && c.end > m) : null;
+  const nxt = isToday ? day.find((c) => c.start > m) : null;
+  def('day', { name: '哪一天', opts: [1, 2, 3, 4, 5].map((d) => '周' + HZ.wd(d)), get: () => S.day - 1, set: (i) => { S.day = i + 1; } });
+  def('week', { name: '看法', opts: ['这一天', '整周'], get: () => (S.week ? 1 : 0), set: (i) => { S.week = i === 1; }, toggle: true });
+  day.forEach((c) => def('c-' + c.id, { name: c.name, opts: ['查看这节课', '在地图上找教室', '为这节课记一件事'], get: () => 0, set: (i) => { if (i === 1) go('map'); if (i === 2) { S.newSubj = SUBJ.indexOf(c.name); focusIn('newTask'); } else toast(c.name + '：' + HZ.mm(c.start) + '—' + HZ.mm(c.end) + '，' + c.room); }, label: () => c.name }));
+  const nowLine = cur ? `正在上 ${w('c-' + cur.id, 'now')}${jz(HZ.mm(cur.end) + ' 下课 · ' + cur.room)}` : nxt ? `下一节是 ${w('c-' + nxt.id, 'now')}${jz(HZ.mm(nxt.start) + ' · ' + nxt.room)}` : (isToday ? '今天的课上完了' : '');
+  const courseSentence = day.length ? day.map((c) => `${w('c-' + c.id, cur === c ? 'now' : '')}<span style="font-size:.6em;color:var(--ink3);font-variant-numeric:tabular-nums"> ${HZ.mm(c.start)}</span>`).join('，') : '没有课';
+  let week = '';
+  if (S.week) {
+    const slots = [...new Set(D.COURSES.map((c) => c.start))].sort((a, b) => a - b);
+    week = `<div class="shu" data-k="shu-week"><table class="t"><thead><tr><th></th>${[1, 2, 3, 4, 5].map((d) => `<th>周${HZ.wd(d)}</th>`).join('')}</tr></thead><tbody>${slots.map((st) => `<tr><td style="color:var(--ink3)">${HZ.mm(st)}</td>${[1, 2, 3, 4, 5].map((d) => { const c = D.COURSES.find((x) => x.day === d && x.start === st); return `<td ${d === S.day ? 'style="color:var(--zhu)"' : ''}>${c ? c.name : ''}</td>`; }).join('')}</tr>`).join('')}</tbody></table><p class="note">整周放不进一句话，就写成表——表也是「疏」的一种。示例课表。</p></div>`;
+  }
+  // 任务
+  const todo = S.tasks.filter((t) => !t.done).sort((a, b) => new Date(a.due) - new Date(b.due));
+  const done = S.tasks.filter((t) => t.done);
+  todo.forEach((t) => def('t-' + t.id, { name: '任务', label: () => '「' + t.title + '」', opts: ['做完了', '推到明天', '先做这件（开始专注）', t.source ? '看来源原文' : '（没有原文）', '删去'], get: () => 0, set: (i) => taskAct(t, i) }));
+  done.forEach((t) => def('t-' + t.id, { name: '已做完', label: () => t.title, opts: ['其实还没做完', '删去'], get: () => 0, set: (i) => { if (i === 0) t.done = false; else S.tasks = S.tasks.filter((x) => x !== t); saveTasks(); } }));
+  const taskList = todo.map((t) => {
+    const late = new Date(t.due) < new Date();
+    return `${w('t-' + t.id)}${jz(t.subject + ' · ' + HZ.dueText(t.due) + (t.example ? ' · 示例' : ''), late ? 'zhu' : '')}`;
+  }).join('，');
+  def('newDue', { name: '截止', opts: ['今天', '明天', '后天', '这周五', '不定日子'], get: () => S.newDue || 0, set: (i) => { S.newDue = i; } });
+  def('newSubj', { name: '科目', opts: SUBJ, get: () => S.newSubj || 0, set: (i) => { S.newSubj = i; } });
+  const newOk = (S.newTitle || '').trim().length > 0;
+  // 收件
+  S.inbox.forEach((it) => def('i-' + it.id, { name: '候选', label: () => '收下', opts: ['收下', '改一改再收', '不要'], get: () => 0, set: (i) => inboxAct(it, i) }));
+  const inbox = S.inbox.map((it) => `<p class="jing s">「${esc(it.text.replace('【示例】', ''))}」${jz('来自 ' + it.from)}——我猜是要「${esc(it.guess.title)}」，${HZ.dueText(it.guess.due)} 前。${w('i-' + it.id)}？</p>`).join('');
+  // 专注
+  const F = S.focus;
+  const todayMin = S.focusLog.filter((l) => new Date(l.at).toDateString() === new Date().toDateString()).reduce((a, l) => a + l.min, 0);
+  def('fmin', { name: '分钟', num: true, min: 5, max: 90, step: 5, get: () => F.min, set: (v) => { F.min = v; }, fmt: (v) => String(v) });
+  def('fsubj', { name: '做什么', opts: SUBJ, get: () => F.subj, set: (i) => { F.subj = i; } });
+  def('fstop', { go: true, label: () => '停下', set: () => stopFocus(false) });
+  const focusLine = F.running
+    ? `<p class="jing" data-k="focus">正在专注${esc(SUBJ[F.subj])}，还剩 <span id="fleft" style="font-variant-numeric:tabular-nums">${fmtLeft()}</span>${stop('focusRun', 'busy')}　${w('fstop')}</p>`
+    : `<p class="jing" data-k="focus">我要专注 ${w('fmin')} 分钟，做 ${w('fsubj')}${stop('focus', 'ok', '开始专注')}${jz('今天已经专注 ' + todayMin + ' 分钟')}</p>`;
+  return `
+  <p class="jing">现在看的是 ${w('day')}${isToday ? jz('今天') : ''}，${nowLine}。</p>
+  <p class="jing s">${w('week')}的课：${courseSentence}。</p>
+  ${week}
+  <p class="jing">还有 ${todo.length} 件事没做${todo.length ? '：' : '。'}</p>
+  ${todo.length ? `<p class="jing s" style="max-width:none">${taskList}。</p>` : ''}
+  ${done.length ? `<p class="jing s" style="color:var(--ink3)">已经做完：${done.map((t) => w('t-' + t.id, 'done')).join('，')}。</p>` : ''}
+  <p class="jing s">再记一件：${blank('newTask', '要做的事')}，${w('newDue')}前，${w('newSubj')}${stop('addTask', newOk ? 'ok' : 'wait', '记下这件事')}</p>
+  ${S.inbox.length ? `<p class="jing">收件里有 ${S.inbox.length} 条候选${jz('只有你确认后才会变成任务')}：</p>${inbox}` : `<p class="jing s" style="color:var(--ink3)">收件里没有待核的候选了。</p>`}
+  ${focusLine}
+  <div class="shu"><p class="note">课表、任务、收件全部是示例数据，对应 HAIZ Pocket 现有的「今天 · 课表 · 收件 · 专注」。改动只存在这台浏览器里。</p></div>`;
+}
+function saveTasks() { store.set('tasks', S.tasks); }
+function taskAct(t, i) {
+  if (i === 0) { t.done = true; say('已做完：' + t.title); }
+  if (i === 1) { const d = new Date(t.due); d.setDate(d.getDate() + 1); t.due = d.toISOString(); say('推到明天'); }
+  if (i === 2) { S.focus.subj = Math.max(0, SUBJ.indexOf(t.subject)); startFocus(); }
+  if (i === 3 && t.source) toast(t.source + '：' + (D.INBOX[0].text));
+  if (i === 4) { S.tasks = S.tasks.filter((x) => x !== t); say('删去了'); }
+  saveTasks();
+}
+function inboxAct(it, i) {
+  if (i === 0 || i === 1) {
+    S.tasks.push({ id: 'n' + Date.now(), title: it.guess.title, subject: it.guess.subject, due: it.guess.due, done: false, example: true, source: it.from });
+    saveTasks();
+    if (i === 1) { S.newTitle = it.guess.title; }
+  }
+  S.inbox = S.inbox.filter((x) => x !== it);
+}
+function fmtLeft() { const s = Math.max(0, Math.round((S.focus.end - Date.now()) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+let focusTimer = 0;
+function startFocus() { S.focus.running = true; S.focus.end = Date.now() + S.focus.min * 60000; clearInterval(focusTimer); focusTimer = setInterval(tickFocus, 1000); say('开始专注 ' + S.focus.min + ' 分钟'); }
+function tickFocus() { const el = $('#fleft'); if (el) el.textContent = fmtLeft(); renderAside(); if (Date.now() >= S.focus.end) stopFocus(true); }
+function stopFocus(done) {
+  const F = S.focus; const used = Math.round((F.min * 60000 - Math.max(0, F.end - Date.now())) / 60000);
+  F.running = false; clearInterval(focusTimer);
+  if (used > 0) S.focusLog.push({ at: new Date().toISOString(), min: used, label: SUBJ[F.subj] });
+  say(done ? '专注结束' : '停下了，记了 ' + used + ' 分钟'); render();
+}
+
+/* ════════════════════ D · 地图 ════════════════════ */
+const PLACES = ['lanshu', 'beimen', 'nanmen', 'yihao', 'erhao', 'sanhao', 'sihao', 'keji', 'kexue', 'library', 'yanchi', 'hujulongpan', 'fengqitang', 'yanlintang', 'yishu', 'yundong', 'canteen1', 'canteen3', 'zhiwuyuan', 'xiaoyouhui'];
+const B = Object.fromEntries(C.b.map((b) => [b.id, b]));
+const ctr = (b) => [(b.r[0] + b.r[2]) / 2, (b.r[1] + b.r[3]) / 2];
+function vMap() {
+  const M = S.map;
+  const names = PLACES.map((id) => B[id].n);
+  def('from', { name: '我在', opts: names, get: () => PLACES.indexOf(M.from), set: (i) => { M.from = PLACES[i]; } });
+  def('to', { name: '想去', opts: names, get: () => PLACES.indexOf(M.to), set: (i) => { M.to = PLACES[i]; } });
+  def('how', { name: '怎么去', opts: ['走过去', '骑车过去', '只在图上看看'], get: () => M.how, set: (i) => { M.how = i; } });
+  def('time', { name: '时间', opts: ['此刻', '清晨', '正午', '傍晚', '夜里'], get: () => M.time, set: (i) => { M.time = i; } });
+  const a = B[M.from], b = B[M.to];
+  const [ax, ay] = ctr(a), [bx, by] = ctr(b);
+  const meters = Math.round((Math.abs(ax - bx) + Math.abs(ay - by)) * 0.167);
+  const speed = [1.2, 3.5, 0][M.how];
+  const mins = speed ? Math.max(1, Math.round(meters / speed / 60)) : 0;
+  // 途经：路线 L 形拐点附近最近的地标
+  const via = PLACES.filter((id) => id !== M.from && id !== M.to).map((id) => { const [x, y] = ctr(B[id]); return [id, Math.hypot(x - bx, y - ay)]; }).sort((p, q) => p[1] - q[1])[0];
+  def('via', { go: true, label: () => B[via[0]].n, set: () => { M.to = via[0]; } });
+  def('enter', { go: true, label: () => '第一人称校园', href: R + 'campus-3d.html' });
+  def('act4', { go: true, label: () => '六幕的第四幕', href: R + 'index.html#map' });
+  const tint = ['', 'filter:sepia(.25) hue-rotate(-10deg)', '', 'filter:sepia(.5) saturate(1.3)', 'filter:invert(.88) hue-rotate(180deg)'][M.time];
+  return `
+  <p class="jing">我在 ${w('from')}，想去 ${w('to')}，${w('how')}。</p>
+  <p class="jing s">${speed ? `大约 ${meters} 米，${mins} 分钟${jz('沿校园主轴折线估算，不是实地导航')}，途中会经过 ${w('via')}。` : `${esc(b.n)} 在 ${esc(a.n)} 的${dirWord(ax, ay, bx, by)}，相距约 ${meters} 米。`}</p>
+  <div class="shu" data-k="shu-map" style="max-width:40em">
+    ${planSVG(M.from, M.to, tint)}
+    <p class="note">在图上点一栋楼，它就填进「想去」；按住 Shift（或长按）就填进「我在」。平面来自项目既有的近似数据，方向与精度未独立复核，北在上。</p>
+  </div>
+  <div class="shu" data-k="shu-place">
+    ${b.img ? `<figure><img src="${R + b.img}" alt="${esc(b.n)}" loading="lazy" style="max-height:220px"><figcaption>图片来源：海南中学官网，经 HAIZ 既有页面使用。</figcaption></figure>` : ''}
+    <p><b>${esc(b.n)}</b>　${esc(b.d || b.c)}</p>
+  </div>
+  <p class="jing s">校园停在 ${w('time')}。走进去，可以打开 ${w('enter')}，或者回到 ${w('act4')} 看它从水面里升起。</p>`;
+}
+function dirWord(ax, ay, bx, by) { const dx = bx - ax, dy = by - ay; const ang = Math.atan2(dy, dx) * 180 / Math.PI; const dirs = ['东', '东北', '北', '西北', '西', '西南', '南', '东南']; return dirs[((Math.round(ang / 45) % 8) + 8) % 8] + '面'; }
+function planSVG(from, to, style) {
+  const bs = C.b.filter((b) => b.k !== 'corr');
+  const xs = bs.flatMap((b) => [b.r[0], b.r[2]]), ys = bs.flatMap((b) => [b.r[1], b.r[3]]);
+  const x0 = Math.min(...xs) - 40, x1 = Math.max(...xs) + 40, y0 = Math.min(...ys) - 40, y1 = Math.max(...ys) + 40;
+  const H = y1 - y0; const fy = (y) => y1 - y + y0; // 翻转：北在上
+  const rect = (r, cls, extra = '') => `<rect class="${cls}" x="${r[0]}" y="${fy(r[3])}" width="${r[2] - r[0]}" height="${r[3] - r[1]}" ${extra}/>`;
+  const [ax, ay] = ctr(B[from]), [bx, by] = ctr(B[to]);
+  const lb = (id, cls) => { const b = B[id]; const [x, y] = ctr(b); return `<text x="${x}" y="${fy(b.r[3]) - 12}" text-anchor="middle" class="${cls}">${esc(b.n)}</text>`; };
+  return `<svg class="plan" viewBox="${x0} ${y0} ${x1 - x0} ${H}" role="img" aria-label="校园平面示意：从${esc(B[from].n)}到${esc(B[to].n)}" style="${style}">
+    ${C.roads.map((r) => rect(r, 'rd')).join('')}
+    ${C.green.map((g) => rect(g.r, 'gr')).join('')}
+    ${bs.map((b) => rect(b.r, 'bd' + (b.id === from ? ' from' : '') + (b.id === to ? ' to' : ''), `data-b="${b.id}"><title>${esc(b.n)}</title></rect`)).join('').replace(/\/><title>/g, '><title>').replace(/<\/title><\/rect\/>/g, '</title></rect>')}
+    <path class="route" d="M${ax} ${fy(ay)} L${bx} ${fy(ay)} L${bx} ${fy(by)}"/>
+    ${lb(from, '')}${lb(to, 'lbl-to')}
+  </svg>`;
+}
+
+/* ════════════════════ E · 实验册 ════════════════════ */
+const G_HAIKOU = 9.787;
+function vRead() {
+  const Lb = S.lab, T = D.LAB;
+  const pages = [T.title, '酸碱中和滴定', '活字印刷', '力的合成'];
+  def('page', { name: '哪一页', opts: pages.map((p, i) => i ? p + ' ' : p), get: () => 0, set: (i) => { if (i) toast('「' + pages[i] + '」在 HAIZ 实验册里，这个样板只做了单摆这一页。'); } });
+  def('L', { name: '摆长', num: true, min: 0.3, max: 1.5, step: 0.05, get: () => Lb.L, set: (v) => { Lb.L = +v.toFixed(2); Lb.t = null; }, fmt: (v) => v.toFixed(2) });
+  def('n', { name: '全振动次数', num: true, min: 10, max: 60, step: 5, get: () => Lb.n, set: (v) => { Lb.n = v; Lb.t = null; }, fmt: (v) => String(v) });
+  def('deg', { name: '放开角度', num: true, min: 2, max: 30, step: 1, get: () => Lb.deg, set: (v) => { Lb.deg = v; Lb.t = null; }, fmt: (v) => String(v) });
+  if (Lb.t == null) Lb.t = simT();
+  const Tp = Lb.t / Lb.n, g = 4 * Math.PI ** 2 * Lb.L / Tp ** 2;
+  const big = Lb.deg > 5;
+  def('again', { go: true, label: () => '再测一次', set: () => { Lb.t = simT(); } });
+  def('rec', { go: true, label: () => '记下这一组', set: () => { Lb.rows.push({ L: Lb.L, n: Lb.n, deg: Lb.deg, t: Lb.t, T: Tp, g }); } });
+  def('book', { go: true, label: () => '在实验册里翻开这一页', href: R + 'lab/' });
+  const terms = { 摆长: '悬点到球心的距离', 全振动: '从一侧最高点出发再回到这一点', 简谐振动: '回复力与位移成正比的往复运动' };
+  def('term0', { name: '摆长', label: () => '摆长', opts: ['摆长', '（' + terms.摆长 + '）'], get: () => 0, set: (i) => { S.showTerm = i ? '摆长' : null; }, toggle: true });
+  const steps = T.steps.map((s, i) => `<p>${i + 1}　${esc(s).replace('摆长 L', S.showTerm === '摆长' ? `摆长${jz(terms.摆长)} L` : `${w('term0')} L`)}</p>`).join('');
+  const rows = Lb.rows;
+  const mean = rows.length ? rows.reduce((a, r) => a + r.g, 0) / rows.length : 0;
+  const sd = rows.length > 1 ? Math.sqrt(rows.reduce((a, r) => a + (r.g - mean) ** 2, 0) / (rows.length - 1)) : 0;
+  return `
+  <p class="jing">翻到 ${w('page')} 这一页${jz(T.subject)}。</p>
+  <div class="shu" data-k="shu-steps" style="max-width:38em">
+    ${pendSVG()}
+    ${steps}
+    <p class="note">${esc(T.principle)}</p>
+  </div>
+  <p class="jing" data-k="lab-s" style="max-width:none">摆长 ${w('L')} 米，拉开 ${w('deg')}°${big ? jz('超过 5°，小角度近似不再成立，结果会偏小', 'zhu') : ''}，数 ${w('n')} 次全振动，秒表读到 ${Lb.t.toFixed(1)} 秒${jz('模拟秒表，含人的反应误差')}，所以周期 ${Tp.toFixed(3)} 秒，g ≈ ${g.toFixed(2)} m/s²${big ? stop('lab', 'err') : '。'}</p>
+  <p class="jing s">${w('again')}，或者 ${w('rec')}。</p>
+  ${rows.length ? `<div class="shu" data-k="shu-rows"><table class="t"><thead><tr><th>摆长 m</th><th>角度</th><th>次数</th><th>t / s</th><th>T / s</th><th>g</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${r.L.toFixed(2)}</td><td>${r.deg}°</td><td>${r.n}</td><td>${r.t.toFixed(1)}</td><td>${r.T.toFixed(3)}</td><td>${r.g.toFixed(2)}</td></tr>`).join('')}</tbody></table>
+  <p>${rows.length} 组的平均值 ${mean.toFixed(3)}${rows.length > 1 ? '，标准偏差 ' + sd.toFixed(3) : ''}；海口的参考值约 ${G_HAIKOU}${jz('按纬度 20° 的国际重力公式估算')}，相差 ${((mean - G_HAIKOU) / G_HAIKOU * 100).toFixed(1)}%。</p></div>` : ''}
+  <p class="jing s">${w('book')}。</p>
+  <div class="shu"><p class="note">出处：${T.sources.map(esc).join('；')}。</p></div>`;
+}
+function simT() {
+  const L = S.lab.L, th = S.lab.deg * Math.PI / 180;
+  const T0 = 2 * Math.PI * Math.sqrt(L / G_HAIKOU) * (1 + th * th / 16 + 11 * th ** 4 / 3072);
+  const react = (Math.random() - 0.5) * 2 * 0.15; // ±0.15 s 按表误差
+  return S.lab.n * T0 + react;
+}
+function pendSVG() {
+  return `<svg class="pend" viewBox="-60 -10 120 150" aria-hidden="true"><line x1="-40" y1="0" x2="40" y2="0"/><g id="pendArm"><line x1="0" y1="0" x2="0" y2="${40 + S.lab.L * 60}"/><circle class="bob" cx="0" cy="${40 + S.lab.L * 60}" r="5"/></g><path class="arc" d="${(() => { const r = 40 + S.lab.L * 60, a = S.lab.deg * Math.PI / 180; return `M${-r * Math.sin(a)} ${r * Math.cos(a)} A${r} ${r} 0 0 0 ${r * Math.sin(a)} ${r * Math.cos(a)}`; })()}"/></svg>`;
+}
+let pendRAF = 0;
+function animatePend() {
+  cancelAnimationFrame(pendRAF);
+  const arm = $('#pendArm'); if (!arm || HZ.reduced()) return;
+  const T0 = 2 * Math.PI * Math.sqrt(S.lab.L / G_HAIKOU); const A = S.lab.deg; const t0 = performance.now();
+  const f = (t) => { if (!document.body.contains(arm)) return; arm.setAttribute('transform', `rotate(${A * Math.cos(2 * Math.PI * (t - t0) / 1000 / T0)})`); pendRAF = requestAnimationFrame(f); };
+  pendRAF = requestAnimationFrame(f);
+}
+
+/* ════════════════════ F · 设置与个人空间 ════════════════════ */
+function vSettings() {
+  const P = S.pref;
+  const set = (k) => (i) => { P[k] = i; store.set('pref', P); applyPref(); };
+  def('motion', { name: '动画', opts: ['照常', '减少', '跟随系统'], get: () => P.motion, set: set('motion') });
+  def('size', { name: '字', opts: ['标准', '大一些', '再大些'], get: () => P.size, set: set('size') });
+  def('theme', { name: '颜色', opts: ['跟随系统', '白天', '夜里'], get: () => P.theme, set: set('theme') });
+  def('sync', { name: '保存位置', opts: ['只存在这台设备上', '同步到我的账号'], get: () => P.sync, set: (i) => { P.sync = i; store.set('pref', P); S.syncErr = i === 1; } });
+  def('retry', { go: true, label: () => '再试一次', set: () => { S.syncErr = true; flash('#syncLine'); } });
+  def('undoSync', { go: true, label: () => '先不同步', set: () => { P.sync = 0; store.set('pref', P); S.syncErr = false; } });
+  def('leaf', { name: '作品', opts: ['只有我能看到', '审核通过后公开'], get: () => P.leaf, set: set('leaf') });
+  def('intake', { name: '收件', opts: ['不读取通知', '只读名字里有「示例班级群」的通知'], get: () => P.intake, set: set('intake') });
+  const A = D.ACCOUNT;
+  S.devices.filter((d) => !d.current).forEach((d) => def('dev-' + d.id, { go: true, label: () => '让它退出', set: () => { S.confirm = d.id; } }));
+  def('yes', { go: true, label: () => '确定', set: () => { const d = S.devices.find((x) => x.id === S.confirm); S.devices = S.devices.filter((x) => x.id !== S.confirm); S.confirm = null; say((d ? d.name : '') + ' 已退出'); } });
+  def('no', { go: true, label: () => '算了', set: () => { S.confirm = null; } });
+  def('toLogin', { go: true, label: () => '登录', set: () => go('login') });
+  def('wipe', { go: true, label: () => '清除这台设备上的实验室数据', set: () => { S.confirm = 'wipe'; } });
+  def('wipeYes', { go: true, label: () => '清除', set: () => { try { Object.keys(localStorage).filter((k) => k.startsWith('hz-judou-')).forEach((k) => localStorage.removeItem(k)); } catch {} S.tasks = D.TASKS.map((t) => ({ ...t })); S.pref = { motion: 0, size: 0, theme: 0, sync: 0, leaf: 0, intake: 0 }; applyPref(); S.confirm = null; say('已清除'); } });
+  const devs = S.devices.map((d) => {
+    if (S.confirm === d.id) return `<span class="flash">确定让「${esc(d.name)}」退出吗${jz('它下次打开 HAIZ 需要重新登录')}？${w('yes')}　${w('no')}</span>`;
+    return `${esc(d.name)}${jz(d.current ? '现在 · 就是你手上这台' : '最后一次 ' + d.last)}${d.current ? '' : ' ' + w('dev-' + d.id)}`;
+  }).join('；');
+  const who = S.authed
+    ? `<p class="jing">我是 ${esc(A.name)}${ex}${jz('账号 ' + A.handle + ' · ' + A.joined + ' 加入')}，我的树上有 ${A.leaves} 片叶子。</p>`
+    : `<p class="jing">我还没有 ${w('toLogin')}${jz('下面的偏好照样能用，只存在这台设备上')}。</p>`;
+  return `${who}
+  <p class="jing">动画 ${w('motion')}；字 ${w('size')}；颜色 ${w('theme')}。</p>
+  <p class="jing" id="syncLine">我的课表和任务 ${w('sync')}${S.syncErr ? jz('同步没有成功：这个实验室不连网（演示错误）', 'zhu') + stop('sync', 'err') + ` ${w('retry')} 或 ${w('undoSync')}。` : '。'}</p>
+  <p class="jing">我的作品叶子 ${w('leaf')}${jz('没有审核通过的作品不会公开')}；收件 ${w('intake')}。</p>
+  <p class="jing s">我在 ${S.devices.length} 台设备上登录过：${devs}。</p>
+  <p class="jing s">${S.confirm === 'wipe' ? `<span class="flash">真的清除吗${jz('任务、偏好会回到示例的初始状态')}？${w('wipeYes')}　${w('no')}</span>` : w('wipe')}</p>
+  <div class="shu"><p class="note">设置会立刻生效（改「字」「颜色」「动画」试试），每一句的句末标点告诉你它有没有落定。设备列表是示例。</p></div>`;
+}
+function applyPref() {
+  const P = S.pref, r = document.documentElement;
+  r.dataset.motion = ['normal', 'reduce', ''][P.motion] || '';
+  if (!r.dataset.motion) delete r.dataset.motion;
+  r.style.setProperty('--fs', [1, 1.15, 1.3][P.size]);
+  if (P.theme === 0) delete r.dataset.theme; else r.dataset.theme = P.theme === 1 ? 'light' : 'dark';
+}
+
+/* ════════════════════ 渲染：保持词的身份（FLIP） ════════════════════ */
+const VIEW_FN = { home: vHome, login: vLogin, pocket: vPocket, map: vMap, read: vRead, settings: vSettings };
+let lastPick = null; // { id, dir } 用于决定新词从上还是从下进来
+function render(opts = {}) {
+  closePara(true);
+  const before = new Map();
+  if (!opts.fresh) document.querySelectorAll('[data-k]').forEach((el) => before.set(el.dataset.k, { r: el.getBoundingClientRect(), t: el.textContent }));
+  // 保留正在输入的框（焦点、光标位置不丢）
+  const keepInputs = new Map(); document.querySelectorAll('input[data-k]').forEach((el) => keepInputs.set(el.dataset.k, el));
+  const ae = document.activeElement, sel = ae && ae.tagName === 'INPUT' ? [ae.selectionStart, ae.selectionEnd] : null;
+  const aeKey = ae && ae.dataset ? (ae.dataset.k || null) : null;
+  DEFS = {};
+  $('#main').innerHTML = mainClause();
+  $('#view').innerHTML = VIEW_FN[S.view]();
+  renderMargin(); renderWritten(); renderAside();
+  document.querySelectorAll('input[data-k]').forEach((el) => {
+    const old = keepInputs.get(el.dataset.k);
+    if (old && !opts.fresh) { ['type', 'aria-invalid', 'placeholder', 'autocomplete'].forEach((a) => { el.hasAttribute(a) ? old.setAttribute(a, el.getAttribute(a)) : old.removeAttribute(a); }); el.replaceWith(old); }
+    else { const k = el.dataset.in; el.value = inputVal(k); fit(el); }
+  });
+  if (aeKey) { const el = document.querySelector(`[data-k="${aeKey}"]`); if (el && el !== document.activeElement) { el.focus({ preventScroll: true }); if (sel && el.setSelectionRange) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
+  if (!HZ.reduced() && !opts.fresh) {
+    document.querySelectorAll('[data-k]').forEach((el) => {
+      const b = before.get(el.dataset.k); if (!b) return;
+      const r = el.getBoundingClientRect();
+      const dx = b.r.left - r.left, dy = b.r.top - r.top;
+      if (b.t !== el.textContent && el.classList.contains('w')) {
+        // 换词：竖着进来（聚合轴）
+        const dir = lastPick && lastPick.id === el.dataset.w ? lastPick.dir : 1;
+        const v = el.querySelector('.v');
+        v && v.animate([{ transform: `translateY(${dir * 0.7}em)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      } else if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        // 句子重排：横着让位（组合轴）
+        el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    });
+    // 新出现的句子：从左往右写出来
+    document.querySelectorAll('#view > *').forEach((el) => {
+      if (el.dataset.k && before.has(el.dataset.k)) return;
+      if (opts.nav) el.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 420, delay: 0, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'backwards' });
+    });
+  }
+  glueGlosses();
+  lastPick = null;
+  if (S.view === 'read') animatePend(); else cancelAnimationFrame(pendRAF);
+}
+/* 夹注不独占行首：把它和前面一个字、后面的标点粘在一起 */
+function glueGlosses() {
+  document.querySelectorAll('#view .jz, #main .jz').forEach((g) => {
+    if (g.parentElement.classList.contains('nb')) return;
+    const nb = document.createElement('span'); nb.className = 'nb';
+    const prev = g.previousSibling;
+    g.replaceWith(nb);
+    if (prev && prev.nodeType === 3 && prev.textContent.length) { const t = prev.textContent; prev.textContent = t.slice(0, -1); nb.appendChild(document.createTextNode(t.slice(-1))); }
+    else if (prev && prev.nodeType === 1 && !prev.matches('p,div') && !prev.querySelector('input')) nb.appendChild(prev);
+    nb.appendChild(g);
+    const next = nb.nextSibling;
+    if (next && next.nodeType === 3 && /^[，。；：、！？）」]/.test(next.textContent)) { nb.appendChild(document.createTextNode(next.textContent[0])); next.textContent = next.textContent.slice(1); }
+    else if (next && next.nodeType === 1 && next.classList.contains('stop')) nb.appendChild(next);
+  });
+}
+function inputVal(k) { const L = S.login; return { user: L.user, pass: L.pass, pass2: L.pass2, nick: L.nick, newTask: S.newTitle || '' }[k] || ''; }
+function fit(el) { el.size = Math.max(el.placeholder.length + 1, Math.min(18, (el.value || '').length + 1)); }
+
+function renderMargin() {
+  const tips = {
+    home: '<p><b>怎么用</b><br>带<b style="color:var(--zhu)">实心着重号</b>的词可以换：点它，可选的词会竖着展开。</p><p>带<b style="color:var(--zhu)">空心圈</b>的词带你去别处。</p><p>句末的「。」可以按：它就是“确定”。</p><p>键盘：Tab 走到下一个词，↑↓ 换，Enter 落定，/ 搜索。</p>',
+    login: '<p><b>标点就是状态</b><br>？ 还缺东西<br>。 可以落定<br>！ 出了问题<br>…… 正在进行</p><p>错误不弹窗，就注在出错的词旁边。</p>',
+    pocket: '<p><b>高频操作</b><br>勾掉一件事：点它 → 「做完了」，两下。</p><p>换一天：点「周几」，或者在它上面滚一下。</p><p>一句话放不下的（整周课表），写成表。</p>',
+    map: '<p><b>句子和地图是同一件事的两种写法</b><br>改句子，图跟着变；点图，句子跟着变。</p>',
+    read: '<p><b>数字也是词</b><br>在数字上竖着拖，或者用 ↑↓，算式立刻重算。</p><p>夹注只在你想知道的时候出现。</p>',
+    settings: '<p><b>设置就是陈述</b><br>每一句都是你此刻的状态，不是一排开关。</p><p>危险的操作会先变成一个问句，等你回答。</p>',
+  };
+  $('#margin').innerHTML = tips[S.view] + '<p style="margin-top:2.4em">所有学生信息都是<b>示例</b>。</p>';
+}
+function renderWritten() {
+  const items = S.written.slice(-3);
+  $('#written').innerHTML = items.length ? items.map((v, i) => `<button data-back="${S.written.length - items.length + i}">我想${VIEWS.find((x) => x.id === v).phrase}</button>`).join('<span style="margin:0 .4em">，</span>') + '<span style="margin:0 .4em">，</span>' : '';
+}
+function renderAside() {
+  const parts = [];
+  if (S.focus.running) parts.push(`<button data-goto="pocket">专注${esc(SUBJ[S.focus.subj])}还剩 ${fmtLeft()}</button>`);
+  if (S.inbox.length) parts.push(`<button data-goto="pocket">收件 ${S.inbox.length} 条待核</button>`);
+  const late = S.tasks.filter((t) => !t.done && new Date(t.due) < new Date()).length;
+  if (late) parts.push(`<button data-goto="pocket">${late} 件事过期了</button>`);
+  if (S.syncErr) parts.push(`<button data-goto="settings">同步没成功</button>`);
+  $('#asideIn').innerHTML = parts.length ? parts.join('<span class="sep">；</span>') + '。' : '';
+}
+
+/* ════════════════════ 聚合栏 ════════════════════ */
+const para = $('#para'), veil = $('#veil');
+let P = null; // { id, el, list, sel }
+function openPara(el) {
+  const id = el.dataset.w, d = DEFS[id]; if (!d) return;
+  if (d.go) { if (d.href) location.href = d.href; else { d.set(); render(); } return; }
+  if (d.search) return openSearch(el);
+  if (d.toggle && d.opts.length === 2) { const ni = 1 - d.get(); lastPick = { id, dir: ni > d.get() ? 1 : -1 }; d.set(ni); render(); say(d.opts[ni]); return; }
+  let list, cur;
+  if (d.num) {
+    const v = d.get(); list = [];
+    for (let x = d.min; x <= d.max + 1e-9; x += d.step) list.push(+x.toFixed(4));
+    cur = list.reduce((bi, x, i) => Math.abs(x - v) < Math.abs(list[bi] - v) ? i : bi, 0);
+    list = list.map((x) => ({ label: d.fmt(x), val: x }));
+  } else { list = d.opts.map((o, i) => ({ label: o, val: i })); cur = d.get(); }
+  P = { id, el, list, sel: cur, cur };
+  const cs = getComputedStyle(el);
+  para.style.fontSize = cs.fontSize; para.style.fontFamily = cs.fontFamily;
+  para.innerHTML = list.map((o, i) => `<li role="option" id="po${i}" aria-selected="${i === cur}" class="${i === cur ? 'cur' : ''}" data-i="${i}">${esc(o.label)}</li>`).join('');
+  para.classList.add('on'); veil.classList.add('on');
+  el.setAttribute('aria-expanded', 'true'); para.setAttribute('aria-activedescendant', 'po' + cur);
+  placePara();
+  para.focus?.();
+}
+function placePara() {
+  if (!P) return;
+  const r = P.el.getBoundingClientRect();
+  const li = para.children[P.cur]; const vh = innerHeight, vw = innerWidth;
+  para.style.left = '0px'; para.style.top = '0px'; para.scrollTop = 0;
+  const ph = para.offsetHeight, pw = para.offsetWidth;
+  const liTop = li.offsetTop; const liH = li.offsetHeight;
+  let top = r.top + r.height / 2 - (liTop + liH / 2);
+  let left = Math.min(Math.max(8, r.left - 6), vw - pw - 8);
+  // 放不下时：在栏里滚动，让当前项仍落在词的位置
+  if (top < 8 || top + ph > vh - 8) {
+    const maxH = Math.min(ph, vh - 16); para.style.maxHeight = maxH + 'px';
+    const want = r.top + r.height / 2 - liH / 2; // 当前项希望出现的屏幕位置
+    top = Math.min(Math.max(8, want - liTop), vh - 8 - maxH);
+    para.scrollTop = Math.max(0, liTop - (want - top));
+  }
+  para.style.top = top + 'px'; para.style.left = left + 'px';
+}
+function movePara(delta) {
+  if (!P) return; const n = P.list.length;
+  P.sel = Math.max(0, Math.min(n - 1, P.sel + delta));
+  [...para.children].forEach((li, i) => li.setAttribute('aria-selected', i === P.sel));
+  para.setAttribute('aria-activedescendant', 'po' + P.sel);
+  para.children[P.sel].scrollIntoView({ block: 'nearest' });
+}
+function pickPara(i) {
+  if (!P) return; const d = DEFS[P.id]; const o = P.list[i];
+  lastPick = { id: P.id, dir: i > P.cur ? 1 : -1 };
+  const changed = i !== P.cur || d.extra;
+  const id = P.id;
+  closePara(true);
+  if (!changed && !d.opts?.length) return;
+  d.set(o.val);
+  say((d.name ? d.name + '：' : '') + o.label);
+  if (id !== 'nav') render();
+}
+function closePara(silent) {
+  if (!P) { para.classList.remove('on'); veil.classList.remove('on'); return; }
+  P.el.setAttribute('aria-expanded', 'false');
+  const el = P.el; P = null;
+  para.classList.remove('on'); veil.classList.remove('on'); para.style.maxHeight = '';
+  if (!silent) el.focus();
+}
+para.addEventListener('click', (e) => { const li = e.target.closest('li'); if (li && li.getAttribute('aria-disabled') !== 'true') pickPara(+li.dataset.i); });
+para.addEventListener('mousemove', (e) => { const li = e.target.closest('li'); if (li && P) { P.sel = +li.dataset.i; [...para.children].forEach((x, i) => x.setAttribute('aria-selected', i === P.sel)); } });
+veil.addEventListener('click', () => closePara());
+para.addEventListener('wheel', (e) => { e.stopPropagation(); }, { passive: true });
+
+/* ── 搜索：把「我想」后面变成一个空 ── */
+let INDEX = null;
+function buildIndex() {
+  const I = [];
+  VIEWS.forEach((v) => I.push({ t: v.phrase, run: () => go(v.id) }));
+  D.WORKS.forEach((x) => I.push({ t: x.verb + ' ' + x.name, sub: x.line, run: () => { S.home.verb = VERBS.indexOf(x.verb); S.home.obj = D.WORKS.filter((y) => y.verb === x.verb).indexOf(x); go('home'); } }));
+  PLACES.forEach((id) => I.push({ t: '去' + B[id].n, sub: '校园地图', run: () => { S.map.to = id; go('map'); } }));
+  D.HISTORY.forEach((h) => I.push({ t: '回到 ' + h.label + ' · ' + h.title, sub: '根脉 · 校史', run: () => { location.href = R + 'index.html#roots/' + h.id; } }));
+  S.tasks.forEach((t) => I.push({ t: '做「' + t.title + '」', sub: '任务 · 示例', run: () => go('pocket') }));
+  I.push({ t: '专注 25 分钟', run: () => { go('pocket'); startFocus(); render(); } });
+  I.push({ t: '把字调大', run: () => { S.pref.size = 1; applyPref(); store.set('pref', S.pref); go('settings'); } });
+  I.push({ t: '夜里的颜色', run: () => { S.pref.theme = 2; applyPref(); store.set('pref', S.pref); go('settings'); } });
+  I.push({ t: '减少动画', run: () => { S.pref.motion = 1; applyPref(); store.set('pref', S.pref); go('settings'); } });
+  I.push({ t: '测一下重力加速度', sub: '实验册 · 单摆', run: () => go('read') });
+  return I;
+}
+function openSearch(el) {
+  const main = $('#main');
+  main.innerHTML = `我想 <span class="blank"><input id="q" placeholder="做什么？" aria-label="我想……（搜索）" autocomplete="off" size="8" role="combobox" aria-expanded="true" aria-controls="para"></span>${stop('q', 'wait')}`;
+  const q = $('#q'); q.focus(); INDEX = buildIndex();
+  const update = () => {
+    const v = q.value.trim(); fit(q);
+    const hits = (v ? INDEX.filter((x) => (x.t + (x.sub || '')).toLowerCase().includes(v.toLowerCase()) || [...v].every((ch) => (x.t + (x.sub || '')).includes(ch))) : INDEX.slice(0, 8)).slice(0, 9);
+    P = { id: 'search', el: q, list: hits.map((h) => ({ label: h.t, run: h.run })), sel: 0, cur: 0, search: true };
+    para.style.fontSize = getComputedStyle(q).fontSize;
+    para.innerHTML = hits.length ? hits.map((h, i) => `<li role="option" id="po${i}" aria-selected="${i === 0}" data-i="${i}">${esc(h.t)}${h.sub ? `<small>${esc(h.sub)}</small>` : ''}</li>`).join('') : '<li aria-disabled="true">没有这样的句子，换个说法？</li>';
+    para.classList.add('on'); veil.classList.add('on');
+    const r = q.getBoundingClientRect(); const mobile = innerWidth <= 720;
+    para.style.left = Math.max(8, Math.min(r.left, innerWidth - para.offsetWidth - 8)) + 'px';
+    para.style.top = (mobile ? Math.max(8, r.top - para.offsetHeight - 8) : r.bottom + 6) + 'px';
+    const stp = $('#main .stop'); if (stp) { stp.dataset.s = hits.length && v ? 'ok' : 'wait'; stp.textContent = hits.length && v ? '。' : '？'; }
+  };
+  q.addEventListener('input', update);
+  q.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); movePara(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); movePara(-1); }
+    else if (e.key === 'Enter') { e.preventDefault(); runSearch(P && P.sel); }
+    else if (e.key === 'Escape') { P = null; para.classList.remove('on'); veil.classList.remove('on'); render(); }
+  });
+  update();
+}
+function runSearch(i) { if (!P || !P.search || !P.list[i]) return; const run = P.list[i].run; P = null; para.classList.remove('on'); veil.classList.remove('on'); run(); render(); }
+para.addEventListener('click', (e) => { if (P && P.search) { const li = e.target.closest('li'); if (li && li.dataset.i != null) runSearch(+li.dataset.i); } }, true);
+
+/* ════════════════════ 事件 ════════════════════ */
+document.addEventListener('click', (e) => {
+  const wEl = e.target.closest('.w');
+  if (wEl && !(P && P.search)) { e.preventDefault(); if (P && P.el === wEl) return closePara(); openPara(wEl); return; }
+  const st = e.target.closest('.stop'); if (st) return onStop(st);
+  const bk = e.target.closest('[data-back]'); if (bk) { const i = +bk.dataset.back; const v = S.written[i]; S.written = S.written.slice(0, i); go(v, true); return; }
+  const gt = e.target.closest('[data-goto]'); if (gt) return go(gt.dataset.goto);
+  const bd = e.target.closest('[data-b]'); if (bd && S.view === 'map') { const id = bd.dataset.b; if (!PLACES.includes(id)) return toast(B[id].n + ' 不在地点列表里'); if (e.shiftKey) S.map.from = id; else S.map.to = id; render(); }
+});
+// 长按地图上的楼 = 我在
+let lp = 0; document.addEventListener('pointerdown', (e) => { const bd = e.target.closest('[data-b]'); if (!bd) return; lp = setTimeout(() => { if (PLACES.includes(bd.dataset.b)) { S.map.from = bd.dataset.b; render(); lp = -1; } }, 550); });
+document.addEventListener('pointerup', () => clearTimeout(lp));
+
+document.addEventListener('input', (e) => {
+  const k = e.target.dataset && e.target.dataset.in; if (!k) return;
+  const v = e.target.value; fit(e.target);
+  if (k === 'newTask') S.newTitle = v; else S.login[k] = v;
+  if (S.login.state === 'err') S.login.state = 'idle';
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.getModifierState && e.target.tagName === 'INPUT' && e.target.type === 'password') { const c = e.getModifierState('CapsLock'); if (c !== !!S.login.caps) { S.login.caps = c; render(); } }
+  if (P && !P.search) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); movePara(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); movePara(-1); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickPara(P.sel); }
+    else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); closePara(); }
+    return;
+  }
+  const t = e.target;
+  if (t.classList && t.classList.contains('w') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    // 不打开栏，直接在词上换：↑↓
+    e.preventDefault(); const d = DEFS[t.dataset.w]; if (!d || d.go || d.search) return;
+    const dir = e.key === 'ArrowDown' ? 1 : -1;
+    if (d.num) { d.set(Math.min(d.max, Math.max(d.min, +(d.get() + dir * d.step).toFixed(4)))); }
+    else { const n = d.opts.length; d.set((d.get() + dir + n) % n); }
+    lastPick = { id: t.dataset.w, dir }; const k = t.dataset.k; render(); const again = document.querySelector(`[data-k="${k}"]`); again && again.focus();
+    return;
+  }
+  if (t.tagName === 'INPUT' && e.key === 'Enter') { e.preventDefault(); const st = t.closest('p')?.querySelector('.stop'); st && onStop(st); }
+  if (e.key === '/' && t.tagName !== 'INPUT') { e.preventDefault(); openSearch(); }
+});
+// 在词上滚轮 / 竖拖 = 换（加速键，不是唯一入口）
+document.addEventListener('wheel', (e) => {
+  const t = e.target.closest('.w'); if (!t || P) return; const d = DEFS[t.dataset.w]; if (!d || d.go || d.search || !(d.num || d.opts.length > 2)) return;
+  e.preventDefault(); const dir = e.deltaY > 0 ? 1 : -1;
+  if (d.num) d.set(Math.min(d.max, Math.max(d.min, +(d.get() + dir * d.step).toFixed(4)))); else d.set(Math.min(d.opts.length - 1, Math.max(0, d.get() + dir)));
+  lastPick = { id: t.dataset.w, dir }; render();
+}, { passive: false });
+let drag = null;
+document.addEventListener('pointerdown', (e) => { const t = e.target.closest('.w.num'); if (!t) return; drag = { t, y: e.clientY, id: t.dataset.w, moved: false, k: t.dataset.k }; t.setPointerCapture(e.pointerId); });
+document.addEventListener('pointermove', (e) => {
+  if (!drag) return; const d = DEFS[drag.id]; const dy = drag.y - e.clientY;
+  if (Math.abs(dy) > 14) { drag.moved = true; const dir = dy > 0 ? 1 : -1; d.set(Math.min(d.max, Math.max(d.min, +(d.get() + dir * d.step).toFixed(4)))); drag.y = e.clientY; lastPick = { id: drag.id, dir: -dir }; render(); drag.t = document.querySelector(`[data-k="${drag.k}"]`) || drag.t; }
+});
+document.addEventListener('pointerup', (e) => { if (drag && drag.moved) { e.preventDefault(); const t = drag.t; t && t.addEventListener('click', (ev) => ev.stopPropagation(), { once: true, capture: true }); } drag = null; }, true);
+
+function onStop(st) {
+  const id = st.dataset.stop, s = st.dataset.s;
+  if (s === 'wait') {
+    // ？：带你去缺的地方
+    const missing = st.closest('p')?.querySelector('input:placeholder-shown, input[aria-invalid="true"]') || document.querySelector('#view input:placeholder-shown');
+    if (missing) { missing.focus(); missing.closest('.blank').classList.add('flash'); setTimeout(() => missing.closest('.blank').classList.remove('flash'), 900); say('还缺：' + missing.placeholder); }
+    return;
+  }
+  if (s !== 'ok' && id !== 'lab') return;
+  if (id === 'nav') return;
+  if (id === 'openWork') { const objs = D.WORKS.filter((x) => x.verb === VERBS[S.home.verb]); location.href = R + objs[S.home.obj].href; return; }
+  if (id === 'login') return doLogin();
+  if (id === 'addTask') {
+    const due = new Date(); const di = S.newDue || 0; if (di === 1) due.setDate(due.getDate() + 1); if (di === 2) due.setDate(due.getDate() + 2); if (di === 3) due.setDate(due.getDate() + ((5 - due.getDay() + 7) % 7)); due.setHours(21, 0, 0, 0);
+    S.tasks.push({ id: 'n' + Date.now(), title: S.newTitle.trim(), subject: SUBJ[S.newSubj || 0], due: di === 4 ? new Date(Date.now() + 30 * 864e5).toISOString() : due.toISOString(), done: false, example: false, source: '' });
+    S.newTitle = ''; saveTasks(); say('记下了'); const inp = document.querySelector('[data-in="newTask"]'); if (inp) inp.value = ''; render(); return;
+  }
+  if (id === 'focus') { startFocus(); render(); return; }
+}
+function doLogin() {
+  const L = S.login; L.state = 'busy'; render();
+  setTimeout(() => {
+    if (L.mode === 0) {
+      if (L.user === DEMO_USER && L.pass === DEMO_PASS) { S.authed = true; store.set('authed', true); L.state = 'idle'; L.pass = ''; say('登录成功'); }
+      else { L.state = 'err'; L.err = '账号或口令不对'; say('账号或口令不对'); }
+    } else if (L.mode === 1) { L.state = 'err'; L.err = '演示环境不创建真实账号'; }
+    else { L.state = 'idle'; toast('演示：找回请求不会真的发出。'); }
+    render();
+  }, 900);
+}
+
+/* ════════════════════ 导航 ════════════════════ */
+function go(v, fromBack) {
+  if (!VIEW_FN[v]) v = 'home';
+  if (v !== S.view && !fromBack) S.written.push(S.view);
+  S.view = v; S.confirm = null;
+  if (location.hash.slice(1) !== v) history.pushState(null, '', '#' + v);
+  render({ nav: true }); window.scrollTo({ top: 0, behavior: HZ.reduced() ? 'auto' : 'smooth' });
+  $('#view').focus({ preventScroll: true });
+}
+addEventListener('popstate', () => { const v = location.hash.slice(1) || 'home'; if (v !== S.view) { S.view = VIEW_FN[v] ? v : 'home'; render({ nav: true }); } });
+addEventListener('resize', () => placePara());
+
+function say(t) { $('#live').textContent = t; }
+function toast(t) {
+  const p = document.createElement('p'); p.className = 'jing s flash'; p.style.color = 'var(--ink2)'; p.textContent = t;
+  $('#view').appendChild(p); p.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); say(t); setTimeout(() => p.remove(), 6000);
+}
+function flash(sel) { const el = $(sel); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
+function focusIn(k) { setTimeout(() => { const el = document.querySelector(`[data-in="${k}"]`); el && el.focus(); }, 30); }
+
+applyPref();
+S.view = VIEW_FN[location.hash.slice(1)] ? location.hash.slice(1) : 'home';
+render({ fresh: true });
+if (new URLSearchParams(location.search).has('embed')) document.querySelector('[data-lab]').style.display = 'none';
+</script>
+</body>
+</html>

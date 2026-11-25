@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<title>年轮 · HAIZ 设计实验室</title>
+<meta name="description" content="方案三「年轮」：圆心是来处，外圈是此刻；转动是周期，向内是更深。所有界面都是同一种同心圆仪器。">
+<style>
+/* ───────────────────────── 年轮 · Tokens ─────────────────────────
+   一件仪器：石墨底、骨白刻线、一种「此刻」的颜色。 */
+:root{
+  --bg:#0f1110; --bg2:#161917; --line:#e9e4d8; --dim:#e9e4d838; --faint:#e9e4d814; --text:#ecE8de; --text2:#b9b4a8; --text3:#7f7b72;
+  --now:#cde36b; --now-soft:#cde36b26; --warn:#ff7a59; --past:#8fa7c9;
+  --sans:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --fs:1; --t:320ms; --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{ --bg:#efece4; --bg2:#e6e2d8; --line:#1e211f; --dim:#1e211f40; --faint:#1e211f12; --text:#1b1d1c; --text2:#4b4d4a; --text3:#7d7d76; --now:#5d7a00; --now-soft:#5d7a0022; --past:#3d5f93; color-scheme:light }
+@media (prefers-color-scheme: light){ :root[data-theme="auto"]{ --bg:#efece4; --bg2:#e6e2d8; --line:#1e211f; --dim:#1e211f40; --faint:#1e211f12; --text:#1b1d1c; --text2:#4b4d4a; --text3:#7d7d76; --now:#5d7a00; --now-soft:#5d7a0022; --past:#3d5f93; color-scheme:light } }
+:root[data-motion="reduce"]{ --t:0ms }
+@media (prefers-reduced-motion: reduce){ :root:not([data-motion="normal"]){ --t:0ms } }
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{font-family:var(--sans);font-size:calc(15.5px*var(--fs));line-height:1.65;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--now);outline-offset:2px}
+
+/* ───────── 版面：左边一件仪器，右边是准线指着的那一页 ───────── */
+.app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr)}
+.dialwrap{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#dial{width:min(100%, 96vh);height:min(100%, 96vh);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;overflow:visible}
+#dial:active{cursor:grabbing}
+.panel{position:relative;overflow-y:auto;padding:52px 48px 60px 36px;border-left:1px solid var(--faint);scrollbar-width:thin}
+.panel::before{content:"";position:fixed;left:57.5%;top:50%;width:24px;height:1px;background:var(--now)}
+
+/* SVG 仪器 */
+.ring{fill:none;stroke:var(--dim);stroke-width:1}
+.ring.active{stroke:var(--line);stroke-width:1.4}
+.ring.future{stroke-dasharray:2 6}
+.ringband{fill:none;stroke:transparent;stroke-width:46;cursor:grab}
+.tick{stroke:var(--dim);stroke-width:1}
+.tick.major{stroke:var(--text3)}
+.it circle{fill:var(--bg);stroke:var(--line);stroke-width:1.2;transition:r var(--t) var(--ease)}
+.it text{fill:var(--text2);font-size:15px;font-family:var(--sans);pointer-events:none;dominant-baseline:middle}
+.it.sel circle{fill:var(--now);stroke:var(--now)}
+.it.sel text{fill:var(--text);font-weight:600}
+.it.hit circle{stroke:var(--now);stroke-width:3}
+.it.warn circle{stroke:var(--warn)}
+.it.done circle{fill:var(--dim);stroke:var(--dim)}
+.it.done text{fill:var(--text3);text-decoration:line-through}
+.it{cursor:pointer}
+.arc{fill:none;stroke-linecap:butt}
+.arc.course{stroke:var(--line);stroke-width:9;opacity:.55}
+.arc.course.now{stroke:var(--now);opacity:1}
+.arc.focus{stroke:var(--now);stroke-width:4}
+.idx{stroke:var(--now);stroke-width:1.5}
+.ringlabel{fill:var(--text3);font-size:12px;letter-spacing:.2em;font-family:var(--sans)}
+.ringlabel.active{fill:var(--now)}
+.core text{fill:var(--text);font-family:var(--sans);text-anchor:middle;dominant-baseline:middle}
+.core circle{fill:var(--bg2);stroke:var(--dim)}
+.core.go{cursor:pointer}
+.core.go circle{stroke:var(--now);stroke-width:2}
+.nav text{fill:var(--text3);font-size:14px;letter-spacing:.3em}
+.nav .it.sel text{fill:var(--now);font-weight:600}
+.nav .it circle{display:none}
+.status{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 500ms var(--ease),stroke var(--t)}
+.bd{fill:var(--bg2);stroke:var(--text3);stroke-width:1.4;cursor:pointer}
+.bd.sel{fill:var(--now);stroke:var(--now)}
+.shadow{fill:#000;opacity:.35}
+.rd{fill:var(--faint)}
+.mins{fill:var(--text3);font-size:12px}
+.node circle{fill:var(--bg);stroke:var(--line);stroke-width:1.5;cursor:grab}
+.node.on circle{fill:var(--now);stroke:var(--now)}
+.node text{fill:var(--text2);font-size:13px}
+.node.drag circle{stroke-width:3}
+
+/* 面板文字 */
+.kicker{font-size:12px;letter-spacing:.24em;color:var(--text3);margin:0 0 10px;display:flex;gap:10px;align-items:center}
+.kicker b{color:var(--now);font-weight:500}
+h1.t{font-size:calc(32px*var(--fs));line-height:1.25;font-weight:600;margin:0 0 .35em;letter-spacing:.01em}
+h2.t{font-size:calc(20px*var(--fs));font-weight:600;margin:1.6em 0 .5em}
+.p{margin:.3em 0 .9em;color:var(--text)}
+.note{font-size:calc(12.5px*var(--fs));color:var(--text3);line-height:1.6}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ex{font-size:11px;letter-spacing:.12em;color:var(--now);border:1px solid currentColor;padding:0 .45em;margin-left:.4em;vertical-align:.15em;white-space:nowrap}
+.img{display:block;width:100%;height:auto;max-height:260px;object-fit:cover;margin:8px 0 12px;border-radius:0;filter:saturate(.85)}
+.row{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--faint)}
+.row .m{flex:1;min-width:0}
+.row small{display:block;color:var(--text3);font-size:12.5px}
+.row small.late{color:var(--warn)}
+.row.done .m b{text-decoration:line-through;color:var(--text3)}
+
+/* 刻口按钮：一个带刻痕的圆，点它就是“做” */
+.notchbtn{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:8px 2px;cursor:pointer;color:var(--text);font-size:calc(15px*var(--fs))}
+.notchbtn::before{content:"";flex:0 0 22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:conic-gradient(var(--bg) 0 340deg,var(--line) 340deg 360deg);transition:transform var(--t) var(--ease)}
+.notchbtn:hover::before{transform:rotate(90deg)}
+.notchbtn.primary::before{background:conic-gradient(var(--now) 0 340deg,var(--bg) 340deg 360deg);border-color:var(--now)}
+.notchbtn[disabled]{opacity:.4;cursor:not-allowed}
+.notchbtn.small{font-size:13px;padding:4px 2px}
+.notchbtn.small::before{flex-basis:16px;height:16px}
+.bar{display:flex;flex-wrap:wrap;gap:4px 18px;margin:10px 0}
+
+/* 刻口选择：短弧上的几道刻痕 */
+.notches{display:flex;align-items:flex-end;gap:0;margin:6px 0 16px;position:relative;height:52px}
+.notches::before{content:"";position:absolute;left:0;right:0;bottom:16px;height:1px;background:var(--dim)}
+.notches button{flex:1;position:relative;height:100%;background:none;border:0;cursor:pointer;color:var(--text3);font-size:13px;padding:0}
+.notches button::after{content:"";position:absolute;left:50%;bottom:10px;width:1px;height:12px;background:var(--text3);transition:height var(--t) var(--ease),background var(--t)}
+.notches button span{position:absolute;left:0;right:0;top:0}
+.notches button[aria-checked="true"]{color:var(--text)}
+.notches button[aria-checked="true"]::after{height:26px;width:3px;margin-left:-1px;background:var(--now)}
+.lbl{font-size:13px;color:var(--text2)}
+
+/* 闭环输入 */
+.field{display:block;margin:16px 0 8px}
+.field span{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);letter-spacing:.12em}
+.field span em{font-style:normal;color:var(--warn);letter-spacing:0}
+.field span em.ok{color:var(--now)}
+.field input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--dim);padding:10px 0;font-size:calc(19px*var(--fs));outline:0;border-radius:0}
+.field input:focus{border-bottom-color:var(--now)}
+.field .eye{background:none;border:0;color:var(--text2);cursor:pointer;font-size:12.5px;padding:4px 0;float:right;margin-top:-34px}
+
+/* 刻度弧（滑块） */
+.arcs{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0}
+.arcslider{width:132px;text-align:center;touch-action:none}
+.arcslider svg{width:132px;height:80px;display:block;overflow:visible;cursor:pointer}
+.arcslider .trk{fill:none;stroke:var(--dim);stroke-width:2}
+.arcslider .val{fill:none;stroke:var(--now);stroke-width:3}
+.arcslider .knob{fill:var(--bg);stroke:var(--now);stroke-width:2}
+.arcslider .v{font-family:var(--mono);font-size:18px;margin-top:-30px;display:block;pointer-events:none}
+.arcslider .l{font-size:12px;color:var(--text3);display:block;margin-top:6px}
+.arcslider svg:focus-visible{outline:none}
+.arcslider svg:focus-visible .knob{stroke-width:4}
+
+/* 画满一圈才算数（危险操作） */
+.hold{display:inline-flex;align-items:center;gap:10px;background:none;border:0;cursor:pointer;color:var(--warn);font-size:14px;padding:6px 0;touch-action:none;user-select:none;-webkit-user-select:none}
+.hold svg{width:26px;height:26px;transform:rotate(-90deg)}
+.hold .bgc{fill:none;stroke:var(--dim);stroke-width:2}
+.hold .fg{fill:none;stroke:var(--warn);stroke-width:2.5;stroke-dasharray:69.1;stroke-dashoffset:69.1}
+
+.search{display:block;margin:0 0 18px}
+.search input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--dim);padding:8px 0;font-size:16px;outline:0}
+.search input:focus{border-bottom-color:var(--now)}
+.hits button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--faint);padding:8px 0;cursor:pointer;color:var(--text)}
+.hits small{color:var(--text3);margin-left:8px}
+table.t{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:13px}
+table.t th{text-align:left;color:var(--text3);font-weight:400;border-bottom:1px solid var(--dim);padding:4px 8px 4px 0}
+table.t td{border-bottom:1px solid var(--faint);padding:5px 8px 5px 0}
+.toast{visibility:hidden;position:fixed;left:50%;top:18px;transform:translate(-50%,-200%);background:var(--line);color:var(--bg);padding:8px 16px;font-size:14px;transition:transform var(--t) var(--ease);z-index:90;max-width:90vw}
+.toast.on{visibility:visible;transform:translate(-50%,0)}
+.lab-tag{position:fixed;top:12px;left:16px;z-index:30;font-size:11.5px;color:var(--text3);text-decoration:none}
+.lab-tag:hover{color:var(--now)}
+.hintline{position:absolute;left:16px;bottom:14px;font-size:12px;color:var(--text3);max-width:60%}
+.pend line{stroke:var(--line);stroke-width:1.4}.pend circle{fill:var(--now)}
+
+/* ───────── 手机：仪器缩到拇指所在的角上，只露出四分之一 ───────── */
+@media (max-width: 760px){
+  body{overflow:auto}
+  .app{position:static;display:block}
+  .panel{border:0;padding:44px 16px calc(var(--dialvis,320px) + 30px);overflow:visible;min-height:100vh}
+  .panel::before{display:none}
+  .dialwrap{position:fixed;right:0;bottom:0;width:var(--dialvis,320px);height:var(--dialvis,320px);overflow:visible;z-index:20;pointer-events:none}
+  .dialwrap::before{content:"";position:absolute;right:calc(-1*var(--dialvis,320px));bottom:calc(-1*var(--dialvis,320px));width:calc(2*var(--dialvis,320px));height:calc(2*var(--dialvis,320px));border-radius:50%;background:radial-gradient(circle,var(--bg) 66%,transparent 71%);pointer-events:none}
+  :root[data-hand="left"] .dialwrap{right:auto;left:0}
+  :root[data-hand="left"] .dialwrap::before{right:auto;left:calc(-1*var(--dialvis,320px))}
+  #dial{position:absolute;width:calc(2*var(--dialvis,320px));height:calc(2*var(--dialvis,320px));right:calc(-1*var(--dialvis,320px));bottom:calc(-1*var(--dialvis,320px));pointer-events:auto}
+  :root[data-hand="left"] #dial{right:auto;left:calc(-1*var(--dialvis,320px))}
+  .hintline{display:none}
+  .it text{font-size:24px}
+  .ringlabel{font-size:18px}
+  .nav text{font-size:22px}
+  .mins{font-size:18px}
+  h1.t{font-size:calc(27px*var(--fs))}
+  .dialtoggle{display:block!important}
+  .lab-tag{top:10px}
+}
+.dialtoggle{display:none;position:fixed;z-index:25;bottom:calc(var(--dialvis,320px) + 6px);right:12px;background:var(--bg2);border:1px solid var(--dim);color:var(--text2);font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer}
+:root[data-hand="left"] .dialtoggle{right:auto;left:12px}
+</style>
+</head>
+<body>
+<a class="lab-tag" href="../index.html" data-lab>设计实验室 · 方案三「年轮」</a>
+<div class="app">
+  <div class="dialwrap" id="dialwrap">
+    <svg id="dial" viewBox="-560 -560 1120 1120" role="application" aria-roledescription="同心圆转盘" aria-label="转盘：左右键转动，上下键向内或向外换一圈，回车选中"></svg>
+    <p class="hintline" id="hint"></p>
+  </div>
+  <main class="panel" id="panel" aria-live="polite"></main>
+</div>
+<button class="dialtoggle" id="dialtoggle" aria-expanded="true">收起转盘</button>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="../shared/data.js"></script>
+<script src="../shared/campus.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   年轮 · 规则
+   1. 圆心是来处，外圈是此刻。（1923 / 榄仁树 / 你的身份在圆心；今天、正在发生、公开的东西在外圈）
+   2. 转动是周期（一天、一周、一个分类），向内是更深（更早、更私密、更根本、更接近出处）。
+   3. 准线是固定的：被转到准线上的，就是被选中的；准线一直指向右边那一页（手机上指向上方）。
+   4. 键盘：←→ 转动，↑↓ 换一圈（向外 / 向内），Enter 选中。点、拖、滚轮都可以。
+   5. 每个界面都是同一件仪器：表单是一圈圈闭合的环，设置是数据在哪一圈，地图是以树为圆心的距离环。
+   ════════════════════════════════════════════════════════════════ */
+const D = window.HAIZ_SAMPLE, C = window.HAIZ_CAMPUS, R = HZ.root;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem('hz-nl-' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('hz-nl-' + k, JSON.stringify(v)); } catch {} } };
+const mobile = () => innerWidth <= 760;
+const rad = (a) => a * Math.PI / 180;
+const pol = (r, a) => [r * Math.cos(rad(a)), r * Math.sin(rad(a))];
+const norm = (a) => ((a % 360) + 540) % 360 - 180; // -180..180
+
+const S = {
+  view: 'home',
+  rot: {}, active: {},
+  pref: store.get('pref', { motion: 0, size: 0, theme: 0, hand: 0 }),
+  tasks: store.get('tasks', D.TASKS.map((t) => ({ ...t }))),
+  inbox: D.INBOX.map((x) => ({ ...x })),
+  focus: { min: 25, running: false, end: 0 },
+  authed: store.get('authed', false),
+  login: { mode: 0, nick: '', user: '', pass: '', pass2: '', show: false, err: '', busy: false, crack: null },
+  map: { time: 15 },
+  lab: { L: 1.0, deg: 4, n: 30, t: null, rows: [] },
+  scope: store.get('scope', { tasks: 1, prefs: 1, leaf: 2, nick: 3, intake: 1 }),
+  devices: D.ACCOUNT.devices.map((d) => ({ ...d })),
+  q: '', hits: [],
+  dialSmall: false,
+};
+/* 准线方向：桌面指向右（0°），手机右手指向左上（-135°），左手指向右上（-45°） */
+const IDX = () => mobile() ? (S.pref.hand === 1 ? -45 : -135) : 0;
+
+/* ════════════════════ 视图：每个视图描述自己的年轮 ════════════════════
+   ring: { id, label, items:[{id,label,a?}], kind:'cat'|'clock'|'status', future?, r? } 从内到外 */
+const NAV = [
+  { id: 'home', label: '树' }, { id: 'login', label: '入口' }, { id: 'pocket', label: '口袋' },
+  { id: 'map', label: '校园' }, { id: 'read', label: '实验册' }, { id: 'settings', label: '我' },
+];
+const PLACES = ['lanshu', 'beimen', 'nanmen', 'yihao', 'erhao', 'sanhao', 'sihao', 'keji', 'kexue', 'library', 'yanchi', 'hujulongpan', 'fengqitang', 'yanlintang', 'yishu', 'yundong', 'canteen1', 'canteen3', 'zhiwuyuan', 'xiaoyouhui'];
+const B = Object.fromEntries(C.b.map((b) => [b.id, b]));
+const ctr = (b) => [(b.r[0] + b.r[2]) / 2, (b.r[1] + b.r[3]) / 2];
+
+function model() {
+  const v = S.view;
+  if (v === 'home') {
+    const todo = S.tasks.filter((t) => !t.done);
+    const m = HZ.minuteNow(); const nxt = D.COURSES.filter((c) => c.day === HZ.today() && c.end > m).sort((a, b) => a.start - b.start)[0];
+    return {
+      core: { a: '1923', b: '榄仁树' },
+      rings: [
+        { id: 'roots', label: '根脉 · 校史', kind: 'cat', items: D.HISTORY.map((h) => ({ id: h.id, label: h.label, warn: h.grade === 'gap' })) },
+        { id: 'campus', label: '校园', kind: 'cat', items: ['lanshu', 'yihao', 'library', 'yanchi', 'fengqitang', 'beimen', 'yundong', 'hujulongpan'].map((id) => ({ id, label: B[id].n })) },
+        { id: 'works', label: '作品与工具', kind: 'cat', items: D.WORKS.map((x) => ({ id: x.id, label: x.name })) },
+        { id: 'today', label: '今天', kind: 'cat', items: [
+          { id: 'next', label: nxt ? '下一节 ' + nxt.name : '课上完了' },
+          ...todo.slice(0, 4).map((t) => ({ id: 't:' + t.id, label: t.title.length > 9 ? t.title.slice(0, 9) + '…' : t.title, warn: new Date(t.due) < new Date() })),
+          { id: 'inbox', label: '收件 ' + S.inbox.length },
+          { id: 'focus', label: '专注' },
+        ] },
+      ],
+      defaultActive: 'today',
+    };
+  }
+  if (v === 'login') {
+    const L = S.login, reg = L.mode === 1;
+    const okUser = /^[A-Za-z0-9_]{4,20}$/.test(L.user), okPass = L.pass.length >= 8;
+    const rings = reg
+      ? [{ id: 'pass2', label: '再写一遍', ok: L.pass2 && L.pass2 === L.pass, typed: L.pass2.length }, { id: 'pass', label: '口令', ok: okPass, typed: L.pass.length / 8 }, { id: 'user', label: '账号', ok: okUser, typed: L.user.length / 4 }, { id: 'nick', label: '昵称', ok: !!L.nick.trim(), typed: L.nick.length }]
+      : [{ id: 'pass', label: '口令', ok: okPass, typed: L.pass.length / 8 }, { id: 'user', label: '账号', ok: okUser, typed: L.user.length / 4 }];
+    rings.forEach((r) => { r.kind = 'status'; r.items = []; });
+    const all = rings.every((r) => r.ok);
+    return { core: S.authed ? { a: '已进入', b: D.ACCOUNT.name } : { a: L.busy ? '……' : reg ? '注册' : '进入', b: all ? '按下圆心' : '由外向内', go: all && !L.busy }, rings, status: true };
+  }
+  if (v === 'pocket') {
+    const today = HZ.today();
+    const rings = [];
+    for (let d = 1; d <= 5; d++) rings.push({ id: 'd' + d, label: '周' + HZ.wd(d) + (d === today ? ' · 今天' : ''), kind: 'clock', future: d > today, items: [] });
+    // 外圈最外：专注
+    return { core: { a: '本周', b: '示例课表' }, rings, clock: true, defaultActive: 'd' + today };
+  }
+  if (v === 'map') {
+    const [ox, oy] = ctr(B.lanshu);
+    const items = PLACES.filter((id) => id !== 'lanshu').map((id) => { const [x, y] = ctr(B[id]); return { id, label: B[id].n, a: Math.atan2(-(y - oy), x - ox) * 180 / Math.PI, dist: Math.hypot(x - ox, y - oy) * 0.167 }; });
+    return { core: { a: '榄仁树', b: '原点' }, rings: [{ id: 'places', label: '地点 · 按真实方位', kind: 'bearing', items, r: 400 }, { id: 'sun', label: '时间 · 太阳', kind: 'sun', items: [], r: 440 }], map: true, defaultActive: 'places' };
+  }
+  if (v === 'read') {
+    const steps = D.LAB.steps.map((s, i) => ({ id: 's' + i, label: '第 ' + (i + 1) + ' 步' }));
+    return { core: { a: '出处', b: '圆心' }, rings: [
+      { id: 'why', label: '原理', kind: 'cat', items: [{ id: 'p0', label: '简谐振动' }, { id: 'p1', label: '小角度近似' }, { id: 'p2', label: '误差从哪来' }] },
+      { id: 'data', label: '过程 · 数据', kind: 'cat', items: [{ id: 'run', label: '测一次' }, { id: 'rows', label: '记录 ' + S.lab.rows.length }] },
+      { id: 'steps', label: '步骤', kind: 'cat', items: steps },
+    ], defaultActive: 'steps' };
+  }
+  if (v === 'settings') {
+    return { core: { a: '我', b: S.authed ? D.ACCOUNT.handle : '未登录' }, rings: [
+      { id: 'device', label: '只在这台设备', kind: 'scope', items: [] },
+      { id: 'account', label: '我的账号（同步）', kind: 'scope', items: [] },
+      { id: 'public', label: '公开（别人能看到）', kind: 'scope', items: [] },
+    ], scope: true };
+  }
+}
+const SCOPE_ITEMS = [
+  { id: 'prefs', label: '偏好', min: 1, max: 2, a: 200 },
+  { id: 'tasks', label: '课表与任务', min: 1, max: 2, a: 250 },
+  { id: 'intake', label: '收件规则', min: 1, max: 1, a: 300 },
+  { id: 'leaf', label: '作品叶子', min: 2, max: 3, a: 140 },
+  { id: 'nick', label: '昵称', min: 2, max: 3, a: 90 },
+];
+
+/* ════════════════════ 仪器绘制 ════════════════════ */
+const svg = $('#dial');
+let M = null; // 当前模型
+const RADII = (n) => { const inner = 120, outer = 400; return Array.from({ length: n }, (_, i) => n === 1 ? outer : inner + (outer - inner) * (i + (n < 3 ? 1 : 0)) / (n - (n < 3 ? 0 : 1))); };
+function ringR(i) { const r = M.rings[i]; return r.r || RADII(M.rings.length)[i]; }
+function activeId() { return S.active[S.view] || M.defaultActive || (M.rings[M.rings.length - 1] || {}).id; }
+function rotOf(id) { const k = S.view + ':' + id; if (S.rot[k] == null) S.rot[k] = initialRot(id); return S.rot[k]; }
+function initialRot(id) {
+  const ring = M.rings.find((r) => r.id === id);
+  if (!ring) return 0;
+  if (ring.kind === 'clock') return IDX() - clockA(HZ.minuteNow());
+  if (ring.kind === 'cat') return IDX();
+  if (ring.kind === 'bearing') { const it = ring.items.find((x) => x.id === 'library') || ring.items[0]; return IDX() - it.a; }
+  return 0;
+}
+const T0 = 6 * 60, SPAN = 17 * 60; // 06:00–23:00 一圈
+const clockA = (min) => (min - T0) / SPAN * 360;
+const clockMin = (a) => Math.round(((((a / 360) % 1) + 1) % 1) * SPAN + T0);
+function itemA(ring, i) { const it = ring.items[i]; return it.a != null ? it.a : i * 360 / ring.items.length; }
+function selectedIndex(ring) {
+  if (!ring.items.length) return -1;
+  const rot = rotOf(ring.id); let best = 0, bd = 1e9;
+  ring.items.forEach((it, i) => { const d = Math.abs(norm(itemA(ring, i) + rot - IDX())); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function sel(ringId) { const ring = M.rings.find((r) => r.id === ringId); if (!ring) return null; const i = selectedIndex(ring); return i < 0 ? null : ring.items[i]; }
+
+function drawDial() {
+  M = model();
+  const act = activeId(); const idx = IDX();
+  let h = '';
+  // 外缘刻度（一圈 120 刻）
+  for (let i = 0; i < 120; i++) { const a = i * 3; const [x1, y1] = pol(476, a), [x2, y2] = pol(i % 10 ? 482 : 488, a); h += `<line class="tick ${i % 10 ? '' : 'major'}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+  // 导航带
+  const navRot = IDX() - NAV.findIndex((n) => n.id === S.view) * 60;
+  h += `<g class="nav" id="g-nav" transform="rotate(${navRot})">${NAV.map((n, i) => { const [x, y] = pol(455, i * 60); return `<g class="it ${n.id === S.view ? 'sel' : ''}" data-nav="${n.id}" transform="translate(${x} ${y})"><circle r="20"/><text text-anchor="middle" transform="rotate(${-navRot})">${n.label}</text></g>`; }).join('')}</g>`;
+  h += `<circle class="ring" r="432" style="stroke:var(--faint)"/>`;
+  if (M.map) h += drawMap();
+  M.rings.forEach((ring, i) => {
+    const r = ringR(i); const isAct = ring.id === act && !M.status && !M.scope;
+    if (ring.kind === 'status') { h += drawStatusRing(ring, r); return; }
+    if (ring.kind === 'sun') { h += drawSunRing(r); return; }
+    const rot = (ring.kind === 'scope') ? 0 : rotOf(ring.id);
+    h += `<circle class="ring ${isAct ? 'active' : ''} ${ring.future ? 'future' : ''}" r="${r}"/><circle class="ringband" data-ring="${ring.id}" r="${r}"/>`;
+    // 圈名：写在准线反方向
+    const la = idx + 180 + (mobile() ? 0 : 0); const [lx, ly] = pol(r + 14, la - 4);
+    h += `<text class="ringlabel ${isAct ? 'active' : ''}" x="${lx}" y="${ly}" text-anchor="${Math.cos(rad(la)) < 0 ? 'end' : 'start'}">${esc(ring.label)}</text>`;
+    h += `<g id="g-${ring.id}" transform="rotate(${rot})">`;
+    if (ring.kind === 'clock') h += drawClockRing(ring, r, rot);
+    ring.items.forEach((it, j) => {
+      const a = itemA(ring, j); const [x, y] = pol(r, a);
+      const isSel = isAct && j === selectedIndex(ring);
+      const hit = S.hits.includes(ring.id + ':' + it.id);
+      const world = a + rot; const right = Math.cos(rad(world)) >= 0;
+      const nearIdx = Math.abs(norm(world - idx)) < 34;
+      h += `<g class="it ${isSel ? 'sel' : ''} ${hit ? 'hit' : ''} ${it.warn ? 'warn' : ''}" data-ring="${ring.id}" data-item="${j}" transform="translate(${x} ${y})"><circle r="${isSel ? 8 : 5}"/><text x="${right ? 14 : -14}" text-anchor="${right ? 'start' : 'end'}" transform="rotate(${-rot - 0})" style="${isAct ? '' : nearIdx ? 'opacity:.6' : 'display:none'}">${esc(it.label)}</text></g>`;
+    });
+    h += '</g>';
+  });
+  if (M.scope) h += drawScope();
+  // 准线
+  const [ix1, iy1] = pol(90, idx), [ix2, iy2] = pol(500, idx);
+  h += `<line class="idx" x1="${ix1}" y1="${iy1}" x2="${ix2}" y2="${iy2}"/>`;
+  // 圆心
+  h += `<g class="core ${M.core.go ? 'go' : ''}" data-core tabindex="${M.core.go ? 0 : -1}" role="${M.core.go ? 'button' : 'presentation'}" aria-label="${esc(M.core.a + ' ' + M.core.b)}"><circle r="74"/><text y="-10" style="font-size:22px;font-weight:600">${esc(M.core.a)}</text><text y="20" style="font-size:13px;fill:var(--text3)">${esc(M.core.b)}</text></g>`;
+  svg.innerHTML = h;
+  $('#hint').textContent = { home: '拖动或滚动一圈来转它；点另一圈换圈。被转到准线上的，就是右边这一页。', login: '每写对一项，那一圈就闭合。全部闭合后，按下圆心。', pocket: '一周五天是五圈，今天在最外圈。转动 = 拨时间；准线就是此刻。', map: '以榄仁树为圆心，地点按真实方位排在外圈；转到准线就是朝它走。最外圈拨太阳。', read: '外圈是步骤，往里是数据和原理，圆心是出处。', settings: '每一项数据住在它所在的那一圈。把点拖到另一圈，就改变谁能看到它。' }[S.view];
+}
+function drawStatusRing(ring, r) {
+  const c = 2 * Math.PI * r; const L = S.login;
+  const p = ring.ok ? 1 : Math.min(0.92, (ring.typed || 0) * 0.92);
+  const crack = L.crack === ring.id;
+  const idx = IDX(); const [lx, ly] = pol(r, idx + 180);
+  return `<circle class="ring" r="${r}" style="stroke:var(--faint)"/>
+    <circle class="status" r="${r}" transform="rotate(${idx})" style="stroke:${crack ? 'var(--warn)' : ring.ok ? 'var(--now)' : 'var(--line)'};stroke-dasharray:${c};stroke-dashoffset:${c * (1 - p)}${crack ? ';stroke-dasharray:' + (c * 0.2) + ' 18' : ''}"/>
+    <text class="ringlabel ${ring.ok ? 'active' : ''}" x="${lx - 10}" y="${ly - 10}" text-anchor="end">${esc(ring.label)}${ring.ok ? ' ✓' : ''}</text>`;
+}
+function drawClockRing(ring, r, rot) {
+  const d = +ring.id.slice(1); let h = '';
+  // 时刻刻度（每小时）
+  for (let m = T0; m <= T0 + SPAN; m += 60) { const a = clockA(m); const [x1, y1] = pol(r - 5, a), [x2, y2] = pol(r + 5, a); h += `<line class="tick" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+  const now = HZ.minuteNow(); const today = d === HZ.today();
+  D.COURSES.filter((c) => c.day === d).forEach((c) => {
+    const a1 = clockA(c.start), a2 = clockA(c.end); const [x1, y1] = pol(r, a1), [x2, y2] = pol(r, a2);
+    const isNow = today && c.start <= now && c.end > now;
+    h += `<path class="arc course ${isNow ? 'now' : ''}" d="M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}"><title>${c.name} ${HZ.mm(c.start)}</title></path>`;
+    const [tx, ty] = pol(r - 22, (a1 + a2) / 2);
+    h += `<text x="${tx}" y="${ty}" transform="rotate(${-rot} ${tx} ${ty})" text-anchor="middle" style="font-size:12px;fill:${isNow ? 'var(--now)' : 'var(--text2)'};dominant-baseline:middle">${c.name}</text>`;
+  });
+  // 任务刻痕：落在截止那一天、那个时刻
+  S.tasks.forEach((t) => {
+    const due = new Date(t.due); const dd = due.getDay(); if (dd !== d) return;
+    const diffDays = Math.round((new Date(due).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5); if (Math.abs(diffDays) > 4) return;
+    const a = clockA(Math.min(T0 + SPAN, Math.max(T0, due.getHours() * 60 + due.getMinutes())));
+    const [x, y] = pol(r, a); const late = !t.done && due < new Date();
+    h += `<g class="it ${t.done ? 'done' : ''} ${late ? 'warn' : ''}" data-task="${t.id}" transform="translate(${x} ${y})"><circle r="7" style="fill:${t.done ? 'var(--dim)' : late ? 'var(--warn)' : 'var(--bg)'}"/><title>${esc(t.title)}</title></g>`;
+  });
+  // 专注弧：从此刻向前
+  if (today) {
+    const F = S.focus; const start = F.running ? now - (F.min - (F.end - Date.now()) / 60000) : now; const end = F.running ? now + (F.end - Date.now()) / 60000 : now + F.min;
+    const a1 = clockA(F.running ? now : now), a2 = clockA(end); const [x1, y1] = pol(r + 16, a1), [x2, y2] = pol(r + 16, a2);
+    h += `<path class="arc focus" d="M${x1} ${y1} A${r + 16} ${r + 16} 0 ${a2 - a1 > 180 ? 1 : 0} 1 ${x2} ${y2}" style="opacity:${F.running ? 1 : .45}"/>`;
+  }
+  return h;
+}
+let MAPK = 1;
+function drawMap() {
+  const [ox, oy] = ctr(B.lanshu);
+  const rot = rotOf('places');
+  const sun = sunVec(S.map.time);
+  let h = `<defs><clipPath id="disc"><circle r="388"/></clipPath></defs><g clip-path="url(#disc)"><g id="g-plan" transform="rotate(${rot})">`;
+  const MU = 1.3; // 每米多少绘图单位：圆盘半径 388 ≈ 300 米
+  const P = (x, y) => [(x - ox) * 0.167 * MU, -(y - oy) * 0.167 * MU];
+  const pr = (r) => { const [x1, y1] = P(r[0], r[3]), [x2, y2] = P(r[2], r[1]); return [Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1)]; };
+  C.roads.forEach((r) => { const [x, y, w, hh] = pr(r); h += `<rect class="rd" x="${x}" y="${y}" width="${w}" height="${hh}"/>`; });
+  if (sun.alt > 0) C.b.forEach((b) => { if (!b.f && !['oldtree', 'gate'].includes(b.k)) return; const [x, y, w, hh] = pr(b.r); const L = Math.min(60, (b.f ? b.f * 3.8 : 10) / Math.tan(rad(Math.max(8, sun.alt)))) * MU; const dx = -Math.cos(rad(sun.az - rot)) * L, dy = -Math.sin(rad(sun.az - rot)) * L; h += `<rect class="shadow" x="${x + dx * 0}" y="${y}" width="${w}" height="${hh}" transform="rotate(${-rot} ${x + w / 2} ${y + hh / 2}) translate(${dx} ${dy}) rotate(${rot} ${x + w / 2} ${y + hh / 2})"/>`; });
+  C.b.forEach((b) => { const [x, y, w, hh] = pr(b.r); const isSel = sel('places') && sel('places').id === b.id; h += `<rect class="bd ${isSel ? 'sel' : ''}" x="${x}" y="${y}" width="${w}" height="${hh}" data-b="${b.id}"><title>${esc(b.n)}</title></rect>`; });
+  h += `</g></g>`;
+  // 距离环
+  [100, 200].forEach((m) => { const r = m * MU; const [tx, ty] = pol(r, IDX() + 180); h += `<circle class="ring" r="${r}" style="stroke-dasharray:3 5"/><text class="mins" x="${tx + 4}" y="${ty - 6}">${m} 米 · 步行约 ${Math.max(1, Math.round(m / 1.2 / 60))} 分</text>`; });
+  if (S.map.time < 6 || S.map.time > 19) h += `<circle r="390" style="fill:#0a1430;opacity:.45;pointer-events:none"/>`;
+  // 北
+  const [nx, ny] = pol(372, -90 + rot); h += `<text x="${nx}" y="${ny}" text-anchor="middle" style="fill:var(--text3);font-size:13px;dominant-baseline:middle">北</text>`;
+  return h;
+}
+function drawSunRing(r) {
+  let h = `<circle class="ring" r="${r}" style="stroke:var(--faint)"/><circle class="ringband" data-ring="sun" r="${r}"/>`;
+  for (let hr = 0; hr < 24; hr++) { const a = hr * 15 - 90; const [x1, y1] = pol(r - 4, a), [x2, y2] = pol(r + 4, a); h += `<line class="tick ${hr % 6 ? '' : 'major'}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; if (hr % 6 === 0) { const [tx, ty] = pol(r - 16, a); h += `<text x="${tx}" y="${ty}" text-anchor="middle" style="font-size:11px;fill:var(--text3);dominant-baseline:middle">${hr}</text>`; } }
+  const a = S.map.time * 15 - 90; const [sx, sy] = pol(r, a); const day = S.map.time > 6 && S.map.time < 19;
+  h += `<circle data-ring="sun" cx="${sx}" cy="${sy}" r="11" style="fill:${day ? 'var(--now)' : 'var(--past)'};cursor:grab"/><text x="${sx}" y="${sy - 20}" text-anchor="middle" style="font-size:12px;fill:var(--text2)">${String(Math.floor(S.map.time)).padStart(2, '0')}:${String(Math.round((S.map.time % 1) * 60)).padStart(2, '0')}</text>`;
+  return h;
+}
+function sunVec(hour) { // 示意：11 月下旬海口（约北纬 20°）
+  const ha = (hour - 12) * 15; const dec = -21; const lat = 20;
+  const alt = Math.asin(Math.sin(rad(lat)) * Math.sin(rad(dec)) + Math.cos(rad(lat)) * Math.cos(rad(dec)) * Math.cos(rad(ha))) * 180 / Math.PI;
+  const az = Math.atan2(Math.sin(rad(ha)), Math.cos(rad(ha)) * Math.sin(rad(lat)) - Math.tan(rad(dec)) * Math.cos(rad(lat))) * 180 / Math.PI + 180; // 从北顺时针
+  return { alt, az: az - 90 }; // 转成屏幕角（0=东，顺时针）
+}
+function drawScope() {
+  let h = '';
+  SCOPE_ITEMS.forEach((it) => {
+    const lvl = S.scope[it.id]; const r = ringR(lvl - 1); const [x, y] = pol(r, it.a);
+    h += `<g class="node ${lvl > 1 ? 'on' : ''}" data-node="${it.id}" transform="translate(${x} ${y})" tabindex="0" role="slider" aria-label="${esc(it.label)}：${esc(M.rings[lvl - 1].label)}" aria-valuemin="${it.min}" aria-valuemax="${it.max}" aria-valuenow="${lvl}"><circle r="11"/><text x="${Math.cos(rad(it.a)) >= 0 ? 18 : -18}" y="4" text-anchor="${Math.cos(rad(it.a)) >= 0 ? 'start' : 'end'}">${esc(it.label)}</text></g>`;
+  });
+  S.devices.forEach((d, i) => { const [x, y] = pol(ringR(1), -40 + i * 26); h += `<g transform="translate(${x} ${y})"><rect x="-6" y="-6" width="12" height="12" style="fill:${d.current ? 'var(--now)' : 'var(--bg)'};stroke:var(--line)"/></g>`; });
+  return h;
+}
+
+/* ════════════════════ 右边那一页 ════════════════════ */
+const ex = '<span class="ex">示例</span>';
+const nb = (attrs, label, cls = '') => `<button class="notchbtn ${cls}" ${attrs}>${esc(label)}</button>`;
+const notches = (id, opts, cur, label) => `<div class="lbl" id="nl-${id}">${esc(label)}</div><div class="notches" role="radiogroup" aria-labelledby="nl-${id}">${opts.map((o, i) => `<button role="radio" aria-checked="${i === cur}" data-notch="${id}" data-i="${i}"><span>${esc(o)}</span></button>`).join('')}</div>`;
+function arcSlider(id, v, min, max, step, label, fmt = (x) => x) {
+  const p = (v - min) / (max - min); const a = 180 + p * 180; const [kx, ky] = pol(54, a);
+  const [ex2, ey2] = pol(54, a);
+  return `<div class="arcslider"><svg viewBox="-66 -62 132 72" data-arc="${id}" data-min="${min}" data-max="${max}" data-step="${step}" tabindex="0" role="slider" aria-label="${esc(label)}" aria-valuemin="${min}" aria-valuemax="${max}" aria-valuenow="${v}" aria-valuetext="${esc(fmt(v))}"><path class="trk" d="M-54 0 A54 54 0 0 1 54 0"/><path class="val" d="M-54 0 A54 54 0 0 ${p > 0.999 ? 1 : 1} ${ex2.toFixed(2)} ${ey2.toFixed(2)}"/><circle class="knob" cx="${kx}" cy="${ky}" r="8"/></svg><span class="v">${esc(fmt(v))}</span><span class="l">${esc(label)}</span></div>`;
+}
+function panel() {
+  const v = S.view; const act = activeId();
+  if (v === 'home') {
+    const it = sel(act); const ring = M.rings.find((r) => r.id === act);
+    const kick = `<p class="kicker"><b>${esc(ring.label)}</b><span>第 ${M.rings.indexOf(ring) + 1} 圈 · 由内向外</span></p>`;
+    let body = '';
+    if (act === 'roots') { const h = D.HISTORY.find((x) => x.id === it.id); body = `<h1 class="t">${esc(h.label)}<br>${esc(h.title)}</h1><p class="p">${esc(h.lead)}</p><p class="note">可信度：${{ record: '多个来源记载', single: '单一来源', gap: '没有可核实的史料，留白' }[h.grade]} · 摘自 HAIZ「根脉」</p>${h.grade !== 'gap' ? nb(`data-href="${R}index.html#roots/${h.id}"`, '在树干上看这一年', 'primary') : ''}`; }
+    if (act === 'campus') { const b = B[it.id]; body = `<h1 class="t">${esc(b.n)}</h1>${b.img ? `<img class="img" src="${R + b.img}" alt="${esc(b.n)}" loading="lazy">` : ''}<p class="p">${esc(b.d || b.c)}</p><div class="bar">${nb(`data-go="map" data-place="${b.id}"`, '在地图上转到它', 'primary')}</div><p class="note">图片来源：海南中学官网，经 HAIZ 既有页面使用。</p>`; }
+    if (act === 'works') { const w = D.WORKS.find((x) => x.id === it.id); body = `<h1 class="t">${esc(w.name)}</h1>${w.img ? `<img class="img" src="${R + w.img}" alt="${esc(w.name)}" loading="lazy">` : ''}<p class="p">${esc(w.line)}</p>${nb(`data-href="${R + w.href}"`, w.verb + '这里', 'primary')}${w.img ? '<p class="note">HAIZ 已有作品的开发截图（软件渲染）。</p>' : ''}`; }
+    if (act === 'today') {
+      if (it.id === 'next') { const m = HZ.minuteNow(); const c = D.COURSES.filter((x) => x.day === HZ.today() && x.end > m).sort((a, b) => a.start - b.start)[0]; body = c ? `<h1 class="t">下一节 · ${c.name}</h1><p class="p num">${HZ.mm(c.start)}–${HZ.mm(c.end)} · ${c.room} ${ex}</p>${nb('data-go="pocket"', '打开这一周的年轮', 'primary')}` : '<h1 class="t">今天的课上完了</h1>'; }
+      else if (it.id.startsWith('t:')) { const t = S.tasks.find((x) => x.id === it.id.slice(2)); body = `<h1 class="t">${esc(t.title)}</h1><p class="p">${esc(t.subject)} · ${HZ.dueText(t.due)} ${ex}</p><div class="bar">${nb(`data-done="${t.id}"`, '做完了', 'primary')}${nb('data-go="pocket"', '去口袋')}</div>`; }
+      else if (it.id === 'inbox') body = `<h1 class="t">收件 ${S.inbox.length} 条待核</h1><p class="p">只有你确认后才会变成任务。</p>${nb('data-go="pocket"', '去核对', 'primary')}`;
+      else body = `<h1 class="t">专注</h1><p class="p">在口袋的年轮上，从此刻向前画一段弧。</p>${nb('data-go="pocket"', '去口袋', 'primary')}`;
+    }
+    const hits = S.q ? S.hitList.map((x) => `<button data-hit="${x.ring}:${x.id}">${esc(x.label)}<small>${esc(x.ringLabel)}</small></button>`).join('') || '<p class="note">没有找到。</p>' : '';
+    const others = `<p class="note" style="margin-top:2em">这一圈的全部（也可以直接点）：</p><div class="bar">${ring.items.map((x, i) => `<button class="notchbtn small" data-pick="${act}:${i}" ${x === it ? 'aria-current="true" style="color:var(--now)"' : ''}>${esc(x.label)}</button>`).join('')}</div>`;
+    return `<label class="search"><span class="sr">在所有圈里找</span><input id="q" placeholder="在所有圈里找：年份、地点、作品……" value="${esc(S.q)}" autocomplete="off"></label>${S.q ? `<div class="hits">${hits}</div>` : ''}${kick}${body}${others}<p class="note" style="margin-top:2.4em">这里是海南中学府城校区的非官方数字校园，由学生建设。圆心是 1923 年与那棵榄仁树；越往外，越接近今天。</p>`;
+  }
+  if (v === 'login') {
+    const L = S.login, reg = L.mode === 1;
+    if (S.authed) return `<p class="kicker"><b>入口</b></p><h1 class="t">已经进来了，${esc(D.ACCOUNT.name)}${ex}</h1><p class="p">所有的环都闭合了。</p><div class="bar">${nb('data-go="settings"', '去个人空间', 'primary')}${nb('data-logout', '退出登录')}</div><p class="note">演示：只是本机的一个标记，没有连接服务器。</p>`;
+    const okUser = /^[A-Za-z0-9_]{4,20}$/.test(L.user);
+    const f = (id, label, type, ac, msg, ok) => `<label class="field"><span>${label}<em class="${ok ? 'ok' : ''}" id="m-${id}">${ok ? '闭合' : msg}</em></span><input data-in="${id}" type="${type}" autocomplete="${ac}" value="${esc(L[id])}" ${id === 'user' ? 'autocapitalize="off" spellcheck="false"' : ''} aria-describedby="m-${id}" ${msg && L[id] ? 'aria-invalid="true"' : ''}>${type !== 'text' || id.startsWith('pass') ? (id === 'pass' ? `<button type="button" class="eye" data-eye aria-pressed="${L.show}">${L.show ? '隐藏' : '显示'}</button>` : '') : ''}</label>`;
+    const pt = L.show ? 'text' : 'password';
+    return `<p class="kicker"><b>入口</b><span>由外圈向圆心</span></p>
+      ${notches('mode', ['登录', '注册'], L.mode, '我要')}
+      <form id="lf" novalidate>
+      ${reg ? f('nick', '昵称（最外圈）', 'text', 'nickname', L.nick ? '' : '会显示在公开作品上', !!L.nick.trim()) : ''}
+      ${f('user', '账号', 'text', 'username', L.user && !okUser ? '4–20 位字母、数字或下划线' : '', okUser)}
+      ${f('pass', '口令', pt, reg ? 'new-password' : 'current-password', L.pass && L.pass.length < 8 ? '还差 ' + (8 - L.pass.length) + ' 位' : '', L.pass.length >= 8)}
+      ${reg ? f('pass2', '再写一遍（最内圈）', pt, 'new-password', L.pass2 && L.pass2 !== L.pass ? '两次不一样' : '', L.pass2 && L.pass2 === L.pass) : ''}
+      <div class="bar" style="margin-top:20px">${nb('type="submit"' + (M.core.go ? '' : ' aria-disabled="true"'), reg ? '注册（或按下圆心）' : '进入（或按下圆心）', 'primary')}</div>
+      <p class="note" role="alert" style="color:var(--warn);font-size:14px">${esc(L.err)}</p>
+      </form>
+      <p class="note">每写对一项，左边那一圈就闭合；出错的那一圈会裂开。演示账号 sample_01 / haiz2026，不会发送任何数据。</p>`;
+  }
+  if (v === 'pocket') {
+    const act = activeId(); const d = +act.slice(1); const rot = rotOf(act); const atMin = clockMin(IDX() - rot);
+    const today = HZ.today(); const isToday = d === today;
+    const atCourse = D.COURSES.find((c) => c.day === d && c.start <= atMin && c.end > atMin);
+    const todo = S.tasks.filter((t) => !t.done).sort((a, b) => new Date(a.due) - new Date(b.due));
+    const done = S.tasks.filter((t) => t.done);
+    const F = S.focus;
+    const left = F.running ? Math.max(0, Math.round((F.end - Date.now()) / 1000)) : 0;
+    return `<p class="kicker"><b>周${HZ.wd(d)}${isToday ? ' · 今天' : ''}</b><span>准线指着 <span class="num">${HZ.mm(atMin)}</span></span>${Math.abs(atMin - HZ.minuteNow()) > 3 && isToday ? `<button class="notchbtn small" data-now>回到此刻</button>` : ''}</p>
+      <h1 class="t">${atCourse ? atCourse.name : '空着'}</h1>
+      <p class="p num">${atCourse ? HZ.mm(atCourse.start) + '–' + HZ.mm(atCourse.end) + ' · ' + atCourse.room : '这个时刻没有课'} ${ex}</p>
+      <h2 class="t">要做的事 · ${todo.length}</h2>
+      <form id="af" style="display:flex;gap:10px;align-items:flex-end"><label class="field" style="flex:1;margin:0"><span>记一件事</span><input name="t" placeholder="例如：明天交英语作文" autocomplete="off"></label>${nb('type="submit" aria-label="记下"', '记', 'primary')}</form>
+      ${todo.map((t) => `<div class="row"><button class="notchbtn small" data-done="${t.id}" aria-label="完成：${esc(t.title)}"></button><span class="m"><b>${esc(t.title)}</b><small class="${new Date(t.due) < new Date() ? 'late' : ''}">${esc(t.subject)} · ${HZ.dueText(t.due)}${t.example ? ' · 示例' : ''}</small></span><button class="notchbtn small" data-seek="${t.id}">转到</button></div>`).join('')}
+      ${done.length ? `<p class="note">已做完 ${done.length} 件，在年轮上变成灰点。${done.map((t) => `<button class="notchbtn small" data-undo="${t.id}">恢复「${esc(t.title)}」</button>`).join(' ')}</p>` : ''}
+      <h2 class="t">收件 · ${S.inbox.length}</h2>
+      ${S.inbox.map((it) => `<div class="row"><span class="m"><b>${esc(it.guess.title)}</b><small>${esc(it.text)}</small><small>${esc(it.from)} · 猜测截止 ${HZ.dueText(it.guess.due)}</small><span class="bar">${nb(`data-accept="${it.id}"`, '收下', 'primary')}${nb(`data-reject="${it.id}"`, '不要')}</span></span></div>`).join('') || '<p class="note">没有待核的候选。</p>'}
+      <h2 class="t">专注</h2>
+      ${F.running ? `<p class="p num" style="font-size:28px" id="fl">${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}</p>${nb('data-fstop', '停下')}` : `<div class="arcs">${arcSlider('fmin', F.min, 5, 90, 5, '分钟')}</div>${nb('data-fstart', '从此刻开始', 'primary')}`}
+      <p class="note">今天这一圈外侧的亮弧就是专注的时长。课表、任务、收件均为示例数据。</p>`;
+  }
+  if (v === 'map') {
+    const it = sel('places'); const b = B[it.id];
+    const sun = sunVec(S.map.time);
+    return `<p class="kicker"><b>校园</b><span>从榄仁树出发，朝准线方向</span></p>
+      <h1 class="t">${esc(b.n)}</h1>
+      <p class="p num">距榄仁树约 ${Math.round(it.dist)} 米 · 步行约 ${Math.max(1, Math.round(it.dist / 1.2 / 60))} 分钟（直线估算）</p>
+      ${b.img ? `<img class="img" src="${R + b.img}" alt="${esc(b.n)}" loading="lazy">` : ''}
+      <p class="p">${esc(b.d || b.c)}</p>
+      <div class="bar">${nb(`data-href="${R}campus-3d.html"`, '走进第一人称校园', 'primary')}${nb(`data-href="${R}index.html#map"`, '去六幕第四幕')}</div>
+      <h2 class="t">世界此刻</h2>
+      <p class="p">太阳 <span class="num">${sun.alt > 0 ? '高度 ' + Math.round(sun.alt) + '°' : '在地平线下'}</span>。拨最外圈的太阳，影子会跟着转。</p>
+      <p class="note" style="margin-top:1.6em">外圈的全部地点（也可以直接点）：</p><div class="bar">${M.rings[0].items.map((x, i) => `<button class="notchbtn small" data-pick="places:${i}" ${x === it ? 'aria-current="true" style="color:var(--now)"' : ''}>${esc(x.label)}</button>`).join('')}</div>
+      <p class="note">日照为 11 月下旬、北纬 20° 的示意计算；平面来自项目既有近似数据，方向与精度未独立复核；距离是直线估算，不是导航。图片来源：海南中学官网。</p>`;
+  }
+  if (v === 'read') {
+    const act = activeId(); const it = sel(act); const Lb = S.lab, T = D.LAB;
+    const kick = `<p class="kicker"><b>${{ steps: '步骤 · 外圈', data: '过程与数据 · 中圈', why: '原理 · 内圈' }[act]}</b><span>${esc(T.title)}</span></p>`;
+    if (act === 'steps') { const i = +it.id.slice(1); return `${kick}<h1 class="t">第 ${i + 1} 步</h1><p class="p" style="font-size:calc(20px*var(--fs));line-height:1.7">${esc(T.steps[i])}</p><p class="note">${T.steps.map((_, j) => `<span style="color:${j <= i ? 'var(--now)' : 'var(--text3)'}">●</span>`).join(' ')}　读到第 ${i + 1} 步，共 ${T.steps.length} 步</p><div class="bar">${nb('data-step="1"', '下一步', 'primary')}${nb('data-deeper', '往里一圈：动手测')}</div>`; }
+    if (act === 'data') {
+      if (it.id === 'rows') return `${kick}<h1 class="t">记录</h1>${Lb.rows.length ? `<table class="t"><thead><tr><th>L</th><th>θ</th><th>n</th><th>t</th><th>g</th></tr></thead><tbody>${Lb.rows.map((r) => `<tr><td>${r.L.toFixed(2)}</td><td>${r.deg}°</td><td>${r.n}</td><td>${r.t.toFixed(1)}</td><td>${r.g.toFixed(2)}</td></tr>`).join('')}</tbody></table><p class="p">平均 <span class="num">${(Lb.rows.reduce((a, r) => a + r.g, 0) / Lb.rows.length).toFixed(3)}</span>；海口参考约 9.787（按纬度估算）。</p>` : '<p class="p">还没有记录。转到「测一次」。</p>'}`;
+      const o = labCalc();
+      return `${kick}<h1 class="t">测一次</h1><svg class="pend" viewBox="-80 -6 160 170" width="160" height="170" style="float:right" aria-hidden="true"><line x1="-60" y1="0" x2="60" y2="0"/><g id="arm"><line x1="0" y1="0" x2="0" y2="${30 + Lb.L * 90}"/><circle cx="0" cy="${30 + Lb.L * 90}" r="7"/></g></svg>
+        <div class="arcs">${arcSlider('L', Lb.L, 0.3, 1.5, 0.05, '摆长 L（米）', (x) => (+x).toFixed(2))}${arcSlider('deg', Lb.deg, 2, 30, 1, '放开角度', (x) => x + '°')}${arcSlider('n', Lb.n, 10, 60, 5, '全振动次数')}</div>
+        <p class="p num" id="lo">t = ${Lb.t.toFixed(1)} s（模拟秒表）　T = ${o.Tp.toFixed(3)} s　g ≈ ${o.g.toFixed(2)}</p>
+        ${Lb.deg > 5 ? '<p class="p" style="color:var(--warn)">角度超过 5°：小角度近似失效，g 会偏小。往里一圈看为什么。</p>' : ''}
+        <div class="bar">${nb('data-rec', '记下这一组', 'primary')}${nb('data-again', '再测一次')}${nb(`data-href="${R}lab/"`, '在实验册里翻开')}</div>`;
+    }
+    if (act === 'why') { const txt = [T.principle, '周期公式 T = 2π√(L/g) 只在摆角很小（约 5° 以内）时成立；角度变大，真实周期比公式更长，算出的 g 就偏小。', '计时的反应误差、摆长量到哪里（悬点到球心）、摆球是否在同一竖直平面内摆动，都会带来误差；数多次全振动可以把计时误差分摊掉。'][+it.id.slice(1)]; return `${kick}<h1 class="t">${esc(it.label)}</h1><p class="p" style="font-size:calc(18px*var(--fs))">${esc(txt)}</p>${nb('data-core-go', '再往里：圆心是出处')}`; }
+    return '';
+  }
+  if (v === 'settings') {
+    const P = S.pref, A = D.ACCOUNT;
+    const lv = (id) => M.rings[S.scope[id] - 1].label;
+    return `<p class="kicker"><b>我</b><span>圆心是你；越往外，越多人能看到</span></p>
+      ${S.authed ? `<h1 class="t">${esc(A.name)}${ex}</h1><p class="p num">${A.handle} · ${A.joined} 加入 · 树上 ${A.leaves} 片叶子</p>` : `<h1 class="t">还没有登录</h1><p class="p">偏好照样能用，只在这台设备。</p>${nb('data-go="login"', '去登录', 'primary')}`}
+      <h2 class="t">看起来</h2>
+      ${notches('motion', ['照常', '减少', '跟随系统'], P.motion, '动画')}
+      ${notches('size', ['标准', '大', '特大'], P.size, '字号')}
+      ${notches('theme', ['石墨', '纸色', '跟随系统'], P.theme, '颜色')}
+      ${notches('hand', ['右手', '左手'], P.hand, '手机上转盘放在哪只手边')}
+      <h2 class="t">我的东西住在哪一圈</h2>
+      ${SCOPE_ITEMS.map((it) => `<div class="row"><span class="m"><b>${esc(it.label)}</b><small>现在：${esc(lv(it.id))}${it.min === it.max ? ' · 固定' : ''}</small></span>${it.min !== it.max ? nb(`data-scope="${it.id}"`, S.scope[it.id] < it.max ? '往外一圈' : '往里一圈') : ''}</div>`).join('')}
+      ${S.syncErr ? '<p class="p" style="color:var(--warn)">同步没有成功：这个实验室不连网（演示错误）。那一项已经退回「只在这台设备」。</p>' : ''}
+      <h2 class="t">登录过的设备</h2>
+      ${S.devices.map((d) => `<div class="row"><span class="m"><b>${esc(d.name)}</b><small>${d.current ? '现在 · 就是这台' : '最后一次 ' + esc(d.last)}</small></span>${d.current ? '' : `<button class="hold" data-hold="dev:${d.id}" aria-label="按住，画满一圈后让「${esc(d.name)}」退出"><svg viewBox="0 0 26 26"><circle class="bgc" cx="13" cy="13" r="11"/><circle class="fg" cx="13" cy="13" r="11"/></svg>按住画满一圈：退出</button>`}</div>`).join('')}
+      <div class="row"><span class="m"><b>清除这台设备上的实验室数据</b><small>任务与偏好回到示例的初始状态</small></span><button class="hold" data-hold="wipe" aria-label="按住，画满一圈后清除数据"><svg viewBox="0 0 26 26"><circle class="bgc" cx="13" cy="13" r="11"/><circle class="fg" cx="13" cy="13" r="11"/></svg>按住清除</button></div>
+      <p class="note">危险操作要按住，直到画满一圈（约一秒）；键盘上按住空格同样有效。设备列表为示例。</p>`;
+  }
+}
+function labCalc() {
+  const Lb = S.lab, th = Lb.deg * Math.PI / 180;
+  const T0p = 2 * Math.PI * Math.sqrt(Lb.L / 9.787) * (1 + th * th / 16);
+  if (Lb.t == null) Lb.t = Lb.n * T0p + (Math.random() - 0.5) * 0.3;
+  const Tp = Lb.t / Lb.n; return { Tp, g: 4 * Math.PI ** 2 * Lb.L / Tp ** 2 };
+}
+let armRAF = 0;
+function swing() { cancelAnimationFrame(armRAF); const arm = $('#arm'); if (!arm || HZ.reduced()) return; const t0 = performance.now(); const f = (t) => { if (!arm.isConnected) return; arm.setAttribute('transform', `rotate(${S.lab.deg * Math.cos(2 * Math.PI * (t - t0) / 1000 / (2 * Math.PI * Math.sqrt(S.lab.L / 9.787)))})`); armRAF = requestAnimationFrame(f); }; armRAF = requestAnimationFrame(f); }
+
+function renderPanel() {
+  const keep = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.in || (document.activeElement.id === 'q' ? 'q' : null) : null;
+  const pos = keep ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+  $('#panel').innerHTML = panel();
+  if (keep) { const el = keep === 'q' ? $('#q') : document.querySelector(`[data-in="${keep}"]`); if (el) { el.focus(); try { el.setSelectionRange(pos[0], pos[1]); } catch {} } }
+  if (S.view === 'read') swing();
+}
+function render() { drawDial(); renderPanel(); }
+
+/* ════════════════════ 转动：拖、滚、键，带惯性与吸附 ════════════════════ */
+let tween = 0;
+function setRot(id, val) { S.rot[S.view + ':' + id] = val; const g = document.getElementById('g-' + (M.map && id === 'places' ? 'plan' : id)); if (g) { g.setAttribute('transform', `rotate(${val})`); } }
+function animateRot(id, to, done) {
+  cancelAnimationFrame(tween); const from = rotOf(id); const dist = norm(to - from); const target = from + dist;
+  if (HZ.reduced() || Math.abs(dist) < 0.2) { S.rot[S.view + ':' + id] = target; render(); done && done(); return; }
+  const t0 = performance.now(), dur = Math.min(520, 180 + Math.abs(dist) * 2.2);
+  const f = (t) => { const p = Math.min(1, (t - t0) / dur); const e = 1 - Math.pow(1 - p, 3); S.rot[S.view + ':' + id] = from + dist * e; drawDial(); if (p < 1) tween = requestAnimationFrame(f); else { renderPanel(); done && done(); } };
+  tween = requestAnimationFrame(f);
+}
+function snap(id, vel = 0) {
+  const ring = M.rings.find((r) => r.id === id); if (!ring || !ring.items.length) { renderPanel(); return; }
+  // 惯性：按速度多走一点再吸附
+  const proj = rotOf(id) + vel * 120;
+  S.rot[S.view + ':' + id] = proj;
+  const i = selectedIndex(ring);
+  const to = IDX() - itemA(ring, i);
+  S.rot[S.view + ':' + id] = rotOf(id) - (proj - rotOf(id)); // 还原后动画
+  animateRot(id, to + 360 * Math.round((proj - to) / 360));
+}
+function turnTo(ringId, i) { const ring = M.rings.find((r) => r.id === ringId); const to = IDX() - itemA(ring, i); const cur = rotOf(ringId); animateRot(ringId, to + 360 * Math.round((cur - to) / 360)); }
+function step(dir) {
+  const id = activeId(); const ring = M.rings.find((r) => r.id === id); if (!ring) return;
+  if (ring.kind === 'clock') { animateRot(id, rotOf(id) - dir * 360 / SPAN * 30); shareClock(); return; }
+  if (ring.kind === 'sun') { S.map.time = (S.map.time + dir * 0.5 + 24) % 24; render(); return; }
+  if (!ring.items.length) return;
+  const i = (selectedIndex(ring) + dir + ring.items.length) % ring.items.length; turnTo(id, i);
+}
+function shareClock() { /* 一周的各圈共用同一只钟：转一圈，其他圈跟着转 */ const id = activeId(); for (let d = 1; d <= 5; d++) if ('d' + d !== id) S.rot[S.view + ':d' + d] = rotOf(id); }
+function setActive(id) { if (activeId() === id) return; S.active[S.view] = id; render(); }
+
+const toSvg = (e) => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 1120 - 560, (e.clientY - r.top) / r.height * 1120 - 560]; };
+let drag = null;
+svg.addEventListener('pointerdown', (e) => {
+  const [x, y] = toSvg(e); const d = Math.hypot(x, y); const a = Math.atan2(y, x) * 180 / Math.PI;
+  const node = e.target.closest('[data-node]'); if (node) { drag = { node: node.dataset.node, moved: false }; svg.setPointerCapture(e.pointerId); return; }
+  if (e.target.closest('[data-core]') || d < 80) { drag = { core: true }; return; }
+  if (d > 440) { drag = { nav: true, a, x0: e.clientX, y0: e.clientY, moved: false }; return; }
+  // 找最近的一圈
+  let best = null, bd = 1e9; M.rings.forEach((ring, i) => { const rr = ringR(i); if (Math.abs(rr - d) < bd) { bd = Math.abs(rr - d); best = ring; } });
+  if (M.map && d < 388 && best.id !== 'sun') best = M.rings[0];
+  if (!best || M.status || M.scope) { drag = { tap: e.target, x0: e.clientX, y0: e.clientY }; return; }
+  if (best.kind === 'sun') { drag = { sun: true }; svg.setPointerCapture(e.pointerId); return; }
+  if (best.id !== activeId()) { S.active[S.view] = best.id; drawDial(); }
+  cancelAnimationFrame(tween);
+  drag = { ring: best.id, a, last: a, t: performance.now(), vel: 0, moved: false, x0: e.clientX, y0: e.clientY, tap: e.target };
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', (e) => {
+  if (!drag) return; const [x, y] = toSvg(e); const a = Math.atan2(y, x) * 180 / Math.PI;
+  if (drag.node) { drag.moved = true; const dd = Math.hypot(x, y); const it = SCOPE_ITEMS.find((s) => s.id === drag.node); let lvl = 1, bd = 1e9; M.rings.forEach((r, i) => { const q = Math.abs(ringR(i) - dd); if (q < bd) { bd = q; lvl = i + 1; } }); lvl = Math.max(it.min, Math.min(it.max, lvl)); if (lvl !== S.scope[it.id]) { setScope(it.id, lvl); } return; }
+  if (drag.sun) { S.map.time = ((a + 90) / 15 + 24) % 24; drawDial(); return; }
+  if (!drag.ring) return;
+  if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 6) drag.moved = true;
+  if (!drag.moved) return;
+  const da = norm(a - drag.last); const now = performance.now();
+  drag.vel = da / Math.max(8, now - drag.t); drag.last = a; drag.t = now;
+  setRot(drag.ring, rotOf(drag.ring) + da);
+  if (M.clock) { shareClock(); drawDial(); } else if (M.map) drawDial();
+  else { // 只换选中态，不重画全部
+    const ring = M.rings.find((r) => r.id === drag.ring); const si = selectedIndex(ring);
+    document.querySelectorAll(`#g-${drag.ring} .it`).forEach((g) => { g.classList.toggle('sel', +g.dataset.item === si); g.querySelector('circle').setAttribute('r', +g.dataset.item === si ? 8 : 5); const t = g.querySelector('text'); t.setAttribute('transform', `rotate(${-rotOf(drag.ring)})`); });
+  }
+});
+svg.addEventListener('pointerup', (e) => {
+  const d0 = drag; drag = null; if (!d0) return;
+  if (d0.core) { coreAction(); return; }
+  if (d0.node) { if (!d0.moved) { const it = SCOPE_ITEMS.find((s) => s.id === d0.node); setScope(it.id, S.scope[it.id] < it.max ? S.scope[it.id] + 1 : it.min); } return; }
+  if (d0.sun) { render(); return; }
+  if (d0.nav) { const n = e.target.closest('[data-nav]'); if (n) go(n.dataset.nav); return; }
+  if (d0.ring && d0.moved) { if (M.clock) { renderPanel(); return; } snap(d0.ring, d0.vel); return; }
+  // 点一下
+  const t = d0.tap; if (!t) return;
+  const it = t.closest('[data-item]'); if (it) { const rid = it.dataset.ring; S.active[S.view] = rid; turnTo(rid, +it.dataset.item); return; }
+  const tk = t.closest('[data-task]'); if (tk) { seekTask(tk.dataset.task); return; }
+  const bd = t.closest('[data-b]'); if (bd && M.map) { const ring = M.rings[0]; const i = ring.items.findIndex((x) => x.id === bd.dataset.b); if (i >= 0) turnTo('places', i); return; }
+  if (d0.ring) { renderPanel(); drawDial(); }
+});
+svg.addEventListener('wheel', (e) => { e.preventDefault(); if (M.status || M.scope) return; step(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+svg.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' && false) { e.preventDefault(); step(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault(); if (M.status || M.scope) return;
+    const ids = M.rings.map((r) => r.id); const i = ids.indexOf(activeId());
+    const ni = Math.max(0, Math.min(ids.length - 1, i + (e.key === 'ArrowUp' ? 1 : -1))); setActive(ids[ni]);
+  } else if (e.key === 'Enter') { if (M.core.go) coreAction(); else $('#panel button, #panel input')?.focus(); }
+});
+svg.setAttribute('tabindex', '0');
+function coreAction() {
+  if (S.view === 'login' && M.core.go) return doLogin();
+  if (S.view === 'read') { const ring = 'why'; S.active.read = ring; render(); toast('圆心：' + D.LAB.sources[0]); }
+}
+function seekTask(id) { const t = S.tasks.find((x) => x.id === id); const due = new Date(t.due); const d = due.getDay(); if (d < 1 || d > 5) return toast('这件事的截止日不在周一到周五'); S.active.pocket = 'd' + d; M = model(); const to = IDX() - clockA(due.getHours() * 60 + due.getMinutes()); animateRot('d' + d, to, () => { shareClock(); render(); }); }
+function setScope(id, lvl) {
+  S.scope[id] = lvl; store.set('scope', S.scope);
+  if (id === 'tasks' && lvl === 2) { S.syncErr = true; setTimeout(() => { S.scope.tasks = 1; store.set('scope', S.scope); render(); toast('同步没有成功，已退回这台设备（演示）'); }, 900); }
+  render();
+}
+
+/* ════════════════════ 导航：换视图 = 新的年轮从圆心长出来 ════════════════════ */
+const VIEWS = ['home', 'login', 'pocket', 'map', 'read', 'settings'];
+function go(v) {
+  if (!VIEWS.includes(v)) v = 'home';
+  if (v === S.view) return;
+  S.view = v; S.q = ''; S.hits = [];
+  if (location.hash.slice(1) !== v) history.pushState(null, '', '#' + v);
+  render();
+  if (!HZ.reduced()) {
+    svg.querySelectorAll('.ring, [id^="g-"]:not(#g-nav), .core, .status').forEach((el, i) => el.animate([{ opacity: 0, transform: (el.getAttribute('transform') || '') + ' scale(.6)' }, { opacity: 1, transform: (el.getAttribute('transform') || '') + ' scale(1)' }], { duration: 360, delay: i * 18, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' }));
+    $('#panel').animate([{ opacity: 0, transform: 'translateX(-12px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  }
+  $('#panel').scrollTop = 0; if (mobile()) scrollTo(0, 0);
+}
+addEventListener('popstate', () => { const v = location.hash.slice(1) || 'home'; if (v !== S.view) go(v); });
+
+/* ════════════════════ 面板事件 ════════════════════ */
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const g = t.closest('[data-go]'); if (g) { const pl = g.dataset.place; go(g.dataset.go); if (pl) { const ring = M.rings[0]; const i = ring.items.findIndex((x) => x.id === pl); if (i >= 0) turnTo('places', i); } return; }
+  const hr = t.closest('[data-href]'); if (hr) { location.href = hr.dataset.href; return; }
+  const hit = t.closest('[data-hit]'); if (hit) { const [rid, iid] = hit.dataset.hit.split(':'); S.active.home = rid; const ring = M.rings.find((r) => r.id === rid); S.q = ''; S.hits = []; render(); turnTo(rid, ring.items.findIndex((x) => x.id === iid)); return; }
+  const dn = t.closest('[data-done]'); if (dn) { const task = S.tasks.find((x) => x.id === dn.dataset.done); task.done = true; store.set('tasks', S.tasks); render(); toast('做完了：' + task.title); return; }
+  const un = t.closest('[data-undo]'); if (un) { const task = S.tasks.find((x) => x.id === un.dataset.undo); task.done = false; store.set('tasks', S.tasks); render(); return; }
+  const pk = t.closest('[data-pick]'); if (pk) { const [rid, i] = pk.dataset.pick.split(':'); S.active[S.view] = rid; turnTo(rid, +i); return; }
+  const sk = t.closest('[data-seek]'); if (sk) { seekTask(sk.dataset.seek); return; }
+  if (t.closest('[data-now]')) { const id = activeId(); S.active.pocket = 'd' + HZ.today(); animateRot('d' + HZ.today(), IDX() - clockA(HZ.minuteNow()), () => { shareClock(); render(); }); return; }
+  const ac = t.closest('[data-accept]'); if (ac) { const it = S.inbox.find((x) => x.id === ac.dataset.accept); S.tasks.push({ id: 'n' + Date.now(), title: it.guess.title, subject: it.guess.subject, due: it.guess.due, done: false, example: true, source: it.from }); store.set('tasks', S.tasks); S.inbox = S.inbox.filter((x) => x !== it); render(); toast('收下了，它落在年轮上截止的那一刻'); return; }
+  const rj = t.closest('[data-reject]'); if (rj) { S.inbox = S.inbox.filter((x) => x.id !== rj.dataset.reject); render(); return; }
+  if (t.closest('[data-fstart]')) { const F = S.focus; F.running = true; F.end = Date.now() + F.min * 60000; clearInterval(fT); fT = setInterval(() => { const el = $('#fl'); const left = Math.max(0, Math.round((F.end - Date.now()) / 1000)); if (el) el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); if (left % 15 === 0 && S.view === 'pocket') drawDial(); if (!left) { F.running = false; clearInterval(fT); render(); toast('专注结束'); } }, 1000); render(); return; }
+  if (t.closest('[data-fstop]')) { S.focus.running = false; clearInterval(fT); render(); return; }
+  const nt = t.closest('[data-notch]'); if (nt) { const id = nt.dataset.notch, i = +nt.dataset.i; if (id === 'mode') { S.login.mode = i; S.login.err = ''; S.login.crack = null; render(); return; } S.pref[id] = i; store.set('pref', S.pref); applyPref(); render(); return; }
+  const sc = t.closest('[data-scope]'); if (sc) { const it = SCOPE_ITEMS.find((s) => s.id === sc.dataset.scope); setScope(it.id, S.scope[it.id] < it.max ? S.scope[it.id] + 1 : S.scope[it.id] - 1); return; }
+  if (t.closest('[data-eye]')) { S.login.show = !S.login.show; renderPanel(); return; }
+  if (t.closest('[data-logout]')) { S.authed = false; store.set('authed', false); render(); return; }
+  if (t.closest('[data-step]')) { step(1); return; }
+  if (t.closest('[data-deeper]')) { S.active.read = 'data'; render(); return; }
+  if (t.closest('[data-core-go]')) { toast('出处：' + D.LAB.sources.join('；')); return; }
+  if (t.closest('[data-rec]')) { const o = labCalc(); S.lab.rows.push({ L: S.lab.L, deg: S.lab.deg, n: S.lab.n, t: S.lab.t, g: o.g }); S.lab.t = null; render(); toast('记下了'); return; }
+  if (t.closest('[data-again]')) { S.lab.t = null; renderPanel(); return; }
+});
+let fT = 0;
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'q') {
+    S.q = t.value.trim(); const hits = [];
+    if (S.q) M.rings.forEach((r) => r.items.forEach((it) => { if (it.label.includes(S.q) || (r.id === 'roots' && (D.HISTORY.find((h) => h.id === it.id) || {}).title?.includes(S.q))) hits.push({ ring: r.id, id: it.id, label: it.label, ringLabel: r.label }); }));
+    hits.sort((a, b) => (b.label === S.q) - (a.label === S.q) || a.label.length - b.label.length); S.hits = hits.map((h) => h.ring + ':' + h.id); S.hitList = hits; render(); return;
+  }
+  const k = t.dataset.in; if (k) { S.login[k] = t.value; S.login.err = ''; S.login.crack = null; render(); }
+});
+document.addEventListener('submit', (e) => {
+  e.preventDefault(); const f = e.target;
+  if (f.id === 'lf') { if (M.core.go) doLogin(); else { const first = [...f.querySelectorAll('input')].find((i) => { const k = i.dataset.in; return !(M.rings.find((r) => r.id === k) || {}).ok; }); first && first.focus(); S.login.crack = first && first.dataset.in; drawDial(); } return; }
+  if (f.id === 'af') { const v = f.t.value.trim(); if (!v) return f.t.focus(); const due = new Date(); due.setDate(due.getDate() + (/明天/.test(v) ? 1 : 0)); due.setHours(21, 0, 0, 0); S.tasks.push({ id: 'n' + Date.now(), title: v, subject: '其他', due: due.toISOString(), done: false, example: false, source: '' }); store.set('tasks', S.tasks); render(); toast('记下了，落在今晚 21:00'); $('#af input')?.focus(); }
+});
+function doLogin() {
+  const L = S.login; L.busy = true; render();
+  setTimeout(() => {
+    L.busy = false;
+    if (L.mode === 0 && L.user === 'sample_01' && L.pass === 'haiz2026') { S.authed = true; store.set('authed', true); L.pass = ''; render(); toast('所有的环都闭合了'); return; }
+    L.err = L.mode === 1 ? '演示环境不创建真实账号。' : '账号或口令不对。'; L.crack = L.mode === 1 ? null : 'pass'; render();
+  }, 800);
+}
+// 画满一圈（按住确认）
+let hold = null;
+function holdStart(btn) { const fg = btn.querySelector('.fg'); const t0 = performance.now(); const dur = HZ.reduced() ? 900 : 1000; hold = { btn, raf: 0 };
+  const f = (t) => { const p = Math.min(1, (t - t0) / dur); fg.style.strokeDashoffset = 69.1 * (1 - p); if (p >= 1) { const id = btn.dataset.hold; hold = null; holdDone(id); return; } hold.raf = requestAnimationFrame(f); }; hold.raf = requestAnimationFrame(f); }
+function holdEnd() { if (!hold) return; cancelAnimationFrame(hold.raf); hold.btn.querySelector('.fg').style.strokeDashoffset = 69.1; hold = null; }
+function holdDone(id) {
+  if (id === 'wipe') { try { Object.keys(localStorage).filter((k) => k.startsWith('hz-nl-')).forEach((k) => localStorage.removeItem(k)); } catch {} S.tasks = D.TASKS.map((t) => ({ ...t })); S.pref = { motion: 0, size: 0, theme: 0, hand: 0 }; S.scope = { tasks: 1, prefs: 1, leaf: 2, nick: 3, intake: 1 }; applyPref(); toast('已清除'); }
+  else { const did = id.split(':')[1]; const d = S.devices.find((x) => x.id === did); S.devices = S.devices.filter((x) => x.id !== did); toast('「' + (d ? d.name : '') + '」已退出'); }
+  render();
+}
+document.addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-hold]'); if (b) { e.preventDefault(); holdStart(b); } });
+['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => document.addEventListener(ev, holdEnd, true));
+document.addEventListener('keydown', (e) => { const b = e.target.closest && e.target.closest('[data-hold]'); if (b && (e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); holdStart(b); } });
+document.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') holdEnd(); });
+// 刻度弧
+let arcDrag = null;
+function arcSet(el, clientX, clientY) {
+  const r = el.getBoundingClientRect(); const x = (clientX - r.left) / r.width * 132 - 66, y = (clientY - r.top) / r.height * 72 - 62;
+  let a = Math.atan2(y, x) * 180 / Math.PI; if (a > 0) a = a > 90 ? 180 : 0; // 只取上半圆
+  const p = (a + 180) / 180; const min = +el.dataset.min, max = +el.dataset.max, st = +el.dataset.step;
+  const v = Math.round((min + p * (max - min)) / st) * st; arcVal(el.dataset.arc, +v.toFixed(3));
+}
+function arcVal(id, v) {
+  if (id === 'fmin') S.focus.min = v; else { S.lab[id] = v; S.lab.t = null; }
+  renderPanel(); if (S.view === 'pocket') drawDial();
+  const el = document.querySelector(`[data-arc="${id}"]`); el && el.focus({ preventScroll: true });
+}
+document.addEventListener('pointerdown', (e) => { const el = e.target.closest('[data-arc]'); if (!el) return; arcDrag = el.dataset.arc; arcSet(el, e.clientX, e.clientY); });
+document.addEventListener('pointermove', (e) => { if (!arcDrag) return; const el = document.querySelector(`[data-arc="${arcDrag}"]`); if (el) arcSet(el, e.clientX, e.clientY); });
+document.addEventListener('pointerup', () => { arcDrag = null; });
+document.addEventListener('keydown', (e) => {
+  const el = e.target.closest && e.target.closest('[data-arc]'); if (!el) return;
+  const st = +el.dataset.step, min = +el.dataset.min, max = +el.dataset.max; const cur = +el.getAttribute('aria-valuenow');
+  if (['ArrowRight', 'ArrowUp'].includes(e.key)) { e.preventDefault(); arcVal(el.dataset.arc, +Math.min(max, cur + st).toFixed(3)); }
+  if (['ArrowLeft', 'ArrowDown'].includes(e.key)) { e.preventDefault(); arcVal(el.dataset.arc, +Math.max(min, cur - st).toFixed(3)); }
+});
+// 设置里的节点也能用键盘移动
+document.addEventListener('keydown', (e) => { const n = e.target.closest && e.target.closest('[data-node]'); if (!n) return; const it = SCOPE_ITEMS.find((s) => s.id === n.dataset.node); if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); setScope(it.id, Math.min(it.max, S.scope[it.id] + 1)); } if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); setScope(it.id, Math.max(it.min, S.scope[it.id] - 1)); } });
+
+function applyPref() {
+  const P = S.pref, r = document.documentElement;
+  if (P.motion === 1) r.dataset.motion = 'reduce'; else if (P.motion === 0) r.dataset.motion = 'normal'; else delete r.dataset.motion;
+  r.style.setProperty('--fs', [1, 1.12, 1.25][P.size]);
+  r.dataset.theme = ['dark', 'light', 'auto'][P.theme] || 'dark';
+  if (P.hand === 1) r.dataset.hand = 'left'; else delete r.dataset.hand;
+  sizeDial();
+}
+function sizeDial() { const vis = S.dialSmall ? 150 : Math.min(330, Math.round(innerWidth * 0.84)); document.documentElement.style.setProperty('--dialvis', vis + 'px'); $('#dialtoggle').textContent = S.dialSmall ? '展开转盘' : '收起转盘'; $('#dialtoggle').setAttribute('aria-expanded', !S.dialSmall); }
+$('#dialtoggle').addEventListener('click', () => { S.dialSmall = !S.dialSmall; sizeDial(); });
+let lastMobile = mobile();
+addEventListener('resize', () => { sizeDial(); if (mobile() !== lastMobile) { lastMobile = mobile(); S.rot = {}; } render(); });
+
+applyPref();
+S.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home';
+render();
+if (new URLSearchParams(location.search).has('embed')) document.querySelector('[data-lab]').style.display = 'none';
+</script>
+</body>
+</html>

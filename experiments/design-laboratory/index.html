@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<title>HAIZ 设计实验室</title>
+<meta name="description" content="三种根本不同的界面逻辑——句读、折、年轮——用同一组 HAIZ 功能检验。">
+<style>
+:root{--bg:#f3f2ee;--fg:#171816;--fg2:#55574f;--fg3:#8a8b84;--rule:#d9d7cf;--card:#fff;--acc:#171816;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--bg:#121311;--fg:#ecebe5;--fg2:#b6b5ad;--fg3:#7e7e77;--rule:#2b2c29;--card:#1b1c1a;--acc:#ecebe5;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,48px)}
+header{padding:56px 0 28px}
+h1{font-size:clamp(30px,4.4vw,56px);line-height:1.15;margin:0 0 .3em;letter-spacing:.01em;font-weight:650}
+.lede{font-size:clamp(16px,1.4vw,19px);max-width:44em;color:var(--fg2);margin:0}
+.meta{font-size:13px;color:var(--fg3);margin-top:14px}
+h2{font-size:clamp(22px,2.2vw,30px);margin:64px 0 12px;font-weight:650}
+h3{font-size:18px;margin:28px 0 8px}
+p{max-width:46em}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px}
+.scheme{border-top:2px solid var(--fg);padding-top:14px}
+.scheme .name{display:flex;align-items:baseline;gap:12px}
+.scheme .name b{font-size:30px;letter-spacing:.06em}
+.scheme .name span{color:var(--fg3);font-size:13px}
+.scheme .law{font-size:17px;margin:.4em 0 .8em}
+.scheme a.open{display:inline-block;margin-top:6px;font-weight:600;text-decoration:none;border-bottom:1.5px solid currentColor}
+/* 比较台 */
+.bench{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.seg{display:flex;gap:2px;flex-wrap:wrap}
+.seg button{border:1px solid var(--rule);background:transparent;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--fg2)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.seg-l{font-size:12px;color:var(--fg3);letter-spacing:.12em}
+.stage{display:grid;gap:24px;margin:22px 0}
+.stage.phone{grid-template-columns:repeat(3,minmax(0,1fr))}
+.frame{position:relative}
+.frame .cap{display:flex;justify-content:space-between;font-size:13px;color:var(--fg2);margin-bottom:6px}
+.frame .cap a{color:var(--fg3)}
+.screen{position:relative;overflow:hidden;background:#000;border-radius:6px;box-shadow:0 0 0 1px var(--rule)}
+.screen iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:#fff}
+.phone .screen{border-radius:22px;box-shadow:0 0 0 6px #111, 0 0 0 7px var(--rule)}
+table.cmp{border-collapse:collapse;width:100%;font-size:14px;margin-top:12px}
+.cmp th,.cmp td{border-bottom:1px solid var(--rule);padding:10px 12px 10px 0;text-align:left;vertical-align:top}
+.cmp th{font-weight:600;font-size:13px;color:var(--fg3)}
+.cmp td:first-child{font-weight:600;white-space:nowrap}
+.dots{letter-spacing:.15em;white-space:nowrap}
+.verdict{border-left:3px solid var(--fg);padding:4px 0 4px 18px;margin:18px 0}
+ul.tight{padding-left:1.2em;max-width:50em}
+ul.tight li{margin:.25em 0}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px}
+.shots figure{margin:0}
+.shots img{width:100%;display:block;border:1px solid var(--rule)}
+.shots figcaption{font-size:12px;color:var(--fg3)}
+footer{padding:60px 0 80px;color:var(--fg3);font-size:13px}
+@media (max-width:860px){
+  .three{grid-template-columns:1fr}
+  .stage.phone{grid-template-columns:1fr}
+  .bench{position:static}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>HAIZ 设计实验室</h1>
+  <p class="lede">三种在思想、结构和交互规律上根本不同的界面语言，用同一组 HAIZ 功能检验：首页、登录注册、Pocket、校园地图、实验册、设置与个人空间。每一种都可以直接操作。</p>
+  <p class="meta">独立实验目录 <code>experiments/design-laboratory/</code> · 不改动网站其他页面 · 所有学生信息均为<b>示例</b> · 设计文档见 <a href="DESIGN-LAB.md">DESIGN-LAB.md</a></p>
+</header>
+
+<section>
+  <h2>先说 HAIZ 已经有的那条规律</h2>
+  <p>研究六幕、根脉、年轮、地图展开、实验册、入画和共游之后，我发现 HAIZ 最好的作品共享一个思想：<b>同一个对象，在不同状态之间连续地变化，而变化本身就是内容。</b>同一棵树走过六个镜头；同一套几何从总平面升起为校园；装置从纸上的线稿立起、翻页前躺回纸面；年轮上点一格，同一棵树回到那一天；画布上的笔触越出画框变成世界。它们都没有「换页」。</p>
+  <p>而现有的全站界面——顶栏、胶囊按钮、玻璃卡片、登录表单——仍然是通用网页的语言，正是这条规律在日常界面里断掉的地方。下面三套方案，是把这条规律推进到每一个按钮的三种不同方式。</p>
+</section>
+
+<section>
+  <h2>三套方案</h2>
+  <div class="three">
+    <div class="scheme">
+      <div class="name"><b>句读</b><span>方案一 · 完全脱离现有视觉</span></div>
+      <p class="law">界面是一句可以改写的话。横着读是句子，竖着换是选择。</p>
+      <p>没有导航栏、没有按钮框、没有卡片。带着重号的词可以换成别的词；句末的标点就是状态和提交（？还缺东西 · 。可以落定 · ！出了问题）；内容像古书的夹注和疏一样，写在它所属的那个词旁边。</p>
+      <a class="open" href="judou/index.html">打开「句读」→</a>
+    </div>
+    <div class="scheme">
+      <div class="name"><b>折</b><span>方案二 · 从实验册与地图展开推演</span></div>
+      <p class="law">界面是一张纸，信息藏在折里。展开就是进入，折起就是收好。</p>
+      <p>折痕是唯一的边界；完成一件事是把它折起来，开关是翻到纸的背面，危险操作要沿齿孔撕下。打开时立起，合上前先躺平。桌面横着折（经折装），手机竖着折，书口索引永远在拇指边。</p>
+      <a class="open" href="zhe/index.html">打开「折」→</a>
+    </div>
+    <div class="scheme">
+      <div class="name"><b>年轮</b><span>方案三 · 从年轮与校园坐标推演</span></div>
+      <p class="law">圆心是来处，外圈是此刻；转动是周期，向内是更深。</p>
+      <p>每个界面都是同一件同心圆仪器：转到准线上的就是选中的。表单是一圈圈闭合的环；一周是五圈年轮；地图以榄仁树为圆心；设置是「数据住在哪一圈」。手机上仪器缩到拇指所在的角。</p>
+      <a class="open" href="nianlun/index.html">打开「年轮」→</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>比较台</h2>
+  <p>同一个样板，三种语言并排。框里的界面都是真的，可以直接操作（滚动、点击、拖动）。</p>
+  <div class="bench" role="toolbar" aria-label="比较台设置">
+    <span class="seg-l">样板</span>
+    <div class="seg" id="views">
+      <button data-v="home" aria-pressed="true">A 首页</button><button data-v="login">B 登录注册</button><button data-v="pocket">C Pocket</button><button data-v="map">D 校园地图</button><button data-v="read">E 实验册</button><button data-v="settings">F 设置</button>
+    </div>
+    <span class="seg-l">屏幕</span>
+    <div class="seg" id="modes"><button data-m="phone" aria-pressed="true">手机 390</button><button data-m="desktop">桌面 1440</button></div>
+  </div>
+  <div class="stage phone" id="stage"></div>
+</section>
+
+<section>
+  <h2>按验收标准逐项审查</h2>
+  <p>这是我在桌面与手机视口实际操作之后的判断，不是自评满分。● 越多越好；○ 是明显的弱点。</p>
+  <table class="cmp">
+    <thead><tr><th></th><th>句读</th><th>折</th><th>年轮</th></tr></thead>
+    <tbody>
+      <tr><td>原创性</td><td><span class="dots">●●●●●</span> 改变了「控件」本身：词就是控件，标点就是提交，夹注就是容器</td><td><span class="dots">●●●○○</span> 纸的物理规律做成了系统，但「纸」作为隐喻并不新</td><td><span class="dots">●●●●○</span> 「数据住在哪一圈」「表单是闭合的环」是新的；转盘本身有先例</td></tr>
+      <tr><td>辨识度</td><td><span class="dots">●●●●●</span> 去掉颜色与标志，着重号与夹注仍一眼可辨</td><td><span class="dots">●●●●○</span> 折痕、书口索引、斜退的折扇很鲜明</td><td><span class="dots">●●●●●</span> 同心圆与准线即是标志</td></tr>
+      <tr><td>体系性</td><td><span class="dots">●●●●○</span> 六个样板都自然；整周课表必须退回「疏」里的表</td><td><span class="dots">●●●●○</span> 组件最齐全，每一种操作都有对应的形变</td><td><span class="dots">●●●○○</span> 时间、空间、权限都贴切；登录与长文阅读里转盘偏装饰</td></tr>
+      <tr><td>艺术性</td><td><span class="dots">●●●●○</span> 纯排版的庄重；需要真正的宋体才成立</td><td><span class="dots">●●●○○</span> 材质感好，构图偏工具化</td><td><span class="dots">●●●●○</span> 仪器之美，暗色下最好</td></tr>
+      <tr><td>可用性</td><td><span class="dots">●●●○○</span> 读得懂、可键盘可读屏；扫视效率低于列表，长句在手机上换行多</td><td><span class="dots">●●●●○</span> 最接近熟悉的操作，学习成本最低</td><td><span class="dots">●●●○○</span> 单手拇指操作好；初次需要理解「转到准线」</td></tr>
+      <tr><td>连续性</td><td><span class="dots">●●●○○</span> 与「根脉」「校史」的书写传统相通，与三维作品之间需要桥</td><td><span class="dots">●●●●●</span> 直接继承实验册与地图 2D↔3D</td><td><span class="dots">●●●●●</span> 直接继承年轮与以树为原点的校园坐标</td></tr>
+      <tr><td>可持续性</td><td><span class="dots">●●●●○</span> 新功能只要写出它的句子；最依赖文案能力</td><td><span class="dots">●●●●○</span> 新功能就是新的一折</td><td><span class="dots">●●●○○</span> 新功能必须找到合理的「圈」，不是都找得到</td></tr>
+      <tr><td>性能</td><td><span class="dots">●●●●●</span> 纯文字，最省</td><td><span class="dots">●●●○○</span> CSS 3D 纸雕在旧手机上待实测</td><td><span class="dots">●●●●○</span> 单个 SVG，地图阴影最重</td></tr>
+    </tbody>
+  </table>
+  <div class="verdict">
+    <p><b>我的判断：</b>如果只能选一个方向继续，我推荐<b>以「年轮」作为全站的空间与导航骨架，以「句读」作为普通信息界面（设置、登录、Pocket 的列表与表单）的写法</b>。年轮最能代表 HAIZ（时间、原点、来处），句读最能让普通操作也成为 HAIZ 的；两者的规律不冲突——转到准线上的那一项，右边那一页正好可以用句子写。「折」是三者中最稳妥、最容易落地的，但它离「我们自己尚未想到的设计」最远；它的若干组件（撕线、书口索引、打开时立起）值得单独保留，尤其适合实验册和地图。</p>
+    <p>这只是建议。三套都保留在实验室里，等你们体验之后再决定。</p>
+  </div>
+</section>
+
+<section>
+  <h2>真实运行截图</h2>
+  <p>Chromium（无 GPU，软件渲染）在 1440×900 与 390×844 视口里的截图。静态截图不能证明交互质量，模拟手机视口也不能代替真机。</p>
+  <div class="shots" id="shots"></div>
+</section>
+
+<section>
+  <h2>没有验证的部分</h2>
+  <ul class="tight">
+    <li>没有在任何真实手机上运行过；拇指可达、横屏、手势冲突、帧率、发热都只在模拟视口里推演。</li>
+    <li>读屏只做了结构（role、aria、live region），没有用 VoiceOver / TalkBack 实际走一遍。</li>
+    <li>「句读」依赖宋体。实验室内置了一份只含页面用字的思源宋体子集；用户输入的生僻字会回落到系统字体。</li>
+    <li>没有接入任何真实账号、后端或网络；登录、同步、设备退出都是本机演示状态。</li>
+    <li>没有做学生可用性测试。哪一套「更好用」目前只是我的判断。</li>
+  </ul>
+</section>
+
+<footer>
+  HAIZ 是海南中学府城校区的非官方学生项目。地点数据来自仓库 data/buildings.json（近似，方向与精度未独立复核）；校史条目摘自 lanren/roots/history.js；校园照片来源为海南中学官网、经 HAIZ 既有页面使用；HAIZ 作品截图为既有开发截图。
+</footer>
+</div>
+<script>
+const SCHEMES = [['judou', '句读'], ['zhe', '折'], ['nianlun', '年轮']];
+let view = (location.hash.slice(1) || 'home'), mode = 'phone';
+const stage = document.getElementById('stage');
+function build() {
+  stage.className = 'stage ' + mode;
+  const W = mode === 'phone' ? 390 : 1440, H = mode === 'phone' ? 844 : 900;
+  stage.innerHTML = SCHEMES.map(([id, name]) => `<div class="frame"><div class="cap"><b>${name}</b><a href="${id}/index.html#${view}" target="_blank" rel="noopener">单独打开 ↗</a></div><div class="screen" data-w="${W}" data-h="${H}"><iframe title="${name} · ${view}" src="${id}/index.html?embed#${view}" width="${W}" height="${H}" loading="lazy"></iframe></div></div>`).join('');
+  fit();
+}
+function fit() {
+  document.querySelectorAll('.screen').forEach((s) => { const W = +s.dataset.w, H = +s.dataset.h; const k = s.clientWidth / W; s.style.height = H * k + 'px'; s.querySelector('iframe').style.transform = `scale(${k})`; });
+}
+addEventListener('resize', fit);
+document.getElementById('views').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; view = b.dataset.v; history.replaceState(null, '', '#' + view); [...b.parentNode.children].forEach((x) => x.setAttribute('aria-pressed', x === b)); build(); });
+document.getElementById('modes').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.m; [...b.parentNode.children].forEach((x) => x.setAttribute('aria-pressed', x === b)); build(); });
+document.querySelectorAll('#views button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === view));
+build();
+// 截图
+const shots = [];
+SCHEMES.forEach(([id, name]) => ['home', 'login', 'pocket', 'map', 'read', 'settings'].forEach((v) => ['d', 'm'].forEach((m) => shots.push([`shots/${id}-${v}-${m}.jpg`, `${name} · ${v} · ${m === 'd' ? '桌面 1440' : '手机 390'}`]))));
+document.getElementById('shots').innerHTML = shots.map(([src, cap]) => `<figure><a href="${src}"><img src="${src}" alt="${cap}" loading="lazy"></a><figcaption>${cap}</figcaption></figure>`).join('');
+</script>
+</body>
+</html>
