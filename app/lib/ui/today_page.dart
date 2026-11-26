@@ -8,6 +8,7 @@ import 'kit.dart';
 import 'editorial.dart';
 import 'command_palette.dart';
 import 'task_workflow.dart';
+import 'task_sense_sheet.dart';
 
 class TodayPage extends StatefulWidget {
   final PocketStore store;
@@ -91,6 +92,33 @@ class _TodayPageState extends State<TodayPage> {
       _dateAccepted = false;
       view = TaskView.pending;
     });
+  }
+
+  Future<void> _openSense() async {
+    final original = _quickText.text.trim();
+    if (original.isEmpty || !store.ready || store.storageError != null) return;
+    final ticket = store.generation;
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: PocketSkin.of(context).colors.card,
+      builder: (_) => TaskSenseSheet(
+        store: store, generation: ticket, input: original,
+      ),
+    );
+    if (!mounted || ticket != store.generation) return;
+    if (saved == true) {
+      setState(() {
+        if (_quickText.text.trim() == original) _quickText.clear();
+        _dateAccepted = false;
+        view = TaskView.pending;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('HAIZ Sense · 已保存确认的任务')),
+      );
+    }
   }
 
   void _checkOff(TaskItem task) {
@@ -343,7 +371,18 @@ class _TodayPageState extends State<TodayPage> {
                   ],
                 ),
               ],
-              const SizedBox(height: 13),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: const Key('sense-open'),
+                  onPressed: _quickText.text.trim().isEmpty ||
+                          !store.ready || store.storageError != null
+                      ? null : _openSense,
+                  icon: const Icon(Icons.auto_awesome_outlined, size: 17),
+                  label: const Text('智能整理 · 先预览再创建'),
+                ),
+              ),
+              const SizedBox(height: 5),
               Row(
                 children: [
                   Expanded(
