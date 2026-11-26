@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f5ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="HAIZ · NIANLUN · 一卷 V4：为海南中学住校生打造的弹性时间卷、年轮端面拨轮与多维信息归流实验版">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="一卷 V4">
+  <title>一卷 · HAIZ NIANLUN V4</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23e5d9c3' stroke='%236e5338' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%238c6d4a' stroke-width='1.5'/%3E%3Ccircle cx='32' cy='32' r='10' fill='none' stroke='%238c6d4a' stroke-width='1.5'/%3E%3Ccircle cx='32' cy='32' r='3' fill='%236e5338'/%3E%3Ccircle cx='44' cy='22' r='3.5' fill='%23b8761a'/%3E%3C/svg%3E">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <link rel="stylesheet" href="./styles/app.css">
+  <link rel="stylesheet" href="./styles/print.css">
+  <script src="./src/ocr-bridge.js" defer></script>
+</head>
+<body>
+  <div class="app-stage">
+    <!-- Ambient Desktop Desk Companion Rail (visible >= 1080px, never crowds phone view) -->
+    <aside class="desk-rail" aria-label="桌面端操作指南与快捷入口">
+      <div>
+        <div class="rail-card">
+          <div class="eyebrow">HAIZ · NIANLUN · V4</div>
+          <h2 class="rail-title">宣木一卷</h2>
+          <p class="small">一条可以被拉长、压缩、卷起的时间。拉长是阅读，压缩是概览，卷起是归档，转动年轮端面是穿行。</p>
+          <div id="desk-live-status" class="small" style="margin-top:10px;display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+
+        <div class="rail-card">
+          <div class="sec-label">快捷体验入口</div>
+          <div class="btn-row">
+            <button class="mini-btn" id="rail-hour">今日时刻读法</button>
+            <button class="mini-btn" id="rail-juxtapose">捏出中间并置卷</button>
+            <button class="mini-btn" id="rail-conflict">查看局部分道重叠</button>
+            <button class="mini-btn pri" id="rail-intake">9 条群消息归流</button>
+            <button class="mini-btn" id="rail-takeaway">所见即所带导出</button>
+          </div>
+        </div>
+
+        <div class="rail-card">
+          <div class="sec-label">桌面端手势与键盘</div>
+          <ul class="rail-list">
+            <li><kbd>Ctrl</kbd> + 滚轮 / 触控板双指：弹性拉长或压缩卷起</li>
+            <li>拖住右侧年轮端面转圈：顺/逆时针逐日卷出与卷回</li>
+            <li>拖动灰蓝色「雾」到某天：同一事件连续凝聚</li>
+            <li><kbd>⌘/Ctrl+K</kbd> 搜索 · <kbd>⌘/Ctrl+Z</kbd> 撤销 · <kbd>0</kbd> 回到现在</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="small muted" style="padding:0 4px">
+        海南中学（府城校区）住校场景实验版 · 离校/返校与晚修时刻可配置 · 离线本地优先，不评价学生
+      </div>
+    </aside>
+
+    <!-- Single Unified Object: The Living Elastic Time Scroll -->
+    <main class="scroll-shell" aria-label="一卷时间主界面">
+      <header class="top-bar">
+        <div class="brand-mark">
+          <h1>一卷</h1>
+          <span class="brand-sub">海南中学 · V4 实验</span>
+        </div>
+        <button type="button" class="bar-btn pri" id="btn-intake">放入</button>
+        <button type="button" class="bar-btn" id="btn-search">搜索</button>
+        <button type="button" class="bar-btn" id="btn-takeaway">带走</button>
+        <button type="button" class="bar-btn icon-only" id="btn-settings" aria-label="作息、隐私与设置" title="作息、隐私与设置">⚙</button>
+      </header>
+
+      <div class="status-ribbon" role="status">
+        <span id="ribbon-text">海南中学演示数据</span>
+        <button type="button" id="ribbon-stress-btn">高密度压力测试</button>
+      </div>
+
+      <div class="canvas-stage">
+        <canvas id="scroll-canvas" aria-label="可伸缩弹性时间卷画布"></canvas>
+
+        <!-- Synchronized Screen-Reader / Keyboard Semantic Tree (§9.6 B4) -->
+        <div id="a11y-mirror" class="sr-mirror" role="list" aria-label="一卷按日与卷结构列表"></div>
+
+        <div class="first-hint" id="first-hint">
+          <span>双指拉长 / 捏成中间卷 · 转右侧年轮逐日卷出 · 拖雾凝聚（演示数据，纯点击也可用）</span>
+          <button type="button" id="dismiss-hint" aria-label="收起提示">✕</button>
+        </div>
+
+        <div class="floating-bar">
+          <button type="button" id="btn-undo" hidden>撤销</button>
+          <button type="button" id="btn-reset-now" hidden>回到现在</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Unified Half-Screen Drawer (Mobile) / Docked Right Panel (Desktop >= 960px) -->
+    <div class="sheet-backdrop" id="sheet-backdrop"></div>
+    <aside class="drawer-sheet" id="drawer-sheet" aria-label="详情与操作面板"></aside>
+  </div>
+
+  <!-- Accessible Long-Press / Tap Roll Action Menu (§4.3) -->
+  <div class="roll-menu" id="roll-menu" hidden role="dialog" aria-label="卷轴展开选项"></div>
+
+  <!-- Toast with 10-second Private Delete Undo -->
+  <div class="toast-bar" id="toast-bar" role="status" aria-live="polite"></div>
+
+  <!-- Dedicated Printable Mount for "带走" (§9.5) -->
+  <div id="print-stage" aria-hidden="true"></div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

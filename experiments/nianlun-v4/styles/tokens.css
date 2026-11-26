@@ -1,0 +1,81 @@
+/* HAIZ · NIANLUN · 一卷 V4 — Design Tokens (宣纸与榄仁木) */
+:root {
+  color-scheme: light dark;
+
+  --desk-bg: #ebe6da;
+  --paper: #f8f5ee;
+  --panel: #fcfaf4;
+  --panel-elev: #ffffff;
+  --ink: #1f2421;
+  --ink-soft: #636862;
+  --ink-muted: #8b9089;
+  --line: rgba(46, 42, 34, 0.12);
+  --line-strong: rgba(46, 42, 34, 0.24);
+
+  /* Four disciplined semantic inks — ZERO red panic */
+  --now: #2a5ea8;
+  --now-soft: rgba(42, 94, 168, 0.11);
+  --mem: #b8761a;
+  --mem-soft: rgba(184, 118, 26, 0.14);
+  --fog: #5a6f82;
+  --fog-soft: rgba(90, 111, 130, 0.16);
+  --timber: #d8cab0;
+
+  --shadow-scroll: 0 22px 60px rgba(42, 34, 22, 0.14), 0 2px 8px rgba(42, 34, 22, 0.08);
+  --shadow-sheet: 0 -10px 36px rgba(32, 26, 18, 0.16);
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-serif: "Songti SC", "Noto Serif SC", "Cormorant Garamond", Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk-bg: #0f0e0d;
+    --paper: #171614;
+    --panel: #1f1d1a;
+    --panel-elev: #26231f;
+    --ink: #ebe6dc;
+    --ink-soft: #9f998d;
+    --ink-muted: #706b62;
+    --line: rgba(235, 230, 220, 0.12);
+    --line-strong: rgba(235, 230, 220, 0.26);
+
+    --now: #76a8f0;
+    --now-soft: rgba(118, 168, 240, 0.17);
+    --mem: #e6a94c;
+    --mem-soft: rgba(230, 169, 76, 0.18);
+    --fog: #8fa8bf;
+    --fog-soft: rgba(143, 168, 191, 0.22);
+    --timber: #3a3126;
+
+    --shadow-scroll: 0 26px 68px rgba(0, 0, 0, 0.56);
+    --shadow-sheet: 0 -12px 42px rgba(0, 0, 0, 0.54);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --desk-bg: #0f0e0d;
+  --paper: #171614;
+  --panel: #1f1d1a;
+  --panel-elev: #26231f;
+  --ink: #ebe6dc;
+  --ink-soft: #9f998d;
+  --ink-muted: #706b62;
+  --line: rgba(235, 230, 220, 0.12);
+  --line-strong: rgba(235, 230, 220, 0.26);
+
+  --now: #76a8f0;
+  --now-soft: rgba(118, 168, 240, 0.17);
+  --mem: #e6a94c;
+  --mem-soft: rgba(230, 169, 76, 0.18);
+  --fog: #8fa8bf;
+  --fog-soft: rgba(143, 168, 191, 0.22);
+  --timber: #3a3126;
+
+  --shadow-scroll: 0 26px 68px rgba(0, 0, 0, 0.56);
+  --shadow-sheet: 0 -12px 42px rgba(0, 0, 0, 0.54);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}

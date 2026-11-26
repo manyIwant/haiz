@@ -1,0 +1,46 @@
+{
+  "environment": "Playwright Chromium (390x844 touch DPR3 + 1440x900 desktop) & WebKit smoke",
+  "notRealDeviceAcceptance": true,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "checks": {
+    "mobileDefaultLoaded": true,
+    "listModeMinTouchHeightPx": 44,
+    "pinchEnteredHourScale": true,
+    "dialUnrolledDays": 3,
+    "pinchFormedMiddleRoll": true,
+    "sovereigntyGuardShown": true,
+    "stressModeMinTouchHeightPx": 44,
+    "webkitMobileSmoke": true
+  },
+  "fps": {
+    "mobilePinchStretch": {
+      "frames": 93,
+      "avgFps": 60,
+      "p95DtMs": 17
+    }
+  },
+  "videos": {
+    "mobileWebm": "mobile-flow.webm",
+    "desktopWebm": "desktop-flow.webm"
+  },
+  "screenshots": [
+    "mobile-1-default.png",
+    "mobile-2-hour-scale.png",
+    "mobile-3-dial-unrolled.png",
+    "mobile-4-middle-roll.png",
+    "mobile-5-fog-sheet.png",
+    "mobile-6-channel-through-wall.png",
+    "mobile-7-convergence-intake.png",
+    "mobile-8-lineage-yield.png",
+    "mobile-9-high-density-stress.png",
+    "mobile-10-local-lane-split.png",
+    "mobile-11-takeaway-wysiwyg.png",
+    "mobile-12-dark-mode.png",
+    "desktop-1-default.png",
+    "desktop-2-juxtapose-middle-roll.png",
+    "desktop-3-conflict-yield-dock.png",
+    "desktop-4-convergence-side-by-side.png",
+    "desktop-5-takeaway-dock.png"
+  ]
+}

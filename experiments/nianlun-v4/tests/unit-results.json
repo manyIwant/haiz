@@ -1,0 +1,66 @@
+{
+  "passed": 15,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Issue #1: All 4 reading modes exist without collapse for N = 0..20 items",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #2: Channel packing caps visible lanes to <=3 and folds overflow cleanly",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #2: Fog veil packing prevents vertical label collision under 5 overlapping Fogs",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #2: Wall collision solver groups simultaneous Return Wall deadlines",
+      "status": "PASS"
+    },
+    {
+      "name": "§7.1: Local lane splitting flags conflict ONLY for mandatory Occupation × Occupation",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #3: Relative dates anchor to originalSentAt, NOT import date; undated returns Fog",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #3: Full 9-message convergence respects scope mismatch, parent verbatim forward, outdated guard & restore",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #3: Outdated forward with different phrasing but earlier originalSentIso does not overwrite newer layer",
+      "status": "PASS"
+    },
+    {
+      "name": "§8.8: Single-sentence batch input splits cleanly into multiple events",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #4: Weekday classes & locked evening study reject personal blocks; home weekend permits",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #5: Past school exams stay plan_elapsed and past tasks stay unknown (never overdue)",
+      "status": "PASS"
+    },
+    {
+      "name": "Issue #6: Zero occurrences of \"海口中学\" across all V4 source files & Return Wall updates live",
+      "status": "PASS"
+    },
+    {
+      "name": "§3 & §4.1: Pinching intermediate days forms a Middle Roll for non-adjacent comparison",
+      "status": "PASS"
+    },
+    {
+      "name": "§11.3: Private records allow 10s undoable delete; school items refuse deletion",
+      "status": "PASS"
+    },
+    {
+      "name": "§14: HAIZ Pocket PersonalSnapshot migration obeys every mapping rule and supports batch undo",
+      "status": "PASS"
+    }
+  ]
+}
