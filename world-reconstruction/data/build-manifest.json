@@ -1,0 +1,163 @@
+{
+  "schema": "haiz-world-build-manifest/1",
+  "blender_version": "5.2.3 LTS",
+  "built_at_utc": "2026-11-26T12:33:21Z",
+  "frame": "HAIZ-ENU-2026",
+  "exports": {
+    "terrain_campus": {
+      "file": "terrain_campus.glb",
+      "bytes": 81624,
+      "kb": 79.7,
+      "objects": 1,
+      "triangles": 1562,
+      "materials": 14,
+      "sha256_prefix": "a4f73effc7ea13ec"
+    },
+    "d01_axis_forecourt_lod0": {
+      "file": "d01_axis_forecourt_lod0.glb",
+      "bytes": 299948,
+      "kb": 292.9,
+      "objects": 4,
+      "triangles": 16959,
+      "materials": 24,
+      "sha256_prefix": "4cc6d241850bf989"
+    },
+    "d02_academic_core_lod0": {
+      "file": "d02_academic_core_lod0.glb",
+      "bytes": 251088,
+      "kb": 245.2,
+      "objects": 7,
+      "triangles": 33382,
+      "materials": 8,
+      "sha256_prefix": "15c14db7565955ca"
+    },
+    "d03_yanchi_arts_lod0": {
+      "file": "d03_yanchi_arts_lod0.glb",
+      "bytes": 109972,
+      "kb": 107.4,
+      "objects": 2,
+      "triangles": 4650,
+      "materials": 13,
+      "sha256_prefix": "767d93bb5c67afd4"
+    },
+    "d04_heritage_gardens_lod0": {
+      "file": "d04_heritage_gardens_lod0.glb",
+      "bytes": 152856,
+      "kb": 149.3,
+      "objects": 6,
+      "triangles": 7268,
+      "materials": 14,
+      "sha256_prefix": "5185990a99a87b55"
+    },
+    "d05_sports_living_lod0": {
+      "file": "d05_sports_living_lod0.glb",
+      "bytes": 558576,
+      "kb": 545.5,
+      "objects": 18,
+      "triangles": 73018,
+      "materials": 15,
+      "sha256_prefix": "64f2cc69683ae964"
+    },
+    "d06_fucheng_context": {
+      "file": "d06_fucheng_context.glb",
+      "bytes": 23088,
+      "kb": 22.5,
+      "objects": 1,
+      "triangles": 1471,
+      "materials": 6,
+      "sha256_prefix": "70ecb386cf36a687"
+    },
+    "flora_kit": {
+      "file": "flora_kit.glb",
+      "bytes": 60200,
+      "kb": 58.8,
+      "objects": 6,
+      "triangles": 2114,
+      "materials": 11,
+      "sha256_prefix": "de0a3e73c580709e"
+    },
+    "props_kit": {
+      "file": "props_kit.glb",
+      "bytes": 43604,
+      "kb": 42.6,
+      "objects": 5,
+      "triangles": 740,
+      "materials": 10,
+      "sha256_prefix": "ffba4a7e793eabc8"
+    },
+    "d01_axis_forecourt_lod1": {
+      "file": "d01_axis_forecourt_lod1.glb",
+      "bytes": 212016,
+      "kb": 207.0,
+      "objects": 4,
+      "triangles": 9845,
+      "materials": 24,
+      "sha256_prefix": "88b880c9ca3a3a7e"
+    },
+    "d02_academic_core_lod1": {
+      "file": "d02_academic_core_lod1.glb",
+      "bytes": 120676,
+      "kb": 117.8,
+      "objects": 7,
+      "triangles": 13246,
+      "materials": 7,
+      "sha256_prefix": "d8c520209a7272be"
+    },
+    "d03_yanchi_arts_lod1": {
+      "file": "d03_yanchi_arts_lod1.glb",
+      "bytes": 103124,
+      "kb": 100.7,
+      "objects": 2,
+      "triangles": 4350,
+      "materials": 13,
+      "sha256_prefix": "66aa56805b27809d"
+    },
+    "d04_heritage_gardens_lod1": {
+      "file": "d04_heritage_gardens_lod1.glb",
+      "bytes": 150904,
+      "kb": 147.4,
+      "objects": 6,
+      "triangles": 7030,
+      "materials": 14,
+      "sha256_prefix": "a1594dee936c70be"
+    },
+    "d05_sports_living_lod1": {
+      "file": "d05_sports_living_lod1.glb",
+      "bytes": 274244,
+      "kb": 267.8,
+      "objects": 18,
+      "triangles": 28540,
+      "materials": 14,
+      "sha256_prefix": "6ab2be92773767e0"
+    }
+  },
+  "totals": {
+    "lod0_all_districts_mb": 1.51,
+    "lod0_all_districts_triangles": 141164,
+    "lod1_proxies_mb": 0.82,
+    "all_runtime_glb_mb": 2.33,
+    "build_seconds": 1.8
+  },
+  "instances_summary": {
+    "flora": {
+      "royal_palm": 36,
+      "coconut_palm": 26,
+      "banyan": 54,
+      "terminalia": 37,
+      "frangipani": 11,
+      "bougainvillea": 22
+    },
+    "props": {
+      "lamp_3globe": 26,
+      "bench": 12,
+      "basketball_hoop": 12,
+      "bulletin_board": 7,
+      "bike_rack": 6
+    }
+  },
+  "master_blend": {
+    "file": "assets/blend/HAIZ_World_Master.blend",
+    "bytes": 3409039,
+    "mb": 3.25
+  }
+}

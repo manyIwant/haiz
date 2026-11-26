@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-11-26T12:33:23.671Z",
+  "gpu": {
+    "vendor": "Google Inc. (Apple)",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "dpr": 1,
+    "viewport": [
+      1440,
+      900
+    ]
+  },
+  "desktop": {
+    "frames": 301,
+    "durationMs": 5000,
+    "fpsMean": 60.1,
+    "frameMsMean": 16.63,
+    "frameMsP50": 16.7,
+    "frameMsP95": 18.2,
+    "callsAvg": 459,
+    "trisAvg": 576286,
+    "geometries": 392,
+    "textures": 105,
+    "bootMs": 1695,
+    "districtsLoaded": 6,
+    "districtsTotal": 6,
+    "quality": "high"
+  },
+  "mobile": {
+    "frames": 301,
+    "durationMs": 5000,
+    "fpsMean": 60.1,
+    "frameMsMean": 16.65,
+    "frameMsP50": 16.7,
+    "frameMsP95": 18.1,
+    "callsAvg": 321,
+    "trisAvg": 377524,
+    "geometries": 320,
+    "textures": 84,
+    "bootMs": 622,
+    "districtsLoaded": 6,
+    "districtsTotal": 6,
+    "quality": "mobile",
+    "layout": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "overflowX": false,
+      "joystickVisible": true,
+      "quality": "mobile"
+    }
+  },
+  "checks": {
+    "allDistrictsStreamed": true,
+    "unifiedSceneUuidAcrossLenses": true,
+    "zeroGeometryLeakOnLensSwitch": true,
+    "mobileNoHorizontalOverflow": true,
+    "mobileAutoQuality": true,
+    "mobileTouchJoystickVisible": true
+  },
+  "errors": [],
+  "warnings": [],
+  "httpErrors": [],
+  "screenshots": [
+    "01_desktop_opening_forecourt.jpg",
+    "02_vista_north_gate.jpg",
+    "03_vista_terminalia.jpg",
+    "04_vista_yanchi_arts.jpg",
+    "05_vista_library_dome.jpg",
+    "06_vista_sports_heritage.jpg",
+    "07_mode_bike_avenue.jpg",
+    "08_mode_glider_aerial.jpg",
+    "09_lens_gouache.jpg",
+    "10_lens_plan_cutaway.jpg",
+    "11_weather_tropical_rain.jpg",
+    "12_time_evening_study.jpg",
+    "13_ui_provenance_card.jpg",
+    "14_ui_vector_map.jpg",
+    "15_mobile_opening_forecourt.jpg",
+    "16_mobile_yanchi_rain.jpg",
+    "17_mobile_evening_map.jpg"
+  ]
+}
