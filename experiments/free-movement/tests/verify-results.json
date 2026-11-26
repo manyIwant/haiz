@@ -1,0 +1,140 @@
+{
+  "date": "2026-11-26T11:10:24.713Z",
+  "passed": 18,
+  "total": 18,
+  "checks": [
+    {
+      "name": "Desktop boots cleanly without errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Zero 404 runtime assets",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Gouache painted-lab materials active",
+      "ok": true,
+      "detail": "lab"
+    },
+    {
+      "name": "cannon-es physics world initialized",
+      "ok": true,
+      "detail": "{\"bodies\":55,\"props\":10}"
+    },
+    {
+      "name": "Wake patches grass, lawn, crowns & water",
+      "ok": true,
+      "detail": "{\"grass\":6,\"lawn\":2,\"crowns\":241,\"water\":1,\"active\":false,\"count\":0}"
+    },
+    {
+      "name": "Altitude hairline hidden on ground",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Bicycle reaches cruising/sprint speed & leans into turn",
+      "ok": true,
+      "detail": "{\"mode\":\"bike\",\"phase\":\"ride\",\"speed\":7.29,\"roll\":0.324,\"surface\":\"pave\",\"ankleErr\":0.083,\"handErr\":0.061}"
+    },
+    {
+      "name": "Bicycle IK feet & hands locked to pedals & grips (<0.14m)",
+      "ok": true,
+      "detail": "{\"mode\":\"bike\",\"phase\":\"ride\",\"speed\":7.29,\"roll\":0.324,\"surface\":\"pave\",\"ankleErr\":0.083,\"handErr\":0.061}"
+    },
+    {
+      "name": "Bicycle night headlamp illuminates automatically",
+      "ok": true,
+      "detail": "lamp=1"
+    },
+    {
+      "name": "Skateboard pushes and S-carves cleanly on paving",
+      "ok": true,
+      "detail": "{\"mode\":\"board\",\"surface\":\"pave\",\"speed\":5.37,\"pushes\":4,\"carveFlow\":2,\"bikeStillParked\":false}"
+    },
+    {
+      "name": "Skateboard Kickflip pops cleanly into mid-air",
+      "ok": true,
+      "detail": "{\"air\":true,\"trick\":\"Kickflip · 360° 尖翻\"}"
+    },
+    {
+      "name": "Bamboo broom skims 砚池 with active vortex wake",
+      "ok": true,
+      "detail": "{\"mode\":\"broom\",\"speed\":19.61,\"agl\":1.65,\"overWater\":true,\"wakeCount\":28,\"leaves\":17,\"spray\":107}"
+    },
+    {
+      "name": "Seamless mid-air broom->glider transition keeps altitude",
+      "ok": true,
+      "detail": "{\"mode\":\"glider\",\"phase\":\"ride\",\"yStart\":17.98,\"aglStart\":18.81}"
+    },
+    {
+      "name": "Terminalia Glider soars & climbs in campus thermal updraft",
+      "ok": true,
+      "detail": "{\"midAirSwitch\":{\"mode\":\"glider\",\"phase\":\"ride\",\"yStart\":17.98,\"aglStart\":18.81},\"gliderCheck\":{\"mode\":\"glider\",\"speed\":13.48,\"yEnd\":21.54,\"agl\":22.37,\"maxThermalLift\":2.47,\"thermalName\":\"操场暖流\"}}"
+    },
+    {
+      "name": "Foldable watercolor campus map opens with route",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Zen mode cleanly hides 100% of HUD chrome",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile 390x844 zero errors, zero overflow & readable pills",
+      "ok": true,
+      "detail": "{\"mErrors\":[],\"mobCheck\":{\"overflowX\":false,\"padMode\":\"broom\",\"padVisible\":true,\"modeBarFits\":true,\"visiblePills\":[\"16:24 · 晴\",\"地图M\",\"跟随视角V\",\"速写本\"],\"allPillsHaveText\":true}}"
+    },
+    {
+      "name": "Mobile context right-thumb action arc shows for broom",
+      "ok": true,
+      "detail": "{\"overflowX\":false,\"padMode\":\"broom\",\"padVisible\":true,\"modeBarFits\":true,\"visiblePills\":[\"16:24 · 晴\",\"地图M\",\"跟随视角V\",\"速写本\"],\"allPillsHaveText\":true}"
+    }
+  ],
+  "bootInfo": {
+    "bootMs": 2342,
+    "tier": "high",
+    "calls": 1100,
+    "tris": 6466489,
+    "fps": 67.9,
+    "ms": 14.7,
+    "ride": {
+      "mode": "walk",
+      "phase": "free",
+      "x": -35.2,
+      "y": -0.83,
+      "z": -34,
+      "yaw": 0.015,
+      "v": 0,
+      "agl": 0,
+      "roll": 0,
+      "pitch": 0,
+      "firstPerson": false,
+      "perched": false,
+      "gust": 0.45,
+      "thermalLift": 0
+    },
+    "wake": {
+      "grass": 6,
+      "lawn": 2,
+      "crowns": 241,
+      "water": 1,
+      "active": false,
+      "count": 0
+    },
+    "fx": {
+      "leaves": 0,
+      "spray": 0,
+      "thermals": 8
+    },
+    "physics": {
+      "bodies": 55,
+      "props": 10
+    },
+    "gouache": "lab",
+    "altHiddenOnGround": true
+  }
+}

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#265647">
+  <meta name="description" content="HAIZ · 自由移动 — 海南中学数字校园载具与空间探索实验：步行、校园单车、街头滑板、竹扫帚贴地卷风与榄仁纸鸢乘风滑翔，以五种物理与镜头语言重新感知府城校园。">
+  <title>HAIZ · 自由移动 — 校园载具与空间探索实验</title>
+  <link rel="icon" href="assets/walk/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="experiments/free-movement/free-movement.css?v=1">
+  <script type="importmap">
+  { "imports": {
+    "three": "./lanren/vendor/three/three.module.min.js",
+    "three/addons/": "./lanren/vendor/three/addons/",
+    "cannon-es": "./experiments/free-movement/vendor/cannon-es/cannon-es.js",
+    "./lanren/ruhua/world.js": "./lanren/ruhua/world.js?v=ground-20261124-r2",
+    "./lanren/ruhua-stroll/ground.js": "./lanren/ruhua-stroll/ground.js?v=ground-20261124-r2",
+    "./lanren/ruhua-stroll/grass.js": "./lanren/ruhua-stroll/grass.js?v=ground-20261124-r2"
+  } }
+  </script>
+  <script type="module" src="experiments/free-movement/main.js?v=1"></script>
+</head>
+<body data-stage="loading" data-ride="walk">
+  <canvas id="fm-canvas" aria-label="HAIZ 自由移动三维校园探索画布"></canvas>
+
+  <div id="fm-loading" aria-live="polite">
+    <p class="fm-load-kicker">HAIZ · 府城数字校园</p>
+    <h1 class="fm-load-title">自由移动</h1>
+    <div id="fm-bar"><i></i></div>
+    <p id="fm-status">准备场景…</p>
+  </div>
+
+  <div id="fm-ui">
+    <!-- Top-left quiet wordmark -->
+    <header class="fm-brand">
+      <a href="index.html" aria-label="返回 HAIZ 主站">haiz</a>
+      <span>自由移动 · 实验</span>
+    </header>
+
+    <!-- Top-center feather-thin Horizon Orientation Tape (zero boxy minimap!) -->
+    <div id="fm-horizon" aria-hidden="true">
+      <div class="fm-horizon-line"></div>
+      <div class="fm-horizon-center"></div>
+      <div id="fm-horizon-track"></div>
+    </div>
+
+    <!-- Top-right restrained utility strip -->
+    <nav class="fm-top-tools" aria-label="探索工具">
+      <button type="button" id="fm-wx-btn" class="fm-pill" aria-expanded="false" aria-controls="fm-wx-panel" title="切换时辰与天气">
+        <span>16:24 · 晴</span>
+      </button>
+      <button type="button" id="fm-map-btn" class="fm-pill" title="展开校园水彩地图与瞬移直达（M）">
+        <span>地图</span><kbd>M</kbd>
+      </button>
+      <button type="button" id="fm-view-btn" class="fm-pill" aria-pressed="false" title="切换跟随 / 第一人称驾驶视角（V）">
+        <span>跟随视角</span><kbd>V</kbd>
+      </button>
+      <button type="button" id="fm-book-btn" class="fm-pill" title="校园十景速写本">
+        <span>速写</span>
+      </button>
+      <button type="button" id="fm-sound-btn" class="fm-pill" aria-pressed="false" title="程序化风声与校园声景开关">
+        <span>声景</span>
+      </button>
+      <button type="button" id="fm-zen-btn" class="fm-pill" title="纯净摄影模式：隐藏全部界面（H）">
+        <span>纯净</span><kbd>H</kbd>
+      </button>
+    </nav>
+
+    <button type="button" id="fm-zen-restore" class="fm-pill" title="恢复界面（H）">显示界面</button>
+
+    <!-- Weather & Hour Popover -->
+    <section id="fm-wx-panel" hidden aria-label="天气与时辰">
+      <header>
+        <h2>海口天光</h2>
+        <button type="button" id="fm-wx-close" class="fm-x" aria-label="关闭">×</button>
+      </header>
+      <p id="fm-wx-detail" class="fm-wx-note" style="margin-top:0"></p>
+      <button type="button" class="fm-wx-live" data-live="1" aria-pressed="false">同步海口此刻实况</button>
+      <h3>时辰</h3>
+      <div class="fm-wx-grid" role="group" aria-label="时辰">
+        <button type="button" data-hour="7.2" aria-pressed="false">清晨</button>
+        <button type="button" data-hour="12.5" aria-pressed="false">正午</button>
+        <button type="button" data-hour="16.4" aria-pressed="true">午后</button>
+        <button type="button" data-hour="17.8" aria-pressed="false">晚霞</button>
+        <button type="button" data-hour="20.6" aria-pressed="false">夜灯</button>
+      </div>
+      <h3>天气</h3>
+      <div class="fm-wx-grid" role="group" aria-label="天气">
+        <button type="button" data-wx="clear" aria-pressed="true">晴</button>
+        <button type="button" data-wx="cloudy" aria-pressed="false">多云</button>
+        <button type="button" data-wx="windy" aria-pressed="false">海风</button>
+        <button type="button" data-wx="drizzle" aria-pressed="false">小雨</button>
+        <button type="button" data-wx="after" aria-pressed="false">雨后</button>
+      </div>
+      <p class="fm-wx-note">日照强度会影响校园 8 处热气流强度；雨后路面将出现水洼倒影与水雾；夜晚单车前灯与竹扫帚风灯自动亮起。</p>
+    </section>
+
+    <!-- Spatial Vista Sketch Prompt -->
+    <div id="fm-vista" hidden role="status" aria-live="polite">
+      <p><b></b><span></span></p>
+      <button type="button" id="fm-vista-btn">画下来 <kbd>F</kbd></button>
+    </div>
+
+    <!-- Thin Vertical Altitude Hairline (airborne only) -->
+    <div id="fm-alt" hidden aria-hidden="true">
+      <div class="fm-alt-rail"><i></i></div>
+      <b>0m</b>
+    </div>
+
+    <!-- Bottom-left Kinetic Whisper (zero card chrome!) -->
+    <section id="fm-whisper" aria-label="行进感知" style="opacity:0">
+      <div class="fm-wh-top">
+        <span class="fm-wh-speed" data-fm="speed">0</span>
+        <span class="fm-wh-unit">km/h</span>
+        <span class="fm-wh-rhythm" data-fm="rhythm"></span>
+      </div>
+      <div class="fm-wh-place" data-fm="place">百年榄仁树北侧 · 校道</div>
+      <div class="fm-wh-dest" data-fm="dest"></div>
+      <div class="fm-meter" data-fm="meter-wrap" hidden>
+        <span data-fm="meter-label">乘风</span>
+        <div class="fm-meter-bar"><i data-fm="meter-fill"></i></div>
+      </div>
+    </section>
+
+    <!-- Trick / Mode State Callout -->
+    <div id="fm-trick" hidden aria-live="polite"></div>
+
+    <!-- NPC / System Dialogue -->
+    <p id="fm-line" hidden role="status" aria-live="polite"><b></b><span></span></p>
+    <p id="fm-prompt" hidden></p>
+
+    <!-- Bottom-center Five-Mode Calligraphic Dock -->
+    <nav id="fm-modes" aria-label="五种校园移动方式">
+      <button type="button" data-mode="walk" aria-pressed="true" title="步行（1）"><b>步</b><span>步行</span></button>
+      <button type="button" data-mode="bike" aria-pressed="false" title="校园单车（2）"><b>骑</b><span>单车</span></button>
+      <button type="button" data-mode="board" aria-pressed="false" title="街头滑板（3）"><b>滑</b><span>滑板</span></button>
+      <button type="button" data-mode="broom" aria-pressed="false" title="竹扫帚贴地飞（4）"><b>飞</b><span>扫帚</span></button>
+      <button type="button" data-mode="glider" aria-pressed="false" title="榄仁纸鸢乘风滑翔（5）"><b>鸢</b><span>纸鸢</span></button>
+    </nav>
+
+    <!-- Subtle desktop keyboard hint -->
+    <div id="fm-hint-strip" aria-hidden="true">WASD 漫步 · 1-5 切换载具 · V 第一视角 · M 地图</div>
+
+    <!-- Mobile invisible floating thumbstick + right-thumb action arc -->
+    <div id="fm-stick" hidden aria-hidden="true"><i></i></div>
+    <div id="fm-pad" data-mode="none" aria-label="触控动作">
+      <button type="button" data-pad="bell" data-for="bike">铃</button>
+      <button type="button" data-pad="jump" data-for="board">跳</button>
+      <button type="button" data-pad="trick" data-for="board">翻</button>
+      <button type="button" data-pad="up" data-for="broom glider">升</button>
+      <button type="button" data-pad="down" data-for="broom glider">降</button>
+      <button type="button" data-pad="perch" data-for="broom">栖</button>
+      <button type="button" data-pad="boost" data-for="bike board broom glider">疾</button>
+    </div>
+
+    <!-- Foldable Watercolor Campus Map + Fast Travel (inspired by 网上南宁 & 活点地图) -->
+    <section id="fm-map-drawer" hidden aria-label="府城校园水彩地图与直达">
+      <div class="fm-map-folio">
+        <header class="fm-map-head">
+          <div>
+            <h2>府城校园水彩图 · 寻路与直达</h2>
+            <p>点击地图任意处直接前往，或选择地标在路面画下朱红路线；金色虚线圈标出 8 处上升热气流。</p>
+          </div>
+          <button type="button" id="fm-map-close" class="fm-x" aria-label="关闭地图">×</button>
+        </header>
+        <div class="fm-map-stage">
+          <canvas id="fm-map-canvas" width="540" height="505"></canvas>
+          <div class="fm-map-legend">
+            <span><i style="background:#b0201c"></i>你当前位置与朝向</span>
+            <span><i style="background:#d2912a"></i>上升热气流（纸鸢盘旋攀升）</span>
+            <span><i style="background:#265647"></i>停放单车</span>
+          </div>
+        </div>
+        <aside class="fm-map-side">
+          <p id="fm-map-info">选择一处校园地标：</p>
+          <ul id="fm-map-list"></ul>
+          <footer class="fm-map-foot">
+            <button type="button" id="fm-map-clear">清除路线</button>
+            <span style="font-size:11px;color:var(--fm-ink-soft)">按 M 键随时展开或收起</span>
+          </footer>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Sketchbook Modal (校园十景) -->
+    <section id="fm-book" hidden aria-label="校园十景速写本">
+      <div class="fm-book-card">
+        <header>
+          <h2>校园十景 · 行旅速写本 <small data-fm="book-count"></small></h2>
+          <button type="button" id="fm-book-close" class="fm-x" aria-label="合上">×</button>
+        </header>
+        <ol></ol>
+      </div>
+    </section>
+
+    <img id="fm-fly" alt="" hidden>
+  </div>
+</body>
+</html>
