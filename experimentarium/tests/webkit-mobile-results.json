@@ -1,0 +1,26 @@
+{
+  "testedAt": "2026-11-26T16:07:08.500Z",
+  "desktop": {
+    "webkitSafe": true,
+    "turnVerified": true,
+    "checked": [
+      "phy-pendulum",
+      "phy-resistivity-caliper",
+      "chem-titration",
+      "bio-microscope-mitosis",
+      "geo-seasons",
+      "math-conic-locus",
+      "tech-beam",
+      "his-movable-type",
+      "chn-syllogism",
+      "pol-market"
+    ]
+  },
+  "mobile": {
+    "stacked": true,
+    "wbOpen": true,
+    "nbOpen": true,
+    "expId": "chem-titration"
+  },
+  "errors": []
+}

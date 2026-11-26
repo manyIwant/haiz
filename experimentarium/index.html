@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c4539">
+<meta name="description" content="HAIZ · EXPERIMENTARIUM 全学科数字实验手册：覆盖普通高中十一学科课标实验、教材探究、三维装置、展开式工作台与个人实验记录册。">
+<title>HAIZ · EXPERIMENTARIUM · 全学科数字实验手册</title>
+<link rel="icon" href="../assets/walk/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/experimentarium.css">
+<script type="importmap">{"imports":{"three":"../lanren/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<div id="stage" aria-label="交互式数字实验书">
+  <canvas id="gl" aria-label="摊开的实验手册与三维仪器装置。点页边或拖页角翻页，拖空白处调整视角，方向键也可翻页。"></canvas>
+  <div id="css3d"><div class="cam"></div></div>
+</div>
+
+<div id="mTabs" role="tablist" aria-label="移动端视图切换">
+  <button type="button" data-mtab="read" aria-pressed="true">阅读与导引</button>
+  <button type="button" data-mtab="workbench" aria-pressed="false">学科实验台</button>
+  <button type="button" data-mtab="journal" aria-pressed="false">实验记录册</button>
+</div>
+
+<main id="flow"></main>
+<div id="press" aria-hidden="true" inert></div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<section id="workbench" hidden aria-label="学科专属探究实验台"></section>
+
+<nav id="bar" aria-label="翻页与工具栏">
+  <button id="bToc" type="button" title="实验目录" aria-label="实验目录"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+  <button id="bMatrix" type="button" title="课程覆盖矩阵" aria-label="课程覆盖矩阵"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></button>
+  <button id="bPrev" type="button" title="上一个实验 (←)" aria-label="上一个实验"><svg viewBox="0 0 24 24"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+  <div id="bTitle"><b></b><span>载入中…</span></div>
+  <button id="bNext" class="go" type="button" title="下一个实验 (→)" aria-label="下一个实验"><svg viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg></button>
+  <i class="sep"></i>
+  <button id="bWork" type="button" title="展开实验台 (W)" aria-label="展开或收起实验台" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5M9 9l6 6M15 9l-6 6"/></svg></button>
+  <button id="bPlay" type="button" title="暂停 / 继续 (空格)" aria-label="暂停或继续演示" aria-pressed="false"><svg viewBox="0 0 24 24"><path class="pause" d="M9 6v12M15 6v12"/><path class="play" d="M9 6l9 6-9 6z"/></svg></button>
+  <button id="bReset" type="button" title="重置本实验" aria-label="重置本实验"><svg viewBox="0 0 24 24"><path d="M6 12a6 6 0 1 0 2-4.5M6 5v3.5h3.5"/></svg></button>
+  <button id="bRec" type="button" title="个人实验记录册" aria-label="个人实验记录册" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M6 4.5h9l3 3V19.5H6zM9 10h6M9 13.5h6M9 17h3.5"/></svg></button>
+  <button id="bTeach" type="button" title="教师备课与课标依据" aria-label="教师备课与课标依据" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m3 9.5 9-4.5 9 4.5-9 4.5zM7 12v4c1.5 1.4 3.2 2 5 2s3.5-.6 5-2v-4M21 9.5v5"/></svg></button>
+  <button id="bFull" type="button" title="全屏投影" aria-label="全屏投影"><svg viewBox="0 0 24 24"><path d="M5 9V5h4M19 9V5h-4M5 15v4h4M19 15v4h-4"/></svg></button>
+</nav>
+
+<aside id="toc" hidden aria-label="实验目录">
+  <div class="sheet">
+    <header><div><small>HAIZ · EXPERIMENTARIUM</small><h2>全学科实验目录</h2></div><button id="tocClose" type="button" aria-label="关闭目录">合上 ×</button></header>
+    <p class="toc-lede">先预测，再动手操作仪器、走纸世界线或展开工作台进行测量与分析。每一页明确标出课程定位、完成等级（L3/L4）与知识来源笔法。模型计算结果不可直接替代线下真实实验原始数据。</p>
+    <div id="tocFilter"></div><p id="tocCount" aria-live="polite"></p>
+    <div id="tocList"></div>
+    <footer>HAIZ 非商业数字校园实验基础设施（PolyForm Noncommercial 1.0.0）· 依赖 Three.js (MIT) 与 Cormorant Garamond (OFL) · <a href="../index.html">返回 haiz.space</a></footer>
+  </div>
+</aside>
+
+<aside id="matrixModal" hidden aria-label="课程覆盖矩阵总览">
+  <div class="sheet">
+    <header><div><small>CURRICULUM COVERAGE MATRIX · 海南高中课程映射</small><h2>全学科课程与实验覆盖矩阵</h2></div><button id="mxClose" type="button" aria-label="关闭矩阵">关闭 ×</button></header>
+    <div class="mx-body"></div>
+  </div>
+</aside>
+
+<aside id="teach" hidden aria-label="教师备课"></aside>
+<aside id="notebook" hidden aria-label="个人实验记录册"></aside>
+<div id="fallback" hidden>本数字实验手册需要浏览器支持 WebGL 2 与硬件加速。请更新或换用较新的 Chrome、Safari 或 Edge 打开。</div>
+<script type="module" src="js/core/app.js"></script>
+</body>
+</html>

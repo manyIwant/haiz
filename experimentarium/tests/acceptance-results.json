@@ -1,0 +1,756 @@
+{
+  "testedAt": "2026-11-26T16:03:09.253Z",
+  "gpuRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+  "totalCompleted": 63,
+  "passedPages": 63,
+  "overflowWarnings": [],
+  "pages": [
+    {
+      "id": "phy-ticker-velocity",
+      "subject": "phy",
+      "title": "测量做直线运动物体的瞬时速度",
+      "hasInst": true,
+      "marginLen": 99,
+      "leftOverflow": -9.4,
+      "rightOverflow": 0.1
+    },
+    {
+      "id": "phy-hooke",
+      "subject": "phy",
+      "title": "探究弹簧弹力与形变量的关系",
+      "hasInst": true,
+      "marginLen": 85,
+      "leftOverflow": -10.8,
+      "rightOverflow": 0.1
+    },
+    {
+      "id": "phy-forces",
+      "subject": "phy",
+      "title": "探究两个互成角度的力的合成规律",
+      "hasInst": true,
+      "marginLen": 88,
+      "leftOverflow": -22.9,
+      "rightOverflow": -9.1
+    },
+    {
+      "id": "phy-newton2",
+      "subject": "phy",
+      "title": "探究加速度与物体受力、物体质量的关系",
+      "hasInst": true,
+      "marginLen": 95,
+      "leftOverflow": -0.1,
+      "rightOverflow": -0.7
+    },
+    {
+      "id": "phy-projectile",
+      "subject": "phy",
+      "title": "探究平抛运动的特点",
+      "hasInst": true,
+      "marginLen": 94,
+      "leftOverflow": -31,
+      "rightOverflow": 0.3
+    },
+    {
+      "id": "phy-centripetal",
+      "subject": "phy",
+      "title": "探究向心力大小与半径、角速度、质量的关系",
+      "hasInst": true,
+      "marginLen": 75,
+      "leftOverflow": -8.9,
+      "rightOverflow": 0.2
+    },
+    {
+      "id": "phy-energy-conservation",
+      "subject": "phy",
+      "title": "验证机械能守恒定律",
+      "hasInst": true,
+      "marginLen": 69,
+      "leftOverflow": -13,
+      "rightOverflow": 0
+    },
+    {
+      "id": "phy-resistivity-caliper",
+      "subject": "phy",
+      "title": "长度测量工具选用与金属丝电阻率测定",
+      "hasInst": true,
+      "marginLen": 110,
+      "leftOverflow": -2.7,
+      "rightOverflow": -3.2
+    },
+    {
+      "id": "phy-multimeter",
+      "subject": "phy",
+      "title": "用多用电表测量电学中的物理量",
+      "hasInst": true,
+      "marginLen": 81,
+      "leftOverflow": -8.1,
+      "rightOverflow": -2.4
+    },
+    {
+      "id": "phy-emf",
+      "subject": "phy",
+      "title": "测量电源的电动势和内阻",
+      "hasInst": true,
+      "marginLen": 77,
+      "leftOverflow": -10.3,
+      "rightOverflow": 0
+    },
+    {
+      "id": "phy-capacitor",
+      "subject": "phy",
+      "title": "观察电容器的充、放电现象",
+      "hasInst": true,
+      "marginLen": 72,
+      "leftOverflow": -13.1,
+      "rightOverflow": 0
+    },
+    {
+      "id": "phy-momentum",
+      "subject": "phy",
+      "title": "验证动量守恒定律",
+      "hasInst": true,
+      "marginLen": 81,
+      "leftOverflow": -41.3,
+      "rightOverflow": -0.7
+    },
+    {
+      "id": "phy-pendulum",
+      "subject": "phy",
+      "title": "单摆测重力加速度：一条定律的边界",
+      "hasInst": true,
+      "marginLen": 75,
+      "leftOverflow": -5.2,
+      "rightOverflow": -2.4
+    },
+    {
+      "id": "phy-refract",
+      "subject": "phy",
+      "title": "测量玻璃的折射率与全反射",
+      "hasInst": true,
+      "marginLen": 42,
+      "leftOverflow": -2.1,
+      "rightOverflow": -18.4
+    },
+    {
+      "id": "phy-young",
+      "subject": "phy",
+      "title": "用双缝干涉实验测量光的波长",
+      "hasInst": true,
+      "marginLen": 72,
+      "leftOverflow": -0.6,
+      "rightOverflow": 0
+    },
+    {
+      "id": "phy-induction",
+      "subject": "phy",
+      "title": "探究影响感应电流方向的因素（楞次定律）",
+      "hasInst": true,
+      "marginLen": 57,
+      "leftOverflow": -10.7,
+      "rightOverflow": -0.6
+    },
+    {
+      "id": "phy-transformer",
+      "subject": "phy",
+      "title": "探究变压器原、副线圈电压与匝数的关系",
+      "hasInst": true,
+      "marginLen": 80,
+      "leftOverflow": -7.8,
+      "rightOverflow": -12.9
+    },
+    {
+      "id": "phy-sensor",
+      "subject": "phy",
+      "title": "利用传感器制作简单的自动控制装置",
+      "hasInst": true,
+      "marginLen": 76,
+      "leftOverflow": -22.9,
+      "rightOverflow": -1.6
+    },
+    {
+      "id": "phy-oil-film",
+      "subject": "phy",
+      "title": "用油膜法估测油酸分子的大小",
+      "hasInst": true,
+      "marginLen": 110,
+      "leftOverflow": -27.4,
+      "rightOverflow": -0.6
+    },
+    {
+      "id": "phy-boyle",
+      "subject": "phy",
+      "title": "探究等温情况下一定质量气体压强与体积的关系",
+      "hasInst": true,
+      "marginLen": 74,
+      "leftOverflow": -5.3,
+      "rightOverflow": 0.1
+    },
+    {
+      "id": "chem-molarity",
+      "subject": "chem",
+      "title": "配制一定物质的量浓度的溶液",
+      "hasInst": true,
+      "marginLen": 68,
+      "leftOverflow": -14.9,
+      "rightOverflow": -0.6
+    },
+    {
+      "id": "chem-fe-redox",
+      "subject": "chem",
+      "title": "铁及其化合物与含硫物质的价类转化",
+      "hasInst": true,
+      "marginLen": 86,
+      "leftOverflow": -2.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "chem-crude-salt",
+      "subject": "chem",
+      "title": "粗盐提纯与除杂试剂顺序诊断",
+      "hasInst": true,
+      "marginLen": 65,
+      "leftOverflow": -12.2,
+      "rightOverflow": 0
+    },
+    {
+      "id": "chem-periodic",
+      "subject": "chem",
+      "title": "同周期与同主族元素性质递变规律",
+      "hasInst": true,
+      "marginLen": 60,
+      "leftOverflow": 0.1,
+      "rightOverflow": -0.6
+    },
+    {
+      "id": "chem-flame",
+      "subject": "chem",
+      "title": "焰色试验与原子发射线状光谱鉴定",
+      "hasInst": true,
+      "marginLen": 80,
+      "leftOverflow": -3.4,
+      "rightOverflow": -4.4
+    },
+    {
+      "id": "chem-rate",
+      "subject": "chem",
+      "title": "化学反应速率的影响因素与阿伦尼乌斯活化能",
+      "hasInst": true,
+      "marginLen": 65,
+      "leftOverflow": -29.6,
+      "rightOverflow": -12
+    },
+    {
+      "id": "chem-cell",
+      "subject": "chem",
+      "title": "原电池、盐桥电池、燃料电池与电镀原理",
+      "hasInst": true,
+      "marginLen": 56,
+      "leftOverflow": -16.5,
+      "rightOverflow": -1.7
+    },
+    {
+      "id": "chem-equilibrium",
+      "subject": "chem",
+      "title": "化学平衡的移动与 Q_c–K_c 弛豫过程",
+      "hasInst": true,
+      "marginLen": 63,
+      "leftOverflow": -2.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "chem-titration",
+      "subject": "chem",
+      "title": "酸碱中和滴定与缓冲突跃边界",
+      "hasInst": true,
+      "marginLen": 67,
+      "leftOverflow": -0.8,
+      "rightOverflow": -3.9
+    },
+    {
+      "id": "chem-hydrolysis",
+      "subject": "chem",
+      "title": "盐类水解的应用与酸碱性定量测定",
+      "hasInst": true,
+      "marginLen": 68,
+      "leftOverflow": -5.2,
+      "rightOverflow": 0.3
+    },
+    {
+      "id": "chem-electrolysis",
+      "subject": "chem",
+      "title": "霍夫曼电解池、氯碱反应与法拉第定量",
+      "hasInst": true,
+      "marginLen": 74,
+      "leftOverflow": -3.4,
+      "rightOverflow": -0.6
+    },
+    {
+      "id": "chem-ethyl-acetate",
+      "subject": "chem",
+      "title": "乙酸乙酯的制备、防倒吸与 ¹⁸O 断键示踪",
+      "hasInst": true,
+      "marginLen": 51,
+      "leftOverflow": -31.3,
+      "rightOverflow": -8.2
+    },
+    {
+      "id": "bio-microscope-mitosis",
+      "subject": "bio",
+      "title": "洋葱根尖有丝分裂装片观测与周期推断",
+      "hasInst": true,
+      "marginLen": 35,
+      "leftOverflow": -1,
+      "rightOverflow": -19.6
+    },
+    {
+      "id": "bio-plasmolysis",
+      "subject": "bio",
+      "title": "植物细胞的质壁分离与复原",
+      "hasInst": true,
+      "marginLen": 72,
+      "leftOverflow": -12.2,
+      "rightOverflow": -20.5
+    },
+    {
+      "id": "bio-enzyme",
+      "subject": "bio",
+      "title": "酶的高效性与温度、pH对酶活性的影响",
+      "hasInst": true,
+      "marginLen": 64,
+      "leftOverflow": -1,
+      "rightOverflow": -1.6
+    },
+    {
+      "id": "bio-pigments",
+      "subject": "bio",
+      "title": "绿叶中色素的提取和分离（纸层析法）",
+      "hasInst": true,
+      "marginLen": 60,
+      "leftOverflow": -19.9,
+      "rightOverflow": -10.2
+    },
+    {
+      "id": "bio-photosynthesis",
+      "subject": "bio",
+      "title": "探究环境因素对光合作用强度的影响",
+      "hasInst": true,
+      "marginLen": 78,
+      "leftOverflow": -29.6,
+      "rightOverflow": 0
+    },
+    {
+      "id": "bio-mendel",
+      "subject": "bio",
+      "title": "性状分离比的模拟与自由组合检验",
+      "hasInst": true,
+      "marginLen": 70,
+      "leftOverflow": -33.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "bio-dna",
+      "subject": "bio",
+      "title": "DNA 双螺旋结构模型与热变性探究",
+      "hasInst": true,
+      "marginLen": 76,
+      "leftOverflow": -14.9,
+      "rightOverflow": -2.5
+    },
+    {
+      "id": "bio-population",
+      "subject": "bio",
+      "title": "探究培养液中酵母菌种群数量的变化",
+      "hasInst": true,
+      "marginLen": 92,
+      "leftOverflow": -12.2,
+      "rightOverflow": -0.7
+    },
+    {
+      "id": "geo-seasons",
+      "subject": "geo",
+      "title": "地球公转、海口双直射与昼夜长短",
+      "hasInst": true,
+      "marginLen": 80,
+      "leftOverflow": -17.3,
+      "rightOverflow": 0.3
+    },
+    {
+      "id": "geo-breeze",
+      "subject": "geo",
+      "title": "热力环流、海陆风与等压面探空",
+      "hasInst": true,
+      "marginLen": 86,
+      "leftOverflow": -25.4,
+      "rightOverflow": -3.7
+    },
+    {
+      "id": "geo-contour",
+      "subject": "geo",
+      "title": "等高线地形图判读与任意剖面通视分析",
+      "hasInst": true,
+      "marginLen": 68,
+      "leftOverflow": -31.6,
+      "rightOverflow": 0
+    },
+    {
+      "id": "geo-moon",
+      "subject": "geo",
+      "title": "月相变化、潮汐与白道交角食限",
+      "hasInst": true,
+      "marginLen": 64,
+      "leftOverflow": -27,
+      "rightOverflow": -3.7
+    },
+    {
+      "id": "geo-sponge-hydrology",
+      "subject": "geo",
+      "title": "水循环下渗与热带海绵校园暴雨径流过程线",
+      "hasInst": true,
+      "marginLen": 101,
+      "leftOverflow": -26.8,
+      "rightOverflow": -1.6
+    },
+    {
+      "id": "math-function",
+      "subject": "math",
+      "title": "函数的单调性、奇偶性与二次函数退化边界",
+      "hasInst": true,
+      "marginLen": 71,
+      "leftOverflow": -23.9,
+      "rightOverflow": 0
+    },
+    {
+      "id": "math-sine",
+      "subject": "math",
+      "title": "三角函数图像变换与从圆周运动到正弦曲线",
+      "hasInst": true,
+      "marginLen": 73,
+      "leftOverflow": -3.4,
+      "rightOverflow": 0
+    },
+    {
+      "id": "math-cube",
+      "subject": "math",
+      "title": "正方体的截面形状与空间几何约束证明",
+      "hasInst": true,
+      "marginLen": 90,
+      "leftOverflow": -1,
+      "rightOverflow": 0
+    },
+    {
+      "id": "math-conic-locus",
+      "subject": "math",
+      "title": "丹德林双球与圆锥曲线的统一几何发生",
+      "hasInst": true,
+      "marginLen": 43,
+      "leftOverflow": -1,
+      "rightOverflow": 0
+    },
+    {
+      "id": "math-derivative",
+      "subject": "math",
+      "title": "从割线到切线：导数的双侧极限与不可导边界",
+      "hasInst": true,
+      "marginLen": 84,
+      "leftOverflow": -16.5,
+      "rightOverflow": 0
+    },
+    {
+      "id": "math-galton",
+      "subject": "math",
+      "title": "高尔顿板、二项分布与正态近似",
+      "hasInst": true,
+      "marginLen": 54,
+      "leftOverflow": -34.2,
+      "rightOverflow": 0
+    },
+    {
+      "id": "it-binary",
+      "subject": "it",
+      "title": "二进制、补码溢出与点阵图像编码",
+      "hasInst": true,
+      "marginLen": 41,
+      "leftOverflow": -1,
+      "rightOverflow": -2.7
+    },
+    {
+      "id": "it-sort",
+      "subject": "it",
+      "title": "排序算法、自定义输入与复杂度实测",
+      "hasInst": true,
+      "marginLen": 43,
+      "leftOverflow": -2.7,
+      "rightOverflow": -2.5
+    },
+    {
+      "id": "tech-beam",
+      "subject": "tech",
+      "title": "梁的弯曲、截面形状与结构强度",
+      "hasInst": true,
+      "marginLen": 68,
+      "leftOverflow": -70.3,
+      "rightOverflow": 0
+    },
+    {
+      "id": "tech-control",
+      "subject": "tech",
+      "title": "开环控制、比例静差与 PI 闭环抗干扰",
+      "hasInst": true,
+      "marginLen": 61,
+      "leftOverflow": -18.1,
+      "rightOverflow": -0.7
+    },
+    {
+      "id": "chn-meter",
+      "subject": "chn",
+      "title": "近体诗的平仄、入声字与粘对检测",
+      "hasInst": true,
+      "marginLen": 59,
+      "leftOverflow": -2.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "chn-syllogism",
+      "subject": "chn",
+      "title": "三段论、周延性与欧拉反例构造台",
+      "hasInst": true,
+      "marginLen": 43,
+      "leftOverflow": -1.7,
+      "rightOverflow": -6.4
+    },
+    {
+      "id": "eng-tense",
+      "subject": "eng",
+      "title": "英语时态体貌与 Reichenbach 三时间轴",
+      "hasInst": true,
+      "marginLen": 75,
+      "leftOverflow": -0.6,
+      "rightOverflow": 0
+    },
+    {
+      "id": "eng-sentence",
+      "subject": "eng",
+      "title": "五种基本句型、There be 与长难句剥离台",
+      "hasInst": true,
+      "marginLen": 57,
+      "leftOverflow": -2.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "his-timeline",
+      "subject": "his",
+      "title": "中国古代朝代时间尺与中外共时互证",
+      "hasInst": true,
+      "marginLen": 51,
+      "leftOverflow": -1,
+      "rightOverflow": 0
+    },
+    {
+      "id": "his-movable-type",
+      "subject": "his",
+      "title": "毕昇胶泥活字与雕版印刷的技术经济临界点",
+      "hasInst": true,
+      "marginLen": 62,
+      "leftOverflow": -18.1,
+      "rightOverflow": 0.3
+    },
+    {
+      "id": "pol-market",
+      "subject": "pol",
+      "title": "供求关系、均衡价格与政府限价沙盘",
+      "hasInst": true,
+      "marginLen": 74,
+      "leftOverflow": -47.7,
+      "rightOverflow": 0
+    },
+    {
+      "id": "pol-lorenz",
+      "subject": "pol",
+      "title": "收入分配、洛伦兹曲线与基尼系数探究",
+      "hasInst": true,
+      "marginLen": 64,
+      "leftOverflow": -17.8,
+      "rightOverflow": 0
+    }
+  ],
+  "workbenchChecks": {
+    "phy-ticker-velocity": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "phy-newton2": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "phy-resistivity-caliper": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 3
+    },
+    "phy-emf": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "phy-momentum": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "phy-pendulum": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "phy-refract": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "phy-oil-film": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "chem-crude-salt": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "chem-equilibrium": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "chem-titration": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "chem-hydrolysis": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "bio-microscope-mitosis": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "bio-pigments": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "bio-mendel": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "geo-seasons": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "geo-contour": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "geo-sponge-hydrology": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "math-cube": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "math-conic-locus": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "math-derivative": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 1
+    },
+    "it-binary": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "it-sort": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "tech-beam": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "tech-control": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 2
+    },
+    "chn-meter": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 0
+    },
+    "chn-syllogism": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 1
+    },
+    "his-movable-type": {
+      "visible": true,
+      "sections": 2,
+      "canvases": 1
+    },
+    "pol-market": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    },
+    "pol-lorenz": {
+      "visible": true,
+      "sections": 1,
+      "canvases": 1
+    }
+  },
+  "uiAndJournalCheck": {
+    "tocCount": 63,
+    "hasMatrix101": false,
+    "journal": {
+      "schema": "haiz-experiment-record/1",
+      "compareVisible": true,
+      "runCount": 2,
+      "pendulumRowsRun1": 5
+    }
+  },
+  "bridgeCheck": {
+    "version": "3.0.0",
+    "schema": "haiz-experimentarium-bridge/1",
+    "state": {
+      "expId": "phy-ticker-velocity",
+      "index": 0,
+      "mode": "spread",
+      "params": {
+        "motion": 0,
+        "aSet": 1.2,
+        "v0": 0.3,
+        "jitter": true,
+        "drag": false
+      }
+    },
+    "matrixTotal": 101
+  },
+  "errors": []
+}
