@@ -1,0 +1,23 @@
+/* HAIZ · NIANLUN · 一卷 V4 — Clean Paper Print Stylesheet (§9.5 带走) */
+@media print {
+  @page {
+    size: A5 portrait;
+    margin: 10mm;
+  }
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  .app-stage, .sheet-backdrop, .drawer-sheet, .toast-bar, .roll-menu {
+    display: none !important;
+  }
+  #print-stage {
+    display: block !important;
+  }
+  #print-stage .paper-sheet {
+    background: #ffffff !important;
+    color: #111111 !important;
+    padding: 0 !important;
+  }
+}

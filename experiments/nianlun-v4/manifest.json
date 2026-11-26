@@ -1,0 +1,12 @@
+{
+  "name": "HAIZ · NIANLUN · 一卷 V4",
+  "short_name": "一卷 V4",
+  "description": "面向海南中学住校生的弹性时间卷、年轮端面拨轮与多维群消息归流实验版",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8f5ee",
+  "theme_color": "#f8f5ee",
+  "lang": "zh-CN"
+}
