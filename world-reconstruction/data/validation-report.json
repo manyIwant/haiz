@@ -1,0 +1,200 @@
+{
+  "schema": "haiz-world-validation-report/1",
+  "validated_at_utc": "2026-11-26T12:33:23.273Z",
+  "passed": 11,
+  "total": 11,
+  "all_pass": true,
+  "summary": {
+    "priority0_mb": 0.42,
+    "lod0_total_mb": 1.51,
+    "lod0_total_triangles": 141164,
+    "flora_instances": 186,
+    "prop_instances": 63,
+    "provenance_tagged_nodes": 76
+  },
+  "checks": [
+    {
+      "name": "glb_containers_valid",
+      "ok": true,
+      "detail": "14 valid glTF 2.0 binaries"
+    },
+    {
+      "name": "webp_texture_compression",
+      "ok": true,
+      "detail": "184 WebP embedded textures across districts"
+    },
+    {
+      "name": "draco_mesh_compression",
+      "ok": true,
+      "detail": "486 Draco-compressed mesh primitives"
+    },
+    {
+      "name": "budget_priority0_download",
+      "ok": true,
+      "detail": "Priority-0 initial payload = 0.42 MB (budget <= 6.0 MB)"
+    },
+    {
+      "name": "budget_total_lod0_download",
+      "ok": true,
+      "detail": "Full-campus LOD0 payload = 1.51 MB vs legacy 116 MB (budget <= 18.0 MB)"
+    },
+    {
+      "name": "budget_total_lod0_triangles",
+      "ok": true,
+      "detail": "Full-campus LOD0 triangles = 141,164 vs legacy 6.47M (budget <= 450,000)"
+    },
+    {
+      "name": "provenance_coverage",
+      "ok": true,
+      "detail": "76 tagged nodes, 0 invalid tags"
+    },
+    {
+      "name": "provenance_honesty_no_fake_survey",
+      "ok": true,
+      "detail": "0 unverified 'surveyed' claims"
+    },
+    {
+      "name": "spatial_yanchi_zero_overlap",
+      "ok": true,
+      "detail": "0 buildings overlapping Yanchi pond"
+    },
+    {
+      "name": "editable_master_blend",
+      "ok": true,
+      "detail": "assets/blend/HAIZ_World_Master.blend (3.25 MB)"
+    },
+    {
+      "name": "gpu_instanced_flora_and_props",
+      "ok": true,
+      "detail": "186 instanced trees/shrubs + 63 instanced street furniture props"
+    }
+  ],
+  "glbs": {
+    "terrain_campus.glb": {
+      "bytes": 81624,
+      "kb": 79.7,
+      "nodes": 1,
+      "meshes": 1,
+      "materials": 14,
+      "images": 18,
+      "triangles": 1562
+    },
+    "d01_axis_forecourt_lod0.glb": {
+      "bytes": 299948,
+      "kb": 292.9,
+      "nodes": 4,
+      "meshes": 4,
+      "materials": 24,
+      "images": 25,
+      "triangles": 16959
+    },
+    "d02_academic_core_lod0.glb": {
+      "bytes": 251088,
+      "kb": 245.2,
+      "nodes": 7,
+      "meshes": 7,
+      "materials": 8,
+      "images": 9,
+      "triangles": 33382
+    },
+    "d03_yanchi_arts_lod0.glb": {
+      "bytes": 109972,
+      "kb": 107.4,
+      "nodes": 2,
+      "meshes": 2,
+      "materials": 13,
+      "images": 14,
+      "triangles": 4650
+    },
+    "d04_heritage_gardens_lod0.glb": {
+      "bytes": 152856,
+      "kb": 149.3,
+      "nodes": 6,
+      "meshes": 6,
+      "materials": 14,
+      "images": 16,
+      "triangles": 7268
+    },
+    "d05_sports_living_lod0.glb": {
+      "bytes": 558576,
+      "kb": 545.5,
+      "nodes": 18,
+      "meshes": 18,
+      "materials": 15,
+      "images": 16,
+      "triangles": 73018
+    },
+    "d06_fucheng_context.glb": {
+      "bytes": 23088,
+      "kb": 22.5,
+      "nodes": 1,
+      "meshes": 1,
+      "materials": 6,
+      "images": 0,
+      "triangles": 1471
+    },
+    "flora_kit.glb": {
+      "bytes": 60200,
+      "kb": 58.8,
+      "nodes": 6,
+      "meshes": 6,
+      "materials": 11,
+      "images": 2,
+      "triangles": 2114
+    },
+    "props_kit.glb": {
+      "bytes": 43604,
+      "kb": 42.6,
+      "nodes": 5,
+      "meshes": 5,
+      "materials": 10,
+      "images": 6,
+      "triangles": 740
+    },
+    "d01_axis_forecourt_lod1.glb": {
+      "bytes": 212016,
+      "kb": 207,
+      "nodes": 4,
+      "meshes": 4,
+      "materials": 24,
+      "images": 25,
+      "triangles": 9845
+    },
+    "d02_academic_core_lod1.glb": {
+      "bytes": 120676,
+      "kb": 117.8,
+      "nodes": 7,
+      "meshes": 7,
+      "materials": 7,
+      "images": 7,
+      "triangles": 13246
+    },
+    "d03_yanchi_arts_lod1.glb": {
+      "bytes": 103124,
+      "kb": 100.7,
+      "nodes": 2,
+      "meshes": 2,
+      "materials": 13,
+      "images": 14,
+      "triangles": 4350
+    },
+    "d04_heritage_gardens_lod1.glb": {
+      "bytes": 150904,
+      "kb": 147.4,
+      "nodes": 6,
+      "meshes": 6,
+      "materials": 14,
+      "images": 16,
+      "triangles": 7030
+    },
+    "d05_sports_living_lod1.glb": {
+      "bytes": 274244,
+      "kb": 267.8,
+      "nodes": 18,
+      "meshes": 18,
+      "materials": 14,
+      "images": 16,
+      "triangles": 28540
+    }
+  }
+}

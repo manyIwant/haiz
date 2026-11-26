@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>HAIZ · 海南中学府城校区 · 数字校园世界重构</title>
+  <meta name="description" content="海南中学府城校区（1923）新一代统一空间与生命模拟数字校园：Blender 参数化管线、六分区流式加载、海口天文气象、多画境与三模式探索。" />
+  <link rel="icon" href="./favicon.ico" />
+  <link rel="stylesheet" href="./world-reconstruction/engine/ui/world.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="wr-canvas" aria-label="海南中学府城校区三维数字校园"></canvas>
+
+  <!-- Loading Veil -->
+  <div id="wr-loading" role="status" aria-live="polite">
+    <div class="wr-load-title">HAIZ · 府城校园重构</div>
+    <div class="wr-load-sub">正在准备统一米制空间与热带光照…</div>
+    <div class="wr-load-bar"><i></i></div>
+  </div>
+
+  <button id="wr-zen-exit" class="wr-zen-exit" type="button">退出纯净画面 (H)</button>
+
+  <!-- Restrained Editorial HUD -->
+  <div class="wr-hud">
+    <header class="wr-topbar">
+      <div class="wr-brand">
+        <span class="wr-brand-name">HAIZ · 府城重构</span>
+        <span id="wr-clock" class="wr-brand-clock">16:40 · 晴暮</span>
+      </div>
+      <div class="wr-actions">
+        <button class="wr-btn" type="button" data-panel="vistas">视点</button>
+        <button class="wr-btn" type="button" data-panel="lens">画境</button>
+        <button class="wr-btn" type="button" data-panel="weather">气象</button>
+        <button id="wr-btn-map" class="wr-btn" type="button">地图<span class="wr-lbl-long"> M</span></button>
+        <button class="wr-btn" type="button" data-panel="perf">性能</button>
+        <button id="wr-btn-zen" class="wr-btn" type="button">纯净<span class="wr-lbl-long"> H</span></button>
+      </div>
+    </header>
+
+    <!-- Curated Vistas Panel -->
+    <section id="wr-panel-vistas" class="wr-panel" hidden>
+      <h3>校园八大考察视点</h3>
+      <div id="wr-vistas-list" class="wr-panel-list"></div>
+    </section>
+
+    <!-- Unified Multi-Lens Panel -->
+    <section id="wr-panel-lens" class="wr-panel" hidden>
+      <h3>统一场景 · 三种画境</h3>
+      <div id="wr-lens-list" class="wr-panel-list"></div>
+    </section>
+
+    <!-- Haikou Weather & Solar Time Panel -->
+    <section id="wr-panel-weather" class="wr-panel" hidden>
+      <h3>海口 20°N 实时气象与时刻</h3>
+      <div id="wr-weather-grid" class="wr-panel-grid"></div>
+      <div class="wr-slider-row">
+        <label><span>时刻</span><strong id="wr-hour-label">16:40</strong></label>
+        <input id="wr-hour-slider" type="range" min="0" max="23.95" step="0.05" value="16.65" />
+      </div>
+      <div id="wr-time-grid" class="wr-panel-grid" style="margin-top:8px;"></div>
+    </section>
+
+    <!-- Live Performance & Quality Panel -->
+    <section id="wr-panel-perf" class="wr-panel" hidden>
+      <h3>实时渲染性能与流式状态</h3>
+      <div class="wr-perf-grid">
+        <div class="wr-stat"><span>帧率</span><b id="wr-st-fps">60 FPS</b></div>
+        <div class="wr-stat"><span>帧耗时</span><b id="wr-st-ms">16.6 ms</b></div>
+        <div class="wr-stat"><span>Draw Calls</span><b id="wr-st-calls">0</b></div>
+        <div class="wr-stat"><span>活跃三角面</span><b id="wr-st-tris">0k</b></div>
+        <div class="wr-stat"><span>已载入分区</span><b id="wr-st-dist">0/6</b></div>
+        <div class="wr-stat"><span>GPU 资源</span><b id="wr-st-mem">0 / 0</b></div>
+      </div>
+      <div id="wr-quality-grid" class="wr-panel-grid"></div>
+    </section>
+
+    <!-- Building Provenance & Story Inspector -->
+    <aside id="wr-provenance" class="wr-provenance" hidden>
+      <div class="wr-prov-head">
+        <div>
+          <div id="wr-prov-title" class="wr-prov-title"></div>
+          <div id="wr-prov-en" class="wr-prov-en"></div>
+        </div>
+        <button id="wr-prov-close" class="wr-prov-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <div id="wr-prov-story" class="wr-prov-story"></div>
+      <div id="wr-prov-tag" class="wr-prov-tag"></div>
+      <div id="wr-prov-basis" class="wr-prov-basis"></div>
+    </aside>
+
+    <!-- Citizen Dialogue Whisper Toast -->
+    <div id="wr-toast" class="wr-toast" hidden></div>
+
+    <!-- Bottom Mode Dock -->
+    <footer class="wr-bottom">
+      <div class="wr-whisper">
+        <div id="wr-whisper-loc" class="wr-whisper-loc">中轴前庭 · 状元广场</div>
+        <div id="wr-whisper-sub" class="wr-whisper-sub">步履校园 · 点击建筑查看真实溯源</div>
+      </div>
+      <nav id="wr-dock" class="wr-dock" aria-label="探索方式">
+        <button type="button" data-mode="walk" class="active">1 漫步</button>
+        <button type="button" data-mode="bike">2 单车</button>
+        <button type="button" data-mode="glide">3 滑翔</button>
+      </nav>
+      <div id="wr-hint" class="wr-hint">WASD 漫步 · Shift 奔跑 · 空格 跳跃 · 点击建筑查看溯源 · M 地图</div>
+    </footer>
+  </div>
+
+  <!-- Mobile Touch Controls -->
+  <div class="wr-touch-zone">
+    <div id="wr-joy-base" class="wr-joy-base"><div id="wr-joy-knob" class="wr-joy-knob"></div></div>
+    <div class="wr-touch-act">
+      <button id="wr-touch-primary" class="wr-touch-btn" type="button">跳跃</button>
+      <button id="wr-touch-secondary" class="wr-touch-btn" type="button">切换</button>
+    </div>
+  </div>
+
+  <!-- Vector Architectural Campus Map Modal -->
+  <div id="wr-map-modal" class="wr-map-modal" hidden role="dialog" aria-label="海南中学府城校区校园地图">
+    <div class="wr-map-card">
+      <div class="wr-map-head">
+        <h2>海南中学府城校区 · 权威矢量总图（点击任意位置直达）</h2>
+        <button id="wr-map-close" class="wr-prov-close" style="background:#d9d2c3;color:#222;" type="button">×</button>
+      </div>
+      <canvas id="wr-map-canvas" class="wr-map-canvas" width="820" height="540"></canvas>
+      <div class="wr-map-foot">
+        <span>图例：红顶（教学/艺术/女寝）· 绿顶（北门/南门/凤栖堂/衍林堂）· 蓝顶（图书馆天文台）· 蓝点（校园人物）· 橙点（橘猫）</span>
+        <span>坐标系：HAIZ-ENU-2026（校园北 319.0°）</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./world-reconstruction/engine/main.js"></script>
+</body>
+</html>
