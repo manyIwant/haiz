@@ -1,0 +1,122 @@
+{
+  "schema": "haiz-world-r2-manifest/1",
+  "inherited_atelier_runtime": [
+    {
+      "id": "yihao",
+      "path": "twin/assets/runtime/yihao.glb",
+      "bytes": 1038688
+    },
+    {
+      "id": "landmark",
+      "path": "twin/assets/runtime/landmark.glb",
+      "bytes": 5627696
+    },
+    {
+      "id": "terminalia",
+      "path": "twin/assets/runtime/terminalia.glb",
+      "bytes": 10505772
+    },
+    {
+      "id": "forecourt",
+      "path": "twin/assets/runtime/forecourt.glb",
+      "bytes": 3992132
+    },
+    {
+      "id": "erhao",
+      "path": "twin/assets/runtime/erhao.glb",
+      "bytes": 2017272
+    },
+    {
+      "id": "science",
+      "path": "twin/assets/runtime/science.glb",
+      "bytes": 471092
+    },
+    {
+      "id": "south_classrooms",
+      "path": "twin/assets/runtime/south_classrooms.glb",
+      "bytes": 1667820
+    },
+    {
+      "id": "yanchi",
+      "path": "twin/assets/runtime/yanchi.glb",
+      "bytes": 3279912
+    },
+    {
+      "id": "arts",
+      "path": "twin/assets/runtime/arts.glb",
+      "bytes": 3097248
+    }
+  ],
+  "r2_districts": [
+    {
+      "id": "r2_terrain_surround",
+      "path": "world-reconstruction-r2/assets/districts/r2_terrain_surround.glb",
+      "lod": 0,
+      "bytes": 1065240,
+      "polys_ref": 424
+    },
+    {
+      "id": "r2_heroes_north_lod0",
+      "path": "world-reconstruction-r2/assets/districts/r2_heroes_north_lod0.glb",
+      "lod": 0,
+      "bytes": 2108836,
+      "polys_ref": 154982
+    },
+    {
+      "id": "r2_heroes_north_lod1",
+      "path": "world-reconstruction-r2/assets/districts/r2_heroes_north_lod1.glb",
+      "lod": 1,
+      "bytes": 1811180,
+      "polys_ref": 154982
+    },
+    {
+      "id": "r2_heroes_heritage_lod0",
+      "path": "world-reconstruction-r2/assets/districts/r2_heroes_heritage_lod0.glb",
+      "lod": 0,
+      "bytes": 1218588,
+      "polys_ref": 148290
+    },
+    {
+      "id": "r2_heroes_heritage_lod1",
+      "path": "world-reconstruction-r2/assets/districts/r2_heroes_heritage_lod1.glb",
+      "lod": 1,
+      "bytes": 957976,
+      "polys_ref": 148290
+    },
+    {
+      "id": "r2_outer_campus_lod0",
+      "path": "world-reconstruction-r2/assets/districts/r2_outer_campus_lod0.glb",
+      "lod": 0,
+      "bytes": 1007388,
+      "polys_ref": 43059
+    },
+    {
+      "id": "r2_outer_campus_lod1",
+      "path": "world-reconstruction-r2/assets/districts/r2_outer_campus_lod1.glb",
+      "lod": 1,
+      "bytes": 679200,
+      "polys_ref": 43059
+    },
+    {
+      "id": "r2_fucheng_context",
+      "path": "world-reconstruction-r2/assets/districts/r2_fucheng_context.glb",
+      "lod": 0,
+      "bytes": 143440,
+      "polys_ref": 712
+    },
+    {
+      "id": "r2_flora_kit",
+      "path": "world-reconstruction-r2/assets/districts/r2_flora_kit.glb",
+      "lod": 0,
+      "bytes": 411544,
+      "polys_ref": 2167
+    },
+    {
+      "id": "r2_props_kit",
+      "path": "world-reconstruction-r2/assets/districts/r2_props_kit.glb",
+      "lod": 0,
+      "bytes": 207600,
+      "polys_ref": 469
+    }
+  ]
+}

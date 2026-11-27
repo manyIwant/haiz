@@ -1,0 +1,924 @@
+{
+  "atelier_yihao": {
+    "file": "twin/assets/atelier/yihao.glb",
+    "size_mb": 15.22,
+    "mesh_objects": 319,
+    "vertices": 349148,
+    "triangles": 175798,
+    "bbox_spec_enu": {
+      "min": [
+        -58.479,
+        -44.0,
+        -0.15
+      ],
+      "max": [
+        58.479,
+        7.4,
+        31.342
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 31,
+    "sample_materials": [
+      "atelier.court.joint",
+      "atelier.court.zinc",
+      "atelier.erhao.ceramic",
+      "atelier.erhao.coping",
+      "atelier.glass.sea",
+      "atelier.glass.shadow",
+      "atelier.glass.sky",
+      "atelier.linen",
+      "atelier.patinated.numerals",
+      "atelier.sash.bronze",
+      "atelier.sash.charcoal",
+      "atelier.yihao.accent"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "atelier.erhao.ceramic.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.dark.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.dark.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.dark.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.red.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.red.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_landmark": {
+    "file": "twin/assets/atelier/landmark.glb",
+    "size_mb": 30.23,
+    "mesh_objects": 4,
+    "vertices": 465052,
+    "triangles": 557719,
+    "bbox_spec_enu": {
+      "min": [
+        -4.104,
+        25.985,
+        0.0
+      ],
+      "max": [
+        3.584,
+        31.623,
+        3.868
+      ]
+    },
+    "color_attributes": [
+      "Color(CORNER/BYTE_COLOR)"
+    ],
+    "materials_count": 11,
+    "sample_materials": [
+      "atelier.coping",
+      "atelier.grass.fresh",
+      "atelier.grass.olive",
+      "atelier.grass.shade",
+      "atelier.karst",
+      "ground.lawn",
+      "inscription.mineral",
+      "inscription.mineral.dense",
+      "inscription.mineral.edge",
+      "inscription.plaque.granite",
+      "stone.granite.dark"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "karst.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "karst.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "karst.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "plaque.grain",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "plaque.grain-normal",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "plaque.grain-orm",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "stone.granite.dark.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "stone.granite.dark.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_terminalia": {
+    "file": "twin/assets/atelier/terminalia.glb",
+    "size_mb": 51.38,
+    "mesh_objects": 8,
+    "vertices": 978627,
+    "triangles": 1244154,
+    "bbox_spec_enu": {
+      "min": [
+        26.306,
+        1.143,
+        0.481
+      ],
+      "max": [
+        59.71,
+        31.589,
+        14.83
+      ]
+    },
+    "color_attributes": [
+      "Color(CORNER/BYTE_COLOR)"
+    ],
+    "materials_count": 9,
+    "sample_materials": [
+      "atelier.bark",
+      "atelier.leaf.bronze",
+      "atelier.leaf.fresh",
+      "atelier.leaf.mature",
+      "atelier.supportstone",
+      "atelier.understory.0",
+      "atelier.understory.1",
+      "atelier.understory.2",
+      "atelier.understory.3"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "supportstone.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "supportstone.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "supportstone.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "terminalia.bark",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "terminalia.bark.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "terminalia.bark.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "terminalia.leaf",
+        "size": [
+          256,
+          512
+        ]
+      },
+      {
+        "name": "terminalia.leaf.bronze",
+        "size": [
+          256,
+          512
+        ]
+      }
+    ]
+  },
+  "atelier_forecourt": {
+    "file": "twin/assets/atelier/forecourt.glb",
+    "size_mb": 31.73,
+    "mesh_objects": 16,
+    "vertices": 676795,
+    "triangles": 246843,
+    "bbox_spec_enu": {
+      "min": [
+        -1500.0,
+        -1500.0,
+        0.0
+      ],
+      "max": [
+        1500.0,
+        1500.0,
+        1.342
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 18,
+    "sample_materials": [
+      "atelier.hedge.0",
+      "atelier.hedge.1",
+      "atelier.hedge.2",
+      "atelier.hedge.3",
+      "atelier.hedge.4",
+      "atelier.hedge.5",
+      "ground.context",
+      "ground.lawn",
+      "ground.soil",
+      "kerb.granite",
+      "paving.asphalt",
+      "paving.concrete"
+    ],
+    "textures_count": 12,
+    "sample_textures": [
+      {
+        "name": "paving.asphalt.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.asphalt.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.asphalt.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.granite.dark.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.granite.dark.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.granite.dark.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.granite.light.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "paving.granite.light.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_erhao": {
+    "file": "twin/assets/atelier/erhao.glb",
+    "size_mb": 22.39,
+    "mesh_objects": 295,
+    "vertices": 458652,
+    "triangles": 176688,
+    "bbox_spec_enu": {
+      "min": [
+        -42.75,
+        -57.02,
+        -0.105
+      ],
+      "max": [
+        50.23,
+        -10.62,
+        21.26
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 21,
+    "sample_materials": [
+      "atelier.ac",
+      "atelier.court.bark",
+      "atelier.court.joint",
+      "atelier.court.lawn",
+      "atelier.court.leaf0",
+      "atelier.court.leaf1",
+      "atelier.court.leaf2",
+      "atelier.court.paving",
+      "atelier.court.zinc",
+      "atelier.erhao.ceramic",
+      "atelier.erhao.coping",
+      "atelier.erhao.roof"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "atelier.court.lawn.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_science": {
+    "file": "twin/assets/atelier/science.glb",
+    "size_mb": 13.2,
+    "mesh_objects": 522,
+    "vertices": 380257,
+    "triangles": 190275,
+    "bbox_spec_enu": {
+      "min": [
+        -61.743,
+        -103.523,
+        -0.16
+      ],
+      "max": [
+        59.0,
+        -57.2,
+        23.94
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 19,
+    "sample_materials": [
+      "atelier.court.bark",
+      "atelier.court.lawn",
+      "atelier.court.leaf0",
+      "atelier.court.leaf1",
+      "atelier.court.leaf2",
+      "atelier.court.paving",
+      "atelier.court.zinc",
+      "atelier.erhao.ceramic",
+      "atelier.glass.sea",
+      "atelier.glass.shadow",
+      "atelier.science.awning",
+      "atelier.science.coping"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "atelier.court.lawn.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_south_classrooms": {
+    "file": "twin/assets/atelier/south_classrooms.glb",
+    "size_mb": 22.54,
+    "mesh_objects": 530,
+    "vertices": 474580,
+    "triangles": 222264,
+    "bbox_spec_enu": {
+      "min": [
+        -63.3,
+        -189.215,
+        -0.13
+      ],
+      "max": [
+        -22.075,
+        -103.225,
+        18.16
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 18,
+    "sample_materials": [
+      "atelier.court.bark",
+      "atelier.court.lawn",
+      "atelier.court.leaf0",
+      "atelier.court.leaf1",
+      "atelier.court.leaf2",
+      "atelier.court.paving",
+      "atelier.court.zinc",
+      "atelier.erhao.ceramic",
+      "atelier.erhao.roof",
+      "atelier.glass.sea",
+      "atelier.glass.shadow",
+      "atelier.science.coping"
+    ],
+    "textures_count": 9,
+    "sample_textures": [
+      {
+        "name": "atelier.court.lawn.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.lawn.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.court.paving.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "atelier.erhao.ceramic.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  "atelier_yanchi": {
+    "file": "twin/assets/atelier/yanchi.glb",
+    "size_mb": 37.87,
+    "mesh_objects": 42,
+    "vertices": 661593,
+    "triangles": 359590,
+    "bbox_spec_enu": {
+      "min": [
+        35.326,
+        -131.15,
+        -0.98
+      ],
+      "max": [
+        68.604,
+        -103.25,
+        12.209
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 27,
+    "sample_materials": [
+      "atelier.court.bark",
+      "atelier.court.leaf0",
+      "atelier.court.leaf1",
+      "atelier.court.leaf2",
+      "inscription.vermilion",
+      "inscription.vermilion.dense",
+      "inscription.vermilion.edge",
+      "pond.bank.soil",
+      "pond.bark",
+      "pond.basalt.wet",
+      "pond.coping.sandstone",
+      "pond.leaf.0"
+    ],
+    "textures_count": 19,
+    "sample_textures": [
+      {
+        "name": "limestone-normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "limestone-orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "pond.coping.sandstone.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "pond.coping.sandstone.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "pond.coping.sandstone.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "pond.fall.film",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "pond.fall.orm",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "pond.fall.tint",
+        "size": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  "atelier_arts": {
+    "file": "twin/assets/atelier/arts.glb",
+    "size_mb": 29.15,
+    "mesh_objects": 656,
+    "vertices": 592030,
+    "triangles": 335769,
+    "bbox_spec_enu": {
+      "min": [
+        -18.346,
+        -191.709,
+        -0.9
+      ],
+      "max": [
+        63.496,
+        -100.428,
+        16.842
+      ]
+    },
+    "color_attributes": [
+      "Color(CORNER/BYTE_COLOR)"
+    ],
+    "materials_count": 25,
+    "sample_materials": [
+      "arts.baseStone",
+      "arts.ceramic.body",
+      "arts.ceramic.cover",
+      "arts.ceramic.hip",
+      "arts.ceramic.shade",
+      "arts.ceramic.warm",
+      "arts.earth",
+      "arts.lime_coping",
+      "arts.metalDark",
+      "arts.recess_glass",
+      "arts.wallCream",
+      "arts.weathered_roof"
+    ],
+    "textures_count": 19,
+    "sample_textures": [
+      {
+        "name": "arts.membrane.albedo",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "arts.membrane.normal",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "arts.membrane.orm",
+        "size": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "name": "Image_0",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "Image_1",
+        "size": [
+          512,
+          512
+        ]
+      },
+      {
+        "name": "Image_10",
+        "size": [
+          256,
+          512
+        ]
+      },
+      {
+        "name": "Image_11",
+        "size": [
+          256,
+          256
+        ]
+      },
+      {
+        "name": "Image_12",
+        "size": [
+          768,
+          768
+        ]
+      }
+    ]
+  },
+  "phase1_gate": {
+    "file": "twin/assets/phase1/gate.glb",
+    "size_mb": 0.26,
+    "mesh_objects": 6,
+    "vertices": 94391,
+    "triangles": 79764,
+    "bbox_spec_enu": {
+      "min": [
+        -30.07,
+        100.196,
+        0.0
+      ],
+      "max": [
+        29.93,
+        115.223,
+        9.739
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 12,
+    "sample_materials": [
+      "glass.window",
+      "metal.steel.white",
+      "paint.gold",
+      "paint.green.fret",
+      "paint.ochre.fret",
+      "roof.tile.green",
+      "sign.metal.bronze",
+      "stone.granite.grey",
+      "stone.granite.white",
+      "trim.white",
+      "wall.render.cream",
+      "wall.render.white"
+    ],
+    "textures_count": 0,
+    "sample_textures": []
+  },
+  "phase1_campus": {
+    "file": "twin/assets/phase1/campus.glb",
+    "size_mb": 1.32,
+    "mesh_objects": 10,
+    "vertices": 373813,
+    "triangles": 342621,
+    "bbox_spec_enu": {
+      "min": [
+        -348.17,
+        -328.426,
+        -0.9
+      ],
+      "max": [
+        336.61,
+        199.36,
+        24.56
+      ]
+    },
+    "color_attributes": [],
+    "materials_count": 16,
+    "sample_materials": [
+      "bark.coconut",
+      "ground.soil",
+      "leaf.coconut",
+      "paint.red.column",
+      "paint.red.inscription",
+      "palm.coconut.nut",
+      "roof.flat.grey",
+      "roof.tile.green",
+      "stone.granite.dark",
+      "stone.granite.grey",
+      "stone.rock.boulder",
+      "stone.rock.yellow"
+    ],
+    "textures_count": 0,
+    "sample_textures": []
+  }
+}
