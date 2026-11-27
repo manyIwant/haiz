@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-11-27T08:27:34.658Z",
+  "gpuRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+  "errors": {
+    "console": 0,
+    "page": 0,
+    "http": 0
+  },
+  "benchmarks": {
+    "labHeroSolo": {
+      "fpsMean": 60,
+      "frameMsMean": 16.67,
+      "frameMsP50": 16.7,
+      "frameMsP95": 17.6,
+      "heapMB": 17.1,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "renderInfo": {
+        "calls": 11,
+        "triangles": 40631
+      }
+    },
+    "lab3WayCompare": {
+      "fpsMean": 60,
+      "frameMsMean": 16.67,
+      "frameMsP50": 16.7,
+      "frameMsP95": 17.6,
+      "heapMB": 17.1,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "renderInfo": {
+        "calls": 17,
+        "triangles": 70597
+      }
+    },
+    "campusR3Pbr": {
+      "fpsMean": 17.4,
+      "frameMsMean": 57.4,
+      "frameMsP50": 50.6,
+      "frameMsP95": 67.7,
+      "heapMB": 17.1,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "stats": {
+        "fps": 20.02938109568788,
+        "frameMs": 23.41475461987961,
+        "calls": 1643,
+        "triangles": 10596660,
+        "citizensLoaded": 6,
+        "playerPos": [
+          -4.322864068778687,
+          0.14800000000000008,
+          -44.005445455418894
+        ],
+        "playerSpeed": 0,
+        "playerMode": "walk"
+      }
+    },
+    "campusR3Gouache": {
+      "fpsMean": 16.4,
+      "frameMsMean": 60.95,
+      "frameMsP50": 66.5,
+      "frameMsP95": 83.3,
+      "heapMB": 17.1,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "stats": {
+        "fps": 20.047352289549377,
+        "frameMs": 20.60913279737121,
+        "calls": 1647,
+        "triangles": 10596664,
+        "citizensLoaded": 6,
+        "playerPos": [
+          -4.322864068778687,
+          0.14800000000000008,
+          -44.005445455418894
+        ],
+        "playerSpeed": 0,
+        "playerMode": "walk"
+      }
+    }
+  }
+}

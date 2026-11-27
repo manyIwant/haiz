@@ -1,0 +1,73 @@
+{
+  "archetypes": {
+    "student_hero": {
+      "lod0": {
+        "glb": "living-character/assets/characters/student_hero/student_hero_lod0.glb",
+        "triangles": 40615,
+        "bytes": 1984876
+      },
+      "lod1": {
+        "glb": "living-character/assets/characters/student_hero/student_hero_lod1.glb",
+        "triangles": 17056,
+        "bytes": 1061832
+      },
+      "lod2": {
+        "glb": "living-character/assets/characters/student_hero/student_hero_lod2.glb",
+        "triangles": 6902,
+        "bytes": 477396
+      }
+    },
+    "student_f": {
+      "lod0": {
+        "glb": "living-character/assets/characters/student_f/student_f_lod0.glb",
+        "triangles": 40723,
+        "bytes": 1961436
+      },
+      "lod1": {
+        "glb": "living-character/assets/characters/student_f/student_f_lod1.glb",
+        "triangles": 17100,
+        "bytes": 1094672
+      },
+      "lod2": {
+        "glb": "living-character/assets/characters/student_f/student_f_lod2.glb",
+        "triangles": 6919,
+        "bytes": 612280
+      }
+    },
+    "teacher_f": {
+      "lod0": {
+        "glb": "living-character/assets/characters/teacher_f/teacher_f_lod0.glb",
+        "triangles": 37167,
+        "bytes": 1846136
+      },
+      "lod1": {
+        "glb": "living-character/assets/characters/teacher_f/teacher_f_lod1.glb",
+        "triangles": 15610,
+        "bytes": 1031732
+      },
+      "lod2": {
+        "glb": "living-character/assets/characters/teacher_f/teacher_f_lod2.glb",
+        "triangles": 6317,
+        "bytes": 577476
+      }
+    },
+    "worker_m": {
+      "lod0": {
+        "glb": "living-character/assets/characters/worker_m/worker_m_lod0.glb",
+        "triangles": 37167,
+        "bytes": 1864248
+      },
+      "lod1": {
+        "glb": "living-character/assets/characters/worker_m/worker_m_lod1.glb",
+        "triangles": 15609,
+        "bytes": 1042148
+      },
+      "lod2": {
+        "glb": "living-character/assets/characters/worker_m/worker_m_lod2.glb",
+        "triangles": 6318,
+        "bytes": 574728
+      }
+    }
+  },
+  "bones": 38
+}

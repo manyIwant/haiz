@@ -1,0 +1,9493 @@
+{
+  "schema": "haiz-world-reconstruction-spec/1",
+  "project": "HAIZ · World Reconstruction (海南中学府城校区数字世界重构)",
+  "frame": {
+    "id": "HAIZ-ENU-2026",
+    "origin_wgs84": [
+      19.99847892,
+      110.34254843
+    ],
+    "north_bearing_deg": 319.0,
+    "ccw_from_true_north_deg": 41.0,
+    "status": "provisional",
+    "blender_to_threejs": "three_x = spec_x; three_y = spec_z; three_z = -spec_y",
+    "legacy_tree_pivot_spec": [
+      38.91,
+      17.67
+    ],
+    "datum_note": "z = 0.0 m at Teaching Block 1 forecourt road; lawn = 0.15 m; plaza = 0.60 m; Block 1 floor = 1.05 m (estimated from photo risers)"
+  },
+  "districts": [
+    {
+      "id": "d01_axis_forecourt",
+      "name": "中轴礼仪前庭区",
+      "priority": 0,
+      "center": [
+        6.0,
+        42.0
+      ],
+      "radius": 95.0,
+      "has_lod1": true
+    },
+    {
+      "id": "d02_academic_core",
+      "name": "教学与科学核区",
+      "priority": 1,
+      "center": [
+        4.0,
+        -72.0
+      ],
+      "radius": 115.0,
+      "has_lod1": true
+    },
+    {
+      "id": "d03_yanchi_arts",
+      "name": "砚池与艺术中心区",
+      "priority": 1,
+      "center": [
+        30.0,
+        -138.0
+      ],
+      "radius": 75.0,
+      "has_lod1": true
+    },
+    {
+      "id": "d04_heritage_gardens",
+      "name": "历史堂馆与图书馆区",
+      "priority": 2,
+      "center": [
+        28.0,
+        44.0
+      ],
+      "radius": 105.0,
+      "has_lod1": true
+    },
+    {
+      "id": "d05_sports_living",
+      "name": "运动与生活园区",
+      "priority": 2,
+      "center": [
+        -15.0,
+        -68.0
+      ],
+      "radius": 225.0,
+      "has_lod1": true
+    },
+    {
+      "id": "d06_fucheng_context",
+      "name": "府城街区天际线背景",
+      "priority": 3,
+      "center": [
+        0.0,
+        -50.0
+      ],
+      "radius": 450.0,
+      "has_lod1": false
+    }
+  ],
+  "school_boundary": [
+    [
+      -120.33,
+      -131.98
+    ],
+    [
+      -113.48,
+      -256.2
+    ],
+    [
+      -67.36,
+      -261.61
+    ],
+    [
+      16.56,
+      -245.55
+    ],
+    [
+      94.63,
+      -238.23
+    ],
+    [
+      156.07,
+      -241.68
+    ],
+    [
+      176.55,
+      -212.68
+    ],
+    [
+      178.94,
+      -102.23
+    ],
+    [
+      238.66,
+      -42.81
+    ],
+    [
+      102.21,
+      42.7
+    ],
+    [
+      94.89,
+      70.37
+    ],
+    [
+      85.08,
+      70.91
+    ],
+    [
+      84.37,
+      85.38
+    ],
+    [
+      11.08,
+      108.75
+    ],
+    [
+      7.1,
+      105.5
+    ],
+    [
+      0.12,
+      105.76
+    ],
+    [
+      -11.05,
+      106.76
+    ],
+    [
+      -18.3,
+      112.58
+    ],
+    [
+      -111.6,
+      132.5
+    ],
+    [
+      -223.84,
+      133.98
+    ],
+    [
+      -238.14,
+      127.32
+    ],
+    [
+      -247.49,
+      114.35
+    ],
+    [
+      -256.72,
+      85.29
+    ],
+    [
+      -250.88,
+      55.82
+    ],
+    [
+      -242.8,
+      42.0
+    ],
+    [
+      -229.4,
+      31.72
+    ],
+    [
+      -167.75,
+      29.33
+    ],
+    [
+      -176.51,
+      -62.3
+    ],
+    [
+      -180.03,
+      -125.86
+    ]
+  ],
+  "levels": {
+    "road": 0.0,
+    "ground": 0.15,
+    "lawn": 0.15,
+    "plaza": 0.6,
+    "floor": 1.05,
+    "tag": "estimated",
+    "basis": "Four 0.15 m risers between the forecourt road and the plaza and three between the plaza and the porch counted on jiaoxuelou-1600; three to four risers from the side plazas down to the lawns (lanshu-1600, aerial_campus); kerbs assumed 0.15 m. No levelling survey."
+  },
+  "forecourt_site": {
+    "zones": [
+      {
+        "id": "gate_outer",
+        "group": "gate",
+        "geom": {
+          "box": [
+            -9.0,
+            106.75,
+            9.0,
+            121.0
+          ]
+        },
+        "level": "road",
+        "mat": "paving.granite.grey",
+        "tag": "public-map/estimated",
+        "basis": "light paved apron between the gate and the street on the Esri layer (x -7..+5); width widened to the gate piers; flush with the road (assumed)"
+      },
+      {
+        "id": "street_sidewalk",
+        "group": "street",
+        "geom": {
+          "line": [
+            [
+              -80.0,
+              146.0
+            ],
+            [
+              -13.6,
+              131.6
+            ],
+            [
+              1.1,
+              128.2
+            ],
+            [
+              86.1,
+              107.8
+            ],
+            [
+              95.0,
+              105.7
+            ]
+          ],
+          "width": 17.0
+        },
+        "level": "ground",
+        "mat": "paving.concrete",
+        "tag": "public-map/estimated",
+        "basis": "OSM centreline of the street north of the gate; 10 m carriageway and 3.5 m footways assumed"
+      },
+      {
+        "id": "street_road",
+        "group": "street",
+        "geom": {
+          "line": [
+            [
+              -80.0,
+              146.0
+            ],
+            [
+              -13.6,
+              131.6
+            ],
+            [
+              1.1,
+              128.2
+            ],
+            [
+              86.1,
+              107.8
+            ],
+            [
+              95.0,
+              105.7
+            ]
+          ],
+          "width": 10.0
+        },
+        "level": "road",
+        "mat": "paving.asphalt",
+        "tag": "public-map/estimated",
+        "basis": "OSM centreline; carriageway width assumed"
+      },
+      {
+        "id": "lawn_paths",
+        "group": "forecourt.paths",
+        "geom": {
+          "union": [
+            {
+              "box": [
+                -66.0,
+                40.5,
+                66.0,
+                42.6
+              ]
+            },
+            {
+              "box": [
+                63.5,
+                9.0,
+                66.0,
+                42.6
+              ]
+            },
+            {
+              "box": [
+                -66.0,
+                9.0,
+                -63.5,
+                42.6
+              ]
+            },
+            {
+              "box": [
+                12.5,
+                37.0,
+                16.0,
+                40.6
+              ]
+            },
+            {
+              "box": [
+                -16.0,
+                37.0,
+                -12.5,
+                40.6
+              ]
+            }
+          ]
+        },
+        "level": "ground",
+        "mat": "paving.concrete",
+        "tag": "public-map",
+        "basis": "light footpath round the two lawn blocks (north edge y 40.5..42.6, east edge x 63.5..66 down to y 15) on the Esri layer; the west branch is hidden under canopy and mirrored (invented)"
+      },
+      {
+        "id": "north_sidewalk",
+        "group": "forecourt.paths",
+        "geom": {
+          "box": [
+            -78.0,
+            50.2,
+            78.0,
+            52.6
+          ]
+        },
+        "level": "ground",
+        "mat": "paving.concrete",
+        "tag": "public-map/estimated",
+        "basis": "light strip north of the parked cars (y 51.9..54.6 read, kept narrower)"
+      },
+      {
+        "id": "lawn_e",
+        "group": "forecourt.lawns",
+        "geom": {
+          "box": [
+            12.5,
+            9.0,
+            63.5,
+            40.5
+          ],
+          "round": 2.6
+        },
+        "level": "lawn",
+        "mat": "ground.lawn",
+        "tag": "public-map",
+        "basis": "lawn block east of the plaza: inner edge x 12.3..12.5, north edge y 40.0..40.5, rounded corners (kerb curve r ~2.5 m) on the Esri layer; open lawn on aerial_campus; level with the footpaths"
+      },
+      {
+        "id": "lawn_w",
+        "group": "forecourt.lawns",
+        "geom": {
+          "box": [
+            -63.5,
+            9.0,
+            -12.5,
+            40.5
+          ],
+          "round": 2.6
+        },
+        "level": "lawn",
+        "mat": "ground.lawn",
+        "tag": "public-map",
+        "basis": "lawn block west of the plaza, mirrored where hidden under the west canopy"
+      },
+      {
+        "id": "forecourt_road",
+        "group": "forecourt.road",
+        "geom": {
+          "box": [
+            -78.0,
+            42.6,
+            78.0,
+            50.2
+          ]
+        },
+        "level": "road",
+        "mat": "paving.asphalt",
+        "tag": "public-map",
+        "basis": "dark carriageway y 42.6..47.4 plus a parallel-parking lane on the north side (cars 5.5 x 2.4 m at y 47.4..50.0) on the Esri layer"
+      },
+      {
+        "id": "axis_road",
+        "group": "axis.road",
+        "geom": {
+          "box": [
+            -6.0,
+            50.2,
+            6.0,
+            96.0
+          ]
+        },
+        "level": "road",
+        "mat": "paving.asphalt",
+        "tag": "public-map",
+        "basis": "kerb-to-kerb width about 13 m read on hero-2560 at y ~80 (scale checked on the 25 m apron at the far end); the Esri layer shows only the 8 m strip between overhanging canopies; 12 m adopted; OSM centreline on x = 0"
+      },
+      {
+        "id": "gate_inner",
+        "group": "gate",
+        "geom": {
+          "box": [
+            -7.15,
+            96.0,
+            7.15,
+            106.75
+          ]
+        },
+        "level": "road",
+        "mat": "paving.granite.grey",
+        "tag": "estimated",
+        "basis": "paved entry inside the gate, gate width from hero-2560 (14.3 m between the outer piers)"
+      },
+      {
+        "id": "apron",
+        "group": "forecourt.road",
+        "geom": {
+          "box": [
+            -12.5,
+            29.8,
+            12.5,
+            42.6
+          ]
+        },
+        "level": "road",
+        "mat": "paving.asphalt",
+        "tag": "public-map",
+        "basis": "dark apron between the lawn blocks from the road down to the plaza steps (plaza edge y 29.8) on the Esri layer"
+      },
+      {
+        "id": "wingfront_e",
+        "group": "forecourt.side",
+        "geom": {
+          "box": [
+            52.0,
+            -0.3,
+            57.0,
+            9.0
+          ]
+        },
+        "level": "plaza",
+        "mat": "paving.granite.dark",
+        "pattern": "stagger_light",
+        "tag": "estimated",
+        "basis": "paving along the east wing under the Terminalia canopy (scenery_13); extent hidden on the Esri layer"
+      },
+      {
+        "id": "wingfront_w",
+        "group": "forecourt.side",
+        "geom": {
+          "box": [
+            -57.0,
+            -0.3,
+            -36.0,
+            9.0
+          ]
+        },
+        "level": "plaza",
+        "mat": "paving.granite.dark",
+        "pattern": "stagger_light",
+        "tag": "invented",
+        "basis": "mirrored from the east side; the west side is hidden under canopy and roof lean"
+      },
+      {
+        "id": "side_e",
+        "group": "forecourt.side",
+        "geom": {
+          "box": [
+            14.5,
+            -0.3,
+            52.0,
+            20.5
+          ]
+        },
+        "level": "plaza",
+        "mat": "paving.granite.dark",
+        "pattern": "stagger_light",
+        "tag": "photo-derived/public-map",
+        "basis": "dark paving with light squares east of the plaza, from the building to y ~21 and east to x ~50-55 (aerial_campus through a 4-point homography, edge distortion uncorrected; Esri patch x 15..24, y 16..20); pattern from scenery_13 and lanshu-1600",
+        "nodrop": [
+          {
+            "box": [
+              14.5,
+              20.4,
+              52.0,
+              20.6
+            ]
+          }
+        ]
+      },
+      {
+        "id": "side_w",
+        "group": "forecourt.side",
+        "geom": {
+          "box": [
+            -36.0,
+            -0.3,
+            -14.5,
+            20.5
+          ]
+        },
+        "level": "plaza",
+        "mat": "paving.granite.dark",
+        "pattern": "stagger_light",
+        "tag": "photo-derived/public-map",
+        "basis": "dark paving with light squares west of the plaza to x ~-30..-36 (aerial_campus homography; Esri patch x -24..-15, y 16..20)",
+        "nodrop": [
+          {
+            "box": [
+              -36.0,
+              20.4,
+              -14.5,
+              20.6
+            ]
+          }
+        ]
+      },
+      {
+        "id": "plaza",
+        "group": "forecourt.plaza",
+        "geom": {
+          "union": [
+            {
+              "box": [
+                -14.5,
+                -0.3,
+                14.5,
+                20.5
+              ]
+            },
+            {
+              "box": [
+                -12.5,
+                20.5,
+                12.5,
+                29.8
+              ]
+            }
+          ]
+        },
+        "level": "plaza",
+        "mat": "paving.granite.light",
+        "pattern": "diamond_dots",
+        "tag": "public-map",
+        "basis": "light plaza x +/-12.5 for y 20..29.8 and x +/-14.7 for y 13..20 on the Esri layer (south of y 13 hidden by the roof lean, assumed to run to the building); dot grid from aerial_campus",
+        "nodrop": [
+          {
+            "box": [
+              -12.5,
+              29.7,
+              -4.0,
+              29.9
+            ]
+          },
+          {
+            "box": [
+              3.5,
+              29.7,
+              12.5,
+              29.9
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lanren_bed",
+        "group": "trees.lanren_bed",
+        "geom": {
+          "poly": [
+            [
+              35.8,
+              16.0
+            ],
+            [
+              37.0,
+              14.8
+            ],
+            [
+              39.4,
+              14.6
+            ],
+            [
+              41.6,
+              15.4
+            ],
+            [
+              42.4,
+              17.2
+            ],
+            [
+              41.8,
+              19.4
+            ],
+            [
+              39.6,
+              20.1
+            ],
+            [
+              37.0,
+              19.8
+            ],
+            [
+              35.7,
+              18.4
+            ]
+          ]
+        },
+        "level": "plaza",
+        "mat": "plant.groundcover",
+        "raise": 0.12,
+        "tag": "photo-derived/estimated",
+        "basis": "planting bed with ground cover, moss and set stones round the trunk (lanshu-1600: ground cover from the root flare to the right edge of the picture, while the boulders to the east stand on paving); centred on the trunk position calibrated on lanshu-1600, kept clear of the side-plaza steps at y 20.5; outline estimated"
+      }
+    ],
+    "steps": [
+      {
+        "id": "plaza_n",
+        "runs": [
+          [
+            -12.5,
+            -4.0
+          ],
+          [
+            3.5,
+            12.5
+          ]
+        ],
+        "y_edge": 29.8,
+        "from": "plaza",
+        "to": "road",
+        "risers": 4,
+        "tread": 0.4,
+        "direction": 1,
+        "tag": "photo-derived",
+        "basis": "four red granite risers either side of the rock plinth (jiaoxuelou-1600, aerial_campus); tread assumed"
+      },
+      {
+        "id": "side_e_n",
+        "runs": [
+          [
+            14.5,
+            52.0
+          ]
+        ],
+        "y_edge": 20.5,
+        "from": "plaza",
+        "to": "lawn",
+        "risers": 3,
+        "tread": 0.35,
+        "direction": 1,
+        "tag": "photo-derived/estimated",
+        "basis": "steps down from the side plaza in the foreground of lanshu-1600 (grey stone, three risers); light strip along the side plaza's north edge on aerial_campus; full-length flight assumed. Back-projected with the calibrated lanshu-1600 camera the top nosing lies at y 19.8-20.2 (if the plaza is at z 0.60) and the treads look 0.2-0.3 m deep; at this grazing angle 0.1 m of level error moves the edge by about 0.7 m, so the edge is left at y 20.5 and listed for checking",
+        "mat": "stone.granite.grey"
+      },
+      {
+        "id": "side_w_n",
+        "runs": [
+          [
+            -36.0,
+            -14.5
+          ]
+        ],
+        "y_edge": 20.5,
+        "from": "plaza",
+        "to": "lawn",
+        "risers": 3,
+        "tread": 0.35,
+        "direction": 1,
+        "tag": "estimated",
+        "basis": "mirrored from the east side",
+        "mat": "stone.granite.grey"
+      }
+    ],
+    "hedges": [
+      {
+        "box": [
+          16.8,
+          0.0,
+          47.7,
+          0.9
+        ],
+        "level": "plaza",
+        "height": 0.6,
+        "tag": "photo-derived",
+        "basis": "low clipped hedge in a planter along the east colonnade (scenery_13, aerial_campus)"
+      },
+      {
+        "box": [
+          -47.7,
+          0.0,
+          -16.8,
+          0.9
+        ],
+        "level": "plaza",
+        "height": 0.6,
+        "tag": "photo-derived",
+        "basis": "hedge along the west colonnade (jiaoxuelou-1600, aerial_campus)"
+      }
+    ],
+    "taihu": {
+      "plinth": [
+        -4.0,
+        26.0,
+        3.5,
+        31.6
+      ],
+      "plinth_top": 0.75,
+      "panel": [
+        -1.52,
+        1.38,
+        0.16,
+        0.6
+      ],
+      "panel2": [
+        -3.95,
+        -3.3,
+        0.16,
+        0.6
+      ],
+      "inscription": "虎踞龍盤捷報頻傳",
+      "tag": "photo-derived",
+      "basis": "dark granite plinth with a lawn bed, its north face level with the foot of the steps and its east end against them (jiaoxuelou-1600); width 7.5 m and a 0.25 m westward offset from the hero-2560 camera fit (corner residuals of the earlier 9.6 m plinth: -30 / +19 px at 0.043 m/px); depth from the rock's footprint on the Esri layer. OSM puts the artwork 4-5 m further south (y 20.3..24.5). Checked on jiaoxuelou-1600 with its calibrated camera: with the plinth 7.5 m long at this position its height comes out 0.78 +/- 0.05 m (model 0.75).",
+      "inscription_tag": "documented",
+      "inscription_basis": "text read on jiaoxuelou-1600 (running-script calligraphy, 8 characters, signed); typeface substituted. Panels placed with the calibrated jiaoxuelou-1600 camera: the inscription on the raised middle slab (x -1.5..1.4), the alumni donation (2012) on the west end slab (x -3.95..-3.3), modelled blank; the phase-1 model had them the other way round.",
+      "rock_tag": "photo-derived/estimated",
+      "rock_basis": "carved from its outlines on two calibrated photographs (jiaoxuelou-1600: camera fitted on 12 line features of the portal, tower and plinth, 1.6 px rms; hero-2560), twin/evidence/calibration/taihu-silhouettes.json and tools/taihu_carve.py: outline seen from the north within about 0.05 m (overlap with the traced outlines 0.93 and 0.86), twelve photographed holes and caves drilled where they are on jiaoxuelou-1600; depth (about 3 m) is an inflation of the outline about the middle of the bed, not observed; the division into rounded masses (seeded Voronoi cells with crevices), lumps, creases and pits are procedural and not the real ones. About 7.7 x 3.1 x 3.1 m above the lawn.",
+      "rock_silhouettes": "evidence/calibration/taihu-silhouettes.json",
+      "rock_res": 0.035
+    }
+  },
+  "gate_north": {
+    "schema": "haiz-twin-gate/1",
+    "id": "north_gate",
+    "name": "北门（海南中學牌坊）",
+    "frame": "Twin frame. x across the gate (campus east +), y along the axis (+ towards the street), z up from the road (0).",
+    "evidence": {
+      "hero": "assets/images/web/hero-2560.jpg: frontal view from the street. Camera recovered from the scene: level (horizon row 1075 from the converging kerbs), principal column 1280, f ~2036 px, eye 1.52 m, about 13.8 m in front of the gate face. Gate-plane scale 6.78 mm/px; elements in front of the gate (lions) at ~12.5 m: 6.14 mm/px.",
+      "osm": "campus boundary vertex on the axis at y 105.7 (OpenStreetMap via Overture 2026-11-18.0); the gate is placed with its centre plane at y = 106.0 on the axis. The 0.4 m parallax between the gate centre and the Teaching Block 1 portal on hero-2560 is within the uncertainty.",
+      "landscape_intro": "assets/images/campus/landscape_intro.jpg: same gate, slightly wider, confirms bay rhythm, lions, walls"
+    },
+    "tag": "photo-derived",
+    "basis": "All heights and widths measured on hero-2560 in the gate plane (focal-length independent ratios checked against ground-contact back-projection); depth (front-back) of piers and roofs is not visible and is estimated.",
+    "centre_y": 106.0,
+    "depth": 1.2,
+    "piers": {
+      "inner": {
+        "x": [
+          2.37,
+          3.93
+        ],
+        "top": 7.25
+      },
+      "outer": {
+        "x": [
+          5.49,
+          7.22
+        ],
+        "top": 5.15
+      },
+      "base_h": 0.6,
+      "bands_z": [
+        1.78,
+        2.95,
+        4.1
+      ],
+      "band_h": 0.06
+    },
+    "central_bay": {
+      "opening_top": 4.33,
+      "beam": [
+        4.33,
+        4.9
+      ],
+      "fret_low": [
+        4.9,
+        5.2
+      ],
+      "plaque": [
+        5.35,
+        6.57
+      ],
+      "plaque_x": [
+        -2.2,
+        2.2
+      ],
+      "fret_high": [
+        6.75,
+        7.0
+      ],
+      "text": "學中南海",
+      "text_note": "displayed left to right as 學中南海, read right to left as 海南中學",
+      "bracket": {
+        "w": 0.75,
+        "h": 0.65
+      }
+    },
+    "side_bay": {
+      "opening_top": 3.59,
+      "fret_low": [
+        3.95,
+        4.22
+      ],
+      "beam": [
+        4.22,
+        4.6
+      ],
+      "fret_high": [
+        4.6,
+        4.85
+      ],
+      "bracket": {
+        "w": 0.45,
+        "h": 0.42
+      }
+    },
+    "roofs": {
+      "central": {
+        "eave_x": 5.0,
+        "eave_y": 1.55,
+        "eave_z": 7.45,
+        "pitch": 35,
+        "upturn": 0.6,
+        "kick": 0.35,
+        "ridge_ends": 0.45,
+        "basis": "eave board bottom row 200 px (7.45 m), ridge row 76 px (8.3 m), eave span 10.8 m in the photo reduced for the eaves' projection towards the camera"
+      },
+      "side": {
+        "x_in": 2.6,
+        "x_out": 8.55,
+        "eave_y": 1.35,
+        "eave_z": 5.6,
+        "pitch": 32,
+        "upturn": 0.45,
+        "kick": 0.25,
+        "basis": "eave row 476 px (5.6 m), ridge row 370 px (6.3 m), outer eave about 1.3 m beyond the outer pier"
+      }
+    },
+    "lions": {
+      "x": [
+        -6.35,
+        -3.15,
+        3.15,
+        6.35
+      ],
+      "y": 107.55,
+      "pedestal": {
+        "w": 0.8,
+        "d": 0.8,
+        "h": 0.95
+      },
+      "height": 1.1,
+      "tag": "photo-derived",
+      "basis": "four white stone lions on square pedestals in front of the piers (hero-2560: pedestal top 0.94 m, lion top 2.04 m); carving simplified"
+    },
+    "walls": {
+      "west": [
+        [
+          -12.6,
+          106.6
+        ],
+        [
+          -18.4,
+          112.4
+        ],
+        [
+          -30.0,
+          114.9
+        ]
+      ],
+      "east": [
+        [
+          7.22,
+          106.0
+        ],
+        [
+          10.9,
+          108.6
+        ],
+        [
+          29.8,
+          100.5
+        ]
+      ],
+      "h": 2.5,
+      "coping_h": 0.45,
+      "tag": "public-map/estimated",
+      "basis": "line of the OSM campus boundary; white rendered wall with green glazed-tile coping and a notice board east of the gate (left edge of hero-2560); height estimated"
+    },
+    "gatehouse": {
+      "x": [
+        -12.6,
+        -7.4
+      ],
+      "y": [
+        102.6,
+        106.6
+      ],
+      "h": 3.3,
+      "tag": "photo-derived/estimated",
+      "basis": "white building with a green-tiled hip roof west of the gate (right edge of hero-2560, camera facing south); footprint estimated"
+    },
+    "booth": {
+      "x": [
+        -5.1,
+        -4.0
+      ],
+      "y": [
+        106.65,
+        107.6
+      ],
+      "h": 2.1,
+      "tag": "photo-derived",
+      "basis": "guard booth and turnstiles in the west side opening (right-hand opening seen from the street, hero-2560)"
+    },
+    "open_questions": [
+      "Gate depth (piers and roofs front to back) and the south face are not photographed; the south face repeats the north face with a blank plaque (invented).",
+      "Exact position along the axis rests on the OSM boundary (y 105.7); the photo puts the camera 13.8 m in front of the gate, which is consistent but not independent."
+    ]
+  },
+  "yihao_spec": {
+    "schema": "haiz-twin-building/1",
+    "id": "yihao",
+    "name": "一号教学楼",
+    "legacy_id": "yihao",
+    "osm": "way/1165596682 (1号教学楼)",
+    "frame": "Building-local: origin = portal centre on the central block's front wall at the ground-floor level (±0.00); +x campus east along the facade, +y out of the front facade (towards the North Gate), +z up. Placement in the twin frame: twin/data/site.json.",
+    "evidence": {
+      "tags": "surveyed | public-map | estimated | invented | documented (same vocabulary as data/campus-credibility.json)",
+      "sources": {
+        "esri": "assets/cinematic/aligned/courtyard.jpg (Esri World Imagery export, 0.55 m/px, capture date unknown). Roof outlines read in the twin frame; relief displacement of roofs removed with a per-metre-of-height shift of (+0.335, -0.53) m in twin x/y, calibrated so that the central roof and the two rear links are symmetric about the axis and the central front eave sits 1.2 m in front of the wall",
+        "osm": "OpenStreetMap via Overture 2026-11-18.0: building way 1165596682 (front edge at y = +1.3..+2.4, rotated +0.7 deg against the axis road), axis road, 太湖石 artwork polygon",
+        "aerial": "assets/images/campus/aerial_campus.jpg (school website, date unknown): bay counts (6 per wing), storey counts, roof forms, tower tops, porch roofs, forecourt",
+        "front": "assets/images/campus/campus_yihao.jpg: central block (3 bays), towers (granite to the 5th storey, arched window in the 6th), porch, plinth",
+        "portal": "assets/images/web/jiaoxuelou-1600.jpg (= campus/scenery_11.jpg): portal with 1923, stepped door frame, canopy on white columns, side porches with granite side portals, ground floor open through to the courtyard, wing colonnade, window design",
+        "flank": "assets/images/campus/scenery_13.jpg: granite colonnade of storeys 1-2 along the east wing, entablature, upper pilasters, hedge, side-plaza paving, overhanging Terminalia canopy",
+        "hero": "assets/images/web/hero-2560.jpg (North Gate looking south along the axis, keystone-corrected, level camera, horizon row 1075 from the converging road kerbs): central window grid read to 1-2 px; storey pitch = 0.478 x central bay (s3-s6 window tops 908/850/792/736 px, bays 120.5 px); towers cover 0.59 m of each outer central bay; porch floor row 1083 px"
+      }
+    },
+    "levels": {
+      "ground_floor": {
+        "z": 0.0,
+        "above_road_m": 1.05,
+        "tag": "estimated",
+        "basis": "3 risers porch->plaza and 4 risers plaza->forecourt road counted on jiaoxuelou-1600 / aerial, 0.15 m each (generic riser)"
+      },
+      "storeys": {
+        "f1": 4.0,
+        "upper": 3.39,
+        "tag": "photo-derived",
+        "basis": "upper storey = 0.478 x central bay (hero-2560 and campus_yihao agree: 0.478 / 0.47); central bay 7.09 m from the aerial (central roof eave corners lie over the tower centre lines) and the Esri eave width 26.6 m; ground storey from the porch floor (row 1083) to the 3rd-storey sills (row 941.7) on hero-2560 = 8.31 m with 0.9 m sills. Uncertainty about +/-0.15 m per storey, dominated by the absolute scale."
+      }
+    },
+    "parts": {
+      "central": {
+        "x": [
+          -12.1,
+          12.1
+        ],
+        "front_visible_x": [
+          -10.05,
+          10.05
+        ],
+        "y": [
+          -10.4,
+          0.0
+        ],
+        "storeys": 7,
+        "bays": 3,
+        "tag": "photo-derived/public-map",
+        "basis": "3 bays of 7.09 m on the axis (window centres 0, +/-7.09); window width 0.656 bay, height 0.335 storey-pitch (hero-2560); visible front between the granite towers 2.84 bays = 20.1 m; walls behind the towers +/-12.1 from the Esri eave width 26.6 m minus 1.2 m overhang",
+        "bay": 7.09,
+        "window": {
+          "w": 4.65,
+          "h": 1.93,
+          "sill": 0.9,
+          "top_storey": {
+            "h": 2.35,
+            "sill": 0.75
+          }
+        }
+      },
+      "towers": {
+        "x": [
+          10.05,
+          16.5
+        ],
+        "y": [
+          -10.4,
+          0.6
+        ],
+        "granite_top_storey": 5,
+        "tag": "photo-derived",
+        "basis": "tower = 0.91 central bay (campus_yihao 147/159 px; aerial 120/135 px); inner face 0.59 m inside the outer central bays (hero-2560); outer face +/-16.5 meets the wing roofs (Esri +/-16.3). Granite cornice spans the 5th-storey windows (hero-2560 rows 798-817 vs window 792-825; campus_yihao the same), arched window above it through the 6th storey, louvred box in the 7th",
+        "granite_top": "lvl(5) + 1.5",
+        "cornice_h": 1.1,
+        "arch": {
+          "w": 1.8,
+          "h": 3.7,
+          "sill": "lvl(5) + 2.9"
+        }
+      },
+      "wings": {
+        "x": [
+          16.5,
+          48.0
+        ],
+        "y": [
+          -10.6,
+          -0.3
+        ],
+        "storeys": 6,
+        "bays": 6,
+        "tag": "public-map/estimated",
+        "basis": "6 window bays per wing (aerial, both wings); bay 5.25 m; window 0.62 bay, height 0.6 storey (jiaoxuelou-1600, local ratios); granite entablature about 1 m deep over the two-storey colonnade",
+        "window": {
+          "w": 3.25,
+          "h": 2.0,
+          "sill": 0.9
+        },
+        "pilaster_w": 1.2,
+        "entablature_h": 1.0
+      },
+      "pavilions": {
+        "x": [
+          48.0,
+          57.0
+        ],
+        "y": [
+          -15.1,
+          0.0
+        ],
+        "storeys": 7,
+        "tag": "public-map/estimated",
+        "basis": "end roofs 11.0-11.5 m wide x 18 m deep incl. eaves, ridge running front-back (Esri, aerial); overall roof length 116 m eave to eave; narrow front with one column of small windows (aerial)"
+      }
+    },
+    "porch": {
+      "portal": {
+        "x": [
+          -4.4,
+          4.4
+        ],
+        "front_y": 5.6,
+        "pier_w": 1.9,
+        "top_z": 8.0,
+        "lintel": [
+          6.2,
+          7.4
+        ],
+        "text": "1923",
+        "tag": "photo-derived",
+        "basis": "hero-2560: portal 157 px wide at 17.8 px/m (5.6 m in front of the facade) = 8.8 m, opening 5.0 m; terrace/top at 8.0 m; lintel and 1923 from jiaoxuelou-1600 proportions"
+      },
+      "canopy": {
+        "x": [
+          -5.2,
+          5.2
+        ],
+        "y": [
+          0.4,
+          5.6
+        ],
+        "eave_z": 10.6,
+        "pitch": 34,
+        "overhang": 0.8,
+        "columns": 4,
+        "tag": "photo-derived",
+        "basis": "hero-2560: eave corners at rows 893 (10.6 m), ridge row 852 (about 13 m), eaves 218 px = 12.1 m"
+      },
+      "side": {
+        "x_inner": 5.2,
+        "x_outer": 10.05,
+        "front_y": 4.2,
+        "roof_z": [
+          8.2,
+          7.0
+        ],
+        "portal_top": 5.1,
+        "tag": "photo-derived",
+        "basis": "hero-2560: red shed roofs rows 943-960 (8.2 -> 7.0 m) reaching the towers; side portal cap rows 993-1000 (4.9-5.1 m), opening 43 px = 2.4 m wide, head at 4.0 m",
+        "opening_w": 2.4,
+        "opening_top": 4.0
+      },
+      "through_hall": {
+        "x": [
+          -7.2,
+          7.2
+        ],
+        "tag": "estimated",
+        "basis": "the courtyard and the next building are visible through the portal on jiaoxuelou-1600: open ground-floor passage"
+      }
+    },
+    "links": {
+      "x_centres": [
+        -25.2,
+        25.2
+      ],
+      "width": 5.4,
+      "y": [
+        -44.0,
+        -10.6
+      ],
+      "storeys": 6,
+      "tag": "public-map/invented",
+      "basis": "two white flat-roofed links on the Esri layer, symmetric about the axis after lean correction; OSM ways 1165596684/1165596685 run from the rear of Teaching Block 1 to the front of Teaching Block 2 (y -44); their facades are unknown"
+    },
+    "rear": {
+      "tag": "invented",
+      "basis": "No photograph of the rear (courtyard) facades was available; a corridor facade with windows is assumed."
+    },
+    "roofs": {
+      "central": {
+        "pitch": 30,
+        "overhang": 1.2,
+        "concave": 0.1,
+        "upturn": 0.55,
+        "tag": "estimated",
+        "basis": "aerial / campus_yihao: hipped, upturned corners, white fascia, ridges and curled ridge ends"
+      },
+      "pavilion": {
+        "pitch": 32,
+        "overhang": 1.1,
+        "concave": 0.1,
+        "upturn": 0.45,
+        "tag": "estimated"
+      },
+      "wing": {
+        "pitch": 22,
+        "overhang": 1.0,
+        "concave": 0.0,
+        "upturn": 0.0,
+        "tag": "estimated"
+      }
+    },
+    "open_questions": [
+      "Absolute scale of the facade rests on the Esri eave width (26.6 m) and the aerial reading that the central eave corners sit over the tower centre lines; a single taped dimension (e.g. a central bay or the portal) would fix every storey height.",
+      "Long axis rotated +0.7 deg (OSM outline) to +1.2 deg (roof eaves) against the axis-road bearing; not applied.",
+      "OSM puts the front wall 1.3-2.4 m further north than the lean-corrected Esri reading used for the origin.",
+      "Top-storey windows read taller (2.35 m) than the others (1.93 m) on hero-2560; modelled, not confirmed elsewhere.",
+      "Rear facades, link facades and the courtyard are not photographed."
+    ],
+    "materials": {
+      "upper_walls": "wall.render.white",
+      "base": "stone.granite.dark",
+      "roof": "roof.tile.red",
+      "trim": "trim.white",
+      "glass": "glass.window",
+      "frames": "frame.alu.white",
+      "ground_floor_frames": "frame.alu.brown",
+      "steps": "stone.granite.red",
+      "tag": "estimated",
+      "basis": "colours read by eye from the photographs; PBR factors are reference values"
+    }
+  },
+  "terminalia_hero": {
+    "name": "百年榄仁树",
+    "species": "Terminalia catappa (榄仁)",
+    "trunk_xy": [
+      38.91,
+      17.67
+    ],
+    "ground_z": 0.72,
+    "tag": "photo-derived/estimated",
+    "basis": "Calibrated on lanshu-1600 (twin/evidence/calibration/lanshu-1600.report.json, camera fitted on 37 facade lines, 0.70 px rms). Trunk on the ray through its image centre at 12.0 m from the camera, i.e. (38.9, 17.7): the root flare meets the ground at z 0.6-0.75, the trunk is 1.0 m thick and the low limb tapers as on the photograph only at this distance; the phase-1 position (31, 13, from an aerial blob) put the trunk 8-9 m too far west. Uncertainty about +/- 1.5 m along the view direction, +/- 0.2 m across. Visible limbs (low limb resting on the tall boulder and turning up into a stem, the two limbs rising from it, the leader and two crotch limbs) are back-projected from pixel traces with stated plane assumptions (twin/evidence/calibration/lanshu-1600.tree.json, tools/lanren_backproject.py); limbs hidden from this view and everything above the frame are estimated to fill the mapped crown.",
+    "envelope": {
+      "poly": [
+        [
+          57.7,
+          26.0
+        ],
+        [
+          59.4,
+          21.9
+        ],
+        [
+          60.0,
+          17.5
+        ],
+        [
+          59.4,
+          13.1
+        ],
+        [
+          57.7,
+          9.0
+        ],
+        [
+          57.1,
+          8.2
+        ],
+        [
+          56.4,
+          8.9
+        ],
+        [
+          55.8,
+          9.6
+        ],
+        [
+          55.0,
+          10.1
+        ],
+        [
+          54.2,
+          10.5
+        ],
+        [
+          53.3,
+          10.8
+        ],
+        [
+          52.4,
+          10.9
+        ],
+        [
+          51.5,
+          11.0
+        ],
+        [
+          50.6,
+          10.9
+        ],
+        [
+          49.7,
+          10.8
+        ],
+        [
+          48.8,
+          10.5
+        ],
+        [
+          48.0,
+          10.1
+        ],
+        [
+          47.2,
+          9.6
+        ],
+        [
+          46.6,
+          8.9
+        ],
+        [
+          45.9,
+          8.3
+        ],
+        [
+          45.4,
+          7.5
+        ],
+        [
+          45.0,
+          6.7
+        ],
+        [
+          44.7,
+          5.8
+        ],
+        [
+          44.6,
+          4.9
+        ],
+        [
+          44.5,
+          4.0
+        ],
+        [
+          44.6,
+          3.1
+        ],
+        [
+          44.7,
+          2.2
+        ],
+        [
+          45.3,
+          0.8
+        ],
+        [
+          40.7,
+          0.8
+        ],
+        [
+          38.6,
+          1.1
+        ],
+        [
+          34.5,
+          2.8
+        ],
+        [
+          31.0,
+          5.5
+        ],
+        [
+          28.3,
+          9.0
+        ],
+        [
+          26.6,
+          13.1
+        ],
+        [
+          26.0,
+          17.5
+        ],
+        [
+          26.6,
+          21.9
+        ],
+        [
+          28.3,
+          26.0
+        ],
+        [
+          31.0,
+          29.5
+        ],
+        [
+          34.2,
+          32.0
+        ],
+        [
+          51.8,
+          32.0
+        ],
+        [
+          55.0,
+          29.5
+        ]
+      ],
+      "z_bottom": 3.0,
+      "z_top_centre": 15.5,
+      "z_top_edge": 9.5,
+      "centre": [
+        43.0,
+        17.5
+      ],
+      "tag": "public-map/estimated",
+      "basis": "crown outline: the sunlit Terminalia crown on the Esri layer of the east side plaza (about x 26-60, y 1-32, centre near 43, 17.5), clipped at the wing facade, at y 32 and where it meets the crown of east_big; heights estimated (no view shows the top of the crown)"
+    },
+    "limbs": [
+      {
+        "id": "trunk",
+        "tag": "photo-derived",
+        "basis": "trunk centreline and width (104-120 px) on lanshu-1600, at the calibrated trunk position; crotch at z 4.2-5.0 (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            39.032,
+            17.424,
+            0.557,
+            0.56
+          ],
+          [
+            39.005,
+            17.475,
+            1.03,
+            0.52
+          ],
+          [
+            38.955,
+            17.577,
+            1.814,
+            0.49
+          ],
+          [
+            38.903,
+            17.684,
+            2.702,
+            0.49
+          ],
+          [
+            38.849,
+            17.804,
+            3.609,
+            0.52
+          ],
+          [
+            38.773,
+            17.987,
+            4.332,
+            0.56
+          ],
+          [
+            38.69,
+            18.206,
+            4.91,
+            0.52
+          ]
+        ]
+      },
+      {
+        "id": "L_low_limb_on_boulder",
+        "tag": "photo-derived",
+        "basis": "the long low limb: leaves the crotch at z 4.0, runs east towards the camera in an S-curve (low points z 2.3 at image x 775 and z 2.15 at x 430-500) to rest on the tall boulder at z 2.3, 8.3 m from the trunk, then turns up into a stem rising from the boulder top (traced to z 4.6 at the top of the frame; above that estimated).  Plane: vertical, through the trunk and the boulder centre; stem in the plane facing the camera through the boulder.  Widths 90 px near the trunk to 50 px at the boulder; the stem is 75 px (0.36 m), thicker than the limb just before the boulder, as on the photograph. (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            38.95,
+            17.66,
+            4.45,
+            0.4
+          ],
+          [
+            39.486,
+            17.637,
+            4.303,
+            0.36
+          ],
+          [
+            39.709,
+            17.624,
+            4.041,
+            0.34
+          ],
+          [
+            40.723,
+            17.565,
+            3.893,
+            0.3
+          ],
+          [
+            41.436,
+            17.524,
+            3.682,
+            0.28
+          ],
+          [
+            42.082,
+            17.487,
+            3.484,
+            0.26
+          ],
+          [
+            42.678,
+            17.452,
+            3.231,
+            0.25
+          ],
+          [
+            43.226,
+            17.421,
+            2.952,
+            0.23
+          ],
+          [
+            43.725,
+            17.392,
+            2.691,
+            0.22
+          ],
+          [
+            44.196,
+            17.365,
+            2.286,
+            0.21
+          ],
+          [
+            44.778,
+            17.331,
+            2.347,
+            0.18
+          ],
+          [
+            45.472,
+            17.291,
+            2.398,
+            0.16
+          ],
+          [
+            46.095,
+            17.255,
+            2.165,
+            0.15
+          ],
+          [
+            46.482,
+            17.232,
+            2.153,
+            0.14
+          ],
+          [
+            46.935,
+            17.206,
+            2.185,
+            0.13
+          ],
+          [
+            47.205,
+            17.191,
+            2.261,
+            0.15
+          ],
+          [
+            47.361,
+            17.192,
+            2.405,
+            0.18
+          ],
+          [
+            47.401,
+            17.175,
+            2.733,
+            0.18
+          ],
+          [
+            47.45,
+            17.154,
+            3.198,
+            0.17
+          ],
+          [
+            47.498,
+            17.134,
+            3.674,
+            0.16
+          ],
+          [
+            47.563,
+            17.106,
+            4.16,
+            0.15
+          ],
+          [
+            47.708,
+            17.043,
+            4.62,
+            0.14
+          ],
+          [
+            48.6,
+            16.1,
+            6.4,
+            0.12
+          ],
+          [
+            49.8,
+            14.9,
+            8.2,
+            0.09
+          ],
+          [
+            51.0,
+            13.8,
+            9.6,
+            0.06
+          ]
+        ]
+      },
+      {
+        "id": "L_droop",
+        "tag": "photo-derived",
+        "basis": "short hanging stub under the low limb (image x 400-470, y 740-815), in the limb plane (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            46.266,
+            17.245,
+            2.124,
+            0.08
+          ],
+          [
+            46.433,
+            17.235,
+            1.972,
+            0.07
+          ],
+          [
+            46.567,
+            17.228,
+            1.836,
+            0.05
+          ],
+          [
+            46.62,
+            17.225,
+            1.765,
+            0.035
+          ]
+        ]
+      },
+      {
+        "id": "B2_up_from_limb",
+        "tag": "photo-derived/estimated",
+        "basis": "limb rising from the low limb at its first fork (image 905, 605) and curving up to the top of the frame; assumed to grow south (towards the wing) in a vertical plane, because the photograph does not show its depth (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            42.896,
+            17.44,
+            3.172,
+            0.19
+          ],
+          [
+            42.896,
+            17.178,
+            3.689,
+            0.17
+          ],
+          [
+            42.896,
+            16.865,
+            4.379,
+            0.16
+          ],
+          [
+            42.896,
+            16.504,
+            4.887,
+            0.15
+          ],
+          [
+            42.896,
+            16.334,
+            5.356,
+            0.14
+          ],
+          [
+            42.896,
+            16.591,
+            5.762,
+            0.13
+          ],
+          [
+            42.896,
+            16.944,
+            6.117,
+            0.12
+          ],
+          [
+            42.896,
+            16.904,
+            6.742,
+            0.11
+          ],
+          [
+            43.0,
+            15.6,
+            8.0,
+            0.1
+          ],
+          [
+            43.2,
+            13.0,
+            9.6,
+            0.07
+          ],
+          [
+            43.4,
+            10.5,
+            10.6,
+            0.05
+          ]
+        ]
+      },
+      {
+        "id": "B1_up_east_from_limb",
+        "tag": "photo-derived/estimated",
+        "basis": "limb leaving the low limb at its second fork (image 830, 650) and rising to the left edge of the frame, crossing behind the top of the boulder stem; assumed to run east-south-east (azimuth -25 deg), slightly behind the low limb (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            43.668,
+            17.395,
+            2.794,
+            0.17
+          ],
+          [
+            44.138,
+            17.176,
+            3.235,
+            0.15
+          ],
+          [
+            44.546,
+            16.986,
+            3.451,
+            0.14
+          ],
+          [
+            44.999,
+            16.775,
+            3.69,
+            0.13
+          ],
+          [
+            45.26,
+            16.653,
+            3.901,
+            0.13
+          ],
+          [
+            45.687,
+            16.454,
+            4.254,
+            0.12
+          ],
+          [
+            46.105,
+            16.259,
+            4.472,
+            0.11
+          ],
+          [
+            46.51,
+            16.07,
+            4.652,
+            0.1
+          ],
+          [
+            46.902,
+            15.887,
+            4.778,
+            0.09
+          ],
+          [
+            47.428,
+            15.642,
+            4.87,
+            0.08
+          ],
+          [
+            47.722,
+            15.505,
+            4.894,
+            0.07
+          ],
+          [
+            50.5,
+            14.4,
+            5.8,
+            0.06
+          ],
+          [
+            53.2,
+            13.3,
+            6.7,
+            0.05
+          ],
+          [
+            55.5,
+            12.3,
+            7.4,
+            0.04
+          ]
+        ]
+      },
+      {
+        "id": "H_leader",
+        "tag": "photo-derived",
+        "basis": "upright limb from the crotch (image x 1300-1380), leaning north-west in the plane facing the camera; above the frame (z 7.3) estimated (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            38.605,
+            18.467,
+            4.995,
+            0.34
+          ],
+          [
+            38.512,
+            18.81,
+            5.368,
+            0.3
+          ],
+          [
+            38.468,
+            19.009,
+            6.006,
+            0.27
+          ],
+          [
+            38.449,
+            19.102,
+            6.544,
+            0.25
+          ],
+          [
+            38.399,
+            19.415,
+            6.923,
+            0.23
+          ],
+          [
+            38.366,
+            19.724,
+            7.26,
+            0.22
+          ],
+          [
+            38.2,
+            20.6,
+            9.5,
+            0.18
+          ],
+          [
+            38.0,
+            21.3,
+            12.0,
+            0.13
+          ],
+          [
+            37.9,
+            21.8,
+            14.2,
+            0.08
+          ]
+        ]
+      },
+      {
+        "id": "B3_northwest",
+        "tag": "photo-derived/estimated",
+        "basis": "heavy limb from the crotch to the upper right corner; assumed north-west (azimuth 125 deg) (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            38.6,
+            18.3,
+            5.0,
+            0.32
+          ],
+          [
+            38.074,
+            18.966,
+            5.396,
+            0.3
+          ],
+          [
+            37.646,
+            19.576,
+            5.623,
+            0.27
+          ],
+          [
+            37.304,
+            20.065,
+            6.036,
+            0.24
+          ],
+          [
+            37.019,
+            20.472,
+            6.868,
+            0.21
+          ],
+          [
+            36.888,
+            20.66,
+            7.262,
+            0.2
+          ],
+          [
+            33.5,
+            24.2,
+            9.6,
+            0.13
+          ],
+          [
+            31.0,
+            27.6,
+            10.6,
+            0.08
+          ]
+        ]
+      },
+      {
+        "id": "B4_up_south",
+        "tag": "photo-derived/estimated",
+        "basis": "thinner limb rising up-left from the crotch (image x 1020-1150); assumed south-south-east (back-projected from lanshu-1600; see twin/evidence/calibration/lanshu-1600.tree.json)",
+        "pts": [
+          [
+            38.998,
+            17.469,
+            4.994,
+            0.14
+          ],
+          [
+            39.114,
+            17.148,
+            6.077,
+            0.12
+          ],
+          [
+            39.216,
+            16.868,
+            6.884,
+            0.1
+          ],
+          [
+            39.323,
+            16.576,
+            7.727,
+            0.09
+          ],
+          [
+            41.4,
+            10.6,
+            10.4,
+            0.05
+          ]
+        ]
+      },
+      {
+        "id": "W_west",
+        "tag": "estimated",
+        "basis": "hidden behind the trunk from the camera; west part of the mapped crown",
+        "pts": [
+          [
+            38.6,
+            17.7,
+            4.5,
+            0.3
+          ],
+          [
+            36.4,
+            17.9,
+            5.6,
+            0.26
+          ],
+          [
+            33.6,
+            18.2,
+            7.0,
+            0.21
+          ],
+          [
+            30.6,
+            18.4,
+            8.2,
+            0.15
+          ],
+          [
+            27.8,
+            18.6,
+            9.0,
+            0.09
+          ]
+        ]
+      },
+      {
+        "id": "SW_southwest",
+        "tag": "estimated",
+        "basis": "hidden behind the trunk; south-west part of the crown",
+        "pts": [
+          [
+            38.7,
+            17.4,
+            4.4,
+            0.28
+          ],
+          [
+            37.0,
+            15.6,
+            5.7,
+            0.24
+          ],
+          [
+            35.0,
+            13.4,
+            7.1,
+            0.19
+          ],
+          [
+            32.8,
+            11.0,
+            8.2,
+            0.13
+          ],
+          [
+            30.6,
+            8.6,
+            9.0,
+            0.08
+          ]
+        ]
+      },
+      {
+        "id": "S_to_wing",
+        "tag": "estimated",
+        "basis": "towards the east wing; the crown edge on the Esri layer reaches y 1",
+        "pts": [
+          [
+            39.0,
+            17.3,
+            4.6,
+            0.26
+          ],
+          [
+            38.9,
+            15.0,
+            6.0,
+            0.22
+          ],
+          [
+            38.6,
+            12.0,
+            7.6,
+            0.17
+          ],
+          [
+            38.2,
+            8.6,
+            9.0,
+            0.12
+          ],
+          [
+            37.8,
+            5.0,
+            9.8,
+            0.07
+          ]
+        ]
+      },
+      {
+        "id": "N_north",
+        "tag": "estimated",
+        "basis": "over the side-plaza steps towards the north edge of the crown",
+        "pts": [
+          [
+            39.0,
+            18.1,
+            4.8,
+            0.26
+          ],
+          [
+            39.4,
+            20.6,
+            6.2,
+            0.22
+          ],
+          [
+            39.9,
+            23.8,
+            7.6,
+            0.17
+          ],
+          [
+            40.4,
+            27.2,
+            8.8,
+            0.12
+          ],
+          [
+            40.8,
+            30.6,
+            9.6,
+            0.07
+          ]
+        ]
+      },
+      {
+        "id": "NE_from_leader",
+        "tag": "estimated",
+        "basis": "north-east part of the crown, above and behind the camera",
+        "pts": [
+          [
+            38.3,
+            19.9,
+            8.0,
+            0.16
+          ],
+          [
+            40.6,
+            22.0,
+            9.0,
+            0.13
+          ],
+          [
+            43.4,
+            24.6,
+            9.8,
+            0.1
+          ],
+          [
+            46.4,
+            27.4,
+            10.3,
+            0.07
+          ]
+        ]
+      },
+      {
+        "id": "E_from_stem",
+        "tag": "estimated",
+        "basis": "east part of the crown carried by the stem on the boulder",
+        "pts": [
+          [
+            48.9,
+            15.6,
+            7.2,
+            0.1
+          ],
+          [
+            51.6,
+            16.8,
+            8.0,
+            0.08
+          ],
+          [
+            54.4,
+            18.4,
+            8.6,
+            0.06
+          ],
+          [
+            56.6,
+            20.0,
+            8.9,
+            0.04
+          ]
+        ]
+      }
+    ],
+    "boulders": [
+      {
+        "xy": [
+          47.45,
+          17.33
+        ],
+        "z": 0.65,
+        "size": [
+          1.03,
+          1.0,
+          1.57
+        ],
+        "rot_deg": 24,
+        "seed": 11,
+        "lean": [
+          0.05,
+          -0.02
+        ],
+        "foot": 0.7,
+        "tag": "photo-derived",
+        "basis": "the tall upright boulder carrying the low limb: front foot at image (240, 1100), top under the limb at (200, 690); full width visible (image x 100-342), bulging above a narrower foot; position from the calibrated lanshu-1600 camera (foot on z 0.65), width from the image width at that distance"
+      },
+      {
+        "xy": [
+          46.69,
+          16.91
+        ],
+        "z": 0.62,
+        "size": [
+          0.54,
+          0.6,
+          1.16
+        ],
+        "rot_deg": -15,
+        "seed": 14,
+        "lean": [
+          0.0,
+          0.03
+        ],
+        "foot": 1.1,
+        "tag": "photo-derived",
+        "basis": "narrower stone standing behind and right of the tall boulder (image x 307-417); position from the calibrated lanshu-1600 camera (foot on z 0.62), width from the image width at that distance"
+      },
+      {
+        "xy": [
+          46.57,
+          17.61
+        ],
+        "z": 0.62,
+        "size": [
+          0.83,
+          0.8,
+          0.4
+        ],
+        "rot_deg": 10,
+        "seed": 12,
+        "lean": [
+          0.0,
+          0.0
+        ],
+        "foot": 1.25,
+        "tag": "photo-derived",
+        "basis": "low rounded stone right of the tall boulder (image x 372-560); position from the calibrated lanshu-1600 camera (foot on z 0.62), width from the image width at that distance"
+      },
+      {
+        "xy": [
+          41.95,
+          14.05
+        ],
+        "z": 0.62,
+        "size": [
+          1.1,
+          0.9,
+          0.39
+        ],
+        "rot_deg": -30,
+        "seed": 15,
+        "lean": [
+          0.0,
+          0.0
+        ],
+        "foot": 1.1,
+        "tag": "photo-derived",
+        "basis": "dark low rock in front of the far hedge (image x 636-761), about 11 m from the camera; position from the calibrated lanshu-1600 camera (foot on z 0.62), width from the image width at that distance"
+      }
+    ]
+  },
+  "yanchi": {
+    "poly": [
+      [
+        41.79,
+        -109.36
+      ],
+      [
+        37.27,
+        -109.29
+      ],
+      [
+        37.16,
+        -116.32
+      ],
+      [
+        39.42,
+        -116.36
+      ],
+      [
+        39.21,
+        -129.61
+      ],
+      [
+        63.55,
+        -130.0
+      ],
+      [
+        63.9,
+        -108.27
+      ],
+      [
+        53.64,
+        -108.1
+      ],
+      [
+        53.59,
+        -111.52
+      ],
+      [
+        41.76,
+        -111.34
+      ]
+    ],
+    "center": [
+      47.13,
+      -115.02
+    ],
+    "bbox": [
+      37.16,
+      -130.0,
+      63.9,
+      -108.1
+    ],
+    "size": [
+      26.74,
+      21.9
+    ],
+    "area": 501.3,
+    "schema": "haiz-twin-yanchi/1",
+    "name": "砚池",
+    "tag": "public-map/estimated",
+    "basis": "outline: OSM reflecting pool 砚池 (about 500 m2, x 37..64, y -130..-108 in the twin frame); water level and basin depth estimated; photographs campus_yanchi.jpg and wenhua_yanchi-800.jpg show rock edging, a rockery with a curved cascade from a raised round basin, an upright stone inscribed 砚池 in red, coconut palms and surrounding corridor buildings",
+    "water_depth_below_ground": 0.45,
+    "edging_spacing": 1.15,
+    "rockery_tag": "photo-derived/invented",
+    "rockery_basis": "rockery and raised round cascade basin with a curved weir (wenhua_yanchi); their position in the pond and the stones are invented",
+    "rockery": [
+      {
+        "xy": [
+          38.6,
+          -121.8
+        ],
+        "size": [
+          2.2,
+          1.6,
+          1.5
+        ],
+        "seed": 501,
+        "rot": 20
+      },
+      {
+        "xy": [
+          40.2,
+          -123.6
+        ],
+        "size": [
+          1.6,
+          1.3,
+          1.1
+        ],
+        "seed": 502,
+        "rot": -15
+      },
+      {
+        "xy": [
+          38.4,
+          -117.6
+        ],
+        "size": [
+          1.8,
+          1.4,
+          1.9
+        ],
+        "seed": 503,
+        "rot": 40,
+        "lean": [
+          0.15,
+          0.05
+        ]
+      },
+      {
+        "xy": [
+          42.6,
+          -122.4
+        ],
+        "size": [
+          1.2,
+          1.0,
+          0.8
+        ],
+        "seed": 504,
+        "rot": 70
+      },
+      {
+        "xy": [
+          37.9,
+          -114.0
+        ],
+        "size": [
+          1.4,
+          1.1,
+          1.0
+        ],
+        "seed": 505,
+        "rot": 5
+      }
+    ],
+    "cascade": {
+      "xy": [
+        41.4,
+        -119.6
+      ],
+      "r": 1.9,
+      "h": 0.4
+    },
+    "stone": {
+      "xy": [
+        36.0,
+        -112.2
+      ],
+      "size": [
+        1.5,
+        0.75,
+        2.6
+      ],
+      "seed": 510,
+      "rot_deg": 45,
+      "text": "砚\n池",
+      "text_offset": [
+        -0.3,
+        0.3,
+        1.65
+      ],
+      "tag": "photo-derived/estimated",
+      "basis": "upright stone about 2.6 m high with the red vertical inscription 砚池 at the pond edge (campus_yanchi, wenhua_yanchi); position on the shore estimated"
+    },
+    "palms": {
+      "tag": "photo-derived/invented",
+      "basis": "tall leaning coconut palms round the pond (campus_yanchi, wenhua_yanchi); number and positions invented",
+      "positions": [
+        [
+          35.6,
+          -118.4,
+          12.0,
+          0.12,
+          0.03
+        ],
+        [
+          35.2,
+          -124.5,
+          11.0,
+          0.1,
+          -0.05
+        ],
+        [
+          38.2,
+          -106.4,
+          13.0,
+          0.05,
+          0.1
+        ],
+        [
+          45.2,
+          -106.6,
+          11.5,
+          -0.05,
+          0.12
+        ],
+        [
+          56.0,
+          -106.4,
+          12.5,
+          0.06,
+          0.1
+        ],
+        [
+          66.2,
+          -112.5,
+          11.0,
+          0.12,
+          0.0
+        ],
+        [
+          66.0,
+          -126.0,
+          12.0,
+          0.1,
+          -0.05
+        ]
+      ]
+    }
+  },
+  "buildings": [
+    {
+      "id": "fengqitang",
+      "name": "凤栖堂",
+      "en": "Fengqitang Heritage Hall",
+      "district": "d04_heritage_gardens",
+      "archetype": "lingnan_green_hall",
+      "floors": 1,
+      "height": 7.6,
+      "roof_style": "emerald_lingnan_hip",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1165596679 + campus_fengqitang.jpg (single-storey hall, emerald glazed hip roof, vermilion columns, white walls, bronze statue)",
+      "story": "孔雀绿琉璃瓦歇山屋顶与朱红廊柱掩映在鸡蛋花树影间，承载百年海中的传统书院气韵。",
+      "osm_record": "w1165596679@2",
+      "poly": [
+        [
+          -29.55,
+          85.13
+        ],
+        [
+          -56.28,
+          85.7
+        ],
+        [
+          -56.65,
+          68.55
+        ],
+        [
+          -29.93,
+          67.98
+        ]
+      ],
+      "center": [
+        -43.1,
+        76.84
+      ],
+      "bbox": [
+        -56.65,
+        67.98,
+        -29.55,
+        85.7
+      ],
+      "size": [
+        27.1,
+        17.72
+      ],
+      "area": 458.5
+    },
+    {
+      "id": "west_sports_annex",
+      "name": "体艺附楼",
+      "en": "West Sports Annex",
+      "district": "d05_sports_living",
+      "archetype": "tropical_academic_gallery",
+      "floors": 3,
+      "height": 11.4,
+      "roof_style": "flat_parapet",
+      "wall_palette": "ivory_stucco",
+      "poly": [
+        [
+          -73.67,
+          13.67
+        ],
+        [
+          -72.19,
+          26.36
+        ],
+        [
+          -104.93,
+          30.0
+        ],
+        [
+          -105.42,
+          25.76
+        ],
+        [
+          -114.93,
+          26.81
+        ],
+        [
+          -115.92,
+          18.36
+        ]
+      ],
+      "center": [
+        -97.84,
+        23.49
+      ],
+      "bbox": [
+        -115.92,
+        13.67,
+        -72.19,
+        30.0
+      ],
+      "size": [
+        43.73,
+        16.33
+      ],
+      "area": 502.3,
+      "tag": "public-map/estimated",
+      "basis": "Overture/Zenodo footprint between Fengqitang and Sports Courts; height estimated",
+      "story": "位于球场与凤栖堂之间的低层校园附楼。"
+    },
+    {
+      "id": "gymnasium",
+      "name": "体育馆",
+      "en": "Campus Gymnasium",
+      "district": "d05_sports_living",
+      "archetype": "modern_gymnasium",
+      "floors": 3,
+      "height": 14.5,
+      "roof_style": "vaulted_metal",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1165596671 (2,763 m2 real footprint south of track; previously missing in legacy campus.json; facade estimated)",
+      "story": "紧邻运动场南侧的大跨度室内体育馆，弧形采光屋顶与遮阳廊道回应热带运动空间。",
+      "osm_record": "w1165596671@2",
+      "poly": [
+        [
+          -168.8,
+          4.88
+        ],
+        [
+          -172.2,
+          -64.98
+        ],
+        [
+          -132.69,
+          -67.0
+        ],
+        [
+          -129.28,
+          2.61
+        ]
+      ],
+      "center": [
+        -150.74,
+        -31.12
+      ],
+      "bbox": [
+        -172.2,
+        -67.0,
+        -129.28,
+        4.88
+      ],
+      "size": [
+        42.92,
+        71.88
+      ],
+      "area": 2762.9
+    },
+    {
+      "id": "stadium_stand",
+      "name": "运动场看台",
+      "en": "Track Grandstand",
+      "district": "d05_sports_living",
+      "archetype": "stadium_grandstand",
+      "floors": 2,
+      "height": 8.5,
+      "roof_style": "cantilever_canopy",
+      "poly": [
+        [
+          -153.16,
+          44.47
+        ],
+        [
+          -153.04,
+          38.09
+        ],
+        [
+          -160.49,
+          37.91
+        ],
+        [
+          -160.22,
+          23.01
+        ],
+        [
+          -142.13,
+          23.46
+        ],
+        [
+          -142.37,
+          36.22
+        ],
+        [
+          -89.22,
+          37.52
+        ],
+        [
+          -89.32,
+          42.85
+        ],
+        [
+          -95.69,
+          42.69
+        ],
+        [
+          -95.75,
+          45.89
+        ]
+      ],
+      "center": [
+        -128.14,
+        37.21
+      ],
+      "bbox": [
+        -160.49,
+        23.01,
+        -89.22,
+        45.89
+      ],
+      "size": [
+        71.27,
+        22.88
+      ],
+      "area": 770.0,
+      "tag": "public-map/estimated",
+      "basis": "Overture/Zenodo footprint bordering the south edge of 运动场 track; stepped seating canopy estimated",
+      "story": "俯瞰四百米红褐塑胶跑道的露天看台，校运会与黄昏散步的绝佳观景台。"
+    },
+    {
+      "id": "yanlintang",
+      "name": "衍林堂",
+      "en": "Yanlintang Memorial Hall",
+      "district": "d04_heritage_gardens",
+      "archetype": "lingnan_green_hall",
+      "floors": 1,
+      "height": 7.6,
+      "roof_style": "emerald_lingnan_hip",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1165596678 + school history (honoring first principal Zhong Yanlin; single-storey emerald-roofed hall)",
+      "story": "纪念首任校长钟衍林先生的传统堂馆，绿瓦红柱与前庭「春风化雨」意象遥相呼应。",
+      "osm_record": "w1165596678@2",
+      "poly": [
+        [
+          80.16,
+          70.48
+        ],
+        [
+          53.54,
+          71.05
+        ],
+        [
+          53.24,
+          55.78
+        ],
+        [
+          79.81,
+          54.8
+        ]
+      ],
+      "center": [
+        66.69,
+        63.03
+      ],
+      "bbox": [
+        53.24,
+        54.8,
+        80.16,
+        71.05
+      ],
+      "size": [
+        26.92,
+        16.25
+      ],
+      "area": 411.8
+    },
+    {
+      "id": "dorm_m_north",
+      "name": "男生宿舍（东区北栋）",
+      "en": "Boys' Dormitory North",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 7,
+      "height": 22.8,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1444498442 + campus_dorm_m.jpg (7-storey pale tiled dormitory slab with recessed loggia windows)",
+      "story": "东侧林荫道旁的七层男生宿舍，浅米瓷砖与深凹阳台框出热带日照下的冷暖明暗。",
+      "osm_record": "w1444498442@1",
+      "poly": [
+        [
+          160.55,
+          7.74
+        ],
+        [
+          127.82,
+          8.37
+        ],
+        [
+          126.44,
+          -62.92
+        ],
+        [
+          159.17,
+          -63.56
+        ]
+      ],
+      "center": [
+        143.5,
+        -27.59
+      ],
+      "bbox": [
+        126.44,
+        -63.56,
+        160.55,
+        8.37
+      ],
+      "size": [
+        34.11,
+        71.93
+      ],
+      "area": 2334.4
+    },
+    {
+      "id": "east_hall_se",
+      "name": "东南生活楼",
+      "en": "Southeast Living Annex",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 5,
+      "height": 16.5,
+      "roof_style": "flat_parapet",
+      "wall_palette": "warm_cream_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498443; height estimated",
+      "story": "东南区生活配套建筑。",
+      "osm_record": "w1444498443@1",
+      "poly": [
+        [
+          165.09,
+          -194.67
+        ],
+        [
+          162.79,
+          -170.37
+        ],
+        [
+          136.8,
+          -172.82
+        ],
+        [
+          139.09,
+          -197.12
+        ]
+      ],
+      "center": [
+        150.94,
+        -183.74
+      ],
+      "bbox": [
+        136.8,
+        -197.12,
+        165.09,
+        -170.37
+      ],
+      "size": [
+        28.29,
+        26.75
+      ],
+      "area": 637.3
+    },
+    {
+      "id": "dorm_se_b",
+      "name": "南区宿舍（南）",
+      "en": "South Dormitory South",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 6,
+      "height": 19.6,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498449; height estimated",
+      "story": "临近南侧院墙的六层学生宿舍。",
+      "osm_record": "w1444498449@1",
+      "poly": [
+        [
+          143.09,
+          -224.55
+        ],
+        [
+          143.0,
+          -213.02
+        ],
+        [
+          97.19,
+          -213.34
+        ],
+        [
+          97.27,
+          -224.87
+        ]
+      ],
+      "center": [
+        120.14,
+        -218.95
+      ],
+      "bbox": [
+        97.19,
+        -224.87,
+        143.09,
+        -213.02
+      ],
+      "size": [
+        45.9,
+        11.85
+      ],
+      "area": 528.3
+    },
+    {
+      "id": "dorm_se_a",
+      "name": "南区宿舍（北）",
+      "en": "South Dormitory North",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 6,
+      "height": 19.6,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498448; height estimated",
+      "story": "砚池东南侧的安静宿舍区。",
+      "osm_record": "w1444498448@1",
+      "poly": [
+        [
+          118.22,
+          -184.22
+        ],
+        [
+          117.24,
+          -170.17
+        ],
+        [
+          78.45,
+          -172.87
+        ],
+        [
+          79.43,
+          -186.93
+        ]
+      ],
+      "center": [
+        98.33,
+        -178.55
+      ],
+      "bbox": [
+        78.45,
+        -186.93,
+        118.22,
+        -170.17
+      ],
+      "size": [
+        39.77,
+        16.76
+      ],
+      "area": 547.8
+    },
+    {
+      "id": "canteen1",
+      "name": "第一食堂",
+      "en": "First Canteen",
+      "district": "d05_sports_living",
+      "archetype": "campus_canteen",
+      "floors": 3,
+      "height": 12.2,
+      "roof_style": "flat_parapet",
+      "wall_palette": "warm_cream_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498444 + campus_canteen1.jpg (3 storeys, broad shaded ground colonnade, dining halls)",
+      "story": "校园东侧人气最旺的食堂，宽敞底层柱廊与窗前总是聚满刚下课的同学和蹲点的橘猫。",
+      "osm_record": "w1444498444@1",
+      "poly": [
+        [
+          164.07,
+          -145.81
+        ],
+        [
+          162.12,
+          -123.67
+        ],
+        [
+          135.29,
+          -126.03
+        ],
+        [
+          137.23,
+          -148.17
+        ]
+      ],
+      "center": [
+        149.68,
+        -135.92
+      ],
+      "bbox": [
+        135.29,
+        -148.17,
+        164.07,
+        -123.67
+      ],
+      "size": [
+        28.78,
+        24.5
+      ],
+      "area": 598.7
+    },
+    {
+      "id": "campus_wing_155",
+      "name": "校园附楼",
+      "en": "Campus Wing 155",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 4,
+      "height": 14.0,
+      "roof_style": "flat_parapet",
+      "wall_palette": "warm_cream_tile",
+      "poly": [
+        [
+          130.47,
+          -104.48
+        ],
+        [
+          169.43,
+          -104.93
+        ],
+        [
+          169.57,
+          -95.38
+        ],
+        [
+          130.54,
+          -95.01
+        ]
+      ],
+      "center": [
+        150.0,
+        -99.95
+      ],
+      "bbox": [
+        130.47,
+        -104.93,
+        169.57,
+        -95.01
+      ],
+      "size": [
+        39.1,
+        9.92
+      ],
+      "area": 370.9,
+      "tag": "public-map/invented",
+      "basis": "Overture/Zenodo footprint inside school polygon; storeys and facade style estimated",
+      "story": "府城校区内辅助教学与后勤建筑。"
+    },
+    {
+      "id": "dorm_m_east1",
+      "name": "男生宿舍（东区中栋）",
+      "en": "Boys' Dormitory Central",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 6,
+      "height": 19.6,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498445 + campus_dorm_m.jpg typology",
+      "story": "东生活区寄宿宿舍楼，傍晚自习前后灯火与蝉鸣交织。",
+      "osm_record": "w1444498445@1",
+      "poly": [
+        [
+          179.96,
+          -91.01
+        ],
+        [
+          179.44,
+          -69.95
+        ],
+        [
+          126.63,
+          -71.26
+        ],
+        [
+          127.15,
+          -92.31
+        ]
+      ],
+      "center": [
+        153.29,
+        -81.13
+      ],
+      "bbox": [
+        126.63,
+        -92.31,
+        179.96,
+        -69.95
+      ],
+      "size": [
+        53.33,
+        22.36
+      ],
+      "area": 1112.6
+    },
+    {
+      "id": "dorm_m_mid2",
+      "name": "东区宿舍（中南）",
+      "en": "East Residence Wing B",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 6,
+      "height": 19.6,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498447; height & facade estimated from campus_dorm_m.jpg",
+      "story": "面向校园东侧绿带的多层宿舍楼。",
+      "osm_record": "w1444498447@1",
+      "poly": [
+        [
+          118.12,
+          -117.78
+        ],
+        [
+          117.56,
+          -103.52
+        ],
+        [
+          78.28,
+          -105.07
+        ],
+        [
+          78.84,
+          -119.34
+        ]
+      ],
+      "center": [
+        98.2,
+        -111.43
+      ],
+      "bbox": [
+        78.28,
+        -119.34,
+        118.12,
+        -103.52
+      ],
+      "size": [
+        39.84,
+        15.82
+      ],
+      "area": 561.2
+    },
+    {
+      "id": "south_annex_e",
+      "name": "南区综合楼（东）",
+      "en": "South Complex East",
+      "district": "d05_sports_living",
+      "archetype": "tropical_academic_gallery",
+      "floors": 5,
+      "height": 17.2,
+      "roof_style": "flat_parapet",
+      "wall_palette": "ivory_stucco",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498450; height estimated",
+      "story": "位于艺术中心南侧的校园建筑。",
+      "osm_record": "w1444498450@1",
+      "poly": [
+        [
+          79.34,
+          -224.29
+        ],
+        [
+          78.7,
+          -210.65
+        ],
+        [
+          17.45,
+          -213.54
+        ],
+        [
+          18.09,
+          -227.19
+        ]
+      ],
+      "center": [
+        48.4,
+        -218.92
+      ],
+      "bbox": [
+        17.45,
+        -227.19,
+        79.34,
+        -210.65
+      ],
+      "size": [
+        61.89,
+        16.54
+      ],
+      "area": 837.6
+    },
+    {
+      "id": "south_annex_w",
+      "name": "南区综合楼（西）",
+      "en": "South Complex West",
+      "district": "d05_sports_living",
+      "archetype": "tropical_academic_gallery",
+      "floors": 5,
+      "height": 17.2,
+      "roof_style": "flat_parapet",
+      "wall_palette": "ivory_stucco",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498451; height estimated",
+      "story": "通往南门主干道东侧的多层楼宇。",
+      "osm_record": "w1444498451@1",
+      "poly": [
+        [
+          7.13,
+          -240.74
+        ],
+        [
+          5.13,
+          -216.59
+        ],
+        [
+          -56.56,
+          -221.7
+        ],
+        [
+          -54.56,
+          -245.85
+        ]
+      ],
+      "center": [
+        -24.72,
+        -231.22
+      ],
+      "bbox": [
+        -56.56,
+        -245.85,
+        7.13,
+        -216.59
+      ],
+      "size": [
+        63.69,
+        29.26
+      ],
+      "area": 1500.0
+    },
+    {
+      "id": "campus_wing_169",
+      "name": "校园附楼",
+      "en": "Campus Wing 169",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 4,
+      "height": 14.0,
+      "roof_style": "flat_parapet",
+      "wall_palette": "warm_cream_tile",
+      "poly": [
+        [
+          -83.22,
+          -248.46
+        ],
+        [
+          -115.45,
+          -241.72
+        ],
+        [
+          -117.46,
+          -251.1
+        ],
+        [
+          -85.23,
+          -257.83
+        ]
+      ],
+      "center": [
+        -100.34,
+        -249.78
+      ],
+      "bbox": [
+        -117.46,
+        -257.83,
+        -83.22,
+        -241.72
+      ],
+      "size": [
+        34.24,
+        16.11
+      ],
+      "area": 315.7,
+      "tag": "public-map/invented",
+      "basis": "Overture/Zenodo footprint inside school polygon; storeys and facade style estimated",
+      "story": "府城校区内辅助教学与后勤建筑。"
+    },
+    {
+      "id": "dorm_m_mid1",
+      "name": "东区宿舍（中北）",
+      "en": "East Residence Wing A",
+      "district": "d05_sports_living",
+      "archetype": "tropical_dorm_slab",
+      "floors": 6,
+      "height": 19.6,
+      "roof_style": "flat_parapet",
+      "wall_palette": "pale_ceramic_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498446; height & facade estimated from campus_dorm_m.jpg",
+      "story": "东侧教学与生活过渡区的宿舍建筑。",
+      "osm_record": "w1444498446@1",
+      "poly": [
+        [
+          117.59,
+          -78.96
+        ],
+        [
+          117.25,
+          -67.95
+        ],
+        [
+          77.16,
+          -69.15
+        ],
+        [
+          77.49,
+          -80.17
+        ]
+      ],
+      "center": [
+        97.37,
+        -74.06
+      ],
+      "bbox": [
+        77.16,
+        -80.17,
+        117.59,
+        -67.95
+      ],
+      "size": [
+        40.43,
+        12.22
+      ],
+      "area": 442.1
+    },
+    {
+      "id": "south_classrooms",
+      "name": "南侧教学楼群（三四号楼 / 科技活动中心）",
+      "en": "South Classrooms & Science Activity Center",
+      "district": "d02_academic_core",
+      "archetype": "coral_courtyard_academic",
+      "floors": 5,
+      "height": 18.2,
+      "roof_style": "flat_parapet",
+      "wall_palette": "coral_terracotta",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1165596688 + campus_sanhao_sihao.jpg (warm dusty-coral walls, twin planted courts, open breezeway bridges)",
+      "story": "围合两座热带棕榈庭院的陶粉色教学楼群，层间敞开连桥引入穿堂海风。",
+      "osm_record": "w1165596688@1",
+      "poly": [
+        [
+          -26.65,
+          -114.97
+        ],
+        [
+          -62.44,
+          -114.6
+        ],
+        [
+          -62.52,
+          -124.25
+        ],
+        [
+          -35.84,
+          -124.47
+        ],
+        [
+          -35.88,
+          -129.79
+        ],
+        [
+          -33.0,
+          -129.82
+        ],
+        [
+          -32.96,
+          -124.51
+        ],
+        [
+          -27.41,
+          -124.39
+        ],
+        [
+          -27.48,
+          -146.21
+        ],
+        [
+          -31.14,
+          -146.14
+        ],
+        [
+          -31.04,
+          -141.51
+        ],
+        [
+          -34.69,
+          -141.49
+        ],
+        [
+          -34.72,
+          -146.04
+        ],
+        [
+          -62.53,
+          -145.88
+        ],
+        [
+          -62.59,
+          -156.62
+        ],
+        [
+          -29.1,
+          -156.81
+        ],
+        [
+          -29.52,
+          -176.46
+        ],
+        [
+          -32.65,
+          -176.41
+        ],
+        [
+          -33.24,
+          -169.91
+        ],
+        [
+          -37.27,
+          -169.96
+        ],
+        [
+          -37.17,
+          -176.32
+        ],
+        [
+          -62.67,
+          -175.81
+        ],
+        [
+          -62.74,
+          -188.82
+        ],
+        [
+          -23.24,
+          -189.13
+        ],
+        [
+          -22.16,
+          -103.46
+        ],
+        [
+          -26.71,
+          -103.31
+        ]
+      ],
+      "center": [
+        -38.36,
+        -146.04
+      ],
+      "bbox": [
+        -62.74,
+        -189.13,
+        -22.16,
+        -103.31
+      ],
+      "size": [
+        40.58,
+        85.82
+      ],
+      "area": 1658.4
+    },
+    {
+      "id": "science",
+      "name": "科学馆实验大楼",
+      "en": "Science Laboratory Hall",
+      "district": "d02_academic_core",
+      "archetype": "science_hall",
+      "floors": 6,
+      "height": 21.8,
+      "roof_style": "flat_parapet_crown",
+      "wall_palette": "ivory_stucco",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1165596687 + campus_kexue.jpg (6 storeys, horizontal white galleries, dark sun screens, raised stair cap)",
+      "story": "一百二十米长的六层实验建筑群，通长遮阳外廊与暗色格栅构成克制的现代校园立面。",
+      "osm_record": "w1165596687@1",
+      "poly": [
+        [
+          -15.26,
+          -74.51
+        ],
+        [
+          -26.95,
+          -74.67
+        ],
+        [
+          -27.01,
+          -80.48
+        ],
+        [
+          -61.09,
+          -80.64
+        ],
+        [
+          -61.68,
+          -92.31
+        ],
+        [
+          -27.29,
+          -92.57
+        ],
+        [
+          -26.71,
+          -103.31
+        ],
+        [
+          -22.16,
+          -103.46
+        ],
+        [
+          58.36,
+          -101.53
+        ],
+        [
+          58.57,
+          -88.66
+        ],
+        [
+          44.6,
+          -88.62
+        ],
+        [
+          43.51,
+          -85.19
+        ],
+        [
+          41.26,
+          -81.67
+        ],
+        [
+          38.54,
+          -79.3
+        ],
+        [
+          35.24,
+          -78.37
+        ],
+        [
+          31.9,
+          -78.68
+        ],
+        [
+          28.91,
+          -81.03
+        ],
+        [
+          26.27,
+          -84.2
+        ],
+        [
+          24.52,
+          -88.42
+        ],
+        [
+          -15.39,
+          -88.13
+        ]
+      ],
+      "center": [
+        7.41,
+        -86.29
+      ],
+      "bbox": [
+        -61.68,
+        -103.46,
+        58.57,
+        -74.51
+      ],
+      "size": [
+        120.25,
+        28.95
+      ],
+      "area": 1923.5
+    },
+    {
+      "id": "link_e12",
+      "name": "一二号楼东连廊",
+      "en": "East Skybridge (1-2)",
+      "district": "d02_academic_core",
+      "archetype": "skybridge",
+      "floors": 5,
+      "height": 17.5,
+      "roof_style": "flat_parapet",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1165596685 + aerial_campus; links Block 1 rear to Block 2 north facade",
+      "story": "与西连廊对称围合起清荫内院，课间穿行其间可望见院心绿树与晴光。",
+      "osm_record": "w1165596685@1",
+      "poly": [
+        [
+          30.68,
+          -13.44
+        ],
+        [
+          24.51,
+          -13.52
+        ],
+        [
+          24.62,
+          -44.0
+        ],
+        [
+          30.78,
+          -43.97
+        ]
+      ],
+      "center": [
+        27.65,
+        -28.73
+      ],
+      "bbox": [
+        24.51,
+        -44.0,
+        30.78,
+        -13.44
+      ],
+      "size": [
+        6.27,
+        30.56
+      ],
+      "area": 188.1
+    },
+    {
+      "id": "erhao",
+      "name": "二号教学楼",
+      "en": "Teaching Block 2",
+      "district": "d02_academic_core",
+      "archetype": "tropical_academic_gallery",
+      "floors": 5,
+      "height": 17.8,
+      "roof_style": "flat_parapet",
+      "wall_palette": "ivory_stucco",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1165596683 + campus_erhao.jpg (5 storeys, open courtyard gallery, classroom grilles, AC units)",
+      "story": "五层通透外廊教学楼，与一号楼围合静谧内院，白墙挑廊映出细长的热带晴影。",
+      "osm_record": "w1165596683@1",
+      "poly": [
+        [
+          -26.67,
+          -56.87
+        ],
+        [
+          -23.98,
+          -56.87
+        ],
+        [
+          50.17,
+          -56.99
+        ],
+        [
+          50.18,
+          -43.76
+        ],
+        [
+          30.78,
+          -43.97
+        ],
+        [
+          24.62,
+          -44.0
+        ],
+        [
+          -19.7,
+          -43.65
+        ],
+        [
+          -25.44,
+          -43.64
+        ],
+        [
+          -42.67,
+          -43.62
+        ],
+        [
+          -42.7,
+          -56.84
+        ]
+      ],
+      "center": [
+        -2.54,
+        -49.02
+      ],
+      "bbox": [
+        -42.7,
+        -56.99,
+        50.18,
+        -43.62
+      ],
+      "size": [
+        92.88,
+        13.37
+      ],
+      "area": 1218.2
+    },
+    {
+      "id": "link_w12",
+      "name": "一二号楼西连廊",
+      "en": "West Skybridge (1-2)",
+      "district": "d02_academic_core",
+      "archetype": "skybridge",
+      "floors": 5,
+      "height": 17.5,
+      "roof_style": "flat_parapet",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1165596684 + aerial_campus; links Block 1 rear to Block 2 north facade",
+      "story": "连通一号楼与二号楼的架空敞廊，遮挡热带烈日与突如其来的海口阵雨。",
+      "osm_record": "w1165596684@1",
+      "poly": [
+        [
+          -25.48,
+          -14.11
+        ],
+        [
+          -25.44,
+          -43.64
+        ],
+        [
+          -19.7,
+          -43.65
+        ],
+        [
+          -19.72,
+          -14.04
+        ]
+      ],
+      "center": [
+        -22.59,
+        -28.86
+      ],
+      "bbox": [
+        -25.48,
+        -43.65,
+        -19.7,
+        -14.04
+      ],
+      "size": [
+        5.78,
+        29.61
+      ],
+      "area": 170.0
+    },
+    {
+      "id": "yihao",
+      "name": "一号教学楼",
+      "en": "Teaching Block 1 (1923)",
+      "district": "d01_axis_forecourt",
+      "archetype": "hero_yihao",
+      "floors": 6,
+      "height": 22.8,
+      "roof_style": "terracotta_lingnan_hip",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1165596682 + hero-2560/jiaoxuelou-1600/scenery_13/aerial_campus calibration (twin/data/buildings/yihao.json)",
+      "story": "府城校区中轴主楼，花岗岩双层柱廊与双楼梯塔楼拱卫「1923」阶梯门厅，琉璃红瓦翘檐承接百年海中文脉。",
+      "osm_record": "w1165596682@1",
+      "poly": [
+        [
+          58.98,
+          2.53
+        ],
+        [
+          -55.72,
+          1.16
+        ],
+        [
+          -55.48,
+          -18.46
+        ],
+        [
+          -40.25,
+          -18.27
+        ],
+        [
+          -40.29,
+          -14.28
+        ],
+        [
+          -25.48,
+          -14.11
+        ],
+        [
+          -19.72,
+          -14.04
+        ],
+        [
+          24.51,
+          -13.52
+        ],
+        [
+          30.68,
+          -13.44
+        ],
+        [
+          45.36,
+          -13.27
+        ],
+        [
+          45.4,
+          -16.76
+        ],
+        [
+          59.21,
+          -16.59
+        ]
+      ],
+      "center": [
+        2.27,
+        -12.42
+      ],
+      "bbox": [
+        -55.72,
+        -18.46,
+        59.21,
+        2.53
+      ],
+      "size": [
+        114.93,
+        20.99
+      ],
+      "area": 1902.0
+    },
+    {
+      "id": "dorm_f",
+      "name": "女生宿舍",
+      "en": "Girls' Courtyard Dormitory",
+      "district": "d05_sports_living",
+      "archetype": "red_roof_dorm_courtyard",
+      "floors": 6,
+      "height": 21.0,
+      "roof_style": "terracotta_lingnan_hip",
+      "wall_palette": "white_coral_plinth",
+      "tag": "photo-derived/public-map",
+      "basis": "OSM way 1444498479 + campus_dorm_f.jpg + aerial_campus.jpg (6 storeys, coral lower plinth, white recessed balconies, terracotta hip roof)",
+      "story": "红瓦合院式女生宿舍，淡陶粉基座与白色通廊阳台环抱绿荫球场。",
+      "osm_record": "w1444498479@1",
+      "poly": [
+        [
+          -79.12,
+          -121.43
+        ],
+        [
+          -77.37,
+          -80.55
+        ],
+        [
+          -123.25,
+          -78.59
+        ],
+        [
+          -125.0,
+          -119.46
+        ]
+      ],
+      "center": [
+        -101.19,
+        -100.01
+      ],
+      "bbox": [
+        -125.0,
+        -121.43,
+        -77.37,
+        -78.59
+      ],
+      "size": [
+        47.63,
+        42.84
+      ],
+      "area": 1878.8
+    },
+    {
+      "id": "link_sci2",
+      "name": "科二连廊",
+      "en": "Science-Block 2 Walkway",
+      "district": "d02_academic_core",
+      "archetype": "covered_walk",
+      "floors": 2,
+      "height": 7.2,
+      "roof_style": "flat_parapet",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1165596686 (cleanly trimmed at facade faces; eliminates legacy 26% overlap bug)",
+      "story": "连接二号教学楼与科学馆的阴凉连廊，实验课往返必经之路。",
+      "osm_record": "w1165596686@1",
+      "poly": [
+        [
+          -24.11,
+          -74.48
+        ],
+        [
+          -23.98,
+          -56.87
+        ],
+        [
+          -26.67,
+          -56.87
+        ],
+        [
+          -26.95,
+          -74.67
+        ]
+      ],
+      "center": [
+        -25.43,
+        -65.72
+      ],
+      "bbox": [
+        -26.95,
+        -74.67,
+        -23.98,
+        -56.87
+      ],
+      "size": [
+        2.97,
+        17.8
+      ],
+      "area": 48.9
+    },
+    {
+      "id": "canteen3",
+      "name": "第三食堂与生活中心",
+      "en": "Third Canteen & Student Center",
+      "district": "d05_sports_living",
+      "archetype": "campus_canteen",
+      "floors": 3,
+      "height": 12.2,
+      "roof_style": "flat_parapet",
+      "wall_palette": "warm_cream_tile",
+      "tag": "public-map/estimated",
+      "basis": "OSM way 1444498480 + campus_canteen3.jpg; southwest dining & living complex near South Gate",
+      "story": "西南区食堂与生活楼，紧邻植物园绿荫与南门通道。",
+      "osm_record": "w1444498480@1",
+      "poly": [
+        [
+          -81.34,
+          -239.94
+        ],
+        [
+          -79.52,
+          -180.55
+        ],
+        [
+          -100.6,
+          -179.9
+        ],
+        [
+          -102.41,
+          -239.29
+        ]
+      ],
+      "center": [
+        -90.97,
+        -209.92
+      ],
+      "bbox": [
+        -102.41,
+        -239.94,
+        -79.52,
+        -179.9
+      ],
+      "size": [
+        22.89,
+        60.04
+      ],
+      "area": 1252.8
+    },
+    {
+      "id": "arts",
+      "name": "艺术教育活动中心",
+      "en": "Art Education Center",
+      "district": "d03_yanchi_arts",
+      "archetype": "hero_arts",
+      "floors": 3,
+      "height": 13.8,
+      "roof_style": "terracotta_lingnan_hip",
+      "poly": [
+        [
+          -14.0,
+          -184.0
+        ],
+        [
+          44.0,
+          -184.0
+        ],
+        [
+          44.0,
+          -131.5
+        ],
+        [
+          -14.0,
+          -131.5
+        ]
+      ],
+      "center": [
+        15.0,
+        -157.75
+      ],
+      "bbox": [
+        -14.0,
+        -184.0,
+        44.0,
+        -131.5
+      ],
+      "size": [
+        58.0,
+        52.5
+      ],
+      "area": 3045.0,
+      "tag": "photo-derived/public-map",
+      "basis": "Esri orthophoto + Overture footprint + campus_yishu.jpg (red hipped entrance portico with white piers facing Yanchi, stepped entry stairs, red-tiled courtyard wings; strictly clear of Yanchi polygon)",
+      "story": "面朝砚池水面的红瓦合院艺术中心，白柱门廊拾级而上，琴声与画意常在池畔回荡。"
+    },
+    {
+      "id": "library",
+      "name": "图书馆与天文台",
+      "en": "Library & Astronomical Observatory",
+      "district": "d04_heritage_gardens",
+      "archetype": "hero_library",
+      "floors": 4,
+      "height": 17.2,
+      "roof_style": "observatory_dome",
+      "poly": [
+        [
+          78.0,
+          -16.0
+        ],
+        [
+          118.0,
+          -16.0
+        ],
+        [
+          118.0,
+          26.0
+        ],
+        [
+          78.0,
+          26.0
+        ]
+      ],
+      "center": [
+        98.0,
+        5.0
+      ],
+      "bbox": [
+        78.0,
+        -16.0,
+        118.0,
+        26.0
+      ],
+      "size": [
+        40.0,
+        42.0
+      ],
+      "area": 1680.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_library.jpg + aerial_campus.jpg (4-storey white modernist massing, sweeping external grand staircase, arched blue-green glass atrium, ribbed metallic astronomical observatory dome; footprint placed east of Block 1 matching aerial)",
+      "story": "白色现代主义图书馆，室外大台阶直通阅览大厅，拱形蓝绿玻璃幕墙之上矗立着海口中学少见的银色天文台穹顶。"
+    },
+    {
+      "id": "keji",
+      "name": "科技楼",
+      "en": "Science & Technology Building",
+      "district": "d02_academic_core",
+      "archetype": "hero_keji",
+      "floors": 5,
+      "height": 18.8,
+      "roof_style": "flat_parapet",
+      "poly": [
+        [
+          18.0,
+          78.0
+        ],
+        [
+          58.0,
+          78.0
+        ],
+        [
+          58.0,
+          97.0
+        ],
+        [
+          18.0,
+          97.0
+        ]
+      ],
+      "center": [
+        38.0,
+        87.5
+      ],
+      "bbox": [
+        18.0,
+        78.0,
+        58.0,
+        97.0
+      ],
+      "size": [
+        40.0,
+        19.0
+      ],
+      "area": 760.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_keji.jpg (crisp white and warm-sand vertical facade fins, double-height recessed bronze-framed glass lobby; footprint placed NE of forecourt per legacy/campus plan)",
+      "story": "白与暖沙竖向遮阳肋板交织的现代科技楼，双层挑高玻璃大堂映出前庭草坪与树影。"
+    },
+    {
+      "id": "xiaoyouhui",
+      "name": "校友会馆",
+      "en": "Alumni Association Hall",
+      "district": "d04_heritage_gardens",
+      "archetype": "hero_alumni",
+      "floors": 2,
+      "height": 10.2,
+      "roof_style": "emerald_lingnan_gable",
+      "poly": [
+        [
+          82.0,
+          42.0
+        ],
+        [
+          102.0,
+          42.0
+        ],
+        [
+          102.0,
+          56.0
+        ],
+        [
+          82.0,
+          56.0
+        ]
+      ],
+      "center": [
+        92.0,
+        49.0
+      ],
+      "bbox": [
+        82.0,
+        42.0,
+        102.0,
+        56.0
+      ],
+      "size": [
+        20.0,
+        14.0
+      ],
+      "area": 280.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_xiaoyouhui.jpg (two-storey whitewashed hall, double-tiered emerald glazed eaves, vermilion carved lattice windows and balcony rail; position estimated near Yanlintang)",
+      "story": "重檐孔雀绿瓦与朱红花窗构成的二层校友会馆，百年历届海中学子重返府城的家园。"
+    },
+    {
+      "id": "beimen",
+      "name": "北门牌坊（海南中學）",
+      "en": "North Gate Paifang",
+      "district": "d01_axis_forecourt",
+      "archetype": "hero_north_gate",
+      "floors": 1,
+      "height": 9.4,
+      "roof_style": "emerald_paifang",
+      "poly": [
+        [
+          -8.8,
+          104.8
+        ],
+        [
+          8.8,
+          104.8
+        ],
+        [
+          8.8,
+          107.6
+        ],
+        [
+          -8.8,
+          107.6
+        ]
+      ],
+      "center": [
+        0.0,
+        106.2
+      ],
+      "bbox": [
+        -8.8,
+        104.8,
+        8.8,
+        107.6
+      ],
+      "size": [
+        17.6,
+        2.8
+      ],
+      "area": 49.3,
+      "tag": "photo-derived",
+      "basis": "hero-2560.jpg calibrated gate plane (6.78 mm/px, twin/data/gate.json): triple-bay white paifang, emerald glazed curved roofs, golden fretwork, four stone lions, 「海南中學」 plaque",
+      "story": "府城校区标志性三间四柱琉璃绿瓦牌坊，金字「海南中學」面向大路街，四尊石狮静守百年校门。"
+    },
+    {
+      "id": "nanmen",
+      "name": "南门牌坊",
+      "en": "South Gate Paifang",
+      "district": "d05_sports_living",
+      "archetype": "hero_south_gate",
+      "floors": 1,
+      "height": 8.4,
+      "roof_style": "emerald_paifang",
+      "poly": [
+        [
+          -75.0,
+          -258.5
+        ],
+        [
+          -57.0,
+          -258.5
+        ],
+        [
+          -57.0,
+          -255.5
+        ],
+        [
+          -75.0,
+          -255.5
+        ]
+      ],
+      "center": [
+        -66.0,
+        -257.0
+      ],
+      "bbox": [
+        -75.0,
+        -258.5,
+        -57.0,
+        -255.5
+      ],
+      "size": [
+        18.0,
+        3.0
+      ],
+      "area": 54.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_nanmen.jpg (emerald glazed tile triple-bay paifang facing Gaodeng West Street; dimensions estimated from photo)",
+      "story": "连接高登西街烟火市井的南校门，放学时分满是穿青白校服的海中少年与骑行车流。"
+    },
+    {
+      "id": "fengqiting",
+      "name": "凤栖亭",
+      "en": "Fengqiting Pavilion",
+      "district": "d04_heritage_gardens",
+      "archetype": "hero_pavilion",
+      "floors": 1,
+      "height": 5.8,
+      "roof_style": "emerald_pavilion",
+      "poly": [
+        [
+          -43.2,
+          52.8
+        ],
+        [
+          -36.8,
+          52.8
+        ],
+        [
+          -36.8,
+          59.2
+        ],
+        [
+          -43.2,
+          59.2
+        ]
+      ],
+      "center": [
+        -40.0,
+        56.0
+      ],
+      "bbox": [
+        -43.2,
+        52.8,
+        -36.8,
+        59.2
+      ],
+      "size": [
+        6.4,
+        6.4
+      ],
+      "area": 41.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_yanlintang.jpg (square open pavilion, emerald glazed pyramidal curved roof, red columns on stone drum bases, wrap-around bench rail; position estimated in north garden lawns)",
+      "story": "四角攒尖孔雀绿瓦凉亭，朱红木柱配美人靠长凳，是课间纳凉与雨天听雨的好去处。"
+    },
+    {
+      "id": "yanlinting",
+      "name": "衍林亭",
+      "en": "Yanlinting Pavilion",
+      "district": "d04_heritage_gardens",
+      "archetype": "hero_pavilion",
+      "floors": 1,
+      "height": 5.8,
+      "roof_style": "emerald_pavilion",
+      "poly": [
+        [
+          30.8,
+          51.8
+        ],
+        [
+          37.2,
+          51.8
+        ],
+        [
+          37.2,
+          58.2
+        ],
+        [
+          30.8,
+          58.2
+        ]
+      ],
+      "center": [
+        34.0,
+        55.0
+      ],
+      "bbox": [
+        30.8,
+        51.8,
+        37.2,
+        58.2
+      ],
+      "size": [
+        6.4,
+        6.4
+      ],
+      "area": 41.0,
+      "tag": "photo-derived/estimated",
+      "basis": "campus_yanlintang.jpg (square open pavilion, emerald glazed pyramidal curved roof, red columns on stone drum bases, wrap-around bench rail; position estimated in north garden lawns)",
+      "story": "四角攒尖孔雀绿瓦凉亭，朱红木柱配美人靠长凳，是课间纳凉与雨天听雨的好去处。"
+    }
+  ],
+  "context_buildings": [
+    {
+      "id": "fucheng_ctx_005",
+      "poly": [
+        [
+          -178.56,
+          13.41
+        ],
+        [
+          -181.86,
+          -7.63
+        ],
+        [
+          -221.77,
+          -1.58
+        ],
+        [
+          -218.96,
+          16.31
+        ],
+        [
+          -227.36,
+          17.59
+        ],
+        [
+          -236.79,
+          -42.39
+        ],
+        [
+          -181.12,
+          -50.84
+        ],
+        [
+          -169.88,
+          20.72
+        ],
+        [
+          -224.49,
+          29.0
+        ],
+        [
+          -225.82,
+          20.58
+        ]
+      ],
+      "center": [
+        -206.66,
+        1.52
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_006",
+      "poly": [
+        [
+          -261.28,
+          -5.9
+        ],
+        [
+          -249.83,
+          -8.25
+        ],
+        [
+          -246.31,
+          8.43
+        ],
+        [
+          -257.76,
+          10.79
+        ]
+      ],
+      "center": [
+        -253.8,
+        1.27
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_007",
+      "poly": [
+        [
+          -267.87,
+          -20.27
+        ],
+        [
+          -253.25,
+          -23.01
+        ],
+        [
+          -251.04,
+          -11.49
+        ],
+        [
+          -267.74,
+          -8.38
+        ],
+        [
+          -263.53,
+          13.6
+        ],
+        [
+          -289.64,
+          18.46
+        ],
+        [
+          -297.06,
+          -20.25
+        ],
+        [
+          -268.87,
+          -25.51
+        ]
+      ],
+      "center": [
+        -269.88,
+        -9.61
+      ],
+      "floors": 9,
+      "height": 29.1,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_008",
+      "poly": [
+        [
+          -243.22,
+          43.24
+        ],
+        [
+          -283.22,
+          53.95
+        ],
+        [
+          -285.46,
+          45.72
+        ],
+        [
+          -245.46,
+          35.02
+        ]
+      ],
+      "center": [
+        -264.34,
+        44.48
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_009",
+      "poly": [
+        [
+          -257.76,
+          15.49
+        ],
+        [
+          -232.98,
+          8.95
+        ],
+        [
+          -230.42,
+          18.58
+        ],
+        [
+          -255.05,
+          25.13
+        ]
+      ],
+      "center": [
+        -244.05,
+        17.04
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_010",
+      "poly": [
+        [
+          -152.24,
+          148.99
+        ],
+        [
+          -128.2,
+          141.91
+        ],
+        [
+          -125.42,
+          151.79
+        ],
+        [
+          -149.38,
+          158.79
+        ]
+      ],
+      "center": [
+        -138.81,
+        150.37
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_011",
+      "poly": [
+        [
+          -143.3,
+          189.3
+        ],
+        [
+          -145.27,
+          181.01
+        ],
+        [
+          -87.33,
+          167.59
+        ],
+        [
+          -85.37,
+          175.89
+        ]
+      ],
+      "center": [
+        -115.32,
+        178.45
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_012",
+      "poly": [
+        [
+          -176.98,
+          199.36
+        ],
+        [
+          -179.33,
+          190.06
+        ],
+        [
+          -151.5,
+          183.17
+        ],
+        [
+          -149.15,
+          192.47
+        ]
+      ],
+      "center": [
+        -164.24,
+        191.27
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_013",
+      "poly": [
+        [
+          -212.77,
+          152.21
+        ],
+        [
+          -237.45,
+          159.54
+        ],
+        [
+          -239.72,
+          150.94
+        ],
+        [
+          -204.78,
+          140.66
+        ],
+        [
+          -201.32,
+          147.64
+        ],
+        [
+          -197.13,
+          154.6
+        ],
+        [
+          -184.43,
+          153.6
+        ],
+        [
+          -162.74,
+          149.06
+        ],
+        [
+          -160.24,
+          158.97
+        ],
+        [
+          -196.45,
+          167.58
+        ],
+        [
+          -203.67,
+          165.48
+        ]
+      ],
+      "center": [
+        -200.06,
+        154.57
+      ],
+      "floors": 10,
+      "height": 32.3,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_014",
+      "poly": [
+        [
+          -220.97,
+          173.13
+        ],
+        [
+          -214.43,
+          168.71
+        ],
+        [
+          -208.71,
+          177.18
+        ],
+        [
+          -215.25,
+          181.76
+        ]
+      ],
+      "center": [
+        -214.84,
+        175.19
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_015",
+      "poly": [
+        [
+          -316.79,
+          146.56
+        ],
+        [
+          -301.03,
+          146.05
+        ],
+        [
+          -286.8,
+          135.03
+        ],
+        [
+          -282.35,
+          140.15
+        ],
+        [
+          -300.67,
+          153.31
+        ],
+        [
+          -318.17,
+          153.57
+        ]
+      ],
+      "center": [
+        -300.97,
+        145.78
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_016",
+      "poly": [
+        [
+          -252.89,
+          164.03
+        ],
+        [
+          -308.85,
+          182.19
+        ],
+        [
+          -314.11,
+          165.97
+        ],
+        [
+          -258.15,
+          147.8
+        ]
+      ],
+      "center": [
+        -283.5,
+        165.0
+      ],
+      "floors": 7,
+      "height": 22.9,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_017",
+      "poly": [
+        [
+          -283.52,
+          83.03
+        ],
+        [
+          -331.07,
+          97.61
+        ],
+        [
+          -348.17,
+          41.82
+        ],
+        [
+          -300.61,
+          27.25
+        ]
+      ],
+      "center": [
+        -315.84,
+        62.43
+      ],
+      "floors": 10,
+      "height": 32.3,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_018",
+      "poly": [
+        [
+          -72.99,
+          163.42
+        ],
+        [
+          -48.35,
+          156.91
+        ],
+        [
+          -47.24,
+          161.03
+        ],
+        [
+          -71.88,
+          167.53
+        ]
+      ],
+      "center": [
+        -60.12,
+        162.22
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_019",
+      "poly": [
+        [
+          -62.49,
+          125.12
+        ],
+        [
+          -41.32,
+          119.21
+        ],
+        [
+          -39.08,
+          127.19
+        ],
+        [
+          -60.33,
+          133.32
+        ]
+      ],
+      "center": [
+        -50.8,
+        126.21
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_020",
+      "poly": [
+        [
+          -18.65,
+          146.7
+        ],
+        [
+          -16.36,
+          152.68
+        ],
+        [
+          -43.18,
+          162.78
+        ],
+        [
+          -45.47,
+          156.8
+        ]
+      ],
+      "center": [
+        -30.91,
+        154.74
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_021",
+      "poly": [
+        [
+          79.14,
+          141.4
+        ],
+        [
+          6.95,
+          158.44
+        ],
+        [
+          3.57,
+          144.14
+        ],
+        [
+          75.78,
+          127.12
+        ]
+      ],
+      "center": [
+        41.36,
+        142.78
+      ],
+      "floors": 7,
+      "height": 22.9,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_022",
+      "poly": [
+        [
+          74.77,
+          104.31
+        ],
+        [
+          18.74,
+          116.4
+        ],
+        [
+          15.51,
+          101.43
+        ],
+        [
+          71.55,
+          89.34
+        ]
+      ],
+      "center": [
+        45.14,
+        102.87
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_025",
+      "poly": [
+        [
+          91.8,
+          74.15
+        ],
+        [
+          99.41,
+          101.03
+        ],
+        [
+          91.25,
+          103.93
+        ],
+        [
+          86.23,
+          88.44
+        ],
+        [
+          88.92,
+          87.55
+        ],
+        [
+          85.66,
+          76.0
+        ]
+      ],
+      "center": [
+        90.55,
+        88.52
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_026",
+      "poly": [
+        [
+          109.14,
+          122.2
+        ],
+        [
+          102.77,
+          122.62
+        ],
+        [
+          101.94,
+          110.93
+        ],
+        [
+          110.43,
+          110.38
+        ],
+        [
+          111.7,
+          128.44
+        ],
+        [
+          109.58,
+          128.58
+        ]
+      ],
+      "center": [
+        107.59,
+        120.52
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_027",
+      "poly": [
+        [
+          127.2,
+          128.36
+        ],
+        [
+          116.64,
+          130.71
+        ],
+        [
+          115.29,
+          112.12
+        ],
+        [
+          125.52,
+          112.74
+        ]
+      ],
+      "center": [
+        121.16,
+        120.98
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_028",
+      "poly": [
+        [
+          128.57,
+          129.75
+        ],
+        [
+          127.95,
+          123.39
+        ],
+        [
+          138.53,
+          122.41
+        ],
+        [
+          139.15,
+          128.77
+        ]
+      ],
+      "center": [
+        133.55,
+        126.08
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_029",
+      "poly": [
+        [
+          143.48,
+          100.46
+        ],
+        [
+          138.78,
+          104.75
+        ],
+        [
+          135.9,
+          101.6
+        ],
+        [
+          140.6,
+          97.31
+        ]
+      ],
+      "center": [
+        139.69,
+        101.03
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_030",
+      "poly": [
+        [
+          129.05,
+          72.32
+        ],
+        [
+          120.42,
+          76.39
+        ],
+        [
+          117.67,
+          70.61
+        ],
+        [
+          126.31,
+          66.55
+        ]
+      ],
+      "center": [
+        123.36,
+        71.47
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_031",
+      "poly": [
+        [
+          121.85,
+          104.44
+        ],
+        [
+          132.07,
+          101.6
+        ],
+        [
+          133.23,
+          105.71
+        ],
+        [
+          123.0,
+          108.54
+        ]
+      ],
+      "center": [
+        127.54,
+        105.07
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_034",
+      "poly": [
+        [
+          99.55,
+          46.76
+        ],
+        [
+          110.47,
+          40.21
+        ],
+        [
+          115.47,
+          47.85
+        ],
+        [
+          104.38,
+          54.69
+        ]
+      ],
+      "center": [
+        107.47,
+        47.38
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_037",
+      "poly": [
+        [
+          125.49,
+          57.14
+        ],
+        [
+          117.76,
+          62.75
+        ],
+        [
+          115.25,
+          59.3
+        ],
+        [
+          122.97,
+          53.7
+        ]
+      ],
+      "center": [
+        120.37,
+        58.22
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_038",
+      "poly": [
+        [
+          129.91,
+          92.21
+        ],
+        [
+          123.47,
+          85.85
+        ],
+        [
+          130.84,
+          78.37
+        ],
+        [
+          135.14,
+          82.62
+        ],
+        [
+          149.89,
+          67.68
+        ],
+        [
+          155.26,
+          72.98
+        ],
+        [
+          149.99,
+          78.31
+        ],
+        [
+          146.77,
+          75.14
+        ]
+      ],
+      "center": [
+        140.16,
+        79.14
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_039",
+      "poly": [
+        [
+          145.93,
+          65.07
+        ],
+        [
+          143.35,
+          59.21
+        ],
+        [
+          153.07,
+          54.96
+        ],
+        [
+          155.66,
+          60.81
+        ]
+      ],
+      "center": [
+        149.5,
+        60.01
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_040",
+      "poly": [
+        [
+          148.06,
+          50.56
+        ],
+        [
+          136.37,
+          55.59
+        ],
+        [
+          133.82,
+          49.73
+        ],
+        [
+          145.52,
+          44.69
+        ]
+      ],
+      "center": [
+        140.94,
+        50.14
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_043",
+      "poly": [
+        [
+          145.36,
+          24.15
+        ],
+        [
+          153.85,
+          24.78
+        ],
+        [
+          153.12,
+          35.39
+        ],
+        [
+          144.63,
+          34.76
+        ]
+      ],
+      "center": [
+        149.24,
+        29.77
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_044",
+      "poly": [
+        [
+          166.81,
+          34.53
+        ],
+        [
+          170.14,
+          43.54
+        ],
+        [
+          160.18,
+          47.18
+        ],
+        [
+          156.84,
+          38.18
+        ]
+      ],
+      "center": [
+        163.49,
+        40.86
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_046",
+      "poly": [
+        [
+          178.71,
+          57.93
+        ],
+        [
+          179.78,
+          62.05
+        ],
+        [
+          173.6,
+          63.62
+        ],
+        [
+          172.54,
+          59.49
+        ]
+      ],
+      "center": [
+        176.16,
+        60.77
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_047",
+      "poly": [
+        [
+          204.85,
+          34.19
+        ],
+        [
+          208.87,
+          40.49
+        ],
+        [
+          205.29,
+          42.77
+        ],
+        [
+          201.27,
+          36.47
+        ]
+      ],
+      "center": [
+        205.07,
+        38.48
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_048",
+      "poly": [
+        [
+          170.45,
+          8.97
+        ],
+        [
+          181.16,
+          4.09
+        ],
+        [
+          185.89,
+          14.78
+        ],
+        [
+          175.26,
+          19.59
+        ]
+      ],
+      "center": [
+        178.19,
+        11.86
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_049",
+      "poly": [
+        [
+          177.77,
+          29.82
+        ],
+        [
+          189.19,
+          27.33
+        ],
+        [
+          190.82,
+          34.6
+        ],
+        [
+          179.41,
+          37.1
+        ]
+      ],
+      "center": [
+        184.3,
+        32.21
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_051",
+      "poly": [
+        [
+          158.99,
+          31.14
+        ],
+        [
+          156.97,
+          22.85
+        ],
+        [
+          163.17,
+          21.38
+        ],
+        [
+          165.19,
+          29.66
+        ]
+      ],
+      "center": [
+        161.08,
+        26.26
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_053",
+      "poly": [
+        [
+          194.75,
+          9.68
+        ],
+        [
+          193.68,
+          15.59
+        ],
+        [
+          187.76,
+          14.49
+        ],
+        [
+          188.83,
+          8.57
+        ]
+      ],
+      "center": [
+        191.26,
+        12.08
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_054",
+      "poly": [
+        [
+          201.42,
+          21.75
+        ],
+        [
+          200.8,
+          27.73
+        ],
+        [
+          194.81,
+          27.06
+        ],
+        [
+          195.43,
+          21.08
+        ]
+      ],
+      "center": [
+        198.12,
+        24.41
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_055",
+      "poly": [
+        [
+          201.06,
+          16.69
+        ],
+        [
+          211.16,
+          8.96
+        ],
+        [
+          231.92,
+          36.06
+        ],
+        [
+          221.82,
+          43.8
+        ]
+      ],
+      "center": [
+        216.49,
+        26.38
+      ],
+      "floors": 9,
+      "height": 29.1,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_057",
+      "poly": [
+        [
+          221.96,
+          -3.34
+        ],
+        [
+          238.32,
+          -16.07
+        ],
+        [
+          243.27,
+          -9.74
+        ],
+        [
+          226.99,
+          2.93
+        ]
+      ],
+      "center": [
+        232.63,
+        -6.55
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_058",
+      "poly": [
+        [
+          229.59,
+          15.8
+        ],
+        [
+          254.38,
+          -4.16
+        ],
+        [
+          258.4,
+          0.83
+        ],
+        [
+          233.61,
+          20.78
+        ]
+      ],
+      "center": [
+        244.0,
+        8.31
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_059",
+      "poly": [
+        [
+          214.0,
+          -10.86
+        ],
+        [
+          217.61,
+          -5.58
+        ],
+        [
+          214.1,
+          -3.19
+        ],
+        [
+          210.5,
+          -8.48
+        ]
+      ],
+      "center": [
+        214.05,
+        -7.03
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_061",
+      "poly": [
+        [
+          263.99,
+          6.05
+        ],
+        [
+          283.36,
+          -2.64
+        ],
+        [
+          285.56,
+          2.22
+        ],
+        [
+          266.19,
+          10.9
+        ]
+      ],
+      "center": [
+        274.78,
+        4.13
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_062",
+      "poly": [
+        [
+          241.27,
+          -24.12
+        ],
+        [
+          247.29,
+          -28.47
+        ],
+        [
+          259.18,
+          -12.05
+        ],
+        [
+          253.16,
+          -7.7
+        ]
+      ],
+      "center": [
+        250.22,
+        -18.09
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_063",
+      "poly": [
+        [
+          232.56,
+          -28.37
+        ],
+        [
+          239.13,
+          -19.96
+        ],
+        [
+          224.9,
+          -8.88
+        ],
+        [
+          218.34,
+          -17.29
+        ]
+      ],
+      "center": [
+        228.73,
+        -18.62
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_064",
+      "poly": [
+        [
+          193.62,
+          -91.72
+        ],
+        [
+          198.74,
+          -97.2
+        ],
+        [
+          211.95,
+          -84.82
+        ],
+        [
+          206.84,
+          -79.34
+        ]
+      ],
+      "center": [
+        202.79,
+        -88.27
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_065",
+      "poly": [
+        [
+          218.77,
+          -87.53
+        ],
+        [
+          226.1,
+          -79.79
+        ],
+        [
+          219.95,
+          -73.95
+        ],
+        [
+          212.61,
+          -81.71
+        ]
+      ],
+      "center": [
+        219.36,
+        -80.74
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_066",
+      "poly": [
+        [
+          237.49,
+          -65.1
+        ],
+        [
+          239.04,
+          -66.57
+        ],
+        [
+          236.11,
+          -69.67
+        ],
+        [
+          239.96,
+          -73.31
+        ],
+        [
+          245.09,
+          -67.88
+        ],
+        [
+          232.76,
+          -56.22
+        ],
+        [
+          224.7,
+          -64.75
+        ],
+        [
+          231.63,
+          -71.31
+        ]
+      ],
+      "center": [
+        235.85,
+        -66.85
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_067",
+      "poly": [
+        [
+          261.73,
+          -31.72
+        ],
+        [
+          255.16,
+          -26.35
+        ],
+        [
+          248.41,
+          -34.62
+        ],
+        [
+          254.99,
+          -39.99
+        ]
+      ],
+      "center": [
+        255.07,
+        -33.17
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_068",
+      "poly": [
+        [
+          274.5,
+          -20.99
+        ],
+        [
+          276.76,
+          -16.15
+        ],
+        [
+          270.96,
+          -13.48
+        ],
+        [
+          268.72,
+          -18.32
+        ]
+      ],
+      "center": [
+        272.74,
+        -17.23
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_069",
+      "poly": [
+        [
+          261.81,
+          -59.54
+        ],
+        [
+          246.54,
+          -41.02
+        ],
+        [
+          240.72,
+          -45.83
+        ],
+        [
+          255.99,
+          -64.35
+        ]
+      ],
+      "center": [
+        251.27,
+        -52.68
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_070",
+      "poly": [
+        [
+          271.09,
+          -24.17
+        ],
+        [
+          266.73,
+          -30.23
+        ],
+        [
+          271.89,
+          -33.94
+        ],
+        [
+          276.26,
+          -27.88
+        ]
+      ],
+      "center": [
+        271.49,
+        -29.05
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_071",
+      "poly": [
+        [
+          222.62,
+          -94.32
+        ],
+        [
+          227.54,
+          -96.29
+        ],
+        [
+          229.95,
+          -90.36
+        ],
+        [
+          225.03,
+          -88.39
+        ]
+      ],
+      "center": [
+        226.28,
+        -92.34
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_072",
+      "poly": [
+        [
+          252.62,
+          -90.07
+        ],
+        [
+          244.0,
+          -82.21
+        ],
+        [
+          241.13,
+          -85.36
+        ],
+        [
+          249.75,
+          -93.22
+        ]
+      ],
+      "center": [
+        246.88,
+        -87.72
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_073",
+      "poly": [
+        [
+          235.2,
+          -104.41
+        ],
+        [
+          242.91,
+          -111.7
+        ],
+        [
+          248.77,
+          -105.5
+        ],
+        [
+          241.07,
+          -98.21
+        ]
+      ],
+      "center": [
+        241.99,
+        -104.95
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_074",
+      "poly": [
+        [
+          255.18,
+          -96.47
+        ],
+        [
+          259.43,
+          -102.65
+        ],
+        [
+          263.15,
+          -100.07
+        ],
+        [
+          258.89,
+          -93.89
+        ]
+      ],
+      "center": [
+        259.16,
+        -98.27
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_075",
+      "poly": [
+        [
+          279.81,
+          -64.95
+        ],
+        [
+          269.69,
+          -71.55
+        ],
+        [
+          274.6,
+          -79.1
+        ],
+        [
+          284.7,
+          -72.51
+        ]
+      ],
+      "center": [
+        277.2,
+        -72.03
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_076",
+      "poly": [
+        [
+          294.62,
+          -54.56
+        ],
+        [
+          300.32,
+          -48.0
+        ],
+        [
+          289.53,
+          -38.43
+        ],
+        [
+          283.83,
+          -44.98
+        ]
+      ],
+      "center": [
+        292.07,
+        -46.49
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_077",
+      "poly": [
+        [
+          329.94,
+          -56.3
+        ],
+        [
+          336.61,
+          -45.37
+        ],
+        [
+          296.69,
+          -21.17
+        ],
+        [
+          290.03,
+          -32.11
+        ]
+      ],
+      "center": [
+        313.32,
+        -38.74
+      ],
+      "floors": 9,
+      "height": 29.1,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_078",
+      "poly": [
+        [
+          297.87,
+          -60.26
+        ],
+        [
+          292.58,
+          -68.28
+        ],
+        [
+          297.89,
+          -71.78
+        ],
+        [
+          303.18,
+          -63.76
+        ]
+      ],
+      "center": [
+        297.88,
+        -66.02
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_079",
+      "poly": [
+        [
+          283.98,
+          -82.78
+        ],
+        [
+          289.63,
+          -77.78
+        ],
+        [
+          284.66,
+          -72.16
+        ],
+        [
+          279.01,
+          -77.16
+        ]
+      ],
+      "center": [
+        284.32,
+        -77.47
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_080",
+      "poly": [
+        [
+          275.2,
+          -82.43
+        ],
+        [
+          271.36,
+          -87.54
+        ],
+        [
+          282.38,
+          -95.82
+        ],
+        [
+          286.23,
+          -90.7
+        ]
+      ],
+      "center": [
+        278.79,
+        -89.12
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_081",
+      "poly": [
+        [
+          245.03,
+          -238.4
+        ],
+        [
+          232.18,
+          -230.94
+        ],
+        [
+          228.95,
+          -236.47
+        ],
+        [
+          241.79,
+          -243.92
+        ]
+      ],
+      "center": [
+        236.99,
+        -237.43
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_083",
+      "poly": [
+        [
+          242.26,
+          -186.51
+        ],
+        [
+          235.71,
+          -192.76
+        ],
+        [
+          237.77,
+          -194.93
+        ],
+        [
+          244.32,
+          -188.68
+        ]
+      ],
+      "center": [
+        240.01,
+        -190.72
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_084",
+      "poly": [
+        [
+          222.98,
+          -182.43
+        ],
+        [
+          226.97,
+          -186.91
+        ],
+        [
+          231.46,
+          -182.88
+        ],
+        [
+          227.47,
+          -178.4
+        ]
+      ],
+      "center": [
+        227.22,
+        -182.66
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_085",
+      "poly": [
+        [
+          218.92,
+          -197.42
+        ],
+        [
+          225.09,
+          -198.99
+        ],
+        [
+          226.7,
+          -192.81
+        ],
+        [
+          220.53,
+          -191.23
+        ]
+      ],
+      "center": [
+        222.81,
+        -195.11
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_087",
+      "poly": [
+        [
+          210.31,
+          -212.91
+        ],
+        [
+          210.87,
+          -206.56
+        ],
+        [
+          204.52,
+          -206.02
+        ],
+        [
+          203.96,
+          -212.39
+        ]
+      ],
+      "center": [
+        207.42,
+        -209.47
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_089",
+      "poly": [
+        [
+          234.41,
+          -211.41
+        ],
+        [
+          238.6,
+          -202.77
+        ],
+        [
+          234.78,
+          -200.94
+        ],
+        [
+          230.59,
+          -209.57
+        ]
+      ],
+      "center": [
+        234.59,
+        -206.17
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_090",
+      "poly": [
+        [
+          222.69,
+          -235.78
+        ],
+        [
+          200.73,
+          -227.83
+        ],
+        [
+          197.8,
+          -235.84
+        ],
+        [
+          219.75,
+          -243.79
+        ]
+      ],
+      "center": [
+        210.24,
+        -235.81
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_091",
+      "poly": [
+        [
+          173.42,
+          -263.17
+        ],
+        [
+          169.57,
+          -261.39
+        ],
+        [
+          165.08,
+          -271.07
+        ],
+        [
+          182.44,
+          -279.04
+        ],
+        [
+          185.58,
+          -272.27
+        ],
+        [
+          172.08,
+          -266.07
+        ]
+      ],
+      "center": [
+        174.7,
+        -268.83
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_092",
+      "poly": [
+        [
+          182.36,
+          -231.09
+        ],
+        [
+          192.49,
+          -234.28
+        ],
+        [
+          195.73,
+          -224.12
+        ],
+        [
+          185.6,
+          -220.93
+        ]
+      ],
+      "center": [
+        189.05,
+        -227.61
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_093",
+      "poly": [
+        [
+          155.35,
+          -266.21
+        ],
+        [
+          162.82,
+          -265.43
+        ],
+        [
+          162.09,
+          -257.95
+        ],
+        [
+          154.61,
+          -258.73
+        ]
+      ],
+      "center": [
+        158.72,
+        -262.08
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_094",
+      "poly": [
+        [
+          180.12,
+          -251.83
+        ],
+        [
+          181.21,
+          -245.54
+        ],
+        [
+          171.78,
+          -243.95
+        ],
+        [
+          170.69,
+          -250.25
+        ]
+      ],
+      "center": [
+        175.95,
+        -247.89
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_095",
+      "poly": [
+        [
+          139.63,
+          -282.91
+        ],
+        [
+          138.4,
+          -293.49
+        ],
+        [
+          151.06,
+          -294.9
+        ],
+        [
+          152.3,
+          -284.32
+        ]
+      ],
+      "center": [
+        145.35,
+        -288.91
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_096",
+      "poly": [
+        [
+          144.65,
+          -280.07
+        ],
+        [
+          156.82,
+          -283.28
+        ],
+        [
+          159.32,
+          -273.57
+        ],
+        [
+          147.14,
+          -270.35
+        ],
+        [
+          147.09,
+          -270.54
+        ],
+        [
+          147.0,
+          -270.52
+        ]
+      ],
+      "center": [
+        150.34,
+        -274.72
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_097",
+      "poly": [
+        [
+          128.61,
+          -293.92
+        ],
+        [
+          120.29,
+          -292.23
+        ],
+        [
+          118.56,
+          -300.58
+        ],
+        [
+          126.88,
+          -302.27
+        ]
+      ],
+      "center": [
+        123.59,
+        -297.25
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_098",
+      "poly": [
+        [
+          145.63,
+          -305.63
+        ],
+        [
+          153.26,
+          -309.37
+        ],
+        [
+          157.97,
+          -299.81
+        ],
+        [
+          150.35,
+          -296.07
+        ]
+      ],
+      "center": [
+        151.8,
+        -302.72
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_099",
+      "poly": [
+        [
+          167.56,
+          -288.71
+        ],
+        [
+          164.05,
+          -296.48
+        ],
+        [
+          179.54,
+          -303.42
+        ],
+        [
+          183.06,
+          -295.66
+        ]
+      ],
+      "center": [
+        173.55,
+        -296.07
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_100",
+      "poly": [
+        [
+          167.8,
+          -283.65
+        ],
+        [
+          181.26,
+          -289.93
+        ],
+        [
+          183.98,
+          -284.15
+        ],
+        [
+          170.53,
+          -277.86
+        ]
+      ],
+      "center": [
+        175.89,
+        -283.9
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_102",
+      "poly": [
+        [
+          189.63,
+          -285.79
+        ],
+        [
+          197.69,
+          -290.9
+        ],
+        [
+          205.69,
+          -278.28
+        ],
+        [
+          197.62,
+          -273.18
+        ]
+      ],
+      "center": [
+        197.66,
+        -282.04
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_103",
+      "poly": [
+        [
+          208.08,
+          -251.37
+        ],
+        [
+          224.17,
+          -259.51
+        ],
+        [
+          226.11,
+          -255.7
+        ],
+        [
+          210.02,
+          -247.57
+        ]
+      ],
+      "center": [
+        217.09,
+        -253.54
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_104",
+      "poly": [
+        [
+          228.07,
+          -270.45
+        ],
+        [
+          231.03,
+          -264.77
+        ],
+        [
+          196.16,
+          -246.75
+        ],
+        [
+          193.21,
+          -252.43
+        ]
+      ],
+      "center": [
+        212.12,
+        -258.6
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_105",
+      "poly": [
+        [
+          -21.06,
+          -322.23
+        ],
+        [
+          -43.65,
+          -316.33
+        ],
+        [
+          -45.3,
+          -322.51
+        ],
+        [
+          -22.7,
+          -328.41
+        ]
+      ],
+      "center": [
+        -33.18,
+        -322.37
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_106",
+      "poly": [
+        [
+          16.63,
+          -254.67
+        ],
+        [
+          12.78,
+          -261.07
+        ],
+        [
+          18.24,
+          -264.34
+        ],
+        [
+          22.09,
+          -257.94
+        ]
+      ],
+      "center": [
+        17.43,
+        -259.5
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_107",
+      "poly": [
+        [
+          25.49,
+          -266.94
+        ],
+        [
+          23.65,
+          -261.22
+        ],
+        [
+          17.92,
+          -263.12
+        ],
+        [
+          19.78,
+          -268.83
+        ]
+      ],
+      "center": [
+        21.71,
+        -265.03
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_108",
+      "poly": [
+        [
+          22.96,
+          -276.74
+        ],
+        [
+          -0.58,
+          -270.22
+        ],
+        [
+          -2.89,
+          -278.42
+        ],
+        [
+          20.64,
+          -284.95
+        ]
+      ],
+      "center": [
+        10.03,
+        -277.58
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_109",
+      "poly": [
+        [
+          46.4,
+          -268.37
+        ],
+        [
+          51.95,
+          -266.03
+        ],
+        [
+          49.65,
+          -260.48
+        ],
+        [
+          44.1,
+          -262.82
+        ]
+      ],
+      "center": [
+        48.02,
+        -264.43
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_110",
+      "poly": [
+        [
+          42.78,
+          -272.15
+        ],
+        [
+          44.12,
+          -278.0
+        ],
+        [
+          49.99,
+          -276.63
+        ],
+        [
+          48.65,
+          -270.77
+        ]
+      ],
+      "center": [
+        46.39,
+        -274.39
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_111",
+      "poly": [
+        [
+          49.67,
+          -282.24
+        ],
+        [
+          43.42,
+          -281.0
+        ],
+        [
+          42.13,
+          -287.26
+        ],
+        [
+          48.38,
+          -288.51
+        ]
+      ],
+      "center": [
+        45.9,
+        -284.75
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_113",
+      "poly": [
+        [
+          85.33,
+          -270.81
+        ],
+        [
+          68.6,
+          -259.59
+        ],
+        [
+          65.03,
+          -264.89
+        ],
+        [
+          81.75,
+          -276.12
+        ]
+      ],
+      "center": [
+        75.18,
+        -267.85
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_114",
+      "poly": [
+        [
+          70.35,
+          -282.45
+        ],
+        [
+          69.7,
+          -276.47
+        ],
+        [
+          65.21,
+          -276.98
+        ],
+        [
+          65.86,
+          -282.96
+        ]
+      ],
+      "center": [
+        67.78,
+        -279.72
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_115",
+      "poly": [
+        [
+          106.64,
+          -294.26
+        ],
+        [
+          106.78,
+          -300.28
+        ],
+        [
+          112.79,
+          -300.1
+        ],
+        [
+          112.64,
+          -294.08
+        ]
+      ],
+      "center": [
+        109.71,
+        -297.18
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_116",
+      "poly": [
+        [
+          103.25,
+          -293.39
+        ],
+        [
+          95.07,
+          -291.09
+        ],
+        [
+          93.31,
+          -297.25
+        ],
+        [
+          101.5,
+          -299.54
+        ]
+      ],
+      "center": [
+        98.28,
+        -295.32
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_117",
+      "poly": [
+        [
+          80.02,
+          -283.91
+        ],
+        [
+          75.92,
+          -291.39
+        ],
+        [
+          86.17,
+          -296.97
+        ],
+        [
+          90.27,
+          -289.49
+        ]
+      ],
+      "center": [
+        83.09,
+        -290.44
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_118",
+      "poly": [
+        [
+          66.63,
+          -301.54
+        ],
+        [
+          76.07,
+          -308.4
+        ],
+        [
+          79.84,
+          -303.22
+        ],
+        [
+          70.4,
+          -296.36
+        ]
+      ],
+      "center": [
+        73.23,
+        -302.38
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_119",
+      "poly": [
+        [
+          59.17,
+          -284.82
+        ],
+        [
+          58.12,
+          -288.96
+        ],
+        [
+          66.36,
+          -291.01
+        ],
+        [
+          67.41,
+          -286.87
+        ]
+      ],
+      "center": [
+        62.76,
+        -287.91
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_120",
+      "poly": [
+        [
+          91.3,
+          -260.97
+        ],
+        [
+          103.96,
+          -262.46
+        ],
+        [
+          105.39,
+          -250.83
+        ],
+        [
+          92.72,
+          -249.34
+        ]
+      ],
+      "center": [
+        98.34,
+        -255.9
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_121",
+      "poly": [
+        [
+          94.04,
+          -261.48
+        ],
+        [
+          92.1,
+          -269.78
+        ],
+        [
+          102.46,
+          -272.14
+        ],
+        [
+          104.4,
+          -263.85
+        ]
+      ],
+      "center": [
+        98.25,
+        -266.81
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_122",
+      "poly": [
+        [
+          100.12,
+          -282.58
+        ],
+        [
+          99.44,
+          -276.6
+        ],
+        [
+          93.46,
+          -277.31
+        ],
+        [
+          94.14,
+          -283.28
+        ]
+      ],
+      "center": [
+        96.79,
+        -279.94
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_123",
+      "poly": [
+        [
+          128.58,
+          -258.99
+        ],
+        [
+          143.14,
+          -261.99
+        ],
+        [
+          144.9,
+          -253.65
+        ],
+        [
+          130.34,
+          -250.66
+        ]
+      ],
+      "center": [
+        136.74,
+        -256.32
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_124",
+      "poly": [
+        [
+          121.7,
+          -281.99
+        ],
+        [
+          126.44,
+          -278.26
+        ],
+        [
+          122.74,
+          -273.54
+        ],
+        [
+          118.0,
+          -277.27
+        ]
+      ],
+      "center": [
+        122.22,
+        -277.76
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_126",
+      "poly": [
+        [
+          138.33,
+          -286.7
+        ],
+        [
+          140.01,
+          -278.34
+        ],
+        [
+          131.67,
+          -276.71
+        ],
+        [
+          129.99,
+          -285.06
+        ]
+      ],
+      "center": [
+        135.0,
+        -281.7
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_127",
+      "poly": [
+        [
+          132.2,
+          -264.74
+        ],
+        [
+          131.45,
+          -271.08
+        ],
+        [
+          144.12,
+          -272.53
+        ],
+        [
+          144.88,
+          -266.19
+        ]
+      ],
+      "center": [
+        138.16,
+        -268.63
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_128",
+      "poly": [
+        [
+          154.93,
+          -241.66
+        ],
+        [
+          168.1,
+          -247.24
+        ],
+        [
+          173.86,
+          -233.13
+        ],
+        [
+          160.77,
+          -227.78
+        ]
+      ],
+      "center": [
+        164.41,
+        -237.45
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_129",
+      "poly": [
+        [
+          169.29,
+          -215.68
+        ],
+        [
+          166.38,
+          -223.7
+        ],
+        [
+          177.37,
+          -227.64
+        ],
+        [
+          180.29,
+          -219.63
+        ]
+      ],
+      "center": [
+        173.33,
+        -221.66
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_130",
+      "poly": [
+        [
+          141.94,
+          -241.17
+        ],
+        [
+          140.75,
+          -247.45
+        ],
+        [
+          149.11,
+          -248.98
+        ],
+        [
+          150.29,
+          -242.7
+        ]
+      ],
+      "center": [
+        145.52,
+        -245.07
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_131",
+      "poly": [
+        [
+          186.39,
+          -196.43
+        ],
+        [
+          176.43,
+          -192.75
+        ],
+        [
+          174.19,
+          -198.74
+        ],
+        [
+          184.15,
+          -202.42
+        ]
+      ],
+      "center": [
+        180.29,
+        -197.59
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_132",
+      "poly": [
+        [
+          199.22,
+          -186.39
+        ],
+        [
+          188.09,
+          -182.85
+        ],
+        [
+          189.4,
+          -178.79
+        ],
+        [
+          180.3,
+          -175.9
+        ],
+        [
+          177.68,
+          -184.01
+        ],
+        [
+          197.91,
+          -190.44
+        ]
+      ],
+      "center": [
+        188.77,
+        -183.06
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_133",
+      "poly": [
+        [
+          196.19,
+          -169.77
+        ],
+        [
+          192.26,
+          -177.34
+        ],
+        [
+          203.6,
+          -183.15
+        ],
+        [
+          207.51,
+          -175.58
+        ]
+      ],
+      "center": [
+        199.89,
+        -176.46
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_134",
+      "poly": [
+        [
+          170.71,
+          -211.22
+        ],
+        [
+          180.81,
+          -214.54
+        ],
+        [
+          183.49,
+          -206.44
+        ],
+        [
+          173.41,
+          -203.13
+        ]
+      ],
+      "center": [
+        177.1,
+        -208.83
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_135",
+      "poly": [
+        [
+          191.64,
+          -206.76
+        ],
+        [
+          199.58,
+          -209.78
+        ],
+        [
+          202.64,
+          -201.82
+        ],
+        [
+          194.7,
+          -198.8
+        ]
+      ],
+      "center": [
+        197.14,
+        -204.29
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_136",
+      "poly": [
+        [
+          205.99,
+          -196.07
+        ],
+        [
+          208.67,
+          -189.11
+        ],
+        [
+          202.72,
+          -186.84
+        ],
+        [
+          200.04,
+          -193.81
+        ]
+      ],
+      "center": [
+        204.35,
+        -191.46
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_137",
+      "poly": [
+        [
+          238.76,
+          -181.92
+        ],
+        [
+          239.97,
+          -176.74
+        ],
+        [
+          236.87,
+          -176.02
+        ],
+        [
+          241.47,
+          -156.31
+        ],
+        [
+          232.15,
+          -154.18
+        ],
+        [
+          226.33,
+          -179.08
+        ]
+      ],
+      "center": [
+        235.92,
+        -170.71
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_138",
+      "poly": [
+        [
+          230.74,
+          -148.0
+        ],
+        [
+          225.46,
+          -144.43
+        ],
+        [
+          212.89,
+          -162.97
+        ],
+        [
+          218.17,
+          -166.54
+        ]
+      ],
+      "center": [
+        221.81,
+        -155.48
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_142",
+      "poly": [
+        [
+          195.61,
+          -144.28
+        ],
+        [
+          201.38,
+          -139.41
+        ],
+        [
+          196.56,
+          -133.67
+        ],
+        [
+          190.79,
+          -138.54
+        ]
+      ],
+      "center": [
+        196.08,
+        -138.97
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_144",
+      "poly": [
+        [
+          213.58,
+          -113.73
+        ],
+        [
+          218.91,
+          -119.0
+        ],
+        [
+          226.33,
+          -111.48
+        ],
+        [
+          220.99,
+          -106.2
+        ]
+      ],
+      "center": [
+        219.95,
+        -112.6
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_145",
+      "poly": [
+        [
+          206.99,
+          -126.27
+        ],
+        [
+          211.37,
+          -121.62
+        ],
+        [
+          208.3,
+          -118.7
+        ],
+        [
+          203.9,
+          -123.36
+        ]
+      ],
+      "center": [
+        207.64,
+        -122.49
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_146",
+      "poly": [
+        [
+          189.32,
+          -145.46
+        ],
+        [
+          184.24,
+          -141.65
+        ],
+        [
+          179.11,
+          -148.46
+        ],
+        [
+          184.2,
+          -152.28
+        ]
+      ],
+      "center": [
+        184.22,
+        -146.96
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_147",
+      "poly": [
+        [
+          184.9,
+          -138.8
+        ],
+        [
+          208.57,
+          -115.52
+        ],
+        [
+          204.37,
+          -111.24
+        ],
+        [
+          180.7,
+          -134.51
+        ]
+      ],
+      "center": [
+        194.63,
+        -125.02
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_148",
+      "poly": [
+        [
+          175.7,
+          -117.2
+        ],
+        [
+          180.84,
+          -120.97
+        ],
+        [
+          196.61,
+          -99.45
+        ],
+        [
+          191.47,
+          -95.69
+        ]
+      ],
+      "center": [
+        186.16,
+        -108.33
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_161",
+      "poly": [
+        [
+          7.27,
+          -265.99
+        ],
+        [
+          7.02,
+          -259.98
+        ],
+        [
+          1.02,
+          -260.25
+        ],
+        [
+          1.25,
+          -266.27
+        ]
+      ],
+      "center": [
+        4.14,
+        -263.12
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_162",
+      "poly": [
+        [
+          -8.84,
+          -271.49
+        ],
+        [
+          -13.92,
+          -267.66
+        ],
+        [
+          -16.5,
+          -271.06
+        ],
+        [
+          -11.42,
+          -274.9
+        ]
+      ],
+      "center": [
+        -12.67,
+        -271.28
+      ],
+      "floors": 6,
+      "height": 19.7,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_163",
+      "poly": [
+        [
+          -72.1,
+          -316.07
+        ],
+        [
+          -73.68,
+          -320.02
+        ],
+        [
+          -67.76,
+          -322.36
+        ],
+        [
+          -66.19,
+          -318.4
+        ]
+      ],
+      "center": [
+        -69.93,
+        -319.21
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_164",
+      "poly": [
+        [
+          -47.19,
+          -317.13
+        ],
+        [
+          -55.62,
+          -315.96
+        ],
+        [
+          -56.53,
+          -322.28
+        ],
+        [
+          -48.12,
+          -323.46
+        ]
+      ],
+      "center": [
+        -51.87,
+        -319.71
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_166",
+      "poly": [
+        [
+          -78.64,
+          -306.83
+        ],
+        [
+          -86.73,
+          -304.24
+        ],
+        [
+          -90.04,
+          -314.38
+        ],
+        [
+          -81.95,
+          -316.97
+        ]
+      ],
+      "center": [
+        -84.34,
+        -310.61
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_168",
+      "poly": [
+        [
+          -99.25,
+          -301.59
+        ],
+        [
+          -102.15,
+          -311.84
+        ],
+        [
+          -94.99,
+          -313.82
+        ],
+        [
+          -92.09,
+          -303.57
+        ]
+      ],
+      "center": [
+        -97.12,
+        -307.7
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 0,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_183",
+      "poly": [
+        [
+          -177.66,
+          -221.95
+        ],
+        [
+          -170.22,
+          -220.85
+        ],
+        [
+          -170.85,
+          -216.38
+        ],
+        [
+          -178.3,
+          -217.49
+        ]
+      ],
+      "center": [
+        -174.26,
+        -219.17
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_185",
+      "poly": [
+        [
+          -149.19,
+          -228.37
+        ],
+        [
+          -151.51,
+          -243.09
+        ],
+        [
+          -139.95,
+          -244.85
+        ],
+        [
+          -137.64,
+          -230.12
+        ]
+      ],
+      "center": [
+        -144.57,
+        -236.61
+      ],
+      "floors": 4,
+      "height": 13.4,
+      "palette": 1,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_186",
+      "poly": [
+        [
+          -130.77,
+          -210.34
+        ],
+        [
+          -130.41,
+          -223.09
+        ],
+        [
+          -121.91,
+          -222.8
+        ],
+        [
+          -122.27,
+          -210.04
+        ]
+      ],
+      "center": [
+        -126.34,
+        -216.57
+      ],
+      "floors": 5,
+      "height": 16.6,
+      "palette": 2,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_189",
+      "poly": [
+        [
+          -121.41,
+          -249.85
+        ],
+        [
+          -121.98,
+          -241.36
+        ],
+        [
+          -130.47,
+          -241.99
+        ],
+        [
+          -129.89,
+          -250.47
+        ]
+      ],
+      "center": [
+        -125.94,
+        -245.92
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 3,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_190",
+      "poly": [
+        [
+          -122.55,
+          -237.55
+        ],
+        [
+          -123.02,
+          -229.05
+        ],
+        [
+          -131.51,
+          -229.57
+        ],
+        [
+          -131.04,
+          -238.07
+        ]
+      ],
+      "center": [
+        -127.03,
+        -233.56
+      ],
+      "floors": 3,
+      "height": 10.2,
+      "palette": 4,
+      "tag": "public-map/invented"
+    },
+    {
+      "id": "fucheng_ctx_191",
+      "poly": [
+        [
+          -163.79,
+          -294.69
+        ],
+        [
+          -161.86,
+          -287.49
+        ],
+        [
+          -158.78,
+          -288.3
+        ],
+        [
+          -161.27,
+          -297.56
+        ],
+        [
+          -133.55,
+          -304.88
+        ],
+        [
+          -134.66,
+          -309.01
+        ],
+        [
+          -127.48,
+          -310.9
+        ],
+        [
+          -123.04,
+          -294.43
+        ],
+        [
+          -177.45,
+          -280.06
+        ],
+        [
+          -178.56,
+          -284.18
+        ],
+        [
+          -197.04,
+          -279.3
+        ],
+        [
+          -198.7,
+          -285.46
+        ]
+      ],
+      "center": [
+        -159.68,
+        -293.02
+      ],
+      "floors": 8,
+      "height": 26.0,
+      "palette": 3,
+      "tag": "public-map/invented"
+    }
+  ],
+  "sports_and_landuse": [
+    {
+      "id": "lu_00",
+      "kind": "recreation",
+      "name": "recreation",
+      "poly": [
+        [
+          -41.75,
+          107.99
+        ],
+        [
+          -41.96,
+          95.33
+        ],
+        [
+          -23.96,
+          95.01
+        ],
+        [
+          -23.74,
+          107.66
+        ]
+      ],
+      "center": [
+        -32.85,
+        101.5
+      ],
+      "bbox": [
+        -41.96,
+        95.01,
+        -23.74,
+        107.99
+      ],
+      "size": [
+        18.22,
+        12.98
+      ],
+      "area": 227.9,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_01",
+      "kind": "plaza",
+      "name": "plaza",
+      "poly": [
+        [
+          -19.72,
+          -14.04
+        ],
+        [
+          -19.7,
+          -43.65
+        ],
+        [
+          24.62,
+          -44.0
+        ],
+        [
+          24.51,
+          -13.52
+        ]
+      ],
+      "center": [
+        2.43,
+        -28.8
+      ],
+      "bbox": [
+        -19.72,
+        -44.0,
+        24.62,
+        -13.52
+      ],
+      "size": [
+        44.34,
+        30.48
+      ],
+      "area": 1330.2,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_02",
+      "kind": "plaza",
+      "name": "状元广场",
+      "poly": [
+        [
+          -23.98,
+          -56.87
+        ],
+        [
+          -24.11,
+          -74.48
+        ],
+        [
+          -24.21,
+          -88.07
+        ],
+        [
+          -15.39,
+          -88.13
+        ],
+        [
+          24.52,
+          -88.42
+        ],
+        [
+          44.6,
+          -88.62
+        ],
+        [
+          58.57,
+          -88.66
+        ],
+        [
+          58.8,
+          -57.04
+        ],
+        [
+          50.17,
+          -56.99
+        ]
+      ],
+      "center": [
+        16.55,
+        -76.36
+      ],
+      "bbox": [
+        -24.21,
+        -88.66,
+        58.8,
+        -56.87
+      ],
+      "size": [
+        83.01,
+        31.79
+      ],
+      "area": 2602.6,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_03",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -89.57,
+          -36.93
+        ],
+        [
+          -90.94,
+          -68.77
+        ],
+        [
+          -72.67,
+          -69.53
+        ],
+        [
+          -71.76,
+          -37.66
+        ]
+      ],
+      "center": [
+        -81.23,
+        -53.22
+      ],
+      "bbox": [
+        -90.94,
+        -69.53,
+        -71.76,
+        -36.93
+      ],
+      "size": [
+        19.18,
+        32.6
+      ],
+      "area": 575.5,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_04",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -88.69,
+          1.81
+        ],
+        [
+          -90.07,
+          -30.03
+        ],
+        [
+          -71.79,
+          -30.79
+        ],
+        [
+          -70.88,
+          1.08
+        ]
+      ],
+      "center": [
+        -80.36,
+        -14.48
+      ],
+      "bbox": [
+        -90.07,
+        -30.79,
+        -70.88,
+        1.81
+      ],
+      "size": [
+        19.19,
+        32.6
+      ],
+      "area": 575.7,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_05",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -105.59,
+          -36.23
+        ],
+        [
+          -106.97,
+          -68.07
+        ],
+        [
+          -90.94,
+          -68.77
+        ],
+        [
+          -89.57,
+          -36.93
+        ]
+      ],
+      "center": [
+        -98.27,
+        -52.5
+      ],
+      "bbox": [
+        -106.97,
+        -68.77,
+        -89.57,
+        -36.23
+      ],
+      "size": [
+        17.4,
+        32.54
+      ],
+      "area": 511.2,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_06",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -104.72,
+          2.5
+        ],
+        [
+          -106.1,
+          -29.34
+        ],
+        [
+          -90.07,
+          -30.03
+        ],
+        [
+          -88.69,
+          1.81
+        ]
+      ],
+      "center": [
+        -97.39,
+        -13.77
+      ],
+      "bbox": [
+        -106.1,
+        -30.03,
+        -88.69,
+        2.5
+      ],
+      "size": [
+        17.41,
+        32.53
+      ],
+      "area": 511.3,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_07",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -123.01,
+          3.26
+        ],
+        [
+          -123.92,
+          -28.6
+        ],
+        [
+          -106.1,
+          -29.34
+        ],
+        [
+          -104.72,
+          2.5
+        ]
+      ],
+      "center": [
+        -114.44,
+        -13.05
+      ],
+      "bbox": [
+        -123.92,
+        -29.34,
+        -104.72,
+        3.26
+      ],
+      "size": [
+        19.2,
+        32.6
+      ],
+      "area": 575.9,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_08",
+      "kind": "basketball_court",
+      "name": "basketball_court",
+      "poly": [
+        [
+          -123.88,
+          -35.46
+        ],
+        [
+          -124.79,
+          -67.33
+        ],
+        [
+          -106.97,
+          -68.07
+        ],
+        [
+          -105.59,
+          -36.23
+        ]
+      ],
+      "center": [
+        -115.31,
+        -51.77
+      ],
+      "bbox": [
+        -124.79,
+        -68.07,
+        -105.59,
+        -35.46
+      ],
+      "size": [
+        19.2,
+        32.61
+      ],
+      "area": 576.0,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_09",
+      "kind": "football_pitch",
+      "name": "football_pitch",
+      "poly": [
+        [
+          -103.7,
+          115.21
+        ],
+        [
+          -213.37,
+          116.95
+        ],
+        [
+          -214.48,
+          47.19
+        ],
+        [
+          -104.82,
+          45.42
+        ]
+      ],
+      "center": [
+        -159.09,
+        81.19
+      ],
+      "bbox": [
+        -214.48,
+        45.42,
+        -103.7,
+        116.95
+      ],
+      "size": [
+        110.78,
+        71.53
+      ],
+      "area": 7653.8,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_10",
+      "kind": "stadium_track",
+      "name": "stadium_track",
+      "poly": [
+        [
+          -239.07,
+          52.14
+        ],
+        [
+          -233.53,
+          46.77
+        ],
+        [
+          -232.81,
+          36.59
+        ],
+        [
+          -214.25,
+          35.75
+        ],
+        [
+          -106.95,
+          34.66
+        ],
+        [
+          -87.31,
+          35.16
+        ],
+        [
+          -87.69,
+          44.21
+        ],
+        [
+          -79.9,
+          51.68
+        ],
+        [
+          -72.22,
+          65.98
+        ],
+        [
+          -69.8,
+          82.01
+        ],
+        [
+          -72.52,
+          96.83
+        ],
+        [
+          -79.75,
+          110.05
+        ],
+        [
+          -85.97,
+          116.16
+        ],
+        [
+          -87.25,
+          126.33
+        ],
+        [
+          -104.44,
+          126.64
+        ],
+        [
+          -212.47,
+          127.74
+        ],
+        [
+          -233.43,
+          127.34
+        ],
+        [
+          -233.88,
+          115.64
+        ],
+        [
+          -239.39,
+          110.5
+        ],
+        [
+          -246.95,
+          96.15
+        ],
+        [
+          -249.24,
+          80.09
+        ],
+        [
+          -246.4,
+          65.29
+        ]
+      ],
+      "center": [
+        -159.78,
+        81.08
+      ],
+      "bbox": [
+        -249.24,
+        34.66,
+        -69.8,
+        127.74
+      ],
+      "size": [
+        179.44,
+        93.08
+      ],
+      "area": 15033.7,
+      "tag": "public-map"
+    },
+    {
+      "id": "lu_11",
+      "kind": "stadium_bounds",
+      "name": "运动场",
+      "poly": [
+        [
+          -167.75,
+          29.33
+        ],
+        [
+          -162.17,
+          28.75
+        ],
+        [
+          -162.8,
+          23.8
+        ],
+        [
+          -141.55,
+          22.63
+        ],
+        [
+          -141.21,
+          27.83
+        ],
+        [
+          -74.05,
+          28.19
+        ],
+        [
+          -73.9,
+          47.22
+        ],
+        [
+          -68.74,
+          54.35
+        ],
+        [
+          -63.78,
+          69.15
+        ],
+        [
+          -61.65,
+          86.41
+        ],
+        [
+          -65.28,
+          101.82
+        ],
+        [
+          -73.91,
+          115.55
+        ],
+        [
+          -87.25,
+          126.33
+        ],
+        [
+          -104.44,
+          126.64
+        ],
+        [
+          -212.47,
+          127.74
+        ],
+        [
+          -233.43,
+          127.34
+        ],
+        [
+          -238.14,
+          127.32
+        ],
+        [
+          -247.49,
+          114.35
+        ],
+        [
+          -256.72,
+          85.29
+        ],
+        [
+          -250.88,
+          55.82
+        ],
+        [
+          -242.8,
+          42.0
+        ],
+        [
+          -229.4,
+          31.72
+        ]
+      ],
+      "center": [
+        -152.72,
+        72.71
+      ],
+      "bbox": [
+        -256.72,
+        22.63,
+        -61.65,
+        127.74
+      ],
+      "size": [
+        195.07,
+        105.11
+      ],
+      "area": 17680.4,
+      "tag": "public-map"
+    },
+    {
+      "id": "volleyball_0",
+      "kind": "volleyball_court",
+      "name": "排球场 1",
+      "poly": [
+        [
+          -126.0,
+          8.0
+        ],
+        [
+          -111.0,
+          8.0
+        ],
+        [
+          -111.0,
+          26.5
+        ],
+        [
+          -126.0,
+          26.5
+        ]
+      ],
+      "center": [
+        -118.5,
+        17.25
+      ],
+      "bbox": [
+        -126.0,
+        8.0,
+        -111.0,
+        26.5
+      ],
+      "size": [
+        15.0,
+        18.5
+      ],
+      "area": 277.5,
+      "tag": "photo-derived/estimated"
+    },
+    {
+      "id": "volleyball_1",
+      "kind": "volleyball_court",
+      "name": "排球场 2",
+      "poly": [
+        [
+          -108.5,
+          8.0
+        ],
+        [
+          -93.5,
+          8.0
+        ],
+        [
+          -93.5,
+          26.5
+        ],
+        [
+          -108.5,
+          26.5
+        ]
+      ],
+      "center": [
+        -101.0,
+        17.25
+      ],
+      "bbox": [
+        -108.5,
+        8.0,
+        -93.5,
+        26.5
+      ],
+      "size": [
+        15.0,
+        18.5
+      ],
+      "area": 277.5,
+      "tag": "photo-derived/estimated"
+    },
+    {
+      "id": "volleyball_2",
+      "kind": "volleyball_court",
+      "name": "排球场 3",
+      "poly": [
+        [
+          -91.0,
+          8.0
+        ],
+        [
+          -76.0,
+          8.0
+        ],
+        [
+          -76.0,
+          26.5
+        ],
+        [
+          -91.0,
+          26.5
+        ]
+      ],
+      "center": [
+        -83.5,
+        17.25
+      ],
+      "bbox": [
+        -91.0,
+        8.0,
+        -76.0,
+        26.5
+      ],
+      "size": [
+        15.0,
+        18.5
+      ],
+      "area": 277.5,
+      "tag": "photo-derived/estimated"
+    }
+  ],
+  "roads": [
+    {
+      "id": "axis_avenue",
+      "name": "北门中轴椰林大道",
+      "width": 12.0,
+      "pts": [
+        [
+          0.0,
+          122.0
+        ],
+        [
+          0.0,
+          46.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "public-map/photo-derived"
+    },
+    {
+      "id": "forecourt_east_west",
+      "name": "前庭东西校道",
+      "width": 7.8,
+      "pts": [
+        [
+          -145.0,
+          46.4
+        ],
+        [
+          132.0,
+          46.4
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "public-map"
+    },
+    {
+      "id": "east_spine",
+      "name": "东区林荫主道",
+      "width": 6.8,
+      "pts": [
+        [
+          68.0,
+          74.0
+        ],
+        [
+          68.0,
+          -236.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    },
+    {
+      "id": "east_dorm_lane",
+      "name": "东宿舍与一堂校道",
+      "width": 6.2,
+      "pts": [
+        [
+          128.0,
+          46.4
+        ],
+        [
+          128.0,
+          -210.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    },
+    {
+      "id": "west_spine",
+      "name": "西区运动场与宿舍主道",
+      "width": 7.2,
+      "pts": [
+        [
+          -68.0,
+          82.0
+        ],
+        [
+          -68.0,
+          -264.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    },
+    {
+      "id": "west_outer_lane",
+      "name": "体育馆与三堂西道",
+      "width": 6.0,
+      "pts": [
+        [
+          -132.0,
+          46.4
+        ],
+        [
+          -132.0,
+          -230.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    },
+    {
+      "id": "mid_court_cross",
+      "name": "二号楼南横道",
+      "width": 5.8,
+      "pts": [
+        [
+          -132.0,
+          -64.0
+        ],
+        [
+          128.0,
+          -64.0
+        ]
+      ],
+      "surface": "stone",
+      "tag": "estimated"
+    },
+    {
+      "id": "yanchi_cross",
+      "name": "科学馆与砚池横道",
+      "width": 6.4,
+      "pts": [
+        [
+          -132.0,
+          -104.0
+        ],
+        [
+          128.0,
+          -104.0
+        ]
+      ],
+      "surface": "stone",
+      "tag": "estimated"
+    },
+    {
+      "id": "south_cross",
+      "name": "艺术中心与南区横道",
+      "width": 6.4,
+      "pts": [
+        [
+          -132.0,
+          -196.0
+        ],
+        [
+          128.0,
+          -196.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    },
+    {
+      "id": "north_street",
+      "name": "大路街（校外北街）",
+      "width": 12.0,
+      "pts": [
+        [
+          -160.0,
+          148.0
+        ],
+        [
+          0.0,
+          128.0
+        ],
+        [
+          160.0,
+          96.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "public-map"
+    },
+    {
+      "id": "south_street",
+      "name": "高登西街（校外南街）",
+      "width": 11.0,
+      "pts": [
+        [
+          -180.0,
+          -268.0
+        ],
+        [
+          120.0,
+          -268.0
+        ]
+      ],
+      "surface": "asphalt",
+      "tag": "estimated"
+    }
+  ],
+  "vistas": [
+    {
+      "id": "axis_arrival",
+      "name": "中轴初遇 · 一号楼与太湖石",
+      "subtitle": "太阳斜照在「1923」红瓦门厅、太湖石与百年榄仁树冠之间",
+      "pos": [
+        -8.5,
+        52.0,
+        4.2
+      ],
+      "target": [
+        6.0,
+        8.0,
+        7.5
+      ],
+      "district": "d01_axis_forecourt"
+    },
+    {
+      "id": "north_gate",
+      "name": "北门入画 · 海南中學牌坊",
+      "subtitle": "大路街南望孔雀绿琉璃牌坊与大王椰子中轴大道",
+      "pos": [
+        0.0,
+        124.0,
+        2.2
+      ],
+      "target": [
+        0.0,
+        45.0,
+        6.0
+      ],
+      "district": "d01_axis_forecourt"
+    },
+    {
+      "id": "terminalia",
+      "name": "百年榄仁 · 卧枝巨石",
+      "subtitle": "东侧花岗岩广场上 S 形低枝轻卧古石的百年榄仁树",
+      "pos": [
+        55.5,
+        31.0,
+        2.4
+      ],
+      "target": [
+        38.9,
+        14.5,
+        4.5
+      ],
+      "district": "d01_axis_forecourt"
+    },
+    {
+      "id": "yanchi_arts",
+      "name": "砚池叠水 · 艺术中心",
+      "subtitle": "朱红「砚池」题石、弧形跌水、椰林与红瓦白柱门廊",
+      "pos": [
+        61.0,
+        -104.0,
+        3.8
+      ],
+      "target": [
+        36.0,
+        -126.0,
+        3.2
+      ],
+      "district": "d03_yanchi_arts"
+    },
+    {
+      "id": "library_dome",
+      "name": "图书馆 · 天文台穹顶",
+      "subtitle": "室外大台阶、蓝绿弧形幕墙与屋顶银色天文台穹顶",
+      "pos": [
+        68.0,
+        34.0,
+        5.5
+      ],
+      "target": [
+        98.0,
+        4.0,
+        9.5
+      ],
+      "district": "d04_heritage_gardens"
+    },
+    {
+      "id": "fengqitang",
+      "name": "凤栖古韵 · 绿瓦红柱",
+      "subtitle": "凤栖堂与凤栖亭在热带树影中的宁静书院气韵",
+      "pos": [
+        -16.0,
+        52.0,
+        3.5
+      ],
+      "target": [
+        -40.4,
+        76.0,
+        4.0
+      ],
+      "district": "d04_heritage_gardens"
+    },
+    {
+      "id": "sports_sunset",
+      "name": "运动场 · 椰风落日",
+      "subtitle": "四百米红褐跑道、六片篮球场与夕照下的体育馆",
+      "pos": [
+        -76.0,
+        42.0,
+        11.0
+      ],
+      "target": [
+        -148.0,
+        68.0,
+        2.0
+      ],
+      "district": "d05_sports_living"
+    },
+    {
+      "id": "aerial_fucheng",
+      "name": "府城全景 · 百年校园鸟瞰",
+      "subtitle": "从北门上空俯瞰完整府城校区与琼山街区天际线",
+      "pos": [
+        52.0,
+        185.0,
+        118.0
+      ],
+      "target": [
+        -8.0,
+        -42.0,
+        4.0
+      ],
+      "district": "d01_axis_forecourt"
+    }
+  ],
+  "thermals": [
+    {
+      "id": "thermal_track",
+      "name": "运动场暖流",
+      "xy": [
+        -148.0,
+        74.0
+      ],
+      "radius": 28.0,
+      "lift": 4.2
+    },
+    {
+      "id": "thermal_yihao",
+      "name": "一号楼红瓦热流",
+      "xy": [
+        0.0,
+        -6.0
+      ],
+      "radius": 22.0,
+      "lift": 3.4
+    },
+    {
+      "id": "thermal_terminalia",
+      "name": "百年榄仁风涡",
+      "xy": [
+        42.0,
+        18.0
+      ],
+      "radius": 18.0,
+      "lift": 3.0
+    },
+    {
+      "id": "thermal_yanchi",
+      "name": "砚池水汽升流",
+      "xy": [
+        46.0,
+        -116.0
+      ],
+      "radius": 20.0,
+      "lift": 3.2
+    },
+    {
+      "id": "thermal_courts",
+      "name": "球场晴风柱",
+      "xy": [
+        -98.0,
+        -30.0
+      ],
+      "radius": 22.0,
+      "lift": 3.6
+    },
+    {
+      "id": "thermal_library",
+      "name": "天文台海风升流",
+      "xy": [
+        98.0,
+        4.0
+      ],
+      "radius": 20.0,
+      "lift": 3.3
+    }
+  ],
+  "provenance_policy": {
+    "tags": [
+      "surveyed",
+      "public-map",
+      "documented",
+      "photo-derived",
+      "estimated",
+      "invented"
+    ],
+    "surveyed_count": 0,
+    "note": "No field survey exists yet; every element carries an honest credibility tag and evidence basis in glTF extras and world_spec.json. No student PII or security/access interior data is collected or modeled."
+  }
+}

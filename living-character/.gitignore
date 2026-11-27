@@ -1,0 +1,7 @@
+pipeline/.cache/
+assets/characters/textures/
+renders/captures/
+renders/video-check/
+data/motion-raw-*.json
+*.pyc
+__pycache__/

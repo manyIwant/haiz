@@ -1,0 +1,221 @@
+{
+  "rig": "HAIZ_LivingRig_v3",
+  "bones": 38,
+  "bodyTriangles": 37167,
+  "backpackTriangles": 2716,
+  "crossbodyTriangles": 732,
+  "normalizedWeightsMaxError": 1.8e-05,
+  "handTipMinWeight": 1.0,
+  "poses": {
+    "idle": {
+      "soleMinimumY_m": -0.0,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.008,
+          "p99": 1.068,
+          "max": 1.856
+        },
+        "shoulders": {
+          "p95": 1.08,
+          "p99": 1.185,
+          "max": 1.856
+        },
+        "elbows": {
+          "p95": 1.058,
+          "p99": 1.079,
+          "max": 1.199
+        },
+        "knees": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "crotch": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        }
+      }
+    },
+    "walk_contact": {
+      "soleMinimumY_m": 0.00457,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.111,
+          "p99": 1.326,
+          "max": 3.829
+        },
+        "shoulders": {
+          "p95": 1.201,
+          "p99": 1.377,
+          "max": 3.204
+        },
+        "elbows": {
+          "p95": 1.126,
+          "p99": 1.183,
+          "max": 1.501
+        },
+        "knees": {
+          "p95": 1.185,
+          "p99": 1.302,
+          "max": 1.38
+        },
+        "crotch": {
+          "p95": 1.469,
+          "p99": 1.879,
+          "max": 3.829
+        }
+      }
+    },
+    "run_stride": {
+      "soleMinimumY_m": 0.11729,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.294,
+          "p99": 1.798,
+          "max": 6.297
+        },
+        "shoulders": {
+          "p95": 1.445,
+          "p99": 2.003,
+          "max": 5.61
+        },
+        "elbows": {
+          "p95": 1.312,
+          "p99": 1.47,
+          "max": 2.437
+        },
+        "knees": {
+          "p95": 1.569,
+          "p99": 1.816,
+          "max": 2.037
+        },
+        "crotch": {
+          "p95": 1.992,
+          "p99": 3.049,
+          "max": 6.297
+        }
+      }
+    },
+    "squat": {
+      "soleMinimumY_m": 0.26289,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.104,
+          "p99": 1.645,
+          "max": 5.53
+        },
+        "shoulders": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "elbows": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "knees": {
+          "p95": 1.79,
+          "p99": 2.043,
+          "max": 2.235
+        },
+        "crotch": {
+          "p95": 1.535,
+          "p99": 1.923,
+          "max": 5.53
+        }
+      }
+    },
+    "arm_raise_90": {
+      "soleMinimumY_m": -0.0,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.1,
+          "p99": 1.731,
+          "max": 9.233
+        },
+        "shoulders": {
+          "p95": 1.834,
+          "p99": 3.058,
+          "max": 9.233
+        },
+        "elbows": {
+          "p95": 1.282,
+          "p99": 1.823,
+          "max": 3.662
+        },
+        "knees": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.018
+        },
+        "crotch": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        }
+      }
+    },
+    "stair_step_up": {
+      "soleMinimumY_m": -0.01258,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.075,
+          "p99": 1.549,
+          "max": 5.412
+        },
+        "shoulders": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "elbows": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "knees": {
+          "p95": 1.439,
+          "p99": 1.795,
+          "max": 1.977
+        },
+        "crotch": {
+          "p95": 1.825,
+          "p99": 2.677,
+          "max": 5.412
+        }
+      }
+    },
+    "turn_90": {
+      "soleMinimumY_m": -0.01967,
+      "edgeStretch": {
+        "whole": {
+          "p95": 1.068,
+          "p99": 1.451,
+          "max": 3.467
+        },
+        "shoulders": {
+          "p95": 1.51,
+          "p99": 1.842,
+          "max": 3.467
+        },
+        "elbows": {
+          "p95": 1.0,
+          "p99": 1.082,
+          "max": 1.361
+        },
+        "knees": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "crotch": {
+          "p95": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        }
+      }
+    }
+  }
+}

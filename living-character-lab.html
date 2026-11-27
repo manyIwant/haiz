@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HAIZ · LIVING CHARACTER · 独立人体运动验收实验室</title>
+  <link rel="stylesheet" href="./living-character/lab/lab.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="lab-canvas" aria-label="HAIZ 人体运动验收实验室三维画布"></canvas>
+
+  <div id="lab-loading" class="lab-loading">
+    <div style="font-size:18px;font-weight:600;margin-bottom:8px;">HAIZ · LIVING CHARACTER LAB</div>
+    <div style="font-size:13px;color:#5b636b;">正在载入角色骨骼、动作捕捉数据包与对照样本…</div>
+  </div>
+
+  <header class="lab-topbar">
+    <div class="lab-pill-group">
+      <span class="lab-brand">HAIZ · LIVING CHARACTER</span>
+      <span class="lab-sub">人体运动验收台</span>
+      <button id="btn-mode-solo" class="lab-btn active" type="button">主角精览</button>
+      <button id="btn-mode-compare" class="lab-btn" type="button">三代同台对比</button>
+    </div>
+
+    <div class="lab-pill-group">
+      <select id="sel-archetype" class="lab-select" title="角色原型">
+        <option value="student_hero">高二男生 · 主角</option>
+        <option value="student_f">高二女生 · 马尾</option>
+        <option value="teacher_f">女教师</option>
+        <option value="worker_m">校园工友</option>
+      </select>
+      <select id="sel-bags" class="lab-select" title="随身包具">
+        <option value="both">双肩包 + 斜挎包</option>
+        <option value="backpack">仅双肩包</option>
+        <option value="crossbody">仅斜挎包</option>
+        <option value="none">无包具</option>
+      </select>
+      <button id="btn-lens" class="lab-btn" type="button">画境：南海晴光</button>
+      <button id="btn-debug" class="lab-btn warn" type="button">工程调试</button>
+      <a class="lab-btn" href="./living-campus-r3.html" style="text-decoration:none;">进入 R3 校园</a>
+    </div>
+  </header>
+
+  <div id="lab-cmp-labels" class="lab-cmp-labels">
+    <div class="lab-cmp-tag">A · Claude 原始作品<span>「入画」V2 Clip Blend / Gait</span></div>
+    <div class="lab-cmp-tag">B · Round 2 当前基线<span>Hunyuan + 2-Bone Walker</span></div>
+    <div class="lab-cmp-tag">C · Round 3 生命角色<span>TPL IK + 5级转身 + Mocap</span></div>
+  </div>
+
+  <aside id="lab-debug-panel" class="lab-debug-panel">
+    <div class="lab-debug-title">实时运动学与足部接触遥测</div>
+    <div class="lab-metric-row"><span>步态速度 / 目标</span><span class="val" id="m-speed">0.00 / 0.00 m/s</span></div>
+    <div class="lab-metric-row"><span>左脚阶段 / 滑移</span><span class="val" id="m-left">PLANTED · 0.0 mm/s</span></div>
+    <div class="lab-metric-row"><span>右脚阶段 / 滑移</span><span class="val" id="m-right">PLANTED · 0.0 mm/s</span></div>
+    <div class="lab-metric-row"><span>最大穿模 / P95滑移</span><span class="val" id="m-p95">0.0 mm · 0.0 mm/s</span></div>
+    <div class="lab-debug-title">5 级生理转向级联（Gaze→Head→Neck→Chest→Pelvis）</div>
+    <div class="lab-metric-row"><span>模式 / 航向差</span><span class="val" id="m-cascade">aligned · 0°</span></div>
+    <div class="lab-metric-row"><span>头 / 颈 / 胸领先</span><span class="val" id="m-leads">0° / 0° / 0°</span></div>
+    <div class="lab-metric-row"><span>离心侧倾 (Bank)</span><span class="val" id="m-bank">0.0°</span></div>
+    <canvas id="lab-chart" width="258" height="76"></canvas>
+  </aside>
+
+  <div class="lab-kbd-hint">WASD 移动 · Shift 奔跑 · Alt 侧移(Strafe) · 空格 跳跃 · 鼠标拖拽自由观察</div>
+
+  <footer class="lab-dock">
+    <select id="sel-terrain" class="lab-select" title="地形测试台">
+      <option value="flat">平地长廊 (Flat)</option>
+      <option value="stairs">花岗岩台阶 (8级上下)</option>
+      <option value="slopes">斜坡桥梁 (10° / 15°)</option>
+      <option value="course">综合考核全路线</option>
+    </select>
+
+    <select id="sel-scenario" class="lab-select" title="动作场景">
+      <option value="auto_showcase">自动综合巡演</option>
+      <option value="idle">静止站立 · 环顾</option>
+      <option value="walk_slow">慢走 (0.85 m/s)</option>
+      <option value="walk_normal">自然行走 (1.42 m/s)</option>
+      <option value="jog">小跑 (3.05 m/s)</option>
+      <option value="run">奔跑 (4.85 m/s)</option>
+      <option value="start_stop">起步 ↔ 停步</option>
+      <option value="turn_cascade">90° / 180° 级联转身</option>
+      <option value="diagonal_strafe">斜向移动 (Strafe)</option>
+      <option value="stairs_demo">上下台阶测试</option>
+      <option value="slopes_demo">上下斜坡测试</option>
+    </select>
+
+    <select id="sel-camera" class="lab-select" title="机位视角">
+      <option value="three_quarter">3/4 跟随</option>
+      <option value="side">侧面步态剖析</option>
+      <option value="front">正面重心观测</option>
+      <option value="back">背面斜挎包/肩胛</option>
+      <option value="low_foot">低机位足部贴地</option>
+      <option value="orbit">自由环绕 Orbit</option>
+    </select>
+
+    <div class="lab-sep"></div>
+
+    <button id="btn-play" class="lab-btn active" type="button">暂停 / 播放</button>
+    <button id="btn-step" class="lab-btn" type="button">单帧 +1</button>
+    <button class="lab-btn speed-btn active" data-scale="1" type="button">1.0x</button>
+    <button class="lab-btn speed-btn" data-scale="0.5" type="button">0.5x</button>
+    <button class="lab-btn speed-btn" data-scale="0.25" type="button">0.25x</button>
+  </footer>
+
+  <script type="module" src="./living-character/lab/lab.js"></script>
+</body>
+</html>

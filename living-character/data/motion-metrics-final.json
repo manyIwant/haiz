@@ -1,0 +1,156 @@
+{
+  "tag": "final",
+  "errors": 0,
+  "renderInfo": {
+    "calls": 17,
+    "triangles": 70597
+  },
+  "scenarios": {
+    "walk_side": {
+      "frames": 120,
+      "meanSpeed_m_s": 1.273,
+      "maxSpeed_m_s": 1.42,
+      "footsteps": 9,
+      "stanceSlideMean_mm_s": 15.28,
+      "stanceSlideP95_mm_s": 94.11,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "walk_low_foot": {
+      "frames": 110,
+      "meanSpeed_m_s": 1.259,
+      "maxSpeed_m_s": 1.42,
+      "footsteps": 17,
+      "stanceSlideMean_mm_s": 19.2,
+      "stanceSlideP95_mm_s": 183.64,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "walk_back_bags": {
+      "frames": 100,
+      "meanSpeed_m_s": 1.243,
+      "maxSpeed_m_s": 1.42,
+      "footsteps": 24,
+      "stanceSlideMean_mm_s": 20.23,
+      "stanceSlideP95_mm_s": 15.45,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "jog_side": {
+      "frames": 120,
+      "meanSpeed_m_s": 2.438,
+      "maxSpeed_m_s": 3.05,
+      "footsteps": 36,
+      "stanceSlideMean_mm_s": 30.44,
+      "stanceSlideP95_mm_s": 66.19,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "turn_cascade": {
+      "frames": 240,
+      "meanSpeed_m_s": 0.681,
+      "maxSpeed_m_s": 1.45,
+      "footsteps": 51,
+      "stanceSlideMean_mm_s": 20.43,
+      "stanceSlideP95_mm_s": 153.51,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 52.0,
+      "maxChestLead_deg": 19.41
+    },
+    "diagonal_strafe": {
+      "frames": 130,
+      "meanSpeed_m_s": 1.18,
+      "maxSpeed_m_s": 1.35,
+      "footsteps": 61,
+      "stanceSlideMean_mm_s": 34.57,
+      "stanceSlideP95_mm_s": 257.48,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 32.06,
+      "maxChestLead_deg": 21.14
+    },
+    "stairs_up_down": {
+      "frames": 210,
+      "meanSpeed_m_s": 0.7,
+      "maxSpeed_m_s": 1.35,
+      "footsteps": 73,
+      "stanceSlideMean_mm_s": 6.48,
+      "stanceSlideP95_mm_s": 0.03,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "slopes_10_15": {
+      "frames": 210,
+      "meanSpeed_m_s": 1.325,
+      "maxSpeed_m_s": 1.42,
+      "footsteps": 89,
+      "stanceSlideMean_mm_s": 24.05,
+      "stanceSlideP95_mm_s": 291.73,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    },
+    "gouache_lens": {
+      "frames": 80,
+      "meanSpeed_m_s": 1.199,
+      "maxSpeed_m_s": 1.42,
+      "footsteps": 95,
+      "stanceSlideMean_mm_s": 22.94,
+      "stanceSlideP95_mm_s": 214.39,
+      "penetrationMax_mm": 0.0,
+      "maxHeadLead_deg": 0,
+      "maxChestLead_deg": 0
+    }
+  },
+  "compareSummary": {
+    "claude": {
+      "speed": 1.449987973962217,
+      "headingDeg": -83.9928114071413,
+      "samples": 284,
+      "slideMeanMmS": 566.3076770467051,
+      "slideP95MmS": 3855.0567418069622,
+      "penetrationMaxMm": 0,
+      "penetrationP95Mm": 0
+    },
+    "r2": {
+      "speed": 1.449987973962217,
+      "headingDeg": -83.9928114071413,
+      "samples": 278,
+      "slideMeanMmS": 72.72512943856675,
+      "slideP95MmS": 328.5549890196272,
+      "penetrationMaxMm": 0,
+      "penetrationP95Mm": 0
+    },
+    "r3": {
+      "speed": 0.6211293775318202,
+      "targetSpeed": 1.45,
+      "headingDeg": 127.33870079741014,
+      "targetHeadingDeg": -90,
+      "footsteps": 104,
+      "leftPhase": "LIFT",
+      "rightPhase": "PLANT",
+      "leftSlideMmS": 0,
+      "rightSlideMmS": 0,
+      "penetrationMaxMm": 0,
+      "slideMeanMmS": 20.50286145782382,
+      "slideP95MmS": 143.089158464818,
+      "turnCascade": {
+        "deltaDeg": 142.66129920258987,
+        "gazeLeadDeg": 149.88537262780642,
+        "headYawDeg": 51.64962675604642,
+        "neckYawDeg": 21.285330906481867,
+        "chestYawDeg": 18.197287596744374,
+        "pelvisYawDeg": 127.33870079741014,
+        "bankDeg": -4.025883005586543,
+        "mode": "curved_bank_turn"
+      },
+      "samples": 203,
+      "penetrationP95Mm": 0,
+      "hoverMaxMm": 23.74630055463893
+    }
+  }
+}
