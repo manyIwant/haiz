@@ -1,0 +1,35 @@
+{
+  "schema": "haiz-r2-gpu-benchmark/1",
+  "timestamp": "2026-11-27T01:11:09.682Z",
+  "gpu_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+  "gpu_vendor": "Google Inc. (Apple)",
+  "measurement_scope": "Local Playwright Metal-accelerated Chromium on macOS Apple Silicon (mobile metrics collected under 390x844 touch emulation with mobile quality tier, not physical smartphone hardware).",
+  "desktop_1440x900_high": {
+    "boot_ms": 937,
+    "steady_fps": 55.5,
+    "frame_ms": 9.12,
+    "draw_calls": 1658,
+    "triangles": 10447234,
+    "geometries": 730,
+    "textures": 208,
+    "bike_rain_fps": 43.9,
+    "glide_sunset_fps": 37.8
+  },
+  "mobile_390x844_touch_emulated": {
+    "boot_ms": 11564,
+    "quality_tier": "mobile",
+    "steady_fps": 38.7,
+    "frame_ms": 41.51,
+    "draw_calls": 1400,
+    "triangles": 7838745
+  },
+  "atelier_preservation": {
+    "inherited_atelier_count": 9,
+    "r2_districts_count": 5,
+    "has_hdr_ibl": true,
+    "forecourt_context_stripped": true,
+    "landmark_color0_intact": true,
+    "terminalia_color0_intact": true,
+    "terminalia_leaf_double_sided": false
+  }
+}
