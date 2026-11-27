@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>HAIZ · 海南中学府城校区 · 生命角色与数字校园 (Round 3)</title>
+  <meta name="description" content="海南中学府城校区（1923）第三轮生命角色重构：完整继承 Round 2 校园景观与光影系统，升级程序化 IK 步态、五级生理转身、运动捕捉表达及六位校园生活角色。" />
+  <link rel="icon" href="./favicon.ico" />
+  <link rel="stylesheet" href="./world-reconstruction-r2/engine/ui/world.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lanren/vendor/three/three.module.min.js",
+      "three/addons/": "./lanren/vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="wr-canvas" aria-label="海南中学府城校区 R3 生命角色三维校园"></canvas>
+
+  <div id="wr-loading" role="status" aria-live="polite">
+    <div class="wr-load-title">HAIZ · LIVING CHARACTER · 府城校园 (R3)</div>
+    <div class="wr-load-sub">正在载入 Round 2 校园景观与 HAIZ_LivingRig_v3 生命角色系统…</div>
+    <div class="wr-load-bar"><i></i></div>
+  </div>
+
+  <button id="wr-zen-exit" class="wr-zen-exit" type="button">退出纯净画面 (H)</button>
+
+  <div class="wr-hud">
+    <header class="wr-topbar">
+      <div class="wr-brand">
+        <span class="wr-brand-name">HAIZ · 生命校园 R3</span>
+        <span id="wr-clock" class="wr-brand-clock">16:40 · 晴暮</span>
+      </div>
+      <div class="wr-actions">
+        <button id="r3-btn-bags" class="wr-btn" type="button">包具：双包</button>
+        <a class="wr-btn" href="./living-character-lab.html" style="text-decoration:none;">运动实验室</a>
+        <button class="wr-btn" type="button" data-panel="vistas">视点</button>
+        <button id="wr-btn-cmp" class="wr-btn" type="button">对照</button>
+        <button class="wr-btn" type="button" data-panel="lens">画境</button>
+        <button class="wr-btn" type="button" data-panel="weather">气象</button>
+        <button id="wr-btn-map" class="wr-btn" type="button">地图<span class="wr-lbl-long"> M</span></button>
+        <button class="wr-btn" type="button" data-panel="perf">性能</button>
+        <button id="wr-btn-zen" class="wr-btn" type="button">纯净<span class="wr-lbl-long"> H</span></button>
+      </div>
+    </header>
+
+    <section id="wr-panel-vistas" class="wr-panel" hidden>
+      <h3>校园考察视点</h3>
+      <div id="wr-vistas-list" class="wr-panel-list"></div>
+    </section>
+
+    <section id="wr-panel-lens" class="wr-panel" hidden>
+      <h3>统一场景 · 三种画境</h3>
+      <div id="wr-lens-list" class="wr-panel-list"></div>
+    </section>
+
+    <section id="wr-panel-weather" class="wr-panel" hidden>
+      <h3>海口 20°N 实时气象与时刻</h3>
+      <div id="wr-weather-grid" class="wr-panel-grid"></div>
+      <div class="wr-slider-row">
+        <label><span>时刻</span><strong id="wr-hour-label">16:40</strong></label>
+        <input id="wr-hour-slider" type="range" min="0" max="23.95" step="0.05" value="16.65" />
+      </div>
+      <div id="wr-time-grid" class="wr-panel-grid" style="margin-top:8px;"></div>
+    </section>
+
+    <section id="wr-panel-perf" class="wr-panel" hidden>
+      <h3>实时渲染性能与流式状态</h3>
+      <div class="wr-perf-grid">
+        <div class="wr-stat"><span>帧率</span><b id="wr-st-fps">60 FPS</b></div>
+        <div class="wr-stat"><span>帧耗时</span><b id="wr-st-ms">16.6 ms</b></div>
+        <div class="wr-stat"><span>Draw Calls</span><b id="wr-st-calls">0</b></div>
+        <div class="wr-stat"><span>活跃三角面</span><b id="wr-st-tris">0k</b></div>
+        <div class="wr-stat"><span>已载入包体</span><b id="wr-st-dist">0/15</b></div>
+        <div class="wr-stat"><span>GPU 资源</span><b id="wr-st-mem">0 / 0</b></div>
+      </div>
+      <div id="wr-quality-grid" class="wr-panel-grid"></div>
+    </section>
+
+    <aside id="wr-provenance" class="wr-provenance" hidden>
+      <div class="wr-prov-head">
+        <div>
+          <div id="wr-prov-title" class="wr-prov-title"></div>
+          <div id="wr-prov-en" class="wr-prov-en"></div>
+        </div>
+        <button id="wr-prov-close" class="wr-prov-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <div id="wr-prov-story" class="wr-prov-story"></div>
+      <div id="wr-prov-tag" class="wr-prov-tag"></div>
+      <div id="wr-prov-basis" class="wr-prov-basis"></div>
+    </aside>
+
+    <div id="wr-toast" class="wr-toast" hidden></div>
+
+    <footer class="wr-bottom">
+      <div class="wr-whisper">
+        <div id="wr-whisper-loc" class="wr-whisper-loc">中轴前庭 · 状元广场</div>
+        <div id="wr-whisper-sub" class="wr-whisper-sub">R3 生命角色与真实地形足部贴合 · 点击建筑查看真实溯源</div>
+      </div>
+      <nav id="wr-dock" class="wr-dock" aria-label="探索方式">
+        <button type="button" data-mode="walk" class="active">1 漫步</button>
+        <button type="button" data-mode="bike">2 单车</button>
+        <button type="button" data-mode="glide">3 滑翔</button>
+      </nav>
+      <div id="wr-hint" class="wr-hint">WASD 漫步 · Shift 奔跑 · Alt 侧移 · 空格 跳跃 · 点击建筑查看溯源 · M 地图 · C 对照</div>
+    </footer>
+  </div>
+
+  <div class="wr-touch-zone">
+    <div id="wr-joy-base" class="wr-joy-base"><div id="wr-joy-knob" class="wr-joy-knob"></div></div>
+    <div class="wr-touch-act">
+      <button id="wr-touch-primary" class="wr-touch-btn" type="button">跳跃</button>
+      <button id="wr-touch-secondary" class="wr-touch-btn" type="button">切换</button>
+    </div>
+  </div>
+
+  <div id="wr-map-modal" class="wr-map-modal" hidden role="dialog" aria-modal="true" aria-label="海南中学府城校区三维地图">
+    <div class="wr-map-card">
+      <div class="wr-map-head">
+        <h2>海南中学府城校区 · 交互导览图（点击任意地点瞬移）</h2>
+        <button id="wr-map-close" class="wr-btn" style="background:#222b26;color:#f6f1e7" type="button">关闭 (M)</button>
+      </div>
+      <canvas id="wr-map-canvas" class="wr-map-canvas" width="840" height="580"></canvas>
+      <div class="wr-map-foot">
+        <span>青绿顶：传统书院/门楼 · 砖红顶：教学楼/宿舍 · 蓝绿：图书馆天文台 · 红箭：当前位置</span>
+        <span>坐标系：HAIZ-ENU-2026（实景标定与公开地图统一）</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="wr-cmp-modal" class="wr-map-modal" hidden role="dialog" aria-modal="true" aria-label="代表建筑视觉演进对照">
+    <div class="wr-cmp-card">
+      <div class="wr-map-head">
+        <h2>真实感迭代 · 代表建筑四阶段演进对照 (Legacy → PR #118 → R2 v1 → R2 Final)</h2>
+        <button id="wr-cmp-close" class="wr-btn" style="background:#222b26;color:#f6f1e7" type="button">关闭 (C)</button>
+      </div>
+      <div id="wr-cmp-tabs" class="wr-cmp-tabs"></div>
+      <div class="wr-cmp-img-wrap">
+        <img id="wr-cmp-img" alt="三维模型演进四方对照图" />
+      </div>
+      <div class="wr-map-foot">
+        <span id="wr-cmp-basis" class="wr-cmp-meta"></span>
+        <button id="wr-cmp-fly" class="wr-btn" style="background:#1f5c47;color:#fff" type="button">飞往该标定机位观察实时场景 →</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./living-character/campus/main-r3.js"></script>
+</body>
+</html>
