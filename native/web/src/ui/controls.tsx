@@ -133,7 +133,11 @@ export function Slider({ value, onChange, min = 0, max = 1, step = 0.01, label, 
   s.drag.t = drag ? 1 : hot ? 0.35 : 0;
   useLayoutEffect(() => {
     s.skin = new Skin(skinHost.current!, "sl-skin");
-    return () => s.skin?.destroy();
+    // Native 001: the width comes from a ResizeObserver, so a frame never reads layout
+    s.w = root.current!.clientWidth;
+    const ro = new ResizeObserver((e) => { s.w = (e[0].target as HTMLElement).clientWidth || s.w; clock.wake(); });
+    ro.observe(root.current!);
+    return () => { ro.disconnect(); s.skin?.destroy(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useLayoutEffect(() => { clock.wake(); }, [value, drag, hot]);
@@ -141,8 +145,7 @@ export function Slider({ value, onChange, min = 0, max = 1, step = 0.01, label, 
     const a = stepS(s.x, dt), b = stepS(s.drag, dt);
     const r = root.current;
     if (!r) return a || b;
-    const W = r.clientWidth, cy = 22, pad = 11;
-    s.w = W;
+    const W = s.w, cy = 22, pad = 11;
     const tx = pad + s.x.x * (W - 2 * pad);
     const g = s.drag.x;
     // the datum dips under the thumb while it is held (a string pressed by a finger)
@@ -228,8 +231,11 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
     if (!s.init) { settle(s.x, s.x.t); settle(s.w, s.w.t); s.init = true; }
     clock.wake();
   };
-  useLayoutEffect(measure);
-  useEffect(() => { document.fonts?.ready.then(measure); const ro = new ResizeObserver(measure); ro.observe(root.current!); return () => ro.disconnect(); });
+  // Native 001: measure when the choice or the options change, or the control resizes — not on every
+  // render (each measure forces a layout), and one observer for the control's life, not one per render
+  const mref = useRef(measure); mref.current = measure;
+  useLayoutEffect(measure, [idx, options.length]);
+  useEffect(() => { const f = () => mref.current(); document.fonts?.ready.then(f); const ro = new ResizeObserver(f); ro.observe(root.current!); return () => ro.disconnect(); }, []);
   useTick((dt) => {
     const a = stepS(s.x, dt), b = stepS(s.w, dt);
     const p = plate.current;
