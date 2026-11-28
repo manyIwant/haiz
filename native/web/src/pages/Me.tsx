@@ -10,6 +10,11 @@ import { teachingWeek } from "../app/time";
 import { PageHead } from "../ui/PageHead";
 import { Section } from "../ui/Section";
 import { Demo, Segmented, Slider, Switch, Icon } from "../ui/controls";
+import { ThemeToggle } from "../ui/ThemeToggle";
+import { IdentityPanel } from "../identity/IdentityPanel";
+import { HaizNative, isNative } from "../platform/native";
+import { useEffect, useState } from "react";
+import { HaizUpdater } from "../platform/native";
 import "./pages.css";
 
 const WEEKS = 20;
@@ -22,12 +27,16 @@ export function Me({ phone }: { phone: boolean }) {
   const role = useStore((s) => s.role);
   const compact = useStore((s) => s.railCompact);
   const tasks = useStore((s) => s.tasks);
+  const keyboard = useStore((s) => s.keyboard);
+  const perf = useStore((s) => s.perfPanel);
+  const [ver, setVer] = useState<string>(__APP_VERSION__);
+  useEffect(() => { if (isNative()) HaizUpdater.installed().then((v) => setVer(`${v.versionName}（${v.versionCode}）`)).catch(() => {}); }, []);
   const wk = Math.min(WEEKS, teachingWeek());
   const teacher = role === "teacher";
   return (
     <div className="me">
       <PageHead kicker={teacher ? `Me · ${TEACHER.subject}` : `Me · ${STUDENT.cls}`} title={teacher ? TEACHER.name : STUDENT.name}
-        sub={<>{teacher ? TEACHER.classes.join("、") : `学号 ${STUDENT.no}`} · 本学期第 <b className="t-num">{wk}</b> 周<Demo>身份为虚构</Demo></>} />
+        sub={<>{teacher ? TEACHER.classes.join("、") : (STUDENT.no ? `学号 ${STUDENT.no}` : STUDENT.cls || "学生")} · 本学期第 <b className="t-num">{wk}</b> 周</>} />
 
       <div className="me-top" data-rv>
         <SemesterArc week={wk} />
@@ -44,11 +53,21 @@ export function Me({ phone }: { phone: boolean }) {
         </div>
       </div>
 
+      <Section kicker="Identities" title="校园身份">
+        <IdentityPanel />
+      </Section>
+
       <Section kicker="Settings" title="设置">
         <div className="set">
-          <Row t="外观" d="跟随系统时，随操作系统的深浅色一起切换。">
-            <Segmented<Theme> value={theme} onChange={(v) => setState({ theme: v })} size="sm" label="外观"
-              options={[{ id: "system", label: "跟随系统" }, { id: "light", label: "浅色" }, { id: "dark", label: "深色" }]} />
+          <Row t="明暗" d="拨动玻璃开关，新的光从开关处铺满页面。">
+            <ThemeToggle />
+          </Row>
+          <Row t="跟随系统" d="打开后，随系统的深浅色一起切换。">
+            <Switch checked={theme === "system"} onChange={(v) => setState({ theme: v ? "system" : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") as Theme })} label="跟随系统" />
+          </Row>
+          <Row t="键盘" d={<>HAIZ 键盘：拼音（RIME 引擎）、英文、数字与符号、语音。也可以随时换回手机自己的输入法{isNative() ? "，长按键盘上的「中/英」可打开系统输入法列表" : ""}。</>}>
+            <Segmented<"haiz" | "system"> value={keyboard} onChange={(v) => setState({ keyboard: v })} size="sm" label="键盘"
+              options={[{ id: "haiz", label: "HAIZ 键盘" }, { id: "system", label: "系统输入法" }]} />
           </Row>
           <Row t="动态强度" d={<>所有动效共用一个时钟。调到 0，界面立即落定，等同系统的「减少动态效果」。当前：<b>{level(intensity)}</b></>} wide>
             <div className="set-slider"><Slider value={intensity} min={0} max={1} step={0.01} onChange={(v) => setState({ intensity: Math.round(v * 100) / 100 })} format={(v) => level(v)} label="动态强度" /></div>
@@ -61,7 +80,16 @@ export function Me({ phone }: { phone: boolean }) {
               <Switch checked={compact} onChange={(v) => setState({ railCompact: v })} label="紧凑侧栏" />
             </Row>
           )}
-          <Row t="教师身份" d="切换后出现教师工作台，强调色由琉璃绿换成陶土色。演示用。">
+          <Row t="版本与更新" d={<>当前 {ver}。新版本从 GitHub Releases 下载，校验签名与 SHA-256 后覆盖安装，身份与数据全部保留。</>}>
+            <button type="button" className="set-btn" onClick={() => setState({ updateOpen: true })}>检查更新</button>
+          </Row>
+          <Row t="性能面板" d="开发者用：帧率、帧时、长任务、掉帧、内存与温控；可导出报告与模拟测试对照。">
+            <Switch checked={perf} onChange={(v) => setState({ perfPanel: v })} label="性能面板" />
+          </Row>
+          {isNative() && <Row t="输入法列表" d="打开系统的输入法选择器。">
+            <button type="button" className="set-btn" onClick={() => void HaizNative.pickInputMethod()}>选择</button>
+          </Row>}
+          <Row t="教师身份" d="切换后出现教师工作台，强调色由琉璃绿换成陶土色。">
             <Switch checked={teacher} onChange={(v) => { setState({ role: v ? "teacher" : "student" }); if (v) go("teacher"); }} label="教师身份" />
           </Row>
         </div>
@@ -69,11 +97,6 @@ export function Me({ phone }: { phone: boolean }) {
 
       <Section kicker="About" title="关于这个原型">
         <ul className="about">
-          <li>
-            <a className="about-row" href="bench.html">
-              <Icon kind="lab" size={20} /><span><b>新旧对照验收台</b><small>004 的三种 Dock 与 005 并排慢放；OJO 与 005 的页面对照；组件与性能。</small></span><i>→</i>
-            </a>
-          </li>
           <li>
             <a className="about-row" href="https://haiz.space/" target="_blank" rel="noopener">
               <Icon kind="campus" size={20} /><span><b>HAIZ 主站</b><small>校园模型、年轮、入画与实验册的完整版本。</small></span><i>↗</i>
@@ -83,7 +106,7 @@ export function Me({ phone }: { phone: boolean }) {
         <div className="credits">
           <p><b>真实的部分</b>校园建筑平面与说明（HAIZ 校园模型，依据海南中学官网资料与实测平面）；校园照片（海南中学官网与 HAIZ 项目实拍，逐张注明）；年轮的逐日天气（ERA5 再分析，经 Open-Meteo，CC BY 4.0）；入画的渲染与绘画（HAIZ painted-lab）。</p>
           <p><b>演示的部分</b>学生与教师身份、课表、待办、通知正文、社团活动、笔记、成长数据。界面中凡是这类内容，都带有 <Demo /> 标记。</p>
-          <p className="ink-3">HAIZ Experiment 006 · 非官方演示原型，与海南中学无隶属关系。</p>
+          <p className="ink-3">HAIZ Native · 基于 Experiment 006 · 非官方作品，与海南中学无隶属关系。拼音引擎 librime（BSD-3）/ jsh_rime（Apache-2.0）。</p>
         </div>
       </Section>
     </div>

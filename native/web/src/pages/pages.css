@@ -520,3 +520,7 @@
 .wander-close:hover { background: #fff; }
 .wander-note { margin-top: 14px; font-size: 13px; color: var(--ink-2); display: flex; gap: 10px; align-items: baseline; }
 .wander-note b { font-family: var(--font-serif, serif); font-weight: 600; color: var(--ink); }
+
+/* HAIZ Native · settings buttons */
+.set-btn { appearance: none; border: 0; padding: 9px 16px; border-radius: 999px; font: 600 13px/1 var(--font-sans, system-ui); color: var(--accent, #3f7d62); background: color-mix(in srgb, var(--accent, #3f7d62) 12%, transparent); }
+.set-btn:active { transform: scale(.97); }

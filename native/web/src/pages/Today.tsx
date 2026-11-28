@@ -151,7 +151,7 @@ export function Tasks({ compact }: { compact?: boolean }) {
       )}
       <ul ref={list} className="task-list">
         {sorted.map((t) => (
-          <li key={t.id} data-flip={t.id} className={"task" + (t.done ? " is-done" : "")}>
+          <li key={t.id} data-flip={t.id} data-wheel={"task:" + t.id} className={"task" + (t.done ? " is-done" : "")}>
             <Check checked={t.done} onChange={() => toggleTask(t.id)} label={t.title} />
             <button type="button" className="task-b" onClick={(e) => setState({ inspector: { kind: "task", id: t.id, from: e.currentTarget.getBoundingClientRect() } })}>
               <span className="task-t">{t.title}</span>

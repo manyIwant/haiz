@@ -1,0 +1,16 @@
+.perf {
+  position: fixed; z-index: 2000; right: calc(var(--safe-r, 0px) + 10px); top: calc(var(--safe-t, 0px) + 10px);
+  width: 252px; padding: 8px 8px 10px; border-radius: 14px;
+  background: rgba(12, 14, 20, .82); color: #e9eef0; font: 11.5px/1.35 ui-monospace, "SF Mono", Menlo, monospace;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .08);
+  contain: layout paint style;
+}
+.perf.is-small { width: auto; padding: 4px 6px; }
+.perf-fps { appearance: none; border: 0; background: none; color: inherit; font: inherit; display: flex; align-items: baseline; gap: 4px; padding: 2px 4px; }
+.perf-fps b { font-size: 20px; }
+.perf-fps .ok { color: #8be0b0; } .perf-fps .warn { color: #ffd27a; } .perf-fps .bad { color: #ff7a6a; }
+.perf-g { display: block; width: 240px; height: 48px; margin: 4px 2px; }
+.perf dl { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; margin: 6px 4px; }
+.perf dt { opacity: .6; } .perf dd { margin: 0; text-align: right; }
+.perf-a { display: flex; gap: 6px; padding: 0 2px; }
+.perf-a button { flex: 1; appearance: none; border: 0; border-radius: 8px; padding: 7px 0; background: rgba(255, 255, 255, .1); color: inherit; font: inherit; }

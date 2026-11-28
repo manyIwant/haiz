@@ -3,11 +3,12 @@
  * one or two most-used actions — enough to act without entering.
  */
 import { useEffect, useState } from "react";
-import { useStore, addTask, startFocus, toast, setState, isDark } from "./store";
+import { useStore, addTask, startFocus, toast, setState, getState, isDark } from "./store";
 import { go } from "./router";
 import { NOTES, LABS, NOTICES } from "../data/demo";
 import { nextCourse, upcoming } from "./time";
 import { Chip, Icon, Switch } from "../ui/controls";
+import { ThemeToggle } from "../ui/ThemeToggle";
 import { useClimate, sameDayLastYear } from "../culture/useClimate";
 
 export const STAGE_SIZE: Record<string, { w: number; h: number }> = {
@@ -135,7 +136,8 @@ function MeStage({ close }: { close: () => void }) {
   return (
     <div className="stg">
       <div className="stg-k" style={I(0)}><b>快捷</b>外观与身份</div>
-      <div className="stg-line" style={I(1)}><span>深色外观</span><Switch checked={dark} onChange={(v) => setState({ theme: v ? "dark" : "light" })} label="深色外观" /></div>
+      <div className="stg-line" style={I(1)}><span>深色外观</span><ThemeToggle size="sm" /></div>
+      <div className="stg-line" style={I(1)}><span>{getState().identity?.name ?? "校园身份"}</span><button type="button" className="stg-act" data-stage-action onClick={() => { close(); setState({ wallOpen: true }); }}>切换身份</button></div>
       <div className="stg-acts" style={I(2)}>
         <button className="stg-act" data-stage-action onClick={() => { close(); go("me"); }}>设置</button>
         <button className="stg-act" data-stage-action onClick={() => { close(); go("growth"); }}>成长记录</button>

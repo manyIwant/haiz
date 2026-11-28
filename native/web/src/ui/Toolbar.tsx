@@ -13,6 +13,7 @@ import { useStore, setState, readAll, readNotice, isDark } from "../app/store";
 import { search, type Cmd } from "../app/commands";
 import { STUDENT, TEACHER } from "../data/demo";
 import { Grow } from "./Grow";
+import { ThemeToggle } from "./ThemeToggle";
 import { Icon, Switch } from "./controls";
 
 export function Toolbar() {
@@ -84,12 +85,10 @@ export function Toolbar() {
             <BellPanel onClose={() => setBellOpen(false)} />
           </Grow>
         </div>
-        <button type="button" className="bar-btn" aria-label={dark ? "切换到浅色" : "切换到深色"} onClick={() => setState({ theme: dark ? "light" : "dark" })}>
-          <Icon kind="theme" size={20} variant={dark ? 1 : 0} />
-        </button>
+        <ThemeToggle size="sm" label={dark ? "切换到浅色" : "切换到深色"} />
         <div className="bar-anchor">
           <button ref={me} type="button" className={"bar-me" + (meOpen ? " is-open" : "")} aria-label="账户" onClick={() => setMeOpen(!meOpen)}>
-            <span className="bar-av">{role === "teacher" ? "王" : "林"}</span>
+            <span className="bar-av">{[...(role === "teacher" ? TEACHER.name : STUDENT.name)][0] ?? "我"}</span>
           </button>
           <Grow open={meOpen} anchor={me} w={272} h={238} align="end" R={20} fillet={10} onClose={() => setMeOpen(false)}>
             <MePanel onClose={() => setMeOpen(false)} />
@@ -222,7 +221,7 @@ function MePanel({ onClose }: { onClose: () => void }) {
         <span className="pop-t">教师身份（演示）</span>
         <Switch checked={role === "teacher"} onChange={(v) => { setState({ role: v ? "teacher" : "student" }); go(v ? "teacher" : "today"); }} label="教师身份" />
       </div>
-      <button type="button" className="pop-row pop-row--line grow-r" style={{ ["--i" as any]: 3 }} onClick={() => { location.assign("bench.html"); }}><span className="pop-t">新旧对照验收台</span></button>
+      <button type="button" className="pop-row pop-row--line grow-r" style={{ ["--i" as any]: 3 }} onClick={() => { setState({ wallOpen: true }); onClose(); }}><span className="pop-t">切换校园身份</span></button>
     </div>
   );
 }

@@ -2,11 +2,13 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { getState, setState } from '../app/store';
 import { backAction } from './back-policy';
+import { popBack } from './native';
 
 export function installAndroid() {
   if (Capacitor.getPlatform() !== 'android') return;
   document.documentElement.dataset.platform = 'android';
   App.addListener('backButton', ({ canGoBack }) => {
+    if (popBack()) return;
     const s = getState();
     const action = backAction({ inside: !!document.querySelector('.wander-stage.is-inside'), search: s.searchOpen, inspector: !!s.inspector, lens: s.lensOpen, canGoBack, route: location.hash.replace(/^#\//, '') || 'today' });
     if (action === 'painting') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

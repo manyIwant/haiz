@@ -33,6 +33,8 @@ export type State = {
   /** the identity wall (switcher) is open */
   wallOpen: boolean;
   perfPanel: boolean;
+  /** the update sheet is open */
+  updateOpen: boolean;
 };
 
 const pref = (k: string, d: any) => {
@@ -58,6 +60,7 @@ let state: State = {
   keyboard: pref("keyboard", "haiz"),
   wallOpen: false,
   perfPanel: pref("perfPanel", false),
+  updateOpen: false,
 };
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());

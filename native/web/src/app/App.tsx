@@ -20,6 +20,7 @@ import { Campus } from "../pages/Campus";
 import { Me } from "../pages/Me";
 import { Teacher } from "../pages/Teacher";
 import { clock } from "../kernel/motion";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 const Rings = lazy(() => import("../pages/Rings"));
 const Tree = lazy(() => import("../pages/Tree"));
@@ -132,6 +133,7 @@ function PhoneTop({ page }: { page: string }) {
         : <span className="ptop-seal" aria-hidden="true">海</span>}
       <span className="ptop-t">{TITLES[page]}</span>
       <span className="ptop-r">
+        <ThemeToggle size="sm" />
         <button type="button" className="ptop-btn" aria-label="通知" onClick={(e) => go("campus/notice", e.currentTarget)}><Icon kind="bell" size={21} />{unread && <i className="ptop-dot" />}</button>
       </span>
     </header>

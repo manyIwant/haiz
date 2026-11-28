@@ -1,0 +1,30 @@
+.gtog {
+  --w: 74px; --h: 38px; --lit: 0;
+  --cool: #6fb6ff; --warm: #ffc261;
+  position: relative; width: var(--w); height: var(--h); flex: none; padding: 0; appearance: none; border: 0; border-radius: 999px; cursor: pointer;
+  background: color-mix(in srgb, var(--ink, #1d2621) 7%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .14), inset 0 -1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px color-mix(in srgb, var(--ink, #000) 7%, transparent);
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.gtog--sm { --w: 58px; --h: 30px; }
+/* the light strip: a thin line of LED along the bottom inner edge, gold by day, blue at night */
+.gtog-led {
+  position: absolute; left: 12%; right: 12%; bottom: 3px; height: 2px; border-radius: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--warm) calc((1 - var(--lit)) * 100%), var(--cool)), transparent);
+  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--warm) calc((1 - var(--lit)) * 100%), var(--cool));
+  opacity: .85;
+}
+.gtog-knob {
+  position: absolute; left: 3px; top: 3px; width: calc(var(--h) - 6px); height: calc(var(--h) - 6px); border-radius: 50%;
+  display: grid; place-items: center; transform-origin: 50% 50%;
+  background: radial-gradient(120% 100% at 30% 20%, rgba(255, 255, 255, .95), rgba(255, 255, 255, .55) 45%, rgba(255, 255, 255, .25));
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .8), inset 0 -2px 4px rgba(0, 0, 0, .08), 0 3px 8px -2px rgba(0, 0, 0, .3), 0 0 14px -3px color-mix(in srgb, var(--warm) calc((1 - var(--lit)) * 100%), var(--cool));
+  will-change: transform;
+}
+.gtog-knob svg { width: 72%; height: 72%; overflow: visible; }
+.gtog-knob circle { fill: color-mix(in srgb, #c98a1c calc((1 - var(--lit)) * 100%), #2f5f9e); }
+.gtog.is-dark { background: color-mix(in srgb, #0b1426 55%, transparent); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .4), inset 0 -1px 0 rgba(255, 255, 255, .08), inset 0 0 0 1px rgba(255, 255, 255, .06); }
+.gtog.is-dark .gtog-knob { background: radial-gradient(120% 100% at 30% 20%, rgba(220, 235, 255, .55), rgba(150, 180, 230, .25) 50%, rgba(90, 120, 180, .18)); box-shadow: inset 0 0 0 .5px rgba(200, 225, 255, .5), 0 3px 8px -2px rgba(0, 0, 0, .5), 0 0 16px -2px var(--cool); }
+.gtog.is-dark .gtog-knob circle { fill: #d6e8ff; }
+.gtog:focus-visible { outline: 2px solid var(--accent, #3f7d62); outline-offset: 3px; }

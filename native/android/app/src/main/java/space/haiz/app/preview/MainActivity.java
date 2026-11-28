@@ -39,6 +39,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HaizNativePlugin.class);
         registerPlugin(HaizUpdaterPlugin.class);
         registerPlugin(HaizStorePlugin.class);
+        registerPlugin(HaizVoicePlugin.class);
         super.onCreate(state);
 
         Window w = getWindow();

@@ -115,12 +115,12 @@ void main(){
     float cosA = dot(-l, axis);
     float cone = smoothstep(0.50, 0.86, cosA);
     float hot = smoothstep(0.80, 0.985, cosA);
-    float att = 1.0 / (1.0 + dist * dist / (360.0 * 360.0));
-    float dif = max(dot(N, l), 0.0);
+    float att = 1.0 / (1.0 + dist * dist / (250.0 * 250.0));
+    float dif = max(dot(N, l), 0.0) * 0.7 + 0.3;
     vec3 hv = normalize(l + vec3(0.0, 0.0, 1.0));
     float spec = pow(max(dot(N, hv), 0.0), 28.0) * (0.06 + paint * 0.25);
     vec3 tone = uTone[i];
-    col += tone * I * att * (cone * 1.9 + hot * 1.1) * (alb * dif * 2.3 + spec);
+    col += tone * I * att * (cone * 1.9 + hot * 1.1) * (alb * dif * 2.4 + spec);
     // light that leaks out of the shade's top and the glow around the bulb
     float g = length(p - bulb);
     col += tone * I * (exp(-g / 26.0) * 0.55 + exp(-g / 120.0) * 0.06) * (0.6 + 0.4 * dif);
@@ -152,7 +152,7 @@ export class Wall {
 
   constructor(host: HTMLElement, maxDpr = 1.5) {
     this.canvas = document.createElement("canvas");
-    this.canvas.className = "wall-gl";
+    this.canvas.className = "wl-gl";
     host.prepend(this.canvas);
     const gl = this.canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" });
     if (!gl) throw new Error("no webgl");

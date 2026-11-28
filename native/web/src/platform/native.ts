@@ -61,3 +61,39 @@ export function installNative() {
   if (!isNative()) return;
   document.documentElement.dataset.native = "1";
 }
+
+/* ---------------- back: overlays take the back gesture first, newest first ---------------- */
+const backStack: (() => void)[] = [];
+export function pushBack(fn: () => void) { backStack.push(fn); return () => { const i = backStack.lastIndexOf(fn); if (i >= 0) backStack.splice(i, 1); }; }
+export function popBack(): boolean { const f = backStack[backStack.length - 1]; if (!f) return false; f(); return true; }
+
+/* ---------------- files: the system's save / open pickers on Android, a download in a browser ---------------- */
+export async function saveText(name: string, text: string): Promise<string> {
+  if (isNative()) return (await HaizStore.saveFile({ name, text })).uri;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  return name;
+}
+export async function openText(): Promise<string> {
+  if (isNative()) return (await HaizStore.openFile()).text;
+  return new Promise((res, rej) => {
+    const i = document.createElement("input");
+    i.type = "file"; i.accept = "application/json,.json";
+    i.onchange = () => { const f = i.files?.[0]; if (!f) return rej(new Error("cancelled")); f.text().then(res, rej); };
+    i.click();
+  });
+}
+
+type Voice = {
+  available(): Promise<{ recognizer: boolean; intent: boolean }>;
+  start(o: { lang?: string }): Promise<{ mode: "stream" | "system"; text?: string }>;
+  stop(): Promise<void>;
+  cancel(): Promise<void>;
+  addListener(e: "level", f: (p: { db: number }) => void): Promise<PluginListenerHandle>;
+  addListener(e: "partial" | "final", f: (p: { text: string }) => void): Promise<PluginListenerHandle>;
+  addListener(e: "state", f: (p: { state: string }) => void): Promise<PluginListenerHandle>;
+  addListener(e: "error", f: (p: { code: number }) => void): Promise<PluginListenerHandle>;
+};
+export const HaizVoice = registerPlugin<Voice>("HaizVoice");

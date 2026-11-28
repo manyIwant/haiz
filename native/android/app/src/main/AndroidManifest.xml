@@ -49,4 +49,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- One-tap updates: Android still asks the user to confirm every install. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Voice input on the HAIZ keyboard (asked only when the microphone key is used); key ticks. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <queries>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
+        <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
+    </queries>
 </manifest>
