@@ -17,6 +17,7 @@ export function Today({ phone }: { phone: boolean }) {
   const open = tasks.filter((t) => !t.done).length;
   const left = todayCourses().filter((x) => !sd.preview && mins(x.end) > nowMins()).length;
   const next = nextCourse();
+  const inboxN = useStore((s) => s.inboxPending);
   return (
     <div className="today">
       <header className="hero" data-rv>
@@ -30,6 +31,12 @@ export function Today({ phone }: { phone: boolean }) {
           </span>}
         </p>
       </header>
+
+      {inboxN > 0 && (
+        <button type="button" className="inbox-strip" data-rv onClick={(e) => go("inbox", e.currentTarget)}>
+          <i /><span><b className="t-num">{inboxN}</b> 条班群通知待确认</span><small>收件 ›</small>
+        </button>
+      )}
 
       {phone && (
         <button type="button" className="nextcard" data-rv onClick={(e) => setState({ inspector: { kind: "course", id: String(next.course.n), from: e.currentTarget.getBoundingClientRect() } })}>

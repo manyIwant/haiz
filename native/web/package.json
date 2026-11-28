@@ -1,6 +1,6 @@
 {
   "name": "haiz-native-web",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "HAIZ Experiment 006 · 空间交互、材质与动态艺术的深化",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5177",

@@ -5,7 +5,8 @@
  */
 import { useSyncExternalStore } from "react";
 import { clock } from "../kernel/motion";
-import { TASKS, NOTICES, type Task, type Notice } from "../data/demo";
+import { TASKS, NOTICES, EVENTS, type Task, type Notice, type Event } from "../data/demo";
+import type { InboxItem, IntakeConfig } from "../intake/types";
 import type { Identity } from "../identity/repo";
 
 export type Theme = "system" | "light" | "dark";
@@ -35,6 +36,12 @@ export type State = {
   perfPanel: boolean;
   /** the update sheet is open */
   updateOpen: boolean;
+  /** Native 002 · the identity's schedule items (inbox confirmations land here too) */
+  events: Event[];
+  /** Native 002 · 收件: recognised class-group notices of this identity, and its intake settings */
+  inbox: InboxItem[];
+  inboxPending: number;
+  intake: IntakeConfig;
 };
 
 const pref = (k: string, d: any) => {
@@ -61,6 +68,10 @@ let state: State = {
   wallOpen: false,
   perfPanel: pref("perfPanel", false),
   updateOpen: false,
+  events: EVENTS.map((e) => ({ ...e })),
+  inbox: [],
+  inboxPending: 0,
+  intake: { enabled: false, groups: [], sources: {} },
 };
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
@@ -69,6 +80,7 @@ export const getState = () => state;
 export function setState(p: Partial<State> | ((s: State) => Partial<State>)) {
   const patch = typeof p === "function" ? p(state) : p;
   state = { ...state, ...patch };
+  if ("inbox" in patch) state.inboxPending = state.inbox.filter((i) => i.status === "pending").length;
   if ("theme" in patch) { save("theme", state.theme); sweepTheme(); }
   if ("intensity" in patch) { save("intensity", state.intensity); clock.setIntensity(state.intensity); applyMotionVars(); }
   if ("role" in patch) save("role", state.role);
@@ -113,7 +125,12 @@ function sweepTheme() {
     );
   }).catch(() => {});
 }
-export const isDark = () => document.documentElement.getAttribute("data-theme") === "dark" || (state.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+/** Native 002 · read from the state, never from the DOM: inside a view transition the attribute is
+ * applied a frame later, and reading it right after setState gave the old theme (the toggle then
+ * drew the sun in the dark theme and the moon in the light one). */
+export const isDark = () => state.theme === "dark" || (state.theme === "system" && typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches);
+/** set the theme and let it spread from a point (the toggle's knob) instead of the last touch */
+export function setThemeFrom(theme: "light" | "dark", x: number, y: number) { touchAt = { x, y }; setState({ theme }); }
 
 /** CSS transitions follow the same clock: their durations divide by the time scale, and vanish at intensity 0 */
 export function applyMotionVars() {

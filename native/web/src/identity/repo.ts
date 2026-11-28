@@ -13,7 +13,7 @@ export type Identity = {
 };
 export type Prefs = { theme: "system" | "light" | "dark"; intensity: number; notify: boolean; railCompact: boolean; keyboard: "haiz" | "system" };
 export const DEFAULT_PREFS: Prefs = { theme: "system", intensity: 1, notify: true, railCompact: false, keyboard: "haiz" };
-export const KINDS = ["week", "tasks", "notes", "events", "growth", "notices", "favorites", "prefs", "teacher"] as const;
+export const KINDS = ["week", "tasks", "notes", "events", "growth", "notices", "favorites", "prefs", "teacher", "inbox", "intake"] as const;
 export type Kind = (typeof KINDS)[number];
 
 const toIdentity = (r: Row): Identity => ({
@@ -55,6 +55,8 @@ export async function createIdentity(n: NewIdentity): Promise<Identity> {
     favorites: [],
     prefs: { ...DEFAULT_PREFS, ...(n.prefs ?? {}) },
     teacher: clone(SAMPLE.TEACHER),
+    inbox: [],
+    intake: { enabled: false, groups: [], sources: {} },
   };
   await e.run([
     { sql: "INSERT INTO identities (id, school, name, cls, no, role, lamp, seq, created_at, updated_at, last_used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
@@ -109,7 +111,7 @@ export async function writeRecords(id: string, recs: Partial<Record<Kind, unknow
 }
 
 /** everything the app needs to become this identity */
-export async function loadIdentity(id: string): Promise<{ identity: Identity; data: IdentityData; prefs: Prefs; notices: Record<string, boolean>; favorites: string[] } | null> {
+export async function loadIdentity(id: string): Promise<{ identity: Identity; data: IdentityData; prefs: Prefs; notices: Record<string, boolean>; favorites: string[]; inbox: any[]; intake: any } | null> {
   const identity = await getIdentity(id);
   if (!identity) return null;
   const r = await readRecords(id);
@@ -123,6 +125,8 @@ export async function loadIdentity(id: string): Promise<{ identity: Identity; da
     prefs: { ...DEFAULT_PREFS, ...(r.prefs ?? {}) },
     notices: r.notices ?? {},
     favorites: r.favorites ?? [],
+    inbox: Array.isArray(r.inbox) ? r.inbox : [],
+    intake: r.intake ?? null,
   };
 }
 

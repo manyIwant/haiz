@@ -24,8 +24,26 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 收件: text shared from another app goes into the HAIZ inbox -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
 
         </activity>
+
+        <!-- 收件: class-group notices, only after the user turns intake on in HAIZ, chooses groups,
+             and grants notification access in Android's settings. Nothing leaves the phone. -->
+        <service
+            android:name=".HaizIntakeListener"
+            android:label="HAIZ 收件"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <provider
             android:name=".HaizUpdateFileProvider"

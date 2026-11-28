@@ -21,13 +21,14 @@ import { Me } from "../pages/Me";
 import { Teacher } from "../pages/Teacher";
 import { clock } from "../kernel/motion";
 import { ThemeToggle } from "../ui/ThemeToggle";
-import { Curtain } from "../ui/Curtain";
+import { PhoneRail } from "../ui/PhoneRail";
 
 const Rings = lazy(() => import("../pages/Rings"));
 const Tree = lazy(() => import("../pages/Tree"));
 const Wander = lazy(() => import("../pages/Wander"));
+const Inbox = lazy(() => import("../pages/Inbox").then((m) => ({ default: m.Inbox })));
 
-const PARENT: Record<string, string> = { today: "today", schedule: "today", focus: "today", growth: "me", study: "study", campus: "campus", rings: "campus", tree: "campus", wander: "campus", me: "me", teacher: "me" };
+const PARENT: Record<string, string> = { today: "today", schedule: "today", focus: "today", growth: "me", study: "study", campus: "campus", rings: "campus", tree: "campus", wander: "campus", me: "me", teacher: "me", inbox: "today" };
 
 export function App() {
   const vp = useViewport();
@@ -106,6 +107,7 @@ function PageHost({ route, phone }: { route: string; phone: boolean }) {
       case "wander": return <Wander phone={phone} />;
       case "me": return <Me phone={phone} />;
       case "teacher": return <Teacher phone={phone} />;
+      case "inbox": return <Inbox phone={phone} />;
     }
     return <Today phone={phone} />;
   })();
@@ -130,7 +132,7 @@ function PhoneTop({ page }: { page: string }) {
   const [curtain, setCurtain] = useState(false);
   return (
     <>
-    {curtain && <Curtain onClose={() => setCurtain(false)} />}
+    {curtain && <PhoneRail onClose={() => setCurtain(false)} />}
     <header className={"ptop" + (scrolled ? " is-scrolled" : "")}>
       {pushed
         ? <button type="button" className="ptop-back" onClick={() => (history.length > 1 ? history.back() : go(PARENT[page] ?? "today"))} aria-label="返回"><svg viewBox="0 0 16 16"><path d="M10 3 L5 8 L10 13" /></svg><span>{TITLES[PARENT[page]] ?? "返回"}</span></button>

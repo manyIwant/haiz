@@ -82,7 +82,7 @@ export let NOTES: Note[] = [
   { id: "m4", subject: "英语", title: "Unit 4 词块整理", excerpt: "be absorbed in · take ... into account · on the verge of · in terms of", when: "周一", pages: 1 },
 ];
 
-export type Event = { id: string; day: number; time: string; title: string; place: string; kind: "exam" | "club" | "school" | "me" };
+export type Event = { id: string; day: number; time: string; title: string; place: string; kind: "exam" | "club" | "school" | "me"; /** Native 002 · an absolute day (YYYY-MM-DD); when set, day is computed from it */ date?: string };
 /** day = offset in days from today */
 export let EVENTS: Event[] = [
   { id: "e1", day: 0, time: "19:30", title: "晚自习 · 物理答疑", place: "一号教学楼 302", kind: "school" },

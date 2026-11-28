@@ -97,3 +97,20 @@ type Voice = {
   addListener(e: "error", f: (p: { code: number }) => void): Promise<PluginListenerHandle>;
 };
 export const HaizVoice = registerPlugin<Voice>("HaizVoice");
+
+/* 收件 · the opt-in notice queue (Native 002) */
+export type IntakeEntry = { id: string; source: string; label: string; group: string; text: string; at: number };
+export type IntakeNativeConfig = { enabled: boolean; groups: string[]; sources: Record<string, boolean>; granted: boolean; discoveringUntil: number; pending: number };
+type Intake = {
+  getConfig(): Promise<IntakeNativeConfig>;
+  setConfig(o: { enabled: boolean; groups: string[]; sources: Record<string, boolean> }): Promise<IntakeNativeConfig>;
+  openAccessSettings(): Promise<void>;
+  entries(): Promise<{ entries: IntakeEntry[] }>;
+  ack(o: { ids: string[] }): Promise<void>;
+  clear(): Promise<void>;
+  startDiscovery(): Promise<IntakeNativeConfig>;
+  stopDiscovery(): Promise<void>;
+  discovered(): Promise<{ groups: { title: string; source: string; n: number; at: number }[] }>;
+  addListener(e: "entry", f: (p: IntakeEntry) => void): Promise<PluginListenerHandle>;
+};
+export const HaizIntake = registerPlugin<Intake>("HaizIntake");

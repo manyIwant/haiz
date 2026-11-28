@@ -537,3 +537,8 @@
 .cmap3-plan i { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 3px; transform: perspective(40px) rotateX(48deg); transition: transform .6s cubic-bezier(.3, 1.4, .5, 1); }
 .cmap3-plan i.is-plan { transform: none; }
 .cmap3-hint { left: auto; right: 16px; }
+
+/* the strip on 今日 that says the inbox has something to confirm */
+.inbox-strip { display: flex; align-items: center; gap: 10px; width: 100%; margin: 4px 0 10px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--lanren) 9%, var(--paper-raised)); box-shadow: var(--shadow-1); text-align: left; color: var(--ink); font-size: 14px; }
+.inbox-strip i { width: 7px; height: 7px; border-radius: 50%; background: var(--lanren); animation: breathe calc(2.4s / var(--ts, 1)) ease-in-out infinite; }
+.inbox-strip small { margin-left: auto; color: var(--ink-3); font-size: 12.5px; }

@@ -16,7 +16,7 @@ import "./wheel.css";
 
 type Act = { id: string; label: string; glyph: string; run(): void };
 
-const EXCLUDE = "input, textarea, select, canvas, [role=slider], .dock-host, .hkb, .wl, .vrec, .upd, .perf, [data-nowheel], .tree-stage, .cmap3, iframe";
+const EXCLUDE = "input, textarea, select, canvas, [role=slider], [role=switch], .dock-host, .prail, .gtog, .hkb, .wl, .vrec, .upd, .perf, [data-nowheel], .tree-stage, .cmap3, iframe";
 
 function actionsFor(el: Element | null): { title: string; acts: Act[] } {
   const w = el?.closest<HTMLElement>("[data-wheel]")?.dataset.wheel;

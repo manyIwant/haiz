@@ -147,6 +147,14 @@ export class DockEngine {
   private plateShown = spring(0, SP.ui);
   private hotEl: Element | null = null;
   private kbd = false;
+  /** Native 002 · the bay just entered, shown as active at once (plate, dot, icon) while the page it
+   * opens is still rendering; dropped when the app catches up, or after 2.5 s if it never does. */
+  private pending: { id: string; at: number } | null = null;
+  private shownActive: string | null | undefined = undefined;
+  /** Native 002 · the layer is only as tall as what it draws: a ~120 px strip at rest instead of
+   * 560 px, so the SVG contour, its drop shadow and the backdrop blur raster ~5× fewer pixels on
+   * every frame of a gesture and every frame of a page scroll under it. */
+  private tall = true;
 
   constructor(host: HTMLElement, cfg: DockConfig, cb: DockCallbacks) {
     this.cfg = cfg;
@@ -245,6 +253,21 @@ export class DockEngine {
 
   /* ------------------------------------------------------------------ config */
 
+  private get active(): string | null {
+    const p = this.pending;
+    if (p) {
+      if (this.cfg.active === p.id || this.cfg.active === null || performance.now() - p.at > 2500) this.pending = null;
+      else return p.id;
+    }
+    return this.cfg.active;
+  }
+  private syncActive() {
+    const a = this.active;
+    if (a === this.shownActive) return;
+    this.shownActive = a;
+    for (const b of this.bays) b.icon?.setActive(b.item.id === a);
+  }
+
   update(cfg: DockConfig) {
     const prev = this.cfg;
     this.cfg = cfg;
@@ -265,9 +288,7 @@ export class DockEngine {
         this.input.blur();
       }
     }
-    if (prev.active !== cfg.active) {
-      for (const b of this.bays) b.icon?.setActive(b.item.id === cfg.active);
-    }
+    if (prev.active !== cfg.active) this.syncActive();
     if (cfg.pinStage && cfg.pinStage !== this.staged) {
       const i = this.bays.findIndex((b) => b.item.id === cfg.pinStage);
       if (i >= 0) { this.focus = i; this.setStaged(cfg.pinStage); this.stickyStage = true; }
@@ -307,7 +328,8 @@ export class DockEngine {
     });
     ordered.push(...all);
     this.bays = ordered;
-    for (const b of this.bays) b.icon?.setActive(b.item.id === this.cfg.active);
+    this.shownActive = undefined;
+    this.syncActive();
     if (this.focus >= this.bays.length) this.focus = -1;
   }
 
@@ -385,7 +407,7 @@ export class DockEngine {
     this.tick(0);
     for (const b of this.bays) settle(b.w, b.w.t);
     const m = METRIC[this.cfg.size];
-    const a = this.bays.findIndex((b) => b.item.id === this.cfg.active);
+    const a = this.bays.findIndex((b) => b.item.id === this.active);
     this.layoutTargets();
     this.tick(0);
     if (a >= 0) {
@@ -410,7 +432,7 @@ export class DockEngine {
     const s = this.cfg.searchOpen;
     const out = this.bays.map((b) => (b.leaving ? 0 : this.baseW(b.item)));
     if (s) {
-      const a = this.bays.findIndex((b) => b.item.id === this.cfg.active && !b.leaving);
+      const a = this.bays.findIndex((b) => b.item.id === this.active && !b.leaving);
       return this.bays.map((_, i) => (i === (a >= 0 ? a : live[0]) ? m.H - 2 * m.pad : 0));
     }
     if (fi < 0 || this.bays[fi]?.leaving) return out;
@@ -546,8 +568,13 @@ export class DockEngine {
     }
     this.setStaged(null);
     this.stickyStage = false;
-    this.cb.onEnter(b.item.id);
+    const id = b.item.id;
+    // selection migrates now, on the dock's own frames; the page follows a frame later, so the
+    // first frame of the answer is never stuck behind the new page's render
+    const nav = this.cfg.size === "phone" ? !id.startsWith("f:") : id.startsWith("go:");
+    if (nav && this.cfg.active !== null && id !== this.cfg.active) { this.pending = { id, at: performance.now() }; this.syncActive(); }
     clock.markInput();
+    requestAnimationFrame(() => setTimeout(() => this.cb.onEnter(id), 0));
   }
 
   closeStage() { this.stickyStage = false; this.setStaged(null); if (!this.engaged) this.setFocus(-1, 0); }
@@ -736,7 +763,7 @@ export class DockEngine {
     const m = METRIC[this.cfg.size];
     let wsum = 0;
     for (const b of this.bays) wsum += b.w.t * 7 + b.w.x * 3 + (b.leaving ? 1 : 0);
-    const sig = [this.cfg, this.bays, this.focus, this.staged, this.width, this.height, this.hoverSat, clock.intensity, wsum, this.search.t, this.sat.t];
+    const sig = [this.cfg, this.bays, this.active, this.focus, this.staged, this.width, this.height, this.hoverSat, clock.intensity, wsum, this.search.t, this.sat.t];
     if (!this.lastMoving && sig.length === this.lastSig.length && sig.every((v, i) => v === this.lastSig[i])) return false;
     this.lastSig = sig;
     const moving = this.frame(dt, m);
@@ -746,6 +773,15 @@ export class DockEngine {
 
   private frame(dt: number, m: typeof METRIC.phone): boolean {
     let moving = false;
+    this.syncActive();
+    // the layer's height: tall only while a stage or the search results are (or are still) out
+    const tall = !!this.staged || this.cfg.searchOpen || this.stH.x > m.swellH + 3 || this.resH.x > 0.5 || this.stageHost.classList.contains("was-open");
+    if (tall !== this.tall || !this.height) {
+      this.tall = tall;
+      this.height = tall ? 560 : m.bottom + m.H + m.swellH + 44;
+      this.root.style.height = `${this.height}px`;
+      this.lastPath = "";
+    }
     for (const b of this.bays) if (stepS(b.w, dt)) moving = true;
     // drop bays that finished leaving
     if (this.bays.some((b) => b.leaving && b.w.x < 0.4 && b.w.t === 0)) {
@@ -755,7 +791,6 @@ export class DockEngine {
       this.layoutTargets();
     }
 
-    if (!this.height) this.height = this.root.clientHeight;
     const H = this.height;
     const cy = H - m.bottom - m.H / 2;
     // positions from the current widths
@@ -766,7 +801,8 @@ export class DockEngine {
     const cap: Box = { x0: capL, x1: capL + total, y0: cy - m.H / 2, y1: cy + m.H / 2, R: m.H / 2 };
 
     // the plate: under the focus, else home under the active bay
-    const ai = this.bays.findIndex((b) => b.item.id === this.cfg.active && !b.leaving);
+    const act = this.active;
+    const ai = this.bays.findIndex((b) => b.item.id === act && !b.leaving);
     const pi = this.focus >= 0 ? this.focus : ai;
     if (pi >= 0) {
       const pb = this.bays[pi];
@@ -857,10 +893,10 @@ export class DockEngine {
       b.el.style.width = `${b.cw.toFixed(2)}px`;
       b.el.style.height = `${m.H}px`;
       b.labWrap.style.width = `${lw.toFixed(2)}px`;
-      const op = b.leaving ? clamp(b.cw / 30, 0, 1) : this.cfg.searchOpen && b.item.id !== this.cfg.active ? clamp(b.cw / 30, 0, 1) : 1;
+      const op = b.leaving ? clamp(b.cw / 30, 0, 1) : this.cfg.searchOpen && b.item.id !== act ? clamp(b.cw / 30, 0, 1) : 1;
       b.el.style.opacity = op.toFixed(3);
       b.lab.style.opacity = clamp((lw - 4) / Math.max(6, b.labelW - 4), 0, 1).toFixed(3);
-      b.el.classList.toggle("is-active", b.item.id === this.cfg.active);
+      b.el.classList.toggle("is-active", b.item.id === act);
       b.el.classList.toggle("is-focus", this.bays[this.focus] === b);
     }
 

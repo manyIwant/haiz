@@ -8,9 +8,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // HAIZ keeps one package id and one signing key forever so every build updates in place.
-        // versionCode must only grow: 2105 = 1.5.5 (Flutter), 2106 = 006 preview, 2107+ = Native.
-        versionCode Integer.parseInt(System.getenv("HAIZ_VERSION_CODE") ?: "2107")
-        versionName System.getenv("HAIZ_VERSION_NAME") ?: "1.6.0-native.001"
+        // versionCode must only grow: 2105 = 1.5.5 (Flutter), 2106 = 006 preview, 2107 = Native 001, 2108 = Native 002.
+        versionCode Integer.parseInt(System.getenv("HAIZ_VERSION_CODE") ?: "2108")
+        versionName System.getenv("HAIZ_VERSION_NAME") ?: "1.7.0-native.002"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

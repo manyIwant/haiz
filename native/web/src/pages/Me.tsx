@@ -80,6 +80,9 @@ export function Me({ phone }: { phone: boolean }) {
               <Switch checked={compact} onChange={(v) => setState({ railCompact: v })} label="紧凑侧栏" />
             </Row>
           )}
+          <Row t="班群通知接入" d="收件：从选定的班群里识别作业、考试、活动与截止，确认后进入待办与日程。默认关闭，只在本机处理。">
+            <button type="button" className="set-btn" onClick={(e) => go("inbox", e.currentTarget)}>打开收件</button>
+          </Row>
           <Row t="版本与更新" d={<>当前 {ver}。新版本从 GitHub Releases 下载，校验签名与 SHA-256 后覆盖安装，身份与数据全部保留。</>}>
             <button type="button" className="set-btn" onClick={() => setState({ updateOpen: true })}>检查更新</button>
           </Row>

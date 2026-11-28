@@ -5,18 +5,23 @@ import { now as clockNow } from "../app/time";
  */
 import { useRef, useState } from "react";
 import { setState } from "../app/store";
-import { WEEK, PERIODS, WEEKDAYS, EVENTS } from "../data/demo";
+import { WEEK, PERIODS, WEEKDAYS } from "../data/demo";
 import { schoolDay, teachingWeek, dayLabel } from "../app/time";
 import { clock, spring, stepS, clamp, SP, type Spring } from "../kernel/motion";
 import { useConst, useTick } from "../kernel/react";
 import { PageHead } from "../ui/PageHead";
 import { Section } from "../ui/Section";
 import { Demo, WeekPicker } from "../ui/controls";
+import { useStore } from "../app/store";
 import "./pages.css";
 
 const KIND: Record<string, string> = { exam: "考试", club: "社团", school: "学校", me: "我的" };
 
 export function Schedule({ phone }: { phone: boolean }) {
+  const stored = useStore((s) => s.events);
+  // an event with an absolute date (an inbox confirmation) counts its day from today; past ones go
+  const events = stored.map((e) => (e.date ? { ...e, day: Math.round((new Date(e.date + "T00:00").getTime() - new Date(new Date().toDateString()).getTime()) / 864e5) } : e))
+    .filter((e) => e.day >= 0).sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
   const sd = schoolDay();
   const [day, setDay] = useState(sd.idx);
   const now = clockNow();
@@ -44,7 +49,7 @@ export function Schedule({ phone }: { phone: boolean }) {
 
       <Section kicker="Upcoming" title="接下来">
         <ul className="events">
-          {EVENTS.map((e) => (
+          {events.map((e) => (
             <li key={e.id} className={"event event--" + e.kind}>
               <span className="event-d"><b className="t-num">{dayLabel(e.day)}</b><small className="t-num">{e.time}</small></span>
               <span className="event-t">{e.title}<small>{e.place}</small></span>

@@ -53,7 +53,13 @@ const GROUPS: { label: string; items: Item[] }[] = [
     { id: "wander", label: "入画", icon: "wander", to: "wander" },
   ] },
 ];
+const DRAWER_FOOT: Item[] = [
+  { id: "inbox", label: "收件", icon: "notes", to: "inbox" },
+  { id: "teacher", label: "教师工作台", icon: "teacher", to: "teacher" },
+  { id: "me", label: "我", icon: "me", to: "me" },
+];
 const FOOT: Item[] = [
+  { id: "inbox", label: "收件", icon: "notes", to: "inbox" },
   { id: "teacher", label: "教师工作台", icon: "teacher", to: "teacher" },
   { id: "me", label: "我", icon: "me", to: "me" },
 ];
@@ -70,6 +76,8 @@ function usePeeks() {
   const unread = useStore((s) => s.notices.filter((n) => n.unread).length);
   const focus = useStore((s) => s.focus);
   const role = useStore((s) => s.role);
+  const who = useStore((s) => s.identity);
+  const pending = useStore((s) => s.inboxPending);
   const c = useClimate();
   const last = c ? sameDayLastYear(c) : null;
   const m = clockNow().getMonth();
@@ -92,16 +100,25 @@ function usePeeks() {
       case "tree": return <><i className="peek-leaf" style={{ background: `rgb(${lc.join(",")})` }} /><b>{m + 1} 月</b>{ss.label}</>;
       case "wander": return <><i className="peek-lens" /><b>入画</b>走进画里</>;
       case "teacher": return <><b>{role === "teacher" ? "已切换" : "切换"}</b>教师身份</>;
-      case "me": return <><b>{STUDENT.name}</b>{STUDENT.cls}</>;
+      case "me": return <><b>{who?.name ?? STUDENT.name}</b>{who?.cls ?? STUDENT.cls}</>;
+      case "inbox": return pending ? <><b className="lanren">{pending}</b>条待确认</> : <><b>收件</b>班群通知识别</>;
     }
     return null;
   };
 }
 
-export function Rail({ compact }: { compact: boolean }) {
+export type RailDrawer = {
+  /** close the drawer (after a pick, or a swipe back to the left edge) */
+  onClose(): void;
+  /** the finger is dragging the drawer horizontally: dx < 0 pulls it shut; done = released */
+  onDrag(dx: number, done: boolean, vx: number): void;
+};
+
+export function Rail({ compact, drawer }: { compact: boolean; drawer?: RailDrawer }) {
   const route = useRoute();
   const unread = useStore((s) => s.notices.some((n) => n.unread));
   const focusOn = useStore((s) => s.focus.state === "running" || s.focus.state === "paused");
+  const who = useStore((s) => s.identity);
   const root = useRef<HTMLElement>(null);
   const plate = useRef<HTMLDivElement>(null);
   const datum = useRef<SVGPathElement>(null);
@@ -250,9 +267,75 @@ export function Rail({ compact }: { compact: boolean }) {
   });
 
   const onMove = (e: React.PointerEvent) => {
+    if (e.pointerType === "touch") return;
     const row = (e.target as Element).closest<HTMLElement>("[data-rail]");
     setHover(row?.dataset.rail ?? null);
     clock.wake();
+  };
+
+  /* Native 002 · the phone drawer: press a row and the drop rises beside it; keep the finger down
+     and scrub up or down, the drop travels with it (and a long jump sinks one drop and raises the
+     other, exactly as the pointer does on the desk); lift to go there. Swiping left pulls the
+     drawer shut instead. Near the top or bottom edge the list scrolls under the finger. */
+  const touch = useRef<{ id: number; x0: number; y0: number; lx: number; lt: number; vx: number; mode: "scrub" | "drag" | null; row: string | null; to: string | null; auto: number } | null>(null);
+  const lastTouch = useRef(0);
+  const rowAt = (x: number, y: number) => {
+    const el = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-rail]") ?? null;
+    return el && root.current?.contains(el) ? el : null;
+  };
+  const onTouchDown = (e: React.PointerEvent) => {
+    if (!drawer || e.pointerType !== "touch") return;
+    const row = rowAt(e.clientX, e.clientY);
+    root.current?.setPointerCapture(e.pointerId);
+    touch.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), vx: 0, mode: null, row: row?.dataset.rail ?? null, to: row?.getAttribute("href")?.slice(2) ?? null, auto: 0 };
+    if (row) { setHover(row.dataset.rail!); pressSlot(true); }
+    clock.wake();
+  };
+  const onTouchMove = (e: React.PointerEvent) => {
+    const t = touch.current;
+    if (!drawer || !t || e.pointerId !== t.id) return;
+    const dx = e.clientX - t.x0, dy = e.clientY - t.y0;
+    const now = performance.now();
+    t.vx = t.vx * 0.5 + ((e.clientX - t.lx) / Math.max(4, now - t.lt)) * 0.5;
+    t.lx = e.clientX; t.lt = now;
+    if (!t.mode && Math.hypot(dx, dy) > 8) {
+      t.mode = dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.2 ? "drag" : "scrub";
+      if (t.mode === "drag") { pressSlot(false); setHover(null); }
+    }
+    if (t.mode === "drag") { drawer.onDrag(Math.min(0, dx), false, t.vx); return; }
+    const row = rowAt(Math.min(e.clientX, (root.current?.getBoundingClientRect().right ?? 300) - 12), e.clientY);
+    const id = row?.dataset.rail ?? null;
+    if (id !== t.row) {
+      t.row = id; t.to = row?.getAttribute("href")?.slice(2) ?? null;
+      if (id) { setHover(id); try { navigator.vibrate?.(4); } catch { /* optional */ } }
+    }
+    // edge scroll
+    const sc = root.current?.querySelector<HTMLElement>(".rail-scroll");
+    if (sc && sc.scrollHeight > sc.clientHeight + 2) {
+      const b = sc.getBoundingClientRect();
+      const v = e.clientY < b.top + 36 ? -1 : e.clientY > b.bottom - 36 ? 1 : 0;
+      cancelAnimationFrame(t.auto);
+      if (v) { const step = () => { sc.scrollTop += v * 6; clock.wake(); t.auto = requestAnimationFrame(step); }; t.auto = requestAnimationFrame(step); }
+    }
+  };
+  const onTouchUp = (e: React.PointerEvent, cancel = false) => {
+    const t = touch.current;
+    if (!drawer || !t || e.pointerId !== t.id) return;
+    touch.current = null;
+    cancelAnimationFrame(t.auto);
+    lastTouch.current = performance.now();
+    pressSlot(false);
+    if (t.mode === "drag") { drawer.onDrag(Math.min(0, e.clientX - t.x0), true, t.vx); setHover(null); return; }
+    if (cancel || !t.to) { setHover(null); return; }
+    const el = rowOf(t.row!);
+    go(t.to, el);
+    drawer.onClose();
+  };
+  const pick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    e.preventDefault();
+    if (drawer && performance.now() - lastTouch.current < 700) return; // the touch path already went
+    go(to, e.currentTarget);
+    drawer?.onClose();
   };
   const pressSlot = (on: boolean) => { const sl = s.slots.find((x) => x.id === hover); if (sl) { sl.press.t = on ? 1 : 0; clock.wake(); } };
   const labelOf = (id: string | null) => !id ? "" : [...GROUPS.flatMap((g) => g.items), ...FOOT].find((i) => i.id === id)?.label ?? GROUPS.flatMap((g) => g.items.flatMap((i) => i.kids ?? [])).find((k) => "k-" + k.id === id)?.label ?? "";
@@ -264,7 +347,7 @@ export function Rail({ compact }: { compact: boolean }) {
       <li key={it.id}>
         <a href={`#/${it.to}`} data-rail={it.id} className={"rail-i" + (on ? " is-on" : "")} aria-current={on ? "page" : undefined} aria-label={compact ? it.label : undefined}
           onFocus={() => setHover(it.id)} onBlur={() => setHover(null)}
-          onClick={(e) => { e.preventDefault(); go(it.to, e.currentTarget); }}>
+          onClick={(e) => pick(e, it.to)}>
           <Icon kind={it.icon} size={20} active={on} />
           <span className="rail-l">{it.label}</span>
           {it.id === "campus" && unread && <i className="rail-dot" aria-label="有未读" />}
@@ -277,7 +360,7 @@ export function Rail({ compact }: { compact: boolean }) {
               return (
                 <a key={k.id} href={`#/${k.to}`} data-rail={"k-" + k.id} className={"rail-k" + (kon ? " is-on" : "")} style={{ ["--i" as any]: i }}
                   onFocus={() => setHover("k-" + k.id)} onBlur={() => setHover(null)}
-                  onClick={(e) => { e.preventDefault(); go(k.to, e.currentTarget); }}>{k.label}</a>
+                  onClick={(e) => pick(e, k.to)}>{k.label}</a>
               );
             })}
           </Unfold>
@@ -287,16 +370,26 @@ export function Rail({ compact }: { compact: boolean }) {
   };
 
   return (
-    <nav ref={root} className={"rail" + (compact ? " rail--compact" : "")} onPointerMove={onMove} onPointerLeave={() => { setHover(null); clock.wake(); }}
-      onPointerDown={() => pressSlot(true)} onPointerUp={() => pressSlot(false)} aria-label="主导航">
+    <nav ref={root} className={"rail" + (compact ? " rail--compact" : "") + (drawer ? " rail--drawer" : "")}
+      onPointerMove={(e) => { onMove(e); onTouchMove(e); }} onPointerLeave={(e) => { if (e.pointerType !== "touch") { setHover(null); clock.wake(); } }}
+      onPointerDown={(e) => { if (e.pointerType === "touch") onTouchDown(e); else pressSlot(true); }}
+      onPointerUp={(e) => { if (e.pointerType === "touch") onTouchUp(e); else pressSlot(false); }}
+      onPointerCancel={(e) => onTouchUp(e, true)} aria-label="主导航">
       <div ref={plate} className="rail-plate" />
       <svg className="rail-datum" aria-hidden="true"><path ref={datum} /></svg>
       <div ref={liquid} className="rail-liquid" aria-hidden="true" />
       <div ref={mark} className="rail-mark" />
-      <a className="rail-brand" href="#/today" onClick={(e) => { e.preventDefault(); go("today"); }}>
-        <span className="rail-seal">海</span>
-        <span className="rail-bt"><b>HAIZ</b><small>非官方 · 演示原型</small></span>
-      </a>
+      {drawer ? (
+        <button type="button" className="rail-brand rail-who" onClick={() => { drawer.onClose(); setState({ wallOpen: true }); }}>
+          <span className="rail-seal">海</span>
+          <span className="rail-bt"><b>{who?.name ?? "HAIZ"}</b><small>{[who?.school, who?.cls].filter(Boolean).join(" · ") || "非官方 · 演示原型"} · 切换身份</small></span>
+        </button>
+      ) : (
+        <a className="rail-brand" href="#/today" onClick={(e) => { e.preventDefault(); go("today"); }}>
+          <span className="rail-seal">海</span>
+          <span className="rail-bt"><b>HAIZ</b><small>非官方 · 演示原型</small></span>
+        </a>
+      )}
       <div className="rail-scroll">
         {GROUPS.map((g) => (
           <section key={g.label} className="rail-g">
@@ -305,10 +398,11 @@ export function Rail({ compact }: { compact: boolean }) {
           </section>
         ))}
       </div>
-      <ul className="rail-foot">{FOOT.map(row)}</ul>
-      <button className="rail-toggle" type="button" onClick={() => setState((st) => ({ railCompact: !st.railCompact }))} aria-label={compact ? "展开侧轨" : "收起侧轨"}>
+      <ul className="rail-foot">{(drawer ? DRAWER_FOOT : FOOT).map(row)}</ul>
+      {drawer && <button type="button" className="rail-upd" onClick={() => { drawer.onClose(); setState({ updateOpen: true }); }}>检查更新</button>}
+      {!drawer && <button className="rail-toggle" type="button" onClick={() => setState((st) => ({ railCompact: !st.railCompact }))} aria-label={compact ? "展开侧轨" : "收起侧轨"}>
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d={compact ? "M6 4 L10 8 L6 12" : "M10 4 L6 8 L10 12"} /></svg>
-      </button>
+      </button>}
       {slotIds.map((id, i) => (
         <div key={i} ref={(el) => { peekEls.current[i] = el; }} className="rail-peek" aria-hidden="true">
           {id && <span className="rail-peek-in" key={id}>{compact && <em>{labelOf(id)}</em>}{peeks(id)}</span>}

@@ -1,6 +1,6 @@
 {
   "name": "haiz-native-android",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "HAIZ Native · Capacitor Android shell for the Experiment 006 app (native/web).",
   "scripts": {

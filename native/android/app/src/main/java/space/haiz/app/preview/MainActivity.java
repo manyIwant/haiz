@@ -40,7 +40,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HaizUpdaterPlugin.class);
         registerPlugin(HaizStorePlugin.class);
         registerPlugin(HaizVoicePlugin.class);
+        registerPlugin(HaizIntakePlugin.class);
         super.onCreate(state);
+        acceptShare(getIntent());
 
         Window w = getWindow();
         WindowCompat.setDecorFitsSystemWindows(w, false);
@@ -138,5 +140,25 @@ public class MainActivity extends BridgeActivity {
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) hideSystemBars();
+    }
+
+    /** 收件 · text shared to HAIZ from another app's share sheet goes into the inbox (PR #38). */
+    @Override protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        acceptShare(intent);
+    }
+    private void acceptShare(android.content.Intent intent) {
+        if (intent == null || !android.content.Intent.ACTION_SEND.equals(intent.getAction()) || !"text/plain".equals(intent.getType())) return;
+        CharSequence t = intent.getCharSequenceExtra(android.content.Intent.EXTRA_TEXT);
+        String text = t == null ? "" : t.toString().trim();
+        if (text.isEmpty()) return;
+        String subject = intent.getStringExtra(android.content.Intent.EXTRA_SUBJECT);
+        org.json.JSONObject e = HaizIntakeStore.append(this, "share", subject == null || subject.trim().isEmpty() ? "系统分享" : subject.trim(), text, System.currentTimeMillis());
+        if (e != null) HaizIntakePlugin.emit(e);
+        // a recreated activity must not take the same share twice
+        intent.setAction(android.content.Intent.ACTION_MAIN);
+        intent.removeExtra(android.content.Intent.EXTRA_TEXT);
+        if (bridge != null) bridge.getWebView().post(() -> bridge.getWebView().evaluateJavascript("location.hash='#/inbox'", null));
     }
 }
