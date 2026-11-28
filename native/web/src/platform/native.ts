@@ -106,7 +106,11 @@ export const HaizVoice = registerPlugin<Voice>("HaizVoice");
 
 /* 收件 · the opt-in notice queue (Native 002) */
 export type IntakeEntry = { id: string; source: string; label: string; group: string; text: string; at: number };
-export type IntakeNativeConfig = { enabled: boolean; groups: string[]; sources: Record<string, boolean>; granted: boolean; discoveringUntil: number; pending: number };
+/** Native 003 · the wish (enabled), Android's access (granted), the listener service (connected) and
+ * the overall state are separate; diag holds counts and times only, never message text. */
+export type IntakeState = "off" | "needs_access" | "needs_source" | "needs_groups" | "not_connected" | "receiving";
+export type IntakeDiag = { since?: number; seen?: Record<string, number>; lastAt?: Record<string, number>; reasons?: Record<string, number>; lastReason?: string; lastReasonAt?: number };
+export type IntakeNativeConfig = { enabled: boolean; groups: string[]; sources: Record<string, boolean>; granted: boolean; connected?: boolean; connectedAt?: number; state?: IntakeState; diag?: IntakeDiag; discoveringUntil: number; pending: number };
 type Intake = {
   getConfig(): Promise<IntakeNativeConfig>;
   setConfig(o: { enabled: boolean; groups: string[]; sources: Record<string, boolean> }): Promise<IntakeNativeConfig>;
@@ -117,6 +121,8 @@ type Intake = {
   startDiscovery(): Promise<IntakeNativeConfig>;
   stopDiscovery(): Promise<void>;
   discovered(): Promise<{ groups: { title: string; source: string; n: number; at: number }[] }>;
+  resetDiagnostics(): Promise<IntakeNativeConfig>;
   addListener(e: "entry", f: (p: IntakeEntry) => void): Promise<PluginListenerHandle>;
+  addListener(e: "status", f: (p: IntakeNativeConfig) => void): Promise<PluginListenerHandle>;
 };
 export const HaizIntake = registerPlugin<Intake>("HaizIntake");

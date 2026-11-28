@@ -15,7 +15,7 @@ import { Segmented, Switch, Chip } from "../ui/controls";
 import { HaizIntake, isNative, type IntakeNativeConfig } from "../platform/native";
 import { CATEGORY_LABEL, KIND_LABEL, fmtWhen, type Kind } from "../intake/analyze";
 import { LISTEN_SOURCES, SOURCE_LABEL, type InboxItem } from "../intake/types";
-import { intakeOne, confirmAsEvent, confirmAsTask, deleteItem, dismissItem, editItem, importEntries, restoreItem, setIntake, view } from "../intake/inbox";
+import { intakeOne, confirmAsEvent, confirmAsTask, deleteItem, dismissItem, editItem, importEntries, resetWebDiag, restoreItem, setIntake, view, webDiag } from "../intake/inbox";
 import "./inbox.css";
 
 type Tab = "pending" | "confirmed" | "dismissed";
@@ -131,7 +131,8 @@ function IntakeSettings() {
     refresh();
     const f = () => { if (!document.hidden) refresh(); };
     document.addEventListener("visibilitychange", f);
-    return () => document.removeEventListener("visibilitychange", f);
+    const h = native ? HaizIntake.addListener("status", (c) => setNat(c)) : null;
+    return () => { document.removeEventListener("visibilitychange", f); void h?.then((x) => x.remove()); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // while discovering, look at what turned up every few seconds
@@ -151,12 +152,15 @@ function IntakeSettings() {
     setAdd("");
   };
   const anySource = LISTEN_SOURCES.some((s) => cfg.sources[s]);
+  // the state comes from the phone (wish, access, service, sources, groups are separate facts)
+  const state = nat?.state ?? (!cfg.enabled ? "off" : !anySource ? "needs_source" : !cfg.groups.length ? "needs_groups" : "receiving");
   const status = !native ? "浏览器里无法读取手机通知，可以用下面的粘贴来体验识别。"
-    : !cfg.enabled ? "接入已关闭。打开后，HAIZ 只处理你选定的班群里与任务有关的通知。"
-    : !cfg.groups.length ? "还没有选择班群：没有选定的群，就不会收任何通知。"
-    : !anySource ? "还没有打开任何来源应用。"
-    : nat && !nat.granted ? "还差一步：在系统设置里允许 HAIZ 使用通知。"
-    : "正在接入。新的班群通知到达后会自动识别，等你确认。";
+    : state === "off" ? "接入已关闭。可以先把下面的来源和班群设好，再打开。"
+    : state === "needs_access" ? "还差一步：在系统设置里允许 HAIZ 使用通知。允许之前不会收任何通知。"
+    : state === "needs_source" ? "还没有打开任何来源应用。"
+    : state === "needs_groups" ? "还没有选择班群：没有选定的群，就不会保存任何通知。"
+    : state === "not_connected" ? "已允许，但系统还没有启动 HAIZ 的通知服务。可以在系统设置里关闭再打开一次通知使用权。"
+    : "正在接收。选定班群里与任务有关的新通知会出现在这里，等你确认。";
 
   return (
     <Section kicker="Intake" title="接入设置" className="ib-set">
@@ -165,7 +169,7 @@ function IntakeSettings() {
         <Switch checked={cfg.enabled} disabled={!native} onChange={(v) => apply({ enabled: v, sources: v && !anySource ? { ...cfg.sources, wechat: true } : cfg.sources })} label="接收班群通知" />
       </div>
 
-      {native && cfg.enabled && (
+      {native && (
         <>
           <div className="ib-set-row">
             <div><b>通知使用权</b><small>{nat?.granted ? "已允许。随时可以在系统设置里收回。" : "Android 需要你单独允许 HAIZ 读取通知；HAIZ 只保留选定群里与任务有关的内容。"}</small></div>
@@ -203,8 +207,42 @@ function IntakeSettings() {
           </div>
         </>
       )}
+      {native && <Diagnostics nat={nat} onReset={async () => { resetWebDiag(); const r = await HaizIntake.resetDiagnostics().catch(() => null); if (r) setNat(r); }} />}
       <p className="ib-privacy">只在本机处理：不读取微信等应用的数据库或聊天记录，不需要账号密码，不上传任何内容；只看到之后 Android 推送的新通知。消息属于当前身份，保存在本机的身份数据库里。</p>
     </Section>
+  );
+}
+
+/* ---------------------------------------------------------------- diagnostics */
+const REASON: Record<string, string> = {
+  kept: "已进入收件队列", duplicate: "7 天内重复，已跳过", not_task: "选定群里，但与任务无关", other_chat: "不是选定的群（未保存任何内容）",
+  no_groups: "还没有选定班群", source_off: "这个应用的来源开关关着", no_access: "没有通知使用权", off: "接入开关关着",
+};
+const since = (t?: number) => {
+  if (!t) return "从未";
+  const s = Math.round((Date.now() - t) / 1000);
+  return s < 60 ? `${s} 秒前` : s < 3600 ? `${Math.round(s / 60)} 分钟前` : s < 86400 ? `${Math.round(s / 3600)} 小时前` : `${Math.round(s / 86400)} 天前`;
+};
+/** Native 003 · local diagnostics: states and counts only, never message text or other chats' names */
+function Diagnostics({ nat, onReset }: { nat: IntakeNativeConfig | null; onReset(): void }) {
+  const w = webDiag();
+  const d = nat?.diag ?? {};
+  const seen = d.seen ?? {}, reasons = d.reasons ?? {};
+  const totalSeen = Object.values(seen).reduce((a, b) => a + b, 0);
+  return (
+    <details className="ib-diag">
+      <summary>诊断（只有状态和计数）</summary>
+      <dl>
+        <dt>通知使用权</dt><dd>{nat?.granted ? "已允许" : "未允许"}</dd>
+        <dt>通知服务</dt><dd>{nat?.connected ? `已连接（${since(nat.connectedAt)}）` : "未连接"}</dd>
+        <dt>来自来源应用的新通知</dt><dd>{totalSeen ? Object.entries(seen).map(([k, n]) => `${SOURCE_LABEL[k as keyof typeof SOURCE_LABEL] ?? k} ${n} 条（最近 ${since(d.lastAt?.[k])}）`).join("；") : "还没有收到"}</dd>
+        {Object.keys(reasons).length > 0 && <><dt>处理结果</dt><dd>{Object.entries(reasons).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${REASON[k] ?? k} ${n}`).join("；")}</dd></>}
+        {d.lastReason && <><dt>最近一条</dt><dd>{REASON[d.lastReason] ?? d.lastReason}（{since(d.lastReasonAt)}）</dd></>}
+        <dt>队列里等待导入</dt><dd>{nat?.pending ?? 0}</dd>
+        <dt>导入到当前身份</dt><dd>{w.imported ? `共 ${w.imported} 条：新增待确认 ${w.added}，识别为非任务 ${w.notTask}，重复 ${w.duplicate}，合并到已有 ${w.merged}（最近 ${since(w.lastAt)}）` : "还没有"}</dd>
+      </dl>
+      <button type="button" className="ib-pill" onClick={onReset}>清零计数</button>
+    </details>
   );
 }
 

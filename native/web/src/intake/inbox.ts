@@ -44,18 +44,35 @@ export function intakeOne(raw: { id?: string; source: SourceKey; group: string; 
   };
 }
 
+/* Native 003 · what happened to queued notices on the page side, as counts only (no text) */
+export type WebDiag = { imported: number; added: number; notTask: number; duplicate: number; merged: number; lastAt: number };
+const WEB_DIAG = "haiz:intake:webdiag";
+export function webDiag(): WebDiag {
+  try { return { imported: 0, added: 0, notTask: 0, duplicate: 0, merged: 0, lastAt: 0, ...JSON.parse(localStorage.getItem(WEB_DIAG) || "{}") }; }
+  catch { return { imported: 0, added: 0, notTask: 0, duplicate: 0, merged: 0, lastAt: 0 }; }
+}
+function bumpWeb(p: Partial<WebDiag>) {
+  const d = webDiag();
+  for (const [k, v] of Object.entries(p)) (d as any)[k] = k === "lastAt" ? v : ((d as any)[k] ?? 0) + (v as number);
+  try { localStorage.setItem(WEB_DIAG, JSON.stringify(d)); } catch { /* private */ }
+}
+export function resetWebDiag() { try { localStorage.removeItem(WEB_DIAG); } catch { /* private */ } }
+
 /** import a batch into the current identity; returns how many new items awaited confirmation */
-export function importEntries(entries: { id?: string; source: string; group: string; text: string; at: number }[]): number {
+export function importEntries(entries: { id?: string; source: string; group: string; text: string; at: number }[], count = false): number {
   if (!getState().identity) return 0;
   let items = getState().inbox;
-  let added = 0;
+  let added = 0, notTask = 0, duplicate = 0, merged = 0;
   for (const e of [...entries].sort((a, b) => a.at - b.at)) {
     const src = (["wechat", "qq", "tim", "dingtalk", "chaoxing", "share", "paste"].includes(e.source) ? e.source : "share") as SourceKey;
     const r = intakeOne({ ...e, source: src }, items);
-    if (r.merged) items = r.merged;
-    if (r.item) { items = [r.item, ...items]; added++; }
+    if (r.merged) { items = r.merged; merged++; }
+    else if (r.item) { items = [r.item, ...items]; added++; }
+    else if (r.skipped) notTask++;
+    else duplicate++;
   }
   if (items !== getState().inbox) setState({ inbox: items.slice(0, MAX_ITEMS) });
+  if (count) bumpWeb({ imported: entries.length, added, notTask, duplicate, merged, lastAt: Date.now() });
   return added;
 }
 
@@ -66,7 +83,7 @@ async function pullNative(announce: boolean) {
   try {
     const { entries } = await HaizIntake.entries();
     if (!entries.length) return;
-    const n = importEntries(entries);
+    const n = importEntries(entries, true);
     await HaizIntake.ack({ ids: entries.map((e) => e.id) });
     if (announce && n) toast(n === 1 ? "收件：1 条班群通知待确认" : `收件：${n} 条班群通知待确认`, { tone: "lit" });
   } catch (e) { console.warn("[intake] import failed", e); }
@@ -90,9 +107,14 @@ export async function pushConfig(c: IntakeConfig): Promise<IntakeNativeConfig | 
   catch (e) { console.warn("[intake] config failed", e); return null; }
 }
 
+/**
+ * Native 003 · the switch stores the student's wish as it is. Before 003 it was forced off while no
+ * group was chosen, and the group settings only appeared once it was on, so a first-time user could
+ * never get started. Nothing is received without a group and Android's access anyway: the native
+ * policy (HaizIntakePolicy) checks every fact separately for every notification.
+ */
 export function setIntake(p: Partial<IntakeConfig>) {
   const next = { ...getState().intake, ...p };
-  if (!next.groups.length) next.enabled = next.enabled && false;
   setState({ intake: next });
   return pushConfig(next);
 }
