@@ -1,0 +1,10 @@
+import { createRoot } from "react-dom/client";
+import "./styles/fonts.generated.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/icons.css";
+import "./ui/controls.css";
+import "./app/shell.css";
+import { App } from "./app/App";
+
+createRoot(document.getElementById("root")!).render(<App />);

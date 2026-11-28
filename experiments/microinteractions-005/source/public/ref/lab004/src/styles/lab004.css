@@ -1,0 +1,652 @@
+/* ==========================================================================
+   HAIZ · Experiment 004 — 连续空间交互与动态导航艺术
+   Refined Architectural Paper × Muse Minimal Aesthetic
+   ========================================================================== */
+
+:root {
+  --bg: #f5f5f2;
+  --surface: #ffffff;
+  --surface-subtle: #f3f3ef;
+  --surface-hover: rgba(20, 23, 28, 0.055);
+  --surface-pill: rgba(20, 23, 28, 0.068);
+  --ink: #14171c;
+  --ink-2: #484f5b;
+  --muted: #7f8794;
+  --line: rgba(20, 23, 28, 0.088);
+  --line-strong: rgba(20, 23, 28, 0.16);
+  --accent: #16684c;
+  --accent-soft: rgba(22, 104, 76, 0.09);
+
+  --shadow-card: 0 1px 2px rgba(15, 18, 23, 0.03), 0 8px 26px rgba(15, 18, 23, 0.038);
+  --shadow-dock: 0 14px 40px rgba(15, 18, 23, 0.10), 0 2px 6px rgba(15, 18, 23, 0.05);
+  --ease-ink: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c0e12;
+  --surface: #13161d;
+  --surface-subtle: #191d26;
+  --surface-hover: rgba(241, 244, 249, 0.085);
+  --surface-pill: rgba(241, 244, 249, 0.11);
+  --ink: #f1f4f9;
+  --ink-2: #b4bcc9;
+  --muted: #7c8699;
+  --line: rgba(241, 244, 249, 0.09);
+  --line-strong: rgba(241, 244, 249, 0.19);
+  --accent: #45c496;
+  --accent-soft: rgba(69, 196, 150, 0.14);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 10px 30px rgba(0, 0, 0, 0.32);
+  --shadow-dock: 0 16px 46px rgba(0, 0, 0, 0.52), 0 2px 6px rgba(0, 0, 0, 0.32);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.mono, code { font-family: var(--font-mono); }
+
+/* ==================== TOP INSTRUMENT BAR ==================== */
+.bench-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 10px 20px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-group { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font: 700 11px/1 var(--font-mono);
+  letter-spacing: 0.05em;
+}
+.brand-badge {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9.5px;
+}
+.brand-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+
+.ctrl-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.seg-group {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  gap: 2px;
+}
+.seg-btn {
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: background 160ms var(--ease-ink), color 160ms;
+}
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.is-on {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-outline, .btn-solid {
+  height: 29px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 160ms var(--ease-ink);
+}
+.btn-outline { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+.btn-outline:hover { border-color: var(--ink); background: var(--surface-subtle); }
+.btn-outline.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btn-solid { background: var(--ink); color: var(--surface); font-weight: 500; }
+.btn-solid:hover { opacity: 0.9; }
+.btn-solid:active, .btn-outline:active { transform: scale(0.97); }
+
+/* ==================== SUB-BAR: TIME / CHOREOGRAPHY / TELEMETRY ==================== */
+.lab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 9px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.tb-left, .tb-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tb-label { font-size: 10.5px; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase; }
+
+.telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.telemetry-pill strong { color: var(--ink); font-weight: 600; }
+.tel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* ==================== MAIN WORKSPACE ==================== */
+.bench-main {
+  flex: 1;
+  padding: 18px 20px 36px;
+  max-width: 1460px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 4-Panel Side-by-Side Comparison Grid */
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dock-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dock-card.is-featured { border-color: var(--line-strong); }
+
+.dc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 11px;
+  border-bottom: 1px solid var(--line);
+}
+.dc-eyebrow { display: block; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+.dc-h2 { margin: 2px 0 0; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink); }
+.dc-desc { margin: 4px 0 0; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+.dc-metrics {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.dock-arena {
+  position: relative;
+  min-height: 224px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px 16px 26px;
+  background:
+    radial-gradient(circle at 50% 100%, var(--surface-subtle), transparent 72%),
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+  background-position: 0 0, -1px -1px, -1px -1px;
+  overflow: visible;
+}
+
+.dc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-subtle);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.dc-foot strong { color: var(--ink); font-weight: 500; }
+
+/* Architecture Matrix Summary below 4-panel bench */
+.matrix-card {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.matrix-wrap { overflow-x: auto; padding: 6px 16px 14px; }
+.matrix-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.matrix-table th, .matrix-table td { padding: 10px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.matrix-table th { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+/* ==================== SOLO FULL-VIEWPORT DOCK STAGE ==================== */
+.solo-view {
+  min-height: calc(100vh - 134px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 16px 20px;
+}
+.solo-canvas {
+  width: 100%;
+  max-width: 760px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+.solo-kicker { font-size: 11px; letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase; }
+.solo-h1 { margin: 8px 0 6px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; }
+.solo-p { margin: 0 auto; max-width: 560px; font-size: 13.5px; color: var(--ink-2); line-height: 1.68; }
+.solo-event-log {
+  margin: 18px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px;
+  border-radius: 99px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink);
+}
+.solo-dock-anchor {
+  position: fixed;
+  left: 50%;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+}
+.solo-dock-anchor > * { pointer-events: auto; }
+
+/* ==================== SCULPTURAL ICONS V4 (MUSE × HAIRLINE) ==================== */
+.v4-icon { display: block; overflow: visible; }
+.v4-pri {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.v4-fill { fill: var(--surface); }
+.v4-sec {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.78;
+}
+.v4-sub {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.36;
+}
+.v4-fine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.58;
+}
+.v4-dot {
+  fill: var(--muted);
+  transition: fill 200ms var(--ease-ink);
+}
+.v4-dot.is-lit { fill: var(--accent); }
+
+/* ==================== BASELINE LAB 003 DOCK ==================== */
+.d03-shell {
+  position: relative;
+  padding: 5px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-dock);
+  user-select: none;
+}
+.d03-halo {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  border-radius: 11px;
+  background: var(--surface-hover);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+.d03-halo.is-show { opacity: 1; }
+.d03-items { position: relative; z-index: 2; display: flex; align-items: center; gap: 2px; }
+.d03-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 40px;
+  padding: 0 11px;
+  border-radius: 11px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.d03-btn.is-on { color: var(--ink); font-weight: 600; background: var(--surface-subtle); box-shadow: inset 0 0 0 1px var(--line); }
+
+/* ==================== SYSTEM A: ELASTIC BAY / SPATIAL YIELDING ==================== */
+.da-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 76px;
+  user-select: none;
+  touch-action: none;
+}
+.da-vessel {
+  position: relative;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-dock);
+  will-change: width, height, transform;
+  transform-origin: center bottom;
+}
+.da-focus-plate {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  border-radius: 999px;
+  background: var(--surface-pill);
+  pointer-events: none;
+  will-change: transform, width, opacity;
+}
+.da-track { position: relative; width: 100%; height: 100%; }
+.da-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  overflow: hidden;
+  will-change: transform, width;
+}
+.da-slot:hover, .da-slot.is-active { color: var(--ink); }
+.da-ic-wrap {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  will-change: transform;
+}
+.da-copy {
+  position: absolute;
+  left: 52px;
+  right: 12px;
+  text-align: left;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.da-t { display: block; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.2; }
+.da-s { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.da-active-bar {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: translateX(-50%) scaleX(0);
+  transition: transform 240ms var(--ease-ink);
+}
+.da-slot.is-active .da-active-bar { transform: translateX(-50%) scaleX(1); }
+
+/* ==================== SYSTEM B: CONTINUOUS SVG BÉZIER MEMBRANE ==================== */
+.db-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 148px;
+  user-select: none;
+  touch-action: none;
+}
+.db-wrap {
+  position: relative;
+  width: 420px;
+  height: 148px;
+  transform-origin: center bottom;
+}
+.db-svg {
+  display: block;
+  width: 420px;
+  height: 148px;
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 22px rgba(15, 18, 23, 0.095));
+}
+:root[data-theme="dark"] .db-svg {
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.52));
+}
+.db-membrane {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.1;
+}
+.db-liquid-pill {
+  fill: var(--surface-pill);
+}
+.db-index-dot {
+  fill: var(--accent);
+}
+.db-canopy-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.db-cl-t { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.2; }
+.db-cl-s { display: block; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.db-items { position: absolute; inset: 0; }
+.db-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  will-change: transform;
+}
+.db-btn:hover, .db-btn.is-active { color: var(--ink); }
+
+/* ==================== SYSTEM C: CREASE STAGE / ARCHITECTURAL UNFOLDING ==================== */
+.dc-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 136px;
+  user-select: none;
+  touch-action: none;
+}
+.dc-vessel {
+  position: relative;
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-dock);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transform-origin: center bottom;
+  will-change: width, height, transform;
+}
+.dc-tray {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  padding: 11px 16px 4px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.dc-tray-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  will-change: transform;
+}
+.dc-tray-head { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.dc-code { font-size: 10px; color: var(--accent); font-weight: 600; }
+.dc-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.dc-sub { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.dc-actions { display: flex; align-items: center; gap: 6px; }
+.dc-act-chip {
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-subtle);
+  font-size: 11px;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: border-color 150ms, background 150ms, color 150ms;
+}
+.dc-act-chip:hover { border-color: var(--ink); background: var(--ink); color: var(--surface); }
+
+.dc-wire-svg {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  margin-bottom: -10px;
+  z-index: 2;
+  pointer-events: none;
+}
+.dc-wire-path {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+}
+.dc-wire-dot { fill: var(--accent); }
+
+.dc-rail {
+  position: relative;
+  z-index: 3;
+  height: 52px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  padding: 0 10px;
+}
+.dc-btn {
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: var(--ink-2);
+  will-change: transform;
+}
+.dc-btn:hover, .dc-btn.is-active { color: var(--ink); }
+.dc-mini-lbl { font-size: 9.5px; letter-spacing: 0.02em; opacity: 0.72; }
+.dc-btn.is-active .dc-mini-lbl { opacity: 1; font-weight: 600; color: var(--accent); }
+
+/* ==================== RESPONSIVE & MOBILE ==================== */
+@media (max-width: 1080px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .topbar { padding: 8px 12px; }
+  .brand-title { display: none; }
+  .lab-toolbar { padding: 8px 12px; gap: 6px; }
+  .tb-label { display: none; }
+  .bench-main { padding: 12px 10px 28px; }
+  .dock-arena { min-height: 196px; padding: 14px 6px 20px; }
+  .dc-head { flex-direction: column; gap: 6px; }
+  .solo-canvas { padding: 20px 16px; }
+  .solo-h1 { font-size: 19px; }
+  .d03-btn { padding: 0 8px; font-size: 11px; }
+  .d03-lbl { display: none; }
+}
+
+/* ==================== REDUCED MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+:root[data-reduced-motion="true"] *,
+:root[data-reduced-motion="true"] *::before,
+:root[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
