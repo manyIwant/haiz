@@ -1,9 +1,9 @@
 {
   "packageId": "space.haiz.app.preview",
-  "versionName": "1.5.6-preview.006",
-  "versionCode": 2106,
-  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-android-v1.5.6-preview.006/HAIZ-Pocket-Android.apk",
-  "sha256": "f165cd6478baa2f07cf627b4e627151b9b851f643dabd2fbb5f13f66a8478e4f",
-  "sizeBytes": 111438977,
-  "notes": "Experiment 006 测试包：本地交互页面、校园三维模型及画境；榄仁树封面。包含演示数据，未实现旧 Flutter 业务数据迁移；vivo S10 真机验收尚未完成。"
+  "versionName": "1.7.1-native.002.1",
+  "versionCode": 2109,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-native-v1.7.1-native.002.1/HAIZ-Android.apk",
+  "sha256": "8d588d873ba4dda2055afdd9372387bcc46ef0e93bad46ca8352c225a5eebd2c",
+  "sizeBytes": 117446653,
+  "notes": "HAIZ Native 002.1（修正版）：修复一键升级提示「更新信息不完整」——原生更新器按数字类型安全读取 versionCode/sizeBytes（原 getLong 遇到 Integer 返回 0）；错误信息区分网络异常、字段缺失、类型错误、完整性校验与签名校验失败；GitHub Releases 与 haiz.space 两个更新源同步。签名与 SHA-256 / 大小 / 包名 / 版本校验全部保留。注意：1.6.0 / 1.7.0 的更新器有此缺陷，需手动安装本版一次（同一签名，覆盖安装保留数据），之后可在应用内一键升级。"
 }
