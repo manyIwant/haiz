@@ -1,0 +1,461 @@
+{
+ "format": "haiz-perf-report",
+ "version": 1,
+ "app": "HAIZ Native",
+ "ua": "Mozilla/5.0 (Linux; Android 13; V2121A Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/157.0.8103.50 Mobile Safari/537.36",
+ "screen": {
+  "w": 360,
+  "h": 800,
+  "dpr": 3,
+  "vw": 360,
+  "vh": 800
+ },
+ "device": {
+  "model": "vivo V2121A",
+  "android": "13",
+  "sdk": 33,
+  "refreshRate": 90,
+  "webview": "com.google.android.webview 157.0.8103.50",
+  "memTotalMB": 7516,
+  "memAvailMB": 1390,
+  "lowMemory": false,
+  "appPssMB": 344,
+  "thermal": 0
+ },
+ "startedAt": "2026-11-28T16:27:01.718Z",
+ "endedAt": "2026-11-28T16:27:21.076Z",
+ "totals": {
+  "frames": 372,
+  "dropped": 198,
+  "long": 2,
+  "longMs": 110,
+  "worst": 244.60000000000582,
+  "droppedPct": 0.532258064516129
+ },
+ "homologous": {
+  "scene": 0,
+  "nd": 0,
+  "pbrSkipped": 0,
+  "composite": 0
+ },
+ "perSecond": [
+  {
+   "t": 1795883222720,
+   "win": {
+    "fps": 62.59464916708733,
+    "p50": 11.10000000000582,
+    "p95": 33.39999999999418,
+    "worst": 77.89999999999418,
+    "dropped": 0.3548387096774194,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883223720,
+   "win": {
+    "fps": 83.94124113120718,
+    "p50": 11.10000000000582,
+    "p95": 22.199999999982538,
+    "worst": 22.29999999998836,
+    "dropped": 0.07142857142857142,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883224720,
+   "win": {
+    "fps": 31.60325756654984,
+    "p50": 11.10000000000582,
+    "p95": 122.29999999998836,
+    "worst": 133.5,
+    "dropped": 0.23076923076923078,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/campus",
+   "heap": 9.5367431640625,
+   "nodes": 313,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883225720,
+   "win": {
+    "fps": 13.433915469670191,
+    "p50": 77.70000000001164,
+    "p95": 200.20000000001164,
+    "worst": 200.20000000001164,
+    "dropped": 0.8461538461538461,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/study",
+   "heap": 9.5367431640625,
+   "nodes": 435,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883226720,
+   "win": {
+    "fps": 12.490632025980576,
+    "p50": 66.70000000001164,
+    "p95": 244.60000000000582,
+    "worst": 244.60000000000582,
+    "dropped": 0.8,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/today",
+   "heap": 9.5367431640625,
+   "nodes": 476,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883227720,
+   "win": {
+    "fps": 12.11142511102154,
+    "p50": 66.80000000001746,
+    "p95": 211.69999999998254,
+    "worst": 211.69999999998254,
+    "dropped": 0.75,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/campus",
+   "heap": 9.5367431640625,
+   "nodes": 313,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883228720,
+   "win": {
+    "fps": 13.766811394683637,
+    "p50": 66.60000000000582,
+    "p95": 200.19999999998254,
+    "worst": 200.19999999998254,
+    "dropped": 0.7692307692307693,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883229720,
+   "win": {
+    "fps": 11.851851851851851,
+    "p50": 89,
+    "p95": 211.5,
+    "worst": 211.5,
+    "dropped": 0.8333333333333334,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883230720,
+   "win": {
+    "fps": 11.477761836441895,
+    "p50": 89,
+    "p95": 100.10000000000582,
+    "worst": 100.10000000000582,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883231720,
+   "win": {
+    "fps": 13.27885597548519,
+    "p50": 77.89999999999418,
+    "p95": 89,
+    "worst": 89,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883232720,
+   "win": {
+    "fps": 13.98322013583724,
+    "p50": 77.79999999998836,
+    "p95": 166.89999999999418,
+    "worst": 166.89999999999418,
+    "dropped": 0.7857142857142857,
+    "long": 1,
+    "longMs": 53
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883233720,
+   "win": {
+    "fps": 12.259910093992426,
+    "p50": 77.80000000001746,
+    "p95": 155.70000000001164,
+    "worst": 155.70000000001164,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883234743,
+   "win": {
+    "fps": 13.246286309017009,
+    "p50": 77.80000000001746,
+    "p95": 111.19999999998254,
+    "worst": 111.19999999998254,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883235720,
+   "win": {
+    "fps": 10.70663811563169,
+    "p50": 89,
+    "p95": 133.39999999999418,
+    "worst": 133.39999999999418,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883236721,
+   "win": {
+    "fps": 9.562057754828945,
+    "p50": 100.10000000000582,
+    "p95": 144.69999999998254,
+    "worst": 144.69999999998254,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883237723,
+   "win": {
+    "fps": 9.87947046038321,
+    "p50": 100.10000000000582,
+    "p95": 144.5,
+    "worst": 144.5,
+    "dropped": 1,
+    "long": 1,
+    "longMs": 57
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883238720,
+   "win": {
+    "fps": 10.702054794520615,
+    "p50": 89,
+    "p95": 111.29999999998836,
+    "worst": 111.29999999998836,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883239747,
+   "win": {
+    "fps": 13.108614232209737,
+    "p50": 77.89999999999418,
+    "p95": 89.10000000000582,
+    "worst": 89.10000000000582,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/me",
+   "heap": 9.5367431640625,
+   "nodes": 472,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  },
+  {
+   "t": 1795883240720,
+   "win": {
+    "fps": 13.320013320013405,
+    "p50": 77.79999999998836,
+    "p95": 100,
+    "worst": 100,
+    "dropped": 1,
+    "long": 0,
+    "longMs": 0
+   },
+   "route": "#/today",
+   "heap": 9.5367431640625,
+   "nodes": 476,
+   "homo": {
+    "scene": 0,
+    "nd": 0,
+    "pbrSkipped": 0,
+    "composite": 0
+   },
+   "active": 0
+  }
+ ]
+}

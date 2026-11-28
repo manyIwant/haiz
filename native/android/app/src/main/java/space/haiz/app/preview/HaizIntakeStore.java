@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -50,11 +49,6 @@ final class HaizIntakeStore {
     static String sourceOf(String pkg) { for (String[] s : SOURCES) if (s[0].equals(pkg)) return s[1]; return null; }
     static String labelOf(String key) { for (String[] s : SOURCES) if (s[1].equals(key)) return s[2]; return "系统分享"; }
 
-    /** a task-shaped message (PR #38's action list, widened with Notice Hub's academic / deadline words) */
-    private static final Pattern TASK = Pattern.compile(
-        "交|完成|提交|上交|复习|预习|背诵|默写|练习|整理|准备|带好|带上|作业|实验|报告|截止|截至|测验|考试|月考|期中|期末|小测|听写|"
-        + "通知|订正|抄写|签字|收齐|课堂任务|报名|填写|填报|缴费|签到|集合|开会|班会|家长会|讲座|比赛|活动|接龙|登记|核对|务必|请大家|@所有人");
-
     private static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREF, Context.MODE_PRIVATE); }
 
     static synchronized JSONObject config(Context c) {
@@ -67,6 +61,13 @@ final class HaizIntakeStore {
             o.put("granted", accessGranted(c));
             o.put("discoveringUntil", p.getLong("discoverUntil", 0));
             o.put("pending", new JSONArray(p.getString("queue", "[]")).length());
+            JSONObject src = new JSONObject(p.getString("sources", "{}"));
+            boolean any = false; for (String[] s : SOURCES) any |= src.optBoolean(s[1], false);
+            boolean connected = p.getBoolean("connected", false);
+            o.put("connected", connected);
+            o.put("connectedAt", p.getLong("connectedAt", 0));
+            o.put("state", HaizIntakePolicy.state(p.getBoolean("enabled", false), accessGranted(c), connected, any, new JSONArray(p.getString("groups", "[]")).length()));
+            o.put("diag", new JSONObject(p.getString("diag", "{}")));
         } catch (Exception ignored) { }
         return o;
     }
@@ -81,9 +82,9 @@ final class HaizIntakeStore {
         }
         JSONObject src = new JSONObject();
         for (String[] s : SOURCES) { try { src.put(s[1], sources != null && sources.optBoolean(s[1], false)); } catch (Exception ignored) { } }
-        // no group chosen = nothing is ever kept, whatever the switch says
+        // the wish is stored as given; with no group chosen (or no access) the policy keeps nothing
         prefs(c).edit()
-            .putBoolean("enabled", enabled && clean.length() > 0)
+            .putBoolean("enabled", enabled)
             .putString("groups", clean.toString())
             .putString("sources", src.toString())
             .apply();
@@ -100,8 +101,7 @@ final class HaizIntakeStore {
         return false;
     }
 
-    /** strip WeChat's unread count 「群名(3)」 so a chosen name keeps matching */
-    static String bareTitle(String t) { return t == null ? "" : t.replaceAll("\\s*[（(]\\d+[)）]\\s*$", "").trim(); }
+    static String bareTitle(String t) { return HaizIntakePolicy.bareTitle(t); }
 
     /** does this conversation look like a group (to list it during discovery)? */
     static boolean looksLikeGroup(boolean flagged, String text) {
@@ -129,24 +129,50 @@ final class HaizIntakeStore {
         try { return new JSONArray(p.getString("found", "[]")); } catch (Exception e) { return new JSONArray(); }
     }
 
-    /** the policy, decided before anything is stored (the body never identifies a group) */
-    static synchronized boolean allowed(Context c, String source, String title, String conversation, String subText, String text) {
+    /** the policy, decided before anything is stored (the body never identifies a group); returns a reason code */
+    static synchronized String decide(Context c, String source, String title, String conversation, String subText, String text) {
         SharedPreferences p = prefs(c);
-        if (source == null || !p.getBoolean("enabled", false) || !accessGranted(c)) return false;
         try {
-            if (!new JSONObject(p.getString("sources", "{}")).optBoolean(source, false)) return false;
-            if (text == null || text.trim().length() < 4 || !TASK.matcher(text).find()) return false;
-            JSONArray groups = new JSONArray(p.getString("groups", "[]"));
-            if (groups.length() == 0) return false;
-            String[] meta = { bareTitle(conversation), bareTitle(title), bareTitle(subText) };
-            for (int i = 0; i < groups.length(); i++) {
-                String g = groups.optString(i, "");
-                if (g.length() < 2) continue;
-                for (String m : meta) if (!m.isEmpty() && (m.equals(g) || m.toLowerCase(Locale.ROOT).contains(g.toLowerCase(Locale.ROOT)))) return true;
-            }
-        } catch (Exception ignored) { }
-        return false;
+            JSONArray g = new JSONArray(p.getString("groups", "[]"));
+            String[] groups = new String[g.length()];
+            for (int i = 0; i < groups.length; i++) groups[i] = g.optString(i, "");
+            boolean sourceOn = new JSONObject(p.getString("sources", "{}")).optBoolean(source, false);
+            return HaizIntakePolicy.decide(p.getBoolean("enabled", false), accessGranted(c), sourceOn, groups, text, conversation, title, subText);
+        } catch (Exception e) { return HaizIntakePolicy.OFF; }
     }
+
+    /**
+     * Local diagnostics: counts and times only, per source and per reason. Never a message text,
+     * never the title of a chat that is not a chosen group.
+     */
+    static synchronized void count(Context c, String source, String reason) {
+        SharedPreferences p = prefs(c);
+        try {
+            JSONObject d = new JSONObject(p.getString("diag", "{}"));
+            long now = System.currentTimeMillis();
+            JSONObject seen = d.optJSONObject("seen"); if (seen == null) seen = new JSONObject();
+            seen.put(source, seen.optLong(source) + 1);
+            d.put("seen", seen);
+            JSONObject last = d.optJSONObject("lastAt"); if (last == null) last = new JSONObject();
+            last.put(source, now);
+            d.put("lastAt", last);
+            JSONObject r = d.optJSONObject("reasons"); if (r == null) r = new JSONObject();
+            r.put(reason, r.optLong(reason) + 1);
+            d.put("reasons", r);
+            d.put("lastReason", reason);
+            d.put("lastReasonAt", now);
+            if (!d.has("since")) d.put("since", now);
+            p.edit().putString("diag", d.toString()).apply();
+        } catch (Exception ignored) { }
+    }
+
+    static synchronized void connected(Context c, boolean on) {
+        SharedPreferences.Editor e = prefs(c).edit().putBoolean("connected", on);
+        if (on) e.putLong("connectedAt", System.currentTimeMillis()); else e.putLong("disconnectedAt", System.currentTimeMillis());
+        e.apply();
+    }
+
+    static synchronized void resetDiag(Context c) { prefs(c).edit().remove("diag").apply(); }
 
     private static String hash(String v) {
         try {

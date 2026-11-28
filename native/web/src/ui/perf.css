@@ -14,3 +14,5 @@
 .perf dt { opacity: .6; } .perf dd { margin: 0; text-align: right; }
 .perf-a { display: flex; gap: 6px; padding: 0 2px; }
 .perf-a button { flex: 1; appearance: none; border: 0; border-radius: 8px; padding: 7px 0; background: rgba(255, 255, 255, .1); color: inherit; font: inherit; }
+.perf-x { margin: 4px 4px 8px; } .perf-x summary { opacity: .75; cursor: pointer; }
+.perf-x label { display: flex; gap: 6px; align-items: center; padding: 3px 0; } .perf-x small { display: block; opacity: .55; margin-top: 2px; }

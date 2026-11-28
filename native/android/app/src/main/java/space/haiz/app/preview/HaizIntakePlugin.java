@@ -1,6 +1,9 @@
 package space.haiz.app.preview;
 
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.os.Build;
+import android.service.notification.NotificationListenerService;
 import android.content.Intent;
 import android.provider.Settings;
 import com.getcapacitor.JSArray;
@@ -26,7 +29,21 @@ public class HaizIntakePlugin extends Plugin {
         try { p.notifyListeners("entry", JSObject.fromJSONObject(entry)); } catch (Exception ignored) { }
     }
 
-    @PluginMethod public void getConfig(PluginCall call) { resolve(call, HaizIntakeStore.config(getContext())); }
+    static void emitStatus() {
+        HaizIntakePlugin p = live.get();
+        if (p == null) return;
+        try { p.notifyListeners("status", JSObject.fromJSONObject(HaizIntakeStore.config(p.getContext()))); } catch (Exception ignored) { }
+    }
+
+    @PluginMethod public void getConfig(PluginCall call) {
+        // access granted but the service never connected (some ROMs after an update): ask Android to bind it again
+        if (HaizIntakeStore.accessGranted(getContext()) && !HaizIntakeStore.config(getContext()).optBoolean("connected") && Build.VERSION.SDK_INT >= 24) {
+            try { NotificationListenerService.requestRebind(new ComponentName(getContext(), HaizIntakeListener.class)); } catch (Exception ignored) { }
+        }
+        resolve(call, HaizIntakeStore.config(getContext()));
+    }
+
+    @PluginMethod public void resetDiagnostics(PluginCall call) { HaizIntakeStore.resetDiag(getContext()); resolve(call, HaizIntakeStore.config(getContext())); }
 
     @PluginMethod public void setConfig(PluginCall call) {
         JSONArray groups = call.getArray("groups", new JSArray());

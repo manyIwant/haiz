@@ -60,3 +60,7 @@
 }
 .gtog-knob canvas { width: 78%; height: 78%; image-rendering: pixelated; }
 .gtog:focus-visible { outline: 2px solid var(--accent, #3f7d62); outline-offset: 3px; }
+/* Native 003 · in the phone header the track's own frosting is never seen: unscrolled it sits on
+   flat paper, scrolled the header already frosts what is under it. One fewer backdrop pass on every
+   frame the WebView recomposites. */
+.ptop .gtog { -webkit-backdrop-filter: none; backdrop-filter: none; }

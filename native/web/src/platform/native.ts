@@ -15,7 +15,13 @@ type NativeShell = {
   systemKeyboard(o: { show: boolean }): Promise<void>;
   pickInputMethod(): Promise<void>;
   info(): Promise<DeviceInfo>;
+  frameStart(): Promise<void>;
+  frameStop(): Promise<void>;
+  frames(): Promise<NativeFrames>;
 };
+type Pct = { p50?: number; p95?: number; max?: number };
+/** Android FrameMetrics since the last call (ms) — the app window's real frames, GPU time on Android 12+ */
+export type NativeFrames = { frames: number; jank: number; droppedReported: number; total: Pct; renderThread: Pct; gpu?: Pct };
 export const HaizNative = registerPlugin<NativeShell>("HaizNative");
 
 export type UpdaterProgress = { received: number; total: number; bytesPerSecond: number };

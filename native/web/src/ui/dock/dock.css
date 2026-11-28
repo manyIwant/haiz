@@ -3,10 +3,13 @@
 .dock-host--inline .dock { position: absolute; }
 .dock > * { position: absolute; left: 0; top: 0; }
 .dock-body, .dock-edge { width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.dock-body { filter: var(--glaze-shadow); }
+/* Native 003 · the shadow is drawn by .dock-shade (ui/material.ts) at 1 px per CSS px */
+.dock-body { filter: none; }
+:root[data-mat~="legacy-shadow"] .dock-body { filter: var(--glaze-shadow); }
+:root[data-mat~="no-glass"] .dock-glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
 .dock-fill { fill: var(--glaze); }
 .dock-glass {
-  width: 100%; height: 100%; pointer-events: none;
+  width: 100%; height: 100%; pointer-events: none; /* sized to the contour's box per frame */
   -webkit-backdrop-filter: blur(var(--glaze-blur)) saturate(1.7);
   backdrop-filter: blur(var(--glaze-blur)) saturate(1.7);
 }

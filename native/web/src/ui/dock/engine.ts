@@ -21,6 +21,7 @@
  */
 import { clock, spring, stepS, settle, SP, clamp, falloff, lerp, type Spring } from "../../kernel/motion";
 import { stack, rrectPath, neckPath, type Box } from "../../kernel/membrane";
+import { MAT, SoftShadow, pathBox, shiftPath } from "../material";
 import { mountIcon, type IconKind, type KineticIcon } from "../../icons/kinetic";
 import { velocityTracker } from "../../kernel/react";
 
@@ -94,6 +95,11 @@ export class DockEngine {
   private rimClip: SVGPathElement;
   private rimGrad: SVGMaskElement;
   private maskPaths: SVGPathElement[] = [];
+  private cRim!: SVGPathElement;
+  private cOut!: SVGPathElement;
+  private uid = "";
+  private clipMode: boolean | null = null;
+  private neckOn = false;
   private lastMoveAt = 0;
   private datumGrad!: SVGLinearGradientElement;
   private creaseGrad!: SVGLinearGradientElement;
@@ -155,6 +161,7 @@ export class DockEngine {
    * 560 px, so the SVG contour, its drop shadow and the backdrop blur raster ~5× fewer pixels on
    * every frame of a gesture and every frame of a page scroll under it. */
   private tall = true;
+  private shade = new SoftShadow("dock-shade");
 
   constructor(host: HTMLElement, cfg: DockConfig, cb: DockCallbacks) {
     this.cfg = cfg;
@@ -172,6 +179,8 @@ export class DockEngine {
           <mask id="dock-rim-grad" maskUnits="userSpaceOnUse" x="-2000" y="-2000" width="6000" height="6000">
             <rect x="-2000" y="-2000" width="6000" height="6000" fill="#fff"/><path class="m-out" fill="#000"/>
           </mask>
+          <clipPath id="dock-rim-cp"><path class="c-rim" clip-rule="evenodd"/></clipPath>
+          <clipPath id="dock-edge-cp"><path class="c-out" clip-rule="evenodd"/></clipPath>
           <linearGradient id="dock-datum-grad" gradientUnits="userSpaceOnUse" x1="0" x2="100" y1="0" y2="0">
             <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
             <stop offset=".2" stop-color="currentColor" stop-opacity="1"/>
@@ -198,6 +207,8 @@ export class DockEngine {
       <div class="dock-stage" aria-live="polite"><div class="dock-stage-in"></div></div>
       <div class="dock-stage dock-stage--sat"><div class="dock-stage-in"></div></div>`;
     host.appendChild(root);
+    // Native 003 · the soft shadow at 1 px per CSS px under the membrane (was a device-res SVG filter)
+    root.insertBefore(this.shade.el, root.firstChild);
     const q = <T extends Element>(s: string) => root.querySelector(s) as T;
     this.svgBody = q("svg.dock-body");
     this.pBody = q(".dock-fill");
@@ -229,6 +240,12 @@ export class DockEngine {
     this.rimGrad.id = `dock-rim-grad-${uid}`;
     this.pEdge.setAttribute("mask", `url(#dock-rim-grad-${uid})`);
     this.maskPaths = [...root.querySelectorAll<SVGPathElement>(".m-in, .m-sh, .m-out")];
+    // Native 003 · the same two cuts as vector clips (evenodd), used whenever the contour's parts do
+    // not overlap (no neck): a clip is a path test, a mask is two extra device-res layers per frame
+    q<SVGClipPathElement>("#dock-rim-cp").id = `dock-rim-cp-${uid}`;
+    q<SVGClipPathElement>("#dock-edge-cp").id = `dock-edge-cp-${uid}`;
+    this.cRim = q(".c-rim"); this.cOut = q(".c-out");
+    this.uid = uid;
     this.datumGrad = q<SVGLinearGradientElement>("#dock-datum-grad");
     this.datumGrad.id = `dock-datum-grad-${uid}`;
     this.pDatum.setAttribute("stroke", `url(#dock-datum-grad-${uid})`);
@@ -844,6 +861,7 @@ export class DockEngine {
     const sh = Math.max(0, this.stH.x);
     const stage: Box = { x0: this.stCx.x - this.stW.x / 2, x1: this.stCx.x + this.stW.x / 2, y0: cap.y0 - sh, y1: cap.y0, R: Math.max(0, this.stR.x) };
     let d = stack(stage, cap, Math.max(0, this.stF.x), "up");
+    let neck = false;
 
     // satellite + neck
     const satP = clamp(this.sat.x, 0, 1);
@@ -872,7 +890,7 @@ export class DockEngine {
         // the neck: reaching for the lens, or holding the two together while searching
         this.neck.t = this.cfg.searchOpen ? 0.62 : this.hoverSat ? 1 : this.focus >= 0 && this.focus === this.lastLive() ? 0.32 : 0;
         const nb = clamp(this.neck.x, 0, 1) * satP;
-        if (nb > 0.02) d += neckPath(cap.x1 - m.H / 2, m.H / 2, satBox.x0 + r, r, cy, nb);
+        if (nb > 0.02) { d += neckPath(cap.x1 - m.H / 2, m.H / 2, satBox.x0 + r, r, cy, nb); neck = true; }
       }
     }
 
@@ -881,8 +899,33 @@ export class DockEngine {
       this.pBody.setAttribute("d", d);
       this.pEdge.setAttribute("d", d);
       this.pRim.setAttribute("d", d);
-      for (const mp of this.maskPaths) mp.setAttribute("d", d);
-      this.glass.style.clipPath = `path('${d}')`;
+      const clip = !neck && !MAT.has("legacy-masks");
+      if (clip !== this.clipMode) {
+        this.clipMode = clip;
+        if (clip) {
+          this.pRim.removeAttribute("mask"); this.pRim.setAttribute("clip-path", `url(#dock-rim-cp-${this.uid})`);
+          this.pEdge.removeAttribute("mask"); this.pEdge.setAttribute("clip-path", `url(#dock-edge-cp-${this.uid})`);
+        } else {
+          this.pRim.removeAttribute("clip-path"); this.pRim.setAttribute("mask", `url(#dock-rim-clip-${this.uid})`);
+          this.pEdge.removeAttribute("clip-path"); this.pEdge.setAttribute("mask", `url(#dock-rim-grad-${this.uid})`);
+        }
+      }
+      if (clip) {
+        this.cRim.setAttribute("d", d + shiftPath(d, 0, 1.4));
+        this.cOut.setAttribute("d", "M-2000 -2000H4000V4000H-2000Z" + d);
+      } else for (const mp of this.maskPaths) mp.setAttribute("d", d);
+      // Native 003 · the frosted glass reads only the box around the contour (not the whole layer)
+      const gb = MAT.has("full-glass") ? null : pathBox(d);
+      if (!gb) { const gs = this.glass.style; gs.transform = ""; gs.width = gs.height = ""; gs.clipPath = `path('${d}')`; }
+      else {
+        const gx = Math.floor(gb.x0) - 1, gy = Math.floor(gb.y0) - 1;
+        const gs = this.glass.style;
+        gs.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+        gs.width = `${Math.ceil(gb.x1 - gx) + 1}px`;
+        gs.height = `${Math.ceil(gb.y1 - gy) + 1}px`;
+        gs.clipPath = `path('${shiftPath(d, -gx, -gy)}')`;
+      }
+      this.shade.draw(d);
     }
 
     // bays
@@ -994,6 +1037,7 @@ export class DockEngine {
   }
 
   destroy() {
+    this.shade.destroy();
     this.offTick();
     this.ro?.disconnect();
     for (const f of this.cleanup) f();

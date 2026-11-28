@@ -8,12 +8,18 @@
  * casts a soft contact shadow onto the paper it sits on. Give it a path (from kernel/liquid); it
  * draws. The path is the same one the hairline datum follows, so surface and line never part.
  */
+import { MAT, shiftPath } from "./material";
+
 let seq = 0;
+/** Native 003 · the rim, caustic and edge cuts are vector clips (evenodd: a traced iso-contour never
+ * overlaps itself), not masks: a mask is two extra device-res layers re-rastered on every frame. */
+const LEGACY = MAT.has("legacy-masks");
 export class Drop {
   el: HTMLDivElement;
   private paths: SVGPathElement[];
   private masks: SVGPathElement[];
   private glass: HTMLDivElement;
+  private clips: SVGPathElement[];
   private last = "";
   constructor(parent: HTMLElement, cls = "") {
     const id = "dr" + ++seq;
@@ -39,18 +45,22 @@ export class Drop {
           <mask id="${id}t" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000"><path data-p fill="#fff"/><path data-p fill="#000" transform="translate(1.2 1.6)"/></mask>
           <mask id="${id}b" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000"><path data-p fill="#fff"/><path data-p fill="#000" transform="translate(-0.6 -2.2)"/></mask>
           <mask id="${id}o" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000"><rect x="-3000" y="-3000" width="9000" height="9000" fill="#fff"/><path data-p fill="#000"/></mask>
+          <clipPath id="${id}ct"><path data-c="1.2 1.6" clip-rule="evenodd"/></clipPath>
+          <clipPath id="${id}cb"><path data-c="-0.6 -2.2" clip-rule="evenodd"/></clipPath>
+          <clipPath id="${id}co"><path data-c="out" clip-rule="evenodd"/></clipPath>
         </defs>
         <path data-p class="drop-body" fill="url(#${id}g)"/>
         <path data-p class="drop-sheen" filter="url(#${id}s)"/>
-        <path data-p class="drop-caustic" mask="url(#${id}b)"/>
-        <path data-p class="drop-rim" mask="url(#${id}t)"/>
-        <path data-p class="drop-edge" mask="url(#${id}o)"/>
+        <path data-p class="drop-caustic" ${LEGACY ? `mask="url(#${id}b)"` : `clip-path="url(#${id}cb)"`}/>
+        <path data-p class="drop-rim" ${LEGACY ? `mask="url(#${id}t)"` : `clip-path="url(#${id}ct)"`}/>
+        <path data-p class="drop-edge" ${LEGACY ? `mask="url(#${id}o)"` : `clip-path="url(#${id}co)"`}/>
       </svg>`;
     parent.appendChild(el);
     const all = [...el.querySelectorAll<SVGPathElement>("[data-p]")];
     this.masks = all.filter((p) => p.closest("mask"));
     this.paths = all.filter((p) => !p.closest("mask"));
     this.glass = el.querySelector(".drop-glass")!;
+    this.clips = [...el.querySelectorAll<SVGPathElement>("[data-c]")];
   }
   /** d in the skin's own frame; the skin box is placed at (x, y) with size w × h */
   draw(d: string, x = 0, y = 0, w = 0, h = 0) {
@@ -60,7 +70,12 @@ export class Drop {
     this.el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
     if (w && h) { this.el.style.width = `${Math.ceil(w)}px`; this.el.style.height = `${Math.ceil(h)}px`; }
     for (const p of this.paths) p.setAttribute("d", d);
-    for (const p of this.masks) p.setAttribute("d", d);
+    if (LEGACY) for (const p of this.masks) p.setAttribute("d", d);
+    else for (const c of this.clips) {
+      const k = c.dataset.c!;
+      if (k === "out") c.setAttribute("d", "M-3000 -3000H6000V6000H-3000Z" + d);
+      else { const [dx, dy] = k.split(" ").map(Number); c.setAttribute("d", d + shiftPath(d, dx, dy)); }
+    }
     this.glass.style.clipPath = d ? `path('${d}')` : "inset(50%)";
     this.el.style.visibility = d ? "visible" : "hidden";
   }

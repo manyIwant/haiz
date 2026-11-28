@@ -12,6 +12,9 @@ import org.json.JSONObject;
  * text). Migrated from HAIZ Pocket's HaizMessageListener (PR #38). No network.
  */
 public class HaizIntakeListener extends NotificationListenerService {
+    @Override public void onListenerConnected() { HaizIntakeStore.connected(this, true); HaizIntakePlugin.emitStatus(); }
+    @Override public void onListenerDisconnected() { HaizIntakeStore.connected(this, false); HaizIntakePlugin.emitStatus(); }
+
     @Override public void onNotificationPosted(StatusBarNotification sbn) {
         if (sbn == null) return;
         String source = HaizIntakeStore.sourceOf(sbn.getPackageName());
@@ -32,9 +35,11 @@ public class HaizIntakeListener extends NotificationListenerService {
         // discovery lists group titles only, and only while the user's 10-minute window is open
         if (HaizIntakeStore.looksLikeGroup(group, text)) HaizIntakeStore.discovered(this, source, shown);
 
-        if (!HaizIntakeStore.allowed(this, source, title, conversation, sub, text)) return;
+        String reason = HaizIntakeStore.decide(this, source, title, conversation, sub, text);
+        if (!HaizIntakePolicy.KEPT.equals(reason)) { HaizIntakeStore.count(this, source, reason); return; }
         long at = sbn.getPostTime() > 0 ? sbn.getPostTime() : System.currentTimeMillis();
         JSONObject e = HaizIntakeStore.append(this, source, HaizIntakeStore.bareTitle(shown), text, at);
+        HaizIntakeStore.count(this, source, e != null ? HaizIntakePolicy.KEPT : HaizIntakePolicy.DUPLICATE);
         if (e != null) HaizIntakePlugin.emit(e);
     }
 

@@ -6,12 +6,26 @@
  * side (refresh rate, memory, PSS, thermal status). It only runs while it is open; 导出 saves a
  * JSON report through the system file picker so numbers from the phone can be compared with the
  * emulated bench.
+ *
+ * Native 003 · the panel no longer biases what it measures: its graph is redrawn four times a second
+ * instead of on every frame (on Android the WebView recomposites the whole screen, every blur
+ * included, whenever anything changes, so a per-frame graph kept the app from ever resting). On
+ * Android it also reads FrameMetrics, the window's own frame times and GPU time, which do not need
+ * any frame to be forced. 实验 switches material variants live; each second of the report records
+ * which ones were on, so a run on the phone is an A/B test.
  */
+const EXPERIMENTS: [string, string][] = [
+  ["legacy-shadow", "旧阴影（设备分辨率滤镜）"],
+  ["legacy-masks", "旧遮罩（位图蒙版）"],
+  ["full-glass", "旧玻璃区域（整层模糊）"],
+  ["no-glass", "关闭底栏背景模糊（诊断）"],
+];
 import { useEffect, useRef, useState } from "react";
 import { setState } from "../app/store";
 import { clock } from "../kernel/motion";
 import { homoStats } from "../three/homologous";
-import { HaizNative, isNative, saveText, type DeviceInfo } from "../platform/native";
+import { HaizNative, isNative, saveText, type DeviceInfo, type NativeFrames } from "../platform/native";
+import { MAT, setMat } from "./material";
 import "./perf.css";
 
 type Win = { fps: number; p50: number; p95: number; worst: number; dropped: number; long: number; longMs: number };
@@ -21,7 +35,9 @@ export function PerfPanel() {
   const [w, setW] = useState<Win>({ fps: 0, p50: 0, p95: 0, worst: 0, dropped: 0, long: 0, longMs: 0 });
   const [dev, setDev] = useState<DeviceInfo | null>(null);
   const [small, setSmall] = useState(false);
-  const log = useRef<{ t: number; win: Win; route: string; heap: number; nodes: number; homo: typeof homoStats; active: number }[]>([]);
+  const log = useRef<{ t: number; win: Win; route: string; heap: number; nodes: number; homo: typeof homoStats; active: number; mat: string; native?: NativeFrames }[]>([]);
+  const [mat, setMatS] = useState(() => [...MAT].join(","));
+  const [nf, setNf] = useState<NativeFrames | null>(null);
   const started = useRef(Date.now());
   const all = useRef({ frames: 0, dropped: 0, long: 0, longMs: 0, worst: 0 });
 
@@ -42,6 +58,9 @@ export function PerfPanel() {
       frames.push(dt); hist.push(dt); if (hist.length > 120) hist.shift();
       all.current.frames++; if (dt > budget.v * 1.5) all.current.dropped++;
       all.current.worst = Math.max(all.current.worst, dt);
+      raf = requestAnimationFrame(loop);
+    };
+    const paintGraph = () => {
       if (g) {
         const c = g.canvas, H = c.height, W = c.width;
         g.clearRect(0, 0, W, H);
@@ -52,8 +71,8 @@ export function PerfPanel() {
           g.fillRect(i * (W / 120), H - h, W / 120 - 1, h);
         }
       }
-      raf = requestAnimationFrame(loop);
     };
+    const gi = window.setInterval(paintGraph, 250);
     raf = requestAnimationFrame(loop);
     const tick = window.setInterval(() => {
       if (!frames.length) return;
@@ -64,18 +83,21 @@ export function PerfPanel() {
       budget.v = Math.min(1000 / 50, Math.max(1000 / 144, s[Math.floor(s.length * 0.1)] || budget.v));
       const win: Win = { fps, p50: s[Math.floor(s.length / 2)], p95: s[Math.floor(s.length * 0.95)], worst: s[s.length - 1], dropped: frames.filter((x) => x > budget.v * 1.5).length / frames.length, long: longs, longMs };
       setW(win);
-      log.current.push({ t: Date.now(), win, route: location.hash, heap: (performance as any).memory?.usedJSHeapSize / 1048576 || 0, nodes: document.getElementsByTagName("*").length, homo: { ...homoStats }, active: (clock as any).telemetry?.active ?? 0 });
+      const entry = { t: Date.now(), win, route: location.hash, heap: (performance as any).memory?.usedJSHeapSize / 1048576 || 0, nodes: document.getElementsByTagName("*").length, homo: { ...homoStats }, active: (clock as any).telemetry?.active ?? 0, mat: [...MAT].join(","), native: undefined as NativeFrames | undefined };
+      log.current.push(entry);
+      if (isNative()) HaizNative.frames().then((f) => { entry.native = f; setNf(f); }).catch(() => {});
       if (log.current.length > 600) log.current.shift();
       frames = []; longs = 0; longMs = 0;
     }, 1000);
     let di = 0;
-    if (isNative()) { const f = () => HaizNative.info().then(setDev).catch(() => {}); f(); di = window.setInterval(f, 3000); }
-    return () => { cancelAnimationFrame(raf); clearInterval(tick); clearInterval(di); po?.disconnect(); };
+    if (isNative()) { const f = () => HaizNative.info().then(setDev).catch(() => {}); f(); di = window.setInterval(f, 3000); HaizNative.frameStart().catch(() => {}); }
+    return () => { cancelAnimationFrame(raf); clearInterval(tick); clearInterval(di); clearInterval(gi); po?.disconnect(); if (isNative()) HaizNative.frameStop().catch(() => {}); };
   }, []);
 
   const exportReport = async () => {
     const report = {
-      format: "haiz-perf-report", version: 1, app: "HAIZ Native", ua: navigator.userAgent,
+      format: "haiz-perf-report", version: 2, app: "HAIZ Native", ua: navigator.userAgent,
+      notes: "win = rAF intervals in the page; native = Android FrameMetrics of the window (ms), gpu on Android 12+; mat = material experiments on during that second",
       screen: { w: screen.width, h: screen.height, dpr: devicePixelRatio, vw: innerWidth, vh: innerHeight },
       device: dev, startedAt: new Date(started.current).toISOString(), endedAt: new Date().toISOString(),
       totals: { ...all.current, droppedPct: all.current.frames ? all.current.dropped / all.current.frames : 0 },
@@ -103,8 +125,18 @@ export function PerfPanel() {
             <dt>应用内存 PSS</dt><dd>{dev.appPssMB} MB</dd>
             <dt>可用内存</dt><dd>{dev.memAvailMB} / {dev.memTotalMB} MB</dd>
             {dev.thermal !== undefined && <><dt>温控等级</dt><dd>{dev.thermal}</dd></>}</>}
+          {nf && nf.frames > 0 && <><dt>原生帧 p50 / p95</dt><dd>{(nf.total.p50 ?? 0).toFixed(1)} / {(nf.total.p95 ?? 0).toFixed(1)} ms</dd>
+            {nf.gpu && <><dt>GPU p50 / p95</dt><dd>{(nf.gpu.p50 ?? 0).toFixed(1)} / {(nf.gpu.p95 ?? 0).toFixed(1)} ms</dd></>}
+            <dt>原生掉帧</dt><dd>{nf.jank} / {nf.frames}</dd></>}
+          {nf && nf.frames === 0 && <><dt>原生帧</dt><dd>静止（无需重绘）</dd></>}
           <dt>总计</dt><dd>{all.current.frames} 帧 · 掉 {all.current.dropped}</dd>
         </dl>
+        <details className="perf-x"><summary>实验 {mat ? `· ${mat.split(",").length} 项` : ""}</summary>
+          {EXPERIMENTS.map(([k, label]) => (
+            <label key={k}><input type="checkbox" checked={MAT.has(k)} onChange={(e) => { setMat(k, e.currentTarget.checked); setMatS([...MAT].join(",")); }} />{label}</label>
+          ))}
+          <small>阴影与遮罩切换后重新打开页面生效；玻璃区域立即生效。</small>
+        </details>
         <div className="perf-a">
           <button type="button" onClick={exportReport}>导出报告</button>
           <button type="button" onClick={() => setState({ perfPanel: false })}>关闭</button>

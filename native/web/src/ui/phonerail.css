@@ -1,13 +1,14 @@
 /* the phone drawer: the 005/006 rail on a sheet that slides in from the left edge */
 .prail { position: fixed; inset: 0; z-index: 1300; --o: 0; }
-.prail-scrim { position: absolute; inset: 0; border: 0; padding: 0; background: rgba(12, 16, 14, calc(var(--o) * .3)); -webkit-tap-highlight-color: transparent; }
+/* Native 003 · scrim and shadow fade by opacity (compositor only) instead of repainting their colours */
+.prail-scrim { position: absolute; inset: 0; border: 0; padding: 0; background: rgba(12, 16, 14, .3); opacity: clamp(0, var(--o), 1); will-change: opacity; -webkit-tap-highlight-color: transparent; }
 .prail-sheet {
   --rail: min(272px, 80vw);
   position: absolute; left: 0; top: 0; bottom: 0; width: var(--rail);
   transform: translate3d(calc((var(--o) - 1) * (100% + 24px)), 0, 0);
   will-change: transform;
-  box-shadow: 12px 0 40px -24px rgba(0, 0, 0, calc(var(--o) * .55));
 }
+.prail-sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: 12px 0 40px -24px rgba(0, 0, 0, .55); opacity: clamp(0, var(--o), 1); will-change: opacity; }
 .rail--drawer {
   position: absolute; width: 100%; z-index: 1;
   padding: calc(var(--safe-t, 0px) + 14px) 14px calc(var(--safe-b, 0px) + 14px);
