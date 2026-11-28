@@ -6,6 +6,7 @@
 import { useSyncExternalStore } from "react";
 import { clock } from "../kernel/motion";
 import { TASKS, NOTICES, type Task, type Notice } from "../data/demo";
+import type { Identity } from "../identity/repo";
 
 export type Theme = "system" | "light" | "dark";
 export type Role = "student" | "teacher";
@@ -25,6 +26,13 @@ export type State = {
   searchOpen: boolean;
   lensOpen: boolean;
   inspector: { kind: string; id: string; from?: DOMRect | null } | null;
+  /** HAIZ Native · the campus identity in use (null before the first one is made) */
+  identity: Identity | null;
+  favorites: string[];
+  keyboard: "haiz" | "system";
+  /** the identity wall (switcher) is open */
+  wallOpen: boolean;
+  perfPanel: boolean;
 };
 
 const pref = (k: string, d: any) => {
@@ -45,6 +53,11 @@ let state: State = {
   searchOpen: false,
   lensOpen: false,
   inspector: null,
+  identity: null,
+  favorites: [],
+  keyboard: pref("keyboard", "haiz"),
+  wallOpen: false,
+  perfPanel: pref("perfPanel", false),
 };
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
@@ -58,8 +71,12 @@ export function setState(p: Partial<State> | ((s: State) => Partial<State>)) {
   if ("role" in patch) save("role", state.role);
   if ("notify" in patch) save("notify", state.notify);
   if ("railCompact" in patch) save("railCompact", state.railCompact);
+  if ("keyboard" in patch) save("keyboard", state.keyboard);
+  if ("perfPanel" in patch) save("perfPanel", state.perfPanel);
   emit();
 }
+/** subscribe outside React (the identity session saves from here) */
+export function subscribe(f: () => void) { subs.add(f); return () => { subs.delete(f); }; }
 export function useStore<T>(sel: (s: State) => T): T {
   return useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => sel(state), () => sel(state));
 }

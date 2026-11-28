@@ -36,7 +36,7 @@ const IT = C("信息技术", "机房 3", "科技楼", "郑老师", "算法与程
 const CLASS = C("班会", "302", "一号教学楼", "王老师", "期中复盘");
 
 /** Monday … Friday, eight periods each */
-export const WEEK: Course[][] = [
+export let WEEK: Course[][] = [
   [CHN, MATH, PHY, ENG, BIO, PE, HIS, CLASS],
   [MATH, ENG, CHEM, PHY, CHN, IT, BIO, READ],
   [ENG, PHY, MATH, CHN, HIS, PHYLAB, PHYLAB, ART],
@@ -46,7 +46,7 @@ export const WEEK: Course[][] = [
 export const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
 export type Task = { id: string; title: string; subject: string; due: string; note: string; done: boolean; urgent?: boolean; mine?: boolean };
-export const TASKS: Task[] = [
+export let TASKS: Task[] = [
   { id: "t1", title: "物理实验报告《感应电流的方向》", subject: "物理", due: "今天 22:00", urgent: true, note: "附数据表与误差分析；实验课上记录的电流计偏转方向要画进示意图。", done: false },
   { id: "t2", title: "数学 · 导数练习 P56 第 1–12 题", subject: "数学", due: "今天 18:00", note: "第 9–12 题选做两道，写出完整过程。", done: false },
   { id: "t3", title: "背诵英语 Unit 4 第 3、4 段", subject: "英语", due: "明天 07:40", note: "明早课前抽查。", done: false },
@@ -75,7 +75,7 @@ export const CLUBS: Club[] = [
 ];
 
 export type Note = { id: string; subject: string; title: string; excerpt: string; when: string; pages: number };
-export const NOTES: Note[] = [
+export let NOTES: Note[] = [
   { id: "m1", subject: "物理", title: "楞次定律的三种表述", excerpt: "感应电流的磁场总要阻碍引起感应电流的磁通量的变化——“来拒去留”“增反减同”……", when: "今天", pages: 3 },
   { id: "m2", subject: "数学", title: "导数与切线：一道题的四种解法", excerpt: "从定义出发 → 求导公式 → 几何意义 → 数形结合，比较每一步的计算量。", when: "昨天", pages: 2 },
   { id: "m3", subject: "语文", title: "《赤壁赋》中的变与不变", excerpt: "“自其变者而观之，则天地曾不能以一瞬；自其不变者而观之，则物与我皆无尽也。”", when: "周二", pages: 4 },
@@ -84,7 +84,7 @@ export const NOTES: Note[] = [
 
 export type Event = { id: string; day: number; time: string; title: string; place: string; kind: "exam" | "club" | "school" | "me" };
 /** day = offset in days from today */
-export const EVENTS: Event[] = [
+export let EVENTS: Event[] = [
   { id: "e1", day: 0, time: "19:30", title: "晚自习 · 物理答疑", place: "一号教学楼 302", kind: "school" },
   { id: "e2", day: 1, time: "16:10", title: "古筝社合奏排练", place: "艺术教育活动中心", kind: "club" },
   { id: "e3", day: 2, time: "全天", title: "图书馆延长开放至 21:30", place: "图书馆", kind: "school" },
@@ -93,11 +93,11 @@ export const EVENTS: Event[] = [
   { id: "e6", day: 15, time: "20:00", title: "双子座流星雨观测", place: "科技楼天台", kind: "club" },
 ];
 
-export const STUDENT = { name: "林知夏", cls: "高二（3）班", no: "2024-0317" };
-export const TEACHER = { name: "王老师", subject: "数学", classes: ["高二（3）班", "高二（5）班"] };
+export let STUDENT = { name: "林知夏", cls: "高二（3）班", no: "2024-0317" };
+export let TEACHER = { name: "王老师", subject: "数学", classes: ["高二（3）班", "高二（5）班"] };
 
 /** a week of focus minutes and finished tasks (demo) */
-export const GROWTH = {
+export let GROWTH = {
   focus: [52, 75, 40, 95, 68, 120, 30],
   tasks: [3, 4, 2, 5, 3, 2, 1],
   reading: [20, 0, 35, 15, 40, 60, 25],
@@ -134,3 +134,20 @@ export const PHOTOS: Record<string, string> = {
   凤栖堂: "img/campus/campus_fengqitang.jpg",
   衍林堂: "img/campus/campus_yanlintang.jpg",
 };
+
+/* ---------------- HAIZ Native 001 · per-identity data ----------------
+ * The bindings above are live: when a campus identity is restored, its own profile, schedule,
+ * tasks, notes, events and growth record replace them, and the app re-renders from scratch. The
+ * built-in values stay available as the sample a new identity may start from. */
+export const SAMPLE = { WEEK, TASKS, NOTES, EVENTS, STUDENT, TEACHER, GROWTH };
+export type Growth = { focus: number[]; tasks: number[]; reading: number[]; streak: number };
+export type IdentityData = {
+  profile: { name: string; cls: string; no: string; school: string };
+  week: Course[][]; tasks: Task[]; notes: Note[]; events: Event[]; growth: Growth;
+  teacher?: { name: string; subject: string; classes: string[] };
+};
+export function applyIdentityData(d: IdentityData) {
+  STUDENT = { name: d.profile.name, cls: d.profile.cls, no: d.profile.no };
+  TEACHER = d.teacher ?? { ...SAMPLE.TEACHER };
+  WEEK = d.week; TASKS = d.tasks; NOTES = d.notes; EVENTS = d.events; GROWTH = d.growth;
+}

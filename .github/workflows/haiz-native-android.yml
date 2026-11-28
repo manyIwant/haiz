@@ -91,7 +91,7 @@ jobs:
           grep -q "package: name='$HAIZ_PACKAGE' versionCode='${HAIZ_VERSION_CODE}' versionName='${HAIZ_VERSION_NAME}'" out/badging.txt
           if [[ -f "$HOME/.config/haiz-android/signing.properties" ]]; then
             "$BT/apksigner" verify --verbose --print-certs out/HAIZ-Android.apk | tee out/signature.txt
-            actual=$(awk '/Signer #1 certificate SHA-256 digest:/{print tolower($NF); exit}' out/signature.txt)
+            actual=$(awk '/certificate SHA-256 digest:/{print tolower($NF); exit}' out/signature.txt)
             if [[ "$actual" != "$HAIZ_CERT_SHA256" ]]; then echo "::error::Signing certificate $actual is not the HAIZ certificate; this APK could not update installed HAIZ."; exit 1; fi
             echo "signed=true" >> "$GITHUB_OUTPUT"
           else
