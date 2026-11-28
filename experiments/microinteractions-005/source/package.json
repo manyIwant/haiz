@@ -1,0 +1,28 @@
+{
+  "name": "haiz-microinteractions-lab-005",
+  "version": "0.5.0",
+  "description": "HAIZ Experiment 005 · 全局动态 UI 与产品艺术设计",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5175",
+    "fonts": "node scripts/fonts.mjs",
+    "build": "node scripts/clean.mjs && node scripts/fonts.mjs && tsc --noEmit && vite build && node scripts/postbuild.mjs",
+    "preview": "vite preview --port 5176",
+    "verify": "node scripts/verify.mjs"
+  },
+  "license": "SEE LICENSE IN ../../../LICENSING.md",
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-sc": "^5.1.1",
+    "@fontsource/noto-serif-sc": "^5.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,154 @@
+/*
+ * HAIZ 005 · 材质与色彩令牌
+ *
+ * 纸 Paper   the ground every page sits on — warm, matte, never pure white
+ * 墨 Ink     four strengths of one green-black; hierarchy is made with these, not with colour
+ * 琉璃 Glaze floating instruments only (dock, lens, popovers) — frosted, tinted, with a lit rim;
+ *            after the green-glazed tiles of the 府城北门
+ * 木 Grain   time contexts (schedule, 年轮, growth) — a warm undertone, never a texture image
+ * 光 Lit     the ONE lit mark on screen: 琉璃绿. 榄仁红 is reserved for unread and deadlines.
+ */
+@font-face { font-family: "Sora"; font-weight: 300; font-style: normal; font-display: swap; src: url(../assets/fonts/sora-300.woff2) format("woff2"); }
+@font-face { font-family: "Sora"; font-weight: 400; font-style: normal; font-display: swap; src: url(../assets/fonts/sora-400.woff2) format("woff2"); }
+@font-face { font-family: "Sora"; font-weight: 600; font-style: normal; font-display: swap; src: url(../assets/fonts/sora-600.woff2) format("woff2"); }
+
+:root {
+  color-scheme: light;
+  --paper: #f4f2ec;
+  --paper-raised: #fbfaf7;
+  --paper-sunk: #ebe8e0;
+  --paper-deep: #e1ddd2;
+  --ink: #1b1f1c;
+  --ink-2: #474f49;
+  --ink-3: #7f8781;
+  --ink-4: #b2b7b1;
+  --line: rgba(27, 31, 28, 0.075);
+  --line-2: rgba(27, 31, 28, 0.13);
+  --line-3: rgba(27, 31, 28, 0.24);
+  --plate: rgba(27, 31, 28, 0.055);
+  --plate-2: rgba(27, 31, 28, 0.085);
+
+  --jade: #22362c;
+  --on-jade: #f4f2ec;
+  --lit: #2f7a5b;
+  --lit-soft: rgba(47, 122, 91, 0.11);
+  --lit-line: rgba(47, 122, 91, 0.34);
+  --lanren: #b0532c;
+  --lanren-soft: rgba(176, 83, 44, 0.1);
+  --clay: #9c6c40;
+  --clay-soft: rgba(156, 108, 64, 0.11);
+  --grain: #efe7da;
+  --grain-line: rgba(120, 84, 44, 0.16);
+
+  --glaze: rgba(250, 249, 245, 0.74);
+  --glaze-solid: #f8f7f3;
+  --glaze-edge: rgba(27, 31, 28, 0.11);
+  --glaze-rim: rgba(255, 255, 255, 0.95);
+  --glaze-blur: 22px;
+  --glaze-shadow: drop-shadow(0 1px 1px rgba(27, 31, 28, 0.05)) drop-shadow(0 10px 24px rgba(27, 31, 28, 0.1));
+
+  --shadow-1: 0 0 0 0.5px var(--line-2), 0 1px 2px rgba(27, 31, 28, 0.04);
+  --shadow-2: 0 0 0 0.5px var(--line-2), 0 2px 6px rgba(27, 31, 28, 0.05), 0 14px 34px rgba(27, 31, 28, 0.07);
+  --shadow-float: 0 0 0 0.5px var(--glaze-edge), 0 2px 6px rgba(27, 31, 28, 0.05), 0 18px 48px rgba(27, 31, 28, 0.12);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-num: "Sora", var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --r-xs: 6px;
+  --r-sm: 9px;
+  --r-md: 13px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+
+  --ease-lift: cubic-bezier(0.32, 0.72, 0, 1);
+  --rail-w: 232px;
+  --bar-h: 60px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0f1210;
+  --paper-raised: #161a17;
+  --paper-sunk: #0b0d0c;
+  --paper-deep: #1d221f;
+  --ink: #e7eae4;
+  --ink-2: #a6aea7;
+  --ink-3: #6d756f;
+  --ink-4: #454c47;
+  --line: rgba(231, 234, 228, 0.065);
+  --line-2: rgba(231, 234, 228, 0.11);
+  --line-3: rgba(231, 234, 228, 0.2);
+  --plate: rgba(231, 234, 228, 0.06);
+  --plate-2: rgba(231, 234, 228, 0.095);
+  --jade: #cfe5d8;
+  --on-jade: #0f1210;
+  --lit: #5fc497;
+  --lit-soft: rgba(95, 196, 151, 0.13);
+  --lit-line: rgba(95, 196, 151, 0.38);
+  --lanren: #e2794c;
+  --lanren-soft: rgba(226, 121, 76, 0.13);
+  --clay: #d2a273;
+  --clay-soft: rgba(210, 162, 115, 0.13);
+  --grain: #1b1915;
+  --grain-line: rgba(210, 162, 115, 0.16);
+  --glaze: rgba(28, 33, 30, 0.66);
+  --glaze-solid: #1a1e1b;
+  --glaze-edge: rgba(231, 234, 228, 0.1);
+  --glaze-rim: rgba(255, 255, 255, 0.11);
+  --glaze-shadow: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45));
+  --shadow-1: 0 0 0 0.5px var(--line-2), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 0 0 0.5px var(--line-2), 0 2px 6px rgba(0, 0, 0, 0.3), 0 14px 34px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 0 0 0.5px var(--glaze-edge), 0 2px 6px rgba(0, 0, 0, 0.3), 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* "system" follows the OS until the reader picks a side */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0f1210;
+    --paper-raised: #161a17;
+    --paper-sunk: #0b0d0c;
+    --paper-deep: #1d221f;
+    --ink: #e7eae4;
+    --ink-2: #a6aea7;
+    --ink-3: #6d756f;
+    --ink-4: #454c47;
+    --line: rgba(231, 234, 228, 0.065);
+    --line-2: rgba(231, 234, 228, 0.11);
+    --line-3: rgba(231, 234, 228, 0.2);
+    --plate: rgba(231, 234, 228, 0.06);
+    --plate-2: rgba(231, 234, 228, 0.095);
+    --jade: #cfe5d8;
+    --on-jade: #0f1210;
+    --lit: #5fc497;
+    --lit-soft: rgba(95, 196, 151, 0.13);
+    --lit-line: rgba(95, 196, 151, 0.38);
+    --lanren: #e2794c;
+    --lanren-soft: rgba(226, 121, 76, 0.13);
+    --clay: #d2a273;
+    --clay-soft: rgba(210, 162, 115, 0.13);
+    --grain: #1b1915;
+    --grain-line: rgba(210, 162, 115, 0.16);
+    --glaze: rgba(28, 33, 30, 0.66);
+    --glaze-solid: #1a1e1b;
+    --glaze-edge: rgba(231, 234, 228, 0.1);
+    --glaze-rim: rgba(255, 255, 255, 0.11);
+    --glaze-shadow: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45));
+    --shadow-1: 0 0 0 0.5px var(--line-2), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-2: 0 0 0 0.5px var(--line-2), 0 2px 6px rgba(0, 0, 0, 0.3), 0 14px 34px rgba(0, 0, 0, 0.35);
+    --shadow-float: 0 0 0 0.5px var(--glaze-edge), 0 2px 6px rgba(0, 0, 0, 0.3), 0 18px 48px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* the teacher's workbench carries a clay identity instead of jade */
+[data-role="teacher"] {
+  --lit: #9c6c40;
+  --lit-soft: rgba(156, 108, 64, 0.12);
+  --lit-line: rgba(156, 108, 64, 0.36);
+}
+:root[data-theme="dark"] [data-role="teacher"] { --lit: #d2a273; --lit-soft: rgba(210, 162, 115, 0.14); --lit-line: rgba(210, 162, 115, 0.4); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-role="teacher"] { --lit: #d2a273; --lit-soft: rgba(210, 162, 115, 0.14); --lit-line: rgba(210, 162, 115, 0.4); }
+}
