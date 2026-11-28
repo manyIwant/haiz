@@ -182,7 +182,7 @@
 .ptop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 0.5px; background: var(--line-2); opacity: 0; transition: opacity calc(0.3s / var(--ts, 1)); }
 .ptop.is-scrolled { background: color-mix(in srgb, var(--paper) 82%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); }
 .ptop.is-scrolled::after { opacity: 1; }
-.ptop-seal { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--jade); color: var(--on-jade); font-family: var(--font-serif); font-weight: 600; font-size: 16px; margin-left: 4px; }
+.ptop-seal { appearance: none; border: 0; padding: 0; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--jade); color: var(--on-jade); font-family: var(--font-serif); font-weight: 600; font-size: 16px; margin-left: 4px; }
 .ptop-t { flex: 1; text-align: center; font-weight: 600; font-size: 15px; opacity: 0; transform: translateY(4px); transition: opacity calc(0.3s / var(--ts, 1)), transform calc(0.4s / var(--ts, 1)) var(--ease-lift); }
 .ptop.is-scrolled .ptop-t { opacity: 1; transform: none; }
 .ptop-back { display: flex; align-items: center; gap: 2px; height: 36px; padding: 0 8px 0 2px; color: var(--lit); font-size: 15px; }

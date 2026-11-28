@@ -21,6 +21,7 @@ import { Me } from "../pages/Me";
 import { Teacher } from "../pages/Teacher";
 import { clock } from "../kernel/motion";
 import { ThemeToggle } from "../ui/ThemeToggle";
+import { Curtain } from "../ui/Curtain";
 
 const Rings = lazy(() => import("../pages/Rings"));
 const Tree = lazy(() => import("../pages/Tree"));
@@ -126,17 +127,21 @@ function PhoneTop({ page }: { page: string }) {
     return () => window.removeEventListener("scroll", f);
   }, [page]);
   const pushed = !(PRIMARY as readonly string[]).includes(page);
+  const [curtain, setCurtain] = useState(false);
   return (
+    <>
+    {curtain && <Curtain onClose={() => setCurtain(false)} />}
     <header className={"ptop" + (scrolled ? " is-scrolled" : "")}>
       {pushed
         ? <button type="button" className="ptop-back" onClick={() => (history.length > 1 ? history.back() : go(PARENT[page] ?? "today"))} aria-label="返回"><svg viewBox="0 0 16 16"><path d="M10 3 L5 8 L10 13" /></svg><span>{TITLES[PARENT[page]] ?? "返回"}</span></button>
-        : <span className="ptop-seal" aria-hidden="true">海</span>}
+        : <button type="button" className="ptop-seal" aria-label="全部去处" onClick={() => setCurtain(true)}>海</button>}
       <span className="ptop-t">{TITLES[page]}</span>
       <span className="ptop-r">
         <ThemeToggle size="sm" />
         <button type="button" className="ptop-btn" aria-label="通知" onClick={(e) => go("campus/notice", e.currentTarget)}><Icon kind="bell" size={21} />{unread && <i className="ptop-dot" />}</button>
       </span>
     </header>
+    </>
   );
 }
 

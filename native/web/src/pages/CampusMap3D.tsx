@@ -34,6 +34,7 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
   const [mode, setMode] = useState<Mode>("ink");
   const [hover, setHover] = useState<string | null>(null);
   const [zoomed, setZoomed] = useState(false);
+  const [plan, setPlan] = useState(false);
 
   useLayoutEffect(() => {
     if (!campus || !host.current) return;
@@ -130,8 +131,22 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
     setState({ inspector: { kind: "building", id: p.name, from: null } });
   };
   const goHome = () => { const st = stageRef.current; if (st && homeRef.current) { st.setView(homeRef.current); setZoomed(false); } };
+  /**
+   * 平面 ⇄ 立体 (Native 001, after the Whitespace "viewport transition" and "lathe blueprint"
+   * studies): the camera stands up over the campus into a plan, the drawing goes back to lines on a
+   * blueprint grid; back to 立体 it tilts down again and develops into the chosen drawing.
+   */
+  const togglePlan = () => {
+    const st = stageRef.current, home = homeRef.current;
+    if (!st || !home) return;
+    const next = !plan;
+    setPlan(next);
+    if (next) { st.setView({ el: 89.4, az: home.az, tx: home.tx, tz: home.tz, span: home.span * 1.05 }); st.develop(0, [0.5, 0.5], 1.1); }
+    else { st.setView(home); setZoomed(false); window.setTimeout(() => stageRef.current?.develop(LEVEL[mode], [0.5, 0.5], 1.3), 380); }
+  };
   const pickMode = (m: Mode) => {
     setMode(m);
+    if (plan) { setPlan(false); if (homeRef.current) stageRef.current?.setView(homeRef.current); }
     stageRef.current?.develop(LEVEL[m], lastUv.current, 1.3);
   };
 
@@ -139,7 +154,7 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
   // no WebGL: 005's line-drawn prism map, which needs none
   if (noGL) return <CampusMap height={height} focus={focus} onHover={onHover} />;
   return (
-    <div className={"cmap3" + (ready ? " is-ready" : "")} style={{ height }}>
+    <div className={"cmap3" + (ready ? " is-ready" : "") + (plan ? " is-plan" : "")} style={{ height }}>
       <div ref={host} className="cmap3-canvas" role="img" aria-label="海南中学府城校区三维地图：真实建筑模型，线稿、白模与实景同源"
         onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={() => { setHover(null); onHover?.(null); }} />
       <div ref={chip} className="cmap3-chip" aria-hidden="true"><i /><b><em /><span /></b></div>
@@ -147,6 +162,7 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
       <div className="cmap3-modes">
         <Segmented<Mode> size="sm" value={mode} onChange={pickMode} label="表达" options={[{ id: "ink", label: "线稿" }, { id: "clay", label: "白模" }, { id: "real", label: "实景" }]} />
       </div>
+      <button type="button" className="cmap3-plan" onClick={togglePlan} aria-pressed={plan}><i className={plan ? "is-plan" : ""} aria-hidden="true" />{plan ? "立体" : "平面"}</button>
       <button type="button" className={"cmap3-home" + (zoomed ? " is-on" : "")} onClick={goHome} tabIndex={zoomed ? 0 : -1}>全园</button>
       <div className="cmap3-hint">{phone ? "拖动环绕 · 点按建筑打开" : "拖动环绕 · 悬停显影 · 点击打开 · ⌘/Ctrl + 滚轮缩放"}</div>
     </div>

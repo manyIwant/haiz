@@ -524,3 +524,15 @@
 /* HAIZ Native · settings buttons */
 .set-btn { appearance: none; border: 0; padding: 9px 16px; border-radius: 999px; font: 600 13px/1 var(--font-sans, system-ui); color: var(--accent, #3f7d62); background: color-mix(in srgb, var(--accent, #3f7d62) 12%, transparent); }
 .set-btn:active { transform: scale(.97); }
+
+/* Native 001 · 平面 ⇄ 立体: the blueprint the campus stands up from */
+.cmap3::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity .7s ease;
+  background: linear-gradient(color-mix(in srgb, #3b6fb0 16%, transparent) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, color-mix(in srgb, #3b6fb0 16%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(color-mix(in srgb, #3b6fb0 9%, transparent) 1px, transparent 1px) 0 0 / 6px 6px, linear-gradient(90deg, color-mix(in srgb, #3b6fb0 9%, transparent) 1px, transparent 1px) 0 0 / 6px 6px;
+  mix-blend-mode: multiply; }
+.cmap3.is-plan::after { opacity: 1; }
+.cmap3-plan { position: absolute; left: 12px; bottom: 12px; z-index: 2; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 13px 0 10px; border: 0; border-radius: 16px; font: 600 12.5px/1 var(--font-sans, system-ui); color: var(--ink-2);
+  background: color-mix(in oklab, var(--paper-raised) 80%, transparent); box-shadow: var(--shadow-1); backdrop-filter: blur(10px) saturate(1.5); -webkit-backdrop-filter: blur(10px) saturate(1.5); }
+.cmap3-plan i { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 3px; transform: perspective(40px) rotateX(48deg); transition: transform .6s cubic-bezier(.3, 1.4, .5, 1); }
+.cmap3-plan i.is-plan { transform: none; }
+.cmap3-hint { left: auto; right: 16px; }
