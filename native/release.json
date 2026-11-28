@@ -1,0 +1,5 @@
+{
+  "versionName": "1.6.0-native.001",
+  "versionCode": 2107,
+  "notes": "HAIZ Native 001：渲染通道缓存与共享 WebGL 上下文等底层性能优化（画面与动效不变）；真正的全屏沉浸；HAIZ 液态玻璃键盘（RIME 拼音）；墙壁灯光登录与本地多校园身份（SQLite）；应用内一键升级。"
+}

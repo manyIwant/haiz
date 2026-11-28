@@ -1,0 +1,144 @@
+name: HAIZ Native · Android build, sign, release
+
+# Every push touching native/ builds the APK and runs the checks. If the four HAIZ_ANDROID_*
+# secrets are present the APK is signed with the original HAIZ key and its certificate is checked
+# against the one every installed HAIZ carries; a different key fails the run.
+# Pushing a tag haiz-native-v<versionName> (matching native/release.json) publishes a GitHub
+# Release that the in-app updater reads from releases/latest/download/haiz-update.json.
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['native/**', '.github/workflows/haiz-native-android.yml']
+    tags: ['haiz-native-v*']
+  pull_request:
+    paths: ['native/**', '.github/workflows/haiz-native-android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: haiz-native-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  HAIZ_CERT_SHA256: fec8d3962d1d35cf6a975722734da7d525e166421994c5d175ab71fc3c89d169
+  HAIZ_PACKAGE: space.haiz.app.preview
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      KEYSTORE_BASE64: ${{ secrets.HAIZ_ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.HAIZ_ANDROID_STORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.HAIZ_ANDROID_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.HAIZ_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - name: Version from native/release.json
+        id: v
+        shell: bash
+        run: |
+          set -euo pipefail
+          NAME=$(jq -r .versionName native/release.json); CODE=$(jq -r .versionCode native/release.json)
+          if [[ "$GITHUB_REF" == refs/tags/haiz-native-v* && "${GITHUB_REF#refs/tags/haiz-native-v}" != "$NAME" ]]; then
+            echo "::error::Tag ${GITHUB_REF#refs/tags/} does not match native/release.json ($NAME)"; exit 1; fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"; echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "HAIZ_VERSION_NAME=$NAME" >> "$GITHUB_ENV"; echo "HAIZ_VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+      - name: Install
+        run: |
+          npm ci --prefix native
+          npm ci --prefix native/web
+      - name: Web build (type check + Vite) and unit tests
+        run: |
+          npm --prefix native/web run build
+          npm --prefix native/web test
+      - name: Assemble www and sync Capacitor
+        working-directory: native
+        run: |
+          node scripts/prepare-www.mjs
+          npx cap sync android
+      - name: Restore the original HAIZ signing key (runner only)
+        if: env.KEYSTORE_BASE64 != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.config/haiz-android"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/haiz-release.jks"
+          chmod 600 "$RUNNER_TEMP/haiz-release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/haiz-release.jks" "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" \
+            > "$HOME/.config/haiz-android/signing.properties"
+          chmod 600 "$HOME/.config/haiz-android/signing.properties"
+      - name: Gradle assembleRelease + unit tests
+        working-directory: native/android
+        run: ./gradlew --no-daemon assembleRelease testReleaseUnitTest
+      - name: Verify package, version and signing certificate
+        id: apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          BT="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          SRC=$(ls native/android/app/build/outputs/apk/release/*.apk | head -1)
+          mkdir -p out; cp "$SRC" out/HAIZ-Android.apk
+          "$BT/aapt2" dump badging out/HAIZ-Android.apk | head -3 | tee out/badging.txt
+          grep -q "package: name='$HAIZ_PACKAGE' versionCode='${HAIZ_VERSION_CODE}' versionName='${HAIZ_VERSION_NAME}'" out/badging.txt
+          if [[ -f "$HOME/.config/haiz-android/signing.properties" ]]; then
+            "$BT/apksigner" verify --verbose --print-certs out/HAIZ-Android.apk | tee out/signature.txt
+            actual=$(awk '/Signer #1 certificate SHA-256 digest:/{print tolower($NF); exit}' out/signature.txt)
+            if [[ "$actual" != "$HAIZ_CERT_SHA256" ]]; then echo "::error::Signing certificate $actual is not the HAIZ certificate; this APK could not update installed HAIZ."; exit 1; fi
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::HAIZ_ANDROID_* secrets missing: unsigned build, not installable."
+            mv out/HAIZ-Android.apk out/HAIZ-Android-unsigned.apk
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+          (cd out && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          rm -f "$HOME/.config/haiz-android/signing.properties" "$RUNNER_TEMP/haiz-release.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haiz-android-${{ steps.v.outputs.name }}-${{ github.run_number }}
+          path: out/
+          retention-days: 30
+      - name: Publish GitHub Release + update manifest
+        if: startsWith(github.ref, 'refs/tags/haiz-native-v') && steps.apk.outputs.signed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          # never publish a version that is not newer than what phones already have
+          PREV=$(curl -fsSL "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/haiz-update.json" 2>/dev/null | jq -r '.versionCode // 0' || echo 0)
+          SITE=$(curl -fsSL "https://haiz.space/updates/latest.json" 2>/dev/null | jq -r '.versionCode // 0' || echo 0)
+          for p in "$PREV" "$SITE"; do if (( HAIZ_VERSION_CODE <= p )); then echo "::error::versionCode $HAIZ_VERSION_CODE must exceed published $p"; exit 1; fi; done
+          SIZE=$(stat -c %s out/HAIZ-Android.apk); SHA=$(sha256sum out/HAIZ-Android.apk | awk '{print $1}')
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/HAIZ-Android.apk"
+          NOTES=$(jq -r .notes native/release.json)
+          jq -n --arg p "$HAIZ_PACKAGE" --arg n "$HAIZ_VERSION_NAME" --argjson c "$HAIZ_VERSION_CODE" --arg u "$URL" \
+            --arg h "$SHA" --argjson s "$SIZE" --arg notes "$NOTES" --arg cert "$HAIZ_CERT_SHA256" --arg at "$(date -u +%FT%TZ)" \
+            '{packageId:$p,versionName:$n,versionCode:$c,apkUrl:$u,sha256:$h,sizeBytes:$s,notes:$notes,certSha256:$cert,publishedAt:$at}' > out/haiz-update.json
+          cat out/haiz-update.json
+          printf '%s\n\n安装包 %s 字节 · SHA-256 `%s` · 签名证书 SHA-256 `%s`\n' "$NOTES" "$SIZE" "$SHA" "$HAIZ_CERT_SHA256" > out/notes.md
+          gh release create "$TAG" out/HAIZ-Android.apk out/haiz-update.json out/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "HAIZ Android $HAIZ_VERSION_NAME ($HAIZ_VERSION_CODE)" \
+            --notes-file out/notes.md --latest
+      - name: Mirror the manifest to haiz.space/updates/latest.json (older HAIZ builds read it)
+        if: startsWith(github.ref, 'refs/tags/haiz-native-v') && steps.apk.outputs.signed == 'true'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CUR=$(gh api "repos/$GITHUB_REPOSITORY/contents/updates/latest.json" --jq .sha 2>/dev/null || true)
+          jq 'del(.certSha256, .publishedAt)' out/haiz-update.json > latest.json
+          jq -n --arg m "chore(updates): publish HAIZ Android $HAIZ_VERSION_NAME" --arg c "$(base64 -w0 latest.json)" --arg sha "$CUR" \
+            '{message:$m,content:$c,branch:"main"} + (if $sha == "" then {} else {sha:$sha} end)' \
+            | gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/updates/latest.json" --input -

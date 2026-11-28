@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HAIZ · Experiment 004 — 连续空间交互与动态导航艺术</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./src/styles/lab004.css" />
+</head>
+<body>
+  <div class="bench-shell">
+    <header class="topbar">
+      <div class="brand-group">
+        <span class="brand-mark">HAIZ <span class="brand-badge">04</span></span>
+        <span class="brand-title">连续空间交互与动态导航艺术 · 底部导航对照验收台</span>
+      </div>
+
+      <div class="ctrl-cluster">
+        <div class="seg-group" role="tablist" aria-label="视图模式">
+          <button class="seg-btn is-on" data-view="bench">四栏同屏对照</button>
+          <button class="seg-btn" data-view="solo-a">方案 A 独立</button>
+          <button class="seg-btn" data-view="solo-b">方案 B 独立</button>
+          <button class="seg-btn" data-view="solo-c">方案 C 独立</button>
+        </div>
+        <button class="btn-outline is-on" id="btn-mirror">同步联动: 开</button>
+        <button class="btn-outline" id="btn-motion">动态: 完整</button>
+        <button class="btn-outline" id="btn-theme">宣纸亮色</button>
+      </div>
+    </header>
+
+    <div class="lab-toolbar">
+      <div class="tb-left">
+        <span class="tb-label mono">时间控制</span>
+        <div class="seg-group">
+          <button class="seg-btn is-on" data-speed="1">1.0× 正常</button>
+          <button class="seg-btn" data-speed="0.35">0.35× 慢放</button>
+          <button class="seg-btn" data-speed="0.12">0.12× 解剖</button>
+        </div>
+        <button class="btn-outline" id="btn-pause">暂停</button>
+        <button class="btn-outline mono" id="btn-step">+1 帧 (16.7ms)</button>
+      </div>
+
+      <div class="tb-right">
+        <span class="tb-label mono">编排测试</span>
+        <button class="btn-solid" data-script="sweep">平滑顺扫</button>
+        <button class="btn-outline" data-script="jump">跨距跳跃</button>
+        <button class="btn-outline" data-script="reverse">高速折返打断</button>
+        <button class="btn-outline" data-script="press">悬停→按压→激活</button>
+        <div class="telemetry-pill mono">
+          <span class="tel-dot"></span>
+          <strong id="tel-fps">60 fps</strong>
+          <span id="tel-lat">0.0 ms</span>
+          <span id="tel-frame">F#0000</span>
+        </div>
+      </div>
+    </div>
+
+    <main class="bench-main" id="bench-main"></main>
+  </div>
+
+  <script src="./src/engine/kernel.js"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
