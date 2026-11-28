@@ -1,0 +1,9 @@
+node_modules/
+www/
+www-manifest.json
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+android/.gradle/
+android/app/build/
+android/build/
+perf/results/*.trace

@@ -1,0 +1,66 @@
+/* 明暗 · the glass light toggle. --p: knob place (0 left/dark … 1 right/light), --t: the light's
+   colour (0 cool moon … 1 warm sun), --sx/--sy: the knob's deformation, --led: the arc's angle. */
+.gtog {
+  --w: 74px; --h: 38px; --in: 3px; --k: calc(var(--h) - 2 * var(--in));
+  --p: 0; --t: 0; --sx: 1; --sy: 1; --led: 90deg; --ledlit: .55;
+  --cool: #6f86ff; --warm: #ffa82e;
+  --light: color-mix(in srgb, var(--warm) calc(var(--t) * 100%), var(--cool));
+  position: relative; width: var(--w); height: var(--h); flex: none; padding: 0; appearance: none; border: 0; cursor: pointer;
+  border-radius: calc(var(--h) * .34);
+  /* the glass track: deep blue at night, warm frosted by day, mixed live while the knob travels */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, calc(.06 + var(--t) * .3)), rgba(255, 255, 255, 0) 60%),
+    color-mix(in srgb, color-mix(in srgb, #fff3df calc(var(--t) * 100%), #0d1730) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6); backdrop-filter: blur(12px) saturate(1.6);
+  box-shadow:
+    inset 0 1px 1.5px rgba(0, 0, 0, calc(.42 - var(--t) * .28)),
+    inset 0 -1px 0 rgba(255, 255, 255, calc(.08 + var(--t) * .4)),
+    inset 0 0 0 1px color-mix(in srgb, var(--light) 22%, transparent),
+    0 0 18px -6px color-mix(in srgb, var(--light) 70%, transparent);
+  touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  contain: layout style; isolation: isolate;
+}
+.gtog--sm { --w: 58px; --h: 30px; --in: 2.5px; }
+/* the light spilled into the track around the knob */
+.gtog-spill {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; overflow: hidden; z-index: 0;
+  background: radial-gradient(calc(var(--h) * 1.3) calc(var(--h) * 1.1) at calc(var(--h) / 2 + (var(--w) - var(--h)) * var(--p)) 50%,
+    color-mix(in srgb, var(--light) 46%, transparent), transparent 70%);
+  opacity: calc(.55 + var(--t) * .2);
+}
+/* the LED: a short lit arc around the knob, orbiting bottom (dark) → top (light) */
+.gtog-led {
+  position: absolute; left: var(--in); top: var(--in); width: var(--k); height: var(--k); pointer-events: none; z-index: 1;
+  transform: translateX(calc((var(--w) - var(--h)) * var(--p))) rotate(var(--led));
+  will-change: transform;
+}
+.gtog-led svg { position: absolute; inset: -14%; width: 128%; height: 128%; overflow: visible; }
+.gtog-led circle {
+  fill: none; stroke: var(--light); stroke-width: 1.6; stroke-linecap: round;
+  stroke-dasharray: 18 82; stroke-dashoffset: 9; opacity: var(--ledlit);
+  filter: drop-shadow(0 0 2.5px var(--light));
+}
+/* the knob: a rounded-square lens of glass */
+.gtog-knob {
+  position: absolute; left: var(--in); top: var(--in); width: var(--k); height: var(--k); z-index: 2;
+  border-radius: calc(var(--k) * .3); display: grid; place-items: center; transform-origin: 50% 50%;
+  transform: translateX(calc((var(--w) - var(--h)) * var(--p))) scale(var(--sx), var(--sy));
+  background:
+    radial-gradient(90% 70% at 32% 18%, rgba(255, 255, 255, calc(.55 + var(--t) * .35)), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(120% 120% at 50% 110%, color-mix(in srgb, var(--light) 30%, transparent), transparent 60%),
+    color-mix(in srgb, color-mix(in srgb, #fffaf0 calc(var(--t) * 100%), #1b2a52) 55%, transparent);
+  -webkit-backdrop-filter: blur(2px) saturate(1.9) brightness(1.08); backdrop-filter: blur(2px) saturate(1.9) brightness(1.08);
+  box-shadow:
+    inset 0 0 0 .6px rgba(255, 255, 255, calc(.4 + var(--t) * .4)),
+    inset 1px 0 .5px rgba(255, 110, 110, .16), inset -1px 0 .5px rgba(90, 160, 255, .2),
+    inset 0 -2px 4px rgba(0, 0, 0, calc(.22 - var(--t) * .14)),
+    0 3px 8px -2px rgba(0, 0, 0, calc(.5 - var(--t) * .22)),
+    0 0 14px -3px var(--light);
+  will-change: transform;
+}
+.gtog-knob canvas { width: 78%; height: 78%; image-rendering: pixelated; }
+.gtog:focus-visible { outline: 2px solid var(--accent, #3f7d62); outline-offset: 3px; }
+/* Native 003 · in the phone header the track's own frosting is never seen: unscrolled it sits on
+   flat paper, scrolled the header already frosts what is under it. One fewer backdrop pass on every
+   frame the WebView recomposites. */
+.ptop .gtog { -webkit-backdrop-filter: none; backdrop-filter: none; }

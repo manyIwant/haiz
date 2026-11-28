@@ -1,0 +1,41 @@
+.dotf {
+  --dot: 7px;
+  --dot-c: color-mix(in srgb, currentColor 22%, transparent);
+  --lit-c: var(--dotf-lit, #ffd9a3);
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 8px 0 12px;
+  color: inherit;
+}
+.dotf-l { font-size: 12px; letter-spacing: .08em; opacity: .62; transition: opacity .2s; }
+.dotf input {
+  appearance: none; border: 0; outline: 0; background: transparent; color: inherit;
+  font: 500 17px/1.3 var(--font-sans, system-ui); padding: 2px 0 6px; width: 100%;
+  caret-color: var(--lit-c);
+}
+.dotf input::placeholder { color: currentColor; opacity: .3; }
+.dotf-track {
+  position: relative; height: var(--dot); display: block;
+  background: radial-gradient(circle at center, var(--dot-c) 1.6px, transparent 2.1px) 0 0 / calc(var(--dot) + 2px) var(--dot) repeat-x;
+}
+.dotf-lit {
+  position: absolute; inset: 0 auto 0 0;
+  width: calc(var(--n) * (var(--dot) + 2px));
+  background: radial-gradient(circle at center, var(--lit-c) 2px, transparent 2.6px) 0 0 / calc(var(--dot) + 2px) var(--dot) repeat-x;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--lit-c) 70%, transparent));
+  transition: width .18s cubic-bezier(.3, 1.4, .5, 1);
+}
+.dotf-caret {
+  position: absolute; top: 0; left: calc(var(--n) * (var(--dot) + 2px)); width: calc(var(--dot) + 2px); height: var(--dot);
+  background: radial-gradient(circle at center, var(--lit-c) 2.2px, transparent 2.8px);
+  opacity: 0; transition: left .18s cubic-bezier(.3, 1.4, .5, 1);
+}
+.dotf:focus-within .dotf-l { opacity: .9; }
+.dotf:focus-within .dotf-caret { animation: dotf-breathe 1.1s ease-in-out infinite; }
+@keyframes dotf-breathe { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.15); } }
+.dotf.is-error { --lit-c: #ff8f7a; }
+.dotf.is-error .dotf-track { animation: dotf-shake .42s cubic-bezier(.36, .07, .19, .97); }
+@keyframes dotf-shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+.dotf-h { font-size: 11.5px; opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .dotf-lit, .dotf-caret { transition: none; } .dotf:focus-within .dotf-caret { animation: none; opacity: .8; } }

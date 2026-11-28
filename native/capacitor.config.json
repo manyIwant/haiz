@@ -1,0 +1,16 @@
+{
+  "appId": "space.haiz.app.preview",
+  "appName": "HAIZ",
+  "webDir": "www",
+  "backgroundColor": "#F5F3EA",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "disable",
+    "minWebViewVersion": 100
+  }
+}

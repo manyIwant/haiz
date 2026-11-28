@@ -1,0 +1,221 @@
+// @ts-nocheck
+// Ported verbatim from the HAIZ main site: lanren/js/foliage.js (V4 榄仁 leaves) — the part that builds
+// the leaf instances from rosettes.bin and the shared GLSL (wind, touch, leaf colour, growth).
+// Leaves of a growing tree: one instance per leaf, generated from the
+// Blender rosettes. Every leaf has its own emergence time; the scroll-driven
+// growth uniform (uGrow) moves each one through bud → unfolding → mature.
+// Last year's red leaves hang on until the flush begins, then let go.
+import * as THREE from 'three';
+export const LEAF_TIMING = { bud: 0.035, unfold: 0.2, mature: 0.3 }; // lanren/js/chapters.js
+
+export const WIND_GLSL = /* glsl */`
+uniform float uTime;
+uniform float uWind;      // 0 calm … 1 strong breeze
+uniform float uGust;      // slowly varying 0..1
+uniform vec3  uWindDir;
+uniform vec4  uTouchO[4]; // ray origin, start time
+uniform vec4  uTouchD[4]; // ray direction, strength
+vec3 windSway(vec3 p, float flex){
+  float ph = dot(p, vec3(0.31, 0.17, 0.23));
+  float g = uWind * (0.45 + 0.55 * uGust);
+  float t = uTime;
+  float w = sin(t * 0.83 + ph) * 0.55 + sin(t * 1.71 + ph * 1.37) * 0.28 + sin(t * 0.29 + ph * 0.6) * 0.35;
+  vec3 d = uWindDir * (g * 0.55 + w * g * 0.45);
+  d.y += sin(t * 2.1 + ph * 2.0) * 0.12 * g;
+  d += cross(uWindDir, vec3(0.0, 1.0, 0.0)) * sin(t * 1.13 + ph * 0.8) * 0.18 * g;
+  return d * flex * flex * 0.42;
+}
+vec3 touchPush(vec3 p, out float energy){
+  vec3 acc = vec3(0.0);
+  energy = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float dt = uTime - uTouchO[i].w;
+    if (dt < 0.0 || dt > 5.0) continue;
+    vec3 v = p - uTouchO[i].xyz;
+    vec3 dir = uTouchD[i].xyz;
+    vec3 perp = v - dir * dot(v, dir);
+    float k = uTouchD[i].w * exp(-dot(perp, perp) / 0.55);
+    float osc = exp(-dt * 1.9) * sin(dt * 8.5);
+    acc += normalize(perp + vec3(1e-4)) * k * osc * 0.16 + vec3(0.0, -0.05, 0.0) * k * exp(-dt * 3.0);
+    energy += k * exp(-dt * 1.5);
+  }
+  return acc;
+}
+`;
+
+// colour of a leaf (linear RGB) from senescence age, the texture's
+// senescence order, youth (0 mature … 1 just unfolded) and a per-leaf shade
+export const LEAF_COLOUR_GLSL = /* glsl */`
+vec3 leafColour(float age, float sen, float young, float variant){
+  vec3 green  = mix(vec3(0.034, 0.072, 0.020), vec3(0.052, 0.098, 0.026), variant);
+  vec3 yellow = vec3(0.60, 0.40, 0.045);
+  vec3 red    = vec3(0.42, 0.035, 0.018);
+  vec3 brown  = vec3(0.17, 0.075, 0.03);
+  float a = age * 1.35;
+  vec3 c = mix(green, yellow, smoothstep(sen, sen + 0.16, a));
+  c = mix(c, red, smoothstep(sen + 0.30, sen + 0.46, a));
+  c = mix(c, brown, smoothstep(sen + 0.95, sen + 1.2, a));
+  // Terminalia's new flush: bronze-red buds, then a bright yellow-green
+  vec3 fresh = mix(vec3(0.075, 0.15, 0.03), vec3(0.30, 0.10, 0.04), smoothstep(0.66, 0.95, young));
+  return mix(c, fresh, smoothstep(0.0, 0.45, young));
+}
+`;
+
+// Growth of one leaf. Shared by colour and depth materials (and mirrored on the CPU).
+// tE: when this leaf's bud breaks; old > 0: last year's leaf, dropping at uGrow = old.
+export function leafVisible(tE, old, g) { return old > 0 ? g < old : g > tE - LEAF_TIMING.bud; }
+export const GROW_GLSL = /* glsl */`
+uniform float uGrow;
+// 年轮 (lanren/rings): a whole year on the same leaves. Off (uYear = 0) everywhere else,
+// where the lines below reduce to V4's growth exactly.
+//   uTurn   last cohort's senescence, as lanren/js/season.js: 0 green … 1.4 every leaf fallen
+//   uFlushG growth of the new cohort in uGrow's own units
+uniform float uYear; uniform float uTurn; uniform float uFlushG;
+void leafGrow(float tE, float old, out float u, out float scl, out float young, out float fold, out float erect, out float age){
+  age = 0.0;
+  if (old > 0.0) {                       // last year's leaf
+    u = 1.0; young = 0.0; fold = 0.0; erect = 0.0;
+    scl = (uYear < 0.5 && uGrow < old) ? 1.0 : 0.0;
+    age = 0.80 + fract(old * 37.0) * 0.32 + smoothstep(old - 0.12, old, uGrow) * 0.15;
+    return;
+  }
+  float g = uGrow;
+  if (uYear > 0.5) {
+    // the blade this bud carried through last season: it colours, then lets go (each leaf in its own time)
+    float r1 = fract(tE * 917.31 + 0.37);
+    float oldAge = (uTurn - r1 * 0.85) * 2.2;
+    if (uTurn > 0.0 && oldAge < 1.0) {
+      u = 1.0; young = 0.0; fold = 0.0; erect = 0.0; scl = 1.0;
+      age = clamp(oldAge, 0.0, 1.0) * 1.12;
+      return;
+    }
+    g = uFlushG;
+  }
+  u = clamp((g - tE) / ${LEAF_TIMING.unfold.toFixed(3)}, 0.0, 1.0);
+  float m = clamp((g - tE - ${LEAF_TIMING.unfold.toFixed(3)} * 0.6) / ${LEAF_TIMING.mature.toFixed(3)}, 0.0, 1.0);
+  scl = g < tE - ${LEAF_TIMING.bud.toFixed(3)} ? 0.0 : mix(0.07, 1.0, smoothstep(0.0, 0.9, u));
+  fold = (1.0 - smoothstep(0.1, 0.8, u)) * 1.3;
+  erect = (1.0 - smoothstep(0.15, 0.9, u)) * 1.1;
+  // bronze while the bud opens, then a bright, thin yellow-green that deepens as it matures
+  young = (1.0 - m) * 0.62 + (1.0 - smoothstep(0.15, 0.55, u)) * 0.38;
+}
+`;
+
+// Build one leaf blade: a quad folded along the midrib and arched to the tip.
+export function leafGeometry(cols = 2, rows = 4, aspect = 0.62, shape = null) {
+  // A blade along +x (petiole at 0, apex at 1), width along z, folded a little
+  // along the midrib and arched. With `shape` (hero blades seen up close) the
+  // margins droop, the lamina waves gently and the blade twists a touch.
+  const pos = [], uv = [], idx = [];
+  for (let r = 0; r <= rows; r++) {
+    const t = r / rows;
+    for (let c = 0; c <= cols; c++) {
+      const s = c / cols * 2 - 1;
+      let x = t, y = Math.abs(s) * aspect * 0.5 * 0.16 - 0.10 * t * t + 0.05 * t, z = s * aspect * 0.5;
+      if (shape) {
+        y -= shape.cup * s * s * aspect * 0.5;                                   // margins roll down (leathery blade)
+        y += shape.wave * Math.sin(t * Math.PI * shape.waves + Math.sign(s) * 1.3) * Math.abs(s) ** 1.5;
+        y += shape.lift * t * t * t;                                              // the apex lifts
+        const tw = shape.twist * t;                                               // a slight twist along the midrib
+        const cz = Math.cos(tw), sz = Math.sin(tw);
+        [y, z] = [y * cz - z * sz, y * sz + z * cz];
+      }
+      pos.push(x, y, z);
+      uv.push((s + 1) / 2, t);
+    }
+  }
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1;
+      idx.push(a, d, b, b, d, e);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+export function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Expand rosettes (see tree.json rosetteLayout) into individual leaves.
+ * A rosette with tEmerge < 0 holds only last year's leaves (they drop at tOldDrop).
+ */
+export function buildLeafInstances(ros, stride, density = 1, sizeK = 1) {
+  const n = ros.length / stride;
+  const rand = mulberry(20231030);
+  const mats = [], rosA = [], leafA = [], padA = [];
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion();
+  const up = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), blade = new THREE.Vector3();
+  const side = new THREE.Vector3(), nrm = new THREE.Vector3(), basis = new THREE.Matrix4();
+  const s2 = new THREE.Vector3(), n2 = new THREE.Vector3(), at = new THREE.Vector3(), sc = new THREE.Vector3();
+  // fewer leaves on lower tiers are compensated by slightly larger ones
+  const scaleComp = Math.pow(1 / Math.max(0.3, density), 0.22) * sizeK;
+  let cx = 0, cy = 0, cz = 0, shell = 1, tilt = 0, tiltA = 0;
+  const push = (px, py, pz, ang, outer, shootH, flex, tE, old, occ, lenK) => {
+    const elev = THREE.MathUtils.lerp(0.8, -0.3, outer) + (rand() - 0.5) * 0.7 + tilt * Math.cos(ang - tiltA);
+    blade.set(Math.cos(ang), 0, Math.sin(ang)).addScaledVector(shootH, 0.45).normalize();
+    blade.y = Math.sin(elev);
+    blade.normalize();
+    side.crossVectors(up, blade).normalize();
+    nrm.crossVectors(blade, side).normalize();
+    const roll = (rand() - 0.5) * 1.3;
+    s2.copy(side).multiplyScalar(Math.cos(roll)).addScaledVector(nrm, Math.sin(roll));
+    n2.crossVectors(blade, s2).normalize();
+    basis.makeBasis(blade, n2, s2.multiplyScalar(-1));
+    q.setFromRotationMatrix(basis);
+    const len = (0.19 + rand() * 0.15) * (0.58 + 0.5 * outer) * scaleComp * lenK;
+    const off = 0.015 + rand() * 0.03;
+    const back = (1 - outer) * 0 + outer * (0.02 + rand() * 0.07);   // outer (older) leaves sit lower on the shoot
+    at.set(px + blade.x * off - sdir.x * back, py + blade.y * off * 0.5 - sdir.y * back, pz + blade.z * off - sdir.z * back);
+    m.compose(at, q, sc.set(len, len, len));
+    for (let k = 0; k < 16; k++) mats.push(m.elements[k]);
+    rosA.push(px, py, pz, flex);
+    padA.push(cx, cy, cz, shell);
+    // inner leaves of a rosette open a little later
+    leafA.push(tE + (1 - outer) * 0.025 + rand() * 0.012, old, Math.floor(rand() * 4), occ);
+  };
+  const shootH = new THREE.Vector3(), sdir = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const o = i * stride;
+    const px = ros[o], py = ros[o + 1], pz = ros[o + 2];
+    dir.set(ros[o + 3], ros[o + 4], ros[o + 5]).normalize();
+    const size = ros[o + 6], flex = ros[o + 7], occ = ros[o + 8], tE = ros[o + 9], old = ros[o + 10];
+    if (stride >= 15) { cx = ros[o + 12]; cy = ros[o + 13]; cz = ros[o + 14]; } else { cx = px; cy = py - 1; cz = pz; }
+    shell = stride >= 16 ? ros[o + 15] : 1;
+    sdir.copy(dir);
+    shootH.set(dir.x, 0, dir.z);
+    if (shootH.lengthSq() < 1e-4) shootH.set(1, 0, 0);
+    shootH.normalize();
+    const rot0 = rand() * Math.PI * 2;
+    // each rosette leans its own way, so the crown is not made of level plates
+    tilt = (rand() - 0.5) * 0.9; tiltA = rand() * Math.PI * 2;
+    if (tE >= 0) {
+      const count = Math.round((9 + rand() * 5) * size);
+      for (let k = 0; k < count; k++) {
+        if (rand() > density) continue;
+        push(px, py, pz, rot0 + k * 2.39996, 1 - k / count, shootH, flex, tE, -1, occ, 1);
+      }
+    }
+    if (old > 0) {
+      const c = tE >= 0 ? 2 + Math.floor(rand() * 2) : Math.round((5 + rand() * 4) * size);
+      for (let k = 0; k < c; k++) {
+        if (tE < 0 && rand() > Math.max(0.5, density)) continue;
+        push(px, py, pz, rot0 + 1.2 + k * 2.39996, 0.75 + 0.25 * rand(), shootH, flex, 0, old, occ, 1.12);
+      }
+    }
+  }
+  return { count: rosA.length / 4, matrices: new Float32Array(mats), rosette: new Float32Array(rosA), leaf: new Float32Array(leafA), pad: new Float32Array(padA) };
+}
+

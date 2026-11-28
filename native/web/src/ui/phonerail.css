@@ -1,0 +1,30 @@
+/* the phone drawer: the 005/006 rail on a sheet that slides in from the left edge */
+.prail { position: fixed; inset: 0; z-index: 1300; --o: 0; }
+/* Native 003 · scrim and shadow fade by opacity (compositor only) instead of repainting their colours */
+.prail-scrim { position: absolute; inset: 0; border: 0; padding: 0; background: rgba(12, 16, 14, .3); opacity: clamp(0, var(--o), 1); will-change: opacity; -webkit-tap-highlight-color: transparent; }
+.prail-sheet {
+  --rail: min(272px, 80vw);
+  position: absolute; left: 0; top: 0; bottom: 0; width: var(--rail);
+  transform: translate3d(calc((var(--o) - 1) * (100% + 24px)), 0, 0);
+  will-change: transform;
+}
+.prail-sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: 12px 0 40px -24px rgba(0, 0, 0, .55); opacity: clamp(0, var(--o), 1); will-change: opacity; }
+.rail--drawer {
+  position: absolute; width: 100%; z-index: 1;
+  padding: calc(var(--safe-t, 0px) + 14px) 14px calc(var(--safe-b, 0px) + 14px);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: none;
+}
+.rail--drawer .rail-scroll, .rail--drawer .rail-scroll * { touch-action: none; }
+.rail--drawer .rail-i { height: 44px; font-size: 15px; gap: 13px; }
+.rail--drawer .rail-k { height: 38px; font-size: 14px; }
+.rail--drawer .rail-gl { font-size: 11.5px; }
+.rail--drawer .rail-peek-in { font-size: 13px; }
+.rail-who { appearance: none; border: 0; background: transparent; color: inherit; text-align: left; width: 100%; cursor: pointer; }
+.rail-who .rail-bt b { font-family: var(--font-serif); letter-spacing: .02em; font-size: 16px; }
+.rail-who .rail-bt small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.rail-upd {
+  align-self: flex-start; margin: 10px 10px 0; appearance: none; border: 0; padding: 8px 14px; border-radius: 999px;
+  font: 600 12.5px/1 var(--font-sans, system-ui); color: var(--jade); background: color-mix(in srgb, var(--jade) 12%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .prail-sheet { will-change: auto; } }

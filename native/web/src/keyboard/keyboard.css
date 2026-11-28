@@ -1,0 +1,98 @@
+.hkb {
+  --kb-key: color-mix(in srgb, var(--paper, #f4f2ec) 62%, transparent);
+  --kb-fn: color-mix(in srgb, var(--ink, #1d2621) 9%, transparent);
+  --kb-ink: var(--ink, #1d2621);
+  --kb-glow: var(--accent, #3f7d62);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500;
+  padding: 0 calc(var(--safe-r, 0px) + 4px) calc(var(--safe-b, 0px) + 6px) calc(var(--safe-l, 0px) + 4px);
+  color: var(--kb-ink);
+  background: color-mix(in srgb, var(--paper, #f4f2ec) 58%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.7); backdrop-filter: blur(22px) saturate(1.7);
+  border-radius: 22px 22px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 -1px 0 color-mix(in srgb, var(--ink, #000) 8%, transparent), 0 -18px 40px -24px rgba(0, 0, 0, .35);
+  transform: translateY(110%); visibility: hidden;
+  transition: transform .42s cubic-bezier(.25, 1.1, .35, 1), visibility 0s linear .42s;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  contain: layout style;
+}
+.hkb.is-open { transform: none; visibility: visible; transition: transform .42s cubic-bezier(.25, 1.1, .35, 1), visibility 0s; }
+:root[data-theme="dark"] .hkb, :root:not([data-theme="light"]) .hkb.dark-auto { --kb-key: rgba(255, 255, 255, .11); --kb-fn: rgba(255, 255, 255, .05); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hkb { --kb-key: rgba(255, 255, 255, .11); --kb-fn: rgba(255, 255, 255, .05); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 -18px 40px -24px rgba(0, 0, 0, .6); } }
+:root[data-theme="dark"] .hkb { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 -18px 40px -24px rgba(0, 0, 0, .6); }
+
+/* the dot edge: a row of dots that ripples out from the key you touch */
+.hkb-dots {
+  --x: 50%; --r: 0px;
+  position: absolute; left: 14px; right: 14px; top: 3px; height: 4px; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle, var(--kb-glow) 1.3px, transparent 1.8px) 0 0 / 7px 4px repeat-x;
+  -webkit-mask: radial-gradient(var(--r) 10px at var(--x) 50%, transparent calc(100% - 46px), #000 calc(100% - 20px), transparent);
+  mask: radial-gradient(var(--r) 10px at var(--x) 50%, transparent calc(100% - 46px), #000 calc(100% - 20px), transparent);
+}
+@property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+/* candidates and tools */
+.hkb-bar { position: relative; height: 46px; display: flex; align-items: center; gap: 2px; padding: 6px 4px 0; }
+.hkb-tools button { flex: 1; height: 38px; appearance: none; border: 0; background: transparent; color: inherit; border-radius: 12px; display: grid; place-items: center; font: 500 14px/1 var(--font-sans, system-ui); opacity: .72; }
+.hkb-tools button.is-down { background: var(--kb-fn); opacity: 1; }
+.hkb-tools svg, .hkb-k svg, .hkb-more svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.hkb-cands { flex-wrap: nowrap; padding-top: 16px; }
+.hkb-pre { position: absolute; left: 12px; top: 3px; font: 500 12px/1 var(--font-sans, system-ui); letter-spacing: .04em; opacity: .7; white-space: nowrap; }
+.hkb-load { opacity: .6; }
+.hkb-list { flex: 1; display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; overscroll-behavior: contain; }
+.hkb-list::-webkit-scrollbar { display: none; }
+.hkb-list button { flex: none; appearance: none; border: 0; background: transparent; color: inherit; font: 400 19px/1 var(--font-sans, system-ui); padding: 6px 11px; border-radius: 10px; }
+.hkb-list button.is-first { color: var(--kb-glow); font-weight: 600; }
+.hkb-list button.is-down { background: var(--kb-fn); }
+.hkb-more { flex: none; appearance: none; border: 0; background: transparent; color: inherit; width: 40px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+.hkb.is-expanded .hkb-bar { height: auto; align-items: start; }
+.hkb-list.is-grid { flex-wrap: wrap; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; height: 214px; align-content: start; }
+.hkb-list.is-grid button { min-width: 20%; }
+
+/* keys */
+.hkb-keys { display: grid; gap: 9px; padding: 8px 0 2px; }
+.hkb-row { display: flex; gap: 5px; }
+.hkb-row--inset { padding: 0 5%; }
+.hkb-k {
+  flex: 1 1 0; min-width: 0; height: 44px; appearance: none; border: 0; padding: 0;
+  display: grid; place-items: center; position: relative;
+  border-radius: 10px; color: inherit; font: 400 21px/1 var(--font-sans, system-ui);
+  background: var(--kb-key);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 1px 0 color-mix(in srgb, var(--ink, #000) 16%, transparent);
+  transition: transform .18s cubic-bezier(.3, 1.6, .5, 1), background .2s, box-shadow .2s;
+}
+.hkb-k.is-down { transform: scale(.93); background: color-mix(in srgb, var(--kb-key) 70%, var(--kb-glow) 30%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 0 18px -6px var(--kb-glow); transition-duration: .05s; }
+.hkb-fn { background: var(--kb-fn); font-size: 15px; font-weight: 500; }
+.hkb-fn small { position: absolute; right: 6px; bottom: 5px; font-size: 9px; opacity: .5; }
+.hkb-fn.is-on { background: var(--kb-key); color: var(--kb-glow); }
+.hkb-fn.is-lock svg { fill: currentColor; }
+.hkb-w12 { flex-grow: 1.2; } .hkb-w15 { flex-grow: 1.5; } .hkb-w2 { flex-grow: 2.2; }
+.hkb-space { flex-grow: 4.6; font-size: 13px; letter-spacing: .1em; color: color-mix(in srgb, currentColor 55%, transparent); }
+.hkb.is-cursor .hkb-space { color: var(--kb-glow); }
+.hkb.is-cursor .hkb-k:not(.hkb-space) { opacity: .35; }
+.hkb-enter { background: var(--kb-glow); color: #fff; font-size: 15px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 16px -10px var(--kb-glow); }
+
+/* the key pop: a drop of glass that rises out of the key */
+.hkb-pop {
+  position: absolute; left: 0; top: 0; width: 52px; height: 60px; margin: -64px 0 0 -26px; pointer-events: none;
+  display: grid; place-items: center; font: 400 28px/1 var(--font-sans, system-ui);
+  border-radius: 18px 18px 20px 20px; background: var(--kb-key);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6); backdrop-filter: blur(12px) saturate(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 10px 26px -10px rgba(0, 0, 0, .4);
+  opacity: 0; transform-origin: 50% 100%;
+}
+.hkb-pop.is-on { opacity: 1; animation: hkb-pop .16s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes hkb-pop { from { scale: .6 .4; } }
+@media (max-width: 380px) { .hkb-k { height: 42px; font-size: 19px; } .hkb-keys { gap: 8px; } }
+
+/* back to the HAIZ keyboard, from the system one */
+.hkb-chip {
+  position: fixed; z-index: 1500; right: 12px; bottom: calc(var(--ime, 0px) + 8px);
+  appearance: none; border: 0; padding: 8px 14px; border-radius: 999px; font: 600 12.5px/1 var(--font-sans, system-ui);
+  color: var(--ink, #1d2621); background: color-mix(in srgb, var(--paper, #f4f2ec) 70%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 6px 18px -8px rgba(0, 0, 0, .35);
+}
+/* the page makes room */
+:root.has-kb .app-main { padding-bottom: calc(var(--kb, 0px) + 24px); }
+:root.has-kb .dock-host:not(.dock-host--inline) { opacity: 0; pointer-events: none; transition: opacity .2s; }
+@media (prefers-reduced-motion: reduce) { .hkb, .hkb.is-open { transition: visibility 0s; } .hkb-pop.is-on { animation: none; } }

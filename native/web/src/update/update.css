@@ -1,0 +1,26 @@
+.upd { position: fixed; inset: 0; z-index: 1200; display: grid; align-items: end; justify-items: center; }
+.upd-scrim { position: absolute; inset: 0; border: 0; background: rgba(10, 14, 12, .32); animation: upd-fade .3s both; }
+.upd-card {
+  position: relative; width: min(460px, calc(100% - 24px)); margin-bottom: calc(var(--safe-b, 0px) + 12px);
+  padding: 18px 18px 16px; border-radius: 26px; display: grid; gap: 14px; color: var(--ink, inherit);
+  --ltags-c: var(--accent, #3f7d62);
+  animation: upd-rise .45s cubic-bezier(.3, .7, 0, 1) both;
+}
+@media (min-width: 720px) { .upd { align-items: center; } .upd-card { margin: 0; } }
+.upd.is-closing .upd-card { animation: upd-sink .28s ease-in both; }
+.upd.is-closing .upd-scrim { animation: upd-fade .28s reverse both; }
+@keyframes upd-rise { from { opacity: 0; transform: translateY(40px) scale(.97); } }
+@keyframes upd-sink { to { opacity: 0; transform: translateY(30px) scale(.98); } }
+@keyframes upd-fade { from { opacity: 0; } }
+.upd-h { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.upd-h b { display: block; font: 600 19px/1.25 var(--font-serif, serif); }
+.upd-h span { font-size: 12.5px; opacity: .6; }
+.upd-x { appearance: none; border: 0; background: color-mix(in srgb, currentColor 8%, transparent); color: inherit; width: 32px; height: 32px; border-radius: 50%; font-size: 20px; line-height: 1; }
+.upd-meta { font-size: 13px; opacity: .8; min-height: 18px; display: grid; gap: 4px; }
+.upd-err { color: #c4553f; }
+.upd-notes { max-height: 30vh; overflow: auto; font-size: 13.5px; line-height: 1.55; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, currentColor 5%, transparent); }
+.upd-notes p { margin: 0 0 6px; }
+.upd-a { display: flex; justify-content: flex-end; gap: 8px; }
+.upd-go, .upd-btn { appearance: none; border: 0; font: 600 14px/1 var(--font-sans, system-ui); padding: 12px 20px; border-radius: 999px; color: inherit; }
+.upd-go { background: var(--accent, #3f7d62); color: #fff; box-shadow: 0 8px 24px -10px var(--accent, #3f7d62); }
+.upd-btn { background: color-mix(in srgb, currentColor 9%, transparent); }

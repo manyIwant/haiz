@@ -1,0 +1,30 @@
+{
+  "label": "native-001",
+  "date": "2026-11-28T15:20:54.095Z",
+  "env": "Playwright Chromium, 393x873 @2.75, CPU 4x",
+  "dockLayerHeight": 560,
+  "taps-600ms": {
+    "frames": 414,
+    "fps": 48.7,
+    "p50": 16.7,
+    "p95": 33.4,
+    "worst": 166.7,
+    "dropped": 14.7,
+    "longTasks": 6,
+    "longTaskMs": 525,
+    "selectMsMedian": 134,
+    "selectMsMax": 261
+  },
+  "taps-rapid-150ms": {
+    "frames": 186,
+    "fps": 43.3,
+    "p50": 16.7,
+    "p95": 49.9,
+    "worst": 83.4,
+    "dropped": 30.1,
+    "longTasks": 2,
+    "longTaskMs": 108,
+    "selectMsMedian": 89,
+    "selectMsMax": 137
+  }
+}
