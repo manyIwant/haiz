@@ -14,7 +14,7 @@ import { mountCampus, type Place } from "../three/campus";
 import { now as clockNow } from "../app/time";
 import { setState } from "../app/store";
 import { Segmented } from "../ui/controls";
-import { useCampus } from "./CampusMap";
+import { useCampus, CampusMap } from "./CampusMap";
 
 type Mode = "ink" | "clay" | "real";
 const LEVEL: Record<Mode, number> = { ink: 0, clay: 0.5, real: 1 };
@@ -30,6 +30,7 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
   const hotRef = useRef<Place | null>(null);
   const lastUv = useRef<[number, number]>([0.5, 0.5]);
   const [ready, setReady] = useState(false);
+  const [noGL, setNoGL] = useState(false);
   const [mode, setMode] = useState<Mode>("ink");
   const [hover, setHover] = useState<string | null>(null);
   const [zoomed, setZoomed] = useState(false);
@@ -37,13 +38,14 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
   useLayoutEffect(() => {
     if (!campus || !host.current) return;
     let disposed = false;
-    const stage = createHomologousStage({
+    let stage: HomologousStage;
+    try { stage = createHomologousStage({
       host: host.current, reveal: 0, ortho: true, creaseLo: 0.3, creaseHi: 0.62, depthScale: 0.92, realInk: 0.05, gridShow: false, realPaper: true,
       view: { ...HOME, dist: 420, span: 300, tx: 0, ty: 0, tz: 0 },
       orbit: { az: true, el: true, zoom: true, elMin: 14, elMax: 78 },
       maxDpr: phone ? 1.5 : 1.75,
       onFrame: () => { placeChip(); return false; },
-    });
+    }); } catch { setNoGL(true); return; }
     stageRef.current = stage;
     stage.U.uInkR.value = 0;
     mountCampus(stage, campus, { month: clockNow().getMonth() }).then((c) => {
@@ -130,6 +132,8 @@ export default function CampusMap3D({ height = 560, focus, onHover, phone = fals
   };
 
   if (!campus) return <div className="cmap cmap--wait" style={{ height }}>正在展开校园…</div>;
+  // no WebGL: 005's line-drawn prism map, which needs none
+  if (noGL) return <CampusMap height={height} focus={focus} onHover={onHover} />;
   return (
     <div className={"cmap3" + (ready ? " is-ready" : "")} style={{ height }}>
       <div ref={host} className="cmap3-canvas" role="img" aria-label="海南中学府城校区三维地图：真实建筑模型，线稿、白模与实景同源"

@@ -44,6 +44,7 @@ export default function Tree({ phone }: { phone: boolean }) {
   const [m, setM] = useState(() => { const d = clockNow(); return d.getMonth() + (d.getDate() - 1) / 31; });
   const [mode, setMode] = useState<Mode>("real");
   const [ready, setReady] = useState(false);
+  const [noGL, setNoGL] = useState(false);
   const [count, setCount] = useState(0);
   const host = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HomologousStage | null>(null);
@@ -56,13 +57,14 @@ export default function Tree({ phone }: { phone: boolean }) {
   useLayoutEffect(() => {
     const el = host.current!;
     let disposed = false;
-    const stage = createHomologousStage({
+    let stage: HomologousStage;
+    try { stage = createHomologousStage({
       host: el, reveal: 0, ortho: false, creaseLo: 0.36, creaseHi: 0.72, depthScale: 0.76, realInk: 0.03,
       view: phone ? { az: 34, el: 8, dist: 74, tx: -1.2, ty: 6.4, tz: -0.2, fov: 28 } : { az: 34, el: 7, dist: 58, tx: -1.8, ty: 6.9, tz: -0.2, fov: 26 },
       orbit: { az: true, el: true, zoom: true, elMin: 2, elMax: 60 },
       maxDpr: phone ? 1.5 : 1.75,
       onFrame: (dt) => ctrl.current?.update(dt) ?? false,
-    });
+    }); } catch { setNoGL(true); return; }
     stageRef.current = stage;
     stage.U.uInkR.value = 0; // paper until the drawing arrives
     mountTerminalia(stage, { density: phone ? 0.3 : 0.42 }).then((c) => {
@@ -131,7 +133,7 @@ export default function Tree({ phone }: { phone: boolean }) {
         <div className="tree-fig">
           <div className={"tree-stage" + (ready ? " is-ready" : "")} onPointerMove={onMove}>
             <div ref={host} className="tree-canvas" aria-label={`三维榄仁树 · ${MONTHS[i0]} · ${season.label}。拖动可环绕。`} role="img" />
-            {!ready && <div className="tree-wait">正在载入真实的榄仁树…</div>}
+            {!ready && <div className="tree-wait">{noGL ? "这台设备没有可用的 WebGL，三维榄仁无法显示；左侧照片与下方月份仍可使用。" : "正在载入真实的榄仁树…"}</div>}
             <div className="tree-modes">
               <Segmented size="sm" value={mode} onChange={pickMode} label="表达"
                 options={[{ id: "ink", label: "线稿" }, { id: "clay", label: "白模" }, { id: "real", label: "实景" }, { id: "lens", label: "透镜" }]} />
