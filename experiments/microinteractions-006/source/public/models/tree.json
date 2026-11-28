@@ -1,0 +1,178 @@
+{
+ "generator": "scripts/lanren/build_tree.py (v3: scaffold + space colonisation, clumped dome crown)",
+ "blender": "5.2.3 LTS",
+ "seed": 2611,
+ "frame": "three.js Y-up; tree base at origin; water plane at y = -0.85",
+ "water": -0.85,
+ "counts": {
+  "nodes": 33774,
+  "clumps": 192,
+  "rosettes": 10947,
+  "oldRosettes": 2789,
+  "barkVertices": 250390,
+  "islandVertices": 36025
+ },
+ "rosetteStride": 16,
+ "rosetteLayout": [
+  "px",
+  "py",
+  "pz",
+  "dx",
+  "dy",
+  "dz",
+  "size",
+  "flex",
+  "occlusion",
+  "tEmerge",
+  "tOldDrop",
+  "rand",
+  "clumpX",
+  "clumpY",
+  "clumpZ",
+  "shell"
+ ],
+ "growth": {
+  "emergeRange": [
+   0.199,
+   0.408
+  ],
+  "emergeMedian": 0.291,
+  "oldDropRange": [
+   0.03,
+   0.34
+  ]
+ },
+ "crown": {
+  "centre": [
+   0.6,
+   9.9,
+   -0.2
+  ],
+  "radius": 12.2,
+  "top": 15.2,
+  "rim": 4.6,
+  "bounds": {
+   "min": [
+    -17.516,
+    -0.75,
+    11.557
+   ],
+   "max": [
+    13.251,
+    16.003,
+    -12.477
+   ]
+  }
+ },
+ "anchors": {
+  "trunk": [
+   0.1,
+   1.6,
+   -0.0
+  ],
+  "fork": [
+   0.213,
+   3.059,
+   -0.072
+  ],
+  "taihu": [
+   -3.6,
+   0.886,
+   2.55
+  ],
+  "plinth": {
+   "centre": [
+    -3.6,
+    0.046,
+    2.55
+   ],
+   "yaw": -0.2443,
+   "size": [
+    3.9,
+    1.4,
+    0.5
+   ]
+  },
+  "limbDip": [
+   -6.857,
+   2.41,
+   0.772
+  ],
+  "limbEnd": [
+   -10.706,
+   3.261,
+   0.834
+  ]
+ },
+ "params": {
+  "crown": {
+   "R": 12.2,
+   "asym": [
+    0.13,
+    3.141592653589793
+   ],
+   "wobble": 0.07,
+   "top": 15.2,
+   "rim": 4.6,
+   "under_centre": 7.2,
+   "shell": 2.6,
+   "spacing": 2.05,
+   "tier": 2.9,
+   "clump_r": [
+    1.0,
+    1.7
+   ],
+   "clump_h": [
+    0.45,
+    0.8
+   ],
+   "pts_per_m3": 14.0,
+   "mass_r": [
+    2.8,
+    4.4
+   ],
+   "mass_h": [
+    1.5,
+    2.3
+   ],
+   "top_masses": 5
+  },
+  "sc": {
+   "step": 0.24,
+   "influence": 6.5,
+   "kill": 0.36,
+   "momentum": 0.85,
+   "jitter": 0.16,
+   "up": 0.05,
+   "level": 0.8,
+   "min_z": -0.4,
+   "max_z": 0.72,
+   "max_iter": 320
+  },
+  "pipe": {
+   "tip": 0.009,
+   "exp": 2.12
+  },
+  "growth": {
+   "L_new": [
+    0.32,
+    0.95
+   ],
+   "start": [
+    0.02,
+    0.26
+   ],
+   "shoot": 0.12,
+   "leaf_delay": [
+    0.015,
+    0.06
+   ],
+   "old_fraction": 0.72,
+   "old_drop": [
+    0.03,
+    0.34
+   ]
+  }
+ },
+ "note": "Species concept model of Terminalia catappa (open-grown, tiered). Not a survey of the campus tree."
+}

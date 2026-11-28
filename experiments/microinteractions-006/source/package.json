@@ -1,0 +1,32 @@
+{
+  "name": "haiz-microinteractions-lab-006",
+  "version": "0.6.0",
+  "description": "HAIZ Experiment 006 · 空间交互、材质与动态艺术的深化",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5177",
+    "fonts": "node scripts/fonts.mjs",
+    "build": "node scripts/clean.mjs && node scripts/fonts.mjs && tsc --noEmit && vite build && node scripts/postbuild.mjs",
+    "preview": "vite preview --port 5178",
+    "verify": "node scripts/verify.mjs"
+  },
+  "license": "SEE LICENSE IN ../../../LICENSING.md",
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-sc": "^5.1.1",
+    "@fontsource/noto-serif-sc": "^5.1.1",
+    "@types/d3-contour": "^3.0.6",
+    "@types/three": "^0.170.0",
+    "d3-contour": "^4.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.170.0"
+  },
+  "private": true,
+  "type": "module"
+}

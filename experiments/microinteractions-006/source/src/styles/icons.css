@@ -1,0 +1,20 @@
+/* kinetic line icons — bright silhouette, dim inside (Hairline rule 09) */
+.ki { display: block; overflow: visible; color: inherit; }
+.ki * { vector-effect: non-scaling-stroke; }
+.ki .ki-pri, .ki .ki-sec, .ki .ki-fine, .ki .ki-sub {
+  fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round;
+}
+.ki .ki-pri { stroke-width: 1.6; }
+.ki .ki-sec { stroke-width: 1.35; opacity: 0.86; }
+.ki .ki-fine { stroke-width: 1.15; opacity: 0.62; }
+.ki .ki-sub { stroke-width: 1.15; opacity: 0.4; }
+.ki .ki-plate { fill: var(--ki-plate, var(--paper-raised)); }
+.ki .ki-fill-pri { fill: currentColor; stroke: none; }
+.ki .ki-fill-fine { fill: currentColor; stroke: none; opacity: 0.5; }
+.ki .ki-dot { fill: var(--lit); stroke: none; opacity: 0; transition: opacity 0.35s var(--ease-lift); }
+.ki.is-active .ki-dot { opacity: 1; }
+.ki .ki-badge { fill: var(--lanren); stroke: var(--ki-plate, var(--paper-raised)); stroke-width: 1.6; }
+@media (max-resolution: 1.5dppx) {
+  .ki .ki-pri { stroke-width: 1.75; }
+  .ki .ki-fine, .ki .ki-sub { stroke-width: 1.25; }
+}
