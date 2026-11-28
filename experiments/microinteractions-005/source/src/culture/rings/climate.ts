@@ -107,7 +107,16 @@ export async function loadClimate(base = new URL('./data/', import.meta.url)) {
   if (!manifest.ok) throw new Error('climate.json ' + manifest.status);
   const meta = await manifest.json();
   const version = meta.sha256 || meta.built || meta.last; // old archives lack a digest
-  const res = await fetch(new URL(`climate.bin?v=${encodeURIComponent(version)}`, base));
-  if (!res.ok) throw new Error('climate.bin ' + res.status);
-  return createClimate(meta, await res.arrayBuffer());
+  const v = encodeURIComponent(version);
+  const res = await fetch(new URL(`climate.bin?v=${v}`, base)).catch(() => null);
+  const type = res?.headers.get('content-type') || '';
+  if (res?.ok && !/text\/html/.test(type)) return createClimate(meta, await res.arrayBuffer());
+  // Some static hosts refuse to serve an unknown binary type. Where a base64
+  // copy is deployed beside it (climate.b64.json, same bytes), use that instead.
+  const alt = await fetch(new URL(`climate.b64.json?v=${v}`, base));
+  if (!alt.ok) throw new Error('climate.bin ' + (res ? res.status : 'unreachable'));
+  const bin = atob((await alt.json()).data);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return createClimate(meta, buf.buffer);
 }

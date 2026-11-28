@@ -9,6 +9,7 @@
 // relative cost, not a promise about any particular phone.
 import { createServer } from "node:http";
 import { readFile, writeFile, stat } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { resolve, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -39,7 +40,13 @@ const fails = [];
 const ok = (name, pass, detail = "") => { rows.push({ name, pass, detail }); if (!pass) fails.push(name); console.log(`${pass ? "✓" : "✗"} ${name}${detail ? " — " + detail : ""}`); };
 const ignorable = (t) => /ERR_TUNNEL|ERR_PROXY|net::ERR_|Failed to load resource/.test(t); // offline sandboxes: external CDNs used only by the OJO reference
 
-const browser = await chromium.launch();
+// A Playwright resolved from a parent folder may expect a browser build that is not
+// installed; fall back to a system Chromium (PLAYWRIGHT_CHROMIUM, or the sandbox's).
+const browser = await chromium.launch().catch((e) => {
+  const exe = process.env.PLAYWRIGHT_CHROMIUM || "/opt/pw-browsers/chromium";
+  if (!existsSync(exe)) throw e;
+  return chromium.launch({ executablePath: exe });
+});
 
 async function page(ctxOpts) {
   const ctx = await browser.newContext(ctxOpts);

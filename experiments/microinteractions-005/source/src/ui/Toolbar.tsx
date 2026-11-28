@@ -222,7 +222,7 @@ function MePanel({ onClose }: { onClose: () => void }) {
         <span className="pop-t">教师身份（演示）</span>
         <Switch checked={role === "teacher"} onChange={(v) => { setState({ role: v ? "teacher" : "student" }); go(v ? "teacher" : "today"); }} label="教师身份" />
       </div>
-      <button type="button" className="pop-row pop-row--line grow-r" style={{ ["--i" as any]: 3 }} onClick={() => { window.open("bench.html", "_self"); }}><span className="pop-t">新旧对照验收台</span></button>
+      <button type="button" className="pop-row pop-row--line grow-r" style={{ ["--i" as any]: 3 }} onClick={() => { location.assign("bench.html"); }}><span className="pop-t">新旧对照验收台</span></button>
     </div>
   );
 }
