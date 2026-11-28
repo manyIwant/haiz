@@ -1,0 +1,11 @@
+{
+  "packageId": "space.haiz.app.preview",
+  "versionName": "1.7.0-native.002",
+  "versionCode": 2108,
+  "apkUrl": "https://github.com/manyIwant/haiz/releases/download/haiz-native-v1.7.0-native.002/HAIZ-Android.apk",
+  "sha256": "6b3fbd3cdc831691788d091c7f695c776ed13f8b264b26e984fd7a02360c07cc",
+  "sizeBytes": 117443608,
+  "notes": "HAIZ Native 002：底部导航独立低成本合成层，选中即时迁移、页面分片渲染不再卡住动画；明暗玻璃开关完整重做（浅色=右侧太阳、深色=左侧月亮，拖动实时响应、像素重组）；侧边栏恢复为 005/006 液态侧轨（按住滑选、松手前往）；新增「收件」：可选开启的微信等班群通知接入，本机识别作业、考试、活动与截止，确认后进入待办与日程。",
+  "certSha256": "fec8d3962d1d35cf6a975722734da7d525e166421994c5d175ab71fc3c89d169",
+  "publishedAt": "2026-11-28T15:26:13Z"
+}

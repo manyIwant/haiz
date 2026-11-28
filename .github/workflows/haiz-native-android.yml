@@ -134,9 +134,10 @@ jobs:
           gh release create "$TAG" out/HAIZ-Android.apk out/haiz-update.json out/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "HAIZ Android $HAIZ_VERSION_NAME ($HAIZ_VERSION_CODE)" \
             --notes-file out/notes.md --latest
-      # Off unless the repository variable HAIZ_MIRROR_MANIFEST is "true": it commits to main.
+      # On by default for a published release (it commits only updates/latest.json to main, which
+      # haiz.space serves); set the repository variable HAIZ_MIRROR_MANIFEST to "false" to skip it.
       - name: Mirror the manifest to haiz.space/updates/latest.json (older HAIZ builds read it)
-        if: (startsWith(github.ref, 'refs/tags/haiz-native-v') || inputs.publish == true) && steps.apk.outputs.signed == 'true' && vars.HAIZ_MIRROR_MANIFEST == 'true'
+        if: (startsWith(github.ref, 'refs/tags/haiz-native-v') || inputs.publish == true) && steps.apk.outputs.signed == 'true' && vars.HAIZ_MIRROR_MANIFEST != 'false'
         continue-on-error: true
         shell: bash
         env:

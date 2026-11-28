@@ -8,9 +8,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // HAIZ keeps one package id and one signing key forever so every build updates in place.
-        // versionCode must only grow: 2105 = 1.5.5 (Flutter), 2106 = 006 preview, 2107 = Native 001, 2108 = Native 002.
-        versionCode Integer.parseInt(System.getenv("HAIZ_VERSION_CODE") ?: "2108")
-        versionName System.getenv("HAIZ_VERSION_NAME") ?: "1.7.0-native.002"
+        // versionCode must only grow: 2105 = 1.5.5 (Flutter), 2106 = 006 preview, 2107 = Native 001, 2108 = Native 002, 2109 = Native 002.1.
+        versionCode Integer.parseInt(System.getenv("HAIZ_VERSION_CODE") ?: "2109")
+        versionName System.getenv("HAIZ_VERSION_NAME") ?: "1.7.1-native.002.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -60,6 +60,7 @@ dependencies {
     implementation "androidx.webkit:webkit:$androidxWebkitVersion"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.json:json:20240303"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')

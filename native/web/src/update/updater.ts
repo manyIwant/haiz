@@ -8,12 +8,13 @@
  * data: identities live in the app's SQLite database, which an update never touches.
  */
 import { HaizUpdater, isNative } from "../platform/native";
+import { describeError, manifestProblem, validateManifest, type Manifest } from "./manifest";
+export type { Manifest } from "./manifest";
 
 export const MANIFEST_URLS = [
   "https://github.com/manyIwant/haiz/releases/latest/download/haiz-update.json",
   "https://haiz.space/updates/latest.json",
 ];
-export type Manifest = { packageId: string; versionName: string; versionCode: number; apkUrl: string; sha256: string; sizeBytes: number; notes: string; publishedAt?: string; minAndroid?: number };
 export type Phase = "idle" | "checking" | "uptodate" | "available" | "downloading" | "paused" | "verifying" | "ready" | "installing" | "error" | "unsupported";
 export type UpdState = { phase: Phase; manifest: Manifest | null; installed: { versionName: string; versionCode: number } | null; received: number; total: number; bps: number; error: string | null; attempt: number; checkedAt: number };
 
@@ -34,11 +35,6 @@ function listen() {
   });
 }
 
-function valid(m: any, pkg: string): m is Manifest {
-  return m && typeof m === "object" && m.packageId === pkg && Number.isInteger(m.versionCode) && typeof m.apkUrl === "string" && m.apkUrl.startsWith("https://")
-    && /^[0-9a-f]{64}$/i.test(m.sha256 ?? "") && Number.isFinite(m.sizeBytes) && m.sizeBytes > 1024 * 1024;
-}
-
 export async function check(manual = false): Promise<UpdState> {
   if (!isNative()) { set({ phase: "unsupported", error: "浏览器版本随网页更新；一键更新只在 Android 安装包里可用。" }); return st; }
   if (["downloading", "verifying", "installing"].includes(st.phase)) return st;
@@ -51,12 +47,15 @@ export async function check(manual = false): Promise<UpdState> {
     for (const url of MANIFEST_URLS) {
       try {
         const r = await HaizUpdater.fetchManifest({ url: url + "?t=" + Math.floor(Date.now() / 60000) });
-        if (r.status !== 200 || !r.text) { lastErr = `HTTP ${r.status}`; continue; }
-        const j = JSON.parse(r.text);
-        if (!valid(j, me.packageId)) { lastErr = "更新信息不完整"; continue; }
+        if (r.status !== 200 || !r.text) { lastErr = `网络异常：HTTP ${r.status}`; continue; }
+        let raw: unknown;
+        try { raw = JSON.parse(r.text); } catch { lastErr = "更新清单不是有效的 JSON"; continue; }
+        const v = validateManifest(raw, me.packageId);
+        if (!v.ok) { lastErr = manifestProblem(v.issues); continue; }
+        const j = v.manifest;
         if (!m || j.versionCode > m.versionCode) m = j;
         if (m && m.versionCode > me.versionCode) break;       // the first source that has something newer is enough
-      } catch (e: any) { lastErr = e?.message ?? String(e); }
+      } catch (e) { lastErr = describeError(e); }
     }
     try { localStorage.setItem("haiz:update:checkedAt", String(Date.now())); } catch { /* private */ }
     if (!m) { set({ phase: "error", error: manual ? `无法获取更新信息（${lastErr || "网络不可用"}）` : null, checkedAt: Date.now() }); if (!manual) set({ phase: "idle" }); return st; }
@@ -64,7 +63,7 @@ export async function check(manual = false): Promise<UpdState> {
     const local = await HaizUpdater.local({ versionCode: m.versionCode });
     set({ manifest: m, checkedAt: Date.now(), total: m.sizeBytes, received: local.complete ? m.sizeBytes : local.partial, phase: local.complete ? "ready" : local.partial > 0 ? "paused" : "available" });
   } catch (e: any) {
-    set({ phase: "error", error: e?.message ?? String(e) });
+    set({ phase: "error", error: describeError(e) });
   }
   return st;
 }
@@ -78,7 +77,7 @@ export async function download() {
     const r = await HaizUpdater.download({ url: m.apkUrl, sha256: m.sha256, sizeBytes: m.sizeBytes, versionCode: m.versionCode });
     set(r.state === "verified" ? { phase: "ready", received: r.total, total: r.total } : { phase: "paused", received: r.received, total: r.total });
   } catch (e: any) {
-    set({ phase: "error", error: e?.message ?? String(e) });
+    set({ phase: "error", error: describeError(e) });
   }
 }
 export async function pause() { set({ phase: "paused" }); try { await HaizUpdater.pause(); } catch { /* not running */ } }
@@ -92,7 +91,7 @@ export async function install() {
     if (r.state === "permission_required") set({ phase: "ready", error: "请在系统设置里允许 HAIZ “安装未知应用”，返回后再点一次安装。" });
     else window.setTimeout(() => { if (st.phase === "installing") set({ phase: "ready" }); }, 4000);
   } catch (e: any) {
-    set({ phase: "error", error: e?.message ?? String(e) });
+    set({ phase: "error", error: describeError(e) });
   }
 }
 
