@@ -37,12 +37,14 @@ export function ThemeToggle({ size = "md", label = "深色外观" }: { size?: "s
   const dots = useRef<SVGGElement>(null);
   const sim = useRef({ x: dark ? 1 : 0, v: 0, t: dark ? 1 : 0, m: dark ? 0 : 1, mv: 0, mt: dark ? 0 : 1, drag: false, off: null as null | (() => void) });
 
+  // no layout reads: the knob's travel is CSS (var(--w) - var(--h)), so a mount or a frame never forces a reflow
   const paint = () => {
     const s = sim.current, k = knob.current, g = dots.current, r = root.current;
     if (!k || !g || !r) return;
-    const travel = r.clientWidth - k.offsetWidth - 6;
     const stretch = 1 + Math.min(0.38, Math.abs(s.v) * 0.05);
-    k.style.transform = `translateX(${(s.x * travel).toFixed(2)}px) scale(${stretch.toFixed(3)}, ${(1 / Math.sqrt(stretch)).toFixed(3)})`;
+    k.style.setProperty("--x", s.x.toFixed(4));
+    k.style.setProperty("--sx", stretch.toFixed(3));
+    k.style.setProperty("--sy", (1 / Math.sqrt(stretch)).toFixed(3));
     r.style.setProperty("--lit", s.x.toFixed(3));
     const m = s.m, cs = g.children;
     for (let i = 0; i < cs.length; i++) {
@@ -68,22 +70,22 @@ export function ThemeToggle({ size = "md", label = "深色外观" }: { size?: "s
       return true;
     });
   };
-  useLayoutEffect(() => { const s = sim.current; s.t = dark ? 1 : 0; s.mt = dark ? 0 : 1; if (!s.drag) run(); paint(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [dark]);
+  useLayoutEffect(() => { const s = sim.current; s.t = dark ? 1 : 0; s.mt = dark ? 0 : 1; if (s.x === s.t && s.m === s.mt && !s.v) return; if (!s.drag) run(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [dark]);
   useEffect(() => () => { sim.current.off?.(); }, []);
 
   const set = (d: boolean) => {
     if (d === dark) { sim.current.t = d ? 1 : 0; run(); return; }
     setState({ theme: d ? "dark" : "light" });
   };
-  const drag = useRef<{ x0: number; s0: number; moved: boolean } | null>(null);
+  const drag = useRef<{ x0: number; s0: number; moved: boolean; travel: number } | null>(null);
   const onDown = (e: React.PointerEvent) => {
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    drag.current = { x0: e.clientX, s0: sim.current.x, moved: false };
+    drag.current = { x0: e.clientX, s0: sim.current.x, moved: false, travel: Math.max(1, root.current!.clientWidth - root.current!.clientHeight) };
   };
   const onMove = (e: React.PointerEvent) => {
-    const d = drag.current, r = root.current, k = knob.current;
-    if (!d || !r || !k) return;
-    const travel = r.clientWidth - k.offsetWidth - 6;
+    const d = drag.current;
+    if (!d) return;
+    const travel = d.travel;
     const dx = e.clientX - d.x0;
     if (Math.abs(dx) > 4) { d.moved = true; sim.current.drag = true; }
     if (!d.moved) return;
@@ -103,13 +105,13 @@ export function ThemeToggle({ size = "md", label = "深色外观" }: { size?: "s
   };
 
   return (
-    <button ref={root} type="button" role="switch" aria-checked={dark} aria-label={label} className={`gtog gtog--${size}${dark ? " is-dark" : ""}`}
+    <button ref={root} type="button" role="switch" aria-checked={dark} aria-label={label} className={`gtog gtog--${size}${dark ? " is-dark" : ""}`} style={{ ["--lit" as any]: dark ? 1 : 0 }}
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") set(false); else if (e.key === "ArrowRight") set(true); }}
       onClick={(e) => { if (e.detail === 0) set(!dark); }}>
       <span className="gtog-led" aria-hidden="true" />
-      <span ref={knob} className="gtog-knob" aria-hidden="true">
-        <svg viewBox="0 0 19 19"><g ref={dots}>{M.map((p, i) => <circle key={i} cx={p.x * 2 + 1} cy={p.y * 2 + 1} r=".78" />)}</g></svg>
+      <span ref={knob} className="gtog-knob" aria-hidden="true" style={{ ["--x" as any]: dark ? 1 : 0 }}>
+        <svg viewBox="0 0 19 19"><g ref={dots}>{(sim.current.m > 0.5 ? S : M).map((p, i) => <circle key={i} cx={p.x * 2 + 1} cy={p.y * 2 + 1} r=".78" />)}</g></svg>
       </span>
     </button>
   );
